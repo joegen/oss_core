@@ -10,7 +10,7 @@
 // obtaining a copy of the software and accompanying documentation covered by
 // this license (the "Software") to use, execute, and to prepare
 // derivative works of the Software, all subject to the
-// "OSSf Software Solutions OSS API General License Agreement".
+// "GNU Lesser General Public License (LGPL)".
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
