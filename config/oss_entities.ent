@@ -1,0 +1,6 @@
+<!ENTITY oss "oss">
+<!ENTITY ossrelease "4.0">
+<!ENTITY osssetup "oss_setup">
+<!ENTITY osspgk "oss rpm">
+<!ENTITY ossconfig "oss_config">
+<!ENTITY osssuper "oss_supervisor">

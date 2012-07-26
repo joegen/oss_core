@@ -1,0 +1,7 @@
+06-13-2012: Added FURI field in incoming packet log entry for parsers to
+  properly identify the caller when grepping.
+
+06-03-2012: Changed buffer size for RTP read/write buffers from
+  1024 to 8192 to accomodate for packet resizing
+
+

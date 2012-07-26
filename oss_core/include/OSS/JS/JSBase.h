@@ -1,0 +1,130 @@
+// OSS Software Solutions Application Programmer Interface
+//
+// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
+//
+// Package: JS
+//
+// Copyright (c) OSS Software Solutions
+//
+// Permission is hereby granted, to any person or organization
+// obtaining a copy of the software and accompanying documentation covered by
+// this license (the "Software") to use, execute, and to prepare
+// derivative works of the Software, all subject to the
+// "GNU Lesser General Public License (LGPL)".
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT
+// SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE
+// FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
+// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+
+
+#ifndef JSBase_H_INCLUDED
+#define JSBase_H_INCLUDED
+
+#include "OSS/OSS.h"
+#include "boost/noncopyable.hpp"
+#include "boost/tuple/tuple.hpp"
+
+#include "OSS/JS/JS.h"
+#include "OSS/Thread.h"
+#include "OSS/BlockingQueue.h"
+
+#include "v8.h"
+
+namespace OSS {
+namespace JS {
+
+
+OSS_CREATE_INLINE_EXCEPTION(JSBaseException, OSS::IOException, "Javascript SIPMessage Processor Exception");
+
+class OSS_API JSBase : boost::noncopyable
+{
+public:
+  JSBase(const std::string& contextName);
+    /// Create a new JSBase
+
+  virtual ~JSBase();
+    /// Destroy the JSBase
+
+  bool initialize(const boost::filesystem::path& script,
+    const std::string& functionName,
+    void(*extensionGlobals)(OSS_HANDLE) = 0);
+    /// Initialize the javascript context and the object template.
+    /// The function indicated by funtionName must exist in the script
+
+  bool recompile();
+    /// Recompile the current active java script.
+
+  bool processRequest(OSS_HANDLE request);
+    /// Process the request
+
+  bool isInitialized() const;
+    /// Returns true if the script has been initialized
+
+  virtual void initGlobalFuncs(OSS_HANDLE objectTemplate) = 0;
+    /// Initialize global functions that will be exposed to the java script engine
+
+  const boost::filesystem::path& getScriptFilePath() const;
+    /// return the path of the script file
+
+  const std::string& getContextName() const;
+    /// returns the name of the context
+
+protected:
+  bool internalInitialize(const boost::filesystem::path& script,
+    const std::string& functionName,
+    void(*extensionGlobals)(OSS_HANDLE));
+    /// Initialize the javascript context and the object template.
+    /// The function indicated by funtionName must exist in the scri
+
+  bool internalProcessRequest(OSS_HANDLE request);
+    /// Process the request
+
+  bool internalRecompile();
+    /// Recompile the script
+
+  std::string _contextName;
+  boost::filesystem::path _script;
+  OSS_HANDLE _context;
+  OSS_HANDLE _processFunc;
+  OSS_HANDLE _requestTemplate;
+  OSS_HANDLE _globalTemplate;
+  bool _isInitialized;
+  static OSS::mutex _mutex;
+  std::string _functionName;
+  void(*_extensionGlobals)(OSS_HANDLE);
+  friend class JSWorker;
+};
+
+
+
+
+//
+// Inlines
+//
+
+inline const boost::filesystem::path& JSBase::getScriptFilePath() const
+{
+  return _script;
+}
+
+inline bool JSBase::isInitialized() const
+{
+  return _isInitialized;
+}
+
+inline const std::string& JSBase::getContextName() const
+{
+  return _contextName;
+}
+
+} } // OSS::JS
+
+
+#endif // JSBase_H_INCLUDED
+
+

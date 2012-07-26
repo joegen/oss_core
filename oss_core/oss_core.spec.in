@@ -1,0 +1,120 @@
+#!BuildIgnore: post-build-checks
+# see http://lizards.opensuse.org/2008/09/08/opensuse-build-service-build-checks/
+Name: @PACKAGE@
+Version: @VERSION@
+Release: @PACKAGE_REVISION@
+
+Summary: OS Abstraction and OS Utilities library for OSS modules
+License: OSS Commercial License
+Group: Development/Libraries
+Vendor: OSS Software Solutions
+Url: http://www.ossapp.com
+
+BuildRequires: automake
+BuildRequires: gcc-c++
+BuildRequires: openssl-devel
+BuildRequires: oss_externals-devel
+Requires: oss_externals
+BuildRequires: libmcrypt-devel
+Requires: libmcrypt
+BuildRequires: libtool-ltdl-devel
+Requires: libtool-ltdl
+BuildRequires: pcre-devel
+BuildRequires: findutils
+BuildRequires: db4-devel
+Requires: db4
+Requires: openssl >= 0.9.7a
+Requires: pcre >= 4.5
+
+Source: %name-%version.tar.gz
+
+Prefix: %_prefix
+BuildRoot: %{_tmppath}/%name-%version-root
+
+%description
+This library provides a set of classes that provide an operating
+system abstraction from a majority of OS provided functions. All of
+the sipX projects use this library to ensure easy porting to any
+operating system. The library currently provides classes that
+encapsulate functions and operations for:
+
+  * Threads
+  * Locks and Mutexes
+  * Semaphores
+  * Messages and Queues
+  * Timers
+  * Time and Date
+  * Sockets
+  * File and Directory
+  * Operating System Processes
+  * Dynamic loading of shared libraries and symbols
+
+%if %{_vendor} == suse
+%debug_package
+%endif
+
+# Install header files
+%package devel
+Requires: %name
+Group: Development/Libraries
+Vendor: OSS Software Solutions
+Summary: Header files for %name
+
+
+%description devel
+This library provides a set of classes that provide an operating
+system abstraction from a majority of OS provided functions. All of
+the sipX projects use this library to ensure easy porting to any
+operating system. The library currently provides classes that
+encapsulate functions and operations for:
+
+  * Threads
+  * Locks and Mutexes
+  * Semaphores
+  * Messages and Queues
+  * Timers
+  * Time and Date
+  * Sockets
+  * File and Directory
+  * Operating System Processes
+  * Dynamic loading of shared libraries and symbols
+
+This package contains the neccessary header files and static libraries
+helpful to build projects from the sipX library
+
+%prep
+%setup -q
+# suse and obs build system
+mv %{_builddir}/%name-%version/%name-rpmlintrc %{_sourcedir}
+
+%build
+%configure @OSSLIBS_RPM_CONFIGURE_OPTIONS@
+cp config.log %name.configlog
+make %{_smp_mflags} all
+
+%install
+rm -rf $RPM_BUILD_ROOT
+make DESTDIR=$RPM_BUILD_ROOT install
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%files
+%defattr(644,root,root,755)
+%doc CONTRIBUTORS README NEWS TODO ChangeLog %name.configlog
+%attr(755,root,root) %{_libdir}/liboss_core.la
+%attr(755,root,root) %{_libdir}/liboss_core.so*
+
+
+%files devel
+%defattr(644,root,root,755)
+%{_libdir}/liboss_core.la
+%{_libdir}/liboss_core.a
+
+%dir %attr(755,root,root) %{_includedir}/OSS
+%{_includedir}/OSS/*
+%{_includedir}/json/*
+
+
+%post
+

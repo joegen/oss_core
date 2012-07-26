@@ -1,0 +1,111 @@
+# Included directly (or indirectly) in every Makefile.am.
+
+# It is unclear why this is necessary; putting it in a common place in
+# case this is relevant to some odd platform.
+INSTALL=@INSTALL@
+
+LocalizeSipXconfig = sed \
+		  -e 's,@PACKAGE\@,@PACKAGE@,g' \
+		  -e 's,@PACKAGE_REVISION\@,@PACKAGE_REVISION@,g' \
+		  -e 's,@PACKAGE_VERSION\@,@PACKAGE_VERSION@,g' \
+		  -e 's,@VERSION\@,@VERSION@,g' \
+		  -e 's,@abs_builddir\@,@abs_builddir@,g' \
+		  -e 's,@abs_srcdir\@,@abs_srcdir@,g' \
+		  -e 's,@abs_top_srcdir\@,@abs_top_srcdir@,g' \
+		  -e 's,@OSSLIBS_RPM_CONFIGURE_OPTIONS\@,@OSSLIBS_RPM_CONFIGURE_OPTIONS@,g' \
+		  -e 's,@POSTGRESQL_INLCLUDE\@,@POSTGRESQL_INLCLUDE@,g' \
+		  -e 's,@PREFIX\@,$(prefix),g' \
+		  -e 's,@DAILYDIR\@,@DAILYDIR@,g' \
+		  -e 's,@SERVICEDIR\@,@SERVICEDIR@,g' \
+		  -e 's,@sbindir\@,$(sbindir),g' \
+		  -e 's,@bindir\@,$(bindir),g' \
+		  -e 's,@datadir\@,$(datadir),g' \
+		  -e 's,@sysconfdir\@,$(sysconfdir),g' \
+		  -e 's,@INSTALL\@,@INSTALL@,g' \
+		  -e 's,@install_sh\@,@install_sh@,g' \
+		  -e 's,@libdir\@,$(libdir),g' \
+		  -e 's,@localstatedir\@,$(localstatedir),g' \
+		  -e 's,@pkgdatadir\@,@pkgdatadir@,g' \
+		  -e 's,@prefix\@,$(prefix),g' \
+		  -e 's,@profiledir\@,@profiledir@,g' \
+		  -e 's,@wwwdir\@,@wwwdir@,g' \
+		  -e 's,@host\@,@host@,g' \
+		  -e 's,@BASH\@,@BASH@,g' \
+		  -e 's,@PERL\@,@PERL@,g' \
+		  -e 's,@RUBY\@,@RUBY@,g' \
+		  -e 's,@RAKE\@,@RAKE@,g' \
+		  -e 's,@GEM\@,@GEM@,g' \
+		  -e 's,@ODBC_LIBDIR\@,@ODBC_LIBDIR@,g' \
+		  -e 's,@APACHE2_HTTPD\@,@APACHE2_HTTPD@,g' \
+		  -e 's,@APACHE2_MOD\@,@APACHE2_MOD@,g' \
+		  -e 's,@CLOVER_HOME\@,@CLOVER_HOME@,g' \
+		  -e 's,@JAVAC_DEBUG\@,@JAVAC_DEBUG@,g' \
+		  -e 's,@JAVAC_OPTIMIZED\@,@JAVAC_OPTIMIZED@,g' \
+		  -e 's,@JAVA\@,@JAVA@,g' \
+		  -e 's,@JAVA_HOME\@,@JAVA_HOME@,g' \
+		  -e 's,@SIPFOUNDRY_ORG\@,@SIPFOUNDRY_ORG@,g' \
+		  -e 's,@OSSLIBSPBXUSER\@,@OSSLIBSPBXUSER@,g' \
+		  -e 's,@OSSLIBSPBXGROUP\@,@OSSLIBSPBXGROUP@,g' \
+		  -e 's,@OSSLIBS_BINDIR\@,@OSSLIBS_BINDIR@,g' \
+		  -e 's,@OSSLIBS_CONFDIR\@,@OSSLIBS_CONFDIR@,g' \
+		  -e 's,@OSSLIBS_DATADIR\@,@OSSLIBS_DATADIR@,g' \
+		  -e 's,@OSSLIBS_JAVADIR\@,@OSSLIBS_JAVADIR@,g' \
+		  -e 's,@OSSLIBS_DBDIR\@,@OSSLIBS_DBDIR@,g' \
+		  -e 's,@OSSLIBS_DOCDIR\@,@OSSLIBS_DOCDIR@,g' \
+		  -e 's,@OSSLIBS_LOGDIR\@,@OSSLIBS_LOGDIR@,g' \
+		  -e 's,@OSSLIBS_RUNDIR\@,@OSSLIBS_RUNDIR@,g' \
+		  -e 's,@OSSLIBS_TMPDIR\@,@OSSLIBS_TMPDIR@,g' \
+		  -e 's,@OSSLIBS_INCDIR\@,@OSSLIBS_INCDIR@,g' \
+		  -e 's,@OSSLIBS_LIBDIR\@,@OSSLIBS_LIBDIR@,g' \
+		  -e 's,@OSSLIBS_LIBEXECDIR\@,@OSSLIBS_LIBEXECDIR@,g' \
+		  -e 's,@OSSLIBS_VARDIR\@,@OSSLIBS_VARDIR@,g' \
+		  -e 's,@OSSLIBS_VXMLDATADIR\@,@OSSLIBS_VXMLDATADIR@,g' \
+		  -e 's,@XPRESSA_BUILD_NUMBER\@,@XPRESSA_BUILD_NUMBER@,g' \
+		  -e 's,@XPRESSA_BUILD_COMMENT\@,@XPRESSA_BUILD_COMMENT@,g' \
+		  -e 's,@OSSLIBSPHONELIB\@,@OSSLIBSPHONELIB@,g' \
+		  -e 's,@OSSLIBSPHONEDATA\@,@OSSLIBSPHONEDATA@,g' \
+		  -e 's,@OSSLIBSPHONECONF\@,@OSSLIBSPHONECONF@,g' \
+		  -e 's,@OSSLIB_NAME\@,@OSSLIB_NAME@,g' \
+		  -e 's,@NAMED_PROGRAM\@,@NAMED_PROGRAM@,g' \
+		  -e 's,@SELINUX_GETENFORCE\@,@SELINUX_GETENFORCE@,g' \
+		  -e 's,@LIBWWW_RPM\@,@LIBWWW_RPM@,g' \
+		  -e 's,@POSTGRESQL_USER\@,@POSTGRESQL_USER@,g' \
+		  -e 's,@LIBSRC\@,@LIBSRC@,g' \
+		  -e 's,@RPMBUILD_DEBUG_PACKAGE_SPEC\@,@RPMBUILD_DEBUG_PACKAGE_SPEC@,g' \
+		  -e 's,@FREESWITCH_PREFIX\@,@FREESWITCH_PREFIX@,g' \
+		  -e 's,@DATE_PARSE_ARGS\@,@DATE_PARSE_ARGS@,g' \
+		  -e 's,@XARGS_REPLACE\@,@XARGS_REPLACE@,g'
+
+################################################################
+# localize and install process definition based on:
+# OSSLIBS_PROCESS_DEFS : the process definition file name without '-process.xml'
+
+install-data-hook: \
+	$(foreach proc,$(OSSLIBS_PROCESS_DEFS),$(DESTDIR)$(OSSLIBS_DATADIR)/process.d/$(proc)-process.xml)
+
+$(foreach proc,$(OSSLIBS_PROCESS_DEFS),$(DESTDIR)$(OSSLIBS_DATADIR)/process.d/$(proc)-process.xml) \
+	: $(DESTDIR)$(OSSLIBS_DATADIR)/process.d/% : %
+	$(INSTALL) -D -m 644 $< $@
+
+$(foreach proc,$(OSSLIBS_PROCESS_DEFS),$(proc)-process.xml) : % : %.in
+	@echo "Localize process definition: $*"
+	@$(LocalizeSipXconfig) $< > $@
+
+.PHONY: $(foreach proc,$(OSSLIBS_PROCESS_DEFS),$(proc)-process.xml)
+
+################################################################
+# Common pattern rules
+
+# localize and syntax check a python file
+%.py : %.py.in
+	@echo "Localize $< -> $@"
+	@$(LocalizeSipXconfig) $< > $@
+	chmod +x $@
+	python -m py_compile $@
+
+# localize and syntax check a perl file
+%.pl : %.pl.in
+	@echo "Localize $< -> $@"
+	@$(LocalizeSipXconfig) $< > $@
+	chmod +x $@
+	perl -wc $@
