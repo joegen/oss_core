@@ -1,0 +1,21 @@
+OSS Core Library build system is based on the sipXecs (http://www.sipfoundry.org)
+
+Prerequisites (CentOS or Fedora)
+- Install oss_externals from the http://bridge.ossapp.com repository 
+  - cd /etc/yum.repos.d
+  - CentOS:  wget http://bridge.ossapp.com/karoo/repo/1.5.0/stage/karoo-1.5.0-centos.repo
+  - Fedora:  wget http://bridge.ossapp.com/karoo/repo/1.5.0/stage/karoo-1.5.0-fedora.repo
+  - yum update
+  - yum install oss_externals-devel
+
+Building From Source (CentOS or Fedora)
+- Download the source code from https://github.com/joegen/oss_core and build it
+	- git clone https://github.com/joegen/oss_core.git
+	cd oss_core/
+	autoreconf -if
+	mkdir -p .build
+	cd .build
+	../configure --prefix=`pwd`/root
+	make oss
+	
+
