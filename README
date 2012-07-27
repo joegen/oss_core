@@ -27,19 +27,19 @@ Building RPMS (CentOS or Fedora)
 	- mkdir -p .rpmbuild
 	- cd .rpmbuild
 	- ../configure --enable-rpm \
-		--with-yum-proxy=http://localhost:3128 \
-		CENTOS_BASE_URL="http://ftp.jaist.ac.jp/pub/Linux/CentOS"  \
-		FEDORA_BASE_URL="http://ftp.jaist.ac.jp/pub/Linux/Fedora"} \
-		MIRROR_SITE="http://ftp.linux.ncsu.edu/pub" \
-		FEDORA_ARCHIVE_BASE_URL="http://dl.fedoraproject.org/pub/archive/fedora/linux"
+	--with-yum-proxy=http://localhost:3128 \
+	CENTOS_BASE_URL="http://ftp.jaist.ac.jp/pub/Linux/CentOS"  \
+	FEDORA_BASE_URL="http://ftp.jaist.ac.jp/pub/Linux/Fedora"} \
+	MIRROR_SITE="http://ftp.linux.ncsu.edu/pub" \
+	FEDORA_ARCHIVE_BASE_URL="http://dl.fedoraproject.org/pub/archive/fedora/linux"
 - Create chroots for Mock (https://fedoraproject.org/wiki/Projects/Mock)
 	- sudo usermod -a -G mock $USER
-	-	CentOS_5:  make distro.centos-5-x86_64.repo-chroot-init
-	-	CentOS_6:  make distro.centos-6-x86_64.repo-chroot-init
+	-	CentOS_5: make distro.centos-5-x86_64.repo-chroot-init
+	-	CentOS_6: make distro.centos-6-x86_64.repo-chroot-init
 	-	Fedora_16: make distro.fedora-16-x86_64.repo-chroot-init
 - Building the RPMS
-	-	CentOS_5:  make distro.centos-5-x86_64.oss_core.rpm
-	-	CentOS_6:  make distro.centos-6-x86_64.oss_core.rpm
+	-	CentOS_5: make distro.centos-5-x86_64.oss_core.rpm
+	-	CentOS_6: make distro.centos-6-x86_64.oss_core.rpm
 	-	Fedora_16: make distro.fedora-16-x86_64.oss_core.rpm
 
 	
