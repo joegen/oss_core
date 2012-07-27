@@ -1,4 +1,4 @@
-OSS Core Library build system is based on the sipXecs (http://www.sipfoundry.org)
+OSS Core Library build environment is based on the sipXecs build system  (http://www.sipfoundry.org)
 
 Prerequisites (CentOS or Fedora)
 - Install oss_externals from the http://bridge.ossapp.com repository 
@@ -35,13 +35,13 @@ Building RPMS (CentOS or Fedora)
 	"http://dl.fedoraproject.org/pub/archive/fedora/linux"
 - Create chroots for Mock (https://fedoraproject.org/wiki/Projects/Mock)
 	- sudo usermod -a -G mock $USER
-	-	CentOS_5: make distro.centos-5-x86_64.repo-chroot-init
-	-	CentOS_6: make distro.centos-6-x86_64.repo-chroot-init
-	-	Fedora_16: make distro.fedora-16-x86_64.repo-chroot-init
+	- make distro.centos-5-x86_64.repo-chroot-init
+	- make distro.centos-6-x86_64.repo-chroot-init
+	- make distro.fedora-16-x86_64.repo-chroot-init
 - Building the RPMS
-	-	CentOS_5: make distro.centos-5-x86_64.oss_core.rpm
-	-	CentOS_6: make distro.centos-6-x86_64.oss_core.rpm
-	-	Fedora_16: make distro.fedora-16-x86_64.oss_core.rpm
+	- make distro.centos-5-x86_64.oss_core.rpm
+	- make distro.centos-6-x86_64.oss_core.rpm
+	- make distro.fedora-16-x86_64.oss_core.rpm
 
 	
 
