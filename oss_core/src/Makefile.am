@@ -196,6 +196,7 @@ liboss_core_la_SOURCES =  \
     stun/STUNClient.cpp \
     b2bua/SIPB2BClientTransaction.cpp \
     b2bua/SIPB2BTransaction.cpp \
+    b2bua/SIPB2BScriptableHandler.cpp \
     b2bua/SIPB2BTransactionManager.cpp \
     js/JSBase.cpp \
     js/JSSIPMessage.cpp

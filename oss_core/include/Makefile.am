@@ -174,6 +174,7 @@ nobase_include_HEADERS = \
     OSS/SIP/B2BUA.h \
     OSS/SIP/SIPB2BClientTransaction.h \
     OSS/SIP/SIPB2BHandler.h \
+    OSS/SIP/SIPB2BScriptableHandler.h \
     OSS/SIP/SIPB2BTransaction.h \
     OSS/SIP/SIPB2BTransactionManager.h \
     OSS/STUN/VovidaSTUN.inl \
