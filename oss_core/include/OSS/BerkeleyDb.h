@@ -2,7 +2,7 @@
 // Package: OSSAPI
 // Author: Joegen E. Baclor - mailto:joegen@ossapp.com
 //
-// Basic definitions for the OSSAPI API.g
+// Basic definitions for the OSS Core SDK.g
 //
 // Copyright (c) OSS Software Solutions
 //

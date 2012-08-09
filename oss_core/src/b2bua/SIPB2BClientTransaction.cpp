@@ -2,7 +2,7 @@
 // Package: B2BUA
 // Author: Joegen E. Baclor - mailto:joegen@ossapp.com
 //
-// Basic definitions for the OSSAPI API.
+// Basic definitions for the OSS Core SDK.
 //
 // Copyright (c) OSS Software Solutions
 //

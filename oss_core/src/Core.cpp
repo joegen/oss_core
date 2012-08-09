@@ -2,7 +2,7 @@
 // Package: OSSAPI
 // Author: Joegen E. Baclor - mailto:joegen@ossapp.com
 //
-// Basic definitions for the OSSAPI API.
+// Basic definitions for the OSS Core SDK.
 //
 // Copyright (c) OSS Software Solutions
 //
@@ -61,6 +61,11 @@
 #include "Poco/MD5Engine.h"
 #include "Poco/File.h"
 #include "Poco/DateTime.h"
+
+//
+// Header only implementations so we catch any compile errors
+//
+#include "OSS/RedisClient.h"
 
 namespace OSS {
 
