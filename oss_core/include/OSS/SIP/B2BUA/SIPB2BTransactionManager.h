@@ -39,8 +39,8 @@
 #include "OSS/SIP/SIP.h"
 #include "OSS/SIP/OSSSIP.h"
 #include "OSS/SIP/SIPTransaction.h"
-#include "OSS/SIP/SIPB2BTransaction.h"
-#include "OSS/SIP/SIPB2BHandler.h"
+#include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
+#include "OSS/SIP/B2BUA/SIPB2BHandler.h"
 
 
 namespace OSS {

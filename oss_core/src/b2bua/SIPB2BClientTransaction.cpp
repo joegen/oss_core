@@ -21,8 +21,8 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#include "OSS/SIP/SIPB2BClientTransaction.h"
-#include "OSS/SIP/SIPB2BTransactionManager.h"
+#include "OSS/SIP/B2BUA/SIPB2BClientTransaction.h"
+#include "OSS/SIP/B2BUA/SIPB2BTransactionManager.h"
 #include "OSS/Logger.h"
 
 

@@ -26,7 +26,7 @@
 #define SIP_OSSSIPClientTransaction_INCLUDED
 
 
-#include "OSS/SIP/SIPB2BTransaction.h"
+#include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 
 
 namespace OSS {

@@ -20,7 +20,7 @@
 //
 
 
-#include "OSS/SIP/SIPB2BScriptableHandler.h"
+#include "OSS/SIP/B2BUA/SIPB2BScriptableHandler.h"
 
 
 namespace OSS {
@@ -54,9 +54,13 @@ void SIPB2BScriptableHandler::deinitialize()
 
 }
 
-SIPMessage::Ptr onTransactionCreated(
+SIPMessage::Ptr SIPB2BScriptableHandler::onTransactionCreated(
   const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction)
 {
+  //
+  // We simply do nothing here and return a NULL response to allow processing
+  // to continue
+  //
   return SIPMessage::Ptr();
 }
 

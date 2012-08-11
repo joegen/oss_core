@@ -22,7 +22,7 @@
 #ifndef SIPB2BSCRIPTABLEHANDLER_H
 #define	SIPB2BSCRIPTABLEHANDLER_H
 
-#include "OSS/SIP/SIPB2BHandler.h"
+#include "OSS/SIP/B2BUA/SIPB2BHandler.h"
 #include "OSS/Persistent/ClassType.h"
 #include "OSS/JS/JSSIPMessage.h"
 #include "OSS/SIP/SIPMessage.h"

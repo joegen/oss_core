@@ -171,12 +171,12 @@ nobase_include_HEADERS = \
     OSS/SIP/SIPUDPConnection.h \
     OSS/SIP/SIPTCPConnectionManager.h \
     OSS/SIP/SIPNistPool.h \
-    OSS/SIP/B2BUA.h \
-    OSS/SIP/SIPB2BClientTransaction.h \
-    OSS/SIP/SIPB2BHandler.h \
-    OSS/SIP/SIPB2BScriptableHandler.h \
-    OSS/SIP/SIPB2BTransaction.h \
-    OSS/SIP/SIPB2BTransactionManager.h \
+    OSS/SIP/B2BUA/B2BUA.h \
+    OSS/SIP/B2BUA/SIPB2BClientTransaction.h \
+    OSS/SIP/B2BUA/SIPB2BHandler.h \
+    OSS/SIP/B2BUA/SIPB2BScriptableHandler.h \
+    OSS/SIP/B2BUA/SIPB2BTransaction.h \
+    OSS/SIP/B2BUA/SIPB2BTransactionManager.h \
     OSS/STUN/VovidaSTUN.inl \
     OSS/STUN/VovidaUDP.h \
     OSS/STUN/STUNMappedAddress.h \

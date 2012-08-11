@@ -22,9 +22,9 @@
 //
 
 #include <boost/tuple/tuple.hpp>
-#include "OSS/SIP/SIPB2BTransactionManager.h"
-#include "OSS/SIP/SIPB2BTransaction.h"
-#include "OSS/SIP/SIPB2BClientTransaction.h"
+#include "OSS/SIP/B2BUA/SIPB2BTransactionManager.h"
+#include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
+#include "OSS/SIP/B2BUA/SIPB2BClientTransaction.h"
 #include "OSS/SIP/SIPVia.h"
 #include "OSS/Logger.h"
 #include "OSS/Core.h"

@@ -36,7 +36,7 @@
 #include "OSS/DNS.h"
 #include "OSS/SIP/B2BUA.h"
 #include "OSS/SIP/SIPTransaction.h"
-#include "OSS/SIP/SIPB2BTransaction.h"
+#include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 
 
 namespace OSS {

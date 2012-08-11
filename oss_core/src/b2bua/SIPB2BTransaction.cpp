@@ -22,8 +22,8 @@
 //
 
 
-#include "OSS/SIP/SIPB2BTransaction.h"
-#include "OSS/SIP/SIPB2BTransactionManager.h"
+#include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
+#include "OSS/SIP/B2BUA/SIPB2BTransactionManager.h"
 #include "OSS/Logger.h"
 #include "OSS/SIP/SIPRequestLine.h"
 #include "OSS/ABNF/ABNFSIPIPV4Address.h"

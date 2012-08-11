@@ -186,6 +186,7 @@ am_liboss_core_la_OBJECTS = liboss_core_la-DNS.lo \
 	liboss_core_la-STUNServer.lo liboss_core_la-STUNClient.lo \
 	liboss_core_la-SIPB2BClientTransaction.lo \
 	liboss_core_la-SIPB2BTransaction.lo \
+	liboss_core_la-SIPB2BScriptableHandler.lo \
 	liboss_core_la-SIPB2BTransactionManager.lo \
 	liboss_core_la-JSBase.lo liboss_core_la-JSSIPMessage.lo
 liboss_core_la_OBJECTS = $(am_liboss_core_la_OBJECTS)
@@ -661,6 +662,7 @@ liboss_core_la_SOURCES = \
     stun/STUNClient.cpp \
     b2bua/SIPB2BClientTransaction.cpp \
     b2bua/SIPB2BTransaction.cpp \
+    b2bua/SIPB2BScriptableHandler.cpp \
     b2bua/SIPB2BTransactionManager.cpp \
     js/JSBase.cpp \
     js/JSSIPMessage.cpp
@@ -845,6 +847,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liboss_core_la-SDPSession.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liboss_core_la-SIPAuthorization.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liboss_core_la-SIPB2BClientTransaction.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liboss_core_la-SIPB2BScriptableHandler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liboss_core_la-SIPB2BTransaction.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liboss_core_la-SIPB2BTransactionManager.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liboss_core_la-SIPCSeq.Plo@am__quote@
@@ -1854,6 +1857,13 @@ liboss_core_la-SIPB2BTransaction.lo: b2bua/SIPB2BTransaction.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='b2bua/SIPB2BTransaction.cpp' object='liboss_core_la-SIPB2BTransaction.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liboss_core_la_CXXFLAGS) $(CXXFLAGS) -c -o liboss_core_la-SIPB2BTransaction.lo `test -f 'b2bua/SIPB2BTransaction.cpp' || echo '$(srcdir)/'`b2bua/SIPB2BTransaction.cpp
+
+liboss_core_la-SIPB2BScriptableHandler.lo: b2bua/SIPB2BScriptableHandler.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liboss_core_la_CXXFLAGS) $(CXXFLAGS) -MT liboss_core_la-SIPB2BScriptableHandler.lo -MD -MP -MF $(DEPDIR)/liboss_core_la-SIPB2BScriptableHandler.Tpo -c -o liboss_core_la-SIPB2BScriptableHandler.lo `test -f 'b2bua/SIPB2BScriptableHandler.cpp' || echo '$(srcdir)/'`b2bua/SIPB2BScriptableHandler.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/liboss_core_la-SIPB2BScriptableHandler.Tpo $(DEPDIR)/liboss_core_la-SIPB2BScriptableHandler.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='b2bua/SIPB2BScriptableHandler.cpp' object='liboss_core_la-SIPB2BScriptableHandler.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liboss_core_la_CXXFLAGS) $(CXXFLAGS) -c -o liboss_core_la-SIPB2BScriptableHandler.lo `test -f 'b2bua/SIPB2BScriptableHandler.cpp' || echo '$(srcdir)/'`b2bua/SIPB2BScriptableHandler.cpp
 
 liboss_core_la-SIPB2BTransactionManager.lo: b2bua/SIPB2BTransactionManager.cpp
 @am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liboss_core_la_CXXFLAGS) $(CXXFLAGS) -MT liboss_core_la-SIPB2BTransactionManager.lo -MD -MP -MF $(DEPDIR)/liboss_core_la-SIPB2BTransactionManager.Tpo -c -o liboss_core_la-SIPB2BTransactionManager.lo `test -f 'b2bua/SIPB2BTransactionManager.cpp' || echo '$(srcdir)/'`b2bua/SIPB2BTransactionManager.cpp
