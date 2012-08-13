@@ -41,16 +41,12 @@
 #include <sys/resource.h>
 #include <sys/wait.h>
 #include <signal.h>
-#include <boost/filesystem/v3/operations.hpp>
 
 
 
 namespace OSS {
 namespace Exec {
 
-
-std::string Process::_psCommand;
-boost::filesystem::path Process::_psPath;
 
 static bool headerSplit(
     const std::string & header,
@@ -181,30 +177,7 @@ Process::Process(const std::string& processName, const std::string& startupComma
   _isAlive(false),
   _noChild(false)
 {
-  if (_psCommand.empty())
-  {
-    if (_psPath.native().empty())
-    {
-      _psPath = "/bin/ps";
-      if (!boost::filesystem::exists(_psPath))
-        _psPath = "/sbin/ps";
-      if (!boost::filesystem::exists(_psPath))
-        _psPath = "/usr/bin/ps";
-      if (!boost::filesystem::exists(_psPath))
-        _psPath = "/usr/sbin/ps";
-      if (!boost::filesystem::exists(_psPath))
-      {
-        std::cerr << "Unable to find  ps command." << std::endl;
-        std::cerr.flush();
-        _exit(-1);
-      }
-    }
-    //
-    // Prepare the command to fetch process status
-    //
-    _psCommand = _psPath.native();
-    _psCommand += " auxc";
-  }
+  
 }
 
 Process::~Process()
@@ -539,14 +512,13 @@ int Process::countProcessInstances(const std::string& process)
   {
     if (boost::filesystem::is_directory(iter->status()))
     {
-      if (iter->path().filename().native() != "self")
+      if (OSS::boost_file_name(iter->path()) != "self")
       {
         boost::filesystem::path statusFile = operator/(iter->path(), "status");
         std::string procName;
-        if (getStatusHeader(statusFile.native(), "name", procName) && procName == process)
+        if (getStatusHeader(OSS::boost_path(statusFile), "name", procName) && procName == process)
         {
           ++instances;
-          std::cout << procName << " instance count: " << instances << " pid: "  << iter->path().native() << std::endl;
         }
       }
     }
@@ -568,8 +540,8 @@ pid_t Process::getProcessId(const std::string& process, bool /*includeDefunct*/)
 
       boost::filesystem::path statusFile = operator/(iter->path(), "status");
       std::string procName;
-      if (getStatusHeader(statusFile.native(), "name", procName) && procName == process)
-        return OSS::string_to_number<pid_t>(iter->path().filename().native().c_str());
+      if (getStatusHeader(OSS::boost_path(statusFile), "name", procName) && procName == process)
+        return OSS::string_to_number<pid_t>(OSS::boost_file_name(iter->path()).c_str());
     }
   }
   return -1;
@@ -592,12 +564,12 @@ void Process::killAll(const std::string& process, int signal)
   {
     if (boost::filesystem::is_directory(iter->status()))
     {
-      if (iter->path().filename().native() != "self")
+      if (OSS::boost_file_name(iter->path()) != "self")
       {
         boost::filesystem::path statusFile = operator/(iter->path(), "status");
         std::string procName;
-        if (getStatusHeader(statusFile.native(), "name", procName) && procName == process)
-          ::kill(OSS::string_to_number<pid_t>(iter->path().filename().native().c_str()), signal);
+        if (getStatusHeader(OSS::boost_path(statusFile), "name", procName) && procName == process)
+          ::kill(OSS::string_to_number<pid_t>(OSS::boost_file_name(iter->path()).c_str()), signal);
       }
     }
   }
@@ -607,9 +579,6 @@ void Process::killAll(const std::string& process, int signal)
 
 bool Process::executeAndMonitor()
 {
-  if (_psCommand.empty())
-    return false;
-
   shutDown();
 
   if (!execute())
@@ -628,9 +597,6 @@ bool Process::executeAndMonitor()
 
 bool Process::executeAndMonitorMem(double maxMemPercent)
 {
-  if (_psCommand.empty())
-    return false;
-
   shutDown();
 
   if (!execute())
@@ -647,9 +613,6 @@ bool Process::executeAndMonitorMem(double maxMemPercent)
 
 bool Process::executeAndMonitorCpu(double maxCpuPercent)
 {
-  if (_psCommand.empty())
-    return false;
-
   shutDown();
 
   if (!execute())
@@ -666,9 +629,6 @@ bool Process::executeAndMonitorCpu(double maxCpuPercent)
 
 bool Process::executeAndMonitorMemCpu(double maxMemPercent, double maxCpuPercent)
 {
-  if (_psCommand.empty())
-    return false;
-
   shutDown();
 
   if (!execute())

@@ -54,13 +54,13 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/functional/hash.hpp>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_io.hpp>
 #include "OSS/Core.h"
 #include "Poco/UUIDGenerator.h"
 #include "Poco/MD5Engine.h"
 #include "Poco/File.h"
 #include "Poco/DateTime.h"
+#include "Poco/Path.h"
+#include "Poco/TemporaryFile.h"
 
 //
 // Header only implementations so we catch any compile errors
@@ -336,12 +336,52 @@ void string_trim(std::string& str)
 
 bool isFileOlderThan(const boost::filesystem::path& file, int minutes)
 {
-  Poco::File f(file.native());
+  Poco::File f(OSS::boost_path(file));
   Poco::Timestamp stamp = f.getLastModified();
   Poco::DateTime modified(stamp);
   Poco::DateTime now;
   Poco::Timespan elapsed = now - modified;
   return elapsed.totalMinutes() > minutes;
+}
+
+std::string boost_file_name(const boost::filesystem::path& path)
+{
+#if defined(BOOST_FILESYSTEM_VERSION) && BOOST_FILESYSTEM_VERSION >= 3
+  return path.filename().native();
+#else
+  return path.filename();
+#endif
+}
+
+std::string boost_path(const boost::filesystem::path& path)
+{
+#if defined(BOOST_FILESYSTEM_VERSION) && BOOST_FILESYSTEM_VERSION >= 3
+  return path.native();
+#else
+  return path.string();
+#endif
+}
+
+
+bool boost_temp_file(std::string& tempfile)
+{
+#if defined(BOOST_FILESYSTEM_VERSION) && BOOST_FILESYSTEM_VERSION >= 3
+  try
+  {
+    boost::filesystem::path tmp = boost::filesystem::temp_directory_path();
+    boost::filesystem::path fn = boost::filesystem::unique_path();
+    boost::filesystem::path tempPath = operator/(tmp, OSS::boost_file_name(fn));
+    tempfile = OSS::boost_path(tempPath);
+    return true;
+  }
+  catch(...)
+  {
+  }
+  return false;
+#else
+  std::string tmp = Poco::Path::temp();
+  tempfile = Poco::TemporaryFile::tempName(tmp);
+#endif
 }
 
 } // OSS

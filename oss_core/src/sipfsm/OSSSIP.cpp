@@ -223,7 +223,7 @@ void OSSSIP::transportInit(unsigned short udpPortBase, unsigned short udpPortMax
 void OSSSIP::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 {
   ClassType config;
-  config.load(cfgFile.native());
+  config.load(OSS::boost_path(cfgFile));
   DataType root = config.self();
   DataType listeners = root["listeners"];
   

@@ -99,11 +99,11 @@ void logger_init(
       //
       // Application override for the directory
       //
-      std::string lfile = _logFile.filename().native();
+      std::string lfile = OSS::boost_file_name(_logFile);
       _logFile = operator/(_logDirectory, lfile);
     }
 
-    AutoPtr<FileChannel> rotatedFileChannel(new FileChannel(_logFile.string()));
+    AutoPtr<FileChannel> rotatedFileChannel(new FileChannel(OSS::boost_path(_logFile)));
     rotatedFileChannel->setProperty("rotation", "daily");
     rotatedFileChannel->setProperty("archive", "timestamp");
     rotatedFileChannel->setProperty("compress", compress);

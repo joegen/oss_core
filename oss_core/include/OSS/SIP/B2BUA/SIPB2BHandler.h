@@ -33,7 +33,7 @@
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "OSS/SIP/B2BUA.h"
+#include "OSS/SIP/B2BUA/B2BUA.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 
 namespace OSS {

@@ -111,9 +111,6 @@ nobase_include_HEADERS = \
     OSS/Crypto/BlockCipher.h \
     OSS/Crypto/FileEncryptor.h \
     OSS/Crypto/OSSCrypto.h \
-    OSS/CLI/Client.h \
-    OSS/CLI/Command.h \
-    OSS/CLI/Service.h \
     OSS/Persistent/ClassType.h \
     OSS/Persistent/DataType.h \
     OSS/Persistent/Persistent.h \

@@ -22,7 +22,7 @@
 //
 
 #include "OSS/OSS.h"
-
+#include "OSS/Core.h"
 #include "Poco/Util/Util.h"
 #include "Poco/Util/Application.h"
 #include "Poco/Util/LayeredConfiguration.h"
@@ -1842,8 +1842,7 @@ void OSSApp::initialize(OSSApplication& self)
   OSS::OSS_init();
 
   boost::filesystem::path programPath= _argv[0];
-
-  std::string fn = programPath.filename().native();
+  std::string fn = OSS::boost_file_name(programPath);
   
   // std::cerr << programPath << std::endl;
   

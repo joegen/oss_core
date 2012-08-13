@@ -116,6 +116,7 @@ bool JSWorker::initialize(JSBase* pJS, const boost::filesystem::path& script,
   V8LOCK;
 
 #if ENABLE_V8_PREEMPTION
+  OSS_LOG_INFO("Google V8 Preemption ENABLED");
   return pJS->internalInitialize(script, functionName, extensionGlobals);
 #else
   JSWorker::_pJSBase = pJS;
@@ -464,14 +465,19 @@ static v8::Handle<v8::String> read_directory(const boost::filesystem::path& dire
         }
         else
         {
-          boost::filesystem::path currentFile = operator/(directory, itr->path().filename().native());
+          boost::filesystem::path currentFile = itr->path();
+          std::string fileName = OSS::boost_file_name(currentFile);
           if (boost::filesystem::is_regular(currentFile))
           {
-            if (OSS::string_ends_with(currentFile.filename().native(), ".js"))
+            if (OSS::string_ends_with(fileName, ".js"))
             {
-              FILE* file = fopen(currentFile.native().c_str(), "rb");
+              OSS_LOG_INFO("Google V8 is loading " << currentFile);
+              FILE* file = fopen(OSS::boost_path(currentFile).c_str(), "rb");
               if (file == NULL)
+              {
+                OSS_LOG_ERROR("Google V8 failed to open file " << currentFile);
                 return v8::Handle<v8::String>();
+              }
 
               fseek(file, 0, SEEK_END);
               int size = ftell(file);
@@ -485,6 +491,7 @@ static v8::Handle<v8::String> read_directory(const boost::filesystem::path& dire
               }
               fclose(file);
               data += chars;
+              OSS_LOG_INFO("Google V8 " << currentFile << " LOADED");
               delete[] chars;
             }
 
@@ -555,7 +562,12 @@ bool JSBase::internalInitialize(
   void(*extensionGlobals)(OSS_HANDLE) )
 {
   if (!boost::filesystem::exists(scriptFile))
+  {
+    OSS_LOG_ERROR("Google V8 is unable to locate file " << scriptFile);
     return false;
+  }
+
+  OSS_LOG_INFO("Google V8 JSBase::internalInitialize INVOKED");
 
   // Create a handle scope to hold the temporary references.
   v8::HandleScope handle_scope;
@@ -617,6 +629,7 @@ bool JSBase::internalInitialize(
   
   
 
+  OSS_LOG_INFO("Google V8 is loading context for " << _script);
   // Create a template for the global object where we set the
   // built-in global functions.
   //v8::Handle<v8::ObjectTemplate> global = v8::ObjectTemplate::New();
@@ -629,6 +642,7 @@ bool JSBase::internalInitialize(
   //
   // Initialize subclass global functions
   //
+  OSS_LOG_INFO("Google V8 is initializing global exports for " << _script);
   initGlobalFuncs(_globalTemplate);
 
   //
@@ -650,7 +664,7 @@ bool JSBase::internalInitialize(
   // within it.
   v8::Context::Scope context_scope(context);
 
-  
+  OSS_LOG_INFO("Google V8 context for " << _script << " CREATED");
 
   //
   // We're just about to compile the script; set up an error handler to
@@ -675,18 +689,20 @@ bool JSBase::internalInitialize(
 
       if (helperScript.IsEmpty())
       {
+        OSS_LOG_INFO("Google V8 global.detail for " << _script << " failed to compile.");
         // The script failed to compile; bail out.
         return false;
       }
 
+      OSS_LOG_INFO("Google V8 is compiling global.detail for " << _script);
       v8::Handle<v8::Script> compiledHelper = v8::Script::Compile(helperScript);
-
       if (compiledHelper.IsEmpty())
       {
         reportException(try_catch, true);
         return false;
       }
 
+      OSS_LOG_INFO("Google V8 is running global.detail for " << _script);
        // Run the script!
       v8::Handle<v8::Value> result = compiledHelper->Run();
       if (result.IsEmpty())
@@ -695,6 +711,7 @@ bool JSBase::internalInitialize(
         reportException(try_catch, true);
         return false;
       }
+      OSS_LOG_INFO("Google V8 global.detail for " << _script << " EXECUTED");
     }
     catch(OSS::Exception e)
     {
@@ -706,7 +723,7 @@ bool JSBase::internalInitialize(
   //
   // Compile the helpers
   //
-  helpers = _script.native() + ".detail";
+  helpers = OSS::boost_path(_script) + ".detail";
   if (boost::filesystem::exists(helpers))
   {
     //
@@ -723,16 +740,24 @@ bool JSBase::internalInitialize(
         }
         else
         {
-          boost::filesystem::path currentFile = operator/(helpers, itr->path().filename().native());
+          std::string fileName = OSS::boost_file_name(itr->path());
+          boost::filesystem::path currentFile = itr->path();
+          
           if (boost::filesystem::is_regular(currentFile))
           {
-            if (OSS::string_ends_with(currentFile.filename().native(), ".js"))
+            if (OSS::string_ends_with(fileName, ".js"))
             {
               //
               // Compile it!
               //
+              OSS_LOG_INFO("Google V8 is compiling helper script " << currentFile);
               v8::Handle<v8::String> helperScript;
-              helperScript = read_file(currentFile.native());
+              helperScript = read_file(OSS::boost_path(currentFile));
+              if (helperScript.IsEmpty())
+              {
+                reportException(try_catch, true);
+                return false;
+              }
 
               v8::Handle<v8::Script> compiledHelper = v8::Script::Compile(helperScript);
 
@@ -766,8 +791,9 @@ bool JSBase::internalInitialize(
   //
   // Compile the main script script
   //
+  OSS_LOG_ERROR("Google V8 is compiling main script " << _script);
   v8::Handle<v8::String> script;
-  script = read_file(_script.native());
+  script = read_file(OSS::boost_path(_script));
 
   v8::Handle<v8::Script> compiled_script = v8::Script::Compile(script);
 
@@ -777,6 +803,7 @@ bool JSBase::internalInitialize(
     return false;
   }
 
+  OSS_LOG_ERROR("Google V8 is running main script " << _script);
   // Run the script!
   v8::Handle<v8::Value> result = compiled_script->Run();
   if (result.IsEmpty())
@@ -796,7 +823,10 @@ bool JSBase::internalInitialize(
   // If there is no Process function, or if it is not a function,
   // bail out
   if (!process_val->IsFunction())
+  {
+    OSS_LOG_ERROR("Google V8 is unable to load function " << functionName);
     return false;
+  }
 
   // It is a function; cast it to a Function
   v8::Handle<v8::Function> process_fun = v8::Handle<v8::Function>::Cast(process_val);

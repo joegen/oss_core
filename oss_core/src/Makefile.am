@@ -15,28 +15,26 @@ version_Current=1
 version_Revision=5
 # Age - set to 0 of any interfaces have been removed
 #       increment if any interfaces have been added
-version_Age=0
+version_Age=1
 
 liboss_core_la_LDFLAGS = \
-	-version-info ${version_Current}:${version_Revision}:${version_Age} \
-	-L/usr/local/lib/oss-externals/lib \
-	-Wl,--rpath,/usr/local/lib/oss-externals/lib
+	-version-info ${version_Current}:${version_Revision}:${version_Age}
 
 liboss_core_la_LIBADD = \
-	/usr/local/lib/oss-externals/lib/libboost_date_time.so \
-	/usr/local/lib/oss-externals/lib/libboost_filesystem.so \
-	/usr/local/lib/oss-externals/lib/libboost_system.so \
-	/usr/local/lib/oss-externals/lib/libboost_thread.so \
-	/usr/local/lib/oss-externals/lib/libboost_regex.so \
-	/usr/local/lib/oss-externals/lib/libboost_program_options.so \
-	/usr/local/lib/oss-externals/lib/libboost_program_options.so \
-	/usr/local/lib/oss-externals/lib/libPocoFoundation.so \
-	/usr/local/lib/oss-externals/lib/libPocoUtil.so \
-	/usr/local/lib/oss-externals/lib/libPocoNet.so \
-	/usr/local/lib/oss-externals/lib/libPocoXML.so \
-	/usr/local/lib/oss-externals/lib/libhiredis.so \
-	/usr/local/lib/oss-externals/lib/liboss_config++.so \
-	-loss_v8 \
+	-lboost_date_time-mt \
+	-lboost_filesystem-mt \
+	-lboost_system-mt \
+	-lboost_thread-mt \
+	-lboost_regex-mt \
+	-lboost_program_options-mt \
+	-lboost_iostreams-mt \
+	-lPocoFoundation \
+	-lPocoUtil \
+	-lPocoNet \
+	-lPocoXML \
+	-lhiredis \
+	-lconfig++ \
+	-lv8 \
 	-lltdl \
 	-lmcrypt \
 	-lssl \
@@ -138,9 +136,6 @@ liboss_core_la_SOURCES =  \
     abnf/ABNFSIPHierPart.cpp \
     crypto/BlockCipher.cpp \
     crypto/FileEncryptor.cpp \
-    cli/CliClient.cpp \
-    cli/CliCommand.cpp \
-    cli/CliService.cpp \
     persistent/ClassType.cpp \
     persistent/DataType.cpp \
     persistent/Reference.cpp \

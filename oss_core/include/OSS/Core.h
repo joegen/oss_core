@@ -33,9 +33,12 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
+#include <fstream>
 
 #include <boost/detail/atomic_count.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/filesystem.hpp>
+
 
 namespace OSS {
 
@@ -174,7 +177,14 @@ OSS::UInt64 OSS_API getTime();
 bool OSS_API isFileOlderThan(const boost::filesystem::path& file, int minutes);
   /// Utility function to check the modified date of the file
 
+std::string OSS_API boost_file_name(const boost::filesystem::path& path);
+
+std::string OSS_API boost_path(const boost::filesystem::path& path);
+
+bool OSS_API boost_temp_file(std::string& tempfile);
+
 } // OSS
+
 
 
 #endif //OSS_CORE_H_INCLUDED

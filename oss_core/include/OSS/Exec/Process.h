@@ -90,8 +90,6 @@ protected:
   std::string _startupCommand;
   std::string _shutdownCommand;
   std::string _pidFile;
-  static boost::filesystem::path _psPath;
-  static std::string _psCommand;
   pid_t _pid;
   boost::thread* _pMonitorThread;
   OSS::semaphore _frequencySync;

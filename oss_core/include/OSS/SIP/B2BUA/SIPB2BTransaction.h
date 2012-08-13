@@ -34,7 +34,7 @@
 #include <boost/function.hpp>
 
 #include "OSS/DNS.h"
-#include "OSS/SIP/B2BUA.h"
+#include "OSS/SIP/B2BUA/B2BUA.h"
 #include "OSS/SIP/SIPTransaction.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 

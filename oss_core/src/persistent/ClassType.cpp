@@ -26,6 +26,9 @@
 #include <libconfig.h++>
 #include <boost/interprocess/creation_tags.hpp>
 #include "OSS/Logger.h"
+#include "OSS/Core.h"
+#include <fstream>
+
 
 namespace OSS {
 namespace Persistent {
@@ -37,8 +40,6 @@ namespace Persistent {
    until such time when a safe solution is achieved.
 */
 
-ClassType::FileOpenFilter ClassType::_loadFilter;
-ClassType::FileSaveFilter ClassType::_persistFilter;
 //OSS::mutex_critic_sec ClassType::_csFileMutex;
 
 ClassType::ClassType() : _isLoaded(false)
@@ -98,14 +99,7 @@ bool ClassType::load(const boost::filesystem::path& file)
   OSS_ASSERT(!_isLoaded);
   try
   {
-    std::string filterData;
-    if (ClassType::_loadFilter)
-      filterData = _loadFilter(file);
-
-    if (filterData.empty())
-      static_cast<libconfig::Config*>(_persistentClass->_config)->readFile(file.string().c_str());
-    else
-      static_cast<libconfig::Config*>(_persistentClass->_config)->readString(filterData);
+      static_cast<libconfig::Config*>(_persistentClass->_config)->readFile(OSS::boost_path(file).c_str());
   }
   catch(libconfig::ParseException e)
   {
@@ -138,36 +132,21 @@ bool ClassType::load(const boost::filesystem::path& file)
 
 bool ClassType::loadString(const std::string& config)
 {
-  OSS_ASSERT(!_isLoaded);
-  try
+  std::ofstream tempFile;
+  std::string fn;
+  if (OSS::boost_temp_file(fn))
   {
-      static_cast<libconfig::Config*>(_persistentClass->_config)->readString(config);
+    std::ofstream tempFile(fn.c_str());
+    if (tempFile.is_open())
+    {
+      tempFile.write(config.data(), config.size());
+      tempFile.close();
+      bool ok = load(fn);
+      boost::filesystem::remove(fn);
+      return ok;
+    }
   }
-  catch(libconfig::ParseException e)
-  {
-    std::ostringstream errorMsg;
-    errorMsg << "Persistent::ClassType::loadString Error reading " << " at line " << e.getLine() << " with error " << e.getError();
-    OSS_LOG_ERROR(errorMsg.str());
-    return false;
-  }
-  catch(OSS::Exception e)
-  {
-    //_csFileMutex.unlock();
-    std::ostringstream errorMsg;
-    errorMsg << "Persistent::ClassType::loadString Error reading " << " - " << e.message();
-    OSS_LOG_ERROR(errorMsg.str());
-    return false;
-  }
-  catch(...)
-  {
-    std::ostringstream errorMsg;
-    errorMsg << "Persistent::ClassType::loadString Error reading from string" ;
-    OSS_LOG_ERROR(errorMsg.str());
-    return false;
-  }
-  _isLoaded = true;
-
-  return true;
+  return false;
 }
 
 void ClassType::persist(const boost::filesystem::path& file)
@@ -177,9 +156,7 @@ void ClassType::persist(const boost::filesystem::path& file)
   _currentFile = file;
   try
   {
-    static_cast<libconfig::Config*>(_persistentClass->_config)->writeFile(file.string().c_str());
-    if (ClassType::_persistFilter)
-      _persistFilter(file);
+    static_cast<libconfig::Config*>(_persistentClass->_config)->writeFile(OSS::boost_path(file).c_str());
   }
   catch(...)
   {

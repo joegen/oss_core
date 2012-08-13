@@ -35,7 +35,7 @@
 #include "OSS/Core.h"
 #include "OSS/Net.h"
 #include "OSS/Thread.h"
-#include "OSS/SIP/B2BUA.h"
+#include "OSS/SIP/B2BUA/B2BUA.h"
 #include "OSS/SIP/SIP.h"
 #include "OSS/SIP/OSSSIP.h"
 #include "OSS/SIP/SIPTransaction.h"

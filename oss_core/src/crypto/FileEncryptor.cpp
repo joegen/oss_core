@@ -74,7 +74,7 @@ FileEncryptor::~FileEncryptor()
 
 void FileEncryptor::encrypt(const boost::filesystem::path& src, BlockCipher::Buffer& target)
 {
-  std::ifstream input(src.native().c_str());
+  std::ifstream input(OSS::boost_path(src).c_str());
   if (!input.is_open())
   {
     std::ostringstream errorMsg;
@@ -199,7 +199,7 @@ void FileEncryptor::encrypt(BlockCipher::Buffer& inputBuff, const boost::filesys
     throw BlockCipherException(errorMsg.str());
   }
 
-  std::ofstream output(out.native().c_str());
+  std::ofstream output(OSS::boost_path(out).c_str());
   if (!output.is_open())
   {
     std::ostringstream errorMsg;
@@ -218,7 +218,7 @@ void FileEncryptor::encrypt(const boost::filesystem::path& src, const boost::fil
     throw BlockCipherException(errorMsg.str());
   }
 
-  std::ofstream output(target.native().c_str());
+  std::ofstream output(OSS::boost_path(target).c_str());
   if (!output.is_open())
   {
     std::ostringstream errorMsg;
@@ -233,7 +233,7 @@ void FileEncryptor::encrypt(const boost::filesystem::path& src, const boost::fil
 
 void FileEncryptor::decrypt(const boost::filesystem::path& src, BlockCipher::Buffer& outputBuffer)
 {
-  std::ifstream input(src.native().c_str());
+  std::ifstream input(OSS::boost_path(src).c_str());
   if (!input.is_open())
   {
     std::ostringstream errorMsg;
@@ -304,7 +304,7 @@ void FileEncryptor::decrypt(const boost::filesystem::path& src, const boost::fil
     throw BlockCipherException(errorMsg.str());
   }
 
-  std::ofstream output(target.native().c_str());
+  std::ofstream output(OSS::boost_path(target).c_str());
   if (!output.is_open())
   {
     std::ostringstream errorMsg;

@@ -95,8 +95,6 @@ public:
 
   typedef boost::function<std::string(const boost::filesystem::path&)> FileOpenFilter;
   typedef boost::function<void(const boost::filesystem::path&)> FileSaveFilter;
-  static FileOpenFilter _loadFilter;
-  static FileSaveFilter _persistFilter;
 private:
   Reference::Ptr _persistentClass;
   DataType _root;
