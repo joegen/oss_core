@@ -62,7 +62,7 @@ See also: For more string comparison tricks (substring, prefix, suffix, and regu
 #include "OSS/Persistent/DataType.h"
 #include "OSS/Persistent/ClassType.h"
 #include "OSS/SIP/OSSSIP.h"
-#include "OSS/SIP/SBC/SBCManager.h"
+
 
 using OSS::Persistent::DataType;
 using OSS::Persistent::ClassType;
