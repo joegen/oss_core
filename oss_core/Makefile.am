@@ -7,5 +7,4 @@ include config/project.am
 SUBDIRS = \
 	. \
 	src \
-	include \
-	unit_test
+	include

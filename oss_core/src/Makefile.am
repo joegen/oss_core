@@ -20,7 +20,7 @@ version_Age=0
 liboss_core_la_LDFLAGS = \
 	-version-info ${version_Current}:${version_Revision}:${version_Age}
 
-liboss_core_la_LIBADD = \
+dep_libs = \
 	-lboost_date_time-mt \
 	-lboost_filesystem-mt \
 	-lboost_system-mt \
@@ -44,9 +44,10 @@ liboss_core_la_LIBADD = \
 	-lrt \
 	-lcrypt \
 	-lssl \
-	-lresolv \
-	-ldb \
-	-ldb_cxx
+	-lresolv
+
+liboss_core_la_LIBADD = \
+	${dep_libs}
   
 
 # this is helpful if you're debugging something with lots of inlines (like the UtlLink code)
@@ -196,6 +197,36 @@ liboss_core_la_SOURCES =  \
     js/JSBase.cpp \
     js/JSSIPMessage.cpp
 
+bin_PROGRAMS = oss_core_unit_test
+
+oss_core_unit_test_CXXFLAGS = \
+	${common_cxx_flags} \
+	-fno-gcse -O0 -fno-implement-inlines -fno-default-inline
+
+oss_core_unit_test_LDFLAGS = \
+	-rdynamic \
+	${dep_libs} \
+	-lgtest
+
+oss_core_unit_test_LDADD = \
+	liboss_core.la \
+	${common_libs}
+
+oss_core_unit_test_SOURCES = \
+	unit_test/TestRequestLine.cpp \
+	unit_test/TestBasicParser.cpp \
+	unit_test/TestSDP.cpp \
+	unit_test/TestCSeq.cpp \
+	unit_test/TestCache.cpp \
+	unit_test/TestFoundationAPI.cpp \
+	unit_test/TestVia.cpp \
+	unit_test/TestContact.cpp \
+	unit_test/TestRouteHeader.cpp \
+	unit_test/TestFrom.cpp \
+	unit_test/TestPersistent.cpp \
+	unit_test/TestDNS.cpp \
+	unit_test/TestSIPURI.cpp \
+	unit_test/TestSuite.cpp
 
 
 

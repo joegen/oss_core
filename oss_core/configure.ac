@@ -19,13 +19,11 @@ CHECK_LIBRT
 AC_SEARCH_LIBS([dlopen], [dl])
 CHECK_SSL
 SFAC_INIT_FLAGS
-SFAC_LIB_CORE
 AC_CHECK_FUNCS(setenv)
 AC_CONFIG_FILES([
   Makefile
   include/Makefile
   src/Makefile
-  unit_test/Makefile
 ])
 
 AC_OUTPUT
