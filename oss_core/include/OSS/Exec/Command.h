@@ -52,8 +52,8 @@ public:
   std::string readLine() const;
   bool isEOF() const;
   bool isGood() const;
-  int kill();
-  int kill(int signal);
+  bool kill();
+  bool kill(int signal);
   void close();
   void setCommand(const std::string& command);
   const std::string& getCommand() const;

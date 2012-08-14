@@ -156,28 +156,30 @@ bool Command::isGood() const
   return pStrm->good();
 }
 
-int Command::kill()
+bool Command::kill()
 {
   ipstream* pStrm = static_cast<ipstream*>(_pstream);
   if (!pStrm)
-    return -1;
+    return false;
 
   pstreambuf* pbuf = pStrm->rdbuf();
   if (!pbuf)
-    return -1;
+    return false;
   pbuf->kill();
+  return true;
 }
 
-int Command::kill(int signal)
+bool Command::kill(int signal)
 {
   ipstream* pStrm = static_cast<ipstream*>(_pstream);
   if (!pStrm)
-    return -1;
+    return false;
 
   pstreambuf* pbuf = pStrm->rdbuf();
   if (!pbuf)
-    return -1;
+    return false;
   pbuf->kill(signal);
+  return true;
 }
 
 
@@ -189,7 +191,7 @@ bool Command::exited()
   pstreambuf* pbuf = pStrm->rdbuf();
   if (!pbuf)
     return true;
-  pbuf->exited();
+  return pbuf->exited();
 }
 
 
