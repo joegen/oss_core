@@ -13,7 +13,6 @@ Url: http://www.ossapp.com
 BuildRequires: automake
 BuildRequires: gcc-c++
 BuildRequires: openssl-devel
-Requires: oss_externals
 BuildRequires: libmcrypt-devel
 Requires: libmcrypt
 BuildRequires: libtool-ltdl-devel
@@ -29,8 +28,21 @@ BuildRequires: boost-devel
 Requires: boost
 BuildRequires: v8-devel
 Requires: v8
+
 BuildRequires: poco-devel
-Requires: poco
+Requires: poco-crypto
+Requires: poco-data
+Requires: poco-foundation
+Requires: poco-mysql
+Requires: poco-net
+Requires: poco-netssl
+Requires: poco-odbc
+Requires: poco-pagecompiler
+Requires: poco-sqlite
+Requires: poco-util
+Requires: poco-xml
+Requires: poco-zip
+
 BuildRequires: libconfig-devel
 Requires: libconfig
 BuildRequires: hiredis-devel

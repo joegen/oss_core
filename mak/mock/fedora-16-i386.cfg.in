@@ -36,10 +36,4 @@ enabled=0
 [build]
 name=build
 baseurl=http://localhost:40100/Fedora_16/i386/
-
-[oss_karoo]
-name=karoo
-baseurl=http://bridge.ossapp.com/karoo/repo/1.5.0/stage/Fedora_16/i386/
-gpgcheck=0
-
 """

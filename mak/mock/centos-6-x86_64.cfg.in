@@ -53,11 +53,5 @@ enabled=0
 [build]
 name=build
 baseurl=http://localhost:40100/CentOS_6/x86_64/
-
-[oss_karoo]
-name=karoo
-baseurl=http://bridge.ossapp.com/karoo/repo/1.5.0/stage/CentOS_6/x86_64/
-gpgcheck=0
-
 """
 
