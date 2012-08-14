@@ -4,7 +4,7 @@
 # 
 AC_PREREQ(2.57)
 
-AC_INIT(oss_, 1.5.0, oss-dev@list.sipfoundry.org)
+AC_INIT(oss_, 1.6.0, oss-dev@list.sipfoundry.org)
 
 # Pass same ./configure switches all sub-projects. Crude but effective.
 AC_SUBST(CONFIGURE_OPTIONS, $@)

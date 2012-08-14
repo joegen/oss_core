@@ -13,7 +13,6 @@ Url: http://www.ossapp.com
 BuildRequires: automake
 BuildRequires: gcc-c++
 BuildRequires: openssl-devel
-BuildRequires: oss_externals-devel
 Requires: oss_externals
 BuildRequires: libmcrypt-devel
 Requires: libmcrypt
@@ -25,6 +24,19 @@ BuildRequires: db4-devel
 Requires: db4
 Requires: openssl >= 0.9.7a
 Requires: pcre >= 4.5
+
+BuildRequires: boost-devel
+Requires: boost
+BuildRequires: v8-devel
+Requires: v8
+BuildRequires: poco-devel
+Requires: poco
+BuildRequires: libconfig-devel
+Requires: libconfig
+BuildRequires: hiredis-devel
+Requires: hiredis
+BuildRequires: gtest-devel
+Requires: gtest
 
 Source: %name-%version.tar.gz
 
@@ -102,6 +114,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(644,root,root,755)
 %doc CONTRIBUTORS README NEWS TODO ChangeLog %name.configlog
+%attr(755,root,root) %{_bindir}/oss_core_unit_test
 %attr(755,root,root) %{_libdir}/liboss_core.la
 %attr(755,root,root) %{_libdir}/liboss_core.so*
 

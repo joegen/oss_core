@@ -76,7 +76,7 @@ AC_CHECK_FILE(/bin/rpm,
 AC_ARG_VAR(DISTRO, [What operating system you are compiling for. Default is ${DistroDefault}])
 test -n "${DISTRO}" || DISTRO="${DistroDefault:-centos-5-i386}"
 
-AllDistrosDefault="centos-5-i386 centos-5-x86_64 centos-6-i386 centos-6-x86_64 fedora-16-i386 fedora-16-x86_64 fedora-17-i386 fedora-17-x86_64"
+AllDistrosDefault="centos-6-i386 centos-6-x86_64 fedora-16-i386 fedora-16-x86_64 fedora-17-i386 fedora-17-x86_64"
 AC_ARG_VAR(ALL_DISTROS, [All distros which using cross distroy compiling (xc.* targets) Default is ${AllDistrosDefault}])
 ALL_DISTROS="${AllDistrosDefault}"
 
@@ -131,8 +131,6 @@ AC_ARG_ENABLE(rpm, [--enable-rpm Using mock package to build rpms],
 
   AC_CONFIG_FILES([mak/mock/logging.ini])
   AC_CONFIG_FILES([mak/mock/site-defaults.cfg])
-  AC_CONFIG_FILES([mak/mock/centos-5-i386.cfg])
-  AC_CONFIG_FILES([mak/mock/centos-5-x86_64.cfg])
   AC_CONFIG_FILES([mak/mock/centos-6-i386.cfg])
   AC_CONFIG_FILES([mak/mock/centos-6-x86_64.cfg])
   AC_CONFIG_FILES([mak/mock/fedora-16-i386.cfg])

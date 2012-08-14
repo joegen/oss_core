@@ -5,17 +5,17 @@ SUBDIRS = .
 
 lib_LTLIBRARIES = liboss_core.la
 
-INCLUDES = -I$(top_srcdir)/include -I/usr/local/lib/oss-externals/include
+INCLUDES = -I$(top_srcdir)/include
 
 ## Libtool version info - update only immediately before a release
 # Current - increment if any interfaces are added, removed, or changed
 version_Current=1
 # Revision - set to 0 if Current was incremented
 #            increment if any implementation has changed
-version_Revision=5
+version_Revision=6
 # Age - set to 0 of any interfaces have been removed
 #       increment if any interfaces have been added
-version_Age=1
+version_Age=0
 
 liboss_core_la_LDFLAGS = \
 	-version-info ${version_Current}:${version_Revision}:${version_Age}

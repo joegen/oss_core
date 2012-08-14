@@ -1,5 +1,5 @@
 AC_PREREQ(2.57)
-AC_INIT(oss_core, 1.5.1, info@ossapp.com)
+AC_INIT(oss_core, 1.6.0, info@ossapp.com)
 AC_CONFIG_AUX_DIR(config)
 m4_include([config/general.m4])
 m4_include([config/oss_lib.m4])
@@ -19,11 +19,13 @@ CHECK_LIBRT
 AC_SEARCH_LIBS([dlopen], [dl])
 CHECK_SSL
 SFAC_INIT_FLAGS
+SFAC_LIB_CORE
 AC_CHECK_FUNCS(setenv)
 AC_CONFIG_FILES([
   Makefile
   include/Makefile
   src/Makefile
+  unit_test/Makefile
 ])
 
 AC_OUTPUT
