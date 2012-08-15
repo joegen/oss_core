@@ -3,7 +3,7 @@
 ## Prerequisites (CentOS or Fedora)
 -----------------------------------
   
-### Install yum repo file from [ossapp](http://bridge.ossapp.com) repository 
+### Install yum repo file from [ossapp](http://www.ossapp.com) repository 
     cd /etc/yum.repos.d
     CentOS:  wget http://bridge.ossapp.com/karoo/repo/1.5.0/stage/karoo-1.5.0-centos.repo
     Fedora:  wget http://bridge.ossapp.com/karoo/repo/1.5.0/stage/karoo-1.5.0-fedora.repo
