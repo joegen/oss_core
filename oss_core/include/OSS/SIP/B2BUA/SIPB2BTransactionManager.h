@@ -291,6 +291,16 @@ public:
 
   const PostRouteCallback& getPostRouteCallback() const;
     /// Returns a constat reference to the post route callback
+
+  bool getExternalAddress(const OSS::IPAddress& internalIp, std::string& externalIp) const;
+    /// Return the assigned external address for a particular transport.
+    /// This is normally used in relation to messages that has to passthrough
+    /// a firewall.
+
+  bool getExternalAddress(const std::string& proto, const OSS::IPAddress& internalIp, std::string& externalIp) const;
+    /// Return the assigned external address for a particular transport.
+    /// This is normally used in relation to messages that has to passthrough
+    /// a firewall.
   
 protected:
   void handleRequest(
@@ -377,6 +387,21 @@ inline void SIPB2BTransactionManager::setPostRouteCallback(const PostRouteCallba
 inline const SIPB2BTransactionManager::PostRouteCallback& SIPB2BTransactionManager::getPostRouteCallback() const
 {
   return _postRouteCallback;
+}
+
+inline bool SIPB2BTransactionManager::getExternalAddress(
+    const OSS::IPAddress& internalIp,
+    std::string& externalIp) const
+{
+  return const_cast<SIPTransportService&>(const_cast<OSSSIP&>(_stack).transport()).getExternalAddress(internalIp, externalIp);
+}
+
+inline bool SIPB2BTransactionManager::getExternalAddress(
+  const std::string& proto,
+  const OSS::IPAddress& internalIp,
+  std::string& externalIp) const
+{
+  return const_cast<SIPTransportService&>(const_cast<OSSSIP&>(_stack).transport()).getExternalAddress(proto, internalIp, externalIp);
 }
 
 } } // OSS::SIP
