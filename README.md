@@ -35,7 +35,7 @@
     ../configure --enable-rpm \
       --with-yum-proxy=http://localhost:3128 \
       CENTOS_BASE_URL="http://ftp.jaist.ac.jp/pub/Linux/CentOS"  \
-      FEDORA_BASE_URL="http://ftp.jaist.ac.jp/pub/Linux/Fedora"} \
+      FEDORA_BASE_URL="http://ftp.jaist.ac.jp/pub/Linux/Fedora" \
       MIRROR_SITE="http://ftp.linux.ncsu.edu/pub" \
       FEDORA_ARCHIVE_BASE_URL=\
       "http://dl.fedoraproject.org/pub/archive/fedora/linux"
