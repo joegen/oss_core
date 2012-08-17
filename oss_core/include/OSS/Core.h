@@ -79,9 +79,7 @@ template <typename T>
 std::string string_from_number(T var)
   /// This is a template function that converts basic types to std::string
 {
-  std::stringstream strm;
-  strm << var;
-  return strm.str();
+  return boost::lexical_cast<std::string>(var);
 }
 
 
@@ -102,13 +100,10 @@ bool OSS_API string_caseless_ends_with(const std::string& str, const char* key);
   /// This function is NONE case-sensitive
 
 template <typename T>
-T string_to_number(const char* str)
+T string_to_number(const std::string& str)
   /// Convert a string to a numeric value
 {
-  T value;
-  std::istringstream iss(str);
-  iss >> value;
-  return value;
+  try { return boost::lexical_cast<T>(str);} catch(...){return 0;};
 }
 
 void OSS_API string_to_lower(std::string& str);
