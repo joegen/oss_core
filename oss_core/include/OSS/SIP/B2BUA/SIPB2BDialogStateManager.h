@@ -41,16 +41,14 @@ namespace SIP {
 
 template <typename T>
 class SIPB2BDialogStateManager
-  // This is an implementation of a cache manager for dialog states.
-  // External application must be to provide a persistent datastore
-  // that can insert, update and delete DialogData objects.  
-  //
+  /// This is an implementation of a cache manager for dialog states.
+  /// External application must be to provide a persistent datastore
+  /// that can insert, update and delete DialogData objects.
+  ///
 {
 protected:
   SIPB2BTransactionManager& _transactionManager;
   T& _dataStore;
-  OSS::semaphore _exitSync;
-  boost::thread* _pThread;
   mutable OSS::mutex_critic_sec _csDialogsMutex;
   int _cacheLifeTime;
   CacheManager _dialogs;
@@ -65,8 +63,6 @@ public:
     int cacheLifeTime = 3600*24) :
     _transactionManager(transactionManager),
     _dataStore(dataStore),
-    _exitSync(0, 0xFFF),
-    _pThread(0),
     _cacheLifeTime(cacheLifeTime),
     _dialogs(cacheLifeTime)
   {
@@ -74,7 +70,6 @@ public:
 
   ~SIPB2BDialogStateManager()
   {
-    stop();
   }
 
 
@@ -223,7 +218,7 @@ public:
     }
   }
 
-  bool findDialog(const SIPB2BTransaction::Ptr& pTransaction, const SIPMessage::Ptr& pMsg, DialogData& dialogData)
+  bool findDialog(const SIPB2BTransaction::Ptr& pTransaction, const SIPMessage::Ptr& pMsg, DialogData& dialogData, const std::string& sessionId = "")
   {
     OSS::mutex_critic_sec_lock lock(_csDialogsMutex);
     std::string callId = pMsg->hdrGet("call-id");
@@ -237,7 +232,20 @@ public:
       if (dialogList.size() == 1)
       {
         dialogData = dialogList.front();
-        return true;
+        if (!sessionId.empty())
+          return dialogData.sessionId == sessionId;
+      }
+      else if (!sessionId.empty())
+      {
+        for (DialogList::const_iterator iter = dialogList.begin(); iter != dialogList.end(); iter++)
+        {
+          if (iter->sessionId == sessionId)
+          {
+            dialogData = *iter;
+            return true;
+          }
+        }
+        return false;
       }
       //
       // Do it the hard way
@@ -279,6 +287,102 @@ public:
       }
     }
     return false;
+  }
+
+  bool findDialog(
+    const SIPB2BTransaction::Ptr& pTransaction,
+    const SIPMessage::Ptr& pMsg,
+    const std::string& logId,
+    std::string& senderLeg,
+    std::string& targetLeg,
+    std::string& sessionId,
+    DialogData& dialogData)
+  {
+    SIPRequestLine rline = pMsg->startLine();
+    SIPURI requestUri;
+    if (!rline.getURI(requestUri))
+      return false;
+
+    std::string method = pMsg->getMethod();
+    std::string user = requestUri.getUser();
+    //std::vector<std::string> userTokens = OSS::string_tokenize(user, "-");
+
+    SIPB2BContact::SessionInfo sessionInfo;
+    bool hasSessionInfo = SIPB2BContact::getSessionInfo(
+      this,
+      pMsg,
+      pTransaction,
+      sessionInfo);
+
+
+    if (!hasSessionInfo)
+    {
+      OSS_LOG_DEBUG(logId << "Unable to determine session information from request-uri - " << user);
+
+      if (!findDialog(pTransaction, pMsg, dialogData))
+      {
+        OSS_LOG_WARNING(logId << "No existing dialog for " << method);
+        return false;
+      }
+
+      std::string from = pMsg->hdrGet("from");
+      std::string fromTag = SIPFrom::getTag(from);
+      try
+      {
+        std::string leg1ToTag = SIPFrom::getTag(dialogData.leg1.to);
+        if (leg1ToTag == fromTag)
+        {
+          senderLeg = "leg-1";
+          targetLeg = "leg-2";
+          sessionId = dialogData.sessionId;
+          return true;
+        }
+        else
+        {
+          std::string leg2ToTag = SIPFrom::getTag(dialogData.leg2.to);
+          if (leg2ToTag == fromTag)
+          {
+            senderLeg = "leg-2";
+            targetLeg = "leg-1";
+            sessionId = dialogData.sessionId;
+            return true;
+          }
+          else
+          {
+            OSS_LOG_WARNING(logId << "Unable to determine dialog for " << method);
+            return false;
+          }
+        }
+      }catch(OSS::Exception e)
+      {
+        OSS_LOG_WARNING(logId << "No existing dialog state file for " << method << " - " << e.message());
+        return false;
+      }
+    }
+
+    //
+    // Session-id is compliant so there is less guess work we will do
+    //
+    sessionId = sessionInfo.sessionId;
+    if (sessionInfo.callIndex == 1)
+    {
+      targetLeg = "leg-2";
+      senderLeg = "leg-1";
+    }
+    else if (sessionInfo.callIndex == 2)
+    {
+      targetLeg = "leg-1";
+      senderLeg = "leg-2";
+    }
+    //
+    // Now find if the specific session exists in the dialog list
+    //
+    if (!findDialog(pTransaction, pMsg, dialogData, sessionId))
+    {
+      OSS_LOG_WARNING(logId << "No existing dialog for " << method);
+      return false;
+    }
+    return true;
   }
 
   void onUpdateInitialUASState(
@@ -488,6 +592,383 @@ public:
         OSS::log_error(logMsg.str());
       }
     }
+  }
+
+
+  void SBCDialogStateManager::onUpdateMidCallUASState(
+    SIPMessage::Ptr& pResponse,
+    SIPB2BTransaction::Ptr pTransaction,
+    const std::string& sessionId)
+  {
+    pResponse->hdrListRemove("contact");
+    if (!pResponse->is1xx(100))
+    {
+      std::string userId;
+      std::string legIndexNumber;
+      OSS_VERIFY(pTransaction->getProperty("leg-identifier", userId));
+      OSS_VERIFY(pTransaction->getProperty("leg-index", legIndexNumber));
+
+      //
+      // Prepare the new contact
+      //
+      SIPB2BContact::SessionInfo sessionInfo;
+      sessionInfo.sessionId = sessionId;
+      sessionInfo.callIndex = OSS::string_to_number<unsigned>(legIndexNumber.c_str());
+      SIPB2BContact::transform(this,
+        pResponse,
+        pTransaction,
+        pTransaction->serverTransport()->getLocalAddress(),
+        sessionInfo);
+
+
+      //
+      // Save the dialog state
+      //
+      if (pResponse->is2xx())
+      {
+        std::string legIndex;
+        try
+        {
+          DialogData dialogData;
+          if (_dataStore.retrieve(sessionId, dialogData))
+            return;
+
+          DialogData::LegInfo* pLeg;
+          if (legIndexNumber == "1")
+            pLeg = &dialogData.leg1;
+          else if (legIndexNumber == "2")
+            pLeg = &dialogData.leg2;
+          else
+            assert(false);
+
+          //
+          // Preserve leg dialog state
+          //
+          pLeg->remoteContact = pTransaction->serverRequest()->hdrGet("contact");
+          pLeg->remoteIp = pTransaction->serverTransport()->getRemoteAddress().toIpPortString();
+          pLeg->transportId = OSS::string_from_number<OSS::UInt64>(pTransaction->serverTransport()->getIdentifier());
+
+
+          std::string contentType = pResponse->hdrGet("content-type");
+          OSS::string_to_lower(contentType);
+          if (!pResponse->body().empty() && contentType == "application/sdp")
+          {
+            pLeg->localSdp = pResponse->body();
+          }
+
+          contentType = pTransaction->serverRequest()->hdrGet("content-type");
+          OSS::string_to_lower(contentType);
+          if (!pTransaction->serverRequest()->body().empty() && contentType == "application/sdp")
+          {
+            pLeg->remoteSdp = pTransaction->serverRequest()->body();
+          }
+
+          updateDialog(dialogData.sessionId, *pLeg, boost::lexical_cast<int>(legIndexNumber));
+          _dataStore.persist(dialogData);
+        }
+        catch(OSS::Exception e)
+        {
+          std::ostringstream logMsg;
+          logMsg << pTransaction->getLogId() << "Unable to save dialog state for " << legIndex << " - " << e.message();
+          OSS::log_error(logMsg.str());
+        }
+      }
+    }
+  }
+
+  void onUpdateMidCallUACState(
+    SIPMessage::Ptr& pResponse,
+    SIPB2BTransaction::Ptr pTransaction,
+    const std::string& sessionId)
+  {
+
+    //
+    // Reinvites are target refresh so update the dialog state once we get the final response
+    //
+    std::string userId;
+    std::string legIndexNumber;
+    OSS_VERIFY(pTransaction->getProperty("leg-identifier", userId));
+    OSS_VERIFY(pTransaction->getProperty("leg-index", legIndexNumber));
+
+    if (pResponse->is2xx())
+    {
+      DialogData dialogData;
+      if (!_dataStore.retrieve(sessionId, dialogData))
+        return;
+
+      DialogData::LegInfo* pLeg;
+      if (legIndexNumber == "1")
+        pLeg = &dialogData.leg1;
+      else if (legIndexNumber == "2")
+        pLeg = &dialogData.leg2;
+      else
+        assert(false);
+
+      try
+      {
+        //
+        // Preserve leg dialog state
+        //
+        pLeg->remoteContact = pTransaction->serverRequest()->hdrGet("contact");
+        pLeg->remoteIp = pTransaction->serverTransport()->getRemoteAddress().toIpPortString();
+        pLeg->transportId = OSS::string_from_number<OSS::UInt64>(pTransaction->serverTransport()->getIdentifier());
+
+
+        std::string contentType = pResponse->hdrGet("content-type");
+        OSS::string_to_lower(contentType);
+        if (!pResponse->body().empty() && contentType == "application/sdp")
+        {
+          pLeg->remoteSdp = pResponse->body();
+        }
+
+        contentType = pTransaction->clientRequest()->hdrGet("content-type");
+        OSS::string_to_lower(contentType);
+        if (!pTransaction->clientRequest()->body().empty() && contentType == "application/sdp")
+        {
+          pLeg->localSdp = pTransaction->clientRequest()->body();
+        }
+
+        updateDialog(dialogData.sessionId, *pLeg, boost::lexical_cast<int>(legIndexNumber));
+        _dataStore.persist(dialogData);
+      }
+      catch(OSS::Exception e)
+      {
+        std::ostringstream logMsg;
+        logMsg << pTransaction->getLogId() << "Unable to save dialog state for reinvite " << e.message();
+        OSS::log_error(logMsg.str());
+      }
+    }
+  }
+
+  SIPMessage::Ptr onRouteMidDialogTransaction(
+    SIPMessage::Ptr& pMsg,
+    SIPB2BTransaction::Ptr pTransaction,
+    OSS::IPAddress& localAddress,
+    OSS::IPAddress& targetAddress)
+  {
+    SIPRequestLine rline = pMsg->startLine();
+    SIPURI requestUri;
+    std::string oldVia;
+    SIPVia::msgGetTopVia(pMsg.get(), oldVia);
+    std::string branch;
+    SIPVia::getBranch(oldVia, branch);
+    if (branch.empty())
+    {
+      SIPMessage::Ptr serverError = pMsg->createResponse(SIPMessage::CODE_400_BadRequest, "Missing Via Branch Parameter");
+      return serverError;
+    }
+    if (!rline.getURI(requestUri))
+    {
+      SIPMessage::Ptr serverError = pMsg->createResponse(SIPMessage::CODE_400_BadRequest, "Bad Request URI");
+      return serverError;
+    }
+
+    //
+    // INSERT HERE
+    //
+    const std::string& logId = pTransaction->getLogId();
+    boost::filesystem::path stateFile;
+    std::string senderLeg;
+    std::string targetLeg;
+    std::string sessionId;
+    DialogData dialogData;
+
+    try
+    {
+      if (!findDialog(pTransaction, pMsg, logId,  senderLeg, targetLeg, sessionId, dialogData))
+      {
+        SIPMessage::Ptr serverError = pMsg->createResponse(SIPMessage::CODE_481_TransactionDoesNotExist, "Unable to match dialog");
+        return serverError;
+      }
+
+      //
+      // Preserve the contact user to be used by the outbound response later on
+      //
+      DialogData::LegInfo* pLeg;
+      pTransaction->setProperty("leg-identifier", requestUri.getUser());
+      if (senderLeg == "leg-1")
+      {
+        pTransaction->setProperty("leg-index", "1");
+        pLeg = &dialogData.leg1;
+      }
+      else
+      {
+        pTransaction->setProperty("leg-index", "2");
+        pLeg = &dialogData.leg2;
+      }
+      pTransaction->setProperty("session-id", sessionId);
+
+
+      std::string callId = pLeg->callId;
+      SIPFrom from;
+      from = pLeg->from;
+      SIPFrom to;
+      to = pLeg->to;
+      SIPFrom remoteContact;
+      remoteContact = pLeg->remoteContact;
+      SIPFrom localContact;
+      localContact = pLeg->localContact;
+      std::string remoteIp = pLeg->remoteIp;
+
+      std::string localRR = pLeg->localRecordRoute;
+
+      if (pLeg->noRtpProxy)
+         pTransaction->setProperty("no-rtp-proxy", "1");
+      
+      std::string hSeqNum;
+      SIPCSeq::getNumber(pMsg->hdrGet("cseq"), hSeqNum);
+      int seqNum = 0;
+      int requestSeqNum = OSS::string_to_number<int>(hSeqNum.c_str());
+      if (requestSeqNum > pLeg->localCSeq)
+        seqNum = requestSeqNum;
+      pLeg->localCSeq = seqNum;
+
+      if (pLeg->encryption == "xor")
+        pMsg->setProperty("xor", "1");
+
+      dataStore.persist(dialogData);
+
+      pMsg->hdrRemove("call-id");
+      pMsg->hdrRemove("from");
+      pMsg->hdrRemove("to");
+      pMsg->hdrRemove("cseq");
+      pMsg->hdrListRemove("contact");
+      pMsg->hdrListRemove("via");
+      pMsg->hdrListRemove("route");
+      pMsg->hdrListRemove("record-route");
+
+      std::string method;
+      rline.getMethod(method);
+      std::ostringstream newRLine;
+      newRLine << method << " " << remoteContact.getURI() << " SIP/2.0";
+      pMsg->startLine() = newRLine.str();
+
+      pMsg->hdrSet("From", from.data().c_str());
+      pMsg->hdrSet("To", to.data().c_str());
+      pMsg->hdrSet("Contact", localContact.data().c_str());
+      pMsg->hdrSet("Call-ID", callId.c_str());
+      if (!localRR.empty())
+        pMsg->hdrSet("Record-Route", localRR.c_str());
+
+      std::ostringstream newCSeq;
+      newCSeq  << seqNum << " " << method;
+      pMsg->hdrSet("CSeq", newCSeq.str().c_str());
+
+      std::vector<std::string> routeList = pLeg->routeSet;
+
+      localAddress = IPAddress::fromV4IPPort(localContact.getHostPort().c_str());
+      //
+      // The local contact may point to the external mapped address
+      // so make sure we convert it back
+      //
+      _pManager->getInternalAddress(localAddress, localAddress);
+
+      std::string transportScheme = "UDP";
+      std::string transportId;
+      transportScheme = pLeg->targetTransport;
+      OSS::string_to_upper(transportScheme);
+      pMsg->setProperty("target-transport", transportScheme.c_str());
+
+
+      transportId = pLeg->transportId;
+      pMsg->setProperty("transport-id", transportId.c_str());
+      OSS_LOG_DEBUG(logId << "Target transport identifier set by statefile: transport-id=" << transportId);
+
+
+      std::ostringstream via;
+
+      if (!localAddress.externalAddress().empty())
+        via << "SIP/2.0/" << transportScheme << " " << localAddress.externalAddress() << ":" << localAddress.getPort();
+      else
+        via << "SIP/2.0/" << transportScheme << " " << localAddress.toIpPortString();
+
+      via << ";branch=" << branch << ";rport";
+
+
+      pMsg->hdrSet("Via", via.str().c_str());
+
+      if (routeList.size() > 0)
+      {
+        SIPFrom topRoute = routeList[0];
+        bool strictRoute = topRoute.data().find(";lr") == std::string::npos;
+        if (strictRoute)
+        {
+          std::ostringstream sline;
+          sline << method << " " << topRoute.getURI() << " SIP/2.0";
+          pMsg->startLine() = sline.str();
+          std::ostringstream newRoute;
+          newRoute << "<" << remoteContact.getURI() << ">";
+          routeList[0] = newRoute.str();
+        }
+
+        for (std::vector<std::string>::iterator iter = routeList.begin();
+          iter != routeList.end(); iter++)
+        {
+          SIPRoute::msgAddRoute(pMsg.get(), *iter);
+        }
+
+        SIPURI topRouteURI = topRoute.getURI();
+
+        std::string host;
+        unsigned short port = 0;
+        topRouteURI.getHostPort(host, port);
+
+        OSS::dns_host_record_list hosts = OSS::dns_lookup_host(host);
+        if (!hosts.empty())
+        {
+          if (port == 0)
+            port = 5060;
+          targetAddress = *(hosts.begin());
+          targetAddress.setPort(port);
+        }
+      }
+
+      //
+      // User request URI if no route is set
+      //
+      if (!targetAddress.isValid())
+      {
+        SIPURI requestTarget = remoteContact.getURI();
+        std::string host;
+        unsigned short port = 0;
+        requestTarget.getHostPort(host, port);
+        OSS::dns_host_record_list hosts = OSS::dns_lookup_host(host);
+        if (!hosts.empty())
+        {
+          if (port == 0)
+            port = 5060;
+          targetAddress = *(hosts.begin());
+          targetAddress.setPort(port);
+        }
+      }
+
+      if (!targetAddress.isValid() || (targetAddress.isPrivate() && transportScheme == "UDP"))
+      {
+        //
+        // Still unable to resolve request-uri
+        //
+        targetAddress = IPAddress::fromV4IPPort(remoteIp.c_str());
+      }
+    }
+    catch(...)
+    {
+      SIPMessage::Ptr serverError = pMsg->createResponse(SIPMessage::CODE_481_TransactionDoesNotExist, "Unable to match dialog");
+      return serverError;
+    }
+
+    if (!targetAddress.isValid())
+    {
+      SIPMessage::Ptr serverError = pMsg->createResponse(SIPMessage::CODE_500_InternalServerError, "Can't Resolve Requested Target");
+      return serverError;
+    }
+
+    unsigned short targetPort = targetAddress.getPort();
+    if (targetPort == 0)
+        targetPort = 5060;
+    pMsg->setProperty("target-address", targetAddress.toString());
+    pMsg->setProperty("target-port", OSS::string_from_number<unsigned short>(targetPort));
+
+    return SIPMessage::Ptr();
   }
 };
 
