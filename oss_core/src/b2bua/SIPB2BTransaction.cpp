@@ -33,6 +33,7 @@
 
 namespace OSS {
 namespace SIP {
+namespace B2BUA {
 
 
 SIPB2BTransaction::SIPB2BTransaction(SIPB2BTransactionManager* pManager) :
@@ -888,5 +889,5 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
   return true;
 }
 
-} } // OSS::SIP
+} } } // OSS::SIP::B2BUA
 

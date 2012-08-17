@@ -41,6 +41,9 @@
 
 namespace OSS {
 namespace SIP {
+namespace B2BUA {
+
+
 
 //
 // Base Exception
@@ -276,7 +279,7 @@ inline bool SIPB2BTransaction::isMidDialog() const
     return _isMidDialog;
 }
 
-} } // OSS::SIP
+} } } // OSS::SIP::B2BUA
 
 #endif
 

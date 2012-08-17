@@ -27,7 +27,8 @@
 
 
 namespace OSS {
-namespace SIP{
+namespace SIP {
+namespace B2BUA {
 
 
 SIPB2BClientTransaction::SIPB2BClientTransaction(SIPB2BTransactionManager* pManager) :
@@ -203,7 +204,7 @@ void SIPB2BClientTransaction::runResponseTask()
   }
 }
 
-} } // OSS::SIP
+} } } // OSS::SIP::B2BUA
 
 
 

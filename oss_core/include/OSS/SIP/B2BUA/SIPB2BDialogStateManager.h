@@ -38,6 +38,7 @@
 
 namespace OSS {
 namespace SIP {
+namespace B2BUA {
 
 template <typename T>
 class SIPB2BDialogStateManager
@@ -1287,7 +1288,7 @@ public:
   }
 };
 
-} } // OSS::SIP
+} } } // OSS::SIP::B2BUA
 
 #endif	/* SIPB2BDIALOGSTATEMANAGER_H */
 

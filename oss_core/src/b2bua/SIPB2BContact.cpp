@@ -34,6 +34,7 @@
 
 namespace OSS {
 namespace SIP {
+namespace B2BUA {
 
 
 bool SIPB2BContact::_dialogStateInParams = false;
@@ -491,7 +492,7 @@ std::string SIPB2BContact::constructVia(SIPB2BTransactionManager* pManager,
   return via.str();
 }
 
-} }  // OSS::SIP
+} } } // OSS::SIP::B2BUA
 
 
 

@@ -36,16 +36,16 @@
 #include "OSS/Cache.h"
 
 
-
 namespace OSS {
 namespace SIP {
+namespace B2BUA {
 
 
-class OSS_API SIPB2BScriptableHandler : public OSS::SIP::SIPB2BHandler
+class OSS_API SIPB2BScriptableHandler : public OSS::SIP::B2BUA::SIPB2BHandler
 {
 public:
   SIPB2BScriptableHandler(SIPB2BTransactionManager* pManager,
-    OSS::SIP::SIPB2BHandler::MessageType type = OSS::SIP::SIPB2BHandler::TYPE_ANY,
+    OSS::SIP::B2BUA::SIPB2BHandler::MessageType type = OSS::SIP::B2BUA::SIPB2BHandler::TYPE_ANY,
     const std::string& contextName = "SIPB2BScriptableHandler");
     /// Creates a new SIPB2BScriptableHandler
 
@@ -284,7 +284,7 @@ inline SIPB2BTransactionManager* SIPB2BScriptableHandler::getManager() const
   return _pManager;
 }
 
-} }  // OSS::SIP
+} } } // OSS::SIP::B2BUA
 
 
 #endif	/* SIPB2BSCRIPTABLEHANDLER_H */

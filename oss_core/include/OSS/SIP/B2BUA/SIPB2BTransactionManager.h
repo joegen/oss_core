@@ -45,6 +45,7 @@
 
 namespace OSS {
 namespace SIP {
+namespace B2BUA {
 
 
 class OSS_API SIPB2BTransactionManager : private boost::noncopyable
@@ -404,7 +405,7 @@ inline bool SIPB2BTransactionManager::getExternalAddress(
   return const_cast<SIPTransportService&>(const_cast<OSSSIP&>(_stack).transport()).getExternalAddress(proto, internalIp, externalIp);
 }
 
-} } // OSS::SIP
+} } } // OSS::SIP::B2BUA
 
 #endif
 

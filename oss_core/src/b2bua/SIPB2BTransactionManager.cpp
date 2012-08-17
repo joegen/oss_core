@@ -29,8 +29,10 @@
 #include "OSS/Logger.h"
 #include "OSS/Core.h"
 
+
 namespace OSS {
 namespace SIP {
+namespace B2BUA {
 
 
 SIPB2BTransactionManager::SIPB2BTransactionManager(int minThreadcount, int maxThreadCount) :
@@ -452,5 +454,5 @@ void SIPB2BTransactionManager::onClientTransactionError(
 
 
 
-} } // OSS::SIP
+} } } // OSS::SIP::B2BUA
 

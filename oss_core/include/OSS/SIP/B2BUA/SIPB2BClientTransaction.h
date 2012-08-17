@@ -30,7 +30,8 @@
 
 
 namespace OSS {
-namespace SIP{
+namespace SIP {
+namespace B2BUA {
 
 
 class SIPB2BClientTransaction: public SIPB2BTransaction
@@ -67,7 +68,7 @@ public:
 };
 
 
-} } // OSS::SIP
+} } } // OSS::SIP
 
 #endif //SIP_OSSSIPClientTransaction_INCLUDED
 

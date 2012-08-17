@@ -29,6 +29,7 @@
 
 namespace OSS {
 namespace SIP {
+namespace B2BUA {
 
 
 struct SIPB2BDialogData
@@ -65,7 +66,7 @@ public:
   LegInfo leg2;
 };
 
-} } // OSS::SIP
+} } // OSS::SIP::B2BUA
 
 #endif	/* SIPB2BDIALOGDATA_H */
 

@@ -33,6 +33,7 @@
 
 namespace OSS {
 namespace SIP {
+namespace B2BUA {
 
 
 
@@ -121,7 +122,7 @@ public:
   static const char* _regPrefix;
 };
 
-} } // OSS::SIP::SBC
+} } } // OSS::SIP::B2BUA
 
 #endif	// SBCCONTACT_H_INCLUDED
 

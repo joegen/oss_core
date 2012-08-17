@@ -38,6 +38,7 @@
 
 namespace OSS {
 namespace SIP {
+namespace B2BUA {
 
 class SIPB2BHandler :
   public boost::enable_shared_from_this<SIPB2BHandler>,
@@ -284,7 +285,7 @@ inline SIPB2BHandler::~SIPB2BHandler()
 {
 }
 
-} } // OSS::SIP
+} } } // OSS::SIP::B2BUA
 
 
 #endif	// SIPB2BHANDLER_INCLUDED_H

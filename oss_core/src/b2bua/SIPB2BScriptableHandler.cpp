@@ -25,12 +25,13 @@
 
 namespace OSS {
 namespace SIP {
+namespace B2BUA {
 
 
 SIPB2BScriptableHandler::SIPB2BScriptableHandler(SIPB2BTransactionManager* pManager,
-  OSS::SIP::SIPB2BHandler::MessageType type,
+  OSS::SIP::B2BUA::SIPB2BHandler::MessageType type,
   const std::string& contextName) :
-    OSS::SIP::SIPB2BHandler(type),
+    OSS::SIP::B2BUA::SIPB2BHandler(type),
     _outboundScript(contextName),
     _outboundResponseScript(contextName),
     _pManager(pManager)
@@ -210,7 +211,7 @@ void SIPB2BScriptableHandler::onClientTransactionError(
 
 }
 
-} }  // OSS::SIP
+} } } // OSS::SIP::B2BUA
 
 
 
