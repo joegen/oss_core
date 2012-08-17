@@ -40,7 +40,27 @@
 
 
 namespace OSS {
-namespace SIP{
+namespace SIP {
+
+//
+// Base Exception
+//
+OSS_CREATE_INLINE_EXCEPTION(B2BUABaseException, OSS::IOException, "B2BUA Exception")
+
+//
+// Configuration related exceptions
+//
+OSS_CREATE_INLINE_EXCEPTION(B2BUAConfigException, B2BUABaseException, "B2BUA Configuration Exception")
+
+//
+// Script related exceptions
+//
+OSS_CREATE_INLINE_EXCEPTION(B2BUAScriptException, B2BUABaseException, "B2BUA Script Exception")
+
+//
+// State related exceptions
+//
+OSS_CREATE_INLINE_EXCEPTION(B2BUAStateException, B2BUABaseException, "B2BUA State Exception")
 
 class SIPB2BTransactionManager;
 
