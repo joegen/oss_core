@@ -72,6 +72,11 @@ public:
   {
   }
 
+  SIPMessage::Ptr onMidDialogTransactionCreated(
+    const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction)
+  {
+    return SIPMessage::Ptr();
+  }
 
   bool hasDialog(const std::string& callId) const
     // This function will return true if the cache has the dialog
@@ -118,6 +123,26 @@ public:
             iter->leg2 = leg;
           else
             assert(false);
+          break;
+        }
+      }
+    }
+  }
+
+  void updateDialog(const DialogData& dialog)
+  {
+    OSS::mutex_critic_sec_lock lock(_csDialogsMutex);
+    if (_dialogs.has(dialog.leg1.callId))
+    {
+      Cacheable::Ptr dialogs = _dialogs.get(dialog.leg1.callId);
+      DialogList& dialogList = boost::any_cast<DialogList&>(dialogs->data());
+      for (DialogList::iterator iter = dialogList.begin();
+        iter != dialogList.end(); iter++)
+      {
+        if (iter->sessionId == dialog.sessionId)
+        {
+          iter->leg1 = dialog.leg1;
+          iter->leg2 = dialog.leg2;
           break;
         }
       }
@@ -767,7 +792,6 @@ public:
     // INSERT HERE
     //
     const std::string& logId = pTransaction->getLogId();
-    boost::filesystem::path stateFile;
     std::string senderLeg;
     std::string targetLeg;
     std::string sessionId;
@@ -969,6 +993,297 @@ public:
     pMsg->setProperty("target-port", OSS::string_from_number<unsigned short>(targetPort));
 
     return SIPMessage::Ptr();
+  }
+
+  void onRouteAckRequest(
+    const SIPMessage::Ptr& pMsg,
+    const OSS::SIP::SIPTransportSession::Ptr& pTransport,
+    OSS::CacheManager& retransmitCache,
+    std::string& sessionId,
+    std::string& peerXOR,
+    OSS::IPAddress& routeLocalInterface,
+    OSS::IPAddress& targetAddress)
+  {
+    std::string logId = pMsg->createContextId(true);
+    if (!pMsg->isRequest("ACK"))
+    {
+      OSS_LOG_ERROR(logId << "Non-ACK Request fed to onRouteAckRequest" << pMsg->startLine());
+      throw B2BUAStateException("Non-ACK Request fed to onRouteAckRequest");
+      return;
+    }
+
+    OSS_LOG_DEBUG(logId << "Attempting to route " << pMsg->startLine());
+
+    std::string maxForwards = pMsg->hdrGet("max-forwards");
+    if (maxForwards.empty())
+    {
+      maxForwards = "70";
+    }
+    int maxF = OSS::string_to_number<int>(maxForwards.c_str());
+    if (--maxF == 0)
+    {
+      throw B2BUAStateException("Max-forward reached.");
+      return;
+    }
+    pMsg->hdrRemove("max-forwards");
+    pMsg->hdrSet("Max-Forwards", OSS::string_from_number(maxF).c_str());
+
+    pMsg->clearProperties();
+    SIPRequestLine rline = pMsg->startLine();
+    SIPURI requestUri;
+    rline.getURI(requestUri);
+
+    std::string senderLeg;
+    std::string targetLeg;
+    ClassType persistent;
+
+    SIPB2BTransaction::Ptr pTransaction; /// DUMMY
+    DialogData dialogData;
+    if (!findDialog(pTransaction, pMsg, logId, senderLeg, targetLeg, sessionId, dialogData))
+    {
+      OSS_LOG_DEBUG(logId << "No dialog data found for ACK request." );
+      throw B2BUAStateException("No dialog exist.");
+      return;
+    }
+    else
+    {
+      OSS_LOG_DEBUG(logId << "Found dialog data for ACK request. Target leg = " << targetLeg << " " << dialogData.sessionId );
+    }
+
+    try
+    {
+      DialogData::LegInfo* pLeg;
+      if (targetLeg == "leg-1")
+        pLeg = &dialogData.leg1;
+      else
+        pLeg = &dialogData.leg2;
+
+      std::string callId = pLeg->callId;
+      SIPFrom from;
+      from = pLeg->from;
+      SIPFrom to;
+      to = pLeg->to;
+      SIPFrom remoteContact;
+      remoteContact = pLeg->remoteContact;
+      SIPFrom localContact;
+      localContact = pLeg->localContact;
+      std::string localRR = pLeg->localRecordRoute;
+      std::string remoteIp = pLeg->remoteIp;
+
+      bool isXOREncrypted = false;
+      //
+      // Check if propritery xor is set
+      //
+      pMsg->getProperty("xor", peerXOR);
+      pMsg->setProperty("peer-xor", peerXOR);
+      if (pLeg->encryption == "xor")
+      {
+        pMsg->setProperty("xor", "1");
+        isXOREncrypted = true;
+      }
+
+      std::string transportScheme = pLeg->targetTransport;
+      OSS::string_to_upper(transportScheme);
+      pMsg->setProperty("target-transport", transportScheme.c_str());
+      std::string transportId = pLeg->transportId;
+
+      pMsg->hdrRemove("call-id");
+      pMsg->hdrRemove("from");
+      pMsg->hdrRemove("to");
+      pMsg->hdrListRemove("contact");
+      pMsg->hdrListRemove("via");
+      pMsg->hdrListRemove("route");
+      pMsg->hdrListRemove("record-route");
+
+      std::ostringstream newRLine;
+      newRLine << "ACK " << remoteContact.getURI() << " SIP/2.0";
+      pMsg->startLine() = newRLine.str();
+
+      pMsg->hdrSet("From", from.data().c_str());
+      pMsg->hdrSet("To", to.data().c_str());
+      pMsg->hdrSet("Contact", localContact.data().c_str());
+      pMsg->hdrSet("Call-ID", callId.c_str());
+
+      if (!localRR.empty())
+      {
+        pMsg->hdrSet("Record-Route", localRR.c_str());
+      }
+
+      SIPCSeq cseq = pMsg->hdrGet("cseq");
+      cseq.setMethod("INVITE");
+
+      std::ostringstream cacheId;
+      cacheId << pMsg->getDialogId(true) << cseq.data();
+      Cacheable::Ptr cacheItem = retransmitCache.get(cacheId.str());
+      if (cacheItem)
+      {
+        SIPMessage::Ptr p2xx = boost::any_cast<SIPMessage::Ptr>(cacheItem->data());
+        if (p2xx)
+        {
+          std::string oldVia;
+          SIPVia::msgGetTopVia(p2xx.get(), oldVia);
+          std::string branch;
+          SIPVia::getBranch(oldVia, branch);
+          if (branch.empty())
+          {
+            OSS_LOG_WARNING(logId << "Unable to process ACK. Old via appears to have no branch parameter.");
+            throw B2BUAStateException("Unable to process ACK. Old via appears to have no branch parameter.");
+          }
+
+          OSS::IPAddress viaHost = OSS::IPAddress::fromV4IPPort(localContact.getHostPort().c_str());
+          std::string newVia = SBCContact::constructVia(_pManager, pMsg, viaHost, transportScheme, branch);
+          pMsg->hdrListPrepend("Via", newVia.c_str());
+        }
+      }
+      else
+      {
+        OSS_LOG_WARNING(logId <<"Unable to process ACK. There is no 2xx retransmisison in cache.");
+        throw B2BUAStateException("Unable to process ACK. There is no 2xx retransmisison in cache.");
+      }
+
+      std::vector<std::string> routeList = pLeg->routeSet;
+      if (routeList.size() > 0)
+      {
+        SIPFrom topRoute = routeList[0];
+        bool strictRoute = topRoute.data().find(";lr") == std::string::npos;
+        if (strictRoute)
+        {
+          std::ostringstream sline;
+          sline << "ACK " << topRoute.getURI() << " SIP/2.0";
+          pMsg->startLine() = sline.str();
+          std::ostringstream newRoute;
+          newRoute << "<" << remoteContact.getURI() << ">";
+          routeList[0] = newRoute.str();
+        }
+
+        for (std::vector<std::string>::iterator iter = routeList.begin();
+          iter != routeList.end(); iter++)
+        {
+          SIPRoute::msgAddRoute(pMsg.get(), *iter);
+        }
+
+        SIPURI topRouteURI = topRoute.getURI();
+
+        std::string host;
+        unsigned short port = 0;
+        topRouteURI.getHostPort(host, port);
+
+        OSS::dns_host_record_list hosts = OSS::dns_lookup_host(host);
+        if (!hosts.empty())
+        {
+          if (port == 0)
+            port = 5060;
+          targetAddress = *(hosts.begin());
+          targetAddress.setPort(port);
+        }
+      }
+
+      //
+      // User request URI if no route is set
+      //
+      if (!targetAddress.isValid())
+      {
+        SIPURI requestTarget = remoteContact.getURI();
+        std::string host;
+        unsigned short port = 0;
+        requestTarget.getHostPort(host, port);
+        OSS::dns_host_record_list hosts = OSS::dns_lookup_host(host);
+        if (!hosts.empty())
+        {
+          if (port == 0)
+            port = 5060;
+          targetAddress = *(hosts.begin());
+          targetAddress.setPort(port);
+        }
+      }
+
+      if (!targetAddress.isValid() || (targetAddress.isPrivate() && transportScheme == "UDP"))
+      {
+        //
+        // Still unable to resolve request-uri
+        //
+        targetAddress = IPAddress::fromV4IPPort(remoteIp.c_str());
+      }
+
+      if (!_pManager->getUserAgentName().empty())
+        pMsg->hdrSet("User-Agent", _pManager->getUserAgentName().c_str());
+
+      std::string contentType = pMsg->hdrGet("content-type");
+      OSS::string_to_lower(contentType);
+
+
+      //
+      // Set the local address to the local contact
+      // This would have previously been set to the external address if one was used
+      // So make sure we transform it back to it's original state
+      //
+      routeLocalInterface = IPAddress::fromV4IPPort(localContact.getHostPort().c_str());
+      OSS_LOG_DEBUG(logId << "ACK Local interface preliminary address is " << routeLocalInterface.toString());
+      _pManager->getInternalAddress(routeLocalInterface, routeLocalInterface);
+      OSS_LOG_DEBUG(logId << "ACK Local interface post conversion address is " << routeLocalInterface.toString()
+        << " external=(" <<  routeLocalInterface.externalAddress() << ")");
+
+      if (contentType == "application/sdp")
+      {
+        std::string sdp = pMsg->getBody();
+        SBCRTPProxy::Attributes rtpAttributes;
+        rtpAttributes.verbose = false;
+        rtpAttributes.forcePEAEncryption = peerXOR == "1";
+        rtpAttributes.forceCreate = false;
+
+        DialogData::LegInfo* pSenderLeg;
+        if (senderLeg == "leg-1")
+          pSenderLeg = &dialogData.leg1;
+        else
+          pSenderLeg = &dialogData.leg2;
+
+        pSenderLeg->remoteSdp = pMsg->body();
+        //
+        // Now set the B-Leg local interface using the transport info
+        //
+        OSS::IPAddress packetLocalInterface = pTransport->getLocalAddress();
+        packetLocalInterface.externalAddress() = pTransport->getExternalAddress();
+
+        _pManager->rtpProxy().handleSDP(logId, sessionId,
+                pTransport->getRemoteAddress(), // sentyBy
+                pTransport->getRemoteAddress(), // packetSourceIp
+                packetLocalInterface,  // packetLocalInterface
+                targetAddress, // route
+                routeLocalInterface,  // routeLocalInterface
+                SBCRTPProxySession::INVITE_ACK, sdp, rtpAttributes);
+
+
+        pMsg->setBody(sdp);
+        std::string clen = OSS::string_from_number<size_t>(sdp.size());
+        pMsg->hdrSet("Content-Length", clen.c_str());
+        pLeg->localSdp = sdp;
+
+        dataStore.persist(dialogData);
+        updateDialog(dialogData);
+      }
+
+      pMsg->commitData();
+
+      std::ostringstream logMsg;
+      logMsg << logId << ">>> " << pMsg->startLine()
+        << " LEN: " << pMsg->data().size()
+        << " SRC: " << routeLocalInterface.toIpPortString()
+        << " DST: " << targetAddress.toIpPortString()
+        << " ENC: " << isXOREncrypted
+        << " PROT: " << transportScheme;
+      OSS::log_information(logMsg.str());
+
+      if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
+        OSS::log_debug(pMsg->createLoggerData());
+
+    }
+    catch(OSS::Exception e)
+    {
+      std::ostringstream logMsg;
+      logMsg << logId << "Unable to process ACK.  Exception: " << e.message();
+      OSS::log_warning(logMsg.str());
+      throw;
+    }
   }
 };
 
