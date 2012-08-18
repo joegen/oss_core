@@ -23,18 +23,26 @@
 #define	SIPB2BDIALOGSTATEMANAGER_H
 
 #include <list>
-#include "OSS/SIP/B2BUA/SIPB2BContact.h"
-#include "OSS/SIP/B2BUA/SIPB2BDialogData.h"
-#include "OSS/SIP/B2BUA/SIPB2BTransactionManager.h"
+
+#include "OSS/Cache.h"
+#include "OSS/Core.h"
+#include "OSS/Thread.h"
+#include "OSS/Logger.h"
+
 #include "OSS/SIP/SIPMessage.h"
-#include "OSS/SIP/SIPRequestLine.h"
 #include "OSS/SIP/SIPURI.h"
 #include "OSS/SIP/SIPFrom.h"
 #include "OSS/SIP/SIPContact.h"
 #include "OSS/SIP/SIPRoute.h"
-#include "OSS/Cache.h"
-#include "OSS/Core.h"
-#include "OSS/Thread.h"
+#include "OSS/SIP/SIPRequestLine.h"
+#include "OSS/SIP/SIPCSeq.h"
+#include "OSS/SIP/SIPVia.h"
+
+#include "OSS/SIP/B2BUA/SIPB2BContact.h"
+#include "OSS/SIP/B2BUA/SIPB2BDialogData.h"
+#include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
+#include "OSS/SIP/B2BUA/SIPB2BTransactionManager.h"
+
 
 namespace OSS {
 namespace SIP {
@@ -42,14 +50,10 @@ namespace B2BUA {
 
 template <typename T>
 class SIPB2BDialogStateManager
-  /// This is an implementation of a cache manager for dialog states.
-  /// External application must be to provide a persistent datastore
-  /// that can insert, update and delete DialogData objects.
-  ///
 {
 protected:
   SIPB2BTransactionManager& _transactionManager;
-  T& _dataStore;
+  T _dataStore;
   mutable OSS::mutex_critic_sec _csDialogsMutex;
   int _cacheLifeTime;
   CacheManager _dialogs;
@@ -60,10 +64,8 @@ public:
 
   SIPB2BDialogStateManager(
     SIPB2BTransactionManager& transactionManager,
-    T& dataStore,
     int cacheLifeTime = 3600*24) :
     _transactionManager(transactionManager),
-    _dataStore(dataStore),
     _cacheLifeTime(cacheLifeTime),
     _dialogs(cacheLifeTime)
   {
@@ -455,6 +457,7 @@ public:
           leg1.to = pResponse->hdrGet("from");
           leg1.remoteContact = pTransaction->serverRequest()->hdrGet("contact");
           leg1.localContact = pResponse->hdrGet("contact");
+          std::string localRecordRoute;
           if (pResponse->hdrPresent("record-route"))
             localRecordRoute = pResponse->hdrGet("record-route");
           leg1.remoteIp = pTransaction->serverTransport()->getRemoteAddress().toIpPortString();
@@ -529,7 +532,7 @@ public:
         try
         {
 
-          _dataStore.remove(sessionId)
+          _dataStore.remove(sessionId);
           removeDialog(pResponse->hdrGet("call-id"), sessionId);
         }catch(...){}
       }
@@ -564,7 +567,7 @@ public:
         leg2.localCSeq = OSS::string_to_number<unsigned long>(seqNum.c_str());
         OSS_VERIFY(pTransaction->getProperty("leg2-contact", leg2.localContact));
         pTransaction->getProperty("leg2-rr", leg2.localRecordRoute);
-        remoteIp = pTransaction->clientTransport()->getRemoteAddress().toIpPortString();
+        std::string remoteIp = pTransaction->clientTransport()->getRemoteAddress().toIpPortString();
         leg2.transportId = OSS::string_from_number<OSS::UInt64>(pTransaction->clientTransport()->getIdentifier());
         leg2.targetTransport = pTransaction->clientTransport()->getTransportScheme();
 
@@ -579,7 +582,7 @@ public:
         OSS::string_to_lower(contentType);
         if (!pTransaction->clientRequest()->body().empty() && contentType == "application/sdp")
         {
-          leg2.localSDP = pTransaction->clientRequest()->body();
+          leg2.localSdp = pTransaction->clientRequest()->body();
         }
 
         std::string noRTPProxy;
@@ -621,7 +624,7 @@ public:
   }
 
 
-  void SBCDialogStateManager::onUpdateMidCallUASState(
+  void onUpdateMidCallUASState(
     SIPMessage::Ptr& pResponse,
     SIPB2BTransaction::Ptr pTransaction,
     const std::string& sessionId)
@@ -851,7 +854,7 @@ public:
       if (pLeg->encryption == "xor")
         pMsg->setProperty("xor", "1");
 
-      dataStore.persist(dialogData);
+      _dataStore.persist(dialogData);
 
       pMsg->hdrRemove("call-id");
       pMsg->hdrRemove("from");
@@ -886,7 +889,7 @@ public:
       // The local contact may point to the external mapped address
       // so make sure we convert it back
       //
-      _pManager->getInternalAddress(localAddress, localAddress);
+      _transactionManager.getInternalAddress(localAddress, localAddress);
 
       std::string transportScheme = "UDP";
       std::string transportId;
@@ -1036,7 +1039,6 @@ public:
 
     std::string senderLeg;
     std::string targetLeg;
-    ClassType persistent;
 
     SIPB2BTransaction::Ptr pTransaction; /// DUMMY
     DialogData dialogData;
@@ -1132,7 +1134,7 @@ public:
           }
 
           OSS::IPAddress viaHost = OSS::IPAddress::fromV4IPPort(localContact.getHostPort().c_str());
-          std::string newVia = SBCContact::constructVia(_pManager, pMsg, viaHost, transportScheme, branch);
+          std::string newVia = SIPB2BContact::constructVia(&_transactionManager, pMsg, viaHost, transportScheme, branch);
           pMsg->hdrListPrepend("Via", newVia.c_str());
         }
       }
@@ -1206,8 +1208,8 @@ public:
         targetAddress = IPAddress::fromV4IPPort(remoteIp.c_str());
       }
 
-      if (!_pManager->getUserAgentName().empty())
-        pMsg->hdrSet("User-Agent", _pManager->getUserAgentName().c_str());
+      if (!_transactionManager.getUserAgentName().empty())
+        pMsg->hdrSet("User-Agent", _transactionManager.getUserAgentName().c_str());
 
       std::string contentType = pMsg->hdrGet("content-type");
       OSS::string_to_lower(contentType);
@@ -1220,17 +1222,14 @@ public:
       //
       routeLocalInterface = IPAddress::fromV4IPPort(localContact.getHostPort().c_str());
       OSS_LOG_DEBUG(logId << "ACK Local interface preliminary address is " << routeLocalInterface.toString());
-      _pManager->getInternalAddress(routeLocalInterface, routeLocalInterface);
+      _transactionManager.getInternalAddress(routeLocalInterface, routeLocalInterface);
       OSS_LOG_DEBUG(logId << "ACK Local interface post conversion address is " << routeLocalInterface.toString()
         << " external=(" <<  routeLocalInterface.externalAddress() << ")");
 
       if (contentType == "application/sdp")
       {
         std::string sdp = pMsg->getBody();
-        SBCRTPProxy::Attributes rtpAttributes;
-        rtpAttributes.verbose = false;
-        rtpAttributes.forcePEAEncryption = peerXOR == "1";
-        rtpAttributes.forceCreate = false;
+        
 
         DialogData::LegInfo* pSenderLeg;
         if (senderLeg == "leg-1")
@@ -1245,21 +1244,27 @@ public:
         OSS::IPAddress packetLocalInterface = pTransport->getLocalAddress();
         packetLocalInterface.externalAddress() = pTransport->getExternalAddress();
 
-        _pManager->rtpProxy().handleSDP(logId, sessionId,
+#if 0
+        SBCRTPProxy::Attributes rtpAttributes;
+        rtpAttributes.verbose = false;
+        rtpAttributes.forcePEAEncryption = peerXOR == "1";
+        rtpAttributes.forceCreate = false;
+
+        _transactionManager.rtpProxy().handleSDP(logId, sessionId,
                 pTransport->getRemoteAddress(), // sentyBy
                 pTransport->getRemoteAddress(), // packetSourceIp
                 packetLocalInterface,  // packetLocalInterface
                 targetAddress, // route
                 routeLocalInterface,  // routeLocalInterface
                 SBCRTPProxySession::INVITE_ACK, sdp, rtpAttributes);
-
+#endif
 
         pMsg->setBody(sdp);
         std::string clen = OSS::string_from_number<size_t>(sdp.size());
         pMsg->hdrSet("Content-Length", clen.c_str());
         pLeg->localSdp = sdp;
 
-        dataStore.persist(dialogData);
+        _dataStore.persist(dialogData);
         updateDialog(dialogData);
       }
 

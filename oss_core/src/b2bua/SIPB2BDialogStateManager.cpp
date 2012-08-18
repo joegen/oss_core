@@ -19,54 +19,32 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#ifndef SIPB2BDIALOGDATA_H
-#define	SIPB2BDIALOGDATA_H
 
-
-#include <string>
-#include <vector>
+#include "OSS/SIP/B2BUA/SIPB2BDialogStateManager.h"
 
 
 namespace OSS {
 namespace SIP {
 namespace B2BUA {
 
+//
+// Note SIPB2BDialogStateManager is a header only template class.
+// This CPP file only serves as an early catch-all for compilation errors
+//
 
-struct SIPB2BDialogData
+struct DummyDataStore
 {
-public:
-  struct LegInfo
-  {
-    std::string dialogId;
-    std::string callId;
-    std::string from;
-    std::string to;
-    std::string remoteContact;
-    std::string localContact;
-    std::string localRecordRoute;
-    std::string remoteIp;
-    std::string transportId;
-    std::string targetTransport;
-    std::string localSdp;
-    std::string remoteSdp;
-    std::vector<std::string> routeSet;
-    std::string encryption;
-    bool noRtpProxy;
-    unsigned long localCSeq;
-
-    LegInfo()
-    {
-      noRtpProxy = false;
-      localCSeq = 0;
-    }
-  };
-
-  std::string sessionId;
-  LegInfo leg1;
-  LegInfo leg2;
+  bool persist(const SIPB2BDialogData&){return false;}
 };
 
-} } }// OSS::SIP::B2BUA
+typedef  SIPB2BDialogStateManager<DummyDataStore> DummyManager_Base;
 
-#endif	/* SIPB2BDIALOGDATA_H */
+class DummyManager : public DummyManager_Base
+{
+public:
+  DummyManager(SIPB2BTransactionManager& trn) : DummyManager_Base(trn)
+  {
+  }
+};
 
+} } }
