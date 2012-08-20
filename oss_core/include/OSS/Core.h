@@ -167,7 +167,7 @@ int OSS_API getRandom();
   /// Generate pseudo random number based on time ticks
 
 OSS::UInt64 OSS_API getTime();
-  /// Return time of day
+  /// Return milliseconds since epoch
 
 bool OSS_API isFileOlderThan(const boost::filesystem::path& file, int minutes);
   /// Utility function to check the modified date of the file
