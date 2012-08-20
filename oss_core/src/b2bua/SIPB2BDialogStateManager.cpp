@@ -34,7 +34,10 @@ namespace B2BUA {
 
 struct DummyDataStore
 {
-  bool persist(const SIPB2BDialogData&){return false;}
+  bool persist(const DialogData&){return false;}
+  void getAll(DialogList& dialogs){};
+  void removeSession(const std::string& sessionId){}
+  void removeAllDialogs(const std::string& callId);
 };
 
 typedef  SIPB2BDialogStateManager<DummyDataStore> DummyManager_Base;

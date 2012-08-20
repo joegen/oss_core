@@ -83,7 +83,8 @@ public:
     const SIPMessage::Ptr& pRequest,
     const OSS::IPAddress& localInterface,
     const std::string& transportScheme,
-    const std::string& branchHash);
+    const std::string& branchHash,
+    bool canUseExternalAddress = true);
 
   static bool getSessionInfo(
     SIPB2BTransactionManager* pManager,

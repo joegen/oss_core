@@ -25,7 +25,10 @@
 
 #include <string>
 #include <vector>
+#include <list>
 
+#include "OSS/OSS.h"
+#include "OSS/Core.h"
 
 namespace OSS {
 namespace SIP {
@@ -60,11 +63,26 @@ public:
       localCSeq = 0;
     }
   };
+  
+  SIPB2BDialogData()
+  {
+    timeStamp = OSS::getTime();
+    connectTime = timeStamp;
+    disconnectTime = timeStamp;
+    sessionAge = timeStamp;
+  }
 
   std::string sessionId;
   LegInfo leg1;
   LegInfo leg2;
+  OSS::UInt64 timeStamp;
+  OSS::UInt64 connectTime;
+  OSS::UInt64 disconnectTime;
+  OSS::UInt64 sessionAge;
 };
+
+typedef SIPB2BDialogData DialogData;
+typedef std::list<DialogData> DialogList;
 
 } } }// OSS::SIP::B2BUA
 

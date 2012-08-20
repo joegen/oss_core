@@ -474,7 +474,8 @@ std::string SIPB2BContact::constructVia(SIPB2BTransactionManager* pManager,
   const SIPMessage::Ptr& pRequest,
   const OSS::IPAddress& localInterface,
   const std::string& transportScheme,
-  const std::string& branchHash)
+  const std::string& branchHash,
+  bool canUseExternalAddress)
 {
   std::string targetTransport = transportScheme;
   OSS::string_to_upper(targetTransport);
@@ -482,7 +483,7 @@ std::string SIPB2BContact::constructVia(SIPB2BTransactionManager* pManager,
   via << "SIP/2.0/" << targetTransport << " " ;
 
   std::string externalIp;
-  if (pManager->getExternalAddress(transportScheme, localInterface, externalIp) && !externalIp.empty())
+  if (canUseExternalAddress && pManager->getExternalAddress(transportScheme, localInterface, externalIp) && !externalIp.empty())
     via << externalIp << ":" << localInterface.getPort();
   else
     via << localInterface.toIpPortString();
