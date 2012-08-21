@@ -1,27 +1,29 @@
-# Initial Version Copyright (C) 2010 eZuce, Inc., All Rights Reserved.
-# Licensed to the User under the LGPL license.
-#
-# 
 AC_PREREQ(2.57)
-
-AC_INIT(oss_, 1.6.0, oss-dev@list.sipfoundry.org)
-
-# Pass same ./configure switches all sub-projects. Crude but effective.
-AC_SUBST(CONFIGURE_OPTIONS, $@)
-
-m4_include([config/autoconf-2.66.m4])
-m4_include([config/oss_lib2.m4])
-m4_include([mak/opensuse-build-service.m4])
-m4_include([mak/rpm.m4])
-m4_include([mak/centos-iso.m4])
-m4_sinclude([custom/custom.m4])
-
+AC_INIT(oss_core, 1.6.0, info@ossapp.com)
+AC_CONFIG_AUX_DIR(config)
+m4_include([config/general.m4])
+m4_include([config/oss_lib.m4])
+AM_INIT_AUTOMAKE(foreign tar-ustar)
+SFAC_AUTOMAKE_VERSION([1.6])
+AC_CONFIG_SRCDIR([src/Core.cpp])
+AM_CONFIG_HEADER([src/config.h])
+AC_PROG_LIBTOOL
+AC_LTDL_SHLIBEXT
+AC_PATH_PROG([BASH], [bash])
+AC_PROG_CXX
+AX_COMPILER_VENDOR
+AC_PROG_CC
+CHECK_XARGS_REPLACE
+CHECK_MSG_NOSIGNAL
+CHECK_LIBRT
+AC_SEARCH_LIBS([dlopen], [dl])
+CHECK_SSL
+SFAC_INIT_FLAGS
+AC_CHECK_FUNCS(setenv)
 AC_CONFIG_FILES([
-	Makefile
-	mak/00-modules.mk
-	mak/05-build.mk
-	mak/20-list-dependencies.mk
+  Makefile
+  include/Makefile
+  src/Makefile
 ])
 
 AC_OUTPUT
-
