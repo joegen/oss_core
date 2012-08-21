@@ -33,6 +33,7 @@
 #include "OSS/Thread.h"
 #include "OSS/Exec/Command.h"
 #include <unistd.h>
+#include <signal.h>
 #include <boost/filesystem.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
