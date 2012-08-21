@@ -351,6 +351,9 @@ protected:
     /// This configuration file will be used by the SIP stack
     /// to initialize its listeners
 
+  SIPB2BHandler::Ptr findHandler(const OSS::SIP::SIPMessage::Ptr& pMsg) const;
+    /// Returns the iterator for the request handler if one is registered
+
 private:
   OSS::thread_pool _threadPool;
   OSSSIP _stack;

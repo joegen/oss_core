@@ -37,7 +37,7 @@ struct DummyDataStore
   bool persist(const DialogData&){return false;}
   void getAll(DialogList& dialogs){};
   void removeSession(const std::string& sessionId){}
-  void removeAllDialogs(const std::string& callId);
+  void removeAllDialogs(const std::string& callId){}
 };
 
 typedef  SIPB2BDialogStateManager<DummyDataStore> DummyManager_Base;
