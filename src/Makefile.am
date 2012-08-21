@@ -1,6 +1,3 @@
-## Process this file with automake to produce Makefile.in
-include $(top_srcdir)/config/subdir.am
-
 SUBDIRS = .
 
 lib_LTLIBRARIES = liboss_core.la
@@ -48,7 +45,6 @@ dep_libs = \
 
 liboss_core_la_LIBADD = \
 	${dep_libs}
-  
 
 # this is helpful if you're debugging something with lots of inlines (like the UtlLink code)
 # 		-fno-gcse -O0 -fno-implement-inlines -fno-default-inline
@@ -57,7 +53,7 @@ liboss_core_la_CXXFLAGS = \
 	-DOSSLIBS_CONFDIR=\"@OSSLIBS_CONFDIR@\" \
 	-DOSSAPP_LIB_VERSION=${version_Current}.${version_Revision}.${version_Age} \
 	-fno-gcse -O0 -fno-implement-inlines -fno-default-inline
-	
+
 liboss_core_la_CFLAGS = 	-std=c99
 
 liboss_core_la_SOURCES =  \
