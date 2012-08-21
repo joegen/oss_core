@@ -2,12 +2,13 @@
 
 ## Prerequisites (CentOS or Fedora)
 -----------------------------------
-  
-### Install yum repo file from [ossapp](http://www.ossapp.com) repository 
-    cd /etc/yum.repos.d
-    CentOS:  wget http://bridge.ossapp.com/karoo/repo/1.5.0/stage/karoo-1.5.0-centos.repo
-    Fedora:  wget http://bridge.ossapp.com/karoo/repo/1.5.0/stage/karoo-1.5.0-fedora.repo
-    yum update
+To list build dependencies
+
+  grep '^BuildRequires' oss_core/oss_core.spec.in | awk '{print $2}'
+
+To list runtime dependencies
+
+  grep '^Requires' oss_core/oss_core.spec.in | awk '{print $2}'
   
 ## Building From Source (CentOS or Fedora)
 ------------------------------------------
@@ -18,7 +19,7 @@
     autoreconf -if
     mkdir -p .build
     cd .build
-    ../configure --prefix=`pwd`/root
+    ../configure
   
 ## Building RPMS (CentOS or Fedora)
 -----------------------------------
@@ -31,5 +32,5 @@
     mkdir -p .build
     cd .build
     ../configure
-    make install
+    make dist
     rpmbuild -ta oss_core-*tar.gz
