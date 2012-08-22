@@ -463,6 +463,39 @@ void SIPB2BTransactionManager::onClientTransactionError(
   }
 }
 
+SIPMessage::Ptr SIPB2BTransactionManager::postMidDialogTransactionCreated(
+    const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction)
+{
+  return SIPMessage::Ptr();
+}
+
+bool SIPB2BTransactionManager::postRetargetTransaction(
+    SIPMessage::Ptr& pRequest,
+    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction)
+{
+  false;
+}
+
+SIPMessage::Ptr SIPB2BTransactionManager::postRouteUpperReg(
+    SIPMessage::Ptr& pRequest,
+    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
+    OSS::IPAddress& localInterface,
+    OSS::IPAddress& target)
+{
+  //
+  // Note:  Applications must implement this function;
+  //
+  OSS_ASSERT(false);
+  return SIPMessage::Ptr();
+}
+
+bool SIPB2BTransactionManager::postRouteByAOR(
+    SIPMessage* pRequest,
+    OSS::SIP::B2BUA::SIPB2BTransaction* pTransaction,
+    bool userComparisonOnly)
+{
+  false;
+}
 
 
 } } } // OSS::SIP::B2BUA

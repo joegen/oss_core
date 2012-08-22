@@ -23,6 +23,7 @@
 #ifndef SIPB2BSCRIPTABLEHANDLER_H_INCLUDED
 #define SIPB2BSCRIPTABLEHANDLER_H_INCLUDED
 
+#include <map>
 
 #include "OSS/Cache.h"
 #include "OSS/SIP/SIPMessage.h"
@@ -33,7 +34,6 @@
 #include "OSS/SIP/SIPRoute.h"
 #include "OSS/JS/JSSIPMessage.h"
 #include "OSS/SIP/B2BUA/SIPB2BHandler.h"
-#include "OSS/SIP/B2BUA/SIPB2BTransactionManager.h"
 #include "OSS/SIP/B2BUA/SIPB2BContact.h"
 
 
@@ -42,11 +42,14 @@ namespace SIP {
 namespace B2BUA {
 
 class SIPB2BTransactionManager;
+class SIPB2BDialogStateManager;
 
 class OSS_API SIPB2BScriptableHandler : public OSS::SIP::B2BUA::SIPB2BHandler
 {
 public:
-  SIPB2BScriptableHandler(SIPB2BTransactionManager* pManager,
+  SIPB2BScriptableHandler(
+    SIPB2BTransactionManager* pManager,
+    SIPB2BDialogStateManager* pDialogState,
     const std::string& contextName = "B2BUA Scriptable Handler");
     /// Creates a new B2BUA default behavior
     /// This is the base class of all B2BUA behaviors
@@ -290,6 +293,15 @@ public:
     /// Signals that an error occured on the transaction
     ///
     /// The transaction will be destroyed automatically after this function call
+
+  //
+  // INVITE handlers
+  //
+  virtual void onProcessUnknownInviteRequest(
+    const OSS::SIP::SIPMessage::Ptr& pMsg,
+    const OSS::SIP::SIPTransportSession::Ptr& pTransport);
+    /// Callback for ACK and 200 OK retransmission for INVITE
+
 protected:
   OSS::JS::JSSIPMessage _inboundScript;
   OSS::JS::JSSIPMessage _authScript;
@@ -297,7 +309,11 @@ protected:
   OSS::JS::JSSIPMessage _routeFailoverScript;
   OSS::JS::JSSIPMessage _outboundScript;
   OSS::JS::JSSIPMessage _outboundResponseScript;
-  SIPB2BTransactionManager* _pManager;
+  SIPB2BTransactionManager* _pTransactionManager;
+  SIPB2BDialogStateManager* _pDialogState;
+  OSS::CacheManager _2xxRetransmitCache;
+  OSS::mutex_read_write _rwInvitePoolMutex;
+  std::map<std::string, SIPMessage::Ptr> _invitePool;
 };
 
 //
@@ -307,7 +323,7 @@ protected:
 
 inline SIPB2BTransactionManager* SIPB2BScriptableHandler::getManager() const
 {
-  return _pManager;
+  return _pTransactionManager;
 }
 
 } } } // OSS::SIP::B2BUA

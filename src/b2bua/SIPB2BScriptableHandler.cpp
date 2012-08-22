@@ -31,6 +31,7 @@
 #include "OSS/ABNF/ABNFSIPIPV4Address.h"
 #include "OSS/ABNF/ABNFSIPIPV6Address.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransactionManager.h"
+#include "OSS/SIP/B2BUA/SIPB2BDialogStateManager.h"
 #include "OSS/SIP/B2BUA/SIPB2BScriptableHandler.h"
 
 
@@ -40,7 +41,8 @@ namespace B2BUA {
 
 
 SIPB2BScriptableHandler::SIPB2BScriptableHandler(
-  SIPB2BTransactionManager* pManager,
+  SIPB2BTransactionManager* pTransactionManager,
+  SIPB2BDialogStateManager* pDialogState,
   const std::string& contextName) :
   OSS::SIP::B2BUA::SIPB2BHandler(OSS::SIP::B2BUA::SIPB2BHandler::TYPE_ANY),
   _inboundScript(contextName),
@@ -49,7 +51,9 @@ SIPB2BScriptableHandler::SIPB2BScriptableHandler(
   _routeFailoverScript(contextName),
   _outboundScript(contextName),
   _outboundResponseScript(contextName),
-  _pManager(pManager)
+  _pTransactionManager(pTransactionManager),
+  _pDialogState(pDialogState),
+  _2xxRetransmitCache(32)
 {
 }
 
@@ -72,6 +76,22 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onTransactionCreated(
   /// This precedes any other transaction callbacks and therefore is the best place
   /// to initialize anything that would be needed by the transaction processing
 {
+  //
+  // Force RTP proxy by default
+  //
+  if (pRequest->isRequest("INVITE"))
+  {
+    pTransaction->setProperty("require-rtp-proxy", "1");
+  }
+  else if (pRequest->isRequest("BYE"))
+  {
+    if (!pRequest->isMidDialog())
+    {
+      SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_400_BadRequest);
+      return serverError;
+    }
+  }
+
   pRequest->userData() = static_cast<OSS_HANDLE>(pTransaction.get());
 
   if (_inboundScript.isInitialized())
@@ -84,7 +104,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onTransactionCreated(
   }
 
   if (pRequest->isMidDialog() && !pRequest->isRequest("SUBSCRIBE"))
-    return _pManager->postMidDialogTransactionCreated(pRequest, pTransaction);
+    return _pTransactionManager->postMidDialogTransactionCreated(pRequest, pTransaction);
 
   return OSS::SIP::SIPMessage::Ptr();
 }
@@ -95,7 +115,6 @@ void SIPB2BScriptableHandler::onDestroyTransaction(OSS::SIP::B2BUA::SIPB2BTransa
     /// to the transaction.  It is a mere indication that the transaction
     /// thread would now destroy its internal reference to the transaction.
 {
-
 }
 
 SIPMessage::Ptr SIPB2BScriptableHandler::onAuthenticateTransaction(
@@ -164,16 +183,169 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
   OSS::IPAddress& target)
 {
   pRequest->userData() = static_cast<OSS_HANDLE>(pTransaction.get());
+
+  if (pRequest->isRequest("CANCEL"))
+  {
+    std::string inviteId;
+    SIPMessage::Ptr pInvite;
+    pRequest->getTransactionId(inviteId, "invite");
+    {
+      OSS::mutex_read_lock _rwlock(_rwInvitePoolMutex);
+      std::map<std::string, SIPMessage::Ptr>::iterator inviteIter = _invitePool.find(inviteId);
+      if (inviteIter == _invitePool.end())
+      {
+        SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_481_TransactionDoesNotExist );
+        return serverError;
+      }
+      pInvite = inviteIter->second;
+    }
+
+    pRequest.reset();
+    pRequest = SIPMessage::Ptr(new SIPMessage(*(pInvite.get())));
+
+    SIPRequestLine startLine = pRequest->startLine();
+    startLine.setMethod("CANCEL");
+    pRequest->setStartLine(startLine.data());
+
+    SIPCSeq cseq = pRequest->hdrGet("cseq");
+    cseq.setMethod("CANCEL");
+    pRequest->hdrRemove("cseq");
+    pRequest->hdrSet("CSeq", cseq.data().c_str());
+
+    pRequest->setBody("");
+    pRequest->hdrRemove("content-length");
+    pRequest->hdrSet("Content-Length", "0");
+    //
+    // Remove headers that do not have semantics in CANCEL
+    //
+    pRequest->hdrRemove("content-type");
+    pRequest->hdrRemove("min-se");
+    pRequest->hdrRemove("allow");
+    pRequest->hdrRemove("supported");
+    pRequest->hdrRemove("session-expires");
+    pRequest->hdrRemove("proxy-authorization");
+    pRequest->hdrRemove("authorization");
+
+    std::string isXorValue;
+    if (pInvite->getProperty("xor", isXorValue) && isXorValue == "1")
+      pRequest->setProperty("xor", "1");
+
+    std::string localAddress;
+    OSS_VERIFY(pInvite->getProperty("local-address", localAddress));
+    pRequest->setProperty("local-address", localAddress);
+
+    std::string targetAddress;
+    OSS_VERIFY(pInvite->getProperty("target-address", targetAddress));
+    pRequest->setProperty("target-address", targetAddress);
+
+    std::string targetTransport;
+    OSS_VERIFY(pInvite->getProperty("target-transport", targetTransport));
+    pRequest->setProperty("target-transport", targetTransport);
+
+    localInterface = IPAddress::fromV4IPPort(localAddress.c_str());
+    OSS_VERIFY(localInterface.isValid());
+
+    target = IPAddress::fromV4IPPort(targetAddress.c_str());
+    OSS_VERIFY(target.isValid());
+
+    return OSS::SIP::SIPMessage::Ptr();
+  }
+
+
+  bool isInvite = pRequest->isRequest("INVITE");
   if (pRequest->isMidDialog() && !pRequest->isRequest("SUBSCRIBE"))
   {
-    return _pManager->postRouteMidDialogTransaction(pRequest, pTransaction, localInterface, target);
+    SIPMessage::Ptr ret = _pDialogState->onRouteMidDialogTransaction(pRequest, pTransaction, localInterface, target);
+    if (isInvite)
+      pTransaction->setProperty("reinvite", "1");
+
+    return ret;
   }
   else if (SIPB2BContact::isRegisterRoute(pRequest))
   {
     return onRouteUpperReg(pRequest, pTransaction, localInterface, target);
   }
+  else if (isInvite)
+  {
+    //
+    // This is a new call
+    //
+    if (_pDialogState->hasDialog(pRequest->hdrGet("call-id")))
+    {
+      SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_400_BadRequest, "Dialog already exist!");
+      return serverError;
+    }
+    SIPMessage::Ptr ret = onRouteOutOfDialogTransaction(pRequest, pTransaction, localInterface, target);
+    if (ret)
+    {
+      //
+      // Route transaction produced a response.  This normally means an error occured in routing
+      //
+      return ret;
+    }
+
+    std::string oldVia;
+    SIPVia::msgGetTopVia(pRequest.get(), oldVia);
+    std::string branch;
+    SIPVia::getBranch(oldVia, branch);
+    if (branch.empty())
+    {
+      SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_400_BadRequest, "Missing Via Branch Parameter");
+      return serverError;
+    }
+    //
+    // Prepare the SIP Message for outbound
+    //
+    pRequest->hdrListRemove("Route");
+    pRequest->hdrListRemove("Record-Route");
+    pRequest->hdrListRemove("Via");
+
+    //
+    // Preserver the contact as property header.  it will be used for transformation later
+    //
+    pRequest->setProperty("inbound-contact", pRequest->hdrGet("contact").c_str());
+    pRequest->hdrListRemove("Contact");
+    //
+    // Set the target tranport
+    //
+    std::string targetTransport;
+    if (!pRequest->getProperty("target-transport", targetTransport) || targetTransport.empty())
+    {
+      targetTransport = "udp";
+      pRequest->setProperty("target-transport", "udp");
+    }
+    //
+    // Prepare the new via
+    //
+    OSS::string_to_upper(targetTransport);
+    std::ostringstream viaBranch;
+    viaBranch << "z9hG4bK" << OSS::string_hash(branch.c_str());
+    std::string newVia = SIPB2BContact::constructVia(_pTransactionManager, pRequest, localInterface, targetTransport, viaBranch.str());
+    pRequest->hdrListPrepend("Via", newVia);
+    //
+    // Prepare the new contact
+    //
+    std::ostringstream sessionId;
+    sessionId << OSS::string_hash(pRequest->hdrGet("call-id").c_str()) << OSS::getRandom();
+    pTransaction->setProperty("session-id", sessionId.str());
+
+    SIPB2BContact::SessionInfo sessionInfo;
+    sessionInfo.sessionId = sessionId.str();
+    sessionInfo.callIndex = 2;
+
+    SIPB2BContact::transform(_pTransactionManager,
+      pRequest,
+      pTransaction,
+      localInterface,
+      sessionInfo);
+
+    return OSS::SIP::SIPMessage::Ptr();
+  }
   else
   {
+    //
+    // This is a new request
+    //
     return onRouteOutOfDialogTransaction(pRequest, pTransaction, localInterface, target);
   }
 }
@@ -184,7 +356,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteOutOfDialogTransaction(
   OSS::IPAddress& localInterface,
   OSS::IPAddress& target)
 {
-  if (!_pManager->postRetargetTransaction(pRequest, pTransaction))
+  if (!_pTransactionManager->postRetargetTransaction(pRequest, pTransaction))
   {
     if (!_routeScript.isInitialized() || !_routeScript.processRequest(pRequest))
     {
@@ -292,7 +464,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteOutOfDialogTransaction(
     //
     // local-interface is not set by the script.  use the default interface
     //
-    localInterface = _pManager->stack().transport().defaultListenerAddress();
+    localInterface = _pTransactionManager->stack().transport().defaultListenerAddress();
   }
 
   return OSS::SIP::SIPMessage::Ptr();
@@ -304,7 +476,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteUpperReg(
   OSS::IPAddress& localInterface,
   OSS::IPAddress& target)
 {
-  return _pManager->postRouteUpperReg(pRequest, pTransaction, localInterface, target);
+  return _pTransactionManager->postRouteUpperReg(pRequest, pTransaction, localInterface, target);
 }
 
 bool SIPB2BScriptableHandler::onRouteResponse(
@@ -418,18 +590,64 @@ void SIPB2BScriptableHandler::onProcessOutbound(
   /// headers to the desired application-specific values for as long
   /// as it wont conflict with dialog creation states.
 {
-   pRequest->userData() = static_cast<OSS_HANDLE>(pTransaction.get());
+  pRequest->userData() = static_cast<OSS_HANDLE>(pTransaction.get());
+
+  if (pRequest->isRequest("INVITE"))
+  {
+    std::string id;
+    if (pTransaction->serverRequest()->getTransactionId(id))
+    {
+      OSS::mutex_write_lock _rwlock(_rwInvitePoolMutex);
+      _invitePool[id] = pRequest;
+    }
+    //
+    // Send a 100 Trying.  Take note that 100 trying may be delayed if route transaction,
+    // particularly DNS lookups takes longer than expected.  Delaying 100 Trying after
+    // we get a route is necessary because we won't be able to route the CANCEL request
+    // if they ever arrive while we are still fetching the route to the INVITE
+    //
+    SIPMessage::Ptr trying = pTransaction->serverRequest()->createResponse(SIPMessage::CODE_100_Trying);
+    OSS::IPAddress responseTarget;
+    pTransaction->onRouteResponse(pTransaction->serverRequest(),
+      pTransaction->serverTransport(), pTransaction->serverTransaction(), responseTarget);
+    pTransaction->serverTransaction()->sendResponse(trying, responseTarget);
+  }
+
   if (_outboundScript.isInitialized())
     _outboundScript.processRequest(pRequest);
-   if (!_pManager->getUserAgentName().empty())
-     pRequest->hdrSet("User-Agent", _pManager->getUserAgentName().c_str());
+   if (!_pTransactionManager->getUserAgentName().empty())
+     pRequest->hdrSet("User-Agent", _pTransactionManager->getUserAgentName().c_str());
 }
 
 void SIPB2BScriptableHandler::onProcessResponseInbound(
   SIPMessage::Ptr& pResponse,
   OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction)
 {
+  if (pResponse->isResponseTo("INVITE"))
+  {
+    if (pResponse->is2xx())
+    {
+      std::string id;
+      if (pTransaction->serverRequest()->getTransactionId(id))
+      {
+        OSS::mutex_write_lock _rwlock(_rwInvitePoolMutex);
+        _invitePool.erase(id);
+      }
+    }
 
+    std::string isReinvite;
+    if (pTransaction->getProperty("reinvite", isReinvite))
+    {
+      std::string sessionId;
+      OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
+      _pDialogState->onUpdateMidCallUACState(pResponse, pTransaction, sessionId);
+      return;
+    }
+
+    std::string sessionId;
+    OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
+    _pDialogState->onUpdateInitialUACState(pResponse, pTransaction, sessionId);
+  }
 }
 
 void SIPB2BScriptableHandler::onProcessResponseOutbound(
@@ -443,11 +661,201 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
   /// headers to the desired application-specific values for as long
   /// as it wont conflict with dialog creation states.
 {
+  std::string logId = pTransaction->getLogId();
+  //
+  // Let the script process it first
+  //
   pResponse->userData() = static_cast<OSS_HANDLE>(pTransaction.get());
   if (_outboundResponseScript.isInitialized())
     _outboundResponseScript.processRequest(pResponse);
-  if (!_pManager->getUserAgentName().empty())
-     pResponse->hdrSet("Server", _pManager->getUserAgentName().c_str());
+  if (!_pTransactionManager->getUserAgentName().empty())
+     pResponse->hdrSet("Server", _pTransactionManager->getUserAgentName().c_str());
+
+  if (pResponse->isResponseTo("INVITE"))
+  {
+    //
+    // If it is a reinvite let the other handler do the job and bail-out
+    //
+    std::string isReinvite;
+    if (pTransaction->getProperty("reinvite", isReinvite))
+    {
+      std::string sessionId;
+      OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
+      _pDialogState->onUpdateMidCallUASState(pResponse, pTransaction, sessionId);
+      if (pResponse->is2xx())
+      {
+        //
+        // If this is a 2xx, add it to the retranmission cache
+        //
+        std::ostringstream cacheId;
+        cacheId << pResponse->getDialogId(false) << pResponse->hdrGet("cseq");
+        boost::any cacheItem = pResponse;
+        pResponse->setProperty("session-id", sessionId);
+        _2xxRetransmitCache.add(cacheId.str(), cacheItem);
+      }
+      return;
+    }
+
+    std::string sessionId;
+    OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
+    //
+    // Update the dialog state for leg1
+    //
+    _pDialogState->onUpdateInitialUASState(pResponse, pTransaction, sessionId);
+    //
+    // If this is a 2xx, then retransmit it.
+    //
+    if (pResponse->is2xx())
+    {
+      std::string transportId = OSS::string_from_number<OSS::UInt64>(pTransaction->serverTransport()->getIdentifier()).c_str();
+      pResponse->setProperty("transport-id", transportId);
+
+      std::string transportScheme = pTransaction->serverTransport()->getTransportScheme();
+      OSS::string_to_upper(transportScheme);
+      pResponse->setProperty("target-transport", transportScheme);
+
+      std::ostringstream cacheId;
+      cacheId << pResponse->getDialogId(false) << pResponse->hdrGet("cseq");
+      boost::any cacheItem = pResponse;
+      pResponse->setProperty("session-id", sessionId);
+      _2xxRetransmitCache.add(cacheId.str(), cacheItem);
+    }
+  }
+  else if (pResponse->isResponseTo("BYE"))
+  {
+    std::string sessionId;
+    OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
+    std::string legIndex;
+    OSS_VERIFY(pTransaction->getProperty("leg-index", legIndex));
+    if (!pResponse->is1xx(100))
+    {
+      SIPB2BContact::SessionInfo sessionInfo;
+      sessionInfo.sessionId = sessionId;
+      sessionInfo.callIndex = OSS::string_to_number<unsigned>(legIndex.c_str());
+      SIPB2BContact::transform(_pTransactionManager,
+        pResponse,
+        pTransaction,
+        pTransaction->serverTransport()->getLocalAddress(),
+        sessionInfo);
+    }
+
+    if (pResponse->is2xx())
+    {
+      //
+      // Remove the state files if they were created
+      //
+      try
+      {
+        _pDialogState->removeDialog(pResponse->hdrGet("call-id"), sessionId);
+      }catch(...){}
+    }
+  }
+  else if (pResponse->isResponseTo("REFER"))
+  {
+    std::string sessionId;
+    std::string legIndex;
+
+    pTransaction->getProperty("session-id", sessionId);
+    pTransaction->getProperty("leg-index", legIndex);
+
+    if (!pResponse->is1xx(100))
+    {
+      SIPB2BContact::SessionInfo sessionInfo;
+      sessionInfo.sessionId = sessionId;
+
+      if (!legIndex.empty())
+        sessionInfo.callIndex = OSS::string_to_number<unsigned>(legIndex.c_str());
+
+      SIPB2BContact::transform(_pTransactionManager,
+        pResponse,
+        pTransaction,
+        pTransaction->serverTransport()->getLocalAddress(),
+        sessionInfo);
+    }
+  }
+}
+
+void SIPB2BScriptableHandler::onProcessUnknownInviteRequest(
+    const OSS::SIP::SIPMessage::Ptr& pMsg,
+    const OSS::SIP::SIPTransportSession::Ptr& pTransport)
+{
+  std::string logId = pMsg->createContextId(true);
+  OSS_LOG_DEBUG(logId << "Processing orphaned invite request " << pMsg->startLine());
+  {
+    std::string isXOREncrypted = "0";
+    pMsg->getProperty("xor", isXOREncrypted);
+
+    std::ostringstream logMsg;
+    logMsg << logId << "<<< " << pMsg->startLine()
+    << " LEN: " << pTransport->getLastReadCount()
+    << " SRC: " << pTransport->getRemoteAddress().toIpPortString()
+    << " DST: " << pTransport->getLocalAddress().toIpPortString()
+    << " EXT: " << "[" << pTransport->getExternalAddress() << "]"
+    << " ENC: " << isXOREncrypted
+    << " PROT: " << pTransport->getTransportScheme();
+    OSS::log_information(logMsg.str());
+    if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
+      OSS::log_debug(pMsg->createLoggerData());
+  }
+
+  if (pMsg->is2xx())
+  {
+    std::ostringstream cacheId;
+    cacheId << pMsg->getDialogId(false) << pMsg->hdrGet("cseq");
+    Cacheable::Ptr cacheItem = _2xxRetransmitCache.get(cacheId.str());
+    if (cacheItem)
+    {
+      SIPMessage::Ptr p2xx = boost::any_cast<SIPMessage::Ptr>(cacheItem->data());
+      if (p2xx)
+      {
+        std::string target;
+        std::string localInterface;
+        OSS_VERIFY(p2xx->getProperty("response-target", target));
+        OSS_VERIFY(p2xx->getProperty("response-interface", localInterface));
+
+        std::string isXOREncrypted = "0";
+        p2xx->getProperty("xor", isXOREncrypted);
+
+
+        std::ostringstream logMsg;
+        logMsg << logId << ">>> " << p2xx->startLine()
+        << " LEN: " << p2xx->data().size()
+        << " SRC: " << localInterface
+        << " DST: " << target
+        << " ENC: " << isXOREncrypted;
+        OSS::log_information(logMsg.str());
+        if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
+          OSS::log_debug(p2xx->createLoggerData());
+
+        if (!_pTransactionManager->getUserAgentName().empty())
+          p2xx->hdrSet("Server", _pTransactionManager->getUserAgentName().c_str());
+
+        _pTransactionManager->stack().sendRequestDirect(p2xx,
+          IPAddress::fromV4IPPort(localInterface.c_str()),
+          IPAddress::fromV4IPPort(target.c_str()));
+      }
+    }
+  }
+  else if (pMsg->isRequest("ACK"))
+  {
+    OSS_LOG_DEBUG(logId << "Processing ACK request " << pMsg->startLine());
+    OSS::IPAddress localAddress;
+    OSS::IPAddress targetAddress;
+    std::string sessionId;
+    std::string peerXOR = "0";
+    try
+    {
+      _pDialogState->onRouteAckRequest(pMsg, pTransport, _2xxRetransmitCache,
+        sessionId, peerXOR, localAddress, targetAddress);
+      _pTransactionManager->stack().sendRequestDirect(pMsg, localAddress, targetAddress);
+    }
+    catch(OSS::Exception e)
+    {
+      std::ostringstream logMsg;
+      logMsg << logId << "Unable to process ACK.  Exception: " << e.message();
+      OSS::log_warning(logMsg.str());
+    }
+  }
 }
 
 void SIPB2BScriptableHandler::onTransactionError(
@@ -458,6 +866,10 @@ void SIPB2BScriptableHandler::onTransactionError(
   ///
   /// The transaction will be destroyed automatically after this function call
 {
+  std::string sessionId;
+  OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
+  std::string callId = pTransaction->serverRequest()->hdrGet("call-id");
+  
   if (e && !pErrorResponse)
   {
     SIPMessage::Ptr serverError = pTransaction->serverRequest()->createResponse(SIPMessage::CODE_408_RequestTimeout);
@@ -465,6 +877,26 @@ void SIPB2BScriptableHandler::onTransactionError(
     pTransaction->onRouteResponse(pTransaction->serverRequest(),
         pTransaction->serverTransport(), pTransaction->serverTransaction(), responseTarget);
     pTransaction->serverTransaction()->sendResponse(serverError, responseTarget);
+
+    if (pTransaction->serverRequest()->isRequest("BYE"))
+    {
+      
+      OSS_LOG_DEBUG(pTransaction->getLogId() << "BYE Transaction Exception: " << e->message() );
+      OSS_LOG_DEBUG(pTransaction->getLogId()
+        << "Destroying dialog " << sessionId << " with Call-ID " << callId);
+      _pDialogState->removeDialog(callId, sessionId);
+    }
+  }
+
+  if (pTransaction->serverRequest()->isRequest("INVITE"))
+  {
+    std::string id;
+    if (pTransaction->serverRequest()->getTransactionId(id))
+    {
+      OSS::mutex_write_lock _rwlock(_rwInvitePoolMutex);
+      _invitePool.erase(id);
+      _pDialogState->removeDialog(pTransaction->serverRequest()->hdrGet("call-id"), sessionId);
+    }
   }
 }
 

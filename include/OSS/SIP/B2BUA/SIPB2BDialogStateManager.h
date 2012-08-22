@@ -24,6 +24,8 @@
 
 #include <list>
 
+#include <boost/function.hpp>
+
 #include "OSS/Cache.h"
 #include "OSS/Core.h"
 #include "OSS/Thread.h"
@@ -41,18 +43,20 @@
 #include "OSS/SIP/B2BUA/SIPB2BContact.h"
 #include "OSS/SIP/B2BUA/SIPB2BDialogData.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
-#include "OSS/SIP/B2BUA/SIPB2BTransactionManager.h"
+
 
 
 namespace OSS {
 namespace SIP {
 namespace B2BUA {
 
+class SIPB2BTransactionManager;
+
 template <typename T>
-class SIPB2BDialogStateManager
+class SIPB2BDialogStateManager_Base
 {
 protected:
-  SIPB2BTransactionManager& _transactionManager;
+  SIPB2BTransactionManager* _pTransactionManager;
   T _dataStore;
   mutable OSS::mutex_critic_sec _csDialogsMutex;
   int _cacheLifeTime;
@@ -61,10 +65,10 @@ protected:
   boost::thread* _pThread;
 public:
 
-  SIPB2BDialogStateManager(
-    SIPB2BTransactionManager& transactionManager,
+  SIPB2BDialogStateManager_Base(
+    SIPB2BTransactionManager* pTransactionManager,
     int cacheLifeTime = 3600*24) :
-    _transactionManager(transactionManager),
+    _pTransactionManager(pTransactionManager),
     _cacheLifeTime(cacheLifeTime),
     _dialogs(cacheLifeTime),
     _exitSync(0, 0xFFF),
@@ -72,7 +76,7 @@ public:
   {
   }
 
-  ~SIPB2BDialogStateManager()
+  ~SIPB2BDialogStateManager_Base()
   {
     stop();
   }
@@ -80,7 +84,7 @@ public:
   void run()
   {
     OSS_VERIFY(!_pThread);
-    _pThread = new boost::thread(boost::bind(&SIPB2BDialogStateManager<T>::runTask, this));
+    _pThread = new boost::thread(boost::bind(&SIPB2BDialogStateManager_Base<T>::runTask, this));
   }
 
   void stop()
@@ -92,6 +96,11 @@ public:
       delete _pThread;
       _pThread = 0;
     }
+  }
+
+  T& datastore()
+  {
+    return _dataStore;
   }
 
 protected:
@@ -225,81 +234,6 @@ public:
     _dataStore.removeSession(sessionId);
   }
 
-#if 0
-  void removeDialog(const SIPMessage::Ptr& pMsg)
-  {
-    OSS::mutex_critic_sec_lock lock(_csDialogsMutex);
-    std::string callId = pMsg->hdrGet("call-id");
-    OSS_VERIFY(!callId.empty());
-    SIPFrom from = pMsg->hdrGet("from");
-    SIPTo to = pMsg->hdrGet("to");
-
-    if (_dialogs.has(callId))
-    {
-      Cacheable::Ptr dialogs = _dialogs.get(callId);
-      DialogList& dialogList = boost::any_cast<DialogList&>(dialogs->data());
-      if (dialogList.size() <= 1)
-      {
-        _dialogs.remove(callId);
-        return;
-      }
-      //
-      // Do it the hard way
-      //
-      std::string tag;
-      std::string fromTag = from.getTag();
-      std::string toTag = to.getTag();
-      if (pMsg->isRequest())
-        tag = toTag;
-      else
-        tag = fromTag;
-
-      DialogData& first = dialogList.front();
-      DialogData& last = dialogList.back();
-
-      try
-      {
-        //
-        // Check if the to tag corresponds to the dialog leg1 from tag of the first state file
-        //
-        std::string leg1FromTag = SIPFrom::getTag(first.leg1.from);
-        if (leg1FromTag == tag)
-        {
-          dialogList.pop_front();
-          if (dialogList.empty())
-          {
-            _dialogs.remove(callId);
-            return;
-          }
-          return;
-        }
-        else
-        {
-          //
-          // Check if the to tag corresponds to the dialog leg2 from tag of the last state file
-          //
-          std::string leg2FromTag = SIPFrom::getTag(last.leg2.from);
-          if (leg2FromTag == tag)
-          {
-            dialogList.pop_back();
-            if (dialogList.empty())
-            {
-              _dialogs.remove(callId);
-              return;
-            }
-            return;
-          }
-        }
-      }
-      catch(...)
-      {
-        return;
-      }
-    }
-  }
-#endif
-
-
   bool findDialog(const SIPB2BTransaction::Ptr& pTransaction, const SIPMessage::Ptr& pMsg, DialogData& dialogData, const std::string& sessionId = "")
   {
     OSS::mutex_critic_sec_lock lock(_csDialogsMutex);
@@ -391,7 +325,7 @@ public:
 
     SIPB2BContact::SessionInfo sessionInfo;
     bool hasSessionInfo = SIPB2BContact::getSessionInfo(
-      &_transactionManager,
+      _pTransactionManager,
       pMsg,
       pTransaction,
       sessionInfo);
@@ -486,7 +420,7 @@ public:
         SIPB2BContact::SessionInfo sessionInfo;
         sessionInfo.sessionId = sessionId;
         sessionInfo.callIndex = 1;
-        SIPB2BContact::transform(&_transactionManager,
+        SIPB2BContact::transform(_pTransactionManager,
           pResponse,
           pTransaction,
           pTransaction->serverTransport()->getLocalAddress(),
@@ -696,7 +630,7 @@ public:
       SIPB2BContact::SessionInfo sessionInfo;
       sessionInfo.sessionId = sessionId;
       sessionInfo.callIndex = OSS::string_to_number<unsigned>(legIndexNumber.c_str());
-      SIPB2BContact::transform(&_transactionManager,
+      SIPB2BContact::transform(_pTransactionManager,
         pResponse,
         pTransaction,
         pTransaction->serverTransport()->getLocalAddress(),
@@ -946,7 +880,7 @@ public:
       // The local contact may point to the external mapped address
       // so make sure we convert it back
       //
-      _transactionManager.getInternalAddress(localAddress, localAddress);
+      _pTransactionManager->getInternalAddress(localAddress, localAddress);
 
       std::string transportScheme = "UDP";
       
@@ -958,7 +892,7 @@ public:
       pMsg->setProperty("transport-id", pLeg->transportId);
       OSS_LOG_DEBUG(logId << "Target transport identifier set by dialog data: transport-id=" << pLeg->transportId);
 
-      std::string via = SIPB2BContact::constructVia(&_transactionManager,
+      std::string via = SIPB2BContact::constructVia(_pTransactionManager,
         pMsg,
         localAddress,
         transportScheme,
@@ -1187,7 +1121,7 @@ public:
           }
 
           OSS::IPAddress viaHost = OSS::IPAddress::fromV4IPPort(localContact.getHostPort().c_str());
-          std::string newVia = SIPB2BContact::constructVia(&_transactionManager, pMsg, viaHost, transportScheme, branch);
+          std::string newVia = SIPB2BContact::constructVia(_pTransactionManager, pMsg, viaHost, transportScheme, branch);
           pMsg->hdrListPrepend("Via", newVia.c_str());
         }
       }
@@ -1261,8 +1195,8 @@ public:
         targetAddress = IPAddress::fromV4IPPort(remoteIp.c_str());
       }
 
-      if (!_transactionManager.getUserAgentName().empty())
-        pMsg->hdrSet("User-Agent", _transactionManager.getUserAgentName().c_str());
+      if (!_pTransactionManager->getUserAgentName().empty())
+        pMsg->hdrSet("User-Agent", _pTransactionManager->getUserAgentName().c_str());
 
       std::string contentType = pMsg->hdrGet("content-type");
       OSS::string_to_lower(contentType);
@@ -1275,7 +1209,7 @@ public:
       //
       routeLocalInterface = IPAddress::fromV4IPPort(localContact.getHostPort().c_str());
       OSS_LOG_DEBUG(logId << "ACK Local interface preliminary address is " << routeLocalInterface.toString());
-      _transactionManager.getInternalAddress(routeLocalInterface, routeLocalInterface);
+      _pTransactionManager->getInternalAddress(routeLocalInterface, routeLocalInterface);
       OSS_LOG_DEBUG(logId << "ACK Local interface post conversion address is " << routeLocalInterface.toString()
         << " external=(" <<  routeLocalInterface.externalAddress() << ")");
 
@@ -1303,7 +1237,7 @@ public:
         rtpAttributes.forcePEAEncryption = peerXOR == "1";
         rtpAttributes.forceCreate = false;
 
-        _transactionManager.rtpProxy().handleSDP(logId, sessionId,
+        _pTransactionManager->rtpProxy().handleSDP(logId, sessionId,
                 pTransport->getRemoteAddress(), // sentyBy
                 pTransport->getRemoteAddress(), // packetSourceIp
                 packetLocalInterface,  // packetLocalInterface
@@ -1343,6 +1277,29 @@ public:
       OSS::log_warning(logMsg.str());
       throw;
     }
+  }
+};
+
+
+struct SIPB2BDialogDataStoreCb
+{
+   boost::function<bool(const DialogData&)> persist;
+   boost::function<void(DialogList& dialogs)> getAll;
+   boost::function<void(const std::string& sessionId)> removeSession;
+   boost::function<void(const std::string& callId)> removeAllDialogs;
+   boost::function<bool(const RegData&)> persistReg;
+   boost::function<void(const std::string& sessionId)> removeReg;
+};
+
+class  SIPB2BDialogStateManager : public SIPB2BDialogStateManager_Base<SIPB2BDialogDataStoreCb>
+{
+public:
+  SIPB2BDialogStateManager(
+    SIPB2BTransactionManager* pTransactionManager,
+    int cacheLifeTime = 3600*24) : SIPB2BDialogStateManager_Base<SIPB2BDialogDataStoreCb>(
+      pTransactionManager,
+      cacheLifeTime)
+  {
   }
 };
 

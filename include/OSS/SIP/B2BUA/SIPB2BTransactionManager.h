@@ -43,6 +43,7 @@
 #include "OSS/SIP/B2BUA/SIPB2BHandler.h"
 
 
+
 namespace OSS {
 namespace SIP {
 namespace B2BUA {
@@ -356,20 +357,12 @@ protected:
 
 public:
   virtual SIPMessage::Ptr postMidDialogTransactionCreated(
-    const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction) = 0;
+    const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction);
     /// Called by handlers when a mid dialog trasaction has been created
-
-  virtual SIPMessage::Ptr postRouteMidDialogTransaction(
-    SIPMessage::Ptr& pMsg,
-    SIPB2BTransaction::Ptr pTransaction,
-    OSS::IPAddress& localAddress,
-    OSS::IPAddress& targetAddress) = 0;
-    /// Route a mid-dialog transaction.  This would usually call the dialog manager
-    /// to do the rest of the work
 
   virtual bool postRetargetTransaction(
     SIPMessage::Ptr& pRequest,
-    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction) = 0;
+    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction);
     //
     // This allows the application to execute a retarget prior to actual route scripts being called
     //
@@ -378,13 +371,14 @@ public:
     SIPMessage::Ptr& pRequest,
     OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
     OSS::IPAddress& localInterface,
-    OSS::IPAddress& target) = 0;
-    /// This routes the call comming from the upper registrar
+    OSS::IPAddress& target);
+    /// This routes the call comming from the upper registrar.  Applications
+    /// MUST implement this function for upper registration to get routed properly.
 
   virtual bool postRouteByAOR(
     SIPMessage* pRequest,
     OSS::SIP::B2BUA::SIPB2BTransaction* pTransaction,
-    bool userComparisonOnly) = 0;
+    bool userComparisonOnly);
     /// This is called from the route scripts to attempt routing via the address
     /// of record of a registered user.  If userComparisonOnly is set to true,
     /// the domain/host portion of the request-uri will be ignored and only compare

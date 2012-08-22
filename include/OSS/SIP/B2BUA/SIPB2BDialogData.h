@@ -63,7 +63,8 @@ public:
       localCSeq = 0;
     }
   };
-  
+
+ 
   SIPB2BDialogData()
   {
     timeStamp = OSS::getTime();
@@ -83,6 +84,27 @@ public:
 
 typedef SIPB2BDialogData DialogData;
 typedef std::list<DialogData> DialogList;
+
+struct SIPB2BRegData
+{
+  std::string contact;
+  std::string packetSource;
+  std::string localInterface;
+  std::string transportId;
+  std::string targetTransport;
+  std::string aor;
+  int expires;
+  bool enc;
+  std::string key;
+
+  SIPB2BRegData()
+  {
+    expires = 0;
+    enc = false;
+  }
+};
+
+typedef SIPB2BRegData RegData;
 
 } } }// OSS::SIP::B2BUA
 
