@@ -35,6 +35,7 @@
 #include "OSS/JS/JSSIPMessage.h"
 #include "OSS/SIP/B2BUA/SIPB2BHandler.h"
 #include "OSS/SIP/B2BUA/SIPB2BContact.h"
+#include "OSS/SIP/B2BUA/SIPB2BDialogData.h"
 
 
 namespace OSS {
@@ -302,6 +303,24 @@ public:
     const OSS::SIP::SIPTransportSession::Ptr& pTransport);
     /// Callback for ACK and 200 OK retransmission for INVITE
 
+  //
+  // REGISTER handlers
+  //
+  void sendOptionsKeepAlive(RegData& regData);
+  void handleOptionsResponse(
+    const OSS::SIP::SIPTransaction::Error& e,
+    const OSS::SIP::SIPMessage::Ptr& pMsg,
+    const OSS::SIP::SIPTransportSession::Ptr& pTransport,
+    const OSS::SIP::SIPTransaction::Ptr& pTransacion);
+    /// This callback handles responses to the OPTIONS keep-alive
+
+protected:
+  void runOptionsThread();
+    /// This method runs the OPTIONS keep-alive loop
+
+  void runOptionsResponseThread();
+    /// This method runs the OPTIONS keep-alive response loop
+
 protected:
   OSS::JS::JSSIPMessage _inboundScript;
   OSS::JS::JSSIPMessage _authScript;
@@ -311,9 +330,26 @@ protected:
   OSS::JS::JSSIPMessage _outboundResponseScript;
   SIPB2BTransactionManager* _pTransactionManager;
   SIPB2BDialogStateManager* _pDialogState;
+
+  //
+  // INVITE related variables
+  //
   OSS::CacheManager _2xxRetransmitCache;
   OSS::mutex_read_write _rwInvitePoolMutex;
   std::map<std::string, SIPMessage::Ptr> _invitePool;
+  //
+  // REGISTER related variables
+  //
+  boost::thread* _pOptionsThread;
+  OSS::semaphore _optionsThreadExit;
+  OSS::BlockingQueue<std::string> _optionsResponseQueue;
+  boost::thread* _pOptionsResponseThread;
+  OSS::semaphore _optionsResponseThreadExit;
+  OSS::SIP::SIPTransaction::Callback _keepAliveResponseCb;
+  OSS::mutex_read_write _rwKeepAliveListMutex;
+  typedef std::map<OSS::IPAddress, OSS::IPAddress> KeepAliveList;
+  KeepAliveList _keepAliveList;
+  OSS::thread_pool _threadPool;
 };
 
 //

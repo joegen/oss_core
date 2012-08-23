@@ -74,6 +74,7 @@ public:
     _exitSync(0, 0xFFF),
     _pThread(0)
   {
+      populateFromStore();
   }
 
   ~SIPB2BDialogStateManager_Base()
@@ -1288,7 +1289,11 @@ struct SIPB2BDialogDataStoreCb
    boost::function<void(const std::string& sessionId)> removeSession;
    boost::function<void(const std::string& callId)> removeAllDialogs;
    boost::function<bool(const RegData&)> persistReg;
-   boost::function<void(const std::string& sessionId)> removeReg;
+   boost::function<bool(const std::string&, RegData&)> getOneReg;
+   boost::function<bool(const std::string&, RegList&)> getReg;
+   boost::function<void(const std::string&)> removeReg;
+   boost::function<void(const std::string&)> removeAllReg;
+   boost::function<void(RegList& regs)> getAllReg;
 };
 
 class  SIPB2BDialogStateManager : public SIPB2BDialogStateManager_Base<SIPB2BDialogDataStoreCb>
@@ -1300,6 +1305,36 @@ public:
       pTransactionManager,
       cacheLifeTime)
   {
+  }
+
+  bool findRegistration(const std::string& key, RegList& regList)
+  {
+    return _dataStore.getReg(key, regList);
+  }
+
+  bool findOneRegistration(const std::string& key, RegData& regData)
+  {
+    return _dataStore.getOneReg(key, regData);
+  }
+
+  void addRegistration(const RegData& regData)
+  {
+    _dataStore.persistReg(regData);
+  }
+
+  void removeRegistration(const std::string& key)
+  {
+    _dataStore.removeReg(key);
+  }
+
+  void removeAllRegistration(const std::string& key)
+  {
+    _dataStore.removeAllReg(key);
+  }
+
+  void getAllRegistrationRecords(RegList& regList)
+  {
+    _dataStore.getAllReg(regList);
   }
 };
 

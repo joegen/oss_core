@@ -53,12 +53,35 @@ SIPB2BScriptableHandler::SIPB2BScriptableHandler(
   _outboundResponseScript(contextName),
   _pTransactionManager(pTransactionManager),
   _pDialogState(pDialogState),
-  _2xxRetransmitCache(32)
+  _2xxRetransmitCache(32),
+  _pOptionsThread(0),
+  _optionsThreadExit(0, 0xFFFF),
+  _pOptionsResponseThread(0),
+  _optionsResponseThreadExit(0, 0xFFFF),
+  _threadPool(1, 10)
 {
+  _keepAliveResponseCb = boost::bind(&SIPB2BScriptableHandler::handleOptionsResponse, this, _1, _2, _3, _4);
+  //
+  // Initialize the options keep-alive thread
+  //
+  OSS_ASSERT(_pOptionsResponseThread == 0);
+  OSS_ASSERT(_pOptionsThread == 0);
+  _pOptionsThread = new boost::thread(boost::bind(&SIPB2BScriptableHandler::runOptionsThread, this));
+  _pOptionsResponseThread = new boost::thread(boost::bind(&SIPB2BScriptableHandler::runOptionsResponseThread, this));
 }
 
 SIPB2BScriptableHandler::~SIPB2BScriptableHandler()
 {
+  //
+  // Exit the option keep-alive loop
+  //
+  _optionsThreadExit.set();
+  _pOptionsThread->join();
+  _optionsResponseThreadExit.set();
+  _optionsResponseQueue.enqueue("exit");
+  _pOptionsResponseThread->join();
+  delete _pOptionsThread;
+  delete _pOptionsResponseThread;
 }
 
 void SIPB2BScriptableHandler::initialize()
@@ -250,7 +273,14 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
 
     return OSS::SIP::SIPMessage::Ptr();
   }
-
+  else if (pRequest->isRequest("OPTIONS"))
+  {
+    //
+    // We handle options locally
+    //
+    SIPMessage::Ptr ok = pRequest->createResponse(SIPMessage::CODE_200_Ok);
+    return ok;
+  }
 
   bool isInvite = pRequest->isRequest("INVITE");
   if (pRequest->isMidDialog() && !pRequest->isRequest("SUBSCRIBE"))
@@ -338,6 +368,39 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
       pTransaction,
       localInterface,
       sessionInfo);
+
+    return OSS::SIP::SIPMessage::Ptr();
+  }
+  else if (pRequest->isRequest("REGISTER"))
+  {
+    std::string invokeLocalHandler = "0";
+    if (pTransaction->getProperty("invoke-local-handler", invokeLocalHandler ) && invokeLocalHandler == "1")
+    {
+      SIPMessage::Ptr();
+    }
+
+    pRequest->hdrListRemove("Route");
+    pRequest->hdrListRemove("Record-Route");
+    pRequest->hdrListRemove("Via");
+
+    std::string targetTransport;
+    if (!pRequest->getProperty("target-transport", targetTransport) || targetTransport.empty())
+      targetTransport = "udp";
+
+    //
+    // Prepare the new via
+    //
+    OSS::string_to_upper(targetTransport);
+    std::string viaBranch = "z9hG4bK";
+    viaBranch += OSS::string_create_uuid();
+    std::string newVia = SIPB2BContact::constructVia(_pTransactionManager, pRequest, localInterface, targetTransport, viaBranch);
+    pRequest->hdrListPrepend("Via", newVia);
+
+    if (!SIPB2BContact::transformRegister(_pTransactionManager, pRequest, pTransaction, localInterface))
+    {
+      SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_400_BadRequest);
+      return serverError;
+    }
 
     return OSS::SIP::SIPMessage::Ptr();
   }
@@ -648,6 +711,60 @@ void SIPB2BScriptableHandler::onProcessResponseInbound(
     OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
     _pDialogState->onUpdateInitialUACState(pResponse, pTransaction, sessionId);
   }
+  else if (pResponse->isResponseTo("REGISTER"))
+  {
+    if (!pResponse->is1xx() && pResponse->hdrGetSize("contact") == 0)
+    {
+      std::string ct;
+      ct = pTransaction->clientRequest()->hdrGet("contact");
+      if (ct != "*")
+      {
+        if (pResponse->is2xx())
+        {
+          OSS_LOG_WARNING("Missing contact header in REGISTER response.");
+        }
+        SIPContact contact;
+        contact = ct;
+        ContactURI curi;
+        contact.getAt(curi, 0);
+        SIPURI binding = curi.getURI();
+        std::string user = binding.getUser();
+        std::string regId;
+        if (user.find(SIPB2BContact::_regPrefix) != std::string::npos)
+        {
+          regId = user;
+        }
+        else
+        {
+          if (binding.hasParam(SIPB2BContact::_regPrefix))
+          {
+            regId = SIPB2BContact::_regPrefix;
+            regId += "-";
+            regId += user;
+            regId += "-";
+            regId += binding.getParam(SIPB2BContact::_regPrefix);
+          }
+        }
+
+        if (!regId.empty())
+        {
+          try
+          {
+            if (pResponse->is2xx())
+            {
+              OSS_LOG_INFO("Deleting REGISTER state " << regId);
+            }
+            _pDialogState->removeRegistration(regId);
+            //
+            // Remove from the keep-alive list
+            //
+            OSS::mutex_write_lock writeLock(_rwKeepAliveListMutex);
+            _keepAliveList.erase(pTransaction->serverTransport()->getRemoteAddress());
+          }catch(...){}
+        }
+      }
+    }
+  }
 }
 
 void SIPB2BScriptableHandler::onProcessResponseOutbound(
@@ -750,7 +867,7 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
       }catch(...){}
     }
   }
-  else if (pResponse->isResponseTo("REFER"))
+  else
   {
     std::string sessionId;
     std::string legIndex;
@@ -1055,6 +1172,161 @@ void SIPB2BScriptableHandler::onClientTransactionError(
   /// The transaction will be destroyed automatically after this function call
 {
 }
+
+
+void SIPB2BScriptableHandler::handleOptionsResponse(
+    const OSS::SIP::SIPTransaction::Error& e,
+    const OSS::SIP::SIPMessage::Ptr& pMsg,
+    const OSS::SIP::SIPTransportSession::Ptr& pTransport,
+    const OSS::SIP::SIPTransaction::Ptr& pTransaction)
+{
+  //
+  // Only report errors to the queue
+  //
+  if (e)
+  {
+    SIPMessage::Ptr pRequest = pTransaction->fsm()->getRequest();
+    SIPFrom from = pRequest->hdrGet("from");
+    std::string user = from.getUser();
+    if (user != "exit")
+      _optionsResponseQueue.enqueue(user);
+  }
+}
+
+void SIPB2BScriptableHandler::runOptionsThread()
+{
+
+  int currentIteration = 0;
+  unsigned int segmentSize = 0;
+  unsigned int nextSegment = 0;
+
+
+  while(!_optionsThreadExit.tryWait(5000))
+  {
+    
+    //
+    // Send CRLF keep alive for every iteration
+    //
+    {
+      OSS::mutex_read_lock readLock(_rwKeepAliveListMutex);
+      for (KeepAliveList::iterator iter = _keepAliveList.begin(); iter != _keepAliveList.end(); iter++)
+        _pTransactionManager->stack().transport().sendUDPKeepAlive(iter->second, iter->first);
+    }
+    currentIteration++;
+
+    RegList regList;
+    _pDialogState->getAllRegistrationRecords(regList);
+    if (currentIteration == 1)
+    {
+      segmentSize = regList.size() / 12;
+      if (segmentSize == 0)
+        segmentSize = 12;
+      nextSegment = 0;
+      size_t maxIter = regList.size();
+      for (size_t i = nextSegment; i < nextSegment + segmentSize && i < maxIter; i++)
+        sendOptionsKeepAlive(regList[i]);
+      nextSegment += segmentSize;
+    }
+    else
+    {
+      size_t maxIter = regList.size();
+      for (size_t i = nextSegment; i < nextSegment + segmentSize && i < maxIter; i++)
+        sendOptionsKeepAlive(regList[i]);
+      nextSegment += segmentSize;
+      if (currentIteration == 12)
+        currentIteration = 0;
+    }
+  }
+}
+
+void SIPB2BScriptableHandler::runOptionsResponseThread()
+{
+  while(!_optionsResponseThreadExit.tryWait(0))
+  {
+    std::string response;
+    _optionsResponseQueue.dequeue(response);
+    if (response == "exit")
+      break;
+    else
+    {
+      try
+      {
+        RegData regData;
+        if (!_pDialogState->findOneRegistration(response, regData))
+          continue;
+
+        std::ostringstream logMsg;
+        logMsg << "Registration Expires: " << response;
+        OSS::log_information(logMsg.str());
+        //
+        // Remove from the keep-alive list
+        //
+        OSS::mutex_write_lock writeLock(_rwKeepAliveListMutex);
+        _keepAliveList.erase(OSS::IPAddress::fromV4IPPort(regData.packetSource.c_str()));
+        _pDialogState->removeRegistration(regData.key);
+      }
+      catch(OSS::Exception e)
+      {
+        #if 0
+        std::ostringstream logMsg;
+        logMsg << "SIPB2BScriptableHandler::runOptionsResponseThread Failure - "
+          << e.message();
+        OSS::log_warning(logMsg.str());
+        #endif
+      }
+    }
+  }
+}
+
+void SIPB2BScriptableHandler::sendOptionsKeepAlive(RegData& regData)
+{
+  static int cseqNo = 1;
+
+  std::string callId = OSS::string_create_uuid();
+  size_t hash = OSS::string_hash(callId.c_str());
+
+  SIPTo to(regData.aor);
+  std::string transportScheme = regData.targetTransport;
+  OSS::string_to_upper(transportScheme);
+  IPAddress src = IPAddress::fromV4IPPort(regData.localInterface.c_str());
+  IPAddress target = IPAddress::fromV4IPPort(regData.packetSource.c_str());
+
+  _pTransactionManager->getInternalAddress(src, src);
+
+  std::ostringstream options;
+  options << "OPTIONS " << regData.contact << " SIP/2.0" << OSS::SIP::CRLF;
+  options << "To: " << to.data() << OSS::SIP::CRLF;
+  options << "From: sip:" << regData.key << "@" << to.getHostPort() << ";tag=" << hash << OSS::SIP::CRLF;
+
+  if (src.externalAddress().empty())
+    options << "Via: " << "SIP/2.0/" << transportScheme << " " << regData.localInterface << ";branch=z9hG4bK" << hash << ";rport" << OSS::SIP::CRLF;
+  else
+    options << "Via: " << "SIP/2.0/" << transportScheme << " " << src.externalAddress() << ":" << src.getPort() << ";branch=z9hG4bK" << hash << ";rport"  << OSS::SIP::CRLF;
+
+  options << "Call-ID: " << callId << OSS::SIP::CRLF;
+  options << "CSeq: " << cseqNo++ << " OPTIONS" << OSS::SIP::CRLF;
+
+  if (src.externalAddress().empty())
+    options << "Contact: " << "<sip:" << regData.key << "@" << regData.localInterface << ">" << OSS::SIP::CRLF;
+  else
+    options << "Contact: " << "<sip:" << regData.key << "@" << src.externalAddress() << ":" << src.getPort() << ">" << OSS::SIP::CRLF;
+
+  options << "Content-Length: 0" << OSS::SIP::CRLF << OSS::SIP::CRLF;
+
+
+  SIPMessage::Ptr msg(new SIPMessage(options.str()));
+  if (regData.enc)
+    msg->setProperty("xor", "1");
+
+  msg->setProperty("target-transport", transportScheme.c_str());
+
+  if (!regData.transportId.empty())
+    msg->setProperty("transport-id", regData.transportId.c_str());
+
+  _pTransactionManager->stack().sendRequest(msg, src, target, _keepAliveResponseCb);
+
+}
+
 
 } } } // OSS::SIP::B2BUA
 

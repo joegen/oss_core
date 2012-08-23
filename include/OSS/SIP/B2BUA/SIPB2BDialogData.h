@@ -105,6 +105,7 @@ struct SIPB2BRegData
 };
 
 typedef SIPB2BRegData RegData;
+typedef std::vector<RegData> RegList;
 
 } } }// OSS::SIP::B2BUA
 
