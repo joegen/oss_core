@@ -314,6 +314,8 @@ public:
     const OSS::SIP::SIPTransaction::Ptr& pTransacion);
     /// This callback handles responses to the OPTIONS keep-alive
 
+  bool getRegistrationId(const ContactURI& curi, std::string& regId) const;
+  bool getRegistrationId(const SIPURI& binding, std::string& regId) const;
 protected:
   void runOptionsThread();
     /// This method runs the OPTIONS keep-alive loop

@@ -539,7 +539,78 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteUpperReg(
   OSS::IPAddress& localInterface,
   OSS::IPAddress& target)
 {
-  return _pTransactionManager->postRouteUpperReg(pRequest, pTransaction, localInterface, target);
+  SIPRequestLine rline = pRequest->startLine();
+  SIPURI ruri;
+  if (!rline.getURI(ruri))
+  {
+   SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_400_BadRequest, "Unable to parse request-uri");
+   return serverError;
+  }
+
+  std::string regId;
+  if (!getRegistrationId(ruri, regId))
+  {
+    SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_400_BadRequest, "Unable to parse registration ID from request-URI");
+   return serverError;
+  }
+
+  try
+  {
+    RegData registration;
+    if (!_pDialogState->findOneRegistration(regId, registration))
+    {
+      OSS_LOG_WARNING("No registration found for " << ruri.data());
+      SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_404_NotFound);
+      return serverError;
+    }
+
+    SIPTo to(registration.aor);
+    localInterface = IPAddress::fromV4IPPort(registration.localInterface.c_str());
+    target = IPAddress::fromV4IPPort(registration.packetSource.c_str());
+
+    std::string contact;
+    contact = registration.contact;
+    SIPFrom contactHeader = contact;
+    IPAddress potentialTarget = IPAddress::fromV4IPPort(contactHeader.getHostPort().c_str());
+    if (potentialTarget.isValid() && !potentialTarget.isPrivate())
+      target = potentialTarget;
+
+    //
+    // Check if the contact is non-UDP.  We will try to recycle a persistent connection for TCP
+    //
+    std::string transportScheme = registration.targetTransport;
+    OSS::string_to_upper(transportScheme);
+
+
+    pRequest->setProperty("target-transport", transportScheme.c_str());
+
+    std::string transportId = registration.transportId;
+    if (!transportId.empty())
+        pRequest->setProperty("transport-id", transportId.c_str());
+
+    //
+    // Check if this call is to be encrypted
+    //
+    if (registration.enc)
+      pRequest->setProperty("xor", "1");
+
+
+    std::ostringstream requestLine;
+    requestLine << pRequest->getMethod() << " " << contact << " SIP/2.0";
+    pRequest->setStartLine(requestLine.str().c_str());
+    pRequest->hdrSet("to", to.getURI().c_str());
+    //
+    // Proxy media for upper reg if an rtp proxy is implemented
+    //
+    pTransaction->setProperty("require-rtp-proxy", "1");
+  }
+  catch(OSS::Exception e)
+  {
+    OSS_LOG_ERROR("Unable to process " << regId << " Error=" << e.what());
+    SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_404_NotFound);
+    return serverError;
+  }
+  return OSS::SIP::SIPMessage::Ptr();
 }
 
 bool SIPB2BScriptableHandler::onRouteResponse(
@@ -682,6 +753,34 @@ void SIPB2BScriptableHandler::onProcessOutbound(
      pRequest->hdrSet("User-Agent", _pTransactionManager->getUserAgentName().c_str());
 }
 
+bool SIPB2BScriptableHandler::getRegistrationId(const ContactURI& curi, std::string& regId) const
+{
+   SIPURI binding = curi.getURI();
+   return getRegistrationId(binding, regId);
+}
+
+bool SIPB2BScriptableHandler::getRegistrationId(const SIPURI& binding, std::string& regId) const
+{
+  std::string user = binding.getUser();
+  regId = "";
+  if (user.find(SIPB2BContact::_regPrefix) != std::string::npos)
+  {
+    regId = user;
+  }
+  else
+  {
+    if (binding.hasParam(SIPB2BContact::_regPrefix))
+    {
+      regId = SIPB2BContact::_regPrefix;
+      regId += "-";
+      regId += user;
+      regId += "-";
+      regId += binding.getParam(SIPB2BContact::_regPrefix);
+    }
+  }
+  return !regId.empty();
+}
+
 void SIPB2BScriptableHandler::onProcessResponseInbound(
   SIPMessage::Ptr& pResponse,
   OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction)
@@ -728,25 +827,8 @@ void SIPB2BScriptableHandler::onProcessResponseInbound(
         ContactURI curi;
         contact.getAt(curi, 0);
         SIPURI binding = curi.getURI();
-        std::string user = binding.getUser();
         std::string regId;
-        if (user.find(SIPB2BContact::_regPrefix) != std::string::npos)
-        {
-          regId = user;
-        }
-        else
-        {
-          if (binding.hasParam(SIPB2BContact::_regPrefix))
-          {
-            regId = SIPB2BContact::_regPrefix;
-            regId += "-";
-            regId += user;
-            regId += "-";
-            regId += binding.getParam(SIPB2BContact::_regPrefix);
-          }
-        }
-
-        if (!regId.empty())
+        if (getRegistrationId(binding, regId))
         {
           try
           {
@@ -783,8 +865,13 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
   // Let the script process it first
   //
   pResponse->userData() = static_cast<OSS_HANDLE>(pTransaction.get());
+  
+  //
+  // Give the scripting layer a chance to process the outbound response
+  //
   if (_outboundResponseScript.isInitialized())
     _outboundResponseScript.processRequest(pResponse);
+
   if (!_pTransactionManager->getUserAgentName().empty())
      pResponse->hdrSet("Server", _pTransactionManager->getUserAgentName().c_str());
 
@@ -867,7 +954,172 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
       }catch(...){}
     }
   }
-  else
+  else if (pResponse->isResponseTo("REGISTER"))
+  {
+    //
+    // Extract the REGISTER expiration
+    //
+    std::string expires = pResponse->hdrGet("expires");
+    std::string hContactList = pResponse->hdrGet("contact");
+    ContactURI curi;
+    bool hasContact = SIPContact::getAt(hContactList, curi, 0);
+
+    if (expires.empty())
+    {
+      if (hasContact)
+      {
+        expires = curi.getHeaderParam("expires");
+        if (expires.empty())
+          expires = "3600";
+      }
+
+    }
+    else
+    {
+      pResponse->hdrRemove("expires");
+    }
+    //
+    // Rewrite the contact uri
+    //
+    ContactURI oldCuri;
+    bool hasOldContact = false;
+    SIPMessage::Ptr pRequest = pTransaction->serverRequest();
+    std::string to;
+    to = pRequest->hdrGet("to");
+    if (!hContactList.empty() && hasContact)
+    {
+      std::string oldContactList = pRequest->hdrGet("contact");
+      hasOldContact = SIPContact::getAt(oldContactList, oldCuri, 0);
+    }
+
+    bool is2xx = pResponse->is2xx();
+    bool isTrunkReg = pTransaction->hasProperty("is-trunk-reg");
+
+    if(!isTrunkReg && is2xx && hasContact && !hasOldContact)
+    {
+      //
+      // Check if this was a QUERY (REGISTER with no contact)
+      //
+      std::vector<std::string> bindings;
+      if (SIPContact::msgGetContacts(pResponse.get(), bindings) > 0)
+      {
+        pResponse->hdrListRemove("contact");
+        for(std::vector<std::string>::iterator iter = bindings.begin(); iter != bindings.end(); iter++)
+        {
+          ContactURI curi = *iter;
+          std::string regId;
+          getRegistrationId(curi, regId);
+          RegData regData;
+          if (_pDialogState->findOneRegistration(regId, regData))
+          {
+            OSS_LOG_INFO("Listing contacts for a REGISTER query - " << regData.contact);
+            pResponse->hdrListAppend("contact", regData.contact.c_str());
+          }
+        }
+      }
+    }
+    else if (!isTrunkReg && is2xx && hasContact && hasOldContact)
+    {
+      //
+      // Save the state file
+      //
+      OSS_LOG_INFO("Received updated contact for REGISTER from upper-reg");
+      std::vector<std::string> bindings;
+      if (SIPContact::msgGetContacts(pResponse.get(), bindings) == 0)
+      {
+        OSS_LOG_ERROR("Unable to parse contact from response.");
+        return;
+      }
+      std::string binding = bindings[0];
+      if (binding.find("sbc-reg") == std::string::npos)
+      {
+        OSS_LOG_ERROR("Missing registration ID in binding " << binding);
+        return;
+      }
+
+      ContactURI curi = bindings[0];
+      std::string regId;
+      if (!getRegistrationId(curi, regId))
+      {
+        OSS_LOG_ERROR("Missing registration ID in binding " << binding);
+        return;
+      }
+
+      pResponse->hdrListRemove("contact");
+      oldCuri.setHeaderParam("expires", expires.c_str());
+      pResponse->hdrListAppend("Contact", oldCuri.data().c_str());
+
+      try
+      {
+        OSS::IPAddress packetSource = pTransaction->serverTransport()->getRemoteAddress();
+        OSS::IPAddress localInterface = pTransaction->serverTransport()->getLocalAddress();
+
+        RegData registration;
+        //
+        // Preserve the contact
+        //
+        registration.contact = oldCuri.getURI().c_str();
+        //
+        // Preserve the packet source address
+        //
+        registration.packetSource =  packetSource.toIpPortString().c_str();
+        //
+        // Preserve the local interface
+        //
+        registration.localInterface = localInterface.toIpPortString().c_str();
+        //
+        // Preserve the transport ID for connection reuse
+        //
+        registration.transportId = OSS::string_from_number<OSS::UInt64>(pTransaction->serverTransport()->getIdentifier()).c_str();
+        //
+        // Preserver the trasnport scheme for connection reuse
+        //
+        registration.targetTransport = pTransaction->serverTransport()->getTransportScheme().c_str();
+        //
+        // Preserve the to header
+        //
+        std::string toURI;
+        SIPTo::getURI(to, toURI);
+        registration.aor = toURI.c_str();
+        //
+        // Set XOR Property if XOR is enabled
+        //
+        if (pTransaction->serverTransaction()->isXOREncrypted())
+          registration.enc = true;
+
+        //
+        // Set expires
+        //
+        if (!expires.empty())
+          registration.expires = OSS::string_to_number<int>(expires.c_str());
+        else
+          registration.expires = 3600;
+
+        OSS::mutex_write_lock writeLock(_rwKeepAliveListMutex);
+        _keepAliveList[packetSource] = localInterface;
+
+        _pDialogState->addRegistration(registration);
+      }
+      catch(...)
+      {
+        /// We wont be able to recover on this error.
+        /// transactions towards this registration will be unroutable
+        std::ostringstream logMsg;
+        logMsg << "Warning: " << "Unable to save persistent information for registration " << to;
+        OSS::log_warning(logMsg.str());
+      }
+    }
+    else if (isTrunkReg && is2xx && hasContact && hasOldContact)
+    {
+      //
+      // Simply remove the contact returned by the trunk and insert the old one
+      //
+       pResponse->hdrListRemove("contact");
+       oldCuri.setHeaderParam("expires", expires.c_str());
+       pResponse->hdrListAppend("Contact", oldCuri.data().c_str());
+    }
+  }
+  else // Any response that isn't covered by the if else block
   {
     std::string sessionId;
     std::string legIndex;

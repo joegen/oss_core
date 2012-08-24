@@ -367,26 +367,7 @@ public:
     // This allows the application to execute a retarget prior to actual route scripts being called
     //
 
-  virtual SIPMessage::Ptr postRouteUpperReg(
-    SIPMessage::Ptr& pRequest,
-    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
-    OSS::IPAddress& localInterface,
-    OSS::IPAddress& target);
-    /// This routes the call comming from the upper registrar.  Applications
-    /// MUST implement this function for upper registration to get routed properly.
-
-  virtual bool postRouteByAOR(
-    SIPMessage* pRequest,
-    OSS::SIP::B2BUA::SIPB2BTransaction* pTransaction,
-    bool userComparisonOnly);
-    /// This is called from the route scripts to attempt routing via the address
-    /// of record of a registered user.  If userComparisonOnly is set to true,
-    /// the domain/host portion of the request-uri will be ignored and only compare
-    /// the user agains the registration state.   This will only allow to the first
-    /// occurence of a registration state with the same AOR.  Thus, this function
-    /// may result to a stale route if there are mutiple registrations using the same
-    /// AOR.  Future version of this function may allow forking
-
+ 
 private:
   OSS::thread_pool _threadPool;
   OSSSIP _stack;

@@ -473,27 +473,10 @@ bool SIPB2BTransactionManager::postRetargetTransaction(
     SIPMessage::Ptr& pRequest,
     OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction)
 {
-  false;
-}
-
-SIPMessage::Ptr SIPB2BTransactionManager::postRouteUpperReg(
-    SIPMessage::Ptr& pRequest,
-    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
-    OSS::IPAddress& localInterface,
-    OSS::IPAddress& target)
-{
   //
-  // Note:  Applications must implement this function;
+  // This is the chance of the transaction manager to hijack to processing of routing transactions.
+  // Returning true here will mean the scripting engine will not be called
   //
-  OSS_ASSERT(false);
-  return SIPMessage::Ptr();
-}
-
-bool SIPB2BTransactionManager::postRouteByAOR(
-    SIPMessage* pRequest,
-    OSS::SIP::B2BUA::SIPB2BTransaction* pTransaction,
-    bool userComparisonOnly)
-{
   false;
 }
 
