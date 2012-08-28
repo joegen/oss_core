@@ -1031,7 +1031,7 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
         return;
       }
       std::string binding = bindings[0];
-      if (binding.find("sbc-reg") == std::string::npos)
+      if (binding.find(SIPB2BContact::_regPrefix) == std::string::npos)
       {
         OSS_LOG_ERROR("Missing registration ID in binding " << binding);
         return;
