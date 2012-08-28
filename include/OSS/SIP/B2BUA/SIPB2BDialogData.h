@@ -29,6 +29,12 @@
 
 #include "OSS/OSS.h"
 #include "OSS/Core.h"
+#include "OSS/Logger.h"
+#include "json/reader.h"
+#include "json/writer.h"
+#include "json/elements.h"
+
+
 
 namespace OSS {
 namespace SIP {
@@ -62,16 +68,69 @@ public:
       noRtpProxy = false;
       localCSeq = 0;
     }
+
+    void toJsonObject(json::Object& object) const
+    {
+      try
+      {
+        object["dialogId"] = json::String(dialogId);
+        object["callId"] = json::String(callId);
+        object["from"] = json::String(from);
+        object["to"] = json::String(to);
+        object["remoteContact"] = json::String(remoteContact);
+        object["localContact"] = json::String(localContact);
+        object["localRecordRoute"] = json::String(localRecordRoute);
+        object["remoteIp"] = json::String(remoteIp);
+        object["transportId"] = json::String(transportId);
+        object["targetTransport"] = json::String(targetTransport);
+        object["localSdp"] = json::String(localSdp);
+        object["remoteSdp"] = json::String(remoteSdp);
+        object["encryption"] = json::String(encryption);
+        object["noRtpProxy"] = json::Boolean(noRtpProxy);
+        object["localCSeq"] = json::Number(localCSeq);
+
+        json::Array routes;
+        for (std::vector<std::string>::const_iterator iter = routeSet.begin(); iter != routeSet.end(); iter++)
+          routes.Insert(json::String(*iter));
+        object["routeSet"] = routes;
+      }
+      catch(json::Exception e)
+      {
+        OSS_LOG_ERROR("SIPB2BDialogData::LegInfo: Unable to parse json object - " << e.what());
+      }
+    }
+
+    void fromJsonObject(const json::Object& object)
+    {
+      try
+      {
+        dialogId = ((json::String)object["dialogId"]).Value();
+        callId = ((json::String)object["callId"]).Value();
+        from = ((json::String)object["from"]).Value();
+        to = ((json::String)object["to"]).Value();
+        remoteContact = ((json::String)object["remoteContact"]).Value();
+        localContact = ((json::String)object["localContact"]).Value();
+        localRecordRoute = ((json::String)object["localRecordRoute"]).Value();
+        remoteIp = ((json::String)object["remoteIp"]).Value();
+        transportId = ((json::String)object["transportId"]).Value();
+        targetTransport = ((json::String)object["targetTransport"]).Value();
+        localSdp = ((json::String)object["localSdp"]).Value();
+        remoteSdp = ((json::String)object["remoteSdp"]).Value();
+        encryption = ((json::String)object["encryption"]).Value();
+        noRtpProxy = ((json::Boolean)object["noRtpProxy"]).Value();
+        localCSeq = ((json::Number)object["localCSeq"]).Value();
+
+        json::Array routes = object["routeSet"];
+        for (json::Array::iterator iter = routes.Begin(); iter != routes.End(); iter++)
+          routeSet.push_back(((json::String)*iter).Value());
+      }
+      catch(json::Exception e)
+      {
+        OSS_LOG_ERROR("SIPB2BDialogData::LegInfo: Unable to parse json object - " << e.what());
+      }
+    }
   };
 
- 
-  SIPB2BDialogData()
-  {
-    timeStamp = OSS::getTime();
-    connectTime = timeStamp;
-    disconnectTime = timeStamp;
-    sessionAge = timeStamp;
-  }
 
   std::string sessionId;
   LegInfo leg1;
@@ -80,6 +139,63 @@ public:
   OSS::UInt64 connectTime;
   OSS::UInt64 disconnectTime;
   OSS::UInt64 sessionAge;
+  //
+  // Subscription dialog
+  //
+  std::string event;
+  int expires;
+
+  SIPB2BDialogData()
+  {
+    timeStamp = OSS::getTime();
+    connectTime = timeStamp;
+    disconnectTime = timeStamp;
+    sessionAge = timeStamp;
+    expires = 0;
+  }
+
+  void toJsonObject(json::Object& object) const
+  {
+    try
+    {
+      json::Object leg1Object;
+      leg1.toJsonObject(leg1Object);
+      json::Object leg2Object;
+      leg2.toJsonObject(leg2Object);
+
+      object["sessionId"] = json::String(sessionId);
+      object["leg1"] = leg1Object;
+      object["leg2"] = leg2Object;
+      object["timeStamp"] = json::Number(timeStamp);
+      object["connectTime"] = json::Number(connectTime);
+      object["disconnectTime"] = json::Number(disconnectTime);
+      object["sessionAge"] = json::Number(sessionAge);
+    }
+    catch(json::Exception e)
+    {
+      OSS_LOG_ERROR("SIPB2BDialogData: Unable to parse json object - " << e.what());
+    }
+  }
+ 
+  void fromJsonObject(const json::Object& object)
+  { 
+    try
+    {
+      json::Object leg1Object = object["leg1"];
+      json::Object leg2Object = object["leg2"];
+      leg1.fromJsonObject(leg1Object);
+      leg2.fromJsonObject(leg2Object);
+      sessionId = ((json::String)object["sessionId"]).Value();
+      timeStamp = ((json::Number)object["timeStamp"]).Value();
+      connectTime = ((json::Number)object["connectTime"]).Value();
+      disconnectTime = ((json::Number)object["disconnectTime"]).Value();
+      sessionAge = ((json::Number)object["sessionAge"]).Value();
+    }
+    catch(json::Exception e)
+    {
+      OSS_LOG_ERROR("SIPB2BDialogData: Unable to parse json object - " << e.what());
+    }
+  }
 };
 
 typedef SIPB2BDialogData DialogData;
@@ -102,10 +218,53 @@ struct SIPB2BRegData
     expires = 0;
     enc = false;
   }
+
+  void toJsonObject(json::Object& object) const
+  {
+    try
+    {
+      object["key"] = json::String(key);
+      object["contact"] = json::String(contact);
+      object["packetSource"] = json::String(packetSource);
+      object["localInterface"] = json::String(localInterface);
+      object["transportId"] = json::String(transportId);
+      object["targetTransport"] = json::String(targetTransport);
+      object["aor"] = json::String(aor);
+      object["expires"] = json::Number(expires);
+      object["enc"] = json::Boolean(enc);
+    }
+    catch(json::Exception e)
+    {
+      OSS_LOG_ERROR("SIPB2BRegData: Unable to parse json object - " << e.what());
+    }
+  }
+
+  void fromJsonObject(const json::Object& object)
+  {
+    try
+    {
+      key = ((json::String&)object["key"]).Value();
+      contact = ((json::String&)object["contact"]).Value();
+      packetSource = ((json::String&)object["packetSource"]).Value();
+      localInterface = ((json::String&)object["localInterface"]).Value();
+      transportId = ((json::String&)object["transportId"]).Value();
+      targetTransport = ((json::String&)object["targetTransport"]).Value();
+      aor = ((json::String&)object["aor"]).Value();
+      expires = ((json::Number&)object["expires"]).Value();
+      enc = ((json::Boolean&)object["enc"]).Value();
+    }
+    catch(json::Exception e)
+    {
+      OSS_LOG_ERROR("SIPB2BDialogData: Unable to parse json object - " << e.what());
+    }
+  }
 };
 
 typedef SIPB2BRegData RegData;
 typedef std::vector<RegData> RegList;
+
+
+
 
 } } }// OSS::SIP::B2BUA
 
