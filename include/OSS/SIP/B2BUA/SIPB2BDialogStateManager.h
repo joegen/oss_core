@@ -372,7 +372,7 @@ public:
         }
       }catch(OSS::Exception e)
       {
-        OSS_LOG_WARNING(logId << "No existing dialog state file for " << method << " - " << e.message());
+        OSS_LOG_WARNING(logId << "No existing dialog state for " << method << " - " << e.message());
         return false;
       }
     }
@@ -1285,15 +1285,15 @@ public:
 struct SIPB2BDialogDataStoreCb
 {
    boost::function<bool(const DialogData&)> persist;
-   boost::function<void(DialogList& dialogs)> getAll;
-   boost::function<void(const std::string& sessionId)> removeSession;
-   boost::function<void(const std::string& callId)> removeAllDialogs;
+   boost::function<void(DialogList&)> getAll;
+   boost::function<void(const std::string&)> removeSession;
+   boost::function<void(const std::string&)> removeAllDialogs;
    boost::function<bool(const RegData&)> persistReg;
    boost::function<bool(const std::string&, RegData&)> getOneReg;
    boost::function<bool(const std::string&, RegList&)> getReg;
    boost::function<void(const std::string&)> removeReg;
    boost::function<void(const std::string&)> removeAllReg;
-   boost::function<void(RegList& regs)> getAllReg;
+   boost::function<void(RegList&)> getAllReg;
 };
 
 class  SIPB2BDialogStateManager : public SIPB2BDialogStateManager_Base<SIPB2BDialogDataStoreCb>
