@@ -666,7 +666,15 @@ bool SIPB2BScriptableHandler::onRouteResponse(
       viaHost.setPort(5060);
     }
   }
-  return true;
+  //
+  // If target is still invalid, we simply use the sent-by
+  //
+  target = viaHost;
+  if (viaHost.getPort() == 0)
+  {
+    viaHost.setPort(5060);
+  }
+  return target.isValid();
 }
 
 SIPMessage::Ptr SIPB2BScriptableHandler::onGenerateLocalResponse(

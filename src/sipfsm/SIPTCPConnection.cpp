@@ -72,6 +72,20 @@ void SIPTCPConnection::handleRead(const boost::system::error_code& e, std::size_
   if (!e && bytes_transferred)
   {
     //
+    // set the last read address
+    //
+    if (!_lastReadAddress.isValid())
+    {
+      boost::system::error_code ec;
+      EndPoint ep = _socket.remote_endpoint(ec);
+      if (!ec)
+      {
+        boost::asio::ip::address ip = ep.address();
+        _lastReadAddress = OSS::IPAddress(ip.to_string(), ep.port());
+      }
+    }
+
+    //
     // Reset the read exception count
     //
     _readExceptionCount = 0;

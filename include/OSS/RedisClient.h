@@ -496,6 +496,44 @@ public:
     return !value.empty();
   }
 
+  bool getAll(std::vector<std::string>& values, const std::string& pattern = "*")
+  {
+    std::vector<std::string> keys;
+    getKeys(pattern, keys);
+    for (std::vector<std::string>::const_iterator iter = keys.begin(); iter != keys.end(); iter++)
+    {
+      std::string value;
+      if (get(*iter, value))
+        values.push_back(value);
+    }
+
+    return !values.empty();
+  }
+
+  bool getAll(std::vector<json::Object>& values, const std::string& pattern = "*")
+  {
+    std::vector<std::string> strValues;
+    if (!getAll(strValues, pattern))
+      return false;
+
+    for (std::vector<std::string>::const_iterator iter = strValues.begin(); iter != strValues.end(); iter++)
+    {
+      try
+      {
+        std::stringstream strm;
+        strm << *iter;
+        json::Object value;
+        json::Reader::Read(value, strm);
+        values.push_back(value);
+      }
+      catch(std::exception e)
+      {
+        return false;
+      }
+    }
+    return !values.empty();
+  }
+
   bool hget(const std::string& key, std::string& value) const
   {
     std::vector<std::string> args;

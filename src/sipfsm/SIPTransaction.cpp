@@ -82,7 +82,7 @@ void SIPTransaction::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
     _isInitialRequest = false;
 
     if (_logId.empty())
-    _logId = pMsg->createContextId(true);
+      _logId = pMsg->createContextId(true);
 
     if (!_transport)
       _transport = pTransport;
@@ -235,12 +235,22 @@ void SIPTransaction::sendResponse(
       //
       // Keep-alive failed so create a new transport
       //
-      if (_localAddress.isValid())
+      if (_localAddress.isValid() && _sendAddress.isValid())
       {
         //
         // According to RFC 3261, if there is any transport failure, we must try to
         // re-estabish a connectoin to the via sentby parameter instead
         //
+        std::string transport;
+        if (SIPVia::msgGetTopViaTransport(pResponse.get(), transport))
+        {
+          _transport = _transportService->createClientTransport(_localAddress, _sendAddress, transport);
+          writeMessage(pResponse);
+        }
+      }
+      else
+      {
+        OSS_LOG_ERROR("SIPTransaction::sendResponse - Uanble to re-establish transport to send response.");
       }
 
     }
@@ -260,7 +270,10 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg)
   OSS::mutex_lock lock(_mutex);
 
   if (!_transport)
+  {
+    OSS_LOG_ERROR("SIPTransaction::writeMessage - Transport is NULL while attempting to send a request.");
     return;
+  }
 
   if (SIPXOR::isEnabled() && _isXOREncrypted)
   {

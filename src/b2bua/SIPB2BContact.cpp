@@ -39,7 +39,7 @@ namespace B2BUA {
 
 bool SIPB2BContact::_dialogStateInParams = false;
 bool SIPB2BContact::_registerStateInParams = false;
-bool SIPB2BContact::_dialogStateInRecordRoute = true;
+bool SIPB2BContact::_dialogStateInRecordRoute = false;
 const char* SIPB2BContact::_regPrefix = "sbc-reg";
 
 bool SIPB2BContact::transform(SIPB2BTransactionManager* pManager,

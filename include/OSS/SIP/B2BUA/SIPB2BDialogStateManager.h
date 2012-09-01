@@ -119,6 +119,9 @@ protected:
   {
     OSS::UInt64 timeStamp = OSS::getTime();
     DialogList dialogs;
+    if (!_dataStore.getAll)
+      return;
+    
     _dataStore.getAll(dialogs);
     for (DialogList::const_iterator iter = dialogs.begin(); iter != dialogs.end(); iter++)
     {

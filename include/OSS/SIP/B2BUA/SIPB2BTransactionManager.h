@@ -232,6 +232,11 @@ public:
     /// most likely result to a corrupt map container and invalidate
     /// iterators
 
+  void registerDefaultHandler(SIPB2BHandler* pDefaultHandler);
+    /// Register a default handler. This special handler will take care of all
+    /// events that are not handled by specific message handlers
+    ///
+
   OSSSIP& stack();
     /// Returns a direct reference to the SIP Stack
 
@@ -355,6 +360,8 @@ protected:
   SIPB2BHandler::Ptr findHandler(const OSS::SIP::SIPMessage::Ptr& pMsg) const;
     /// Returns the iterator for the request handler if one is registered
 
+  SIPB2BHandler::Ptr findHandler(SIPB2BHandler::MessageType type) const;
+    /// Returns the iterator for the request handler if one is registered
 public:
   virtual SIPMessage::Ptr postMidDialogTransactionCreated(
     const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction);
@@ -378,6 +385,7 @@ private:
   std::string _sipConfigFile;
   PostRouteCallback _postRouteCallback;
   std::string _userAgentName;
+  SIPB2BHandler* _pDefaultHandler;
 };
 
 //
@@ -466,6 +474,10 @@ inline void SIPB2BTransactionManager::setUserAgentName(const std::string& userAg
   _userAgentName = userAgentName;
 }
 
+inline void SIPB2BTransactionManager::registerDefaultHandler(SIPB2BHandler* pDefaultHandler)
+{
+  _pDefaultHandler = pDefaultHandler;
+}
 
 } } } // OSS::SIP::B2BUA
 

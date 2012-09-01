@@ -38,7 +38,8 @@ namespace B2BUA {
 SIPB2BTransactionManager::SIPB2BTransactionManager(int minThreadcount, int maxThreadCount) :
   _threadPool(minThreadcount, maxThreadCount),
   _stack(),
-  _useSourceAddressForResponses(false)
+  _useSourceAddressForResponses(false),
+  _pDefaultHandler(0)
 {
   _stack.setRequestHandler(boost::bind(&SIPB2BTransactionManager::handleRequest, this, _1, _2, _3));
   _stack.setUnknownInviteTransactionHandler(boost::bind(&SIPB2BTransactionManager::handleUnknowInviteTransaction, this, _1, _2));
@@ -96,10 +97,17 @@ void SIPB2BTransactionManager::handleUnknowInviteTransaction(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport)
 {
-  MessageHandlers::iterator iter = _handlers.find(SIPB2BHandler::TYPE_INVITE);
-  if (iter != _handlers.end() && iter->second)
+  SIPB2BHandler::Ptr pHandler = findHandler(SIPB2BHandler::TYPE_INVITE);
+  if (pHandler)
   {
-    if (!_threadPool.schedule(boost::bind(&SIPB2BHandler::onProcessUnknownInviteRequest, iter->second, pMsg, pTransport)))
+    if (!_threadPool.schedule(boost::bind(&SIPB2BHandler::onProcessUnknownInviteRequest, pHandler, pMsg, pTransport)))
+    {
+      OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleUnknowInviteTransaction");
+    }
+  }
+  else if (_pDefaultHandler)
+  {
+    if (!_threadPool.schedule(boost::bind(&SIPB2BHandler::onProcessUnknownInviteRequest, _pDefaultHandler, pMsg, pTransport)))
     {
       OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleUnknowInviteTransaction");
     }
@@ -194,14 +202,17 @@ static SIPB2BHandler::MessageType getBodyType(const SIPMessage::Ptr& pRequest)
 
 SIPB2BHandler::Ptr SIPB2BTransactionManager::findHandler(const OSS::SIP::SIPMessage::Ptr& pMsg) const
 {
-  MessageHandlers::const_iterator iter = _handlers.find(getMessageType(pMsg));
-  if (iter != _handlers.end() && iter->second)
-    return iter->second;
-  iter = _handlers.find(SIPB2BHandler::TYPE_ANY);
-  if (iter != _handlers.end() && iter->second)
-    return iter->second;
-  SIPB2BHandler::Ptr();
+  return findHandler(getMessageType(pMsg));
 }
+
+SIPB2BHandler::Ptr SIPB2BTransactionManager::findHandler(SIPB2BHandler::MessageType type) const
+{
+  MessageHandlers::const_iterator iter = _handlers.find(type);
+  if (iter != _handlers.end() && iter->second)
+    return iter->second;
+  return SIPB2BHandler::Ptr();
+}
+    /// Returns the iterator for the request handler if one is registered
 
 SIPMessage::Ptr SIPB2BTransactionManager::onTransactionCreated(
   const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction)
@@ -210,6 +221,10 @@ SIPMessage::Ptr SIPB2BTransactionManager::onTransactionCreated(
   if (pHandler)
   {
     return pHandler->onTransactionCreated(pRequest, pTransaction);
+  }
+  else if (_pDefaultHandler)
+  {
+    return _pDefaultHandler->onTransactionCreated(pRequest, pTransaction);
   }
   return pRequest->createResponse(405, "No Corresponding Handler");
 }
@@ -236,6 +251,10 @@ SIPMessage::Ptr SIPB2BTransactionManager::onAuthenticateTransaction(
   {
     return pHandler->onAuthenticateTransaction(pRequest, pTransaction);
   }
+  else if (_pDefaultHandler)
+  {
+    return _pDefaultHandler->onAuthenticateTransaction(pRequest, pTransaction);
+  }
   return pRequest->createResponse(405, "No Corresponding Handler");
 }
 
@@ -249,6 +268,18 @@ SIPMessage::Ptr SIPB2BTransactionManager::onRouteTransaction(
   if (pHandler)
   {
     SIPMessage::Ptr result = pHandler->onRouteTransaction(pRequest, pTransaction, localInterface, target);
+    //
+    // _postRouteCallback is currently set by
+    // the SBCStaticRouter class that allows static router
+    // to bypass the results of the javascript layer.
+    //
+    if (_postRouteCallback)
+      return _postRouteCallback(pRequest, result, pTransaction, localInterface, target);
+    return result;
+  }
+  else if (_pDefaultHandler)
+  {
+    SIPMessage::Ptr result = _pDefaultHandler->onRouteTransaction(pRequest, pTransaction, localInterface, target);
     //
     // _postRouteCallback is currently set by
     // the SBCStaticRouter class that allows static router
@@ -281,6 +312,10 @@ bool SIPB2BTransactionManager::onRouteResponse(
     {
       return pHandler->onRouteResponse(pRequest, pTransport, pTransaction, target);
     }
+    else if (_pDefaultHandler)
+    {
+      return _pDefaultHandler->onRouteResponse(pRequest, pTransport, pTransaction, target);
+    }
     return false;
   }
 }
@@ -295,6 +330,10 @@ SIPMessage::Ptr SIPB2BTransactionManager::onGenerateLocalResponse(
   {
     return pHandler->onGenerateLocalResponse(pRequest, pTransport, pTransaction);
   }
+  else if (_pDefaultHandler)
+  {
+    return _pDefaultHandler->onGenerateLocalResponse(pRequest, pTransport, pTransaction);
+  }
   return pRequest->createResponse(405, "No Corresponding Handler");
 }
 
@@ -308,6 +347,10 @@ SIPMessage::Ptr SIPB2BTransactionManager::onInvokeLocalHandler(
   {
     return pHandler->onInvokeLocalHandler(pRequest, pTransport, pTransaction);
   }
+  else if (_pDefaultHandler)
+  {
+    return _pDefaultHandler->onInvokeLocalHandler(pRequest, pTransport, pTransaction);
+  }
   return pRequest->createResponse(405, "No Corresponding Handler");
 }
 
@@ -315,18 +358,15 @@ SIPMessage::Ptr SIPB2BTransactionManager::onProcessRequestBody(
   SIPMessage::Ptr& pRequest,
   SIPB2BTransaction::Ptr pTransaction)
 {
-  MessageHandlers::iterator iter = _handlers.find(getBodyType(pRequest));
-  if (iter != _handlers.end() && iter->second)
-  {
-    return iter->second->onProcessRequestBody(pRequest, pTransaction);
-  }
-
-  SIPB2BHandler::Ptr pHandler = findHandler(pRequest);
+  SIPB2BHandler::Ptr pHandler = findHandler(getBodyType(pRequest));
   if (pHandler)
   {
     return pHandler->onProcessRequestBody(pRequest, pTransaction);
   }
-
+  else if (_pDefaultHandler)
+  {
+    return _pDefaultHandler->onProcessRequestBody(pRequest, pTransaction);
+  }
   return pRequest->createResponse(405, "No Corresponding Handler");
 }
 
@@ -334,16 +374,14 @@ void SIPB2BTransactionManager::onProcessResponseBody(
   SIPMessage::Ptr& pRequest,
   SIPB2BTransaction::Ptr pTransaction)
 {
-  MessageHandlers::iterator iter = _handlers.find(getBodyType(pRequest));
-  if (iter != _handlers.end() && iter->second)
-  {
-    return iter->second->onProcessResponseBody(pRequest, pTransaction);
-  }
-
-  SIPB2BHandler::Ptr pHandler = findHandler(pRequest);
+  SIPB2BHandler::Ptr pHandler = findHandler(getBodyType(pRequest));
   if (pHandler)
   {
     return pHandler->onProcessResponseBody(pRequest, pTransaction);
+  }
+  else if (_pDefaultHandler)
+  {
+    return _pDefaultHandler->onProcessResponseBody(pRequest, pTransaction);
   }
 }
 
@@ -356,6 +394,10 @@ void SIPB2BTransactionManager::onProcessOutbound(
   {
     return pHandler->onProcessOutbound(pRequest, pTransaction);
   }
+  else if (_pDefaultHandler)
+  {
+    return _pDefaultHandler->onProcessOutbound(pRequest, pTransaction);
+  }
 }
 
 void SIPB2BTransactionManager::onProcessResponseOutbound(
@@ -367,6 +409,10 @@ void SIPB2BTransactionManager::onProcessResponseOutbound(
   {
     return pHandler->onProcessResponseOutbound(pResponse, pTransaction);
   }
+  else if (_pDefaultHandler)
+  {
+    return _pDefaultHandler->onProcessResponseOutbound(pResponse, pTransaction);
+  }
 }
 
 void SIPB2BTransactionManager::onProcessResponseInbound(
@@ -377,6 +423,10 @@ void SIPB2BTransactionManager::onProcessResponseInbound(
   if (pHandler)
   {
     return pHandler->onProcessResponseInbound(pResponse, pTransaction);
+  }
+  else if (_pDefaultHandler)
+  {
+    return _pDefaultHandler->onProcessResponseInbound(pResponse, pTransaction);
   }
 }
 
@@ -390,6 +440,10 @@ void SIPB2BTransactionManager::onTransactionError(
   if (pHandler)
   {
     return pHandler->onTransactionError(e, pErrorResponse, pTransaction);
+  }
+  else if (_pDefaultHandler)
+  {
+    return _pDefaultHandler->onTransactionError(e, pErrorResponse, pTransaction);
   }
 }
 
@@ -422,6 +476,10 @@ bool SIPB2BTransactionManager::onClientTransactionCreated(
   {
     return pHandler->onClientTransactionCreated(pRequest, pTransaction);
   }
+  else if (_pDefaultHandler)
+  {
+    return _pDefaultHandler->onClientTransactionCreated(pRequest, pTransaction);
+  }
   return false;
 }
 
@@ -436,6 +494,10 @@ bool SIPB2BTransactionManager::onRouteClientTransaction(
   {
     return pHandler->onRouteClientTransaction(pRequest, pTransaction, localInterface, target);
   }
+  else if (_pDefaultHandler)
+  {
+    return _pDefaultHandler->onRouteClientTransaction(pRequest, pTransaction, localInterface, target);
+  }
   return false;
 }
 
@@ -447,6 +509,10 @@ void SIPB2BTransactionManager::onProcessClientResponse(
   if (pHandler)
   {
     pHandler->onProcessClientResponse(pResponse, pTransaction);
+  }
+  else if (_pDefaultHandler)
+  {
+    _pDefaultHandler->onProcessClientResponse(pResponse, pTransaction);
   }
 }
 
@@ -460,6 +526,10 @@ void SIPB2BTransactionManager::onClientTransactionError(
   if (pHandler)
   {
     pHandler->onClientTransactionError(e, pErrorResponse, pTransaction);
+  }
+  else if (_pDefaultHandler)
+  {
+    _pDefaultHandler->onClientTransactionError(e, pErrorResponse, pTransaction);
   }
 }
 
