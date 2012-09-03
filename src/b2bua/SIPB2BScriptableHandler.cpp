@@ -376,7 +376,16 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
     std::string invokeLocalHandler = "0";
     if (pTransaction->getProperty("invoke-local-handler", invokeLocalHandler ) && invokeLocalHandler == "1")
     {
-      SIPMessage::Ptr();
+      return SIPMessage::Ptr();
+    }
+
+    SIPMessage::Ptr ret = onRouteOutOfDialogTransaction(pRequest, pTransaction, localInterface, target);
+    if (ret)
+    {
+      //
+      // Route transaction produced a response.  This normally means an error occured in routing
+      //
+      return ret;
     }
 
     pRequest->hdrListRemove("Route");
@@ -1243,9 +1252,7 @@ void SIPB2BScriptableHandler::onTransactionError(
   ///
   /// The transaction will be destroyed automatically after this function call
 {
-  std::string sessionId;
-  OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
-  std::string callId = pTransaction->serverRequest()->hdrGet("call-id");
+  
   
   if (e && !pErrorResponse)
   {
@@ -1257,7 +1264,9 @@ void SIPB2BScriptableHandler::onTransactionError(
 
     if (pTransaction->serverRequest()->isRequest("BYE"))
     {
-      
+      std::string sessionId;
+      OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
+      std::string callId = pTransaction->serverRequest()->hdrGet("call-id");
       OSS_LOG_DEBUG(pTransaction->getLogId() << "BYE Transaction Exception: " << e->message() );
       OSS_LOG_DEBUG(pTransaction->getLogId()
         << "Destroying dialog " << sessionId << " with Call-ID " << callId);
@@ -1270,6 +1279,8 @@ void SIPB2BScriptableHandler::onTransactionError(
     std::string id;
     if (pTransaction->serverRequest()->getTransactionId(id))
     {
+      std::string sessionId;
+      OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
       OSS::mutex_write_lock _rwlock(_rwInvitePoolMutex);
       _invitePool.erase(id);
       _pDialogState->removeDialog(pTransaction->serverRequest()->hdrGet("call-id"), sessionId);
@@ -1277,77 +1288,19 @@ void SIPB2BScriptableHandler::onTransactionError(
   }
 }
 
-bool SIPB2BScriptableHandler::loadInboundScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE))
+bool SIPB2BScriptableHandler::loadScript(OSS::JS::JSSIPMessage& script, const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals, const std::string& helpers)
 {
+  script.setGlobalScriptsDirectory(globals);
+  script.setHelperScriptsDirectory(helpers);
+  
   bool ok = true;
-  if (_inboundScript.isInitialized())
-  {
-    if (!_inboundScript.recompile())
-    {
-      ok = false;
-    }
-  }else
-  {
-    if (!_inboundScript.initialize(scriptFile, "handle_request", extensionGlobals))
-    {
-      ok = false;
-    }
-  }
-  return ok;
-}
-
-bool SIPB2BScriptableHandler::loadAuthScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE))
-{
-  bool ok = true;
-  if (_authScript.isInitialized())
-    ok = _authScript.recompile();
+  if (script.isInitialized())
+    ok = script.recompile();
   else
-    ok = _authScript.initialize(scriptFile, "handle_request", extensionGlobals);
-
-  return ok;
-
-}
-
-bool SIPB2BScriptableHandler::loadRouteScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE))
-{
-  bool ok = false;
-  if (_routeScript.isInitialized())
-    ok = _routeScript.recompile();
-  else
-    ok = _routeScript.initialize(scriptFile, "handle_request", extensionGlobals);
+    ok = script.initialize(scriptFile, "handle_request", extensionGlobals);
   return ok;
 }
-
-bool SIPB2BScriptableHandler::loadRouteFailoverScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE))
-{
-  bool ok = true;
-  if (_routeFailoverScript.isInitialized())
-    ok = _routeFailoverScript.recompile();
-  else
-    ok = _routeFailoverScript.initialize(scriptFile, "handle_request", extensionGlobals);
-  return ok;
-}
-
-bool SIPB2BScriptableHandler::loadOutboundScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE))
-{
-  bool ok = true;
-
-  if (_outboundScript.isInitialized())
-    ok = _outboundScript.recompile();
-  else
-    ok = _outboundScript.initialize(scriptFile, "handle_request", extensionGlobals);
-  return ok;
-}
-
-bool SIPB2BScriptableHandler::loadOutboundResponseScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE))
-{
-  bool ok = true;
-  if (_outboundResponseScript.isInitialized())
-    ok = _outboundResponseScript.recompile();
-  else
-    ok = _outboundResponseScript.initialize(scriptFile, "handle_request", extensionGlobals);
-  return ok;
-}
+    /// Generic script loader
 
 void SIPB2BScriptableHandler::recompileScripts()
 {

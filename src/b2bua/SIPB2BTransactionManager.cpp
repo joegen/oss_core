@@ -436,7 +436,7 @@ void SIPB2BTransactionManager::onTransactionError(
   SIPMessage::Ptr pErrorResponse,
   SIPB2BTransaction::Ptr pTransaction)
 {
-  SIPB2BHandler::Ptr pHandler = findHandler(pErrorResponse);
+  SIPB2BHandler::Ptr pHandler = findHandler(pTransaction->serverRequest());
   if (pHandler)
   {
     return pHandler->onTransactionError(e, pErrorResponse, pTransaction);
@@ -547,7 +547,7 @@ bool SIPB2BTransactionManager::postRetargetTransaction(
   // This is the chance of the transaction manager to hijack to processing of routing transactions.
   // Returning true here will mean the scripting engine will not be called
   //
-  false;
+  return false;
 }
 
 

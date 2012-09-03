@@ -167,6 +167,7 @@ public:
     {
       dialogs = _dialogs.get(callId);
     }
+    OSS_LOG_DEBUG("Added new dialog " << "session-id: " << dialogData.sessionId << " call-id" << callId);
     _dialogs.add(dialogs);
     _csDialogsMutex.unlock();
   }
@@ -418,7 +419,7 @@ public:
       //
       // Prepare the new contact
       //
-
+      OSS_LOG_INFO("onUpdateInitialUASState - sessionId: " << sessionId);
       if (!pResponse->is3xx())
       {
         SIPB2BContact::SessionInfo sessionInfo;
@@ -437,10 +438,14 @@ public:
       {
         try
         {
+          OSS_LOG_INFO("onUpdateInitialUASState - sessionId: " << sessionId << " preserving leg 1 state");
           //
           // Preserve leg 1 dialog state
           //
           DialogData dialogData;
+          if (!findDialog(pTransaction, pResponse, dialogData, sessionId))
+            return;
+
           dialogData.sessionId = sessionId;
           DialogData::LegInfo& leg1 = dialogData.leg1;
 
@@ -504,10 +509,11 @@ public:
           leg1.noRtpProxy = (pTransaction->getProperty("no-rtp-proxy", noRTPProxy) && noRTPProxy == "1");
      
 
+          OSS_LOG_INFO("onUpdateInitialUASState - sessionId: " << sessionId << " peristing to data store");
           _dataStore.persist(dialogData);
 
-          if (pResponse->is2xx())
-            addDialog(leg1.dialogId, dialogData);
+          //if (pResponse->is2xx())
+          updateDialog(sessionId, leg1, 1);
         }
         catch(OSS::Exception e)
         {
@@ -545,8 +551,7 @@ public:
         // Preserve leg 2 dialog state
         //
         DialogData dialogData;
-          if (!findDialog(pTransaction, pResponse, dialogData, sessionId))
-            return;
+        dialogData.sessionId = sessionId;
 
         DialogData::LegInfo& leg2 = dialogData.leg2;
         leg2.callId = pResponse->hdrGet("call-id").c_str();
@@ -558,7 +563,7 @@ public:
         leg2.localCSeq = OSS::string_to_number<unsigned long>(seqNum.c_str());
         OSS_VERIFY(pTransaction->getProperty("leg2-contact", leg2.localContact));
         pTransaction->getProperty("leg2-rr", leg2.localRecordRoute);
-        std::string remoteIp = pTransaction->clientTransport()->getRemoteAddress().toIpPortString();
+        leg2.remoteIp = pTransaction->clientTransport()->getRemoteAddress().toIpPortString();
         leg2.transportId = OSS::string_from_number<OSS::UInt64>(pTransaction->clientTransport()->getIdentifier());
         leg2.targetTransport = pTransaction->clientTransport()->getTransportScheme();
 
@@ -602,7 +607,8 @@ public:
           leg2.encryption = "xor";
         }
 
-        updateDialog(dialogData.sessionId, leg2, 2);
+
+        addDialog(leg2.callId, dialogData);
         _dataStore.persist(dialogData);
       }
       catch(OSS::Exception e)
@@ -816,12 +822,12 @@ public:
       if (senderLeg == "leg-1")
       {
         pTransaction->setProperty("leg-index", "1");
-        pLeg = &dialogData.leg1;
+        pLeg = &dialogData.leg2;
       }
       else
       {
         pTransaction->setProperty("leg-index", "2");
-        pLeg = &dialogData.leg2;
+        pLeg = &dialogData.leg1;
       }
       pTransaction->setProperty("session-id", sessionId);
 
@@ -937,6 +943,12 @@ public:
             port = 5060;
           targetAddress = *(hosts.begin());
           targetAddress.setPort(port);
+          std::string scheme;
+          if (topRouteURI.getParam("transport", scheme))
+          {
+            transportScheme = scheme;
+            boost::to_upper(transportScheme);
+          }
         }
       }
 
@@ -956,7 +968,14 @@ public:
             port = 5060;
           targetAddress = *(hosts.begin());
           targetAddress.setPort(port);
+          std::string scheme;
+          if (requestTarget.getParam("transport", scheme))
+          {
+            transportScheme = scheme;
+            boost::to_upper(transportScheme);
+          }
         }
+        
       }
 
       if (!targetAddress.isValid() || (targetAddress.isPrivate() && transportScheme == "UDP"))
@@ -964,7 +983,14 @@ public:
         //
         // Still unable to resolve request-uri
         //
-        targetAddress = IPAddress::fromV4IPPort(pLeg->remoteIp.c_str());
+        if (!pLeg->remoteIp.empty())
+          targetAddress = IPAddress::fromV4IPPort(pLeg->remoteIp.c_str());
+      }
+
+      if (!targetAddress.isValid())
+      {
+        SIPMessage::Ptr serverError = pMsg->createResponse(SIPMessage::CODE_481_TransactionDoesNotExist, "Unable to determine dialog target");
+        return serverError;
       }
     }
     catch(...)
@@ -1005,7 +1031,7 @@ public:
       return;
     }
 
-    OSS_LOG_DEBUG(logId << "Attempting to route " << pMsg->startLine());
+    OSS_LOG_DEBUG(logId << "Attempting to route session " << sessionId  << pMsg->startLine());
 
     std::string maxForwards = pMsg->hdrGet("max-forwards");
     if (maxForwards.empty())
@@ -1037,17 +1063,13 @@ public:
       throw B2BUAStateException("No dialog exist.");
       return;
     }
-    else
-    {
-      OSS_LOG_DEBUG(logId << "Found dialog data for ACK request. Target leg = " << targetLeg << " " << dialogData.sessionId );
-    }
 
     try
     {
       DialogData::LegInfo* pLeg;
       if (targetLeg == "leg-1")
         pLeg = &dialogData.leg1;
-      else if (targetLeg == "leg-1")
+      else if (targetLeg == "leg-2")
         pLeg = &dialogData.leg2;
       else
         assert(false);
@@ -1063,6 +1085,11 @@ public:
       localContact = pLeg->localContact;
       std::string localRR = pLeg->localRecordRoute;
       std::string remoteIp = pLeg->remoteIp;
+
+      OSS_LOG_DEBUG(logId << "Found dialog data for ACK request."
+              << " Target-leg: " << targetLeg
+              << " Session-Id" << dialogData.sessionId
+              << " Contact: " << pLeg->remoteContact);
 
       bool isXOREncrypted = false;
       //
@@ -1106,35 +1133,6 @@ public:
       SIPCSeq cseq = pMsg->hdrGet("cseq");
       cseq.setMethod("INVITE");
 
-      std::ostringstream cacheId;
-      cacheId << pMsg->getDialogId(true) << cseq.data();
-      Cacheable::Ptr cacheItem = retransmitCache.get(cacheId.str());
-      if (cacheItem)
-      {
-        SIPMessage::Ptr p2xx = boost::any_cast<SIPMessage::Ptr>(cacheItem->data());
-        if (p2xx)
-        {
-          std::string oldVia;
-          SIPVia::msgGetTopVia(p2xx.get(), oldVia);
-          std::string branch;
-          SIPVia::getBranch(oldVia, branch);
-          if (branch.empty())
-          {
-            OSS_LOG_WARNING(logId << "Unable to process ACK. Old via appears to have no branch parameter.");
-            throw B2BUAStateException("Unable to process ACK. Old via appears to have no branch parameter.");
-          }
-
-          OSS::IPAddress viaHost = OSS::IPAddress::fromV4IPPort(localContact.getHostPort().c_str());
-          std::string newVia = SIPB2BContact::constructVia(_pTransactionManager, pMsg, viaHost, transportScheme, branch);
-          pMsg->hdrListPrepend("Via", newVia.c_str());
-        }
-      }
-      else
-      {
-        OSS_LOG_WARNING(logId <<"Unable to process ACK. There is no 2xx retransmisison in cache.");
-        throw B2BUAStateException("Unable to process ACK. There is no 2xx retransmisison in cache.");
-      }
-
       std::vector<std::string> routeList = pLeg->routeSet;
       if (routeList.size() > 0)
       {
@@ -1167,8 +1165,13 @@ public:
         {
           if (port == 0)
             port = 5060;
+          OSS_LOG_INFO("Setting target from route Address: " << host << " Port: " << port);
           targetAddress = *(hosts.begin());
           targetAddress.setPort(port);
+          std::string scheme;
+          if (topRouteURI.getParam("transport", scheme))
+            transportScheme = scheme;
+          boost::to_upper(transportScheme);
         }
       }
 
@@ -1184,19 +1187,58 @@ public:
         OSS::dns_host_record_list hosts = OSS::dns_lookup_host(host);
         if (!hosts.empty())
         {
+
           if (port == 0)
             port = 5060;
+          OSS_LOG_INFO("Setting target from contact Address: " << host << " Port: " << port);
           targetAddress = *(hosts.begin());
           targetAddress.setPort(port);
+          std::string scheme;
+          if (requestTarget.getParam("transport", scheme))
+            transportScheme = scheme;
+          boost::to_upper(transportScheme);
         }
       }
 
-      if (!targetAddress.isValid() || (targetAddress.isPrivate() && transportScheme == "UDP"))
+      if (!remoteIp.empty() &&(!targetAddress.isValid() || (targetAddress.isPrivate() && transportScheme == "UDP")))
       {
         //
         // Still unable to resolve request-uri
         //
+        OSS_LOG_INFO("Setting target from source Address: " << remoteIp);
         targetAddress = IPAddress::fromV4IPPort(remoteIp.c_str());
+      }
+
+      if (!targetAddress.isValid())
+        throw B2BUAStateException("Unable to determine target for ACK request");
+
+      std::ostringstream cacheId;
+      cacheId << pMsg->getDialogId(true) << cseq.data();
+      Cacheable::Ptr cacheItem = retransmitCache.get(cacheId.str());
+      if (cacheItem)
+      {
+        SIPMessage::Ptr p2xx = boost::any_cast<SIPMessage::Ptr>(cacheItem->data());
+        if (p2xx)
+        {
+          std::string oldVia;
+          SIPVia::msgGetTopVia(p2xx.get(), oldVia);
+          std::string branch;
+          SIPVia::getBranch(oldVia, branch);
+          if (branch.empty())
+          {
+            OSS_LOG_WARNING(logId << "Unable to process ACK. Old via appears to have no branch parameter.");
+            throw B2BUAStateException("Unable to process ACK. Old via appears to have no branch parameter.");
+          }
+
+          OSS::IPAddress viaHost = OSS::IPAddress::fromV4IPPort(localContact.getHostPort().c_str());
+          std::string newVia = SIPB2BContact::constructVia(_pTransactionManager, pMsg, viaHost, transportScheme, branch);
+          pMsg->hdrListPrepend("Via", newVia.c_str());
+        }
+      }
+      else
+      {
+        OSS_LOG_WARNING(logId <<"Unable to process ACK. There is no 2xx retransmisison in cache.");
+        throw B2BUAStateException("Unable to process ACK. There is no 2xx retransmisison in cache.");
       }
 
       if (!_pTransactionManager->getUserAgentName().empty())
@@ -1234,21 +1276,6 @@ public:
         //
         OSS::IPAddress packetLocalInterface = pTransport->getLocalAddress();
         packetLocalInterface.externalAddress() = pTransport->getExternalAddress();
-
-#if 0
-        SBCRTPProxy::Attributes rtpAttributes;
-        rtpAttributes.verbose = false;
-        rtpAttributes.forcePEAEncryption = peerXOR == "1";
-        rtpAttributes.forceCreate = false;
-
-        _pTransactionManager->rtpProxy().handleSDP(logId, sessionId,
-                pTransport->getRemoteAddress(), // sentyBy
-                pTransport->getRemoteAddress(), // packetSourceIp
-                packetLocalInterface,  // packetLocalInterface
-                targetAddress, // route
-                routeLocalInterface,  // routeLocalInterface
-                SBCRTPProxySession::INVITE_ACK, sdp, rtpAttributes);
-#endif
 
         pMsg->setBody(sdp);
         std::string clen = OSS::string_from_number<size_t>(sdp.size());

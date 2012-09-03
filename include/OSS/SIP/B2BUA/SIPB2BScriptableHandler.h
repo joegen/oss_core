@@ -214,42 +214,44 @@ public:
     /// is set to 1 by the route handler.  This is used by the applicaiton layer to allow
     /// transactions to process a request locally.  Example is local registration.
 
-  bool loadInboundScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE));
+  bool loadInboundScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals = "", const std::string& helpers = "");
     /// Load the inbound script file for this transaction.
     ///
     /// This method will throw a JSSIPMessageException if an error occurs
     /// in loading or compiling the script
 
-  bool loadAuthScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE));
+  bool loadAuthScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals = "", const std::string& helpers = "");
     /// Load the authentication script file for this transaction.
     ///
     /// This method will throw a JSSIPMessageException if an error occurs
     /// in loading or compiling the script
 
-  bool loadRouteScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE));
+  bool loadRouteScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals = "", const std::string& helpers = "");
     /// Load the routing script file for this transaction.
     ///
     /// This method will throw a JSSIPMessageException if an error occurs
     /// in loading or compiling the script
 
-  bool loadRouteFailoverScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE));
+  bool loadRouteFailoverScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals = "", const std::string& helpers = "");
     /// Load the routing failover script file for this transaction.
     ///
     /// This method will throw a JSSIPMessageException if an error occurs
     /// in loading or compiling the script
 
-  bool loadOutboundScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE));
+  bool loadOutboundScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals = "", const std::string& helpers = "");
     /// Load the routing script file for this transaction.
     ///
     /// This method will throw a JSSIPMessageException if an error occurs
     /// in loading or compiling the script
 
-  bool loadOutboundResponseScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE));
+  bool loadOutboundResponseScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals = "", const std::string& helpers = "");
     /// Load the routing script file for this transaction.
     ///
     /// This method will throw a JSSIPMessageException if an error occurs
     /// in loading or compiling the script
 
+  bool loadScript(OSS::JS::JSSIPMessage& script, const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals = "", const std::string& helpers = "");
+    /// Generic script loader
   void recompileScripts();
     /// Recompile loaded scripts.  This is normally due to a SIGHUP being received by the B2BUA
 
@@ -362,6 +364,36 @@ protected:
 inline SIPB2BTransactionManager* SIPB2BScriptableHandler::getManager() const
 {
   return _pTransactionManager;
+}
+
+inline bool SIPB2BScriptableHandler::loadInboundScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals, const std::string& helpers)
+{
+  return loadScript(_inboundScript, scriptFile, extensionGlobals, globals, helpers);
+}
+
+inline bool SIPB2BScriptableHandler::loadAuthScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals, const std::string& helpers)
+{
+  return loadScript(_authScript, scriptFile, extensionGlobals, globals, helpers);
+}
+
+inline bool SIPB2BScriptableHandler::loadRouteScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals, const std::string& helpers)
+{
+  return loadScript(_routeScript, scriptFile, extensionGlobals, globals, helpers);
+}
+
+inline bool SIPB2BScriptableHandler::loadRouteFailoverScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals, const std::string& helpers)
+{
+  return loadScript(_routeFailoverScript, scriptFile, extensionGlobals, globals, helpers);
+}
+
+inline bool SIPB2BScriptableHandler::loadOutboundScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals, const std::string& helpers)
+{
+  return loadScript(_outboundScript, scriptFile, extensionGlobals, globals, helpers);
+}
+
+inline bool SIPB2BScriptableHandler::loadOutboundResponseScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals, const std::string& helpers)
+{
+  return loadScript(_outboundResponseScript, scriptFile, extensionGlobals, globals, helpers);
 }
 
 } } } // OSS::SIP::B2BUA
