@@ -65,25 +65,29 @@ void SIPTCPListener::run()
 
 void SIPTCPListener::handleAccept(const boost::system::error_code& e)
 {
-  OSS_LOG_DEBUG("SIPTCPListener::handleAccept INVOKED");
+  
   if (!e)
   {
     OSS_LOG_DEBUG("SIPTCPListener::handleAccept STARTING new connection");
     _pNewConnection->setExternalAddress(_externalAddress);
     _connectionManager.start(_pNewConnection);
-  }
 
-  if (_acceptor.is_open())
-  {
-    OSS_LOG_DEBUG("SIPTCPListener::handleAccept RESTARTING async accept loop");
-    _pNewConnection.reset(new SIPTCPConnection(_ioService, _connectionManager));
-    _acceptor.async_accept(dynamic_cast<SIPTCPConnection*>(_pNewConnection.get())->socket(),
-      boost::bind(&SIPTCPListener::handleAccept, this,
-        boost::asio::placeholders::error));
+    if (_acceptor.is_open())
+    {
+      OSS_LOG_DEBUG("SIPTCPListener::handleAccept RESTARTING async accept loop");
+      _pNewConnection.reset(new SIPTCPConnection(_ioService, _connectionManager));
+      _acceptor.async_accept(dynamic_cast<SIPTCPConnection*>(_pNewConnection.get())->socket(),
+        boost::bind(&SIPTCPListener::handleAccept, this,
+          boost::asio::placeholders::error));
+    }
+    else
+    {
+      OSS_LOG_DEBUG("SIPTCPListener::handleAccept ABORTING async accept loop");
+    }
   }
   else
   {
-    OSS_LOG_DEBUG("SIPTCPListener::handleAccept ABORTING async accept loop");
+    OSS_LOG_DEBUG("SIPTCPListener::handleAccept INVOKED with exception " << e.message());
   }
 }
 
