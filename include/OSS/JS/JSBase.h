@@ -74,6 +74,12 @@ public:
   const std::string& getContextName() const;
     /// returns the name of the context
 
+  void setGlobalScriptsDirectory(const std::string& globalScriptsDirectory);
+    /// Set the directory for global exports.  If not set, it will default to global.detail
+
+  void setHelperScriptsDirectory(const std::string& helperScriptsDirectory);
+    /// Set the helper scripts export. If not set, it will default to {scriptname}.detail
+
 protected:
   bool internalInitialize(const boost::filesystem::path& script,
     const std::string& functionName,
@@ -89,6 +95,8 @@ protected:
 
   std::string _contextName;
   boost::filesystem::path _script;
+  std::string _globalScriptsDirectory;
+  std::string _helperScriptsDirectory;
   OSS_HANDLE _context;
   OSS_HANDLE _processFunc;
   OSS_HANDLE _requestTemplate;
@@ -120,6 +128,16 @@ inline bool JSBase::isInitialized() const
 inline const std::string& JSBase::getContextName() const
 {
   return _contextName;
+}
+
+inline void JSBase::setGlobalScriptsDirectory(const std::string& globalScriptsDirectory)
+{
+  _globalScriptsDirectory = globalScriptsDirectory;
+}
+
+inline void JSBase::setHelperScriptsDirectory(const std::string& helperScriptsDirectory)
+{
+  _helperScriptsDirectory = helperScriptsDirectory;
 }
 
 } } // OSS::JS

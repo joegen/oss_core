@@ -676,7 +676,12 @@ bool JSBase::internalInitialize(
   // Compile global helpers
   //
   
-  boost::filesystem::path helpers = operator/(scriptFile.branch_path(), "global.detail");
+  boost::filesystem::path helpers;
+  if (!_globalScriptsDirectory.empty())
+    helpers = boost::filesystem::path(_globalScriptsDirectory);
+  else
+    helpers = operator/(scriptFile.branch_path(), "global.detail");
+
   if (boost::filesystem::exists(helpers))
   {
     try
@@ -720,10 +725,17 @@ bool JSBase::internalInitialize(
       OSS::log_warning(logMsg.str());
     }
   }
+  else
+  {
+    OSS_LOG_INFO("Google V8 context for " << _script << " is unable to load global exports from " << helpers.string());
+  }
   //
   // Compile the helpers
   //
-  helpers = OSS::boost_path(_script) + ".detail";
+  if (!_helperScriptsDirectory.empty())
+    helpers = boost::filesystem::path(_helperScriptsDirectory);
+  else
+    helpers = OSS::boost_path(_script) + ".detail";
   if (boost::filesystem::exists(helpers))
   {
     //
@@ -791,7 +803,7 @@ bool JSBase::internalInitialize(
   //
   // Compile the main script script
   //
-  OSS_LOG_ERROR("Google V8 is compiling main script " << _script);
+  OSS_LOG_INFO("Google V8 is compiling main script " << _script);
   v8::Handle<v8::String> script;
   script = read_file(OSS::boost_path(_script));
 
@@ -803,7 +815,7 @@ bool JSBase::internalInitialize(
     return false;
   }
 
-  OSS_LOG_ERROR("Google V8 is running main script " << _script);
+  OSS_LOG_INFO("Google V8 is running main script " << _script);
   // Run the script!
   v8::Handle<v8::Value> result = compiled_script->Run();
   if (result.IsEmpty())
