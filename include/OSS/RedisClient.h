@@ -24,6 +24,7 @@
 #ifndef OSS_REDISCLIENT_H_INCLUDED
 #define	OSS_REDISCLIENT_H_INCLUDED
 
+#include "OSS/Logger.h"
 #include "hiredis/hiredis.h"
 #include <boost/noncopyable.hpp>
 #include <boost/thread.hpp>
@@ -482,6 +483,7 @@ public:
     }
     catch(std::exception& error)
     {
+      OSS_LOG_ERROR("RedisClient::Get ERROR: " << error.what());
       return false;
     }
     return true;
