@@ -289,13 +289,33 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
     if (isInvite)
       pTransaction->setProperty("reinvite", "1");
 
+    //
+    // if ret is error and this is a NOTIFY, try to send it unsolicited
+    //
+    if (ret && pRequest->isRequest("NOTIFY") && SIPB2BContact::isRegisterRoute(pRequest))
+      return onRouteUpperReg(pRequest, pTransaction, localInterface, target);
+
     return ret;
   }
   else if (SIPB2BContact::isRegisterRoute(pRequest))
   {
-    return onRouteUpperReg(pRequest, pTransaction, localInterface, target);
+    SIPMessage::Ptr ret = onRouteUpperReg(pRequest, pTransaction, localInterface, target);
+    if (ret)
+      return ret;
   }
-  else if (isInvite)
+  else
+  {
+    SIPMessage::Ptr ret = onRouteOutOfDialogTransaction(pRequest, pTransaction, localInterface, target);
+    if (ret)
+    {
+      //
+      // Route transaction produced a response.  This normally means an error occured in routing
+      //
+      return ret;
+    }
+  }
+
+  if (isInvite)
   {
     //
     // This is a new call
@@ -305,14 +325,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
       SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_400_BadRequest, "Dialog already exist!");
       return serverError;
     }
-    SIPMessage::Ptr ret = onRouteOutOfDialogTransaction(pRequest, pTransaction, localInterface, target);
-    if (ret)
-    {
-      //
-      // Route transaction produced a response.  This normally means an error occured in routing
-      //
-      return ret;
-    }
+    
 
     std::string oldVia;
     SIPVia::msgGetTopVia(pRequest.get(), oldVia);
@@ -368,8 +381,6 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
       pTransaction,
       localInterface,
       sessionInfo);
-
-    return OSS::SIP::SIPMessage::Ptr();
   }
   else if (pRequest->isRequest("REGISTER"))
   {
@@ -377,15 +388,6 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
     if (pTransaction->getProperty("invoke-local-handler", invokeLocalHandler ) && invokeLocalHandler == "1")
     {
       return SIPMessage::Ptr();
-    }
-
-    SIPMessage::Ptr ret = onRouteOutOfDialogTransaction(pRequest, pTransaction, localInterface, target);
-    if (ret)
-    {
-      //
-      // Route transaction produced a response.  This normally means an error occured in routing
-      //
-      return ret;
     }
 
     pRequest->hdrListRemove("Route");
@@ -410,16 +412,8 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
       SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_400_BadRequest);
       return serverError;
     }
-
-    return OSS::SIP::SIPMessage::Ptr();
   }
-  else
-  {
-    //
-    // This is a new request
-    //
-    return onRouteOutOfDialogTransaction(pRequest, pTransaction, localInterface, target);
-  }
+  return OSS::SIP::SIPMessage::Ptr();
 }
 
 SIPMessage::Ptr SIPB2BScriptableHandler::onRouteOutOfDialogTransaction(
@@ -1073,6 +1067,10 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
 
         RegData registration;
         //
+        // Preserve the ID
+        //
+        registration.key = regId;
+        //
         // Preserve the contact
         //
         registration.contact = oldCuri.getURI().c_str();
@@ -1493,50 +1491,58 @@ void SIPB2BScriptableHandler::runOptionsResponseThread()
 
 void SIPB2BScriptableHandler::sendOptionsKeepAlive(RegData& regData)
 {
-  static int cseqNo = 1;
+  try
+  {
+    static int cseqNo = 1;
 
-  std::string callId = OSS::string_create_uuid();
-  size_t hash = OSS::string_hash(callId.c_str());
+    std::string callId = OSS::string_create_uuid();
+    size_t hash = OSS::string_hash(callId.c_str());
 
-  SIPTo to(regData.aor);
-  std::string transportScheme = regData.targetTransport;
-  OSS::string_to_upper(transportScheme);
-  IPAddress src = IPAddress::fromV4IPPort(regData.localInterface.c_str());
-  IPAddress target = IPAddress::fromV4IPPort(regData.packetSource.c_str());
+    SIPTo to(regData.aor);
+    std::string transportScheme = regData.targetTransport;
+    OSS::string_to_upper(transportScheme);
 
-  _pTransactionManager->getInternalAddress(src, src);
+    IPAddress src = IPAddress::fromV4IPPort(regData.localInterface.c_str());
+    IPAddress target = IPAddress::fromV4IPPort(regData.packetSource.c_str());
 
-  std::ostringstream options;
-  options << "OPTIONS " << regData.contact << " SIP/2.0" << OSS::SIP::CRLF;
-  options << "To: " << to.data() << OSS::SIP::CRLF;
-  options << "From: sip:" << regData.key << "@" << to.getHostPort() << ";tag=" << hash << OSS::SIP::CRLF;
+    _pTransactionManager->getInternalAddress(src, src);
 
-  if (src.externalAddress().empty())
-    options << "Via: " << "SIP/2.0/" << transportScheme << " " << regData.localInterface << ";branch=z9hG4bK" << hash << ";rport" << OSS::SIP::CRLF;
-  else
-    options << "Via: " << "SIP/2.0/" << transportScheme << " " << src.externalAddress() << ":" << src.getPort() << ";branch=z9hG4bK" << hash << ";rport"  << OSS::SIP::CRLF;
+    std::ostringstream options;
+    options << "OPTIONS " << regData.contact << " SIP/2.0" << OSS::SIP::CRLF;
+    options << "To: " << to.data() << OSS::SIP::CRLF;
+    options << "From: sip:" << regData.key << "@" << to.getHostPort() << ";tag=" << hash << OSS::SIP::CRLF;
 
-  options << "Call-ID: " << callId << OSS::SIP::CRLF;
-  options << "CSeq: " << cseqNo++ << " OPTIONS" << OSS::SIP::CRLF;
+    if (src.externalAddress().empty())
+      options << "Via: " << "SIP/2.0/" << transportScheme << " " << regData.localInterface << ";branch=z9hG4bK" << hash << ";rport" << OSS::SIP::CRLF;
+    else
+      options << "Via: " << "SIP/2.0/" << transportScheme << " " << src.externalAddress() << ":" << src.getPort() << ";branch=z9hG4bK" << hash << ";rport"  << OSS::SIP::CRLF;
 
-  if (src.externalAddress().empty())
-    options << "Contact: " << "<sip:" << regData.key << "@" << regData.localInterface << ">" << OSS::SIP::CRLF;
-  else
-    options << "Contact: " << "<sip:" << regData.key << "@" << src.externalAddress() << ":" << src.getPort() << ">" << OSS::SIP::CRLF;
+    options << "Call-ID: " << callId << OSS::SIP::CRLF;
+    options << "CSeq: " << cseqNo++ << " OPTIONS" << OSS::SIP::CRLF;
 
-  options << "Content-Length: 0" << OSS::SIP::CRLF << OSS::SIP::CRLF;
+    if (src.externalAddress().empty())
+      options << "Contact: " << "<sip:" << regData.key << "@" << regData.localInterface << ">" << OSS::SIP::CRLF;
+    else
+      options << "Contact: " << "<sip:" << regData.key << "@" << src.externalAddress() << ":" << src.getPort() << ">" << OSS::SIP::CRLF;
+
+    options << "Content-Length: 0" << OSS::SIP::CRLF << OSS::SIP::CRLF;
 
 
-  SIPMessage::Ptr msg(new SIPMessage(options.str()));
-  if (regData.enc)
-    msg->setProperty("xor", "1");
+    SIPMessage::Ptr msg(new SIPMessage(options.str()));
+    if (regData.enc)
+      msg->setProperty("xor", "1");
 
-  msg->setProperty("target-transport", transportScheme.c_str());
+    msg->setProperty("target-transport", transportScheme.c_str());
 
-  if (!regData.transportId.empty())
-    msg->setProperty("transport-id", regData.transportId.c_str());
+    if (!regData.transportId.empty())
+      msg->setProperty("transport-id", regData.transportId.c_str());
 
-  _pTransactionManager->stack().sendRequest(msg, src, target, _keepAliveResponseCb);
+    _pTransactionManager->stack().sendRequest(msg, src, target, _keepAliveResponseCb);
+  }
+  catch(std::exception e)
+  {
+    OSS_LOG_ERROR("SIPB2BScriptableHandler::sendOptionsKeepAlive ERROR: " << e.what());
+  }
 
 }
 
