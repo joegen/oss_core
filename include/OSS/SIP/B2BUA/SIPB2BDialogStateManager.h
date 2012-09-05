@@ -234,7 +234,6 @@ public:
       }
       if (dialogList.empty())
         _dialogs.remove(callId);
-      _csDialogsMutex.unlock();
     }
     _dataStore.removeSession(sessionId);
   }
@@ -419,7 +418,6 @@ public:
       //
       // Prepare the new contact
       //
-      OSS_LOG_INFO("onUpdateInitialUASState - sessionId: " << sessionId);
       if (!pResponse->is3xx())
       {
         SIPB2BContact::SessionInfo sessionInfo;
@@ -438,7 +436,6 @@ public:
       {
         try
         {
-          OSS_LOG_INFO("onUpdateInitialUASState - sessionId: " << sessionId << " preserving leg 1 state");
           //
           // Preserve leg 1 dialog state
           //
@@ -508,8 +505,6 @@ public:
           std::string noRTPProxy;
           leg1.noRtpProxy = (pTransaction->getProperty("no-rtp-proxy", noRTPProxy) && noRTPProxy == "1");
      
-
-          OSS_LOG_INFO("onUpdateInitialUASState - sessionId: " << sessionId << " peristing to data store");
           _dataStore.persist(dialogData);
 
           //if (pResponse->is2xx())
