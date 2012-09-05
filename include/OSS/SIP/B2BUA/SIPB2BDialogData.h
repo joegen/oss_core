@@ -40,6 +40,26 @@ namespace OSS {
 namespace SIP {
 namespace B2BUA {
 
+struct JsonHelper
+{
+  static std::string toString(const json::UnknownElement& obj)
+  {
+    json::String jsonString = obj;
+    return jsonString.Value();
+  }
+
+  static double toNumber(const json::UnknownElement& obj)
+  {
+    json::Number jsonNumber = obj;
+    return jsonNumber.Value();
+  }
+
+  static double toBoolean(const json::UnknownElement& obj)
+  {
+    json::Boolean jsonBool = obj;
+    return jsonBool.Value();
+  }
+};
 
 struct SIPB2BDialogData
 {
@@ -67,6 +87,53 @@ public:
     {
       noRtpProxy = false;
       localCSeq = 0;
+    }
+
+    LegInfo(const LegInfo& copy)
+    {
+      dialogId = copy.dialogId;
+      callId = copy.callId;
+      from = copy.from;
+      to = copy.to;
+      remoteContact = copy.remoteContact;
+      localContact = copy.localContact;
+      localRecordRoute = copy.localRecordRoute;
+      remoteIp = copy.remoteIp;
+      transportId = copy.transportId;
+      targetTransport = copy.targetTransport;
+      localSdp = copy.localSdp;
+      remoteSdp = copy.remoteSdp;
+      routeSet = copy.routeSet;
+      encryption = copy.encryption;
+      noRtpProxy = copy.noRtpProxy;
+      localCSeq = copy.localCSeq;
+    }
+
+    void swap(LegInfo& copy)
+    {
+      std::swap(dialogId, copy.dialogId);
+      std::swap(callId, copy.callId);
+      std::swap(from, copy.from);
+      std::swap(to, copy.to);
+      std::swap(remoteContact, copy.remoteContact);
+      std::swap(localContact, copy.localContact);
+      std::swap(localRecordRoute, copy.localRecordRoute);
+      std::swap(remoteIp, copy.remoteIp);
+      std::swap(transportId, copy.transportId);
+      std::swap(targetTransport, copy.targetTransport);
+      std::swap(localSdp, copy.localSdp);
+      std::swap(remoteSdp, copy.remoteSdp);
+      std::swap(routeSet, copy.routeSet);
+      std::swap(encryption, copy.encryption);
+      std::swap(noRtpProxy, copy.noRtpProxy);
+      std::swap(localCSeq, copy.localCSeq);
+    }
+
+    LegInfo& operator=(const LegInfo& copy)
+    {
+      LegInfo clone(copy);
+      swap(clone);
+      return *this;
     }
 
     void toJsonObject(json::Object& object) const
@@ -104,21 +171,21 @@ public:
     {
       try
       {
-        dialogId = ((json::String)object["dialogId"]).Value();
-        callId = ((json::String)object["callId"]).Value();
-        from = ((json::String)object["from"]).Value();
-        to = ((json::String)object["to"]).Value();
-        remoteContact = ((json::String)object["remoteContact"]).Value();
-        localContact = ((json::String)object["localContact"]).Value();
-        localRecordRoute = ((json::String)object["localRecordRoute"]).Value();
-        remoteIp = ((json::String)object["remoteIp"]).Value();
-        transportId = ((json::String)object["transportId"]).Value();
-        targetTransport = ((json::String)object["targetTransport"]).Value();
-        localSdp = ((json::String)object["localSdp"]).Value();
-        remoteSdp = ((json::String)object["remoteSdp"]).Value();
-        encryption = ((json::String)object["encryption"]).Value();
-        noRtpProxy = ((json::Boolean)object["noRtpProxy"]).Value();
-        localCSeq = ((json::Number)object["localCSeq"]).Value();
+        dialogId = JsonHelper::toString(object["dialogId"]);
+        callId = JsonHelper::toString(object["callId"]);
+        from = JsonHelper::toString(object["from"]);
+        to = JsonHelper::toString(object["to"]);
+        remoteContact = JsonHelper::toString(object["remoteContact"]);
+        localContact = JsonHelper::toString(object["localContact"]);
+        localRecordRoute = JsonHelper::toString(object["localRecordRoute"]);
+        remoteIp = JsonHelper::toString(object["remoteIp"]);
+        transportId = JsonHelper::toString(object["transportId"]);
+        targetTransport = JsonHelper::toString(object["targetTransport"]);
+        localSdp = JsonHelper::toString(object["localSdp"]);
+        remoteSdp = JsonHelper::toString(object["remoteSdp"]);
+        encryption = JsonHelper::toString(object["encryption"]);
+        noRtpProxy = JsonHelper::toBoolean(object["noRtpProxy"]);
+        localCSeq = JsonHelper::toNumber(object["localCSeq"]);
 
         json::Array routes = object["routeSet"];
         for (json::Array::iterator iter = routes.Begin(); iter != routes.End(); iter++)
@@ -154,6 +221,35 @@ public:
     expires = 0;
   }
 
+  SIPB2BDialogData(const SIPB2BDialogData& copy)
+  {
+    sessionId = copy.sessionId;
+    leg1 = copy.leg1;
+    leg2 = copy.leg2;
+    timeStamp = copy.timeStamp;
+    connectTime = copy.connectTime;
+    disconnectTime = copy.disconnectTime;
+    sessionAge = copy.sessionAge;
+  }
+
+  void swap(SIPB2BDialogData& copy)
+  {
+    std::swap(sessionId, copy.sessionId);
+    std::swap(leg1, copy.leg1);
+    std::swap(leg2, copy.leg2);
+    std::swap(timeStamp, copy.timeStamp);
+    std::swap(connectTime, copy.connectTime);
+    std::swap(disconnectTime, copy.disconnectTime);
+    std::swap(sessionAge, copy.sessionAge);
+  }
+
+  SIPB2BDialogData& operator=(const SIPB2BDialogData& copy)
+  {
+    SIPB2BDialogData clone(copy);
+    swap(clone);
+    return *this;
+  }
+
   void toJsonObject(json::Object& object) const
   {
     try
@@ -185,11 +281,11 @@ public:
       json::Object leg2Object = object["leg2"];
       leg1.fromJsonObject(leg1Object);
       leg2.fromJsonObject(leg2Object);
-      sessionId = ((json::String)object["sessionId"]).Value();
-      timeStamp = ((json::Number)object["timeStamp"]).Value();
-      connectTime = ((json::Number)object["connectTime"]).Value();
-      disconnectTime = ((json::Number)object["disconnectTime"]).Value();
-      sessionAge = ((json::Number)object["sessionAge"]).Value();
+      sessionId = JsonHelper::toString(object["sessionId"]);
+      timeStamp = JsonHelper::toNumber(object["timeStamp"]);
+      connectTime = JsonHelper::toNumber(object["connectTime"]);
+      disconnectTime = JsonHelper::toNumber(object["disconnectTime"]);
+      sessionAge = JsonHelper::toNumber(object["sessionAge"]);
     }
     catch(json::Exception e)
     {
@@ -219,6 +315,39 @@ struct SIPB2BRegData
     enc = false;
   }
 
+  SIPB2BRegData(const SIPB2BRegData& copy)
+  {
+    contact = copy.contact;
+    packetSource = copy.packetSource;
+    localInterface = copy.localInterface;
+    transportId = copy.transportId;
+    targetTransport = copy.targetTransport;
+    aor = copy.aor;
+    expires = copy.expires;
+    enc = copy.enc;
+    key = copy.key;
+  }
+
+  void swap(SIPB2BRegData& copy)
+  {
+    std::swap(contact, copy.contact);
+    std::swap(packetSource, copy.packetSource);
+    std::swap(localInterface, copy.localInterface);
+    std::swap(transportId, copy.transportId);
+    std::swap(targetTransport, copy.targetTransport);
+    std::swap(aor, copy.aor);
+    std::swap(expires, copy.expires);
+    std::swap(enc, copy.enc);
+    std::swap(key, copy.key);
+  }
+
+  SIPB2BRegData& operator=(const SIPB2BRegData& copy)
+  {
+    SIPB2BRegData clone(copy);
+    swap(clone);
+    return *this;
+  }
+
   void toJsonObject(json::Object& object) const
   {
     try
@@ -243,15 +372,15 @@ struct SIPB2BRegData
   {
     try
     {
-      key = ((json::String&)object["key"]).Value();
-      contact = ((json::String&)object["contact"]).Value();
-      packetSource = ((json::String&)object["packetSource"]).Value();
-      localInterface = ((json::String&)object["localInterface"]).Value();
-      transportId = ((json::String&)object["transportId"]).Value();
-      targetTransport = ((json::String&)object["targetTransport"]).Value();
-      aor = ((json::String&)object["aor"]).Value();
-      expires = ((json::Number&)object["expires"]).Value();
-      enc = ((json::Boolean&)object["enc"]).Value();
+      key = JsonHelper::toString(object["key"]);
+      contact = JsonHelper::toString(object["contact"]);
+      packetSource = JsonHelper::toString(object["packetSource"]);
+      localInterface = JsonHelper::toString(object["localInterface"]);
+      transportId = JsonHelper::toString(object["transportId"]);
+      targetTransport = JsonHelper::toString(object["targetTransport"]);
+      aor = JsonHelper::toString(object["aor"]);
+      expires = JsonHelper::toNumber(object["expires"]);
+      enc = JsonHelper::toBoolean(object["enc"]);
     }
     catch(json::Exception e)
     {
