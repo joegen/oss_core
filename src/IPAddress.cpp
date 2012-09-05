@@ -129,13 +129,19 @@ bool IPAddress::isPrivate()
 
 IPAddress IPAddress::fromHost(const char* host)
 {
-  boost::asio::ip::tcp::resolver::query query(host, "0");
-  boost::asio::ip::tcp::resolver::iterator endpoint_iterator = OSS::net_resolver().resolve(query);
-  boost::asio::ip::tcp::resolver::iterator endpoint_iterator_end;
-  if (endpoint_iterator != endpoint_iterator_end)
+  try
   {
-    boost::asio::ip::tcp::endpoint ep = *endpoint_iterator;
-    return IPAddress(ep.address().to_string());
+    boost::asio::ip::tcp::resolver::query query(host, "0");
+    boost::asio::ip::tcp::resolver::iterator endpoint_iterator = OSS::net_resolver().resolve(query);
+    boost::asio::ip::tcp::resolver::iterator endpoint_iterator_end;
+    if (endpoint_iterator != endpoint_iterator_end)
+    {
+      boost::asio::ip::tcp::endpoint ep = *endpoint_iterator;
+      return IPAddress(ep.address().to_string());
+    }
+  }
+  catch(...)
+  {
   }
   return IPAddress();
 }
