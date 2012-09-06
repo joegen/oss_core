@@ -1071,6 +1071,10 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
         //
         registration.key = regId;
         //
+        // Preserve the call-id
+        //
+        registration.callId = pResponse->hdrGet("call-id");
+        //
         // Preserve the contact
         //
         registration.contact = oldCuri.getURI().c_str();

@@ -308,6 +308,7 @@ struct SIPB2BRegData
   int expires;
   bool enc;
   std::string key;
+  std::string callId;
 
   SIPB2BRegData()
   {
@@ -326,6 +327,7 @@ struct SIPB2BRegData
     expires = copy.expires;
     enc = copy.enc;
     key = copy.key;
+    callId = copy.callId;
   }
 
   void swap(SIPB2BRegData& copy)
@@ -339,6 +341,7 @@ struct SIPB2BRegData
     std::swap(expires, copy.expires);
     std::swap(enc, copy.enc);
     std::swap(key, copy.key);
+    std::swap(callId, copy.callId);
   }
 
   SIPB2BRegData& operator=(const SIPB2BRegData& copy)
@@ -353,6 +356,7 @@ struct SIPB2BRegData
     try
     {
       object["key"] = json::String(key);
+      object["callId"] = json::String(callId);
       object["contact"] = json::String(contact);
       object["packetSource"] = json::String(packetSource);
       object["localInterface"] = json::String(localInterface);
@@ -361,6 +365,7 @@ struct SIPB2BRegData
       object["aor"] = json::String(aor);
       object["expires"] = json::Number(expires);
       object["enc"] = json::Boolean(enc);
+
     }
     catch(json::Exception e)
     {
@@ -373,6 +378,7 @@ struct SIPB2BRegData
     try
     {
       key = JsonHelper::toString(object["key"]);
+      callId = JsonHelper::toString(object["callId"]);
       contact = JsonHelper::toString(object["contact"]);
       packetSource = JsonHelper::toString(object["packetSource"]);
       localInterface = JsonHelper::toString(object["localInterface"]);
