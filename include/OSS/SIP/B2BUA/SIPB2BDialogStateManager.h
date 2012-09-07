@@ -166,8 +166,10 @@ public:
     else
     {
       dialogs = _dialogs.get(callId);
+      DialogList& dialogList = boost::any_cast<DialogList&>(dialogs->data());
+      dialogList.push_back(dialogData);
     }
-    OSS_LOG_DEBUG("Added new dialog " << "session-id: " << dialogData.sessionId << " call-id" << callId);
+    OSS_LOG_DEBUG("Added new dialog " << "Session-ID: " << dialogData.sessionId << " Call-ID: " << callId);
     _dialogs.add(dialogs);
     _csDialogsMutex.unlock();
   }
@@ -242,21 +244,34 @@ public:
   {
     OSS::mutex_critic_sec_lock lock(_csDialogsMutex);
     std::string callId = pMsg->hdrGet("call-id");
-    OSS_VERIFY(!callId.empty());
+    if (callId.empty())
+    {
+      OSS_LOG_ERROR("Unable to determine Call-ID while calling findDialog.");
+      return false;
+    }
+
     SIPFrom from = pMsg->hdrGet("from");
     SIPTo to = pMsg->hdrGet("to");
+
+    OSS_LOG_DEBUG("Finding dialog for Call-ID: " << callId << " SessionId: (" << sessionId << ")");
+
     if (_dialogs.has(callId))
     {
+      OSS_LOG_DEBUG("Dialog database has a record for Call-ID" << callId);
       Cacheable::Ptr dialogs = _dialogs.get(callId);
       DialogList& dialogList = boost::any_cast<DialogList&>(dialogs->data());
       if (dialogList.size() == 1)
       {
         dialogData = dialogList.front();
+        OSS_LOG_DEBUG("Dialog database has 1 session for Call-ID: " << callId << " SessionId: (" << dialogData.sessionId << ")");
         if (!sessionId.empty())
           return dialogData.sessionId == sessionId;
+        else
+          return true;
       }
       else if (!sessionId.empty())
       {
+        OSS_LOG_DEBUG("Dialog database has multiple sessions for Call-ID: " << callId << " SessionId: (" << sessionId << ")");
         for (DialogList::const_iterator iter = dialogList.begin(); iter != dialogList.end(); iter++)
         {
           if (iter->sessionId == sessionId)
@@ -265,6 +280,7 @@ public:
             return true;
           }
         }
+        OSS_LOG_WARNING("Multiple sessions exist for Call-ID: " << callId << " but non of them is Session-ID: " << sessionId);
         return false;
       }
       //
@@ -301,11 +317,14 @@ public:
           }
         }
       }
-      catch(...)
+      catch(std::exception e)
       {
         return false;
       }
     }
+
+    OSS_LOG_WARNING("No dialog exists for Call-ID " << callId);
+
     return false;
   }
 

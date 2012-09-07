@@ -292,10 +292,17 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
     //
     // if ret is error and this is a NOTIFY, try to send it unsolicited
     //
+    SIPMessage::Ptr notifyRet;
     if (ret && pRequest->isRequest("NOTIFY") && SIPB2BContact::isRegisterRoute(pRequest))
-      return onRouteUpperReg(pRequest, pTransaction, localInterface, target);
-
-    return ret;
+    {
+      notifyRet = onRouteUpperReg(pRequest, pTransaction, localInterface, target);
+      if (notifyRet)
+        return ret;
+    }
+    else
+    {
+      return ret;
+    }
   }
   else if (SIPB2BContact::isRegisterRoute(pRequest))
   {
@@ -315,7 +322,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
     }
   }
 
-  if (isInvite)
+  if (isInvite || pRequest->isRequest("NOTIFY"))
   {
     //
     // This is a new call
