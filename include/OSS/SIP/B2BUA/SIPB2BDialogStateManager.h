@@ -257,7 +257,7 @@ public:
 
     if (_dialogs.has(callId))
     {
-      OSS_LOG_DEBUG("Dialog database has a record for Call-ID" << callId);
+      OSS_LOG_DEBUG("Dialog database has a record for Call-ID: " << callId);
       Cacheable::Ptr dialogs = _dialogs.get(callId);
       DialogList& dialogList = boost::any_cast<DialogList&>(dialogs->data());
       if (dialogList.size() == 1)
@@ -319,6 +319,7 @@ public:
       }
       catch(std::exception e)
       {
+        OSS_LOG_ERROR("Exception caught while calling findDialog - Error: " << e.what());
         return false;
       }
     }

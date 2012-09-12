@@ -322,6 +322,9 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
     }
   }
 
+  //
+  // Handle INVITE or unsoliited NOTIFY
+  //
   if (isInvite || pRequest->isRequest("NOTIFY"))
   {
     //
