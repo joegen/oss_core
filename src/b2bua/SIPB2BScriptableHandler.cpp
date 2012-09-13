@@ -322,20 +322,49 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
     }
   }
 
-  //
-  // Handle INVITE or unsoliited NOTIFY
-  //
-  if (isInvite || pRequest->isRequest("NOTIFY"))
+
+  if (pRequest->isRequest("REGISTER"))
+  {
+    std::string invokeLocalHandler = "0";
+    if (pTransaction->getProperty("invoke-local-handler", invokeLocalHandler ) && invokeLocalHandler == "1")
+    {
+      return SIPMessage::Ptr();
+    }
+
+    pRequest->hdrListRemove("Route");
+    pRequest->hdrListRemove("Record-Route");
+    pRequest->hdrListRemove("Via");
+
+    std::string targetTransport;
+    if (!pRequest->getProperty("target-transport", targetTransport) || targetTransport.empty())
+      targetTransport = "udp";
+
+    //
+    // Prepare the new via
+    //
+    OSS::string_to_upper(targetTransport);
+    std::string viaBranch = "z9hG4bK";
+    viaBranch += OSS::string_create_uuid();
+    std::string newVia = SIPB2BContact::constructVia(_pTransactionManager, pRequest, localInterface, targetTransport, viaBranch);
+    pRequest->hdrListPrepend("Via", newVia);
+
+    if (!SIPB2BContact::transformRegister(_pTransactionManager, pRequest, pTransaction, localInterface))
+    {
+      SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_400_BadRequest);
+      return serverError;
+    }
+  }
+  else
   {
     //
-    // This is a new call
+    // This is a new out o dialog transaction
     //
     if (_pDialogState->hasDialog(pRequest->hdrGet("call-id")))
     {
       SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_400_BadRequest, "Dialog already exist!");
       return serverError;
     }
-    
+
 
     std::string oldVia;
     SIPVia::msgGetTopVia(pRequest.get(), oldVia);
@@ -391,37 +420,6 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
       pTransaction,
       localInterface,
       sessionInfo);
-  }
-  else if (pRequest->isRequest("REGISTER"))
-  {
-    std::string invokeLocalHandler = "0";
-    if (pTransaction->getProperty("invoke-local-handler", invokeLocalHandler ) && invokeLocalHandler == "1")
-    {
-      return SIPMessage::Ptr();
-    }
-
-    pRequest->hdrListRemove("Route");
-    pRequest->hdrListRemove("Record-Route");
-    pRequest->hdrListRemove("Via");
-
-    std::string targetTransport;
-    if (!pRequest->getProperty("target-transport", targetTransport) || targetTransport.empty())
-      targetTransport = "udp";
-
-    //
-    // Prepare the new via
-    //
-    OSS::string_to_upper(targetTransport);
-    std::string viaBranch = "z9hG4bK";
-    viaBranch += OSS::string_create_uuid();
-    std::string newVia = SIPB2BContact::constructVia(_pTransactionManager, pRequest, localInterface, targetTransport, viaBranch);
-    pRequest->hdrListPrepend("Via", newVia);
-
-    if (!SIPB2BContact::transformRegister(_pTransactionManager, pRequest, pTransaction, localInterface))
-    {
-      SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_400_BadRequest);
-      return serverError;
-    }
   }
   return OSS::SIP::SIPMessage::Ptr();
 }
@@ -806,9 +804,23 @@ void SIPB2BScriptableHandler::onProcessResponseInbound(
   SIPMessage::Ptr& pResponse,
   OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction)
 {
-  if (pResponse->isResponseTo("INVITE"))
+  bool isDialogForming = false;
+  bool isInvite = pResponse->isResponseTo("INVITE");
+  if (isInvite || pResponse->isResponseTo("SUBSCRIBE"))
   {
-    if (pResponse->is2xx())
+    isDialogForming = true;
+  }
+  else if (pResponse->isResponseTo("REFER"))
+  {
+    //
+    // Out-of-dialog REFER.  This is an implied subscription so treat it as a SUBSCRIBE
+    //
+    isDialogForming = !pTransaction->serverRequest()->isMidDialog();
+  }
+
+  if (isDialogForming)
+  {
+    if (isInvite && pResponse->is2xx())
     {
       std::string id;
       if (pTransaction->serverRequest()->getTransactionId(id))
@@ -896,31 +908,31 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
   if (!_pTransactionManager->getUserAgentName().empty())
      pResponse->hdrSet("Server", _pTransactionManager->getUserAgentName().c_str());
 
-  if (pResponse->isResponseTo("INVITE"))
+  bool isInvite = pResponse->isResponseTo("INVITE");
+  std::string isReinvite;
+  if (isInvite && pTransaction->getProperty("reinvite", isReinvite))
   {
     //
     // If it is a reinvite let the other handler do the job and bail-out
     //
-    std::string isReinvite;
-    if (pTransaction->getProperty("reinvite", isReinvite))
+    std::string sessionId;
+    OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
+    _pDialogState->onUpdateMidCallUASState(pResponse, pTransaction, sessionId);
+    if (pResponse->is2xx())
     {
-      std::string sessionId;
-      OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
-      _pDialogState->onUpdateMidCallUASState(pResponse, pTransaction, sessionId);
-      if (pResponse->is2xx())
-      {
-        //
-        // If this is a 2xx, add it to the retranmission cache
-        //
-        std::ostringstream cacheId;
-        cacheId << pResponse->getDialogId(false) << pResponse->hdrGet("cseq");
-        boost::any cacheItem = pResponse;
-        pResponse->setProperty("session-id", sessionId);
-        _2xxRetransmitCache.add(cacheId.str(), cacheItem);
-      }
-      return;
+      //
+      // If this is a 2xx, add it to the retranmission cache
+      //
+      std::ostringstream cacheId;
+      cacheId << pResponse->getDialogId(false) << pResponse->hdrGet("cseq");
+      boost::any cacheItem = pResponse;
+      pResponse->setProperty("session-id", sessionId);
+      _2xxRetransmitCache.add(cacheId.str(), cacheItem);
     }
-
+    return;
+  }
+  else if (isInvite || pResponse->isResponseTo("SUBSCRIBE") || pResponse->isResponseTo("REFER"))
+  {
     std::string sessionId;
     OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
     //
@@ -930,7 +942,7 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
     //
     // If this is a 2xx, then retransmit it.
     //
-    if (pResponse->is2xx())
+    if (isInvite && pResponse->is2xx())
     {
       std::string transportId = OSS::string_from_number<OSS::UInt64>(pTransaction->serverTransport()->getIdentifier()).c_str();
       pResponse->setProperty("transport-id", transportId);
