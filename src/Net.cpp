@@ -107,7 +107,7 @@ void net_init()
     struct ifaddrs *cur;
     for(cur = list; cur != 0; cur = cur->ifa_next)
     {
-      if(cur->ifa_addr->sa_family != AF_INET)
+      if(!cur || !cur->ifa_addr || cur->ifa_addr->sa_family != AF_INET)
         continue;
 
       struct sockaddr_in *addrStruct = (struct sockaddr_in *)cur->ifa_addr;
