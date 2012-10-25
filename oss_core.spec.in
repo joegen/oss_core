@@ -11,6 +11,7 @@ Vendor: OSS Software Solutions
 Url: http://www.ossapp.com
 
 BuildRequires: automake
+BuildRequires: libtool
 BuildRequires: gcc-c++
 BuildRequires: openssl-devel
 BuildRequires: libmcrypt-devel
