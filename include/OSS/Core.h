@@ -137,7 +137,7 @@ std::vector<std::string> OSS_API string_tokenize(const std::string& str, const c
 void OSS_API string_replace(std::string& str, const char* what, const char* with);
   /// replace elements ina string
 
-std::string OSS_API string_create_uuid();
+std::string OSS_API string_create_uuid(bool random = true);
   /// Generate a time based Universal Unique Identifier string
 
 std::string OSS_API string_md5_hash(const char* input);

@@ -163,18 +163,18 @@ std::vector<std::string> string_tokenize(const std::string& str, const char* tok
   return tokens;
 }
 
-std::string string_create_uuid()
+std::string string_create_uuid(bool random)
 {
-#if 1
-  static Poco::UUIDGenerator uuidgen;
-  Poco::UUID uuid = Poco::UUIDGenerator::defaultGenerator().createOne();
-  return uuid.toString();
-#else
-  boost::uuids::uuid id;
-  std::ostringstream strm;
-  strm << id;
-  return strm.str();
-#endif
+  if (random)
+  {
+    Poco::UUID uuid = Poco::UUIDGenerator::defaultGenerator().createRandom();
+    return uuid.toString();
+  }
+  else
+  {
+    Poco::UUID uuid = Poco::UUIDGenerator::defaultGenerator().createOne();
+    return uuid.toString();
+  }
 }
 
 unsigned int string_to_js_hash(const std::string& str)
