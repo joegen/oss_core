@@ -113,6 +113,7 @@ helpful to build projects from the sipX library
 mv %{_builddir}/%name-%version/%name-rpmlintrc %{_sourcedir}
 
 %build
+autoreconf -if
 %configure @OSSLIBS_RPM_CONFIGURE_OPTIONS@
 cp config.log %name.configlog
 make %{_smp_mflags} all
