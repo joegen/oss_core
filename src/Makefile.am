@@ -192,7 +192,8 @@ liboss_core_la_SOURCES =  \
     b2bua/SIPB2BTransactionManager.cpp \
     b2bua/SIPB2BContact.cpp \
     js/JSBase.cpp \
-    js/JSSIPMessage.cpp
+    js/JSSIPMessage.cpp \
+    rtp/RTPPacket.cpp
 
 bin_PROGRAMS = oss_core_unit_test
 
@@ -210,6 +211,7 @@ oss_core_unit_test_LDADD = \
 	${common_libs}
 
 oss_core_unit_test_SOURCES = \
+	unit_test/TestSuite.cpp \
 	unit_test/TestRequestLine.cpp \
 	unit_test/TestBasicParser.cpp \
 	unit_test/TestSDP.cpp \
@@ -223,7 +225,7 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestPersistent.cpp \
 	unit_test/TestDNS.cpp \
 	unit_test/TestSIPURI.cpp \
-	unit_test/TestSuite.cpp
+	unit_test/TestRTPPacket.cpp
 
 
 
