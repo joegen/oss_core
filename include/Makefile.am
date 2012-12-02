@@ -188,7 +188,8 @@ nobase_include_HEADERS = \
     OSS/STUN/STUNServer.h \
     OSS/JS/JS.h \
     OSS/JS/JSBase.h \
-    OSS/JS/JSSIPMessage.h
+    OSS/JS/JSSIPMessage.h \
+    OSS/RTP/RTPPacket.h
 
 
     
