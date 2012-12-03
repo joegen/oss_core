@@ -189,7 +189,9 @@ nobase_include_HEADERS = \
     OSS/JS/JS.h \
     OSS/JS/JSBase.h \
     OSS/JS/JSSIPMessage.h \
-    OSS/RTP/RTPPacket.h
+    OSS/RTP/RTPPacket.h \
+    OSS/RTP/RTPResizingQueue.h \
+    OSS/RTP/RTPPCAPReader.h
 
 
     

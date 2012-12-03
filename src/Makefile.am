@@ -41,7 +41,8 @@ dep_libs = \
 	-lrt \
 	-lcrypt \
 	-lssl \
-	-lresolv
+	-lresolv \
+	-lpcap
 
 liboss_core_la_LIBADD = \
 	${dep_libs}
@@ -193,7 +194,9 @@ liboss_core_la_SOURCES =  \
     b2bua/SIPB2BContact.cpp \
     js/JSBase.cpp \
     js/JSSIPMessage.cpp \
-    rtp/RTPPacket.cpp
+    rtp/RTPPacket.cpp \
+    rtp/RTPResizingQueue.cpp \
+    rtp/RTPPCAPReader.cpp
 
 bin_PROGRAMS = oss_core_unit_test
 
