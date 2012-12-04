@@ -33,6 +33,9 @@ Requires: v8
 BuildRequires: libpcap-devel
 Requires: libpcap
 
+BuildRequires: libdnet-devel
+Requires: libdnet
+
 BuildRequires: poco-devel
 Requires: poco-crypto
 Requires: poco-data

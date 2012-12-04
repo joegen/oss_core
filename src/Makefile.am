@@ -42,7 +42,8 @@ dep_libs = \
 	-lcrypt \
 	-lssl \
 	-lresolv \
-	-lpcap
+	-lpcap \
+	-ldnet
 
 liboss_core_la_LIBADD = \
 	${dep_libs}
