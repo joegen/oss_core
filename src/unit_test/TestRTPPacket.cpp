@@ -1,12 +1,34 @@
+/*
+ * Copyright (C) 2012  OSS Software Solutions
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with main.c; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
+ */
+
+
+#include <boost/filesystem.hpp>
 #include "gtest/gtest.h"
 #include "OSS/RTP/RTPPacket.h"
+#include "OSS/RTP/RTPPCAPReader.h"
+#include "OSS/RTP/RTPResizingQueue.h"
 
 using namespace OSS;
 using namespace OSS::RTP;
 
 TEST(RTPPacketTest, test_basic_packet_parser)
 {
-  char pkt1[] =
+  u_char pkt1[] =
   {
     0x80, 0x12, 0x00, 0xb5, 0x00, 0x2c, 0xcb, 0x6c,
     0x00, 0x00, 0x3a, 0x87, 0x22, 0xb3, 0x40, 0x77,
@@ -32,8 +54,8 @@ TEST(RTPPacketTest, test_basic_packet_parser)
   ASSERT_EQ(packet1.getSequenceNumber(), packet1.getSequenceNumber());
 
   unsigned int len;
-  char payload1[8192];
-  char payload2[8192];
+  u_char payload1[8192];
+  u_char payload2[8192];
   packet1.getPayload(payload1, len);
   packet2.getPayload(payload2, len);
 
@@ -41,5 +63,83 @@ TEST(RTPPacketTest, test_basic_packet_parser)
   for (int i = 0; i < len; i++)
   {
     ASSERT_EQ(payload1[i], payload2[i]);
+  }
+}
+
+TEST(RTPPacketTest, test_pcap_reader)
+{
+  if (boost::filesystem::exists("sample_rtp_audio_g729.pcap"))
+  {
+    RTPPCAPReader reader;
+    ASSERT_TRUE(reader.open("sample_rtp_audio_g729.pcap"));
+
+    RTPPacket packet;
+    while (reader.read(packet))
+    {
+        std::cout
+          << "SSRC: " << packet.getSynchronizationSource() << " "
+          << "SEQ: " << packet.getSequenceNumber() << " "
+          << "TS: " << packet.getTimeStamp() << " "
+          << "PT: " << packet.getPayloadType() << " "
+          << "SZ: " << packet.getPayloadSize() << std::endl;
+    }
+  }
+}
+
+TEST(RTPPacketTest, test_rtp_resizer_upsize)
+{
+  if (boost::filesystem::exists("resizer_up.pcap"))
+  {
+    RTPPCAPReader reader;
+    ASSERT_TRUE(reader.open("resizer_up.pcap"));
+    RTPResizingQueue q(18, 80, 10, 10, 80);
+    RTPPacket packet;
+    while (reader.read(packet))
+    {
+      if (!q.enqueue(packet))
+      {
+        std::cout << "IMMEDIATE:\t"
+               << "SEQ: " << packet.getSequenceNumber() << " "
+               << "TS: " << packet.getTimeStamp() << " "
+               << "SZ: " << packet.getPayloadSize() << std::endl;
+      }
+
+      while (q.dequeue(packet))
+      {
+        std::cout << "RESIZED: \t"
+                       << "SEQ: " << packet.getSequenceNumber() << " "
+                       << "TS: " << packet.getTimeStamp() << " "
+                       << "SZ: " << packet.getPayloadSize() << std::endl;
+      }
+    }
+  }
+}
+
+TEST(RTPPacketTest, test_rtp_resizer_downsize)
+{
+  if (boost::filesystem::exists("resizer_down.pcap"))
+  {
+    RTPPCAPReader reader;
+    ASSERT_TRUE(reader.open("resizer_down.pcap"));
+    RTPResizingQueue q(18, 80, 10, 10, 20);
+    RTPPacket packet;
+    while (reader.read(packet))
+    {
+      if (!q.enqueue(packet))
+      {
+        std::cout << "IMMEDIATE:\t"
+               << "SEQ: " << packet.getSequenceNumber() << " "
+               << "TS: " << packet.getTimeStamp() << " "
+               << "SZ: " << packet.getPayloadSize() << std::endl;
+      }
+
+      while (q.dequeue(packet))
+      {
+        std::cout << "RESIZED: \t"
+                       << "SEQ: " << packet.getSequenceNumber() << " "
+                       << "TS: " << packet.getTimeStamp() << " "
+                       << "SZ: " << packet.getPayloadSize() << std::endl;
+      }
+    }
   }
 }

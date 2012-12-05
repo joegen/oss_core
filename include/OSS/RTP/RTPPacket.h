@@ -32,10 +32,12 @@
 namespace OSS {
 namespace RTP {
 
+#define RTP_PACKET_BUFFER_SIZE 8192
 
 class RTPPacket
 {
 public:
+
 
   struct Packet
   {
@@ -72,13 +74,13 @@ public:
     unsigned int timeStamp;
     unsigned int synchronizationSource;
     unsigned int contributingSource[16];
-    char payload[8192];
+    u_char payload[RTP_PACKET_BUFFER_SIZE];
   } __attribute__((packed));
 
 
 	RTPPacket();
 	RTPPacket(const RTPPacket& packet);
-	RTPPacket(const char* packet, unsigned int size);
+	RTPPacket(const u_char* packet, unsigned int size);
 	~RTPPacket();
 	void swap(RTPPacket& packet);
 	RTPPacket& operator=(const RTPPacket& packet);
@@ -93,7 +95,7 @@ public:
   unsigned int getTimeStamp() const;
   unsigned int getSynchronizationSource() const;
   unsigned int getContributingSource(unsigned int index) const;
-  void getPayload(char* payload , unsigned int& length) const;
+  void getPayload(u_char* payload , unsigned int& length) const;
   unsigned int getHeaderSize() const;
   unsigned int getPacketSize() const;
   unsigned int getPayloadSize() const;
@@ -108,9 +110,9 @@ public:
   void setTimeStamp(unsigned int timeStamp);
   void setSynchronizationSource(unsigned int synchronizationSource);
   void setContributingSource(unsigned int contributingSource, unsigned int index);
-  void setPayload(char* payload, unsigned int size);
-	bool parse(const char* packet, unsigned int size);
-  const char* data() const;
+  void setPayload(u_char* payload, unsigned int size);
+	bool parse(const u_char* packet, unsigned int size);
+  const u_char* data() const;
   void setPacketSourceIp(const std::string& packetSourceIp);
   const std::string& getPacketSourceIp() const;
   void setPacketSourcePort(unsigned short sourcePort);
@@ -136,7 +138,7 @@ private:
 // Inlines
 //
 
-unsigned int RTPPacket::byteSwap16(unsigned int bytes) const
+inline unsigned int RTPPacket::byteSwap16(unsigned int bytes) const
 {
   int ret = bytes;
 #if BYTE_ORDER == LITTLE_ENDIAN
@@ -145,7 +147,7 @@ unsigned int RTPPacket::byteSwap16(unsigned int bytes) const
   return ret;
 }
 
-unsigned int RTPPacket::byteSwap32(unsigned int bytes) const
+inline unsigned int RTPPacket::byteSwap32(unsigned int bytes) const
 {
   int ret = bytes;
   #if BYTE_ORDER == LITTLE_ENDIAN
@@ -224,7 +226,7 @@ inline unsigned int RTPPacket::getPayloadSize() const
   return (unsigned int)_packetSize - getHeaderSize();
 }
 
-inline void RTPPacket::getPayload(char* payload , unsigned int& length) const
+inline void RTPPacket::getPayload(u_char* payload , unsigned int& length) const
 {
   if (!getPayloadSize())
   {
@@ -236,7 +238,7 @@ inline void RTPPacket::getPayload(char* payload , unsigned int& length) const
   memcpy(payload, _packet.payload, length);
 }
 
-inline void RTPPacket::setPayload(char* payload, unsigned int length)
+inline void RTPPacket::setPayload(u_char* payload, unsigned int length)
 {
   memcpy(_packet.payload, payload, length);
   _packetSize = getHeaderSize() + length;
@@ -293,9 +295,9 @@ inline void RTPPacket::setContributingSource(unsigned int contributingSource, un
   _packet.contributingSource[index] = byteSwap32(contributingSource);
 }
 
-inline const char* RTPPacket::data() const
+inline const u_char* RTPPacket::data() const
 {
-  return (const char*) &_packet;
+  return (const u_char*) &_packet;
 }
 
 inline void RTPPacket::setPacketSourceIp(const std::string& packetSourceIp)
