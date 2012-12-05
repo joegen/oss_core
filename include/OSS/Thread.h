@@ -143,20 +143,24 @@ public:
   void join();
 		/// Waits for all threads to complete.
 
-  bool schedule(boost::function<void()> task);
-    /// Schedule a task for execution
+  int schedule(boost::function<void()> task);
+    /// Schedule a task for execution.  Returns the number of
+    /// currently used thread if sucessful or 0 if unsuccessful.
 
-  void schedule_with_arg(boost::function<void(argument_place_holder)> task, argument_place_holder arg);
-    /// Schedule a task with a placeholder argument
+  int schedule_with_arg(boost::function<void(argument_place_holder)> task, argument_place_holder arg);
+    /// Schedule a task with a placeholder argument.  Returns the number of
+    /// currently used thread if sucessful or 0 if unsuccessful.
 
   static void static_join();
     /// Waits for all threads in the deafult thread pool to complete.
 
-  static void static_schedule(boost::function<void()> task);
-    /// Schedule a task using the default thread pool
+  static int static_schedule(boost::function<void()> task);
+    /// Schedule a task using the default thread pool.  Returns the number of
+    /// currently used thread if sucessful or 0 if unsuccessful.
 
-  static void static_schedule_with_arg(boost::function<void(argument_place_holder)> task, argument_place_holder arg);
-    /// Schedule a task with a placeholder argument using the default thread pool
+  static int static_schedule_with_arg(boost::function<void(argument_place_holder)> task, argument_place_holder arg);
+    /// Schedule a task with a placeholder argument using the default thread pool.  Returns the number of
+    /// currently used thread if sucessful or 0 if unsuccessful.
 private:
   void* _threadPool;
 };
