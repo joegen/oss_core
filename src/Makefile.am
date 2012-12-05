@@ -197,7 +197,9 @@ liboss_core_la_SOURCES =  \
     js/JSSIPMessage.cpp \
     rtp/RTPPacket.cpp \
     rtp/RTPResizingQueue.cpp \
-    rtp/RTPPCAPReader.cpp
+    rtp/RTPPCAPReader.cpp \
+    net/FirewallRule.cpp \
+    net/Firewall.cpp
 
 bin_PROGRAMS = oss_core_unit_test
 
@@ -229,7 +231,8 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestPersistent.cpp \
 	unit_test/TestDNS.cpp \
 	unit_test/TestSIPURI.cpp \
-	unit_test/TestRTPPacket.cpp
+	unit_test/TestRTPPacket.cpp \
+	unit_test/TestFirewall.cpp
 
 
 

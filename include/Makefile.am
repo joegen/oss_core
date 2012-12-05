@@ -191,7 +191,9 @@ nobase_include_HEADERS = \
     OSS/JS/JSSIPMessage.h \
     OSS/RTP/RTPPacket.h \
     OSS/RTP/RTPResizingQueue.h \
-    OSS/RTP/RTPPCAPReader.h
+    OSS/RTP/RTPPCAPReader.h \
+    OSS/Net/FirewallRule.h \
+    OSS/Net/Firewall.h
 
 
     
