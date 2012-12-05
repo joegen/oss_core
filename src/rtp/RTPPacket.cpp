@@ -55,7 +55,7 @@ RTPPacket::RTPPacket(const RTPPacket& packet) :
   _packetDestinationPort = packet._packetDestinationPort;
 }
 
-RTPPacket::RTPPacket(const char* packet, unsigned int size) :
+RTPPacket::RTPPacket(const u_char* packet, unsigned int size) :
   _packetSize(0),
   _packetSourcePort(0),
   _packetDestinationPort(0)
@@ -124,14 +124,14 @@ RTPPacket& RTPPacket::operator=(const RTPPacket& packet)
   return *this;
 }
 
-bool RTPPacket::parse(const char* packet, unsigned int size)
+bool RTPPacket::parse(const u_char* packet, unsigned int size)
 {
   if (size < this->getHeaderSize())
     return false;
 
   memcpy(&_packet, packet, size);
   _packetSize = size;
-  return true;
+  return _packet.version == 2;
 }
 
 

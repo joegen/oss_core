@@ -41,7 +41,9 @@ dep_libs = \
 	-lrt \
 	-lcrypt \
 	-lssl \
-	-lresolv
+	-lresolv \
+	-lpcap \
+	-ldnet
 
 liboss_core_la_LIBADD = \
 	${dep_libs}
@@ -193,7 +195,11 @@ liboss_core_la_SOURCES =  \
     b2bua/SIPB2BContact.cpp \
     js/JSBase.cpp \
     js/JSSIPMessage.cpp \
-    rtp/RTPPacket.cpp
+    rtp/RTPPacket.cpp \
+    rtp/RTPResizingQueue.cpp \
+    rtp/RTPPCAPReader.cpp \
+    net/FirewallRule.cpp \
+    net/Firewall.cpp
 
 bin_PROGRAMS = oss_core_unit_test
 
@@ -225,7 +231,8 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestPersistent.cpp \
 	unit_test/TestDNS.cpp \
 	unit_test/TestSIPURI.cpp \
-	unit_test/TestRTPPacket.cpp
+	unit_test/TestRTPPacket.cpp \
+	unit_test/TestFirewall.cpp
 
 
 
