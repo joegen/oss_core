@@ -96,6 +96,8 @@ static bool rule_to_fwrule(const FirewallRule& rule, fw_rule* fr)
     fr->fw_dport[0] = 0;
     fr->fw_dport[1] = TCP_PORT_MAX;
   }
+
+  return true;
 }
 
 
