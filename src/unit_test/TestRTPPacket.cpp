@@ -47,11 +47,11 @@ TEST(RTPPacketTest, test_basic_packet_parser)
   RTPPacket packet2;
   packet1 = packet2;
 
-  ASSERT_EQ(packet1.getSynchronizationSource(), packet1.getSynchronizationSource());
-  ASSERT_EQ(packet1.getTimeStamp(), packet1.getTimeStamp());
-  ASSERT_EQ(packet1.getPayloadType(), packet1.getPayloadType());
-  ASSERT_EQ(packet1.getVersion(), packet1.getVersion());
-  ASSERT_EQ(packet1.getSequenceNumber(), packet1.getSequenceNumber());
+  ASSERT_EQ(packet1.getSynchronizationSource(), packet2.getSynchronizationSource());
+  ASSERT_EQ(packet1.getTimeStamp(), packet2.getTimeStamp());
+  ASSERT_EQ(packet1.getPayloadType(), packet2.getPayloadType());
+  ASSERT_EQ(packet1.getVersion(), packet2.getVersion());
+  ASSERT_EQ(packet1.getSequenceNumber(), packet2.getSequenceNumber());
 
   unsigned int len;
   u_char payload1[8192];
@@ -63,6 +63,25 @@ TEST(RTPPacketTest, test_basic_packet_parser)
   for (int i = 0; i < len; i++)
   {
     ASSERT_EQ(payload1[i], payload2[i]);
+  }
+
+  RTPPacket packet3;
+  packet3.parse(packet2.data(), packet2.getPacketSize());
+
+  ASSERT_EQ(packet3.getSynchronizationSource(), packet2.getSynchronizationSource());
+  ASSERT_EQ(packet3.getTimeStamp(), packet2.getTimeStamp());
+  ASSERT_EQ(packet3.getPayloadType(), packet2.getPayloadType());
+  ASSERT_EQ(packet3.getVersion(), packet2.getVersion());
+  ASSERT_EQ(packet3.getSequenceNumber(), packet2.getSequenceNumber());
+
+  u_char payload3[8192];
+  packet3.getPayload(payload3, len);
+  packet2.getPayload(payload2, len);
+
+  ASSERT_EQ(len, packet3.getPayloadSize());
+  for (int i = 0; i < len; i++)
+  {
+    ASSERT_EQ(payload3[i], payload2[i]);
   }
 }
 
