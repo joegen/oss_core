@@ -24,32 +24,28 @@
 using namespace OSS;
 using namespace OSS::Net;
 
-static void print_rules(const OSS::Net::FirewallRule& rule)
-{
-  std::cout << " DEV: " << rule.getDevice();
-  std::cout << " SRC: " << rule.getSourceAddress() << ":" << rule.getSourcePort() << "-" << rule.getSourceEndPort();
-  std::cout << " DST: " << rule.getDestinationAddress() << ":" << rule.getDestinationPort() << "-" << rule.getDestinationEndPort();
-  std::cout << " DIR: " << rule.getDirection();
-  std::cout << " ACT: " << rule.getOperation();
-  std::cout << std::endl;
-
-}
-
+#ifdef TEST_FIREWALL_RULE
 TEST(FirewallTest, test_Add_rule)
 {
+
   OSS::Net::FirewallRule rule1;
   rule1.setDevice("p33p1");
   rule1.setSourceAddress("192.169.1.250");
   rule1.setOperation(OSS::Net::FirewallRule::OP_ALLOW);
   rule1.setProtocol(OSS::Net::FirewallRule::PROTO_TCP);
   rule1.setDirection(OSS::Net::FirewallRule::DIR_IN);
-
-  ASSERT_TRUE(OSS::Net::Firewall::instance().addRule(rule1));
+  ASSERT_TRUE(OSS::Net::Firewall::instance().iptAddRule(rule1));
 }
+#endif
 
 TEST(FirewallTest, test_print_rules)
 {
-  OSS::Net::Firewall::TableLoopHandler func = boost::bind(print_rules, _1);
-  OSS::Net::Firewall::instance().tableLoop(func);
+  std::vector<std::string> input;
+  std::vector<std::string> output;
+
+  OSS::Net::Firewall::instance().iptGetRules(OSS::Net::FirewallRule::DIR_IN, input);
+  OSS::Net::Firewall::instance().iptGetRules(OSS::Net::FirewallRule::DIR_OUT, output);
+
+  ASSERT_TRUE(!input.empty() || !output.empty());
 }
 

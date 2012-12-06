@@ -17,7 +17,7 @@
  */
 
 
-
+#include <sstream>
 #include "OSS/Net/FirewallRule.h"
 
 
@@ -105,6 +105,21 @@ FirewallRule& FirewallRule::operator=(const FirewallRule& rule)
   FirewallRule clone(rule);
   swap(clone);
   return *this;
+}
+
+std::string FirewallRule::str() const
+{
+  std::ostringstream strm;
+  strm <<  _device << "\t";
+  strm <<  _sourceAddress << "\t";
+  strm <<  _sourcePort << ":";
+  strm <<  _sourceEndPort << "\t";
+  strm <<  _destinationAddress<< "\t";
+  strm <<  _destinationPort << ":";
+  strm <<  _destinationEndPort << "\t";
+  strm <<  _protocol << "\t";
+  strm <<  _direction << "\t";
+  strm <<  _operation;
 }
 
 
