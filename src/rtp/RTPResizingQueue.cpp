@@ -17,8 +17,10 @@
  */
 
 
-#include "OSS/RTP/RTPResizingQueue.h"
+#include <boost/array.hpp>
 
+#include "OSS/RTP/RTPResizingQueue.h"
+#include "OSS/Logger.h"
 
 namespace OSS {
 namespace RTP {
@@ -31,7 +33,9 @@ RTPResizingQueue::RTPResizingQueue() :
   _lastSequence(0),
   _lastTimeSent(0),
   _packetizationBaseTime(0),
-  _packetizationTargetTime(0)
+  _packetizationTargetTime(0),
+  _verbose(false)
+
 {
 }
 
@@ -47,7 +51,8 @@ RTPResizingQueue::RTPResizingQueue(
     _lastSequence(0),
     _lastTimeSent(0),
     _packetizationBaseTime(packetizationBaseTimeMillis),
-    _packetizationTargetTime(packetizationTargetTimeMillis)
+    _packetizationTargetTime(packetizationTargetTimeMillis),
+    _isResizing(false)
 
 {
 }
@@ -59,14 +64,28 @@ RTPResizingQueue::~RTPResizingQueue()
 bool RTPResizingQueue::enqueue(const RTPPacket& packet)
 {
 	OSS::mutex_critic_sec_lock lock(_mutex);
-	if (packet.getPayloadType() != _payloadType)
-	  return false;
 
+	if (!_isResizing && packet.getPayloadType() != _payloadType)
+  {
+	  return false;
+  }
+  else if (_isResizing  && packet.getPayloadType() != _payloadType)
+  {
+    //
+	  // we are resizing but the payload is not the codec we monitor.
+    // send it right away.
+	  //
+    _out.push(packet);
+	  return true;
+  }
+  
 	//
 	// Check if we have initialized sequence number
 	//
 	if (!_lastSequence)
 	  _lastSequence = packet.getSequenceNumber() -1;
+
+
 
 
 	//
@@ -77,7 +96,7 @@ bool RTPResizingQueue::enqueue(const RTPPacket& packet)
 	  //
 	  // Packet not correct size.  Send it right away
 	  //
-	  _out.push(packet);
+    _out.push(packet);
 	  return true;
 	}
 
@@ -108,9 +127,19 @@ bool RTPResizingQueue::dequeue(RTPPacket& packet)
   if (!_out.empty())
   {
     packet = _out.front();
+
+    if (_verbose)
+    {
+      OSS_LOG_INFO("RTP:  Packet " << packet.getSynchronizationSource() << "/" << packet.getSequenceNumber()
+        << " with payload size of " << packet.getPayloadSize() << " bytes POPPED as " << _lastSequence + 1);
+    }
+
     _lastTimeSent = packet.getTimeStamp();
     packet.setSequenceNumber(++_lastSequence);
     _out.pop();
+
+    _isResizing = true;
+
     return true;
   }
 
@@ -120,9 +149,17 @@ bool RTPResizingQueue::dequeue(RTPPacket& packet)
   while (!_in.empty())
   {
     if (_in.front().getTimeStamp() < _lastTimeSent)
+    {
+      if (_verbose)
+      {
+        OSS_LOG_INFO("RTP:  Packet " << packet.getSynchronizationSource() << "/" << packet.getSequenceNumber()
+          << " with payload size of " << packet.getPayloadSize() << " arrived too late - DROPPED");
+      }
       _in.pop();
-    else
+    }else
+    {
       break;
+    }
   }
 
   if (_in.empty())
@@ -131,7 +168,7 @@ bool RTPResizingQueue::dequeue(RTPPacket& packet)
   //
   // Check if we have enough samples in the _in queue
   //
-  unsigned int targetSize =  (_packetizationTargetTime / _packetizationBaseTime) * _baseSampleSize;
+  unsigned int targetSize =  getTargetSize();
   if (targetSize < _in.front().getPayloadSize())
   {
     //
@@ -146,12 +183,20 @@ bool RTPResizingQueue::dequeue(RTPPacket& packet)
       _lastTimeSent = packet.getTimeStamp();
       packet.setSequenceNumber(++_lastSequence);
       _in.pop();
+      
+      if (_verbose)
+      {
+        OSS_LOG_INFO("RTP:  Packet " << packet.getSynchronizationSource() << "/" << packet.getSequenceNumber()
+            << " with payload size of " << packet.getPayloadSize() << " cannot be resized - POPPED");
+      }
+
       return true;
     }
 
     int packetSize = _in.front().getPayloadSize() / targetSize;
     unsigned len;
     u_char buff[RTP_PACKET_BUFFER_SIZE];
+    packet = _in.front();
     packet.getPayload(buff, len);
 
     //
@@ -165,7 +210,7 @@ bool RTPResizingQueue::dequeue(RTPPacket& packet)
       //
       // Calculate the time stamp
       //
-      unsigned int ts = packet.getTimeStamp() - (sampleCount - i) * ((targetSize/_baseSampleSize) * _clockRate);
+      unsigned int ts = packet.getTimeStamp() - (((sampleCount - i) - 1) * getTargetClockRate());
       sample.setTimeStamp(ts);
       //
       // Set the new payload
@@ -210,13 +255,37 @@ bool RTPResizingQueue::dequeue(RTPPacket& packet)
   if (!_out.empty())
   {
     packet = _out.front();
+
+    if (_verbose)
+    {
+      OSS_LOG_INFO("RTP:  Packet " << packet.getSynchronizationSource() << "/" << packet.getSequenceNumber()
+        << " with payload size of " << packet.getPayloadSize() << " bytes POPPED as " << _lastSequence + 1);
+    }
+
     _lastTimeSent = packet.getTimeStamp();
     packet.setSequenceNumber(++_lastSequence);
     _out.pop();
+
+    _isResizing = true;
     return true;
   }
 
   return false;
+}
+
+bool RTPResizingQueue::enqueue(OSS::RTP::RTPResizingQueue::Data& buff, std::size_t& size)
+{
+  return enqueue(RTPPacket((u_char*)buff.data(), size));
+}
+
+bool RTPResizingQueue::dequeue(OSS::RTP::RTPResizingQueue::Data& buff, std::size_t& size)
+{
+  RTPPacket packet;
+  if (!dequeue(packet))
+    return false;
+  memcpy(buff.data(), packet.data(), packet.getPacketSize());
+  size = packet.getPacketSize();
+  return true;
 }
 
 

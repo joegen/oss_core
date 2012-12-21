@@ -23,8 +23,10 @@
 
 #include <queue>
 #include <boost/noncopyable.hpp>
+#include <boost/array.hpp>
 #include "OSS/Thread.h"
 #include "OSS/RTP/RTPPacket.h"
+#include "OSS/Core.h"
 
 namespace OSS {
 namespace RTP {
@@ -34,7 +36,7 @@ class RTPResizingQueue : boost::noncopyable
 {
 public:
   typedef std::queue<RTPPacket> Queue;
-
+  typedef boost::array<char, RTP_PACKET_BUFFER_SIZE> Data;
   RTPResizingQueue();
 
   RTPResizingQueue(
@@ -50,7 +52,8 @@ public:
 
   bool enqueue(const RTPPacket& packet);
   bool dequeue(RTPPacket& packet);
-
+  bool enqueue(Data& buff, std::size_t& size);
+  bool dequeue(Data& buff, std::size_t& size);
 
   unsigned int getPayloadType() const;
   void setPayloadType(unsigned int payloadType);
@@ -70,6 +73,10 @@ public:
   unsigned int getLastTimeSent() const;
   unsigned int getLastSequence() const;
 
+  unsigned int getTargetSize() const;
+  unsigned int getTargetClockRate() const;
+  bool& verbose();
+
 private:
   Queue _in;
   Queue _out;
@@ -82,6 +89,8 @@ private:
   unsigned int _lastTimeSent;
   unsigned int _packetizationBaseTime;
   unsigned int _packetizationTargetTime;
+  bool _verbose;
+  bool _isResizing;
 };
 
 //
@@ -147,6 +156,21 @@ inline unsigned int RTPResizingQueue::getLastTimeSent() const
 inline unsigned int RTPResizingQueue::getLastSequence() const
 {
   return _lastSequence;
+}
+
+inline unsigned int RTPResizingQueue::getTargetSize() const
+{
+  return (_packetizationTargetTime / _packetizationBaseTime) * _baseSampleSize;
+}
+
+inline unsigned int RTPResizingQueue::getTargetClockRate() const
+{
+  return ((getTargetSize()/_baseSampleSize) * _clockRate);
+}
+
+inline bool& RTPResizingQueue::verbose()
+{
+  return _verbose;
 }
 
 } } // OSS::RTP
