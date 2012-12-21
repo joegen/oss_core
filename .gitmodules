@@ -1,0 +1,3 @@
+[submodule "src/ws/websocketpp"]
+	path = src/ws/websocketpp
+	url = ssh://git@github.com/zaphoyd/websocketpp
