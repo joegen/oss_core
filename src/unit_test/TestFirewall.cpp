@@ -36,7 +36,7 @@ TEST(FirewallTest, test_Add_rule)
   rule1.setDirection(OSS::Net::FirewallRule::DIR_IN);
   ASSERT_TRUE(OSS::Net::Firewall::instance().iptAddRule(rule1));
 }
-#endif
+
 
 TEST(FirewallTest, test_print_rules)
 {
@@ -48,4 +48,4 @@ TEST(FirewallTest, test_print_rules)
 
   ASSERT_TRUE(!input.empty() || !output.empty());
 }
-
+#endif

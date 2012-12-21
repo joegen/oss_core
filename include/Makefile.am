@@ -193,7 +193,8 @@ nobase_include_HEADERS = \
     OSS/RTP/RTPResizingQueue.h \
     OSS/RTP/RTPPCAPReader.h \
     OSS/Net/FirewallRule.h \
-    OSS/Net/Firewall.h
+    OSS/Net/Firewall.h \
+    OSS/UTL/AdaptiveDelay.h
 
 
     

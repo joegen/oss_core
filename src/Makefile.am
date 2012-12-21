@@ -199,7 +199,8 @@ liboss_core_la_SOURCES =  \
     rtp/RTPResizingQueue.cpp \
     rtp/RTPPCAPReader.cpp \
     net/FirewallRule.cpp \
-    net/Firewall.cpp
+    net/Firewall.cpp \
+    utl/AdaptiveDelay.cpp
 
 bin_PROGRAMS = oss_core_unit_test
 
