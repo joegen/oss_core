@@ -75,7 +75,7 @@ void SIPTCPListener::handleAccept(const boost::system::error_code& e)
     if (_acceptor.is_open())
     {
       OSS_LOG_DEBUG("SIPTCPListener::handleAccept RESTARTING async accept loop");
-      _pNewConnection.reset(new SIPTCPConnection(_ioService, _connectionManager));
+      _pNewConnection.reset(new SIPTCPConnection(*_pIoService, _connectionManager));
       _acceptor.async_accept(dynamic_cast<SIPTCPConnection*>(_pNewConnection.get())->socket(),
         boost::bind(&SIPTCPListener::handleAccept, this,
           boost::asio::placeholders::error));
@@ -104,7 +104,7 @@ void SIPTCPListener::handleConnect(const boost::system::error_code& e, boost::as
 {
   if (!e)
   {
-    SIPTCPConnection::Ptr conn(new SIPTCPConnection(_ioService, _connectionManager));
+    SIPTCPConnection::Ptr conn(new SIPTCPConnection(*_pIoService, _connectionManager));
     _connectionManager.add(conn);
     conn->handleResolve(endPointIter);
   }

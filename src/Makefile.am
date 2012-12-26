@@ -25,6 +25,7 @@ dep_libs = \
 	-lboost_regex-mt \
 	-lboost_program_options-mt \
 	-lboost_iostreams-mt \
+        -lboost_random-mt \
 	-lPocoFoundation \
 	-lPocoUtil \
 	-lPocoNet \
@@ -50,7 +51,7 @@ liboss_core_la_LIBADD = \
 
 # this is helpful if you're debugging something with lots of inlines (like the UtlLink code)
 # 		-fno-gcse -O0 -fno-implement-inlines -fno-default-inline
-liboss_core_la_CXXFLAGS = \
+liboss_core_la_CXXFLAGS = 
 	-DOSSLIBS_TMPDIR=\"@OSSLIBS_TMPDIR@\" \
 	-DOSSLIBS_CONFDIR=\"@OSSLIBS_CONFDIR@\" \
 	-DOSSAPP_LIB_VERSION=${version_Current}.${version_Revision}.${version_Age} \
@@ -184,6 +185,9 @@ liboss_core_la_SOURCES =  \
     sipfsm/SIPFsm.cpp \
     sipfsm/SIPNict.cpp \
     sipfsm/SIPTransaction.cpp \
+    sipfsm/SIPWebSocketConnection.cpp \
+    sipfsm/SIPWebSocketListener.cpp \
+    sipfsm/SIPWebSocketConnectionManager.cpp \
     stun/STUNProto.cpp \
     stun/STUNMappedAddress.cpp \
     stun/STUNServer.cpp \
