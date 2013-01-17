@@ -44,14 +44,6 @@ public:
   typedef boost::function<void(const std::string&)> TableLoopHandler;
   static Firewall& instance();
 
-  bool dnetAddRule(const FirewallRule& rule);
-    /// Adds a new firewall rule
-
-  bool dnetDeleteRule(const FirewallRule&);
-    /// Delete the rule by valaue.
-
-  void dnetTableLoop(TableLoopHandler& handler);
-    /// Loop through all rules.  String representation of the rule is
     /// pushed the the handle callback.
 
   bool iptAddRule(const FirewallRule& rule);
@@ -65,9 +57,8 @@ public:
 
 private:
   friend Firewall& instance();
-  Firewall(bool useLibDnet = false);
+  Firewall();
   ~Firewall();
-  bool _useLibDnet;
 };
 
 

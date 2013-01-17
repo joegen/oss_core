@@ -18,14 +18,7 @@ liboss_core_la_LDFLAGS = \
 	-version-info ${version_Current}:${version_Revision}:${version_Age}
 
 dep_libs = \
-	-lboost_date_time-mt \
-	-lboost_filesystem-mt \
-	-lboost_system-mt \
-	-lboost_thread-mt \
-	-lboost_regex-mt \
-	-lboost_program_options-mt \
-	-lboost_iostreams-mt \
-        -lboost_random-mt \
+        @BOOST_LIBS@ \
 	-lPocoFoundation \
 	-lPocoUtil \
 	-lPocoNet \
