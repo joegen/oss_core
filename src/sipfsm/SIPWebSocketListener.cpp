@@ -49,6 +49,11 @@ SIPWebSocketListener::SIPWebSocketListener(
 
 SIPWebSocketListener::~SIPWebSocketListener()
 {
+  _pServerEndPoint->stop_listen(true);
+  _pServerThread->join();
+  delete _pServerThread;
+  _pServerThread = 0;
+
   delete _pServerEndPoint;
   _pServerEndPoint = 0;
   delete _pClientEndPoint;
@@ -59,14 +64,26 @@ SIPWebSocketListener::~SIPWebSocketListener()
 
 void SIPWebSocketListener::run()
 {
+  _pServerThread = new boost::thread(boost::bind(&SIPWebSocketListener::internal_run, this));
+}
+
+void SIPWebSocketListener::internal_run()
+{
   boost::asio::ip::tcp::resolver::query query(getAddress(), getPort());
   boost::asio::ip::tcp::endpoint endpoint = *(_pResolver->resolve(query));
   _pServerEndPoint->listen(endpoint, 1);
 }
 
-void SIPWebSocketListener::handleAccept(const boost::system::error_code& e)
+void SIPWebSocketListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE connectionPtr)
 {
-
+  if (!e)
+  {
+    websocketpp::server::connection_ptr* pConnection = 
+      reinterpret_cast<websocketpp::server::connection_ptr*>(connectionPtr);
+    OSS_VERIFY_NULL(pConnection);
+    SIPWebSocketConnection::Ptr conn(new SIPWebSocketConnection(*pConnection));
+    _connectionManager.start(conn);
+  }
 }
 
 void SIPWebSocketListener::handleStop()
@@ -86,6 +103,13 @@ void SIPWebSocketListener::handleConnect(const boost::system::error_code& e, boo
 
 void SIPWebSocketListener::on_message(websocketpp::server::connection_ptr pConnection, websocketpp::server::handler::message_ptr pMsg)
 {
+  SIPWebSocketConnection::Ptr conn = _connectionManager.findConnectionByPtr(pConnection);
+  if (conn)
+  {
+    boost::system::error_code ec;
+    //conn->handleRead(ec);
+  }
+
 }
 
 void SIPWebSocketListener::on_message(websocketpp::client::connection_ptr pConnection, websocketpp::client::handler::message_ptr pMsg)

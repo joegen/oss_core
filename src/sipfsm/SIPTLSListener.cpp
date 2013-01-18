@@ -75,10 +75,10 @@ void SIPTLSListener::run()
   _acceptor.listen();
   _acceptor.async_accept(dynamic_cast<SIPTLSConnection*>(_pNewConnection.get())->socket().lowest_layer(),
       boost::bind(&SIPTLSListener::handleAccept, this,
-        boost::asio::placeholders::error));
+        boost::asio::placeholders::error, 0));
 }
 
-void SIPTLSListener::handleAccept(const boost::system::error_code& e)
+void SIPTLSListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE userData)
 {
   if (!e)
   {
@@ -87,7 +87,7 @@ void SIPTLSListener::handleAccept(const boost::system::error_code& e)
     _pNewConnection.reset(new SIPTLSConnection(*_pIoService, _tlsContext, _connectionManager));
     _acceptor.async_accept(dynamic_cast<SIPTLSConnection*>(_pNewConnection.get())->socket().lowest_layer(),
       boost::bind(&SIPTLSListener::handleAccept, this,
-        boost::asio::placeholders::error));
+        boost::asio::placeholders::error, 0));
   }
 }
 

@@ -100,7 +100,7 @@ void SIPWebSocketConnection::stop()
   //
 }
 
-void SIPWebSocketConnection::handleRead(const boost::system::error_code& e, std::size_t bytes_transferred)
+void SIPWebSocketConnection::handleRead(const boost::system::error_code& e, std::size_t bytes_transferred, OSS_HANDLE userData)
     /// Handle completion of a read operation.
 {
 

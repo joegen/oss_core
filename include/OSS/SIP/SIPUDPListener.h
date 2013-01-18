@@ -69,7 +69,7 @@ public:
   OSS::IPAddress detectNATBinding(const std::string& stunServer);
 
 private:
-  virtual void handleAccept(const boost::system::error_code& e);
+  virtual void handleAccept(const boost::system::error_code& e, OSS_HANDLE userData = 0);
     /// Handle completion of an asynchronous accept operation.
 
   virtual void connect(const std::string& address, const std::string& port);

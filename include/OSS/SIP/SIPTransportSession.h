@@ -84,7 +84,7 @@ public:
   virtual void stop() = 0;
     /// Stop all asynchronous operations associated with the connection.
 
-  virtual void handleRead(const boost::system::error_code& e, std::size_t bytes_transferred) = 0;
+  virtual void handleRead(const boost::system::error_code& e, std::size_t bytes_transferred, OSS_HANDLE userData = 0) = 0;
     /// Handle completion of a read operation.
 
   virtual void handleWrite(const boost::system::error_code& e) = 0;

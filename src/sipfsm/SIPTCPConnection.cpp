@@ -57,7 +57,7 @@ void SIPTCPConnection::start(SIPFSMDispatch* pDispatch)
   _socket.async_read_some(boost::asio::buffer(_buffer),
       boost::bind(&SIPTCPConnection::handleRead, shared_from_this(),
         boost::asio::placeholders::error,
-        boost::asio::placeholders::bytes_transferred));
+        boost::asio::placeholders::bytes_transferred, (void*)0));
 }
 
 void SIPTCPConnection::stop()
@@ -67,7 +67,7 @@ void SIPTCPConnection::stop()
   _socket.close();
 }
 
-void SIPTCPConnection::handleRead(const boost::system::error_code& e, std::size_t bytes_transferred)
+void SIPTCPConnection::handleRead(const boost::system::error_code& e, std::size_t bytes_transferred, OSS_HANDLE userData)
 {
   if (!e && bytes_transferred)
   {
@@ -118,7 +118,7 @@ void SIPTCPConnection::handleRead(const boost::system::error_code& e, std::size_
         _socket.async_read_some(boost::asio::buffer(_buffer),
             boost::bind(&SIPTCPConnection::handleRead, shared_from_this(),
               boost::asio::placeholders::error,
-              boost::asio::placeholders::bytes_transferred));
+              boost::asio::placeholders::bytes_transferred, (void*)0));
         //
         // We are done
         //
@@ -165,7 +165,7 @@ void SIPTCPConnection::handleRead(const boost::system::error_code& e, std::size_
             _socket.async_read_some(boost::asio::buffer(_buffer),
             boost::bind(&SIPTCPConnection::handleRead, shared_from_this(),
               boost::asio::placeholders::error,
-              boost::asio::placeholders::bytes_transferred));
+              boost::asio::placeholders::bytes_transferred, (void*)0));
             //
             // We are done
             //
@@ -176,7 +176,7 @@ void SIPTCPConnection::handleRead(const boost::system::error_code& e, std::size_
         _socket.async_read_some(boost::asio::buffer(_buffer),
             boost::bind(&SIPTCPConnection::handleRead, shared_from_this(),
               boost::asio::placeholders::error,
-              boost::asio::placeholders::bytes_transferred));
+              boost::asio::placeholders::bytes_transferred, (void*)0));
       }
     }
     else if (!result)
@@ -185,7 +185,7 @@ void SIPTCPConnection::handleRead(const boost::system::error_code& e, std::size_
       _socket.async_read_some(boost::asio::buffer(_buffer),
           boost::bind(&SIPTCPConnection::handleRead, shared_from_this(),
             boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred));
+            boost::asio::placeholders::bytes_transferred, (void*)0));
     }
     else
     {
@@ -214,7 +214,7 @@ void SIPTCPConnection::handleRead(const boost::system::error_code& e, std::size_
       _socket.async_read_some(boost::asio::buffer(_buffer),
           boost::bind(&SIPTCPConnection::handleRead, shared_from_this(),
             boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred));
+            boost::asio::placeholders::bytes_transferred, (void*)0));
 
       return;
     }
@@ -231,7 +231,7 @@ void SIPTCPConnection::handleRead(const boost::system::error_code& e, std::size_
       _socket.async_read_some(boost::asio::buffer(_buffer),
           boost::bind(&SIPTCPConnection::handleRead, shared_from_this(),
             boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred));
+            boost::asio::placeholders::bytes_transferred, (void*)0));
     }
     else
     {

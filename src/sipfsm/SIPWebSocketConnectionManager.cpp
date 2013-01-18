@@ -34,7 +34,6 @@ SIPWebSocketConnectionManager::SIPWebSocketConnectionManager(SIPFSMDispatch* pDi
   _portBase(10000),
   _portMax(12000)
 {
-  _currentIdentifier = OSS::getTicks();
 }
 
 SIPWebSocketConnectionManager::~SIPWebSocketConnectionManager()
@@ -54,24 +53,35 @@ void SIPWebSocketConnectionManager::deinitialize()
 void SIPWebSocketConnectionManager::add(SIPWebSocketConnection::Ptr conn)
 {
   OSS::mutex_write_lock wlock(_rwConnectionsMutex);
-  if (!conn->getIdentifier())
-    conn->setIdentifier(++_currentIdentifier);
+
+  SIPWebSocketConnection* pConnection = dynamic_cast<SIPWebSocketConnection*>(conn.get());
+  OSS_VERIFY_NULL(pConnection);
+
+  if (!pConnection->getIdentifier())
+    pConnection->setIdentifier((OSS::UInt64)pConnection->_pServer.get());
+
   _connections[conn->getIdentifier()] = conn;
-  OSS_LOG_INFO("SIPWebSocketConnection Added transport (" << conn->getIdentifier() << ") "
-    << conn->getLocalAddress().toIpPortString() <<
-    "->" << conn->getRemoteAddress().toIpPortString() );
+  OSS_LOG_INFO("SIPWebSocketConnection Added transport (" << pConnection->getIdentifier() << ") "
+    << pConnection->getLocalAddress().toIpPortString() <<
+    "->" << pConnection->getRemoteAddress().toIpPortString() );
 }
 
 void SIPWebSocketConnectionManager::start(SIPWebSocketConnection::Ptr conn)
 {
   OSS::mutex_write_lock wlock(_rwConnectionsMutex);
-  if (!conn->getIdentifier())
-    conn->setIdentifier(++_currentIdentifier);
+
+  SIPWebSocketConnection* pConnection = dynamic_cast<SIPWebSocketConnection*>(conn.get());
+  OSS_VERIFY_NULL(pConnection);
+
+  if (!pConnection->getIdentifier())
+    pConnection->setIdentifier((OSS::UInt64)pConnection->_pServer.get());
+
   _connections[conn->getIdentifier()] = conn;
-  conn->start(_pDispatch);
-  OSS_LOG_INFO("SIPWebSocketConnection started reading from transport (" << conn->getIdentifier() << ") "
-    << conn->getLocalAddress().toIpPortString() <<
-    "->" << conn->getRemoteAddress().toIpPortString() );
+
+  pConnection->start(_pDispatch);
+  OSS_LOG_INFO("SIPWebSocketConnection started reading from transport (" << pConnection->getIdentifier() << ") "
+    << pConnection->getLocalAddress().toIpPortString() <<
+    "->" << pConnection->getRemoteAddress().toIpPortString() );
 }
 
 void SIPWebSocketConnectionManager::stop(SIPWebSocketConnection::Ptr conn)

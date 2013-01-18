@@ -87,9 +87,10 @@ public:
     /// Find a connection to a specific target if it exists
 
   SIPWebSocketConnection::Ptr findConnectionById(OSS::UInt64 identifier);
+
+  SIPWebSocketConnection::Ptr findConnectionByPtr(websocketpp::server::connection_ptr ptr);
 private:
   OSS::mutex_read_write _rwConnectionsMutex;
-  OSS::UInt64 _currentIdentifier;
   std::map<OSS::UInt64, SIPWebSocketConnection::Ptr> _connections;
   SIPFSMDispatch* _pDispatch;
   unsigned short _portBase;
@@ -119,6 +120,11 @@ inline unsigned short SIPWebSocketConnectionManager::getPortMax() const
 inline void SIPWebSocketConnectionManager::setPortmax(unsigned short port)
 {
   _portMax = port;
+}
+
+inline SIPWebSocketConnection::Ptr SIPWebSocketConnectionManager::findConnectionByPtr(websocketpp::server::connection_ptr ptr)
+{
+  return findConnectionById((OSS::UInt64)ptr.get());
 }
 
 

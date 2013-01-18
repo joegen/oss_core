@@ -231,6 +231,7 @@ oss_core_unit_test_LDADD = \
 
 oss_core_unit_test_SOURCES = \
 	unit_test/TestSuite.cpp \
+        unit_test/TestSemaphore.cpp \
 	unit_test/TestRequestLine.cpp \
 	unit_test/TestBasicParser.cpp \
 	unit_test/TestSDP.cpp \
@@ -245,7 +246,8 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestDNS.cpp \
 	unit_test/TestSIPURI.cpp \
 	unit_test/TestRTPPacket.cpp \
-	unit_test/TestFirewall.cpp
+	unit_test/TestFirewall.cpp \
+        unit_test/TestWebSocket.cpp
 
 
 

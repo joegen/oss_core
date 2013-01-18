@@ -42,6 +42,7 @@ protected:
   public:
     ServerHandler(SIPWebSocketListener& listener);
     void on_message(websocketpp::server::connection_ptr pConnection, websocketpp::server::handler::message_ptr pMsg);
+    void on_handshake_init(websocketpp::server::connection_ptr pConnection);
     SIPWebSocketListener& _listener;
     friend class SIPWebSocketListener;
   };
@@ -68,7 +69,7 @@ public:
   virtual void run();
     /// Run the server's io_service loop.
 
-  virtual void handleAccept(const boost::system::error_code& e);
+  virtual void handleAccept(const boost::system::error_code& e, OSS_HANDLE userData = 0);
     /// Handle completion of an asynchronous accept operation.
 
   virtual void handleStop();
@@ -82,6 +83,8 @@ public:
 
   
 protected:
+  void internal_run();
+
   void on_message(websocketpp::server::connection_ptr pConnection, websocketpp::server::handler::message_ptr pMsg);
   void on_message(websocketpp::client::connection_ptr pConnection, websocketpp::client::handler::message_ptr pMsg);
   websocketpp::server::handler::ptr _pServerHandler;
@@ -120,6 +123,12 @@ inline SIPWebSocketListener::ServerHandler::ServerHandler(SIPWebSocketListener& 
 inline void SIPWebSocketListener::ServerHandler::on_message(websocketpp::server::connection_ptr pConnection, websocketpp::server::handler::message_ptr pMsg)
 {
   _listener.on_message(pConnection, pMsg);
+}
+
+inline void SIPWebSocketListener::ServerHandler::on_handshake_init(websocketpp::server::connection_ptr pConnection)
+{
+  boost::system::error_code ec;
+  _listener.handleAccept(ec, &pConnection);
 }
 
 } } // OSS::SIP

@@ -51,7 +51,7 @@ void SIPTLSConnection::start(SIPFSMDispatch* pDispatch)
   _socket.async_read_some(boost::asio::buffer(_buffer),
       boost::bind(&SIPTLSConnection::handleRead, shared_from_this(),
         boost::asio::placeholders::error,
-        boost::asio::placeholders::bytes_transferred));
+        boost::asio::placeholders::bytes_transferred, (void*)0));
 }
 
 void SIPTLSConnection::stop()
@@ -59,7 +59,7 @@ void SIPTLSConnection::stop()
   _socket.lowest_layer().close();
 }
 
-void SIPTLSConnection::handleRead(const boost::system::error_code& e, std::size_t bytes_transferred)
+void SIPTLSConnection::handleRead(const boost::system::error_code& e, std::size_t bytes_transferred, OSS_HANDLE userData)
 {
   if (!e)
   {
@@ -84,7 +84,7 @@ void SIPTLSConnection::handleRead(const boost::system::error_code& e, std::size_
       _socket.async_read_some(boost::asio::buffer(_buffer),
           boost::bind(&SIPTLSConnection::handleRead, shared_from_this(),
             boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred));
+            boost::asio::placeholders::bytes_transferred, (void*)0));
     }
   }
   else if (e != boost::asio::error::operation_aborted)
@@ -154,7 +154,7 @@ void SIPTLSConnection::handleHandshake(const boost::system::error_code& e)
     _socket.async_read_some(boost::asio::buffer(_buffer),
         boost::bind(&SIPTLSConnection::handleRead, shared_from_this(),
           boost::asio::placeholders::error,
-          boost::asio::placeholders::bytes_transferred));
+          boost::asio::placeholders::bytes_transferred, (void*)0));
   }
 }
 
