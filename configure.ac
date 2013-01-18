@@ -8,6 +8,11 @@ SFAC_AUTOMAKE_VERSION([1.6])
 AC_CONFIG_SRCDIR([src/Core.cpp])
 AM_CONFIG_HEADER([src/config.h])
 AC_PROG_LIBTOOL
+AC_CHECK_LIB(boost_thread, main, [BOOST_LIBS="-lboost_date_time -lboost_filesystem -lboost_system -lboost_thread -lboost_program_options -lboost_iostreams -lboost_random -lboost_regex"],
+    [AC_CHECK_LIB(boost_thread-mt, main,
+    [BOOST_LIBS="-lboost_date_time-mt -lboost_filesystem-mt -lboost_system-mt -lboost_thread-mt -lboost_program_options-mt -lboost_iostreams-mt -lboost_random-mt -lboost_regex-mt"],
+    [AC_MSG_ERROR("no boost thread found")])])
+AC_SUBST(BOOST_LIBS)
 AC_LTDL_SHLIBEXT
 AC_PATH_PROG([BASH], [bash])
 AC_PROG_CXX

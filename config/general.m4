@@ -161,7 +161,7 @@ AC_DEFUN([CHECK_SSL],
 [   AC_ARG_WITH(openssl,
                 [  --with-openssl=PATH to openssl source directory],
                 [openssl_path=$withval],
-                [openssl_path="/usr/local /usr/local/ssl /usr/ssl /usr/pkg /usr / /sw/lib"]
+                [openssl_path="/usr/local /usr/local/ssl /usr/lib/x86_64-linux-gnu /usr/ssl /usr/pkg /usr / /sw/lib"]
                 )
     AC_PATH_PROG([OPENSSL],[openssl])
     AC_MSG_CHECKING([for openssl includes])
@@ -196,7 +196,7 @@ AC_DEFUN([CHECK_SSL],
 
     AC_MSG_CHECKING([for openssl libraries])
     found_ssl_lib="no";
-    for libsubdir in lib lib64 lib32 lib/hpux32; do
+    for libsubdir in lib lib64 lib/x86_64-linux-gnu i386-linux-gnu lib32 lib/hpux32; do
       for dir in $openssl_path ; do
         if test -f "$dir/$libsubdir/libssl.so" -o -f "$dir/$libsubdir/libssl.dylib" -o -f "$dir/$libsubdir/libssl.a"; then
             found_ssl_lib="yes";
