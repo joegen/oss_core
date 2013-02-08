@@ -6,10 +6,10 @@ INCLUDES = -I$(top_srcdir)/include
 
 ## Libtool version info - update only immediately before a release
 # Current - increment if any interfaces are added, removed, or changed
-version_Current=1
+version_Current=2
 # Revision - set to 0 if Current was incremented
 #            increment if any implementation has changed
-version_Revision=6
+version_Revision=0
 # Age - set to 0 of any interfaces have been removed
 #       increment if any interfaces have been added
 version_Age=0
