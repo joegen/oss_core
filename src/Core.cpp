@@ -146,13 +146,11 @@ std::string string_right(const std::string& str, size_t size)
 
 void string_replace(std::string& str, const char* what, const char* with)
 {
-  size_t len = strlen(with);
-  while (true)
+  size_t pos = 0;
+  while((pos = str.find(what, pos)) != std::string::npos)
   {
-    size_t pos = str.find(what);
-    if (pos == std::string::npos)
-      break;
-    str.replace(pos, len-1, with);
+     str.replace(pos, strlen(what), with);
+     pos += strlen(with);
   }
 }
 
