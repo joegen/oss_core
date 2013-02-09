@@ -33,9 +33,9 @@
 #include <cstring>
 #include <iostream>
 
-#include "json/reader.h"
-#include "json/writer.h"
-#include "json/elements.h"
+#include "OSS/JSON/reader.h"
+#include "OSS/JSON/writer.h"
+#include "OSS/JSON/elements.h"
 
 namespace OSS {
 

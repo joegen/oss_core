@@ -29,9 +29,9 @@
 #include <boost/noncopyable.hpp>
 #include <boost/thread.hpp>
 #include <boost/lexical_cast.hpp>
-#include "json/reader.h"
-#include "json/writer.h"
-#include "json/elements.h"
+#include "OSS/JSON/reader.h"
+#include "OSS/JSON/writer.h"
+#include "OSS/JSON/elements.h"
 #include <map>
 
 
