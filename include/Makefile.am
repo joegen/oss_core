@@ -4,15 +4,6 @@
 nobase_includeHEADERS_INSTALL = $(INSTALL) -D -p -c -m 644
 
 nobase_include_HEADERS = \
-    json/visitor.h \
-    json/writer.inl \
-    json/elements.h \
-    json/test.cpp \
-    json/reader.inl \
-    json/elements.inl \
-    json/Readme.txt \
-    json/writer.h \
-    json/reader.h \
     OSS/Semaphore.h \
     OSS/StackTrace.h \
     OSS/DynamicHashTable.h \
@@ -192,6 +183,15 @@ nobase_include_HEADERS = \
     OSS/JS/JS.h \
     OSS/JS/JSBase.h \
     OSS/JS/JSSIPMessage.h \
+    OSS/JSON/visitor.h \
+    OSS/JSON/writer.inl \
+    OSS/JSON/elements.h \
+    OSS/JSON/test.cpp \
+    OSS/JSON/reader.inl \
+    OSS/JSON/elements.inl \
+    OSS/JSON/Readme.txt \
+    OSS/JSON/writer.h \
+    OSS/JSON/reader.h \
     OSS/RTP/RTPPacket.h \
     OSS/RTP/RTPResizingQueue.h \
     OSS/RTP/RTPPCAPReader.h \

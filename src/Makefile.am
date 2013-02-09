@@ -4,43 +4,14 @@ lib_LTLIBRARIES = liboss_core.la
 
 INCLUDES = -I$(top_srcdir)/include
 
-## Libtool version info - update only immediately before a release
-# Current - increment if any interfaces are added, removed, or changed
-version_Current=2
-# Revision - set to 0 if Current was incremented
-#            increment if any implementation has changed
-version_Revision=0
-# Age - set to 0 of any interfaces have been removed
-#       increment if any interfaces have been added
-version_Age=0
+version_Current=@OSS_CORE_VERSION_CURRENT@
+version_Revision=@OSS_CORE_VERSION_REVISION@
+version_Age=@OSS_CORE_VERSION_AGE@
 
 liboss_core_la_LDFLAGS = \
 	-version-info ${version_Current}:${version_Revision}:${version_Age}
 
-dep_libs = \
-        @BOOST_LIBS@ \
-	-lPocoFoundation \
-	-lPocoUtil \
-	-lPocoNet \
-	-lPocoXML \
-	-lhiredis \
-	-lconfig++ \
-	-lv8 \
-	-lltdl \
-	-lmcrypt \
-	-lssl \
-	-lcrypto \
-	-lpthread \
-	-ldl \
-	-lrt \
-	-lcrypt \
-	-lssl \
-	-lresolv \
-	-lpcap \
-	-ldnet
-
-liboss_core_la_LIBADD = \
-	${dep_libs}
+liboss_core_la_LIBADD = @OSS_CORE_DEP_LIBS@
 
 # this is helpful if you're debugging something with lots of inlines (like the UtlLink code)
 # 		-fno-gcse -O0 -fno-implement-inlines -fno-default-inline
@@ -215,12 +186,10 @@ oss_core_unit_test_CXXFLAGS = \
 
 oss_core_unit_test_LDFLAGS = \
 	-rdynamic \
-	${dep_libs} \
+        @OSS_CORE_DEP_LIBS@ \
 	-lgtest
 
-oss_core_unit_test_LDADD = \
-	liboss_core.la \
-	${common_libs}
+oss_core_unit_test_LDADD = @OSSLIBSCORE_LIBS@
 
 oss_core_unit_test_SOURCES = \
 	unit_test/TestSuite.cpp \
