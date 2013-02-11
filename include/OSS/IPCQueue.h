@@ -215,8 +215,8 @@ public:
 
   IPCQueue(const std::string& fileName, Type type) :
     _type(type),
-    _fileName(fileName),
     _key(-1),
+    _fileName(fileName),
     _pReader(0),
     _pWriter(0)
   {

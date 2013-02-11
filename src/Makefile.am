@@ -9,7 +9,7 @@ version_Revision=@OSS_CORE_VERSION_REVISION@
 version_Age=@OSS_CORE_VERSION_AGE@
 
 liboss_core_la_LDFLAGS = \
-	-version-info ${version_Current}:${version_Revision}:${version_Age}
+	-version-info @OSS_CORE_VERSION_INFO@
 
 liboss_core_la_LIBADD = @OSS_CORE_DEP_LIBS@
 
@@ -18,7 +18,7 @@ liboss_core_la_LIBADD = @OSS_CORE_DEP_LIBS@
 liboss_core_la_CXXFLAGS = 
 	-DOSSLIBS_TMPDIR=\"@OSSLIBS_TMPDIR@\" \
 	-DOSSLIBS_CONFDIR=\"@OSSLIBS_CONFDIR@\" \
-	-DOSSAPP_LIB_VERSION=${version_Current}.${version_Revision}.${version_Age} \
+	-DOSSAPP_LIB_VERSION=\"@OSS_CORE_VERSION_FULL@\" \
 	-fno-gcse -O0 -fno-implement-inlines -fno-default-inline
 
 liboss_core_la_CFLAGS = 	-std=c99
@@ -184,12 +184,10 @@ oss_core_unit_test_CXXFLAGS = \
 	${common_cxx_flags} \
 	-fno-gcse -O0 -fno-implement-inlines -fno-default-inline
 
-oss_core_unit_test_LDFLAGS = \
-	-rdynamic \
-        @OSS_CORE_DEP_LIBS@ \
-	-lgtest
+oss_core_unit_test_LDFLAGS = -rdynamic
+	
 
-oss_core_unit_test_LDADD = @OSSLIBSCORE_LIBS@
+oss_core_unit_test_LDADD = @OSS_CORE_DEP_LIBS@ @LIB_OSS_CORE_LA@ -lgtest
 
 oss_core_unit_test_SOURCES = \
 	unit_test/TestSuite.cpp \

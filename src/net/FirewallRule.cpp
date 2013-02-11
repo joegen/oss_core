@@ -120,6 +120,7 @@ std::string FirewallRule::str() const
   strm <<  _protocol << "\t";
   strm <<  _direction << "\t";
   strm <<  _operation;
+  return strm.str();
 }
 
 

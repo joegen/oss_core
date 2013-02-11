@@ -60,7 +60,7 @@ void SIPTCPListener::run()
   _acceptor.listen();
   _acceptor.async_accept(dynamic_cast<SIPTCPConnection*>(_pNewConnection.get())->socket(),
       boost::bind(&SIPTCPListener::handleAccept, this,
-        boost::asio::placeholders::error, 0));
+        boost::asio::placeholders::error, (void*)0));
 }
 
 void SIPTCPListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE userData)
@@ -78,7 +78,7 @@ void SIPTCPListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE
       _pNewConnection.reset(new SIPTCPConnection(*_pIoService, _connectionManager));
       _acceptor.async_accept(dynamic_cast<SIPTCPConnection*>(_pNewConnection.get())->socket(),
         boost::bind(&SIPTCPListener::handleAccept, this,
-          boost::asio::placeholders::error, 0));
+          boost::asio::placeholders::error, userData));
     }
     else
     {

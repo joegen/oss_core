@@ -67,7 +67,7 @@ void SIPTCPConnection::stop()
   _socket.close();
 }
 
-void SIPTCPConnection::handleRead(const boost::system::error_code& e, std::size_t bytes_transferred, OSS_HANDLE userData)
+void SIPTCPConnection::handleRead(const boost::system::error_code& e, std::size_t bytes_transferred, OSS_HANDLE /*userData*/)
 {
   if (!e && bytes_transferred)
   {
@@ -198,7 +198,7 @@ void SIPTCPConnection::handleRead(const boost::system::error_code& e, std::size_
         /// We received a PING, send a PONG
         std::string pong("\r\n");
         boost::system::error_code ec;
-        bool ok = _socket.write_some(boost::asio::buffer(pong.c_str(), pong.size()), ec) > 0;
+        _socket.write_some(boost::asio::buffer(pong.c_str(), pong.size()), ec);
 
         if (ec)
         {

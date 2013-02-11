@@ -864,7 +864,7 @@ void OSSApplication::setArgs(const std::vector<std::string>& args)
 	_pConfig->setInt("application.argc", (int) args.size());
 	_args = args;
 	std::string argvKey = "application.argv[";
-	for (int i = 0; i < args.size(); ++i)
+	for (std::size_t i = 0; i < args.size(); ++i)
 	{
 		_pConfig->setString(argvKey + NumberFormatter::format(i) + "]", args[i]);
 	}

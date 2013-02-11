@@ -23,22 +23,10 @@ AC_DEFUN([SFAC_INIT_FLAGS],
     if test x_"${ax_cv_c_compiler_vendor}" = x_gnu
     then
     	SF_CXX_C_FLAGS="-D_linux_ -D_REENTRANT -D_FILE_OFFSET_BITS=64 -fmessage-length=0"
-    	#SF_CXX_WARNINGS="-Wall -Wformat -Wwrite-strings -Wpointer-arith"
-    	SF_CXX_WARNINGS="-fpermissive"
+    	SF_CXX_WARNINGS="-Wall -Wformat -Wwrite-strings -Wpointer-arith"
+    	#SF_CXX_WARNINGS="-fpermissive"
         CXXFLAGS="$CXXFLAGS $SF_CXX_C_FLAGS $SF_CXX_WARNINGS"
     	CFLAGS="$CFLAGS $SF_CXX_C_FLAGS -Wnested-externs -Wmissing-declarations"
-
-      # the sfac_strict_compile flag is set by SFAC_STRICT_COMPILE_NO_WARNINGS_ALLOWED
-      AC_MSG_CHECKING(how to treat compilation warnings)
-      #if test x$sfac_strict_compile = xstrictmode 
-      #then 
-      #   AC_MSG_RESULT([strict mode - treat as errors])
-      #   CXXFLAGS="$CXXFLAGS -Wno-strict-aliasing -fno-strict-aliasing -Werror"
-      #   CFLAGS="$CXXFLAGS -Wno-strict-aliasing -fno-strict-aliasing -Werror"
-      #else 
-      #   AC_MSG_RESULT([normal mode - allow warnings])
-      #fi
-
     elif test x_"${ax_cv_c_compiler_vendor}" = x_sun
     then
         SF_CXX_C_FLAGS="-D_REENTRANT -D_FILE_OFFSET_BITS=64 -mt -fast -v"
@@ -118,10 +106,12 @@ AC_DEFUN([SFAC_LIB_CORE],
     OSS_CORE_VERSION_REVISION="0"
     OSS_CORE_VERSION_AGE="0"
     OSS_CORE_VERSION_FULL="$OSS_CORE_VERSION_CURRENT.$OSS_CORE_VERSION_REVISION.$OSS_CORE_VERSION_AGE"
+    OSS_CORE_VERSION_INFO="$OSS_CORE_VERSION_CURRENT:$OSS_CORE_VERSION_REVISION:$OSS_CORE_VERSION_AGE"
     AC_SUBST(OSS_CORE_VERSION_CURRENT)
     AC_SUBST(OSS_CORE_VERSION_REVISION)
     AC_SUBST(OSS_CORE_VERSION_AGE)
     AC_SUBST(OSS_CORE_VERSION_FULL)
+    AC_SUBST(OSS_CORE_VERSION_INFO)
 
     AC_CHECK_LIB(boost_date_time, main, [],
         [AC_CHECK_LIB(boost_date_time-mt, main, [],
@@ -184,7 +174,24 @@ AC_DEFUN([SFAC_LIB_CORE],
     AC_CHECK_LIB(xmlrpc_client++, main, [], [AC_MSG_ERROR("XML RPC C++ client classes not found")])
     AC_CHECK_LIB(xmlrpc_server_abyss++, main, [], [AC_MSG_ERROR("XML RPC C++ server classes not found")])
 
-    OSS_CORE_DEP_LIBS=" -lhiredis -lconfig++ -lv8 -lltdl -lmcrypt -lssl -lcrypto -lpthread -ldl -lrt -lcrypt -lresolv -lpcap -lxmlrpc -lxmlrpc_client++ -lxmlrpc_server_abyss++"
+    OSS_CORE_DEP_LIBS=""
+    OSS_CORE_DEP_LIBS+=" -lhiredis "
+    OSS_CORE_DEP_LIBS+=" -lconfig++  "
+    OSS_CORE_DEP_LIBS+=" -lv8  "
+    OSS_CORE_DEP_LIBS+=" -lltdl  "
+    OSS_CORE_DEP_LIBS+=" -lmcrypt  "
+    OSS_CORE_DEP_LIBS+=" -lssl  "
+    OSS_CORE_DEP_LIBS+=" -lcrypto "
+    OSS_CORE_DEP_LIBS+=" -lpthread  "
+    OSS_CORE_DEP_LIBS+=" -ldl  "
+    OSS_CORE_DEP_LIBS+=" -lrt  "
+    OSS_CORE_DEP_LIBS+=" -lcrypt  "
+    OSS_CORE_DEP_LIBS+=" -lresolv  "
+    OSS_CORE_DEP_LIBS+=" -lpcap  "
+    OSS_CORE_DEP_LIBS+=" -lxmlrpc "
+    OSS_CORE_DEP_LIBS+=" -lxmlrpc_client++  "
+    OSS_CORE_DEP_LIBS+=" -lxmlrpc_server_abyss++ "
+
     AC_SUBST(OSS_CORE_DEP_LIBS, "$BOOST_LIBS $POCO_LIBS $OSS_CORE_DEP_LIBS")
 
     foundpath=""
@@ -199,7 +206,7 @@ AC_DEFUN([SFAC_LIB_CORE],
         AC_MSG_WARN([    assuming it will be in '${prefix}/lib'])
         foundpath=${prefix}/lib
     fi
-    AC_SUBST(OSSLIBSCORE_LIBS, "$foundpath/liboss_core.la")
+    AC_SUBST(LIB_OSS_CORE_LA, "$foundpath/liboss_core.la")
 ]) # SFAC_LIB_CORE
 
 

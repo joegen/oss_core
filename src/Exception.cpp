@@ -63,14 +63,15 @@ Exception::Exception(const Exception& exc):
 }
 
 Exception::Exception(const std::exception& exc):
-	_code(0),
-  _pNested(0)
+  _pNested(0),
+  _code(0)
 {
 	_msg = exc.what();
 }
 
 Exception::Exception(const boost::system::system_error& exc) :
-    _pNested(0)
+  _pNested(0),
+  _code(0)
 {
   _msg = exc.what();
   _code = exc.code().value();

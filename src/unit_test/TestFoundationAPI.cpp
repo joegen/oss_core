@@ -86,7 +86,7 @@ TEST(TestFoundation, adaptive_timer)
   //
 
   const int testDuration = 5; // seconds
-  const int resolution = 5; // milliseconds
+  OSS::UInt64 resolution = 5; // milliseconds
   const int iterations = testDuration * (1000/resolution);
 
   OSS::UTL::AdaptiveDelay delay(resolution);

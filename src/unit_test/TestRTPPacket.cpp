@@ -75,7 +75,7 @@ TEST(RTPPacketTest, test_basic_packet_parser)
   packet2.getPayload(payload2, len);
 
   ASSERT_EQ(len, packet1.getPayloadSize());
-  for (int i = 0; i < len; i++)
+  for (unsigned int i = 0; i < len; i++)
   {
     ASSERT_EQ(payload1[i], payload2[i]);
   }
@@ -94,7 +94,7 @@ TEST(RTPPacketTest, test_basic_packet_parser)
   packet2.getPayload(payload2, len);
 
   ASSERT_EQ(len, packet3.getPayloadSize());
-  for (int i = 0; i < len; i++)
+  for (unsigned int i = 0; i < len; i++)
   {
     ASSERT_EQ(payload3[i], payload2[i]);
   }
@@ -262,7 +262,7 @@ TEST(RTPPacketTest, test_rtp_resizer_downsize)
   u_char d4[80];
 
   packet.getPayload(d0, len);
-  for (int i = 0; i < len; i++)
+  for (unsigned int i = 0; i < len; i++)
   {
     ASSERT_EQ(d0[i], pld1[i]);
   }
@@ -354,7 +354,7 @@ TEST(RTPPacketTest, test_rtp_resizer_upsize)
   RTPPacket p1, p2, p3, p4;
   ASSERT_TRUE(p1.parse(pkt1, 32));
   ASSERT_TRUE(p2.parse(pkt2, 32));
-  ASSERT_TRUE(p3.parse(pkt4, 32));
+  ASSERT_TRUE(p3.parse(pkt3, 32));
   ASSERT_TRUE(p4.parse(pkt4, 32));
 
   RTPResizingQueue q(18, 80, 10, 10, 80);

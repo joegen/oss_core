@@ -75,11 +75,11 @@ void SIPXOR::sipEncrypt(boost::array<char, OSS_SIP_MAX_PACKET_SIZE>& packet, siz
     //
     std::vector<char> input;
     input.reserve(len);
-    for (int i = 0; i < len; i++)
+    for (std::size_t i = 0; i < len; i++)
       input.push_back(packet[i]);
     SIPXOR::sipEncryptExternal(input);
 
-    for (int i = 0; i < input.size(); i++)
+    for (std::size_t i = 0; i < input.size(); i++)
       packet[i] = input[i];
     len = input.size();
     return;
@@ -106,11 +106,11 @@ void SIPXOR::sipDecrypt(boost::array<char, OSS_SIP_MAX_PACKET_SIZE>& packet, siz
     //
     std::vector<char> input;
     input.reserve(len);
-    for (int i = 0; i < len; i++)
+    for (std::size_t i = 0; i < len; i++)
       input.push_back(packet[i]);
     SIPXOR::sipDecryptExternal(input);
 
-    for (int i = 0; i < input.size(); i++)
+    for (std::size_t i = 0; i < input.size(); i++)
       packet[i] = input[i];
     len = input.size();
     return;
@@ -133,11 +133,11 @@ void SIPXOR::rtpEncrypt(boost::array<char, 8192>& packet, size_t& len)
     //
     std::vector<char> input;
     input.reserve(len);
-    for (int i = 0; i < len; i++)
+    for (std::size_t i = 0; i < len; i++)
       input.push_back(packet[i]);
     SIPXOR::rtpEncryptExternal(input);
 
-    for (int i = 0; i < input.size(); i++)
+    for (std::size_t i = 0; i < input.size(); i++)
       packet[i] = input[i];
     len = input.size();
     return;
@@ -170,11 +170,11 @@ void SIPXOR::rtpDecrypt(boost::array<char, 8192>& packet, size_t& len)
       //
       std::vector<char> input;
       input.reserve(len);
-      for (int i = 0; i < len; i++)
+      for (std::size_t i = 0; i < len; i++)
         input.push_back(packet[i]);
       SIPXOR::rtpDecryptExternal(input);
 
-      for (int i = 0; i < input.size(); i++)
+      for (std::size_t i = 0; i < input.size(); i++)
         packet[i] = input[i];
       len = input.size();
       return;
@@ -193,7 +193,7 @@ void SIPXOR::rtpDecrypt(boost::array<char, 8192>& packet, size_t& len)
     return;
 
  
-  for(int i = 0; i < len - boundary; i+=2)
+  for(std::size_t i = 0; i < len - boundary; i+=2)
   {
     packet[i] = oldPacket[i + boundary] ^ _xor_config.key[0];
     packet[i+1] = oldPacket[i+1 + boundary] ^ _xor_config.key[1];

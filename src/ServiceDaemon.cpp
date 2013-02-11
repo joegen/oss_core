@@ -86,11 +86,10 @@ bool ServiceOptions::getOption(const std::string& optionName, int& value) const
   return true;
 }
 
-
 ServiceOptions::ServiceOptions(int argc, char** argv, const std::string& daemonName) :
-  _daemonName(daemonName),
   _argc(argc),
   _argv(argv),
+  _daemonName(daemonName),
   _optionItems(_daemonName  + " Options")
 {
 }
