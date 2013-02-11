@@ -66,7 +66,7 @@ void SIPTransportRateLimitStrategy::logPacket(const boost::asio::ip::address& so
       //
       OSS_LOG_WARNING("ALERT: Threshold Violation Detected.  Rate >= " << _packetsPerSecondThreshold);
 
-      int watermark = 0;
+      std::size_t watermark = 0;
       boost::asio::ip::address suspect;
       for (std::map<boost::asio::ip::address, unsigned int>::iterator iter = _packetCounter.begin();
         iter != _packetCounter.end(); iter++)

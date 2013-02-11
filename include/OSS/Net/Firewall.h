@@ -22,6 +22,7 @@
 
 #include <map>
 #include <list>
+#include <vector>
 #include <boost/noncopyable.hpp>
 #include <boost/function.hpp>
 #include "OSS/Net/FirewallRule.h"
@@ -34,39 +35,36 @@ namespace Net {
 class Firewall : boost::noncopyable
 {
   //
-  // This is a wrapper class around libdnet firewall functions.
+  // This is a wrapper class around libdnet firewall functions and iptables.
   // libdnet only supports ipchains which is now obsolete in most
-  // recent linux kernels and replaced by iptables.
+  // recent linux kernels and replaced by iptables.  The current active implementation
+  // class is iptables.  All functions are prefix with dnet and ipt (iptables) respectively
   //
 public:
-  typedef boost::function<void(const FirewallRule&)> TableLoopHandler;
+  typedef boost::function<void(const std::string&)> TableLoopHandler;
   static Firewall& instance();
-  bool addRule(const FirewallRule& rule);
-  bool deleteRule(FirewallRule::Table::iterator& iter);
-  FirewallRule::Table::iterator begin();
-  FirewallRule::Table::iterator end();
-  void tableLoop(TableLoopHandler& handler);
+
+    /// pushed the the handle callback.
+
+  bool iptAddRule(const FirewallRule& rule);
+    /// Adds a new firewall rule
+
+  bool iptDeleteRule(FirewallRule::Direction direction, std::size_t index);
+    /// Deletes the rule in this particular position.
+
+  void iptGetRules(FirewallRule::Direction direction, std::vector<std::string>& rules);
+    /// Get the rules for a specific chain.
 
 private:
   friend Firewall& instance();
   Firewall();
   ~Firewall();
-  FirewallRule::Table _table;
 };
 
 
 //
 // Inlines
 //
-inline FirewallRule::Table::iterator Firewall::begin()
-{
-  return _table.begin();
-}
-
-inline FirewallRule::Table::iterator Firewall::end()
-{
-  return _table.end();
-}
 
 
 } } // OSS::Net

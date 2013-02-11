@@ -246,6 +246,8 @@ public:
   void setOperation(Operation operation);
   int getOperation() const;
 
+  std::string str() const;
+
 private:
   friend class Firewall;
   std::string _device;

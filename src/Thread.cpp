@@ -127,44 +127,72 @@ void thread_pool::join()
   static_cast<Poco::ThreadPool*>(_threadPool)->joinAll();
 }
 
-bool thread_pool::schedule(boost::function<void()> task)
+int thread_pool::schedule(boost::function<void()> task)
 {
   thread_pool_runnable* runnable = new thread_pool_runnable();
   runnable->_task = task;
   try
   {
     static_cast<Poco::ThreadPool*>(_threadPool)->start(*runnable);
+    return static_cast<Poco::ThreadPool*>(_threadPool)->used();
   }
   catch(...)
   {
     delete runnable;
-    return false;
   }
-  return true;
+  return 0;
 }
 
-void thread_pool::schedule_with_arg(boost::function<void(argument_place_holder)> task, argument_place_holder arg)
+int thread_pool::schedule_with_arg(boost::function<void(argument_place_holder)> task, argument_place_holder arg)
 {
   thread_pool_runnable* runnable = new thread_pool_runnable();
-  runnable->_arg = arg;
   runnable->_argTask = task;
-  static_cast<Poco::ThreadPool*>(_threadPool)->start(*runnable);
+  runnable->_arg = arg;
+  try
+  {
+    static_cast<Poco::ThreadPool*>(_threadPool)->start(*runnable);
+    return static_cast<Poco::ThreadPool*>(_threadPool)->used();
+  }
+  catch(...)
+  {
+    delete runnable;
+  }
+  return 0;
 }
 
 
-void thread_pool::static_schedule(boost::function<void()> task)
+int thread_pool::static_schedule(boost::function<void()> task)
 {
   thread_pool_runnable* runnable = new thread_pool_runnable();
   runnable->_task = task;
-  Poco::ThreadPool::defaultPool().start(*runnable);
+  try
+  {
+    Poco::ThreadPool::defaultPool().start(*runnable);
+    return Poco::ThreadPool::defaultPool().used();
+  }
+  catch(...)
+  {
+    delete runnable;
+  }
+  return 0;
+
 }
 
-void thread_pool::static_schedule_with_arg(boost::function<void(argument_place_holder)> task, argument_place_holder arg)
+int thread_pool::static_schedule_with_arg(boost::function<void(argument_place_holder)> task, argument_place_holder arg)
 {
   thread_pool_runnable* runnable = new thread_pool_runnable();
-  runnable->_arg = arg;
   runnable->_argTask = task;
-  Poco::ThreadPool::defaultPool().start(*runnable);
+  runnable->_arg = arg;
+  try
+  {
+    Poco::ThreadPool::defaultPool().start(*runnable);
+    return Poco::ThreadPool::defaultPool().used();
+  }
+  catch(...)
+  {
+    delete runnable;
+  }
+  return 0;
 }
 
 void thread_pool::static_join()

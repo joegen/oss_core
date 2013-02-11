@@ -17,35 +17,19 @@
  */
 
 
+
 #include "gtest/gtest.h"
-#include "OSS/Net/Firewall.h"
-#include <boost/bind.hpp>
+#include "OSS/SIP/SIPWebSocketListener.h"
 
 using namespace OSS;
-using namespace OSS::Net;
+using namespace OSS::SIP;
 
-#ifdef TEST_FIREWALL_RULE
-TEST(FirewallTest, test_Add_rule)
+TEST(SipTransportTest, test_websocket_listen)
 {
-
-  OSS::Net::FirewallRule rule1;
-  rule1.setDevice("p33p1");
-  rule1.setSourceAddress("192.169.1.250");
-  rule1.setOperation(OSS::Net::FirewallRule::OP_ALLOW);
-  rule1.setProtocol(OSS::Net::FirewallRule::PROTO_TCP);
-  rule1.setDirection(OSS::Net::FirewallRule::DIR_IN);
-  ASSERT_TRUE(OSS::Net::Firewall::instance().iptAddRule(rule1));
-}
-
-
-TEST(FirewallTest, test_print_rules)
-{
-  std::vector<std::string> input;
-  std::vector<std::string> output;
-
-  OSS::Net::Firewall::instance().iptGetRules(OSS::Net::FirewallRule::DIR_IN, input);
-  OSS::Net::Firewall::instance().iptGetRules(OSS::Net::FirewallRule::DIR_OUT, output);
-
-  ASSERT_TRUE(!input.empty() || !output.empty());
-}
+#if 0
+  SIPWebSocketConnectionManager manager(NULL);
+  SIPWebSocketListener listener(NULL, "127.0.0.1", "18080", manager);
+  listener.run();
+  OSS::thread_sleep(1000);
 #endif
+}

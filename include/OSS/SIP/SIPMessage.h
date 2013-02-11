@@ -575,7 +575,7 @@ protected:
   SIPHeaderList _headers;
   static std::string _headerEmptyRet;
   size_t _headerOffSet;
-  int _expectedBodyLen;
+  std::size_t _expectedBodyLen;
   mutable boost::tribool _isResponse;
   mutable boost::tribool _isRequest;
   CustomProperties _properties;

@@ -75,7 +75,7 @@ private:
   void writeMessage(SIPMessage::Ptr msg, const std::string& ip, const std::string& port);
     /// Send a SIP message using this session.  This is used by the UDP tranport
 
-  void handleRead(const boost::system::error_code& e, std::size_t bytes_transferred);
+  void handleRead(const boost::system::error_code& e, std::size_t bytes_transferred, OSS_HANDLE userData = 0);
     /// Handle completion of a read operation.
 
   void handleWrite(const boost::system::error_code& e);

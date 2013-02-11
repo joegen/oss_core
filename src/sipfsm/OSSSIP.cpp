@@ -74,7 +74,7 @@ void OSSSIP::transportInit()
   //
   if (_enableUDP)
   {
-    for (int i = 0; i < _udpListeners.size(); i++)
+    for (std::size_t i = 0; i < _udpListeners.size(); i++)
     {
       OSS::IPAddress& iface = _udpListeners[i];
       std::string ip = iface.address().to_string();
@@ -88,7 +88,7 @@ void OSSSIP::transportInit()
   //
   if (_enableTCP)
   {
-    for (int i = 0; i < _tcpListeners.size(); i++)
+    for (std::size_t i = 0; i < _tcpListeners.size(); i++)
     {
       OSS::IPAddress& iface = _tcpListeners[i];
       std::string ip = iface.address().to_string();
@@ -102,7 +102,7 @@ void OSSSIP::transportInit()
   //
   if (_enableTLS)
   {
-    for (int i = 0; i < _tlsListeners.size(); i++)
+    for (std::size_t i = 0; i < _tlsListeners.size(); i++)
     {
       OSS::IPAddress& iface = _tlsListeners[i];
       std::string ip = iface.address().to_string();
@@ -139,7 +139,7 @@ void OSSSIP::transportInit(unsigned short udpPortBase, unsigned short udpPortMax
   //
   if (_enableUDP)
   {
-    for (int i = 0; i < _udpListeners.size(); i++)
+    for (std::size_t i = 0; i < _udpListeners.size(); i++)
     {
       OSS::IPAddress& iface = _udpListeners[i];
       std::string ip = iface.address().to_string();
@@ -166,7 +166,7 @@ void OSSSIP::transportInit(unsigned short udpPortBase, unsigned short udpPortMax
   //
   if (_enableTCP)
   {
-    for (int i = 0; i < _tcpListeners.size(); i++)
+    for (std::size_t i = 0; i < _tcpListeners.size(); i++)
     {
       OSS::IPAddress& iface = _tcpListeners[i];
       std::string ip = iface.address().to_string();
@@ -193,7 +193,7 @@ void OSSSIP::transportInit(unsigned short udpPortBase, unsigned short udpPortMax
   //
   if (_enableTLS)
   {
-    for (int i = 0; i < _tlsListeners.size(); i++)
+    for (std::size_t i = 0; i < _tlsListeners.size(); i++)
     {
       OSS::IPAddress& iface = _tlsListeners[i];
       std::string ip = iface.address().to_string();

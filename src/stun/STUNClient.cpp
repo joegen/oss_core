@@ -63,7 +63,6 @@ void STUNClient::sendTestRequest(
 
   bool changePort=false;
   bool changeIP=false;
-  bool discard=false;
 
   switch (testNum)
   {
@@ -82,7 +81,6 @@ void STUNClient::sendTestRequest(
        changeIP=true;
        break;
     case 5:
-       discard=true;
        break;
     default:
        OSS_ASSERT(false);

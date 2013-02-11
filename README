@@ -16,6 +16,8 @@ To list runtime dependencies
 ### Download the source code from https://github.com/joegen/oss_core and build it
     git clone https://github.com/joegen/oss_core.git
     cd oss_core
+    git submodule init
+    git submoule update
     autoreconf -if
     mkdir -p .build
     cd .build

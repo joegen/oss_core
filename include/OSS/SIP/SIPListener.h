@@ -46,7 +46,7 @@ public:
   virtual void run() = 0;
     /// Run the server's io_service loop.
 
-  virtual void handleAccept(const boost::system::error_code& e) = 0;
+  virtual void handleAccept(const boost::system::error_code& e, OSS_HANDLE userData = 0) = 0;
     /// Handle completion of an asynchronous accept operation.
 
   virtual void handleStop() = 0;
@@ -75,7 +75,7 @@ public:
 protected:
   SIPListener(const SIPListener&);
   SIPListener& operator = (const SIPListener&);
-  boost::asio::io_service& _ioService;
+  boost::asio::io_service* _pIoService;
   SIPTransportService* _pTransportService;
     /// The io_service used to perform asynchronous operations.
   std::string _externalAddress;

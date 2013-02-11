@@ -326,8 +326,6 @@ bool SIPB2BContact::transformRegister(
     pRequest->hdrListRemove("Contact");
   }
 
-  bool hasExpireHeader = false;
-
   if (expires.empty())
   {
     if (hContactList == "*")
@@ -341,10 +339,6 @@ bool SIPB2BContact::transformRegister(
       if (expires.empty())
         expires = "3600";
     }
-  }
-  else
-  {
-    hasExpireHeader = true;
   }
 
   if (!hContactList.empty() && hContactList != "*")

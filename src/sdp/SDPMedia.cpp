@@ -204,7 +204,7 @@ const SDPMedia::Payloads& SDPMedia::getPayloads() const
       //audio 49230 RTP/AVP 0 8 96 97 98 101
       if (tokens.size() > 3)
       {
-        for (int i = 3; i < tokens.size(); i++)
+        for (std::size_t i = 3; i < tokens.size(); i++)
           const_cast<SDPMedia*>(this)->_payloads.push_back(OSS::string_to_number<int>(tokens[i].c_str()));
       }
     }
@@ -227,7 +227,7 @@ void SDPMedia::setPayloads(const Payloads& payloads)
         std::stringstream m;
         m << tokens[0] << " " << tokens[1] << " " << tokens[2] << " ";
         Payloads::const_iterator citer;
-        int i = 0;
+        std::size_t i = 0;
         for (citer = payloads.begin(); citer != payloads.end(); citer++)
         {
           m << *citer;
@@ -294,7 +294,7 @@ void SDPMedia::removePayload(int payload)
         std::stringstream m;
         m << tokens[0] << " " << tokens[1] << " " << tokens[2] << " ";
         Payloads::const_iterator citer;
-        int i = 0;
+        std::size_t i = 0;
         for (citer = _payloads.begin(); citer != _payloads.end(); citer++)
         {
           m << *citer;
@@ -440,7 +440,7 @@ void SDPMedia::setDataPort(unsigned short port)
   {
     tokens[1] = OSS::string_from_number<unsigned short>(port);
     std::stringstream newMLine;
-    for (int i = 0; i < tokens.size() ;i++)
+    for (std::size_t i = 0; i < tokens.size() ;i++)
     {
       newMLine << tokens[i];
       if (i != tokens.size() -1)
@@ -543,7 +543,7 @@ std::string SDPMedia::getCommonAttribute(const char* attribute) const
         if (tokens.size() >= 2)
         {
           std::stringstream strm;
-          for (int i = 1; i < tokens.size(); i++)
+          for (std::size_t i = 1; i < tokens.size(); i++)
           {
             strm << tokens[i];
             if (i < tokens.size() - 1)

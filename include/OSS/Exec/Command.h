@@ -31,6 +31,7 @@
 #define	OSS_COMMAND_H_INCLUDED
 
 #include <string>
+#include <sstream>
 #include <vector>
 
 
@@ -52,6 +53,8 @@ public:
   std::string readLine() const;
   bool isEOF() const;
   bool isGood() const;
+  void join() const;
+  void join(std::vector<std::string>& output);
   bool kill();
   bool kill(int signal);
   void close();
@@ -80,6 +83,25 @@ inline const std::string& Command::getCommand() const
 
 
 } } // OSS::Exec
+
+#define OSS_EXEC(cmd) \
+{ \
+  std::ostringstream strm; \
+  strm << cmd; \
+  OSS::Exec::Command command; \
+  if (command.execute(strm.str())) \
+    command.join(); \
+}
+
+#define OSS_EXEC_EX(cmd, output) \
+{ \
+  std::ostringstream strm; \
+  strm << cmd; \
+  OSS::Exec::Command command; \
+  if (command.execute(strm.str())) \
+    command.join(output); \
+}
+
 
 #endif	/* OSS_EXEC_H_INCLUDED */
 

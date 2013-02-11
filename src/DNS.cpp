@@ -174,13 +174,9 @@ static bool ProcessDNSRecords(
 
     // get other common parts of the record
     unsigned short  type;
-    unsigned short  dnsClass;
-    unsigned long ttl;
     unsigned short  dlen;
 
     GETSHORT(type,     cp);
-    GETSHORT(dnsClass, cp);
-    GETLONG (ttl,      cp);
     GETSHORT(dlen,     cp);
 
     unsigned char * data = cp;

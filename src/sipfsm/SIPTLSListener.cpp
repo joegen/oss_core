@@ -75,19 +75,19 @@ void SIPTLSListener::run()
   _acceptor.listen();
   _acceptor.async_accept(dynamic_cast<SIPTLSConnection*>(_pNewConnection.get())->socket().lowest_layer(),
       boost::bind(&SIPTLSListener::handleAccept, this,
-        boost::asio::placeholders::error));
+        boost::asio::placeholders::error, (void*)0));
 }
 
-void SIPTLSListener::handleAccept(const boost::system::error_code& e)
+void SIPTLSListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE userData)
 {
   if (!e)
   {
     _pNewConnection->setExternalAddress(_externalAddress);
     _connectionManager.start(_pNewConnection);
-    _pNewConnection.reset(new SIPTLSConnection(_ioService, _tlsContext, _connectionManager));
+    _pNewConnection.reset(new SIPTLSConnection(*_pIoService, _tlsContext, _connectionManager));
     _acceptor.async_accept(dynamic_cast<SIPTLSConnection*>(_pNewConnection.get())->socket().lowest_layer(),
       boost::bind(&SIPTLSListener::handleAccept, this,
-        boost::asio::placeholders::error));
+        boost::asio::placeholders::error, userData));
   }
 }
 
@@ -104,7 +104,7 @@ void SIPTLSListener::handleConnect(const boost::system::error_code& e, boost::as
 {
   if (!e)
   {
-    SIPTLSConnection::Ptr conn(new SIPTLSConnection(_ioService, _tlsContext, _connectionManager));
+    SIPTLSConnection::Ptr conn(new SIPTLSConnection(*_pIoService, _tlsContext, _connectionManager));
     _connectionManager.add(conn);
     conn->handleResolve(endPointIter);
   }
