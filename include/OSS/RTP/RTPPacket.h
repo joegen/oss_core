@@ -82,7 +82,6 @@ public:
 	RTPPacket(const RTPPacket& packet);
 	RTPPacket(const u_char* packet, unsigned int size);
 	~RTPPacket();
-	void swap(RTPPacket& packet);
 	RTPPacket& operator=(const RTPPacket& packet);
 
 	unsigned int getVersion() const;
@@ -113,6 +112,7 @@ public:
   void setPayload(u_char* payload, unsigned int size);
 	bool parse(const u_char* packet, unsigned int size);
   const u_char* data() const;
+  u_char* data();
   void setPacketSourceIp(const std::string& packetSourceIp);
   const std::string& getPacketSourceIp() const;
   void setPacketSourcePort(unsigned short sourcePort);
@@ -132,6 +132,7 @@ private:
 	unsigned short _packetSourcePort;
 	std::string _packetDestinationIp;
 	unsigned short _packetDestinationPort;
+	u_char _data[RTP_PACKET_BUFFER_SIZE];
 };
   
 //
@@ -235,12 +236,13 @@ inline void RTPPacket::getPayload(u_char* payload , unsigned int& length) const
     return;
   }
   length = getPayloadSize();
-  memcpy(payload, _packet.payload, length);
+  memcpy(payload, data() + getHeaderSize(), length);
 }
 
 inline void RTPPacket::setPayload(u_char* payload, unsigned int length)
 {
-  memcpy(_packet.payload, payload, length);
+  u_char* ptr = data();
+  memcpy(ptr + getHeaderSize(), payload, length);
   _packetSize = getHeaderSize() + length;
 }
 
@@ -295,11 +297,6 @@ inline void RTPPacket::setContributingSource(unsigned int contributingSource, un
   _packet.contributingSource[index] = byteSwap32(contributingSource);
 }
 
-inline const u_char* RTPPacket::data() const
-{
-  return (const u_char*) &_packet;
-}
-
 inline void RTPPacket::setPacketSourceIp(const std::string& packetSourceIp)
 {
   _packetSourceIp = packetSourceIp;
@@ -338,6 +335,16 @@ inline void RTPPacket::setPacketDestinationPort(unsigned short destinationPort)
 inline unsigned short RTPPacket::getPacketDestinationPort() const
 {
   return _packetDestinationPort;
+}
+
+inline const u_char* RTPPacket::data() const
+{
+  return (const u_char*) &_packet;
+}
+
+inline u_char* RTPPacket::data()
+{
+  return (u_char*) &_packet;
 }
 
 

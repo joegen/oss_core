@@ -131,7 +131,7 @@ static unsigned int kbToInt(const std::string& kb)
   return OSS::string_to_number<unsigned int>(tokens[0].c_str());
 }
 
-static double getMem(int pid)
+double getMem(int pid)
 {
   std::string memTotal;
   if (!getStatusHeader("/proc/meminfo", "memtotal", memTotal))
@@ -284,7 +284,7 @@ bool Process::execute()
     else if (tokens.size() == 1)
     {
       OSS_LOG_INFO("Spawning " << _startupCommand);
-      if (execl(tokens[0].c_str(), NULL) == -1)
+      if (execl(tokens[0].c_str(), "", NULL) == -1)
       {
         OSS_LOG_ERROR("Failed to execute " << _startupCommand << " ERROR: " << strerror(errno));
         return false;

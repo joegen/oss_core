@@ -23,22 +23,10 @@ AC_DEFUN([SFAC_INIT_FLAGS],
     if test x_"${ax_cv_c_compiler_vendor}" = x_gnu
     then
     	SF_CXX_C_FLAGS="-D_linux_ -D_REENTRANT -D_FILE_OFFSET_BITS=64 -fmessage-length=0"
-    	#SF_CXX_WARNINGS="-Wall -Wformat -Wwrite-strings -Wpointer-arith"
-    	SF_CXX_WARNINGS="-fpermissive"
+    	SF_CXX_WARNINGS="-Wall -Wformat -Wwrite-strings -Wpointer-arith"
+    	#SF_CXX_WARNINGS="-fpermissive"
         CXXFLAGS="$CXXFLAGS $SF_CXX_C_FLAGS $SF_CXX_WARNINGS"
     	CFLAGS="$CFLAGS $SF_CXX_C_FLAGS -Wnested-externs -Wmissing-declarations"
-
-      # the sfac_strict_compile flag is set by SFAC_STRICT_COMPILE_NO_WARNINGS_ALLOWED
-      AC_MSG_CHECKING(how to treat compilation warnings)
-      #if test x$sfac_strict_compile = xstrictmode 
-      #then 
-      #   AC_MSG_RESULT([strict mode - treat as errors])
-      #   CXXFLAGS="$CXXFLAGS -Wno-strict-aliasing -fno-strict-aliasing -Werror"
-      #   CFLAGS="$CXXFLAGS -Wno-strict-aliasing -fno-strict-aliasing -Werror"
-      #else 
-      #   AC_MSG_RESULT([normal mode - allow warnings])
-      #fi
-
     elif test x_"${ax_cv_c_compiler_vendor}" = x_sun
     then
         SF_CXX_C_FLAGS="-D_REENTRANT -D_FILE_OFFSET_BITS=64 -mt -fast -v"
@@ -114,8 +102,99 @@ AC_DEFUN([SFAC_LIB_CORE],
     CFLAGS="-I$OSSLIBSCOREINC $CFLAGS"
     CXXFLAGS="-I$OSSLIBSCOREINC $CXXFLAGS"
 
-    foundpath=""
+    OSS_CORE_VERSION_CURRENT="2"
+    OSS_CORE_VERSION_REVISION="0"
+    OSS_CORE_VERSION_AGE="0"
+    OSS_CORE_VERSION_FULL="$OSS_CORE_VERSION_CURRENT.$OSS_CORE_VERSION_REVISION.$OSS_CORE_VERSION_AGE"
+    OSS_CORE_VERSION_INFO="$OSS_CORE_VERSION_CURRENT:$OSS_CORE_VERSION_REVISION:$OSS_CORE_VERSION_AGE"
+    AC_SUBST(OSS_CORE_VERSION_CURRENT)
+    AC_SUBST(OSS_CORE_VERSION_REVISION)
+    AC_SUBST(OSS_CORE_VERSION_AGE)
+    AC_SUBST(OSS_CORE_VERSION_FULL)
+    AC_SUBST(OSS_CORE_VERSION_INFO)
 
+    AC_CHECK_LIB(boost_date_time, main, [],
+        [AC_CHECK_LIB(boost_date_time-mt, main, [],
+        [AC_MSG_ERROR("Required boost library dependency missing.")])])
+
+    AC_CHECK_LIB(boost_filesystem, main, [],
+        [AC_CHECK_LIB(boost_filesystem-mt, main, [],
+        [AC_MSG_ERROR("Required boost library dependency missing.")])])
+
+    AC_CHECK_LIB(boost_system, main, [],
+        [AC_CHECK_LIB(boost_system-mt, main, [],
+        [AC_MSG_ERROR("Required boost library dependency missing.")])])
+
+    AC_CHECK_LIB(boost_program_options, main, [],
+        [AC_CHECK_LIB(boost_program_options-mt, main, [],
+        [AC_MSG_ERROR("Required boost library dependency missing.")])])
+
+    AC_CHECK_LIB(boost_iostreams, main, [],
+        [AC_CHECK_LIB(boost_iostreams-mt, main, [],
+        [AC_MSG_ERROR("Required boost library dependency missing.")])])
+
+    AC_CHECK_LIB(boost_random, main, [],
+        [AC_CHECK_LIB(boost_random-mt, main, [],
+        [AC_MSG_ERROR("Required boost library dependency missing.")])])
+
+    AC_CHECK_LIB(boost_regex, main, [],
+        [AC_CHECK_LIB(boost_regex-mt, main, [],
+        [AC_MSG_ERROR("Required boost library dependency missing.")])])
+
+    AC_CHECK_LIB(boost_thread, main, [BOOST_LIBS="-lboost_date_time -lboost_filesystem -lboost_system -lboost_thread -lboost_program_options -lboost_iostreams -lboost_random -lboost_regex"],
+        [AC_CHECK_LIB(boost_thread-mt, main,
+        [BOOST_LIBS="-lboost_date_time-mt -lboost_filesystem-mt -lboost_system-mt -lboost_thread-mt -lboost_program_options-mt -lboost_iostreams-mt -lboost_random-mt -lboost_regex-mt"],
+        [AC_MSG_ERROR("no boost thread found")])])
+    AC_SUBST(BOOST_LIBS)
+
+    
+    AC_CHECK_LIB(PocoFoundation, main,
+        [POCO_LIBS="-lPocoFoundation -lPocoUtil -lPocoNet -lPocoXML"],
+        [AC_MSG_ERROR("Poco C++ Library not found")])
+    AC_CHECK_LIB(PocoUtil, main,[], [AC_MSG_ERROR("PocoUtil C++ Library not found")])
+    AC_CHECK_LIB(PocoNet, main,[], [AC_MSG_ERROR("PocoNet C++ Library not found")])
+    AC_CHECK_LIB(PocoXML, main,[], [AC_MSG_ERROR("PocoXML C++ Library not found")])
+    AC_SUBST(POCO_LIBS)
+
+    AC_CHECK_LIB(hiredis, main, [], [AC_MSG_ERROR("Redis client library not found")])
+    AC_CHECK_LIB(config++, main, [], [AC_MSG_ERROR("libconfig C++ library not found")])
+    AC_CHECK_LIB(v8, main, [], [AC_MSG_ERROR("Google V8 Javascript engine not found")])
+    AC_CHECK_LIB(ltdl, main, [], [AC_MSG_ERROR("libltdl not found")])
+    AC_CHECK_LIB(mcrypt, main, [], [AC_MSG_ERROR("Mcrypt Encryption Library not found")])
+    AC_CHECK_LIB(ssl, main, [], [AC_MSG_ERROR("SSL Development Library not found")])
+    AC_CHECK_LIB(crypto, main, [], [AC_MSG_ERROR("libcrypto not found")])
+    AC_CHECK_LIB(pthread, main, [], [AC_MSG_ERROR("libpthread not found")])
+    AC_CHECK_LIB(dl, main, [], [AC_MSG_ERROR("libdl not found")])
+    AC_CHECK_LIB(rt, main, [], [AC_MSG_ERROR("librt not found")])
+    AC_CHECK_LIB(crypt, main, [], [AC_MSG_ERROR("libcrypt not found")])
+    AC_CHECK_LIB(resolv, main, [], [AC_MSG_ERROR("libresolv not found")])
+    AC_CHECK_LIB(pcap, main, [], [AC_MSG_ERROR("libpcap not found")])
+    AC_CHECK_LIB(gtest, main, [], [AC_MSG_ERROR("Google Test Framework not found")])
+    AC_CHECK_LIB(xmlrpc, main, [], [AC_MSG_ERROR("XML RPC C Foundation classes not found")])
+    AC_CHECK_LIB(xmlrpc_client++, main, [], [AC_MSG_ERROR("XML RPC C++ client classes not found")])
+    AC_CHECK_LIB(xmlrpc_server_abyss++, main, [], [AC_MSG_ERROR("XML RPC C++ server classes not found")])
+
+    OSS_CORE_DEP_LIBS=""
+    OSS_CORE_DEP_LIBS+=" -lhiredis "
+    OSS_CORE_DEP_LIBS+=" -lconfig++  "
+    OSS_CORE_DEP_LIBS+=" -lv8  "
+    OSS_CORE_DEP_LIBS+=" -lltdl  "
+    OSS_CORE_DEP_LIBS+=" -lmcrypt  "
+    OSS_CORE_DEP_LIBS+=" -lssl  "
+    OSS_CORE_DEP_LIBS+=" -lcrypto "
+    OSS_CORE_DEP_LIBS+=" -lpthread  "
+    OSS_CORE_DEP_LIBS+=" -ldl  "
+    OSS_CORE_DEP_LIBS+=" -lrt  "
+    OSS_CORE_DEP_LIBS+=" -lcrypt  "
+    OSS_CORE_DEP_LIBS+=" -lresolv  "
+    OSS_CORE_DEP_LIBS+=" -lpcap  "
+    OSS_CORE_DEP_LIBS+=" -lxmlrpc "
+    OSS_CORE_DEP_LIBS+=" -lxmlrpc_client++  "
+    OSS_CORE_DEP_LIBS+=" -lxmlrpc_server_abyss++ "
+
+    AC_SUBST(OSS_CORE_DEP_LIBS, "$BOOST_LIBS $POCO_LIBS $OSS_CORE_DEP_LIBS")
+
+    foundpath=""
     SFAC_ARG_WITH_LIB([liboss_core.la],
             [osscorelib],
             [ --with-osscorelib=<dir> portability library path ],
@@ -127,7 +206,7 @@ AC_DEFUN([SFAC_LIB_CORE],
         AC_MSG_WARN([    assuming it will be in '${prefix}/lib'])
         foundpath=${prefix}/lib
     fi
-    AC_SUBST(OSSLIBSCORE_LIBS, "$foundpath/liboss_core.la")
+    AC_SUBST(LIB_OSS_CORE_LA, "$foundpath/liboss_core.la")
 ]) # SFAC_LIB_CORE
 
 
@@ -205,39 +284,6 @@ AC_DEFUN([SFAC_SRCDIR_EXPAND],
     AC_SUBST(TOP_ABS_SRCDIR, $abs_srcdir)
     AC_SUBST(TOP_ABS_BUILDDIR, $abs_srcdir)
     AC_SUBST(TOP_SRCDIR, $srcdir)
-])
-
-
-
-AC_DEFUN([SFAC_DOWNLOAD_DEPENDENCIES],
-[  
-  # URLs to files pulled down files
-  AC_SUBST(RUBY_AUX_RPMS_URL, http://people.redhat.com/dlutter/yum)
-  AC_SUBST(MOD_CPLUSPLUS_URL, http://umn.dl.sourceforge.net/sourceforge/modcplusplus)
-  AC_SUBST(JPKG_FREE_URL, http://mirrors.dotsrc.org/jpackage/1.7/generic/free)
-  AC_SUBST(JPKG_NONFREE_URL, http://mirrors.dotsrc.org/jpackage/1.7/generic/non-free)
-  AC_SUBST(XERCES_C_URL, http://www.apache.org/dist/xerces/c/sources)
-  AC_SUBST(RUBY_RPM_URL, http://dev.centos.org/centos/4/testing)
-  AC_SUBST(FC4_RUBY_RPM_URL, http://download.fedora.redhat.com/pub/fedora/linux/core/updates/4)
-  AC_SUBST(W3C_URL, http://ftp.redhat.com/pub/redhat/linux/enterprise/4/en/os/i386)
-  AC_SUBST(W3C_SRC_URL, http://www.w3.org/Library/Distribution)
-  AC_SUBST(GRAPHVIZ_URL, ftp://194.199.20.114/linux/SuSE-Linux/i386/9.3/suse/src)
-  AC_SUBST(CENTOS_URL, http://mirrors.easynews.com/linux/centos)
-  AC_SUBST(FC5_URL, http://redhat.download.fedoraproject.org/pub/fedora/linux/core)
-  AC_SUBST(FC5_EXTRAS_URL, http://download.fedora.redhat.com/pub/fedora/linux/extras)
-  AC_SUBST(FC5_UPDATES_URL, http://download.fedora.redhat.com/pub/fedora/linux/core/updates)
-  AC_SUBST(RHEL5_URL, http://mirrors.kernel.org/centos)
-  AC_SUBST(RHEL5_UPDATES_URL, http://mirrors.kernel.org/centos/5/updates)
-  AC_SUBST(FC6_URL, http://mirrors.kernel.org/fedora/core)
-  AC_SUBST(FC6_UPDATES_URL, http://mirrors.kernel.org/fedora/core/updates)
-  AC_SUBST(FC6_EXTRAS_URL, http://mirrors.kernel.org/fedora/extras)
-  AC_SUBST(RRDTOOL_URL, http://oss.oetiker.ch/rrdtool/pub)
-  AC_SUBST(JAIN_SIP_URL, http://download.java.net/communications/jain-sip/nightly/jain-sip-src)
-  AC_SUBST(DNSJAVA_URL, http://www.dnsjava.org/download/)
-
-  SFAC_SRCDIR_EXPAND
-  download_file="$abs_srcdir/config/download-file"
-  AC_SUBST(DOWNLOAD_FILE, $download_file)
 ])
 
 

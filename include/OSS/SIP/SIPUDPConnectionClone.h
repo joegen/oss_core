@@ -72,7 +72,7 @@ private:
   void writeMessage(SIPMessage::Ptr msg);
     /// Send a SIP message using this transport.
 
-  void handleRead(const boost::system::error_code& e, std::size_t bytes_transferred);
+  void handleRead(const boost::system::error_code& e, std::size_t bytes_transferred, OSS_HANDLE userData = 0);
     /// Handle completion of a read operation.
 
   void handleWrite(const boost::system::error_code& e);

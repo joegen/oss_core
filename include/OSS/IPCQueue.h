@@ -33,9 +33,9 @@
 #include <cstring>
 #include <iostream>
 
-#include "json/reader.h"
-#include "json/writer.h"
-#include "json/elements.h"
+#include "OSS/JSON/reader.h"
+#include "OSS/JSON/writer.h"
+#include "OSS/JSON/elements.h"
 
 namespace OSS {
 
@@ -215,8 +215,8 @@ public:
 
   IPCQueue(const std::string& fileName, Type type) :
     _type(type),
-    _fileName(fileName),
     _key(-1),
+    _fileName(fileName),
     _pReader(0),
     _pWriter(0)
   {

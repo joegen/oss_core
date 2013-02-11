@@ -130,7 +130,7 @@ char* findNextIterFromString(const std::string& needle, const char* hayStack)
 {
   char* startT = const_cast<char*>(hayStack);
   char* t = startT;
-  for (int i = 0; i < needle.size(); i++)
+  for (std::size_t i = 0; i < needle.size(); i++)
   {
     char c = *t;
     if (c == 0x00)

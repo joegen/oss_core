@@ -4,56 +4,21 @@ lib_LTLIBRARIES = liboss_core.la
 
 INCLUDES = -I$(top_srcdir)/include
 
-## Libtool version info - update only immediately before a release
-# Current - increment if any interfaces are added, removed, or changed
-version_Current=1
-# Revision - set to 0 if Current was incremented
-#            increment if any implementation has changed
-version_Revision=6
-# Age - set to 0 of any interfaces have been removed
-#       increment if any interfaces have been added
-version_Age=0
+version_Current=@OSS_CORE_VERSION_CURRENT@
+version_Revision=@OSS_CORE_VERSION_REVISION@
+version_Age=@OSS_CORE_VERSION_AGE@
 
 liboss_core_la_LDFLAGS = \
-	-version-info ${version_Current}:${version_Revision}:${version_Age}
+	-version-info @OSS_CORE_VERSION_INFO@
 
-dep_libs = \
-	-lboost_date_time-mt \
-	-lboost_filesystem-mt \
-	-lboost_system-mt \
-	-lboost_thread-mt \
-	-lboost_regex-mt \
-	-lboost_program_options-mt \
-	-lboost_iostreams-mt \
-	-lPocoFoundation \
-	-lPocoUtil \
-	-lPocoNet \
-	-lPocoXML \
-	-lhiredis \
-	-lconfig++ \
-	-lv8 \
-	-lltdl \
-	-lmcrypt \
-	-lssl \
-	-lcrypto \
-	-lpthread \
-	-ldl \
-	-lrt \
-	-lcrypt \
-	-lssl \
-	-lresolv \
-	-lpcap \
-	-ldnet
-
-liboss_core_la_LIBADD = \
-	${dep_libs}
+liboss_core_la_LIBADD = @OSS_CORE_DEP_LIBS@
 
 # this is helpful if you're debugging something with lots of inlines (like the UtlLink code)
 # 		-fno-gcse -O0 -fno-implement-inlines -fno-default-inline
-liboss_core_la_CXXFLAGS = \
+liboss_core_la_CXXFLAGS = 
 	-DOSSLIBS_TMPDIR=\"@OSSLIBS_TMPDIR@\" \
 	-DOSSLIBS_CONFDIR=\"@OSSLIBS_CONFDIR@\" \
-	-DOSSAPP_LIB_VERSION=${version_Current}.${version_Revision}.${version_Age} \
+	-DOSSAPP_LIB_VERSION=\"@OSS_CORE_VERSION_FULL@\" \
 	-fno-gcse -O0 -fno-implement-inlines -fno-default-inline
 
 liboss_core_la_CFLAGS = 	-std=c99
@@ -184,6 +149,9 @@ liboss_core_la_SOURCES =  \
     sipfsm/SIPFsm.cpp \
     sipfsm/SIPNict.cpp \
     sipfsm/SIPTransaction.cpp \
+    sipfsm/SIPWebSocketConnection.cpp \
+    sipfsm/SIPWebSocketListener.cpp \
+    sipfsm/SIPWebSocketConnectionManager.cpp \
     stun/STUNProto.cpp \
     stun/STUNMappedAddress.cpp \
     stun/STUNServer.cpp \
@@ -199,7 +167,16 @@ liboss_core_la_SOURCES =  \
     rtp/RTPResizingQueue.cpp \
     rtp/RTPPCAPReader.cpp \
     net/FirewallRule.cpp \
-    net/Firewall.cpp
+    net/Firewall.cpp \
+    utl/AdaptiveDelay.cpp \
+    ws/websocketpp/src/base64/base64.cpp \
+    ws/websocketpp/src/md5/md5.c \
+    ws/websocketpp/src/messages/data.cpp \
+    ws/websocketpp/src/network_utilities.cpp \
+    ws/websocketpp/src/processors/hybi_header.cpp \
+    ws/websocketpp/src/processors/hybi_util.cpp \
+    ws/websocketpp/src/sha1/sha1.cpp \
+    ws/websocketpp/src/uri.cpp
 
 bin_PROGRAMS = oss_core_unit_test
 
@@ -207,17 +184,14 @@ oss_core_unit_test_CXXFLAGS = \
 	${common_cxx_flags} \
 	-fno-gcse -O0 -fno-implement-inlines -fno-default-inline
 
-oss_core_unit_test_LDFLAGS = \
-	-rdynamic \
-	${dep_libs} \
-	-lgtest
+oss_core_unit_test_LDFLAGS = -rdynamic
+	
 
-oss_core_unit_test_LDADD = \
-	liboss_core.la \
-	${common_libs}
+oss_core_unit_test_LDADD = @OSS_CORE_DEP_LIBS@ @LIB_OSS_CORE_LA@ -lgtest
 
 oss_core_unit_test_SOURCES = \
 	unit_test/TestSuite.cpp \
+        unit_test/TestSemaphore.cpp \
 	unit_test/TestRequestLine.cpp \
 	unit_test/TestBasicParser.cpp \
 	unit_test/TestSDP.cpp \
@@ -232,7 +206,8 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestDNS.cpp \
 	unit_test/TestSIPURI.cpp \
 	unit_test/TestRTPPacket.cpp \
-	unit_test/TestFirewall.cpp
+	unit_test/TestFirewall.cpp \
+        unit_test/TestWebSocket.cpp
 
 
 

@@ -4,15 +4,6 @@
 nobase_includeHEADERS_INSTALL = $(INSTALL) -D -p -c -m 644
 
 nobase_include_HEADERS = \
-    json/visitor.h \
-    json/writer.inl \
-    json/elements.h \
-    json/test.cpp \
-    json/reader.inl \
-    json/elements.inl \
-    json/Readme.txt \
-    json/writer.h \
-    json/reader.h \
     OSS/Semaphore.h \
     OSS/StackTrace.h \
     OSS/DynamicHashTable.h \
@@ -168,6 +159,9 @@ nobase_include_HEADERS = \
     OSS/SIP/SIPUDPConnection.h \
     OSS/SIP/SIPTCPConnectionManager.h \
     OSS/SIP/SIPNistPool.h \
+    OSS/SIP/SIPWebSocketConnection.h \
+    OSS/SIP/SIPWebSocketListener.h \
+    OSS/SIP/SIPWebSocketConnectionManager.h \
     OSS/SIP/B2BUA/B2BUA.h \
     OSS/SIP/B2BUA/SIPB2BClientTransaction.h \
     OSS/SIP/B2BUA/SIPB2BHandler.h \
@@ -189,15 +183,50 @@ nobase_include_HEADERS = \
     OSS/JS/JS.h \
     OSS/JS/JSBase.h \
     OSS/JS/JSSIPMessage.h \
+    OSS/JSON/visitor.h \
+    OSS/JSON/writer.inl \
+    OSS/JSON/elements.h \
+    OSS/JSON/test.cpp \
+    OSS/JSON/reader.inl \
+    OSS/JSON/elements.inl \
+    OSS/JSON/Readme.txt \
+    OSS/JSON/writer.h \
+    OSS/JSON/reader.h \
     OSS/RTP/RTPPacket.h \
     OSS/RTP/RTPResizingQueue.h \
     OSS/RTP/RTPPCAPReader.h \
     OSS/Net/FirewallRule.h \
-    OSS/Net/Firewall.h
-
-
-    
-    
+    OSS/Net/Firewall.h \
+    OSS/UTL/AdaptiveDelay.h \
+    OSS/websocketpp/common.hpp \
+    OSS/websocketpp/connection.hpp \
+    OSS/websocketpp/endpoint.hpp \
+    OSS/websocketpp/network_utilities.hpp \
+    OSS/websocketpp/shared_const_buffer.hpp \
+    OSS/websocketpp/uri.hpp \
+    OSS/websocketpp/websocket_frame.hpp \
+    OSS/websocketpp/websocketpp.hpp \
+    OSS/websocketpp/base64/base64.h \
+    OSS/websocketpp/http/parser.hpp \
+    OSS/websocketpp/logger/logger.hpp \
+    OSS/websocketpp/md5/md5.h \
+    OSS/websocketpp/md5/md5.hpp \
+    OSS/websocketpp/messages/control.hpp \
+    OSS/websocketpp/messages/data.hpp \
+    OSS/websocketpp/processors/hybi.hpp \
+    OSS/websocketpp/processors/hybi_header.hpp \
+    OSS/websocketpp/processors/hybi_legacy.hpp \
+    OSS/websocketpp/processors/hybi_util.hpp \
+    OSS/websocketpp/processors/processor.hpp \
+    OSS/websocketpp/rng/blank_rng.hpp \
+    OSS/websocketpp/rng/boost_rng.hpp \
+    OSS/websocketpp/roles/client.hpp \
+    OSS/websocketpp/roles/server.hpp \
+    OSS/websocketpp/sha1/sha1.h \
+    OSS/websocketpp/sockets/plain.hpp \
+    OSS/websocketpp/sockets/socket_base.hpp \
+    OSS/websocketpp/sockets/tls.hpp \
+    OSS/websocketpp/utf8_validator/utf8_validator.hpp
 
 
 DISTCLEANFILES = Makefile.in

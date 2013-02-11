@@ -1,6 +1,6 @@
-/* $Id: pstream.h,v 1.112 2010/03/20 14:50:47 redi Exp $
+/*
 PStreams - POSIX Process I/O for C++
-Copyright (C) 2001,2002,2003,2004,2005,2006,2007,2008 Jonathan Wakely
+Copyright (C) 2001-2012 Jonathan Wakely
 
 This file is part of PStreams.
 
@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <algorithm>    // for min()
 #include <cerrno>       // for errno
-#include <cstddef>      // for size_t
+#include <cstddef>      // for size_t, NULL
 #include <cstdlib>      // for exit()
 #include <sys/types.h>  // for pid_t
 #include <sys/wait.h>   // for waitpid()
@@ -55,7 +55,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 /// The library version.
-#define PSTREAMS_VERSION 0x0070   // 0.7.0
+#define PSTREAMS_VERSION 0x0072   // 0.7.2
 
 /**
  *  @namespace redi
@@ -1130,7 +1130,13 @@ namespace redi
               // parent can get error code from ck_exec pipe
               error_ = errno;
 
-              ::write(ck_exec[WR], &error_, sizeof(error_));
+              ssize_t wrote = ::write(ck_exec[WR], &error_, sizeof(error_));
+              if (wrote == -1)
+              {
+                // Suppress warn_unused_result attribute with _FORTIFY_SOURCE.
+                // Process is about to exit anyway, no need for a better check.
+              }
+
               ::close(ck_exec[WR]);
               ::close(ck_exec[RD]);
 
@@ -1615,21 +1621,20 @@ namespace redi
     std::streamsize
     basic_pstreambuf<C,T>::xsputn(const char_type* s, std::streamsize n)
     {
-      if (n < this->epptr() - this->pptr())
+      std::streamsize done = 0;
+      while (done < n)
       {
-        traits_type::copy(this->pptr(), s, n);
-        this->pbump(n);
-        return n;
-      }
-      else
-      {
-        for (std::streamsize i = 0; i < n; ++i)
+        if (std::streamsize nbuf = this->epptr() - this->pptr())
         {
-          if (traits_type::eq_int_type(this->sputc(s[i]), traits_type::eof()))
-            return i;
+          nbuf = std::min(nbuf, n - done);
+          traits_type::copy(this->pptr(), s + done, nbuf);
+          this->pbump(nbuf);
+          done += nbuf;
         }
-        return n;
+        else if (!empty_buffer())
+          break;
       }
+      return done;
     }
 
   /**
@@ -1816,7 +1821,7 @@ namespace redi
 
   /** @return a reference to the output file descriptor */
   template <typename C, typename T>
-    inline typename basic_pstreambuf<C,T>::fd_type&
+    inline pstreams::fd_type&
     basic_pstreambuf<C,T>::wpipe()
     {
       return wpipe_;
@@ -1824,7 +1829,7 @@ namespace redi
 
   /** @return a reference to the active input file descriptor */
   template <typename C, typename T>
-    inline typename basic_pstreambuf<C,T>::fd_type&
+    inline pstreams::fd_type&
     basic_pstreambuf<C,T>::rpipe()
     {
       return rpipe_[rsrc_];
@@ -1832,7 +1837,7 @@ namespace redi
 
   /** @return a reference to the specified input file descriptor */
   template <typename C, typename T>
-    inline typename basic_pstreambuf<C,T>::fd_type&
+    inline pstreams::fd_type&
     basic_pstreambuf<C,T>::rpipe(buf_read_src which)
     {
       return rpipe_[which];
@@ -1867,7 +1872,7 @@ namespace redi
     , command_()
     , buf_()
     {
-      this->init(&buf_);
+      this->std::basic_ios<C,T>::rdbuf(&buf_);
     }
 
   /**
@@ -1885,7 +1890,7 @@ namespace redi
     , command_(command)
     , buf_()
     {
-      this->init(&buf_);
+      this->std::basic_ios<C,T>::rdbuf(&buf_);
       do_open(command, mode);
     }
 
@@ -1907,7 +1912,7 @@ namespace redi
     , command_(file)
     , buf_()
     {
-      this->init(&buf_);
+      this->std::basic_ios<C,T>::rdbuf(&buf_);
       do_open(file, argv, mode);
     }
 
@@ -2092,4 +2097,3 @@ namespace redi
 #endif  // REDI_PSTREAM_H_SEEN
 
 // vim: ts=2 sw=2 expandtab
-

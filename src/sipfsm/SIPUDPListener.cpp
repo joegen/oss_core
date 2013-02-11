@@ -62,7 +62,7 @@ void SIPUDPListener::handleStop()
   _socket->close();
 }
 
-void SIPUDPListener::handleAccept(const boost::system::error_code& e)
+void SIPUDPListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE userData)
 {
   // This is only significant for stream based connections (TCP/TLS)
 }

@@ -54,9 +54,9 @@ void SIPUDPConnectionClone::start(SIPFSMDispatch* pDispatch)
 }
 
 
-void SIPUDPConnectionClone::handleRead(const boost::system::error_code& e, std::size_t bytes_transferred)
+void SIPUDPConnectionClone::handleRead(const boost::system::error_code& e, std::size_t bytes_transferred, OSS_HANDLE userData)
 {
-  _orginalConnection->handleRead(e, bytes_transferred);
+  _orginalConnection->handleRead(e, bytes_transferred, userData);
 }
 
 void SIPUDPConnectionClone::writeMessage(SIPMessage::Ptr msg, const std::string& ip, const std::string& port)

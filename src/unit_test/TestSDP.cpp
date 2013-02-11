@@ -4,6 +4,7 @@
 #include "gtest/gtest.h"
 #include "OSS/OSS.h"
 #include "OSS/SDP/SDPSession.h"
+#include "OSS/IPAddress.h"
 
 
 using OSS::SDP::SDPHeader;
@@ -131,4 +132,40 @@ TEST(ParserTest, test_sdp_parser)
   ASSERT_TRUE(s3.getMediaCount(SDPMedia::TYPE_AUDIO) == 0);
   s3.addMedia(SDPMedia::Ptr(new SDPMedia(audioSDP)));
   ASSERT_TRUE(s3.getMediaCount(SDPMedia::TYPE_AUDIO) == 1);
+
+
+
+  std::ostringstream faxSDP;
+  faxSDP << "v=0" << std::endl;
+  faxSDP << "o=- 324805632 1357327348 IN IP4 10.100.151.5" << std::endl;
+  faxSDP << "s=-" << std::endl;
+  faxSDP << "c=IN IP4 10.100.151.5" << std::endl;
+  faxSDP << "t=0 0" << std::endl;
+  faxSDP << "a=sendrecv" << std::endl;
+  faxSDP << "m=image 12416 udptl t38" << std::endl;
+  faxSDP << "a=T38FaxVersion:0" << std::endl;
+  faxSDP << "a=T38MaxBitRate:14400" << std::endl;
+  faxSDP << "a=T38FaxRateManagement:transferredTCF" << std::endl;
+  faxSDP << "a=T38FaxMaxBuffer:300" << std::endl;
+  faxSDP << "a=T38FaxMaxDatagram:122" << std::endl;
+  faxSDP << "a=T38FaxUdpEC:t38UDPRedundancy" << std::endl;
+  faxSDP << "a=silenceSupp:off - - - -" << std::endl;
+  faxSDP << "a=ptime:20" << std::endl;
+  faxSDP << "a=maxptime:40" << std::endl;
+
+  SDPSession faxSession(faxSDP.str().c_str());
+  SDPMedia::Ptr fax = faxSession.getMedia(SDPMedia::TYPE_FAX);
+  ASSERT_TRUE(fax);
+
+  std::string sessionAddress = faxSession.getAddress();
+  std::string address = fax->getAddress();
+  ASSERT_TRUE(address.empty());
+  ASSERT_FALSE(sessionAddress.empty());
+  OSS::IPAddress mediaAddress(sessionAddress);
+  ASSERT_TRUE(mediaAddress.isPrivate());
+  fax->setDataPort(10000);
+  faxSession.changeAddress("10.0.0.1", "IP4");
+
+  std::cout << faxSession.toString() << std::endl;
+
 }

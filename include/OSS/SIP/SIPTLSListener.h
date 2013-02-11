@@ -60,7 +60,7 @@ public:
   virtual void run();
     /// Run the server's io_service loop.
 
-  virtual void handleAccept(const boost::system::error_code& e);
+  virtual void handleAccept(const boost::system::error_code& e, OSS_HANDLE userData = 0);
     /// Handle completion of an asynchronous accept operation.
 
   virtual void handleStop();

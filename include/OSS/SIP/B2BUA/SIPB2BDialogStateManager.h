@@ -863,8 +863,8 @@ public:
       
       std::string hSeqNum;
       SIPCSeq::getNumber(pMsg->hdrGet("cseq"), hSeqNum);
-      int seqNum = 0;
-      int requestSeqNum = OSS::string_to_number<int>(hSeqNum.c_str());
+      unsigned long seqNum = 0;
+      unsigned long requestSeqNum = OSS::string_to_number<unsigned long>(hSeqNum.c_str());
       if (requestSeqNum > pLeg->localCSeq)
         seqNum = requestSeqNum;
       pLeg->localCSeq = seqNum;

@@ -33,10 +33,11 @@ SIPListener::SIPListener(
   const std::string& address,
   const std::string& port) :
     _pTransportService(pTransportService),
-    _ioService(pTransportService->ioService()),
     _address(address),
     _port(port)
 {
+  if (_pTransportService)
+    _pIoService = (&(_pTransportService->ioService()));
 }
 
 SIPListener::~SIPListener()
@@ -44,7 +45,7 @@ SIPListener::~SIPListener()
 }
 
 SIPListener::SIPListener(const SIPListener& copy) :
-  _ioService(copy._ioService)
+  _pIoService(copy._pIoService)
 {
 }
 

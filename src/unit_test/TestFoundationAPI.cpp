@@ -4,6 +4,7 @@
 #include "OSS/Crypto.h"
 #include <sstream>
 #include "OSS/Core.h"
+#include "OSS/UTL/AdaptiveDelay.h"
 
 TEST(TestFoundation, blocking_queue)
 {
@@ -75,4 +76,35 @@ TEST(TestFoundation, blocking_queue)
   ASSERT_STREQ(replaceStr.c_str(), "KarooBridge KarooBridge KarooBridge");
 
 
+}
+
+
+TEST(TestFoundation, adaptive_timer)
+{
+  //
+  // Test adaptive delay with 5 ms resolution running a span of 5 seconds;
+  //
+
+  const int testDuration = 5; // seconds
+  OSS::UInt64 resolution = 5; // milliseconds
+  const int iterations = testDuration * (1000/resolution);
+
+  OSS::UTL::AdaptiveDelay delay(resolution);
+  OSS::UInt64 start = OSS::getTime();
+  
+  for (int i = 0; i < iterations; i++)
+    delay.wait();
+
+  // ASSERT_EQ(start + (resolution * iterations),  OSS::getTime());
+
+  OSS::UInt64 expected = start + (resolution * iterations);
+  OSS::UInt64 actual = OSS::getTime();
+
+  //
+  // Give or take 1 iteration 
+  //
+  if (actual > expected)
+    ASSERT_TRUE( actual - expected <= resolution);
+  else if (expected > actual)
+    ASSERT_TRUE( expected - actual  <= resolution);
 }

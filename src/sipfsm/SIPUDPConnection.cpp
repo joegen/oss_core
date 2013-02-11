@@ -58,7 +58,7 @@ void SIPUDPConnection::start(SIPFSMDispatch* pDispatch)
   _socket.async_receive_from(boost::asio::buffer(_buffer), _senderEndPoint,
       boost::bind(&SIPUDPConnection::handleRead, shared_from_this(),
         boost::asio::placeholders::error,
-          boost::asio::placeholders::bytes_transferred));
+          boost::asio::placeholders::bytes_transferred, (void*)0));
 }
 
 static bool isSIPPacket(const char* p)
@@ -97,7 +97,7 @@ static bool isSIPPacket(const char* p)
   return false;
 }
 
-void SIPUDPConnection::handleRead(const boost::system::error_code& e, std::size_t bytes_transferred)
+void SIPUDPConnection::handleRead(const boost::system::error_code& e, std::size_t bytes_transferred, OSS_HANDLE userData)
 {
   if (!e)
   {
@@ -121,7 +121,7 @@ void SIPUDPConnection::handleRead(const boost::system::error_code& e, std::size_
             _socket.async_receive_from(boost::asio::buffer(_buffer), _senderEndPoint,
               boost::bind(&SIPUDPConnection::handleRead, shared_from_this(),
                 boost::asio::placeholders::error,
-                  boost::asio::placeholders::bytes_transferred));
+                  boost::asio::placeholders::bytes_transferred, (void*)0));
           }
           return;
         }
@@ -155,7 +155,7 @@ void SIPUDPConnection::handleRead(const boost::system::error_code& e, std::size_
             _socket.async_receive_from(boost::asio::buffer(_buffer), _senderEndPoint,
               boost::bind(&SIPUDPConnection::handleRead, shared_from_this(),
                 boost::asio::placeholders::error,
-                  boost::asio::placeholders::bytes_transferred));
+                  boost::asio::placeholders::bytes_transferred, (void*)0));
           }
           return;
         }
@@ -199,7 +199,7 @@ void SIPUDPConnection::handleRead(const boost::system::error_code& e, std::size_
       _socket.async_receive_from(boost::asio::buffer(_buffer), _senderEndPoint,
         boost::bind(&SIPUDPConnection::handleRead, shared_from_this(),
           boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred));
+            boost::asio::placeholders::bytes_transferred, (void*)0));
     }
   }
 }

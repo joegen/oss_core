@@ -577,8 +577,6 @@ bool JSBase::internalInitialize(
   v8::Persistent<v8::Function>* oldProcessFunc = static_cast<v8::Persistent<v8::Function>*>(_processFunc);
   v8::Persistent<v8::Context>* oldContext = static_cast<v8::Persistent<v8::Context>*>(_context);
 
-
-  bool garbageCollect = oldContext;
   if (oldContext)
   {
     (*oldContext)->DetachGlobal();

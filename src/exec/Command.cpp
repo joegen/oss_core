@@ -135,7 +135,7 @@ std::string Command::readLine() const
   if (!pStrm)
     return 0;
   std::string buf;
-  getline(pStrm->out(), buf);
+  std::getline(pStrm->out(), buf);
   return buf;
 }
 
@@ -145,6 +145,28 @@ bool Command::isEOF() const
   if (!pStrm)
     return true;
   return pStrm->eof();
+}
+
+void Command::join() const
+{
+  ipstream* pStrm = static_cast<ipstream*>(_pstream);
+  if (!pStrm)
+    return;
+  std::string buf;
+  while(!pStrm->eof() && pStrm->good() && std::getline(pStrm->out(), buf));
+}
+
+void Command::join(std::vector<std::string>& output)
+{
+  ipstream* pStrm = static_cast<ipstream*>(_pstream);
+  if (!pStrm)
+    return;
+  std::string buf;
+  while(!pStrm->eof() && pStrm->good() && std::getline(pStrm->out(), buf))
+  {
+    output.push_back(buf);
+    buf.clear();
+  }
 }
 
 bool Command::isGood() const
