@@ -45,6 +45,13 @@ public:
   typedef boost::recursive_mutex mutex;
   typedef boost::lock_guard<mutex> mutex_lock;
 
+  struct ConnectionInfo
+  {
+    std::string host;
+    std::string password;
+    unsigned short port;
+  };
+
   enum RedisWorkspace
   {
     SBC_SYSTEMDB,

@@ -193,8 +193,14 @@ nobase_include_HEADERS = \
     OSS/JSON/writer.h \
     OSS/JSON/reader.h \
     OSS/RTP/RTPPacket.h \
-    OSS/RTP/RTPResizingQueue.h \
     OSS/RTP/RTPPCAPReader.h \
+    OSS/RTP/RTPProxy.h \
+    OSS/RTP/RTPProxyManager.h \
+    OSS/RTP/RTPProxyRecord.h \
+    OSS/RTP/RTPProxySession.h \
+    OSS/RTP/RTPProxyTuple.h \
+    OSS/RTP/RTPResizer.h \
+    OSS/RTP/RTPResizingQueue.h \
     OSS/Net/FirewallRule.h \
     OSS/Net/Firewall.h \
     OSS/UTL/AdaptiveDelay.h \

@@ -164,8 +164,14 @@ liboss_core_la_SOURCES =  \
     js/JSBase.cpp \
     js/JSSIPMessage.cpp \
     rtp/RTPPacket.cpp \
-    rtp/RTPResizingQueue.cpp \
     rtp/RTPPCAPReader.cpp \
+    rtp/RTPProxy.cpp \
+    rtp/RTPProxyManager.cpp \
+    rtp/RTPProxyRecord.cpp \
+    rtp/RTPProxySession.cpp \
+    rtp/RTPProxyTuple.cpp \
+    rtp/RTPResizer.cpp \
+    rtp/RTPResizingQueue.cpp \
     net/FirewallRule.cpp \
     net/Firewall.cpp \
     utl/AdaptiveDelay.cpp \
