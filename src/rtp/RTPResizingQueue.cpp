@@ -78,6 +78,14 @@ bool RTPResizingQueue::enqueue(const RTPPacket& packet)
     _out.push(packet);
 	  return true;
   }
+  else if (_isResizing  && !packet.getPayloadSize())
+  {
+    //
+	  // we are resizing but there is no payload.
+    // drop it.  Return true so the application does not bother processing this packet
+	  //
+	  return true;
+  }
   
 	//
 	// Check if we have initialized sequence number
@@ -169,12 +177,23 @@ bool RTPResizingQueue::dequeue(RTPPacket& packet)
   // Check if we have enough samples in the _in queue
   //
   unsigned int targetSize =  getTargetSize();
-  if (targetSize < _in.front().getPayloadSize())
+  unsigned int frontPayloadSize = _in.front().getPayloadSize();
+
+  if (!targetSize || !frontPayloadSize)
+  {
+    //
+    // We got garbage.  pop it to oblivion.
+    //
+    _in.pop();
+    return false;
+  }
+  
+  if (targetSize < frontPayloadSize)
   {
     //
     // We are resizing down
     //
-    if  (_in.front().getPayloadSize() % targetSize > 0)
+    if  (frontPayloadSize % targetSize > 0)
     {
       //
       // Ratio is not proportional to the target.  We cannot resize this packet.
@@ -193,6 +212,7 @@ bool RTPResizingQueue::dequeue(RTPPacket& packet)
       return true;
     }
 
+
     unsigned len;
     u_char buff[RTP_PACKET_BUFFER_SIZE];
     packet = _in.front();
@@ -202,7 +222,7 @@ bool RTPResizingQueue::dequeue(RTPPacket& packet)
     // enqueue the packets
     //
     unsigned int offset = 0;
-    unsigned int sampleCount = _in.front().getPayloadSize() / targetSize;
+    unsigned int sampleCount = frontPayloadSize / targetSize;
     for (unsigned int i = 0; i < sampleCount; i++)
     {
       RTPPacket sample(packet);
@@ -225,7 +245,7 @@ bool RTPResizingQueue::dequeue(RTPPacket& packet)
     //
     // We are resizing up
     //
-    unsigned int sampleCountRequired = targetSize / _in.front().getPayloadSize();
+    unsigned int sampleCountRequired = targetSize / frontPayloadSize;
     if (_in.size() >= sampleCountRequired)
     {
       //
@@ -233,9 +253,9 @@ bool RTPResizingQueue::dequeue(RTPPacket& packet)
       //
       u_char resizedBuff[RTP_PACKET_BUFFER_SIZE];
       unsigned int offset = 0;
-      unsigned int ts = 0;
+      unsigned int ts;
       RTPPacket sample = _in.front();
-      for (unsigned int i = 0; i < sampleCountRequired; i++)
+      for (int i = 0; i < sampleCountRequired; i++)
       {
         u_char buff[RTP_PACKET_BUFFER_SIZE];
         unsigned int len = 0;

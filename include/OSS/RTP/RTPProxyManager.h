@@ -98,8 +98,14 @@ public:
   unsigned short getUDPPortBase() const;
     /// Return the UDP Port Base
 
+  void setUdpPortBase(unsigned short portBase);
+    /// Set the current UDP port base
+
   unsigned short getUDPPortMax() const;
     /// Return the UDP port max
+
+  void setUdpPortMax(unsigned short portMax);
+    /// Set the current maximum port for UDP
 
   unsigned short getNextAvailablePortTuple();
     /// Return the next available port tuple for data and control listeners
@@ -122,6 +128,9 @@ public:
   const boost::filesystem::path& getStateDirectory() const;
     /// return the state directory where rtp session state files will
     /// be stored.
+
+  void setStateDirectory(const boost::filesystem::path& stateDirectory);
+    /// Set the state directory where state files will be stored
 
   OSS::mutex_critic_sec& sessionListMutex();
     /// return the session list mutex to allow upper layer to safely access
@@ -205,6 +214,17 @@ inline unsigned short RTPProxyManager::getUDPPortMax() const
   return _rtpProxyUDPPortMax;
 }
 
+inline void RTPProxyManager::setUdpPortBase(unsigned short portBase)
+{
+  _rtpProxyUDPPortBase = portBase;
+}
+
+
+inline void RTPProxyManager::setUdpPortMax(unsigned short portMax)
+{
+  _rtpProxyUDPPortMax = portMax;
+}
+
 
 inline unsigned& RTPProxyManager::rtpSessionMax()
 {
@@ -214,6 +234,11 @@ inline unsigned& RTPProxyManager::rtpSessionMax()
 inline const boost::filesystem::path& RTPProxyManager::getStateDirectory() const
 {
   return _rtpStateDirectory;
+}
+
+inline void RTPProxyManager::setStateDirectory(const boost::filesystem::path& stateDirectory)
+{
+  _rtpStateDirectory = stateDirectory;
 }
 
 inline OSS::mutex_critic_sec& RTPProxyManager::sessionListMutex()

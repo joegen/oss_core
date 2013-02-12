@@ -19,7 +19,11 @@
 #ifndef RTPPCAPREADER_H_
 #define RTPPCAPREADER_H_
 
+#if 0
 #include <pcap/pcap.h>
+#else
+#include <pcap.h>
+#endif
 #include <iostream>
 #include <fstream>
 #include <string>
