@@ -24,7 +24,90 @@
 
 namespace OSS {
 namespace RTP {
-  
+
+class HandleSDP : public xmlrpc_c::method
+{
+public:
+  RTPProxyManager& _rpc;
+  HandleSDP(RTPProxyManager& rpc) :
+    _rpc(rpc)
+  {
+  }
+
+  void execute(xmlrpc_c::paramList const& paramList,
+          xmlrpc_c::value *   const  retvalP)
+  {
+    json::Object params;
+    json::Object response;
+    try
+    {
+      std::stringstream strm;
+      strm << paramList.getString(0);
+      paramList.verifyEnd(1);
+      json::Reader::Read(params, strm);
+      _rpc.handleSDP(method(), params, response);
+      std::ostringstream responseStrm;
+      json::Writer::Write(response, responseStrm);
+      *retvalP = xmlrpc_c::value_string(responseStrm.str());
+    }
+    catch(json::Exception e)
+    {
+      OSS_LOG_ERROR("[RPC] HanleSDP::execute Exception: " << e.what());
+    }
+    catch(std::exception e)
+    {
+      OSS_LOG_ERROR("[RPC] HanleSDP::execute Exception: " << e.what());
+    }
+  }
+
+  static std::string method()
+  {
+    return "rtp.handleSDP";
+  }
+};
+
+class RemoveSession : public xmlrpc_c::method
+{
+public:
+  RTPProxyManager& _rpc;
+  RemoveSession(RTPProxyManager& rpc) :
+    _rpc(rpc)
+  {
+  }
+
+  void execute(xmlrpc_c::paramList const& paramList,
+          xmlrpc_c::value *   const  retvalP)
+  {
+    json::Object params;
+    json::Object response;
+    try
+    {
+      std::stringstream strm;
+      strm << paramList.getString(0);
+      paramList.verifyEnd(1);
+      json::Reader::Read(params, strm);
+      _rpc.removeSession(method(), params, response);
+      std::ostringstream responseStrm;
+      json::Writer::Write(response, responseStrm);
+      *retvalP = xmlrpc_c::value_string(responseStrm.str());
+    }
+    catch(json::Exception e)
+    {
+      OSS_LOG_ERROR("[RPC] HanleSDP::execute Exception: " << e.what());
+    }
+    catch(std::exception e)
+    {
+      OSS_LOG_ERROR("[RPC] HanleSDP::execute Exception: " << e.what());
+    }
+  }
+
+  static std::string method()
+  {
+    return "rtp.removeSession";
+  }
+};
+
+
 RTPProxyManager::RTPProxyManager(int houseKeepingInterval) :
   _ioService(),
   _houseKeepingInterval(houseKeepingInterval),
@@ -36,12 +119,16 @@ RTPProxyManager::RTPProxyManager(int houseKeepingInterval) :
   _readTimeout(0),
   _rtpSessionMax(1000),
   _canRecycleState(true),
-  _hasRtpDb(false)
+  _hasRtpDb(false),
+  _pRpcServerThread(0),
+  _pRpcServer(0),
+  _rpcServerPort(0)
 {
 }
 
 RTPProxyManager::~RTPProxyManager()
 {
+  stop();
 }
 
 void RTPProxyManager::run(int threadCount, int readTimeout)
@@ -152,7 +239,10 @@ void RTPProxyManager::stop()
   // Wait for all threads in the pool to exit.
   //
   for (std::size_t i = 0; i < _threadPool.size(); ++i)
+  {
     _threadPool[i]->join();
+  }
+  _threadPool.clear();
 }
 
 void RTPProxyManager::onHouseKeepingTimer(const boost::system::error_code& e)
@@ -260,6 +350,96 @@ void RTPProxyManager::handleSDP(
     routeLocalInterface, requestType, sdp, rtpAttribute);
 }
 
+void RTPProxyManager::handleSDP(const std::string& /*method*/,
+    const json::Object& args,
+    json::Object& response)
+{
+  std::string lid;
+  try
+  {
+    json::String logId = args["logId"];
+    lid = logId.Value();
+    json::String sessionId = args["sessionId"];
+    json::String sentBy = args["sentBy"];
+    json::String packetSourceIP = args["packetSourceIP"];
+    json::String packetLocalInterface = args["packetLocalInterface"];
+    json::String route = args["route"];
+    json::String routeLocalInterface = args["routeLocalInterface"];
+    json::Number requestType = args["requestType"];
+    json::String sdp = args["sdp"];
+    json::Boolean attr_verbose = args["attr.verbose"];
+    json::Boolean attr_forceCreate = args["attr.forceCreate"];
+    json::Boolean attr_forcePEAEncryption = args["attr.forcePEAEncryption"];
+    json::String attr_callId = args["attr.callId"];
+    json::String attr_from = args["attr.from"];
+    json::String attr_to = args["attr.to"];
+    json::Number attr_resizerSamplesLeg1 = args["attr.resizerSamplesLeg1"];
+    json::Number attr_resizerSamplesLeg2 = args["attr.resizerSamplesLeg2"];
+
+    std::string logId_(logId.Value());
+    std::string sessionId_(sessionId.Value());
+    OSS::IPAddress sentBy_ = OSS::IPAddress::fromV4IPPort(sentBy.Value().c_str());
+    OSS::IPAddress packetSourceIP_ = OSS::IPAddress::fromV4IPPort(packetSourceIP.Value().c_str());
+    OSS::IPAddress packetLocalInterface_ = OSS::IPAddress::fromV4IPPort(packetLocalInterface.Value().c_str());
+    OSS::IPAddress route_ = OSS::IPAddress::fromV4IPPort(route.Value().c_str());
+    OSS::IPAddress routeLocalInterface_ = OSS::IPAddress::fromV4IPPort(routeLocalInterface.Value().c_str());
+    RTPProxySession::RequestType requestType_((RTPProxySession::RequestType)requestType.Value());
+    std::string sdp_(sdp.Value());
+
+    RTPProxy::Attributes attr;
+    attr.callId = attr_callId.Value();
+    attr.forceCreate = attr_forceCreate.Value();
+    attr.forcePEAEncryption = attr_forcePEAEncryption.Value();
+    attr.from = attr_from.Value();
+    attr.resizerSamplesLeg1 = attr_resizerSamplesLeg1.Value();
+    attr.resizerSamplesLeg2 = attr_resizerSamplesLeg2.Value();
+    attr.to = attr_to.Value();
+    attr.verbose = attr_verbose.Value();
+    attr.isRemoteRpc = true;
+
+    handleSDP(logId_, sessionId_, sentBy_, packetSourceIP_, packetLocalInterface_, route_, routeLocalInterface_, requestType_, sdp_, attr);
+
+    response["sdp"] = json::String(sdp_);
+  }
+  catch(json::Exception e)
+  {
+    OSS_LOG_ERROR(lid << " RTP RTPProxy::handleSDP Exception: " << e.what());
+  }
+  catch(std::exception e)
+  {
+    OSS_LOG_ERROR(lid << " RTP RTPProxy::handleSDP Exception: " << e.what());
+  }
+  catch(...)
+  {
+    OSS_LOG_ERROR(lid << " RTP RTPProxy::handleSDP Unknown Exception");
+  }
+}
+
+void RTPProxyManager::removeSession(const std::string& method,
+  const json::Object& args,
+  json::Object& response)
+{
+  try
+  {
+    json::String sessionId = args["sessionId"];
+    removeSession(sessionId.Value());
+    response["errorString"] = json::String("ok");
+  }
+  catch(json::Exception e)
+  {
+    OSS_LOG_ERROR(" RTP RTPProxy::handleSDP Exception: " << e.what());
+  }
+  catch(std::exception e)
+  {
+    OSS_LOG_ERROR(" RTP RTPProxy::handleSDP Exception: " << e.what());
+  }
+  catch(...)
+  {
+    OSS_LOG_ERROR(" RTP RTPProxy::handleSDP Unknown Exception");
+  }
+}
+
+
 void RTPProxyManager::removeSession(const std::string& sessionId)
 {
   _sessionListMutex.lock();
@@ -360,6 +540,44 @@ std::size_t RTPProxyManager::getSessionCount(const std::string& address) const
   if (iter == _sessionCounter.end())
     return 0;
   return iter->second;
+}
+
+void RTPProxyManager::runRpc(unsigned short port)
+{
+  if (!_pRpcServer)
+  {
+    _pRpcServerThread = new boost::thread(boost::bind(&RTPProxyManager::runRpc, this, port));
+    return;
+  }
+
+  _rpcServerPort = port;
+  /*
+     boost::thread* _pRpcServerThread;
+  xmlrpc_c::serverAbyss* _pRpcServer;
+  unsigned short _rpcServerPort;
+   */
+
+  try
+  {
+    xmlrpc_c::registry registry;
+    xmlrpc_c::methodPtr const handleSdp(new HandleSDP(*this));
+    registry.addMethod(HandleSDP::method().c_str(), handleSdp);
+
+    _pRpcServer = new xmlrpc_c::serverAbyss(
+      registry,
+      _rpcServerPort
+    );
+    _pRpcServer->run();
+  } catch (std::exception const e)
+  {
+    OSS_LOG_ERROR("[RPC] KarooRtpProxyRPCServer::internal_run Exception: " << e.what());
+  }
+
+}
+
+void RTPProxyManager::stopRpc()
+{
+
 }
 
 } } //OSS::RTP

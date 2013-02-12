@@ -24,6 +24,9 @@
 
 #include <map>
 #include <boost/unordered_map.hpp>
+#include <xmlrpc-c/base.hpp>
+#include <xmlrpc-c/registry.hpp>
+#include <xmlrpc-c/server_abyss.hpp>
 
 #include "OSS/Thread.h"
 #include "OSS/RTP/RTPProxySession.h"
@@ -66,6 +69,12 @@ public:
     /// This function will return immediately
     ///
 
+  void runRpc(unsigned short port);
+    /// Starts the RPC server on this port.
+
+  void stopRpc();
+    /// Stop the RPC service
+
   void recycleState();
     /// This method recycle state files that weren't deleted by the previous
     /// instance.  Assuming this was dues to a restart, recycling state would
@@ -95,6 +104,12 @@ public:
     RTPProxy::Attributes& rtpAttribute);
     /// Process the incoming SDP
 
+  void handleSDP(const std::string& method,
+    const json::Object& args,
+    json::Object& response);
+    /// Callback handler for RPC based operation.  Returns the processed
+    /// SDP in the response
+
   unsigned short getUDPPortBase() const;
     /// Return the UDP Port Base
 
@@ -112,6 +127,11 @@ public:
 
   void removeSession(const std::string& sessionId);
     /// closes and deletes the rtp session
+
+  void removeSession(const std::string& method,
+    const json::Object& args,
+    json::Object& response);
+    /// RPC call for remove session
 
   void changeSessionState(const std::string& sessionId, RTPProxySession::State state);
     /// manually change the state of a session
@@ -178,6 +198,9 @@ private:
   bool _hasRtpDb;
   mutable OSS::mutex_critic_sec _sessionCounterMutex;
   mutable RTPProxyCounter _sessionCounter;
+  boost::thread* _pRpcServerThread;
+  xmlrpc_c::serverAbyss* _pRpcServer;
+  unsigned short _rpcServerPort;
 
   friend class RTPProxy;
   friend class RTPProxySession;
