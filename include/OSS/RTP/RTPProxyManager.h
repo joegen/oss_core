@@ -24,10 +24,6 @@
 
 #include <map>
 #include <boost/unordered_map.hpp>
-#include <xmlrpc-c/base.hpp>
-#include <xmlrpc-c/registry.hpp>
-#include <xmlrpc-c/server_abyss.hpp>
-
 #include "OSS/Thread.h"
 #include "OSS/RTP/RTPProxySession.h"
 #include "OSS/RTP/RTPProxyRecord.h"
@@ -38,12 +34,18 @@
 #include "OSS/JSON/writer.h"
 #include "OSS/JSON/elements.h"
 
+namespace xmlrpc_c 
+{
+  //
+  // Forward declaration so we dont have to include the headers here.
+  // xmlrpc-c redefines CRLF which collides with our own
+  //
+  class serverAbyss;
+}
 
 namespace OSS {
 namespace RTP {
   
-class RTPProxyRPCServer;
-
 
 typedef boost::unordered_map<std::string, RTPProxySession::Ptr> RTPProxySessionList;
 typedef std::map<std::string, std::size_t> RTPProxyCounter;

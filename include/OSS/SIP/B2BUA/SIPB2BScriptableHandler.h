@@ -36,7 +36,7 @@
 #include "OSS/SIP/B2BUA/SIPB2BHandler.h"
 #include "OSS/SIP/B2BUA/SIPB2BContact.h"
 #include "OSS/SIP/B2BUA/SIPB2BDialogData.h"
-
+#include "OSS/RTP/RTPProxyManager.h"
 
 namespace OSS {
 namespace SIP {
@@ -318,6 +318,13 @@ public:
 
   bool getRegistrationId(const ContactURI& curi, std::string& regId) const;
   bool getRegistrationId(const SIPURI& binding, std::string& regId) const;
+
+  OSS::RTP::RTPProxyManager& rtpProxy();
+
+  bool getExternalAddress(
+    const OSS::IPAddress& internalIp,
+    std::string& externalIp) const;
+    /// Return the external interface for a given internal listener
 protected:
   void runOptionsThread();
     /// This method runs the OPTIONS keep-alive loop
@@ -354,6 +361,10 @@ protected:
   typedef std::map<OSS::IPAddress, OSS::IPAddress> KeepAliveList;
   KeepAliveList _keepAliveList;
   OSS::thread_pool _threadPool;
+  //
+  // RTP Proxy
+  //
+  OSS::RTP::RTPProxyManager _rtpProxy;
 };
 
 //
@@ -394,6 +405,18 @@ inline bool SIPB2BScriptableHandler::loadOutboundScript(const boost::filesystem:
 inline bool SIPB2BScriptableHandler::loadOutboundResponseScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals, const std::string& helpers)
 {
   return loadScript(_outboundResponseScript, scriptFile, extensionGlobals, globals, helpers);
+}
+
+inline OSS::RTP::RTPProxyManager& SIPB2BScriptableHandler::rtpProxy()
+{
+  return _rtpProxy;
+}
+
+inline bool SIPB2BScriptableHandler::getExternalAddress(
+    const OSS::IPAddress& internalIp,
+    std::string& externalIp) const
+{
+  return _pTransactionManager->stack().transport().getExternalAddress(internalIp, externalIp);
 }
 
 } } } // OSS::SIP::B2BUA
