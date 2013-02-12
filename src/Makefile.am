@@ -166,6 +166,7 @@ liboss_core_la_SOURCES =  \
     rtp/RTPPacket.cpp \
     rtp/RTPPCAPReader.cpp \
     rtp/RTPProxy.cpp \
+    rtp/RTPProxyClient.cpp \
     rtp/RTPProxyManager.cpp \
     rtp/RTPProxyRecord.cpp \
     rtp/RTPProxySession.cpp \

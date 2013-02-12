@@ -128,6 +128,7 @@ RTPProxyManager::RTPProxyManager(int houseKeepingInterval) :
 
 RTPProxyManager::~RTPProxyManager()
 {
+  stopRpc();
   stop();
 }
 
@@ -551,17 +552,16 @@ void RTPProxyManager::runRpc(unsigned short port)
   }
 
   _rpcServerPort = port;
-  /*
-     boost::thread* _pRpcServerThread;
-  xmlrpc_c::serverAbyss* _pRpcServer;
-  unsigned short _rpcServerPort;
-   */
 
   try
   {
     xmlrpc_c::registry registry;
+
     xmlrpc_c::methodPtr const handleSdp(new HandleSDP(*this));
+    xmlrpc_c::methodPtr const removeSession(new RemoveSession(*this));
+    
     registry.addMethod(HandleSDP::method().c_str(), handleSdp);
+    registry.addMethod(RemoveSession::method().c_str(), removeSession);
 
     _pRpcServer = new xmlrpc_c::serverAbyss(
       registry,
@@ -572,12 +572,25 @@ void RTPProxyManager::runRpc(unsigned short port)
   {
     OSS_LOG_ERROR("[RPC] KarooRtpProxyRPCServer::internal_run Exception: " << e.what());
   }
-
 }
 
 void RTPProxyManager::stopRpc()
 {
+  if (_pRpcServer)
+    _pRpcServer->terminate();
 
+  if (_pRpcServerThread)
+  {
+    _pRpcServerThread->join();
+    delete _pRpcServerThread;
+    _pRpcServerThread = 0;
+  }
+
+  if (_pRpcServer)
+  {
+    delete _pRpcServer;
+    _pRpcServer = 0;
+  }
 }
 
 } } //OSS::RTP
