@@ -195,6 +195,7 @@ nobase_include_HEADERS = \
     OSS/RTP/RTPPacket.h \
     OSS/RTP/RTPPCAPReader.h \
     OSS/RTP/RTPProxy.h \
+    OSS/RTP/RTPProxyClient.h \
     OSS/RTP/RTPProxyManager.h \
     OSS/RTP/RTPProxyRecord.h \
     OSS/RTP/RTPProxySession.h \

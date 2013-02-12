@@ -63,6 +63,7 @@ public:
     int resizerSamplesLeg1;
     int resizerSamplesLeg2;
     bool countSessions;
+    bool isRemoteRpc;
 
     Attributes()
     {
@@ -72,6 +73,7 @@ public:
       resizerSamplesLeg1 = 0;
       resizerSamplesLeg2 = 0;
       countSessions = false;
+      isRemoteRpc = false;
     }
   };
 
