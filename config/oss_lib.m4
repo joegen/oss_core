@@ -6,6 +6,7 @@
 AC_DEFUN([SFAC_INIT_FLAGS],
 [
     m4_include([config/oss_lib2.m4])
+    m4_include([config/carp.m4])
     AC_REQUIRE([SFAC_OSSLIBS_GLOBAL_OPTS])
 
     
@@ -80,27 +81,16 @@ AC_DEFUN([SFAC_AUTOMAKE_VERSION],[
 # If not found, the configure is aborted.  Otherwise, variables are defined
 # for both the INC and LIB paths 
 # AND the paths are added to the CFLAGS and CXXFLAGS
-AC_DEFUN([SFAC_LIB_CORE],
+
+
+AC_DEFUN([SFAC_LIB_CORE_FLAGS],
 [
     AC_REQUIRE([SFAC_INIT_FLAGS])
     AC_REQUIRE([CHECK_SSL])
 
-    SFAC_ARG_WITH_INCLUDE([OSS/Core.h],
-            [osscoreinc],
-            [ --with-osscoreinc=<dir> portability include path ],
-            [oss_coreLib])
-
-    if test x_$foundpath != x_; then
-        AC_MSG_RESULT($foundpath)
-    else
-        AC_MSG_WARN([    assuming it will be in '${prefix}/include'])
-        foundpath=${prefix}/include
-    fi
     OSSLIBSCOREINC=$foundpath
-    AC_SUBST(OSSLIBSCOREINC)
-
-    CFLAGS="-I$OSSLIBSCOREINC $CFLAGS"
-    CXXFLAGS="-I$OSSLIBSCOREINC $CXXFLAGS"
+    CFLAGS="-I${prefix}/include $CFLAGS"
+    CXXFLAGS="-I${prefix}/include $CXXFLAGS"
 
     OSS_CORE_VERSION_CURRENT="2"
     OSS_CORE_VERSION_REVISION="0"
@@ -113,33 +103,6 @@ AC_DEFUN([SFAC_LIB_CORE],
     AC_SUBST(OSS_CORE_VERSION_FULL)
     AC_SUBST(OSS_CORE_VERSION_INFO)
 
-    AC_CHECK_LIB(boost_date_time, main, [],
-        [AC_CHECK_LIB(boost_date_time-mt, main, [],
-        [AC_MSG_ERROR("Required boost library dependency missing.")])])
-
-    AC_CHECK_LIB(boost_filesystem, main, [],
-        [AC_CHECK_LIB(boost_filesystem-mt, main, [],
-        [AC_MSG_ERROR("Required boost library dependency missing.")])])
-
-    AC_CHECK_LIB(boost_system, main, [],
-        [AC_CHECK_LIB(boost_system-mt, main, [],
-        [AC_MSG_ERROR("Required boost library dependency missing.")])])
-
-    AC_CHECK_LIB(boost_program_options, main, [],
-        [AC_CHECK_LIB(boost_program_options-mt, main, [],
-        [AC_MSG_ERROR("Required boost library dependency missing.")])])
-
-    AC_CHECK_LIB(boost_iostreams, main, [],
-        [AC_CHECK_LIB(boost_iostreams-mt, main, [],
-        [AC_MSG_ERROR("Required boost library dependency missing.")])])
-
-    AC_CHECK_LIB(boost_random, main, [],
-        [AC_CHECK_LIB(boost_random-mt, main, [],
-        [AC_MSG_ERROR("Required boost library dependency missing.")])])
-
-    AC_CHECK_LIB(boost_regex, main, [],
-        [AC_CHECK_LIB(boost_regex-mt, main, [],
-        [AC_MSG_ERROR("Required boost library dependency missing.")])])
 
     AC_CHECK_LIB(boost_thread, main, [BOOST_LIBS="-lboost_date_time -lboost_filesystem -lboost_system -lboost_thread -lboost_program_options -lboost_iostreams -lboost_random -lboost_regex"],
         [AC_CHECK_LIB(boost_thread-mt, main,
@@ -147,7 +110,7 @@ AC_DEFUN([SFAC_LIB_CORE],
         [AC_MSG_ERROR("no boost thread found")])])
     AC_SUBST(BOOST_LIBS)
 
-    
+
     AC_CHECK_LIB(PocoFoundation, main,
         [POCO_LIBS="-lPocoFoundation -lPocoUtil -lPocoNet -lPocoXML"],
         [AC_MSG_ERROR("Poco C++ Library not found")])
@@ -194,6 +157,41 @@ AC_DEFUN([SFAC_LIB_CORE],
 
     AC_SUBST(OSS_CORE_DEP_LIBS, "$BOOST_LIBS $POCO_LIBS $OSS_CORE_DEP_LIBS")
 
+]) # SFAC_LIB_CORE_FLAGS
+
+AC_DEFUN([SFAC_LIB_CORE],
+[
+    SFAC_ARG_WITH_INCLUDE([OSS/Core.h],
+            [osscoreinc],
+            [ --with-osscoreinc=<dir> portability include path ],
+            [oss_coreLib])
+
+    if test x_$foundpath != x_; then
+        AC_MSG_RESULT($foundpath)
+        OSSLIBSCOREINC=$foundpath
+        CFLAGS="-I$OSSLIBSCOREINC $CFLAGS"
+        CXXFLAGS="-I$OSSLIBSCOREINC $CXXFLAGS"
+    fi
+    
+    foundpath=""
+
+    SFAC_ARG_WITH_INCLUDE([OSS/Core.h],
+            [osscoreinc],
+            [ --with-osscoreinc=<dir> portability include path ],
+            [oss_coreLib])
+
+    if test x_$foundpath != x_; then
+        AC_MSG_RESULT($foundpath)
+    else
+        AC_MSG_WARN([    assuming it will be in '${prefix}/include'])
+        foundpath=${prefix}/include
+    fi
+    OSSLIBSCOREINC=$foundpath
+    AC_SUBST(OSSLIBSCOREINC)
+
+    CFLAGS="-I$OSSLIBSCOREINC $CFLAGS"
+    CXXFLAGS="-I$OSSLIBSCOREINC $CXXFLAGS"
+
     foundpath=""
     SFAC_ARG_WITH_LIB([liboss_core.la],
             [osscorelib],
@@ -207,8 +205,25 @@ AC_DEFUN([SFAC_LIB_CORE],
         foundpath=${prefix}/lib
     fi
     AC_SUBST(LIB_OSS_CORE_LA, "$foundpath/liboss_core.la")
-]) # SFAC_LIB_CORE
 
+
+    foundpath=""
+    SFAC_ARG_WITH_LIB([liboss_carp.la],
+            [osscarplib],
+            [ --with-osscarplib=<dir> portability library path ],
+            [oss_carpLib])
+
+    if test x_$foundpath != x_; then
+        AC_MSG_RESULT($foundpath)
+    else
+        AC_MSG_WARN([    assuming it will be in '${prefix}/lib'])
+        foundpath=${prefix}/lib
+    fi
+    AC_SUBST(LIB_OSS_CARP_LA, "$foundpath/liboss_carp.la")
+
+    AC_REQUIRE([SFAC_LIB_CORE_FLAGS])
+
+]) # SFAC_LIB_CORE
 
 
 ##  Generic find of an include
