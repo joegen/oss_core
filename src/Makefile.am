@@ -220,7 +220,11 @@ liboss_core_la_SOURCES =  \
     ws/websocketpp/src/uri.cpp
 
 
-bin_PROGRAMS = oss_core_unit_test
+bin_PROGRAMS = \
+    oss_core_unit_test \
+    oss_garp \
+    oss_carp \
+    oss_b2bua
 
 oss_core_unit_test_CXXFLAGS = \
 	${common_cxx_flags} \
@@ -229,7 +233,7 @@ oss_core_unit_test_CXXFLAGS = \
 oss_core_unit_test_LDFLAGS = -rdynamic
 	
 
-oss_core_unit_test_LDADD = @OSS_CORE_DEP_LIBS@ liboss_core.la -lgtest
+oss_core_unit_test_LDADD = @OSS_CORE_DEP_LIBS@ liboss_core.la liboss_carp.la -lgtest
 
 oss_core_unit_test_SOURCES = \
 	unit_test/TestSuite.cpp \
@@ -251,6 +255,29 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestFirewall.cpp \
         unit_test/TestWebSocket.cpp
 
+#
+# oss_b2bua - A simple back-to-back user agent
+#
+oss_b2bua_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
+oss_b2bua_LDFLAGS = -rdynamic
+oss_b2bua_LDADD = @OSS_CORE_DEP_LIBS@ liboss_core.la liboss_carp.la -lgtest
+oss_b2bua_SOURCES = apps/oss_b2bua.cpp
+
+#
+# oss_garp - tool for sending gratuitous ARP requests
+#
+oss_garp_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
+oss_garp_LDFLAGS = -rdynamic
+oss_garp_LDADD = @OSS_CORE_DEP_LIBS@ liboss_core.la liboss_carp.la -lgtest
+oss_garp_SOURCES = apps/oss_garp.cpp
+
+#
+# oss_carp - tool for Common Address Redundancy Protocol
+#
+oss_carp_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
+oss_carp_LDFLAGS = -rdynamic
+oss_carp_LDADD = @OSS_CORE_DEP_LIBS@ liboss_core.la liboss_carp.la -lgtest
+oss_carp_SOURCES = apps/oss_carp.cpp
 
 
 DISTCLEANFILES = Makefile.in
