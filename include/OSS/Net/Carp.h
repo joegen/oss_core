@@ -63,8 +63,7 @@ protected:
 public:
   static Carp* instance();
   static bool getMacAddress(const std::string& ethInterface, unsigned char* hwaddr);
-
-  bool sendGratuitousArp(const std::string& ethInterface, const std::string& ipAddress);
+  static bool sendGratuitousArp(const std::string& ethInterface, const std::string& ipAddress);
 
 };
 
