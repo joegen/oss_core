@@ -48,6 +48,17 @@ class SIPB2BDialogStateManager;
 class OSS_API SIPB2BScriptableHandler : public OSS::SIP::B2BUA::SIPB2BHandler
 {
 public:
+
+  enum MessageType
+  {
+    TYPE_INBOUND,
+    TYPE_AUTH,
+    TYPE_ROUTE,
+    TYPE_ROUTE_FAILOVER,
+    TYPE_OUTBOUND_REQUEST,
+    TYPE_OUTBOUND_RESPONSE
+  };
+
   SIPB2BScriptableHandler(
     SIPB2BTransactionManager* pManager,
     SIPB2BDialogStateManager* pDialogState,
@@ -296,6 +307,11 @@ public:
     /// Signals that an error occured on the transaction
     ///
     /// The transaction will be destroyed automatically after this function call
+
+  virtual bool onProcessRequest(MessageType type, const OSS::SIP::SIPMessage::Ptr& request);
+    /// Send the SIPRequest to the application.  This means that the scripting
+    /// engine is not initialized for this message type. Otherwise, the javascript engine
+    /// will handle the request
 
   //
   // INVITE handlers

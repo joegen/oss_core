@@ -58,6 +58,12 @@ oss_b2bua() :
 {
 }
 
+bool onProcessRequest(MessageType type, const SIPMessage::Ptr& pRequest)
+{
+  pRequest->setProperty("route-action", "accept");
+  return true;
+}
+
 }; // class oss_b2bua
 
 

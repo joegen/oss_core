@@ -127,6 +127,11 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onTransactionCreated(
       return serverError;
     }
   }
+  else if (!onProcessRequest(TYPE_INBOUND, pRequest))
+  {
+    SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_500_InternalServerError);
+    return serverError;
+  }
 
   if (pRequest->isMidDialog() && !pRequest->isRequest("SUBSCRIBE"))
     return _pTransactionManager->postMidDialogTransactionCreated(pRequest, pTransaction);
@@ -174,6 +179,36 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onAuthenticateTransaction(
     {
       pRequest->setProperty("auth-action", "accept");
       return OSS::SIP::SIPMessage::Ptr();
+    }
+
+    std::string authAction;
+    if (!pRequest->getProperty("auth-action", authAction))
+    {
+      return SIPMessage::Ptr();
+    }
+    else if (authAction == "reject")
+    {
+      SIPMessage::Ptr reject = pRequest->createResponse(SIPMessage::CODE_403_Forbidden);
+      std::string authResponse;
+      if (pRequest->getProperty("auth-response", authResponse) && !authResponse.empty())
+      {
+        reject->setStartLine(authResponse);
+        reject->commitData();
+        return reject;
+      }
+      else
+      {
+        reject->commitData();
+        return reject;
+      }
+    }
+  }
+  else 
+  {
+    if (!onProcessRequest(TYPE_AUTH, pRequest))
+    {
+      SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_500_InternalServerError);
+      return serverError;
     }
 
     std::string authAction;
@@ -434,7 +469,15 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteOutOfDialogTransaction(
 {
   if (!_pTransactionManager->postRetargetTransaction(pRequest, pTransaction))
   {
-    if (!_routeScript.isInitialized() || !_routeScript.processRequest(pRequest))
+    if (!_routeScript.isInitialized())
+    {
+      if (!_routeScript.processRequest(pRequest))
+      {
+        SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_500_InternalServerError);
+        return serverError;
+      }
+    }
+    else if (!onProcessRequest(TYPE_ROUTE, pRequest))
     {
       SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_500_InternalServerError);
       return serverError;
@@ -982,6 +1025,9 @@ void SIPB2BScriptableHandler::onProcessOutbound(
 
   if (_outboundScript.isInitialized())
     _outboundScript.processRequest(pRequest);
+  else
+    onProcessRequest(TYPE_OUTBOUND_REQUEST, pRequest);
+
    if (!_pTransactionManager->getUserAgentName().empty())
      pRequest->hdrSet("User-Agent", _pTransactionManager->getUserAgentName().c_str());
 }
@@ -1109,6 +1155,12 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
   /// headers to the desired application-specific values for as long
   /// as it wont conflict with dialog creation states.
 {
+
+  if (_outboundResponseScript.isInitialized())
+    _outboundResponseScript.processRequest(pResponse);
+  else
+    onProcessRequest(TYPE_OUTBOUND_RESPONSE, pResponse);
+
 #if 0
   std::string logId = pTransaction->getLogId();
   //
@@ -1791,6 +1843,15 @@ void SIPB2BScriptableHandler::sendOptionsKeepAlive(RegData& regData)
   }
 }
 
+bool SIPB2BScriptableHandler::onProcessRequest(MessageType type, const OSS::SIP::SIPMessage::Ptr& pRequest)
+{
+  //
+  // We return true by default.  This means we will allow relay to happen.  It's up to the applicaiton
+  // to override this method and process the request.
+  //
+  pRequest->setProperty("route-action", "accept");
+  return true;
+}
 
 } } } // OSS::SIP::B2BUA
 
