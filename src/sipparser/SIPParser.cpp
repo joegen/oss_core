@@ -50,7 +50,7 @@ void SIPParser::escape(std::string& result, const char* _str, const char* validC
   int pos = -1;
   char* offSet = const_cast<char*>(_str);
   char* str = const_cast<char*>(_str);
-  size_t len = strlen(str);
+  int len = strlen(str);
 
   std::string front;
   while ((pos += (int)(1+strspn(&str[pos+1], validChars == 0 ? safeChars : validChars))) < len)
@@ -74,7 +74,7 @@ void SIPParser::unescape(std::string& result, const char* str)
   result = str;
   int pos = -1;
 
-  while ((pos = (int)result.find('%', pos+1)) != std::string::npos) 
+  while (((size_t)(pos = (int)result.find('%', pos+1))) != std::string::npos) 
   {
     int digit1 = result[pos+1];
     int digit2 = result[pos+2];
