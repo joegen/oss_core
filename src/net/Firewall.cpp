@@ -37,7 +37,7 @@ std::string iptable_add_rule(const FirewallRule& rule)
   assert (rule.getDirection() != -1 && rule.getOperation() != -1);
 
   std::ostringstream cmd;
-  cmd << "/sbin/iptables --append";
+  cmd << OSS_IP_TABLES << "  --append";
 
   //
   // Check which chain we are concerned with
@@ -106,7 +106,7 @@ std::string iptable_add_rule(const FirewallRule& rule)
 static std::string iptables_delete(FirewallRule::Direction direction,  std::size_t index)
 {
   std::ostringstream cmd;
-  cmd << "/sbin/iptables --delete";
+  cmd << OSS_IP_TABLES << "  --delete";
 
   if (direction == FirewallRule::DIR_IN)
     cmd << " INPUT ";
@@ -121,7 +121,7 @@ static std::string iptables_delete(FirewallRule::Direction direction,  std::size
 static std::string iptables_get_rules(FirewallRule::Direction direction)
 {
   std::ostringstream cmd;
-  cmd << "/sbin/iptables --list-rules";
+  cmd << OSS_IP_TABLES << "  --list-rules";
 
   if (direction == FirewallRule::DIR_IN)
     cmd << " INPUT ";
