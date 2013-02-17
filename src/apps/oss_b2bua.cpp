@@ -18,8 +18,10 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+#include <execinfo.h>
 #include <Poco/Exception.h>
 
+#include "OSS/Application.h"
 #include "OSS/ServiceDaemon.h"
 #include "OSS/DNS.h"
 #include "OSS/Net.h"
@@ -60,23 +62,96 @@ class oss_b2bua :
   public SIPB2BDialogStateManager,
   public SIPB2BScriptableHandler
 {
+public:
+  Config& _config;
 
-oss_b2bua() :
-  SIPB2BTransactionManager(2, 1024),
-  SIPB2BDialogStateManager(dynamic_cast<SIPB2BTransactionManager*>(this)),
-  SIPB2BScriptableHandler(dynamic_cast<SIPB2BTransactionManager*>(this), dynamic_cast<SIPB2BDialogStateManager*>(this))
-{
-}
+  oss_b2bua(Config& config) :
+    SIPB2BTransactionManager(2, 1024),
+    SIPB2BDialogStateManager(dynamic_cast<SIPB2BTransactionManager*>(this)),
+    SIPB2BScriptableHandler(dynamic_cast<SIPB2BTransactionManager*>(this), dynamic_cast<SIPB2BDialogStateManager*>(this)),
+    _config(config)
+  {
+    //
+    // Register Datastore functions
+    //
+    datastore().persist = boost::bind(&oss_b2bua::dbPersist, this, _1);
+    datastore().getAll = boost::bind(&oss_b2bua::dbGetAll, this, _1);
+    datastore().removeSession = boost::bind(&oss_b2bua::dbRemoveSession, this, _1);
+    datastore().removeAllDialogs = boost::bind(&oss_b2bua::dbRemoveAllDialogs, this, _1);
+    datastore().persistReg = boost::bind(&oss_b2bua::dbPersistReg, this, _1);
+    datastore().getOneReg = boost::bind(&oss_b2bua::dbGetOneReg, this, _1, _2);
+    datastore().getReg = boost::bind(&oss_b2bua::dbGetReg, this, _1, _2);
+    datastore().removeReg = boost::bind(&oss_b2bua::dbRemoveReg, this, _1);
+    datastore().removeAllReg = boost::bind(&oss_b2bua::dbRemoveAllReg, this, _1);
+    datastore().getAllReg = boost::bind(&oss_b2bua::dbGetAllReg, this, _1);
+    //
+    // Initialize the transport
+    //
+    OSS::IPAddress listener;
+    listener = _config.address;
+    listener.externalAddress() = _config.externalAddress;
+    listener.setPort(config.port);
+    stack().udpListeners().push_back(listener);
+    stack().tcpListeners().push_back(listener);
+    stack().transport().defaultListenerAddress() = listener;
+    stack().transport().setTCPPortRange(TCP_PORT_BASE, TCP_PORT_MAX);
+    stack().transportInit();
+  }
 
-~oss_b2bua()
-{
-}
+  bool dbPersist(const DialogData& dialogData)
+  {
+    return false;
+  }
+  void dbGetAll(DialogList& dialogs)
+  {
 
-bool onProcessRequest(MessageType type, const SIPMessage::Ptr& pRequest)
-{
-  pRequest->setProperty("route-action", "accept");
-  return true;
-}
+  }
+
+  void dbRemoveSession(const std::string& sessionId)
+  {
+
+  }
+
+  void dbRemoveAllDialogs(const std::string& callId)
+  {
+
+  }
+
+  bool dbPersistReg(const RegData& regData)
+  {
+    return false;
+  }
+
+  bool dbGetOneReg(const std::string& regId, RegData& regData)
+  {
+    return false;
+  }
+
+  bool dbGetReg(const std::string& regIdPrefix, RegList& regData)
+  {
+    return false;
+  }
+
+  void dbRemoveReg(const std::string& regId)
+  {
+
+  }
+
+  void dbRemoveAllReg(const std::string& regIdPrefix)
+  {
+
+  }
+
+  void dbGetAllReg(RegList& regs)
+  {
+
+  }
+
+  bool onProcessRequest(MessageType type, const SIPMessage::Ptr& pRequest)
+  {
+    pRequest->setProperty("route-action", "accept");
+    return true;
+  }
 
 }; // class oss_b2bua
 
@@ -115,14 +190,59 @@ inline void  daemonize(int argc, char** argv, bool& isDaemon)
   }
 }
 
+static void globalCatch()
+{
+#define catch_global_print(msg)  \
+  std::ostringstream bt; \
+  bt << msg << std::endl; \
+  void* trace_elems[20]; \
+  int trace_elem_count(backtrace( trace_elems, 20 )); \
+  char** stack_syms(backtrace_symbols(trace_elems, trace_elem_count)); \
+  for (int i = 0 ; i < trace_elem_count ; ++i ) \
+    bt << stack_syms[i] << std::endl; \
+  OSS_LOG_CRITICAL(bt.str().c_str()); \
+  std::cerr << bt.str().c_str(); \
+  free(stack_syms);
+
+  try
+  {
+      throw;
+  }
+  catch (std::string& e)
+  {
+    catch_global_print(e.c_str());
+  }
+  catch (boost::exception& e)
+  {
+    catch_global_print(diagnostic_information(e).c_str());
+  }
+  catch (std::exception& e)
+  {
+    catch_global_print(e.what());
+  }
+  catch (...)
+  {
+    catch_global_print("Error occurred. Unknown exception type.");
+  }
+
+  std::abort();
+}
+
 bool prepareOptions(ServiceOptions& options)
 {
   options.addOptionFlag('h', "help", "Display help information.");
   options.addOptionFlag('D', "daemonize", "Run as system daemon.");
   options.addOptionString('P', "pid-file", "PID file when running as daemon.");
+
+  options.addOptionInt('l', "log-level",
+      "Specify the application log priority level."
+      "Valid level is between 0-7.  "
+      "0 (EMERG) 1 (ALERT) 2 (CRIT) 3 (ERR) 4 (WARNING) 5 (NOTICE) 6 (INFO) 7 (DEBUG)");
+  options.addOptionString('L', "log-file", "Specify the application log file.");
+
   options.addOptionString('i', "interface-address", "The IP Address where the B2BUA will listener for connections.");
   options.addOptionInt('p', "port", "The port where the B2BUA will listen for connections.");
-  options.addOptionString('t', "target-domain", "IP Address, Host or DNS/SRV address of your SIP Server.");
+  options.addOptionString('t', "target-address", "IP Address, Host or DNS/SRV address of your SIP Server.");
   options.addOptionFlag('r', "allow-relay", "Allow relaying of transactions towards SIP Servers other than the one specified in the target-domain.");
   return options.parseOptions();
 }
@@ -240,26 +360,40 @@ void prepateListenerInfo(Config& config, ServiceOptions& options)
     //
     // Try to find the default route to the internet
     //
-    
-    dns_host_record_list hosts = dns_lookup_host("ossapp.com");
-    if (hosts.empty())
+    try
     {
-      OSS_LOG_ERROR("You must provide value for interface-address.  Unable to get a connection to the internet.");
+      dns_host_record_list hosts = dns_lookup_host("ossapp.com");
+      if (hosts.empty())
+      {
+        OSS_LOG_ERROR("You must provide value for interface-address.  Unable to get a connection to the internet.");
+        options.displayUsage(std::cout);
+        _exit(-1);
+      }
+      std::string address;
+      std::string gateway;
+      if (!ipRouteGet(*hosts.begin(), address, gateway))
+      {
+        OSS_LOG_ERROR("You must provide value for interface-address.  Unable to get default interface.");
+        options.displayUsage(std::cout);
+        _exit(-1);
+      }
+      else
+      {
+        OSS_LOG_INFO("Using default address " << address << "." );
+        config.address = address;
+      }
+    }
+    catch(std::exception& e)
+    {
+      OSS_LOG_ERROR("Exception occured while preparing listener information: " << e.what());
       options.displayUsage(std::cout);
       _exit(-1);
     }
-    std::string address;
-    std::string gateway;
-    if (!ipRouteGet(*hosts.begin(), address, gateway))
+    catch(...)
     {
-      OSS_LOG_ERROR("You must provide value for interface-address.  Unable to get default interface.");
+      OSS_LOG_ERROR("Exception occured while preparing listener information: Unknown exception.");
       options.displayUsage(std::cout);
       _exit(-1);
-    }
-    else
-    {
-      OSS_LOG_INFO("Using default address " << address << "." );
-      config.address = address;
     }
   }
   
@@ -278,6 +412,34 @@ void prepateListenerInfo(Config& config, ServiceOptions& options)
 
 void prepareTargetInfo(Config& config, ServiceOptions& options)
 {
+  if (options.getOption("target-address", config.target) && !config.target.empty())
+  {
+    config.allowRelay = options.hasOption("allow-relay");
+  }
+  else
+  {
+    //
+    // Allowing relay.  We dont have a static target set
+    //
+    OSS_LOG_INFO("target-address is not set.  Allowing relay by default.");
+    config.allowRelay = true;
+  }
+}
+
+void prepareLogger(ServiceOptions& options)
+{
+  std::string logFile;
+  int priorityLevel = 6;
+  bool compress = true;
+  int purgeCount = 7;
+  std::string pattern = "%h-%M-%S.%i: %t";
+
+  if (options.getOption("log-file", logFile) && !logFile.empty())
+  {
+    if (!options.getOption("log-level", priorityLevel))
+      priorityLevel = 6;
+    OSS::logger_init(logFile, (OSS::LogPriority)priorityLevel, pattern, compress ? "true" : "false", boost::lexical_cast<std::string>(purgeCount));
+  }
 }
 
 int main(int argc, char** argv)
@@ -285,8 +447,10 @@ int main(int argc, char** argv)
   bool isDaemon = false;
   daemonize(argc, argv, isDaemon);
 
+  std::set_terminate(globalCatch);
+
   OSS::OSS_init();
-  
+
   ServiceOptions options(argc, argv, "oss_b2bua");
   if (!prepareOptions(options) || options.hasOption("help"))
   {
@@ -295,11 +459,27 @@ int main(int argc, char** argv)
   }
 
   saveProcessId(options);
-
+  prepareLogger(options);
   Config config;
   prepateListenerInfo(config, options);
   prepareTargetInfo(config, options);
-  OSS::OSS_deinit();
+
+  try
+  {
+    oss_b2bua ua(config);
+    ua.run();
+    OSS::app_wait_for_termination_request();
+  }
+  catch(std::exception& e)
+  {
+    OSS_LOG_CRITICAL("Fatal Exception: " << e.what());
+  }
+  catch(...)
+  {
+    OSS_LOG_CRITICAL("Unknown Fatal Exception.");
+  }
+
   
+  OSS::OSS_deinit();
   return 0;
 }
