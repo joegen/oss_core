@@ -499,9 +499,13 @@ static v8::Handle<v8::String> read_directory(const boost::filesystem::path& dire
         }
       }
     }
-    catch(std::exception e)
+    catch(std::exception& e)
     {
-
+      OSS_LOG_WARNING("Googe V8 exception: " << e.what());
+    }
+    catch(...)
+    {
+      OSS_LOG_WARNING("Unknown Googe V8 exception.");
     }
 
   }
