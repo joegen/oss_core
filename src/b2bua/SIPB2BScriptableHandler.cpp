@@ -1837,9 +1837,13 @@ void SIPB2BScriptableHandler::sendOptionsKeepAlive(RegData& regData)
 
     _pTransactionManager->stack().sendRequest(msg, src, target, _keepAliveResponseCb);
   }
-  catch(std::exception e)
+  catch(std::exception& e)
   {
     OSS_LOG_ERROR("SIPB2BScriptableHandler::sendOptionsKeepAlive ERROR: " << e.what());
+  }
+  catch(...)
+  {
+    OSS_LOG_ERROR("SIPB2BScriptableHandler::sendOptionsKeepAlive ERROR: Unknown exception.");
   }
 }
 

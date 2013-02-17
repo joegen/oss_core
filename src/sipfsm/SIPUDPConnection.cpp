@@ -128,9 +128,13 @@ void SIPUDPConnection::handleRead(const boost::system::error_code& e, std::size_
 
         rateLimit().logPacket(getRemoteAddress().address(), bytes_transferred);
       }
-      catch(std::exception e)
+      catch(std::exception& e)
       {
         OSS_LOG_ERROR("Rate Limit Exception: " << e.what());
+      }
+      catch(...)
+      {
+        OSS_LOG_ERROR("Rate Limit Exception: Unknown exception.");
       }
 
       std::string buffer(_buffer.data(), _buffer.data() + bytes_transferred);

@@ -215,7 +215,7 @@ void thread_sleep( unsigned long milliseconds )
 #if defined ( WIN32 )
 	::Sleep( milliseconds );
 #else
-	timeval sTimeout = { milliseconds / 1000, ( milliseconds % 1000 ) * 1000 };
+	timeval sTimeout = { (long int)(milliseconds / 1000), (long int)(( milliseconds % 1000 ) * 1000) };
 	select( 0, 0, 0, 0, &sTimeout );
 #endif
 }

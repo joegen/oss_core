@@ -103,6 +103,19 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     AC_SUBST(OSS_CORE_VERSION_FULL)
     AC_SUBST(OSS_CORE_VERSION_INFO)
 
+    #
+    # Check if iproute2 is installed
+    #
+    AC_CHECK_FILE(/sbin/ip, [OSS_IP_ROUTE_2="/sbin/ip"], [AC_MSG_ERROR("Install iproute2 package")])
+    AC_SUBST(OSS_IP_ROUTE_2)
+    CXXFLAGS="-DOSS_IP_ROUTE_2=\\\"$OSS_IP_ROUTE_2\\\" $CXXFLAGS"
+
+    #
+    # Check if iptables is installed
+    #
+    AC_CHECK_FILE(/sbin/iptables, [OSS_IP_TABLES="/sbin/iptables"], [AC_MSG_ERROR("Install iptables package")])
+    AC_SUBST(OSS_IP_TABLES)
+    CXXFLAGS="-DOSS_IP_TABLES=\\\"$OSS_IP_TABLES\\\" $CXXFLAGS"
 
     AC_CHECK_LIB(boost_thread, main, [BOOST_LIBS="-lboost_date_time -lboost_filesystem -lboost_system -lboost_thread -lboost_program_options -lboost_iostreams -lboost_random -lboost_regex"],
         [AC_CHECK_LIB(boost_thread-mt, main,

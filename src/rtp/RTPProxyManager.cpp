@@ -53,13 +53,17 @@ public:
       json::Writer::Write(response, responseStrm);
       *retvalP = xmlrpc_c::value_string(responseStrm.str());
     }
-    catch(json::Exception e)
+    catch(json::Exception& e)
     {
       OSS_LOG_ERROR("[RPC] HanleSDP::execute Exception: " << e.what());
     }
-    catch(std::exception e)
+    catch(std::exception& e)
     {
       OSS_LOG_ERROR("[RPC] HanleSDP::execute Exception: " << e.what());
+    }
+    catch(...)
+    {
+      OSS_LOG_ERROR("[RPC] HanleSDP::execute: Unknown exception");
     }
   }
 
@@ -94,13 +98,17 @@ public:
       json::Writer::Write(response, responseStrm);
       *retvalP = xmlrpc_c::value_string(responseStrm.str());
     }
-    catch(json::Exception e)
+    catch(json::Exception& e)
     {
       OSS_LOG_ERROR("[RPC] HanleSDP::execute Exception: " << e.what());
     }
-    catch(std::exception e)
+    catch(std::exception& e)
     {
       OSS_LOG_ERROR("[RPC] HanleSDP::execute Exception: " << e.what());
+    }
+    catch(...)
+    {
+      OSS_LOG_ERROR("[RPC] HanleSDP::execute: Unknown exception.");
     }
   }
 
@@ -405,11 +413,11 @@ void RTPProxyManager::handleSDP(const std::string& /*method*/,
 
     response["sdp"] = json::String(sdp_);
   }
-  catch(json::Exception e)
+  catch(json::Exception& e)
   {
     OSS_LOG_ERROR(lid << " RTP RTPProxy::handleSDP Exception: " << e.what());
   }
-  catch(std::exception e)
+  catch(std::exception& e)
   {
     OSS_LOG_ERROR(lid << " RTP RTPProxy::handleSDP Exception: " << e.what());
   }
@@ -429,11 +437,11 @@ void RTPProxyManager::removeSession(const std::string& method,
     removeSession(sessionId.Value());
     response["errorString"] = json::String("ok");
   }
-  catch(json::Exception e)
+  catch(json::Exception& e)
   {
     OSS_LOG_ERROR(" RTP RTPProxy::handleSDP Exception: " << e.what());
   }
-  catch(std::exception e)
+  catch(std::exception& e)
   {
     OSS_LOG_ERROR(" RTP RTPProxy::handleSDP Exception: " << e.what());
   }
