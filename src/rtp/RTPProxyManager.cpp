@@ -212,7 +212,7 @@ void RTPProxyManager::recycleState()
         }
         else
         {
-          boost::filesystem::path currentFile = operator/(_rtpStateDirectory, itr->path().filename().native());
+          boost::filesystem::path currentFile = operator/(_rtpStateDirectory, OSS::boost_file_name(itr->path()));
           if (boost::filesystem::is_regular(currentFile))
           {
             _sessionListMutex.lock();
