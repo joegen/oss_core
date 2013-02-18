@@ -111,9 +111,13 @@ void RTPProxyClient::handleSDP(
       if (!responseSdp.Value().empty())
         sdp = responseSdp.Value();
     }
-    catch(std::exception e)
+    catch(std::exception& e)
     {
-      OSS_LOG_DEBUG("[RPC] RTPProxyClient::handleSDP Exception: " << e.what());
+      OSS_LOG_ERROR("[RPC] RTPProxyClient::handleSDP Exception: " << e.what());
+    }
+    catch(...)
+    {
+      OSS_LOG_ERROR("[RPC] RTPProxyClient::handleSDP: Unknown exception.");
     }
     _connections.enqueue(pConnection);
   }
@@ -148,9 +152,13 @@ void RTPProxyClient::removeSession(const std::string& sessionId)
 
       proc->call(&(pConnection->client), &requestUri);
     }
-    catch(std::exception e)
+    catch(std::exception& e)
     {
-      OSS_LOG_DEBUG("[RPC] RTPProxyClient::removeSession Exception: " << e.what());
+      OSS_LOG_ERROR("[RPC] RTPProxyClient::removeSession Exception: " << e.what());
+    }
+    catch(...)
+    {
+      OSS_LOG_ERROR("[RPC] RTPProxyClient::removeSession: Unknown exception.");
     }
     _connections.enqueue(pConnection);
   }

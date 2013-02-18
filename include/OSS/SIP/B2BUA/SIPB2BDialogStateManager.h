@@ -317,9 +317,14 @@ public:
           }
         }
       }
-      catch(std::exception e)
+      catch(std::exception& e)
       {
         OSS_LOG_ERROR("Exception caught while calling findDialog - Error: " << e.what());
+        return false;
+      }
+      catch(...)
+      {
+        OSS_LOG_ERROR("Exception caught while calling findDialog - Error: Unknown exception.");
         return false;
       }
     }

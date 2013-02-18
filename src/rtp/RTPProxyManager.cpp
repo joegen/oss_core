@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
+#include <xmlrpc-c/base.hpp>
+#include <xmlrpc-c/registry.hpp>
+#include <xmlrpc-c/server_abyss.hpp>
 
 #include "OSS/RTP/RTPProxyManager.h"
 #include "OSS/Logger.h"
@@ -50,13 +53,17 @@ public:
       json::Writer::Write(response, responseStrm);
       *retvalP = xmlrpc_c::value_string(responseStrm.str());
     }
-    catch(json::Exception e)
+    catch(json::Exception& e)
     {
       OSS_LOG_ERROR("[RPC] HanleSDP::execute Exception: " << e.what());
     }
-    catch(std::exception e)
+    catch(std::exception& e)
     {
       OSS_LOG_ERROR("[RPC] HanleSDP::execute Exception: " << e.what());
+    }
+    catch(...)
+    {
+      OSS_LOG_ERROR("[RPC] HanleSDP::execute: Unknown exception");
     }
   }
 
@@ -91,13 +98,17 @@ public:
       json::Writer::Write(response, responseStrm);
       *retvalP = xmlrpc_c::value_string(responseStrm.str());
     }
-    catch(json::Exception e)
+    catch(json::Exception& e)
     {
       OSS_LOG_ERROR("[RPC] HanleSDP::execute Exception: " << e.what());
     }
-    catch(std::exception e)
+    catch(std::exception& e)
     {
       OSS_LOG_ERROR("[RPC] HanleSDP::execute Exception: " << e.what());
+    }
+    catch(...)
+    {
+      OSS_LOG_ERROR("[RPC] HanleSDP::execute: Unknown exception.");
     }
   }
 
@@ -122,7 +133,8 @@ RTPProxyManager::RTPProxyManager(int houseKeepingInterval) :
   _hasRtpDb(false),
   _pRpcServerThread(0),
   _pRpcServer(0),
-  _rpcServerPort(0)
+  _rpcServerPort(0),
+  _persistStateFiles(false)
 {
 }
 
@@ -175,6 +187,9 @@ bool RTPProxyManager::redisConnect(const std::vector<RedisClient::ConnectionInfo
 
 void RTPProxyManager::recycleState()
 {
+  if (!_persistStateFiles)
+    return;
+
   if (!boost::filesystem::exists(_rtpStateDirectory))
   {
     boost::filesystem::create_directory(_rtpStateDirectory);
@@ -402,11 +417,11 @@ void RTPProxyManager::handleSDP(const std::string& /*method*/,
 
     response["sdp"] = json::String(sdp_);
   }
-  catch(json::Exception e)
+  catch(json::Exception& e)
   {
     OSS_LOG_ERROR(lid << " RTP RTPProxy::handleSDP Exception: " << e.what());
   }
-  catch(std::exception e)
+  catch(std::exception& e)
   {
     OSS_LOG_ERROR(lid << " RTP RTPProxy::handleSDP Exception: " << e.what());
   }
@@ -426,11 +441,11 @@ void RTPProxyManager::removeSession(const std::string& method,
     removeSession(sessionId.Value());
     response["errorString"] = json::String("ok");
   }
-  catch(json::Exception e)
+  catch(json::Exception& e)
   {
     OSS_LOG_ERROR(" RTP RTPProxy::handleSDP Exception: " << e.what());
   }
-  catch(std::exception e)
+  catch(std::exception& e)
   {
     OSS_LOG_ERROR(" RTP RTPProxy::handleSDP Exception: " << e.what());
   }

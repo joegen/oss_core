@@ -139,6 +139,7 @@ int thread_pool::schedule(boost::function<void()> task)
   catch(...)
   {
     delete runnable;
+    return -1;
   }
   return 0;
 }
@@ -156,6 +157,7 @@ int thread_pool::schedule_with_arg(boost::function<void(argument_place_holder)> 
   catch(...)
   {
     delete runnable;
+    return -1;
   }
   return 0;
 }
@@ -173,6 +175,7 @@ int thread_pool::static_schedule(boost::function<void()> task)
   catch(...)
   {
     delete runnable;
+    return -1;
   }
   return 0;
 
@@ -191,6 +194,7 @@ int thread_pool::static_schedule_with_arg(boost::function<void(argument_place_ho
   catch(...)
   {
     delete runnable;
+    return -1;
   }
   return 0;
 }
@@ -215,7 +219,7 @@ void thread_sleep( unsigned long milliseconds )
 #if defined ( WIN32 )
 	::Sleep( milliseconds );
 #else
-	timeval sTimeout = { milliseconds / 1000, ( milliseconds % 1000 ) * 1000 };
+	timeval sTimeout = { (long int)(milliseconds / 1000), (long int)(( milliseconds % 1000 ) * 1000) };
 	select( 0, 0, 0, 0, &sTimeout );
 #endif
 }

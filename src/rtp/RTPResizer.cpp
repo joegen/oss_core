@@ -117,7 +117,7 @@ void RTPResizer::wait()
 
   if (nextWait)
   {
-    timeval sTimeout = { nextWait / 1000000, ( nextWait % 1000000 ) };
+    timeval sTimeout = { (long int)(nextWait / 1000000), (long int)( nextWait % 1000000 ) };
     select( 0, 0, 0, 0, &sTimeout );
   }
 }

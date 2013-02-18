@@ -204,6 +204,8 @@ nobase_include_HEADERS = \
     OSS/RTP/RTPResizingQueue.h \
     OSS/Net/FirewallRule.h \
     OSS/Net/Firewall.h \
+    OSS/Net/oss_carp.h \
+    OSS/Net/Carp.h \
     OSS/UTL/AdaptiveDelay.h \
     OSS/websocketpp/common.hpp \
     OSS/websocketpp/connection.hpp \
@@ -215,6 +217,7 @@ nobase_include_HEADERS = \
     OSS/websocketpp/websocketpp.hpp \
     OSS/websocketpp/base64/base64.h \
     OSS/websocketpp/http/parser.hpp \
+    OSS/websocketpp/http/constants.hpp \
     OSS/websocketpp/logger/logger.hpp \
     OSS/websocketpp/md5/md5.h \
     OSS/websocketpp/md5/md5.hpp \

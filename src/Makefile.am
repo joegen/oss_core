@@ -1,12 +1,47 @@
 SUBDIRS = .
 
-lib_LTLIBRARIES = liboss_core.la
+lib_LTLIBRARIES = liboss_carp.la liboss_core.la
 
+localedir = $(datadir)/locale -DLOCALEDIR=\"$(localedir)\"
 INCLUDES = -I$(top_srcdir)/include
 
 version_Current=@OSS_CORE_VERSION_CURRENT@
 version_Revision=@OSS_CORE_VERSION_REVISION@
 version_Age=@OSS_CORE_VERSION_AGE@
+
+
+liboss_carp_la_LDFLAGS = -version-info @OSS_CORE_VERSION_INFO@
+
+liboss_carp_la_LIBADD = $(LTLIBINTL)
+
+liboss_carp_la_SOURCES = \
+	net/carp/gettext.h \
+	net/carp/ucarp.c \
+	net/carp/ucarp.h \
+	net/carp/carp.c \
+	net/carp/carp_p.h \
+	net/carp/ucarp_p.h \
+	net/carp/ip_carp.h \
+	net/carp/crypto-sha1.c \
+	net/carp/crypto.h \
+	net/carp/crypto-sha1.h \
+	net/carp/globals.h \
+	net/carp/fillmac.c \
+	net/carp/fillmac.h \
+	net/carp/bsd-getopt_long.h \
+	net/carp/bsd-getopt_long.c \
+	net/carp/garp.c \
+	net/carp/garp.h \
+	net/carp/spawn.c \
+	net/carp/spawn.h \
+	net/carp/fakesnprintf.c \
+	net/carp/fakesnprintf.h \
+	net/carp/mysnprintf.c \
+	net/carp/mysnprintf.h \
+	net/carp/log.c \
+	net/carp/log.h \
+	net/carp/syslognames.h
+
 
 liboss_core_la_LDFLAGS = \
 	-version-info @OSS_CORE_VERSION_INFO@
@@ -19,9 +54,7 @@ liboss_core_la_CXXFLAGS =
 	-DOSSLIBS_TMPDIR=\"@OSSLIBS_TMPDIR@\" \
 	-DOSSLIBS_CONFDIR=\"@OSSLIBS_CONFDIR@\" \
 	-DOSSAPP_LIB_VERSION=\"@OSS_CORE_VERSION_FULL@\" \
-	-fno-gcse -O0 -fno-implement-inlines -fno-default-inline
-
-liboss_core_la_CFLAGS = 	-std=c99
+	-fno-gcse -O0 -fno-implement-inlines -fno-default-inline 
 
 liboss_core_la_SOURCES =  \
     DNS.cpp \
@@ -175,6 +208,7 @@ liboss_core_la_SOURCES =  \
     rtp/RTPResizingQueue.cpp \
     net/FirewallRule.cpp \
     net/Firewall.cpp \
+    net/Carp.cpp \
     utl/AdaptiveDelay.cpp \
     ws/websocketpp/src/base64/base64.cpp \
     ws/websocketpp/src/md5/md5.c \
@@ -185,7 +219,12 @@ liboss_core_la_SOURCES =  \
     ws/websocketpp/src/sha1/sha1.cpp \
     ws/websocketpp/src/uri.cpp
 
-bin_PROGRAMS = oss_core_unit_test
+
+bin_PROGRAMS = \
+    oss_core_unit_test \
+    oss_garp \
+    oss_carp \
+    oss_b2bua
 
 oss_core_unit_test_CXXFLAGS = \
 	${common_cxx_flags} \
@@ -194,7 +233,7 @@ oss_core_unit_test_CXXFLAGS = \
 oss_core_unit_test_LDFLAGS = -rdynamic
 	
 
-oss_core_unit_test_LDADD = @OSS_CORE_DEP_LIBS@ @LIB_OSS_CORE_LA@ -lgtest
+oss_core_unit_test_LDADD = @OSS_CORE_DEP_LIBS@ liboss_core.la liboss_carp.la -lgtest
 
 oss_core_unit_test_SOURCES = \
 	unit_test/TestSuite.cpp \
@@ -216,6 +255,29 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestFirewall.cpp \
         unit_test/TestWebSocket.cpp
 
+#
+# oss_b2bua - A simple back-to-back user agent
+#
+oss_b2bua_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
+oss_b2bua_LDFLAGS = -rdynamic
+oss_b2bua_LDADD = @OSS_CORE_DEP_LIBS@ liboss_core.la liboss_carp.la -lgtest
+oss_b2bua_SOURCES = apps/oss_b2bua.cpp
+
+#
+# oss_garp - tool for sending gratuitous ARP requests
+#
+oss_garp_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
+oss_garp_LDFLAGS = -rdynamic
+oss_garp_LDADD = @OSS_CORE_DEP_LIBS@ liboss_core.la liboss_carp.la -lgtest
+oss_garp_SOURCES = apps/oss_garp.cpp
+
+#
+# oss_carp - tool for Common Address Redundancy Protocol
+#
+oss_carp_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
+oss_carp_LDFLAGS = -rdynamic
+oss_carp_LDADD = @OSS_CORE_DEP_LIBS@ liboss_core.la liboss_carp.la -lgtest
+oss_carp_SOURCES = apps/oss_carp.cpp
 
 
 DISTCLEANFILES = Makefile.in

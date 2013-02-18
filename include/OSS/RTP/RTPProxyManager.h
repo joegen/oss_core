@@ -24,10 +24,6 @@
 
 #include <map>
 #include <boost/unordered_map.hpp>
-#include <xmlrpc-c/base.hpp>
-#include <xmlrpc-c/registry.hpp>
-#include <xmlrpc-c/server_abyss.hpp>
-
 #include "OSS/Thread.h"
 #include "OSS/RTP/RTPProxySession.h"
 #include "OSS/RTP/RTPProxyRecord.h"
@@ -38,12 +34,18 @@
 #include "OSS/JSON/writer.h"
 #include "OSS/JSON/elements.h"
 
+namespace xmlrpc_c 
+{
+  //
+  // Forward declaration so we dont have to include the headers here.
+  // xmlrpc-c redefines CRLF which collides with our own
+  //
+  class serverAbyss;
+}
 
 namespace OSS {
 namespace RTP {
   
-class RTPProxyRPCServer;
-
 
 typedef boost::unordered_map<std::string, RTPProxySession::Ptr> RTPProxySessionList;
 typedef std::map<std::string, std::size_t> RTPProxyCounter;
@@ -178,6 +180,10 @@ public:
   std::size_t getSessionCount(const std::string& address) const;
     /// Return the number of sessions terminating to a particular address
 
+  bool persistStateFiles() const;
+    /// If this flag is true, state files for RTP will be stored in the diretory
+    /// specified by _rtpStateDirectory.  The default value is false and is
+    /// set together with _rtpStateDirectory.
 private:
   boost::asio::io_service _ioService;
   mutable OSS::mutex_critic_sec _sessionListMutex;
@@ -201,6 +207,7 @@ private:
   boost::thread* _pRpcServerThread;
   xmlrpc_c::serverAbyss* _pRpcServer;
   unsigned short _rpcServerPort;
+  bool _persistStateFiles;
 
   friend class RTPProxy;
   friend class RTPProxySession;
@@ -262,6 +269,7 @@ inline const boost::filesystem::path& RTPProxyManager::getStateDirectory() const
 inline void RTPProxyManager::setStateDirectory(const boost::filesystem::path& stateDirectory)
 {
   _rtpStateDirectory = stateDirectory;
+  _persistStateFiles = true;
 }
 
 inline OSS::mutex_critic_sec& RTPProxyManager::sessionListMutex()
@@ -272,6 +280,11 @@ inline OSS::mutex_critic_sec& RTPProxyManager::sessionListMutex()
 inline RTPProxySessionList& RTPProxyManager::sessionList()
 {
   return _sessionList;
+}
+
+inline bool RTPProxyManager::persistStateFiles() const
+{
+  return _persistStateFiles;
 }
 
 } } //OSS::RTP
