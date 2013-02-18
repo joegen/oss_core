@@ -133,7 +133,8 @@ RTPProxyManager::RTPProxyManager(int houseKeepingInterval) :
   _hasRtpDb(false),
   _pRpcServerThread(0),
   _pRpcServer(0),
-  _rpcServerPort(0)
+  _rpcServerPort(0),
+  _persistStateFiles(false)
 {
 }
 
@@ -186,6 +187,9 @@ bool RTPProxyManager::redisConnect(const std::vector<RedisClient::ConnectionInfo
 
 void RTPProxyManager::recycleState()
 {
+  if (!_persistStateFiles)
+    return;
+
   if (!boost::filesystem::exists(_rtpStateDirectory))
   {
     boost::filesystem::create_directory(_rtpStateDirectory);

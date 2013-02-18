@@ -180,6 +180,10 @@ public:
   std::size_t getSessionCount(const std::string& address) const;
     /// Return the number of sessions terminating to a particular address
 
+  bool persistStateFiles() const;
+    /// If this flag is true, state files for RTP will be stored in the diretory
+    /// specified by _rtpStateDirectory.  The default value is false and is
+    /// set together with _rtpStateDirectory.
 private:
   boost::asio::io_service _ioService;
   mutable OSS::mutex_critic_sec _sessionListMutex;
@@ -203,6 +207,7 @@ private:
   boost::thread* _pRpcServerThread;
   xmlrpc_c::serverAbyss* _pRpcServer;
   unsigned short _rpcServerPort;
+  bool _persistStateFiles;
 
   friend class RTPProxy;
   friend class RTPProxySession;
@@ -264,6 +269,7 @@ inline const boost::filesystem::path& RTPProxyManager::getStateDirectory() const
 inline void RTPProxyManager::setStateDirectory(const boost::filesystem::path& stateDirectory)
 {
   _rtpStateDirectory = stateDirectory;
+  _persistStateFiles = true;
 }
 
 inline OSS::mutex_critic_sec& RTPProxyManager::sessionListMutex()
@@ -274,6 +280,11 @@ inline OSS::mutex_critic_sec& RTPProxyManager::sessionListMutex()
 inline RTPProxySessionList& RTPProxyManager::sessionList()
 {
   return _sessionList;
+}
+
+inline bool RTPProxyManager::persistStateFiles() const
+{
+  return _persistStateFiles;
 }
 
 } } //OSS::RTP

@@ -61,9 +61,9 @@ RTPProxySession::RTPProxySession(RTPProxyManager* pManager, const std::string& i
 RTPProxySession::~RTPProxySession()
 {
   stop();
-  if (!_pManager->hasRtpDb())
+  if (!_pManager->hasRtpDb() && _pManager->persistStateFiles())
     ClassType::remove(_stateFile);
-  else
+  else if (_pManager->hasRtpDb())
     _pManager->redisClient().del(_identifier);
 }
 
@@ -2202,6 +2202,12 @@ void RTPProxySession::dumpStateFile()
     return;
   }
 
+  //
+  // Check if the manager allows persistence of state files to the disc
+  //
+  if (!_pManager->persistStateFiles())
+    return;
+
   ClassType persistent;
   DataType root = persistent.self();
 
@@ -2744,6 +2750,11 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromRedis(RTPProxyManager* pMan
 RTPProxySession::Ptr RTPProxySession::reconstructFromStateFile(
   RTPProxyManager* pManager, const boost::filesystem::path& stateFile)
 {
+  if (!pManager->persistStateFiles())
+  {
+    return RTPProxySession::Ptr();
+  }
+
   RTPProxySession* pSession = 0;
   try
   {
