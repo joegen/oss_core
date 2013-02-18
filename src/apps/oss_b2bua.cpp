@@ -445,7 +445,7 @@ bool testListen(const Config& config)
   return true;
 }
 
-void prepateListenerInfo(Config& config, ServiceOptions& options)
+void prepareListenerInfo(Config& config, ServiceOptions& options)
 {
   if (!options.getOption("interface-address", config.address))
   {
@@ -553,7 +553,7 @@ int main(int argc, char** argv)
   saveProcessId(options);
   prepareLogger(options);
   Config config;
-  prepateListenerInfo(config, options);
+  prepareListenerInfo(config, options);
   prepareTargetInfo(config, options);
 
   try
