@@ -84,7 +84,7 @@ struct RTPProxyRecord
 //
 inline bool RTPProxyRecord::writeToRedis(RedisClient& client, const boost::filesystem::path& key) const
 {
-  return writeToRedis(client, key.filename().native());
+  return writeToRedis(client, OSS::boost_file_name(key));
 }
 
 inline bool RTPProxyRecord::readFromRedis(RedisClient& client, const boost::filesystem::path& key)
