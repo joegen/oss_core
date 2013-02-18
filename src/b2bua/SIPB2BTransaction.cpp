@@ -402,7 +402,7 @@ bool SIPB2BTransaction::isFailoverCandidate(
   
   if (e)
   {
-    if (!_pManager->threadPool().schedule(boost::bind(&SIPB2BTransaction::runFailoverTask, shared_from_this())))
+    if (_pManager->threadPool().schedule(boost::bind(&SIPB2BTransaction::runFailoverTask, shared_from_this())) == -1)
     {
       OSS::log_error(_logId + "No available thread to handle SIPB2BTransaction::runFailoverTask");
       return false;
@@ -412,7 +412,7 @@ bool SIPB2BTransaction::isFailoverCandidate(
 
   if (pMsg && pMsg->is5xx())
   {
-    if (!_pManager->threadPool().schedule(boost::bind(&SIPB2BTransaction::runFailoverTask, shared_from_this())))
+    if (_pManager->threadPool().schedule(boost::bind(&SIPB2BTransaction::runFailoverTask, shared_from_this())) == -1)
     {
       OSS::log_error(_logId + "No available thread to handle SIPB2BTransaction::runFailoverTask");
       return false;
@@ -594,7 +594,7 @@ void SIPB2BTransaction::handleResponse(
 
 
 
-  if (!_pManager->threadPool().schedule(boost::bind(&SIPB2BTransaction::runResponseTask, shared_from_this())))
+  if (_pManager->threadPool().schedule(boost::bind(&SIPB2BTransaction::runResponseTask, shared_from_this())) == -1)
   {
     OSS::log_error(_logId + "No available thread to handle SIPB2BTransaction::handleResponse");
   }

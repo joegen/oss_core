@@ -145,11 +145,11 @@ public:
 
   int schedule(boost::function<void()> task);
     /// Schedule a task for execution.  Returns the number of
-    /// currently used thread if sucessful or 0 if unsuccessful.
+    /// currently used thread if sucessful or -1 if unsuccessful.
 
   int schedule_with_arg(boost::function<void(argument_place_holder)> task, argument_place_holder arg);
     /// Schedule a task with a placeholder argument.  Returns the number of
-    /// currently used thread if sucessful or 0 if unsuccessful.
+    /// currently used thread if sucessful or -1 if unsuccessful.
 
   static void static_join();
     /// Waits for all threads in the deafult thread pool to complete.

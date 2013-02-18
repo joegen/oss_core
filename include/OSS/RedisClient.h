@@ -535,8 +535,14 @@ public:
         json::Reader::Read(value, strm);
         values.push_back(value);
       }
-      catch(std::exception e)
+      catch(std::exception& e)
       {
+        OSS_LOG_ERROR("JSON Parser exception: " << e.what());
+        return false;
+      }
+      catch(...)
+      {
+        OSS_LOG_ERROR("Unknown JSON Parser exception.");
         return false;
       }
     }

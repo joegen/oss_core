@@ -39,6 +39,8 @@ namespace OSS {
 namespace SIP {
 namespace B2BUA {
 
+  
+using namespace OSS::RTP;
 
 SIPB2BScriptableHandler::SIPB2BScriptableHandler(
   SIPB2BTransactionManager* pTransactionManager,
@@ -125,6 +127,11 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onTransactionCreated(
       return serverError;
     }
   }
+  else if (!onProcessRequest(TYPE_INBOUND, pRequest))
+  {
+    SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_500_InternalServerError);
+    return serverError;
+  }
 
   if (pRequest->isMidDialog() && !pRequest->isRequest("SUBSCRIBE"))
     return _pTransactionManager->postMidDialogTransactionCreated(pRequest, pTransaction);
@@ -172,6 +179,36 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onAuthenticateTransaction(
     {
       pRequest->setProperty("auth-action", "accept");
       return OSS::SIP::SIPMessage::Ptr();
+    }
+
+    std::string authAction;
+    if (!pRequest->getProperty("auth-action", authAction))
+    {
+      return SIPMessage::Ptr();
+    }
+    else if (authAction == "reject")
+    {
+      SIPMessage::Ptr reject = pRequest->createResponse(SIPMessage::CODE_403_Forbidden);
+      std::string authResponse;
+      if (pRequest->getProperty("auth-response", authResponse) && !authResponse.empty())
+      {
+        reject->setStartLine(authResponse);
+        reject->commitData();
+        return reject;
+      }
+      else
+      {
+        reject->commitData();
+        return reject;
+      }
+    }
+  }
+  else 
+  {
+    if (!onProcessRequest(TYPE_AUTH, pRequest))
+    {
+      SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_500_InternalServerError);
+      return serverError;
     }
 
     std::string authAction;
@@ -432,7 +469,15 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteOutOfDialogTransaction(
 {
   if (!_pTransactionManager->postRetargetTransaction(pRequest, pTransaction))
   {
-    if (!_routeScript.isInitialized() || !_routeScript.processRequest(pRequest))
+    if (_routeScript.isInitialized())
+    {
+      if (!_routeScript.processRequest(pRequest))
+      {
+        SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_500_InternalServerError);
+        return serverError;
+      }
+    }
+    else if (!onProcessRequest(TYPE_ROUTE, pRequest))
     {
       SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_500_InternalServerError);
       return serverError;
@@ -714,11 +759,134 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
   ///
   /// If the body is supported, the return value must be a null-Ptr.
 {
+  std::string noRTPProxy;
+  if (pTransaction->getProperty("no-rtp-proxy", noRTPProxy) && noRTPProxy == "1")
+    return OSS::SIP::SIPMessage::Ptr();
+
+  std::string sessionId;
+  OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
+
+  SIPMessage* pServerRequest = pTransaction->serverRequest().get();
+  std::string bottomVia;
+  if (!SIPVia::msgGetBottomVia(pServerRequest, bottomVia))
+  {
+    SIPMessage::Ptr serverError = pServerRequest->createResponse(SIPMessage::CODE_400_BadRequest, "Bad bottom via header");
+    return serverError;
+  }
+
+ std::string sentBy;
+ if (!SIPVia::getSentBy(bottomVia, sentBy))
+  {
+    SIPMessage::Ptr serverError = pServerRequest->createResponse(SIPMessage::CODE_400_BadRequest, "Bad bottom via header");
+    return serverError;
+  }
+
+  pTransaction->setProperty("sdp-answer-route", sentBy);
+
+  OSS::IPAddress addrSentBy = OSS::IPAddress::fromV4IPPort(sentBy.c_str());
+  OSS::IPAddress addrPacketSource = pTransaction->serverTransport()->getRemoteAddress();
+
+  //
+  // Set the local interface to be used to send to A Leg.
+  // Also set the external address if one is configured.
+  //
+  OSS::IPAddress addrLocalInterface = pTransaction->serverTransport()->getLocalAddress();
+  addrLocalInterface.externalAddress() = pTransaction->serverTransport()->getExternalAddress();
+
+  std::string targetAddress;
+  std::string localAddress;
+  OSS_VERIFY(pRequest->getProperty("target-address", targetAddress) &&
+    pRequest->getProperty("local-address", localAddress));
+
+  OSS::IPAddress addrRoute = OSS::IPAddress::fromV4IPPort(targetAddress.c_str());
+  OSS::IPAddress addrRouteLocalInterface = OSS::IPAddress::fromV4IPPort(localAddress.c_str());
+
+  //
+  // Assign the exteral address for B-Leg if one is configured
+  //
+  std::string routeExternalAddress;
+  if (getExternalAddress(addrRouteLocalInterface, routeExternalAddress))
+  {
+    addrRouteLocalInterface.externalAddress() = routeExternalAddress;
+  }
+
+  std::string rtpProxyProp;
+  bool requireRTPProxy = pTransaction->getProperty("require-rtp-proxy", rtpProxyProp) && rtpProxyProp == "1";
+  std::string sdp = pRequest->getBody();
+  try
+  {
+    RTPProxy::Attributes rtpAttributes;
+
+    rtpAttributes.verbose = false;
+    std::string propXOR = "0";
+    rtpAttributes.forcePEAEncryption = pRequest->getProperty("peer-xor", propXOR) && propXOR == "1";
+    rtpAttributes.forceCreate = requireRTPProxy;
+    rtpAttributes.callId = pRequest->hdrGet("call-id");
+    rtpAttributes.from = pRequest->hdrGet("from");
+    rtpAttributes.to = pRequest->hdrGet("to");
+
+    std::string sResizerSamples;
+    if (!pServerRequest->getProperty("rtp-resizer-samples", sResizerSamples))
+      pRequest->getProperty("rtp-resizer-samples", sResizerSamples);
+
+    if (!sResizerSamples.empty())
+    {
+      try
+      {
+        std::vector<std::string> tokens = OSS::string_tokenize(sResizerSamples, "/");
+        if (tokens.size() == 2)
+        {
+          rtpAttributes.resizerSamplesLeg1 = boost::lexical_cast<int>(tokens[0]);
+          rtpAttributes.resizerSamplesLeg2 = boost::lexical_cast<int>(tokens[1]);
+          OSS_LOG_INFO("RTP: Activating RTP repacketization to " << rtpAttributes.resizerSamplesLeg1 << "/" << rtpAttributes.resizerSamplesLeg2 << " resolution.")
+        }
+        else
+        {
+          rtpAttributes.resizerSamplesLeg1 = boost::lexical_cast<int>(sResizerSamples);
+          rtpAttributes.resizerSamplesLeg2 = boost::lexical_cast<int>(sResizerSamples);
+          OSS_LOG_INFO("RTP: Activating RTP repacketization to " << rtpAttributes.resizerSamplesLeg1 << "/" << rtpAttributes.resizerSamplesLeg2 << " resolution.")
+        }
+      }
+      catch(...)
+      {
+      }
+    }
+    else
+    {
+      OSS_LOG_INFO("RTP: RTP repacketization is DISABLED.");
+    }
+
+
+    std::string maximumChannel;
+    if (pRequest->getProperty("max-channel", maximumChannel) && !maximumChannel.empty())
+      rtpAttributes.countSessions = true;
+
+
+    rtpProxy().handleSDP(pTransaction->getLogId(), sessionId, addrSentBy, addrPacketSource, addrLocalInterface,
+      addrRoute, addrRouteLocalInterface, RTPProxySession::INVITE, sdp, rtpAttributes);
+
+
+  }
+  catch(RTPProxyTooManySession e)
+  {
+    SIPMessage::Ptr serverError = pServerRequest->createResponse(SIPMessage::CODE_503_ServiceUnavailable, e.message().c_str());
+    return serverError;
+  }
+  catch(OSS::Exception e)
+  {
+    SIPMessage::Ptr serverError = pServerRequest->createResponse(SIPMessage::CODE_400_BadRequest, e.message().c_str());
+    return serverError;
+  }
+
+
+  pRequest->setBody(sdp);
+  std::string clen = OSS::string_from_number<size_t>(sdp.size());
+  pRequest->hdrSet("Content-Length", clen.c_str());
   return OSS::SIP::SIPMessage::Ptr();
 }
 
 void SIPB2BScriptableHandler::onProcessResponseBody(
-  SIPMessage::Ptr& pRequest,
+  SIPMessage::Ptr& pResponse,
   OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction)
   /// This method allows the application to
   /// process the body of the response
@@ -730,6 +898,95 @@ void SIPB2BScriptableHandler::onProcessResponseBody(
   /// so that RTP passes through the application.
   ///
 {
+  std::string noRTPProxy;
+  if (pTransaction->getProperty("no-rtp-proxy", noRTPProxy) && noRTPProxy == "1")
+    return;
+
+  std::string responseSDP;
+  if (pTransaction->getProperty("response-sdp", responseSDP))
+  {
+    pResponse->setBody(responseSDP);
+    std::string clen = OSS::string_from_number<size_t>(responseSDP.size());
+    pResponse->hdrSet("Content-Length", clen.c_str());
+    return;
+  }
+
+  std::string hContact = pResponse->hdrGet("contact");
+  std::string sentBy;
+
+  if (!hContact.empty())
+  {
+    ContactURI contactURI;
+    if (!SIPContact::getAt(hContact, contactURI, 0))
+      return;
+    sentBy = contactURI.getHostPort();
+  }
+
+  std::string sessionId;
+  OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
+
+  std::string sdpAnswerRoute;
+  if (!pTransaction->getProperty("sdp-answer-route", sdpAnswerRoute))
+  {
+    SIPMessage* pServerRequest = pTransaction->serverRequest().get();
+    std::string bottomVia;
+    if (!SIPVia::msgGetBottomVia(pServerRequest, bottomVia))
+    {
+      return;
+    }
+    if (!SIPVia::getSentBy(bottomVia, sdpAnswerRoute))
+    {
+      return;
+    }
+    pTransaction->setProperty("sdp-answer-route", sdpAnswerRoute);
+  }
+
+  OSS::IPAddress addrSentBy;
+  if (!sentBy.empty())
+    addrSentBy = OSS::IPAddress::fromV4IPPort(sentBy.c_str());
+  else
+    addrSentBy = pTransaction->clientTransport()->getRemoteAddress();
+
+  OSS::IPAddress addrPacketSource = pTransaction->clientTransport()->getRemoteAddress();
+  OSS::IPAddress addrLocalInterface = pTransaction->clientTransport()->getLocalAddress();
+  addrLocalInterface.externalAddress() = pTransaction->clientTransport()->getExternalAddress();
+
+  OSS::IPAddress addrRoute = OSS::IPAddress::fromV4IPPort(sdpAnswerRoute.c_str());
+  OSS::IPAddress addrRouteLocalInterface = pTransaction->serverTransport()->getLocalAddress();
+  addrRouteLocalInterface.externalAddress() = pTransaction->serverTransport()->getExternalAddress();
+
+  std::string sdp = pResponse->getBody();
+  std::string rtpProxyProp;
+  bool requireRTPProxy = pTransaction->getProperty("require-rtp-proxy", rtpProxyProp) && rtpProxyProp == "1";
+
+  std::string enableVerboseRTP;
+  bool verboseRTP = pTransaction->getProperty("enable-verbose-rtp", enableVerboseRTP) && enableVerboseRTP == "1";
+  try
+  {
+    RTPProxy::Attributes rtpAttributes;
+    rtpAttributes.verbose = verboseRTP;
+    std::string propXOR = "0";
+    rtpAttributes.forcePEAEncryption = pResponse->getProperty("peer-xor", propXOR) && propXOR == "1";
+    rtpAttributes.forceCreate = requireRTPProxy;
+    rtpAttributes.callId = pResponse->hdrGet("call-id");
+    rtpAttributes.from = pResponse->hdrGet("from");
+    rtpAttributes.to = pResponse->hdrGet("to");
+
+    rtpProxy().handleSDP(pTransaction->getLogId(), sessionId, addrSentBy, addrPacketSource, addrLocalInterface,
+        addrRoute, addrRouteLocalInterface, RTPProxySession::INVITE_RESPONSE, sdp, rtpAttributes);
+  }
+  catch(OSS::Exception e)
+  {
+    std::ostringstream logMsg;
+    logMsg << pTransaction->getLogId() << "Unable to process SDP in response.  Exception: " << e.message();
+    OSS::log_warning(logMsg.str());
+    return;
+  }
+
+  pResponse->setBody(sdp);
+  std::string clen = OSS::string_from_number<size_t>(sdp.size());
+  pTransaction->setProperty("response-sdp", sdp.c_str());
+  pResponse->hdrSet("Content-Length", clen.c_str());
 }
 
 void SIPB2BScriptableHandler::onProcessOutbound(
@@ -765,11 +1022,28 @@ void SIPB2BScriptableHandler::onProcessOutbound(
       pTransaction->serverTransport(), pTransaction->serverTransaction(), responseTarget);
     pTransaction->serverTransaction()->sendResponse(trying, responseTarget);
   }
+  else if (pRequest->isRequest("BYE"))
+  {
+    std::string sessionId;
+    OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
+    //
+    // Remove the rtp proxies if they were created
+    //
+    try
+    {
+      rtpProxy().removeSession(sessionId);
+    }catch(...){}
+  }
 
   if (_outboundScript.isInitialized())
     _outboundScript.processRequest(pRequest);
+  else
+    onProcessRequest(TYPE_OUTBOUND_REQUEST, pRequest);
+
    if (!_pTransactionManager->getUserAgentName().empty())
      pRequest->hdrSet("User-Agent", _pTransactionManager->getUserAgentName().c_str());
+
+
 }
 
 bool SIPB2BScriptableHandler::getRegistrationId(const ContactURI& curi, std::string& regId) const
@@ -893,6 +1167,12 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
   /// headers to the desired application-specific values for as long
   /// as it wont conflict with dialog creation states.
 {
+
+  if (_outboundResponseScript.isInitialized())
+    _outboundResponseScript.processRequest(pResponse);
+  else
+    onProcessRequest(TYPE_OUTBOUND_RESPONSE, pResponse);
+
   std::string logId = pTransaction->getLogId();
   //
   // Let the script process it first
@@ -1160,6 +1440,18 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
        pResponse->hdrListAppend("Contact", oldCuri.data().c_str());
     }
   }
+  else if (pResponse->isResponseTo("INVITE") && pResponse->isErrorResponse())
+  {
+    std::string sessionId;
+    pTransaction->getProperty("session-id", sessionId);
+    //
+    // Remove the rtp proxies if they were created.
+    //
+    try
+    {
+      rtpProxy().removeSession(sessionId);
+    }catch(...){}
+  }
   else // Any response that isn't covered by the if else block
   {
     std::string sessionId;
@@ -1183,6 +1475,9 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
         sessionInfo);
     }
   }
+
+
+
 }
 
 void SIPB2BScriptableHandler::onProcessUnknownInviteRequest(
@@ -1309,6 +1604,16 @@ void SIPB2BScriptableHandler::onTransactionError(
       _invitePool.erase(id);
       _pDialogState->removeDialog(pTransaction->serverRequest()->hdrGet("call-id"), sessionId);
     }
+
+    std::string sessionId;
+    OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
+    //
+    // Remove the rtp proxies if they were created
+    //
+    try
+    {
+      rtpProxy().removeSession(sessionId);
+    }catch(...){}
   }
 }
 
@@ -1517,6 +1822,7 @@ void SIPB2BScriptableHandler::runOptionsResponseThread()
 
 void SIPB2BScriptableHandler::sendOptionsKeepAlive(RegData& regData)
 {
+
   try
   {
     static int cseqNo = 1;
@@ -1565,13 +1871,25 @@ void SIPB2BScriptableHandler::sendOptionsKeepAlive(RegData& regData)
 
     _pTransactionManager->stack().sendRequest(msg, src, target, _keepAliveResponseCb);
   }
-  catch(std::exception e)
+  catch(std::exception& e)
   {
     OSS_LOG_ERROR("SIPB2BScriptableHandler::sendOptionsKeepAlive ERROR: " << e.what());
   }
-
+  catch(...)
+  {
+    OSS_LOG_ERROR("SIPB2BScriptableHandler::sendOptionsKeepAlive ERROR: Unknown exception.");
+  }
 }
 
+bool SIPB2BScriptableHandler::onProcessRequest(MessageType type, const OSS::SIP::SIPMessage::Ptr& pRequest)
+{
+  //
+  // We return true by default.  This means we will allow relay to happen.  It's up to the applicaiton
+  // to override this method and process the request.
+  //
+  pRequest->setProperty("route-action", "accept");
+  return true;
+}
 
 } } } // OSS::SIP::B2BUA
 
