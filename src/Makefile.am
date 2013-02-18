@@ -253,8 +253,8 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestDNS.cpp \
 	unit_test/TestSIPURI.cpp \
 	unit_test/TestRTPPacket.cpp \
-	unit_test/TestFirewall.cpp \
-        unit_test/TestWebSocket.cpp
+	unit_test/TestFirewall.cpp
+#        unit_test/TestWebSocket.cpp
 
 #
 # oss_b2bua - A simple back-to-back user agent
