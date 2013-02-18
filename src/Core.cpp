@@ -380,6 +380,7 @@ bool boost_temp_file(std::string& tempfile)
   tempfile = Poco::Path::temp();
   tempfile += "/";
   tempfile += Poco::TemporaryFile::tempName();
+  return true;
 #endif
 }
 
