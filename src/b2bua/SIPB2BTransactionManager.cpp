@@ -81,7 +81,7 @@ void SIPB2BTransactionManager::handleRequest(
     return;
   
 #if 0
-  if (!_threadPool.schedule(boost::bind(&SIPB2BTransaction::runTask, b2bTransaction)))
+  if (_threadPool.schedule(boost::bind(&SIPB2BTransaction::runTask, b2bTransaction)) == -1)
   {
     OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleRequest");
     SIPMessage::Ptr serverError = pMsg->createResponse(500, "Thread Resource Depleted");
@@ -100,14 +100,14 @@ void SIPB2BTransactionManager::handleUnknowInviteTransaction(
   SIPB2BHandler::Ptr pHandler = findHandler(SIPB2BHandler::TYPE_INVITE);
   if (pHandler)
   {
-    if (!_threadPool.schedule(boost::bind(&SIPB2BHandler::onProcessUnknownInviteRequest, pHandler, pMsg, pTransport)))
+    if (_threadPool.schedule(boost::bind(&SIPB2BHandler::onProcessUnknownInviteRequest, pHandler, pMsg, pTransport)) == -1)
     {
       OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleUnknowInviteTransaction");
     }
   }
   else if (_pDefaultHandler)
   {
-    if (!_threadPool.schedule(boost::bind(&SIPB2BHandler::onProcessUnknownInviteRequest, _pDefaultHandler, pMsg, pTransport)))
+    if (_threadPool.schedule(boost::bind(&SIPB2BHandler::onProcessUnknownInviteRequest, _pDefaultHandler, pMsg, pTransport)) == -1)
     {
       OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleUnknowInviteTransaction");
     }
@@ -454,7 +454,7 @@ void SIPB2BTransactionManager::onDestroyTransaction(SIPB2BTransaction::Ptr pTran
 void SIPB2BTransactionManager::sendClientRequest(
   const OSS::SIP::SIPMessage::Ptr& pMsg)
 {
-  if (!_threadPool.schedule(boost::bind(&SIPB2BTransaction::runTask, onCreateB2BClientTransaction(pMsg))))
+  if (_threadPool.schedule(boost::bind(&SIPB2BTransaction::runTask, onCreateB2BClientTransaction(pMsg))) == -1)
   {
     OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::sendClientRequest");
   }

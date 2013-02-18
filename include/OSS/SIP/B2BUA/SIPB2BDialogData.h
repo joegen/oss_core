@@ -161,7 +161,7 @@ public:
           routes.Insert(json::String(*iter));
         object["routeSet"] = routes;
       }
-      catch(json::Exception e)
+      catch(json::Exception& e)
       {
         OSS_LOG_ERROR("SIPB2BDialogData::LegInfo: Unable to parse json object - " << e.what());
       }
@@ -191,7 +191,7 @@ public:
         for (json::Array::iterator iter = routes.Begin(); iter != routes.End(); iter++)
           routeSet.push_back(((json::String)*iter).Value());
       }
-      catch(json::Exception e)
+      catch(json::Exception& e)
       {
         OSS_LOG_ERROR("SIPB2BDialogData::LegInfo: Unable to parse json object - " << e.what());
       }
@@ -267,7 +267,23 @@ public:
       object["disconnectTime"] = json::Number(disconnectTime);
       object["sessionAge"] = json::Number(sessionAge);
     }
-    catch(json::Exception e)
+    catch(json::Exception& e)
+    {
+      OSS_LOG_ERROR("SIPB2BDialogData: Unable to parse json object - " << e.what());
+    }
+  }
+
+  void toJsonString(std::string& object) const
+  {
+    json::Object jObject;
+    toJsonObject(jObject);
+    try
+    {
+      std::ostringstream strm;
+      json::Writer::Write(jObject, strm);
+      object = strm.str();
+    }
+    catch(json::Exception& e)
     {
       OSS_LOG_ERROR("SIPB2BDialogData: Unable to parse json object - " << e.what());
     }
@@ -287,7 +303,23 @@ public:
       disconnectTime = JsonHelper::toNumber(object["disconnectTime"]);
       sessionAge = JsonHelper::toNumber(object["sessionAge"]);
     }
-    catch(json::Exception e)
+    catch(json::Exception& e)
+    {
+      OSS_LOG_ERROR("SIPB2BDialogData: Unable to parse json object - " << e.what());
+    }
+  }
+
+  void fromJsonString(const std::string& jsonString)
+  {
+    try
+    {
+      json::Object object;
+      std::stringstream strm;
+      strm << jsonString;
+      json::Reader::Read(object, strm);
+      fromJsonObject(object);
+    }
+    catch(json::Exception& e)
     {
       OSS_LOG_ERROR("SIPB2BDialogData: Unable to parse json object - " << e.what());
     }
@@ -367,7 +399,23 @@ struct SIPB2BRegData
       object["enc"] = json::Boolean(enc);
 
     }
-    catch(json::Exception e)
+    catch(json::Exception& e)
+    {
+      OSS_LOG_ERROR("SIPB2BRegData: Unable to parse json object - " << e.what());
+    }
+  }
+
+  void toJsonString(std::string& object) const
+  {
+    json::Object jObject;
+    toJsonObject(jObject);
+    try
+    {
+      std::ostringstream strm;
+      json::Writer::Write(jObject, strm);
+      object = strm.str();
+    }
+    catch(json::Exception& e)
     {
       OSS_LOG_ERROR("SIPB2BRegData: Unable to parse json object - " << e.what());
     }
@@ -388,9 +436,25 @@ struct SIPB2BRegData
       expires = JsonHelper::toNumber(object["expires"]);
       enc = JsonHelper::toBoolean(object["enc"]);
     }
-    catch(json::Exception e)
+    catch(json::Exception& e)
     {
-      OSS_LOG_ERROR("SIPB2BDialogData: Unable to parse json object - " << e.what());
+      OSS_LOG_ERROR("SIPB2BRegData: Unable to parse json object - " << e.what());
+    }
+  }
+
+  void fromJsonString(const std::string& jsonString)
+  {
+    try
+    {
+      json::Object object;
+      std::stringstream strm;
+      strm << jsonString;
+      json::Reader::Read(object, strm);
+      fromJsonObject(object);
+    }
+    catch(json::Exception& e)
+    {
+      OSS_LOG_ERROR("SIPB2BRegData: Unable to parse json object - " << e.what());
     }
   }
 };

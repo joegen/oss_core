@@ -469,7 +469,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteOutOfDialogTransaction(
 {
   if (!_pTransactionManager->postRetargetTransaction(pRequest, pTransaction))
   {
-    if (!_routeScript.isInitialized())
+    if (_routeScript.isInitialized())
     {
       if (!_routeScript.processRequest(pRequest))
       {
@@ -1022,6 +1022,18 @@ void SIPB2BScriptableHandler::onProcessOutbound(
       pTransaction->serverTransport(), pTransaction->serverTransaction(), responseTarget);
     pTransaction->serverTransaction()->sendResponse(trying, responseTarget);
   }
+  else if (pRequest->isRequest("BYE"))
+  {
+    std::string sessionId;
+    OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
+    //
+    // Remove the rtp proxies if they were created
+    //
+    try
+    {
+      rtpProxy().removeSession(sessionId);
+    }catch(...){}
+  }
 
   if (_outboundScript.isInitialized())
     _outboundScript.processRequest(pRequest);
@@ -1030,6 +1042,8 @@ void SIPB2BScriptableHandler::onProcessOutbound(
 
    if (!_pTransactionManager->getUserAgentName().empty())
      pRequest->hdrSet("User-Agent", _pTransactionManager->getUserAgentName().c_str());
+
+
 }
 
 bool SIPB2BScriptableHandler::getRegistrationId(const ContactURI& curi, std::string& regId) const
@@ -1064,7 +1078,6 @@ void SIPB2BScriptableHandler::onProcessResponseInbound(
   SIPMessage::Ptr& pResponse,
   OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction)
 {
-#if 0
   bool isDialogForming = false;
   bool isInvite = pResponse->isResponseTo("INVITE");
   if (isInvite || pResponse->isResponseTo("SUBSCRIBE"))
@@ -1141,7 +1154,6 @@ void SIPB2BScriptableHandler::onProcessResponseInbound(
       }
     }
   }
-#endif
 }
 
 void SIPB2BScriptableHandler::onProcessResponseOutbound(
@@ -1161,7 +1173,6 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
   else
     onProcessRequest(TYPE_OUTBOUND_RESPONSE, pResponse);
 
-#if 0
   std::string logId = pTransaction->getLogId();
   //
   // Let the script process it first
@@ -1429,6 +1440,18 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
        pResponse->hdrListAppend("Contact", oldCuri.data().c_str());
     }
   }
+  else if (pResponse->isResponseTo("INVITE") && pResponse->isErrorResponse())
+  {
+    std::string sessionId;
+    pTransaction->getProperty("session-id", sessionId);
+    //
+    // Remove the rtp proxies if they were created.
+    //
+    try
+    {
+      rtpProxy().removeSession(sessionId);
+    }catch(...){}
+  }
   else // Any response that isn't covered by the if else block
   {
     std::string sessionId;
@@ -1453,7 +1476,8 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
     }
   }
 
-#endif
+
+
 }
 
 void SIPB2BScriptableHandler::onProcessUnknownInviteRequest(
@@ -1580,6 +1604,16 @@ void SIPB2BScriptableHandler::onTransactionError(
       _invitePool.erase(id);
       _pDialogState->removeDialog(pTransaction->serverRequest()->hdrGet("call-id"), sessionId);
     }
+
+    std::string sessionId;
+    OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
+    //
+    // Remove the rtp proxies if they were created
+    //
+    try
+    {
+      rtpProxy().removeSession(sessionId);
+    }catch(...){}
   }
 }
 

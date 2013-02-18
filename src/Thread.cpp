@@ -139,6 +139,7 @@ int thread_pool::schedule(boost::function<void()> task)
   catch(...)
   {
     delete runnable;
+    return -1;
   }
   return 0;
 }
@@ -156,6 +157,7 @@ int thread_pool::schedule_with_arg(boost::function<void(argument_place_holder)> 
   catch(...)
   {
     delete runnable;
+    return -1;
   }
   return 0;
 }
@@ -173,6 +175,7 @@ int thread_pool::static_schedule(boost::function<void()> task)
   catch(...)
   {
     delete runnable;
+    return -1;
   }
   return 0;
 
@@ -191,6 +194,7 @@ int thread_pool::static_schedule_with_arg(boost::function<void(argument_place_ho
   catch(...)
   {
     delete runnable;
+    return -1;
   }
   return 0;
 }

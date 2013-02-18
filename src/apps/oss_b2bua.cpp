@@ -23,6 +23,7 @@
 
 #include "OSS/Application.h"
 #include "OSS/ServiceDaemon.h"
+#include "OSS/Thread.h"
 #include "OSS/DNS.h"
 #include "OSS/Net.h"
 #include "OSS/Exec/Command.h"
@@ -32,6 +33,7 @@
 
 #define TCP_PORT_BASE 20000
 #define TCP_PORT_MAX  30000
+#define RTP_PROXY_THREAD_COUNT 10
 
 using namespace OSS;
 using namespace OSS::SIP;
@@ -57,15 +59,21 @@ struct Config
 };
 
 
-class oss_b2bua :
+class OSSB2BUA :
   public SIPB2BTransactionManager,
   public SIPB2BDialogStateManager,
   public SIPB2BScriptableHandler
 {
 public:
-  Config& _config;
+  typedef std::map<std::string, std::string> Storage;
 
-  oss_b2bua(Config& config) :
+  Config& _config;
+  Storage _dialogs;
+  Storage _registry;
+  mutex_critic_sec _storageMutex;
+
+
+  OSSB2BUA(Config& config) :
     SIPB2BTransactionManager(2, 1024),
     SIPB2BDialogStateManager(dynamic_cast<SIPB2BTransactionManager*>(this)),
     SIPB2BScriptableHandler(dynamic_cast<SIPB2BTransactionManager*>(this), dynamic_cast<SIPB2BDialogStateManager*>(this)),
@@ -74,16 +82,16 @@ public:
     //
     // Register Datastore functions
     //
-    datastore().persist = boost::bind(&oss_b2bua::dbPersist, this, _1);
-    datastore().getAll = boost::bind(&oss_b2bua::dbGetAll, this, _1);
-    datastore().removeSession = boost::bind(&oss_b2bua::dbRemoveSession, this, _1);
-    datastore().removeAllDialogs = boost::bind(&oss_b2bua::dbRemoveAllDialogs, this, _1);
-    datastore().persistReg = boost::bind(&oss_b2bua::dbPersistReg, this, _1);
-    datastore().getOneReg = boost::bind(&oss_b2bua::dbGetOneReg, this, _1, _2);
-    datastore().getReg = boost::bind(&oss_b2bua::dbGetReg, this, _1, _2);
-    datastore().removeReg = boost::bind(&oss_b2bua::dbRemoveReg, this, _1);
-    datastore().removeAllReg = boost::bind(&oss_b2bua::dbRemoveAllReg, this, _1);
-    datastore().getAllReg = boost::bind(&oss_b2bua::dbGetAllReg, this, _1);
+    datastore().persist = boost::bind(&OSSB2BUA::dbPersist, this, _1);
+    datastore().getAll = boost::bind(&OSSB2BUA::dbGetAll, this, _1);
+    datastore().removeSession = boost::bind(&OSSB2BUA::dbRemoveSession, this, _1);
+    datastore().removeAllDialogs = boost::bind(&OSSB2BUA::dbRemoveAllDialogs, this, _1);
+    datastore().persistReg = boost::bind(&OSSB2BUA::dbPersistReg, this, _1);
+    datastore().getOneReg = boost::bind(&OSSB2BUA::dbGetOneReg, this, _1, _2);
+    datastore().getReg = boost::bind(&OSSB2BUA::dbGetReg, this, _1, _2);
+    datastore().removeReg = boost::bind(&OSSB2BUA::dbRemoveReg, this, _1);
+    datastore().removeAllReg = boost::bind(&OSSB2BUA::dbRemoveAllReg, this, _1);
+    datastore().getAllReg = boost::bind(&OSSB2BUA::dbGetAllReg, this, _1);
     //
     // Initialize the transport
     //
@@ -96,67 +104,151 @@ public:
     stack().transport().defaultListenerAddress() = listener;
     stack().transport().setTCPPortRange(TCP_PORT_BASE, TCP_PORT_MAX);
     stack().transportInit();
+
+    registerDefaultHandler(dynamic_cast<SIPB2BHandler*>(this));
   }
 
   bool dbPersist(const DialogData& dialogData)
   {
-    return false;
+    mutex_critic_sec_lock lock(_storageMutex);
+    std::string data;
+    dialogData.toJsonString(data);
+    _dialogs[dialogData.sessionId] = data;
+    return true;
   }
   void dbGetAll(DialogList& dialogs)
   {
-
+    mutex_critic_sec_lock lock(_storageMutex);
+    for (Storage::const_iterator iter = _dialogs.begin(); iter != _dialogs.end(); iter++)
+    {
+      DialogData dialog;
+      dialog.fromJsonString(iter->second);
+      dialogs.push_back(dialog);
+    }
   }
 
   void dbRemoveSession(const std::string& sessionId)
   {
-
+    mutex_critic_sec_lock lock(_storageMutex);
+    _dialogs.erase(sessionId);
   }
 
   void dbRemoveAllDialogs(const std::string& callId)
   {
+    std::vector<std::string> deleteThese;
+    DialogList dialogs;
+    dbGetAll(dialogs);
 
+    //
+    // Only lock the mutex after dbGetAll (it's non-recursive!)
+    //
+    mutex_critic_sec_lock lock(_storageMutex);
+    for (DialogList::const_iterator iter = dialogs.begin(); iter != dialogs.end(); iter++)
+      if (iter->leg1.callId == callId)
+        deleteThese.push_back(iter->sessionId);
+
+    for (std::vector<std::string>::const_iterator iter = deleteThese.begin(); iter != deleteThese.end(); iter++)
+      _dialogs.erase(*iter);
   }
 
   bool dbPersistReg(const RegData& regData)
   {
-    return false;
+    mutex_critic_sec_lock lock(_storageMutex);
+    if (regData.key.empty() || regData.aor.empty() || regData.contact.empty())
+    {
+      OSS_LOG_ERROR("Invalid registration record.");
+      return false;
+    }
+    std::string data;
+    regData.toJsonString(data);
+    OSS_LOG_INFO("Persisting registration " << regData.key << " for AOR: " << regData.aor << " Binding: " << regData.contact);
+    _registry[regData.key] = data;
+    return true;
   }
 
   bool dbGetOneReg(const std::string& regId, RegData& regData)
   {
-    return false;
+    mutex_critic_sec_lock lock(_storageMutex);
+    OSS_LOG_INFO("OSSB2BUA::getOneReg " << regId);
+    std::string data;
+    if (_registry.find(regId) == _registry.end())
+    {
+      OSS_LOG_INFO("Unable to find registration for " << regId );
+      return false;
+    }
+    OSS_LOG_INFO("OSSB2BUA::getOneReg " << regId << " FOUND");
+    data = _registry[regId];
+    regData.fromJsonString(data);
+    OSS_LOG_INFO("Found registration for " << regData.key << " AOR: " << regData.aor << " Binding: " << regData.contact);
+    return true;
   }
 
   bool dbGetReg(const std::string& regIdPrefix, RegList& regData)
   {
-    return false;
+    mutex_critic_sec_lock lock(_storageMutex);
+    for (Storage::const_iterator iter = _registry.begin(); iter != _registry.end(); iter++)
+    {
+      if (OSS::string_starts_with(iter->first, regIdPrefix.c_str()))
+      {
+        RegData data;
+        data.fromJsonString(iter->second);
+        regData.push_back(data);
+      }
+    }
+    return true;
   }
 
   void dbRemoveReg(const std::string& regId)
   {
-
+    mutex_critic_sec_lock lock(_storageMutex);
+    _registry.erase(regId);
   }
 
   void dbRemoveAllReg(const std::string& regIdPrefix)
   {
-
+    std::vector<std::string> deleteThese;
+    RegList regs;
+    dbGetReg(regIdPrefix, regs);
+    //
+    // Only lock the mutex after dbGetReg (it's non-recursive!)
+    //
+    mutex_critic_sec_lock lock(_storageMutex);
+    for (RegList::const_iterator iter = regs.begin(); iter != regs.end(); iter++)
+        deleteThese.push_back(iter->key);
+    for (std::vector<std::string>::const_iterator iter = deleteThese.begin(); iter != deleteThese.end(); iter++)
+      _registry.erase(*iter);
   }
 
   void dbGetAllReg(RegList& regs)
   {
+    mutex_critic_sec_lock lock(_storageMutex);
+    for (Storage::const_iterator iter = _registry.begin(); iter != _registry.end(); iter++)
+    {
+      RegData data;
+      data.fromJsonString(iter->second);
+      regs.push_back(data);
+    }
+  }
 
+  bool run()
+  {
+    stack().run();
+    dynamic_cast<SIPB2BDialogStateManager*>(this)->run();
+    dynamic_cast<SIPB2BScriptableHandler*>(this)->rtpProxy().run(RTP_PROXY_THREAD_COUNT);
+    return true;
   }
 
   bool onProcessRequest(MessageType type, const SIPMessage::Ptr& pRequest)
   {
     pRequest->setProperty("route-action", "accept");
+    pRequest->setProperty("auth-action", "accept");
     return true;
   }
 
-}; // class oss_b2bua
+}; // class OSSB2BUA
 
 
-inline void  daemonize(int argc, char** argv, bool& isDaemon)
+void  daemonize(int argc, char** argv, bool& isDaemon)
 {
   for (int i = 0; i < argc; i++)
   {
@@ -451,7 +543,7 @@ int main(int argc, char** argv)
 
   OSS::OSS_init();
 
-  ServiceOptions options(argc, argv, "oss_b2bua");
+  ServiceOptions options(argc, argv, "OSSB2BUA");
   if (!prepareOptions(options) || options.hasOption("help"))
   {
     options.displayUsage(std::cout);
@@ -466,7 +558,7 @@ int main(int argc, char** argv)
 
   try
   {
-    oss_b2bua ua(config);
+    OSSB2BUA ua(config);
     ua.run();
     OSS::app_wait_for_termination_request();
   }
