@@ -36,6 +36,14 @@ Requires: libpcap
 BuildRequires: libdnet-devel
 Requires: libdnet
 
+BuildRequires: xmlrpc-c-devel
+Requires: xmlrpc-c
+Requires: xmlrpc-c-client
+Requires: xmlrpc-c-client++
+Requires: xmlrpc-c-c++
+
+
+
 BuildRequires: poco-devel
 Requires: poco-crypto
 Requires: poco-data
