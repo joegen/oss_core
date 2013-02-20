@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "OSS/SIP/SIPMessage.h"
+#include "OSS/SIP/SIPContact.h"
 #include "OSS/SIP/SIPRoute.h"
 #include "OSS/SIP/SIPURI.h"
 #include <iostream>
@@ -107,3 +108,19 @@ TEST(ParserTest, test_route_header_parser)
   }
 }
 
+TEST(ParserTest, test_route_header_host_port_comparison)
+{
+  SIP::SIPRoute route1("<sip:192.168.1.10:5060;transport=udp;sbc-session-id=165849452091134292041821654391;sbc-call-index=2;lr>");
+  SIP::SIPRoute route2("<sip:192.168.1.10:5060;transport=udp;lr;sbc-session-id=165849452091134292041821654391;sbc-call-index=2>");
+  
+  SIP::ContactURI c1;
+  route1.getAt(c1, 0);
+  
+  SIP::ContactURI c2;
+  route2.getAt(c2, 0);
+  
+  std::string hp1 = c1.getHostPort();
+  std::string hp2 = c2.getHostPort();
+
+  ASSERT_STREQ(hp1.c_str(), hp2.c_str());
+}
