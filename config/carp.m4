@@ -24,7 +24,7 @@ dnl Check for types
 AC_TYPE_SIGNAL
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
-AC_TYPE_SSIZE_T
+#AC_TYPE_SSIZE_T
 AC_CHECK_TYPE(dev_t, , [AC_DEFINE(dev_t, unsigned int, [dev_t type])],
 [
 #ifdef HAVE_UNISTD_H

@@ -13,7 +13,7 @@
 # include <locale.h>
 #endif
 #include "log.h"
-#include "daemonize.h"
+/*#include "daemonize.h"*/
 #include "ucarp_p.h"
 
 #ifdef WITH_DMALLOC

@@ -682,7 +682,8 @@ bool SIPB2BScriptableHandler::onRouteResponse(
 
 
   std::string respondtoPacketSource;
-  if (!disableNatCompensation && pTransaction->getProperty("respond-to-packet-source", respondtoPacketSource) && respondtoPacketSource == "1")
+  pTransaction->getProperty("respond-to-packet-source", respondtoPacketSource);
+  if (!disableNatCompensation && respondtoPacketSource != "0")
   {
     target = pTransport->getRemoteAddress();
     return true;
