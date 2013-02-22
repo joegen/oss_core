@@ -24,6 +24,8 @@ BuildRequires: db4-devel
 Requires: db4
 Requires: openssl >= 0.9.7a
 Requires: pcre >= 4.5
+BuildRequires: iptables
+BuildRequires: iproute
 
 BuildRequires: boost-devel
 Requires: boost
