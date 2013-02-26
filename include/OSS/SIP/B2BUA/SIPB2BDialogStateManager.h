@@ -1257,7 +1257,7 @@ public:
       }
       else
       {
-        OSS_LOG_WARNING(logId <<"Unable to process ACK. There is no 2xx retransmisison in cache.");
+        OSS_LOG_ERROR(logId << " Unable to find 2xx dialog-id: " << cacheId.str() << " in retransmission cache.");
         throw B2BUAStateException("Unable to process ACK. There is no 2xx retransmisison in cache.");
       }
 

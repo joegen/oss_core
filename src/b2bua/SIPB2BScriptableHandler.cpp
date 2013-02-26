@@ -1219,6 +1219,7 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
       boost::any cacheItem = pResponse;
       pResponse->setProperty("session-id", sessionId);
       _2xxRetransmitCache.add(cacheId.str(), cacheItem);
+      OSS_LOG_DEBUG(pTransaction->getLogId() << " Added 2xx dialog-id: " << cacheId.str() << " to retransmission cache.");
     }
     return;
   }
@@ -1247,6 +1248,7 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
       boost::any cacheItem = pResponse;
       pResponse->setProperty("session-id", sessionId);
       _2xxRetransmitCache.add(cacheId.str(), cacheItem);
+      OSS_LOG_DEBUG(pTransaction->getLogId() << " Added 2xx dialog-id: " << cacheId.str() << " to retransmission cache.");
     }
   }
   else if (pResponse->isResponseTo("BYE"))
