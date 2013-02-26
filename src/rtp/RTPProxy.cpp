@@ -731,7 +731,7 @@ void RTPProxy::setResizerSamples(int leg1, int leg2)
 bool RTPProxy::validateBuffer(boost::array<char, RTP_PACKET_BUFFER_SIZE>& buff, int size)
 {
   OSS::RTP::RTPPacket packet((u_char*)buff.data(), (unsigned int)size);
-  return packet.getVersion() == 2;
+  return packet.getVersion() == 2; //TODO: magic value
 }
 
 } } // OSS::RTP

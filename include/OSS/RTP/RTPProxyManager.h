@@ -48,6 +48,7 @@ namespace RTP {
   
 
 typedef boost::unordered_map<std::string, RTPProxySession::Ptr> RTPProxySessionList;
+//TODO: Document the usage of RTPProxyCounter
 typedef std::map<std::string, std::size_t> RTPProxyCounter;
 
 class OSS_API RTPProxyManager : private boost::noncopyable
@@ -55,13 +56,13 @@ class OSS_API RTPProxyManager : private boost::noncopyable
 public:
   
 
-  RTPProxyManager(int houseKeepingInterval = 5000);
+  RTPProxyManager(int houseKeepingInterval = 5000);//TODO:magic value
     /// Creates a new RTPProxyManager
 
   ~RTPProxyManager();
     /// Destroys the RTPProxyManager
 
-  void run(int threadCount, int readTimeout = 600000);
+  void run(int threadCount, int readTimeout = 600000);//TODO:magic value
     /// Runs the io service for async operations
     ///
     /// The threadCount parameter specifies the number
@@ -80,7 +81,7 @@ public:
   void recycleState();
     /// This method recycle state files that weren't deleted by the previous
     /// instance.  Assuming this was dues to a restart, recycling state would
-    /// allow the preiously affected streams to recontinue as if nothing happened.
+    /// allow the previously affected streams to recontinue as if nothing happened.
 
   void stop();
     /// Stop the event loop.  This function will block until all threads have exited.
