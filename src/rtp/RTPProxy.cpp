@@ -69,13 +69,6 @@ bool RTPProxy::open(
   _pLeg1Socket->open(boost::asio::ip::udp::v4());
   _pLeg2Socket->open(boost::asio::ip::udp::v4());
 
-  {
-  std::ostringstream logMsg;
-  logMsg <<  _pSession->logId() << " RTP Opening sockets " <<  leg1Listener.toIpPortString() << "/"
-    << leg2Listener.toIpPortString();
-  OSS::log_debug(logMsg.str());
-  }
-
   boost::asio::ip::address addr1 = const_cast<OSS::IPAddress&>(leg1Listener).address();
   _localEndPointLeg1 = boost::asio::ip::udp::endpoint(addr1, leg1Listener.getPort());
   _localEndPointLeg1External = const_cast<OSS::IPAddress&>(leg1Listener).externalAddress();
@@ -90,6 +83,13 @@ bool RTPProxy::open(
     _pLeg2Socket->bind(_localEndPointLeg2, ec);
     if (!ec)
     {
+      {
+      std::ostringstream logMsg;
+      logMsg <<  _pSession->logId() << " RTP Opened sockets " <<  leg1Listener.toIpPortString() << "/"
+        << leg2Listener.toIpPortString();
+      OSS::log_debug(logMsg.str());
+      }
+
       _csSessionMutex.unlock();
       return true;
     }
@@ -351,6 +351,12 @@ void RTPProxy::handleLeg1FrameRead(
           {
           }
         }
+      }
+      else
+      {
+        OSS_LOG_DEBUG(_pSession->logId() << " RTP " << "BYTES=" << bytes_transferred
+          << " SRC (Leg1): " << _senderEndPointLeg1.address().to_string() << ":"
+          << _senderEndPointLeg1.port() << " cannot be relayed.  Connection information to remote peer is not yet known.");
       }
     }
     _csLeg2Mutex.unlock();

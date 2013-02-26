@@ -488,7 +488,9 @@ void RTPProxySession::handleInitialSDPOffer(
       throw SDPException("Unable to parse media address from SDP offer.");
 
     bool createProxy = false;
-    if (!forceCreateProxy && mediaAddress.isValid()
+    if (mediaAddress == routeLocalInterface)
+      createProxy = false;
+    else if (!forceCreateProxy && mediaAddress.isValid()
       && mediaAddress.isPrivate() && mediaAddress != packetSourceIP)
       createProxy = true;
     else if(forceCreateProxy)
@@ -581,7 +583,9 @@ void RTPProxySession::handleInitialSDPOffer(
       throw SDPException("Unable to parse media address from SDP offer.");
 
     bool createProxy = false;
-    if (!forceCreateProxy && mediaAddress.isValid()
+    if (mediaAddress == routeLocalInterface)
+      createProxy = false;
+    else if (!forceCreateProxy && mediaAddress.isValid()
       && mediaAddress.isPrivate() && mediaAddress != packetSourceIP)
       createProxy = true;
     else if(forceCreateProxy)
@@ -676,7 +680,9 @@ void RTPProxySession::handleInitialSDPOffer(
       throw SDPException("Unable to parse media address from SDP offer.");
 
     bool createProxy = false;
-    if (!forceCreateProxy && mediaAddress.isValid()
+    if (mediaAddress == routeLocalInterface)
+      createProxy = false;
+    else if (!forceCreateProxy && mediaAddress.isValid()
       && mediaAddress.isPrivate() && mediaAddress != packetSourceIP)
       createProxy = true;
     else if(forceCreateProxy)
@@ -1015,6 +1021,10 @@ void RTPProxySession::handleInitialSDPAnswer(
   {
     sdp = offer.toString();
     dumpStateFile();
+  }
+  else
+  {
+    setInactive();
   }
 }
 

@@ -899,10 +899,20 @@ void SIPB2BScriptableHandler::onProcessResponseBody(
   /// so that RTP passes through the application.
   ///
 {
+  //
+  // Ignore OPTIONS response
+  //
+  if (pResponse->isResponseTo("OPTIONS"))
+    return;
+
   std::string noRTPProxy;
   if (pTransaction->getProperty("no-rtp-proxy", noRTPProxy) && noRTPProxy == "1")
     return;
 
+  //
+  // Note:  We should stop caching responses since a foked INVITE can have
+  // multiple SDP responses
+  //
   std::string responseSDP;
   if (pTransaction->getProperty("response-sdp", responseSDP))
   {
@@ -1728,7 +1738,7 @@ void SIPB2BScriptableHandler::handleOptionsResponse(
   //
   if (e)
   {
-    SIPMessage::Ptr pRequest = pTransaction->fsm()->getRequest();
+    SIPMessage::Ptr pRequest = pTransaction->getInitialRequest();
     SIPFrom from = pRequest->hdrGet("from");
     std::string user = from.getUser();
     if (user != "exit")
