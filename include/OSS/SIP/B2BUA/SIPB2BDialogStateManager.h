@@ -511,6 +511,9 @@ public:
             std::list<std::string> recordRoutes;
             SIPRoute::msgGetRecordRoutes(pResponse.get(), recordRoutes);
 
+            if (!recordRoutes.empty())
+              leg1.routeSet.clear();
+
             for (std::list<std::string>::reverse_iterator iter = recordRoutes.rbegin();
               iter != recordRoutes.rend(); iter++)
             {
@@ -611,6 +614,9 @@ public:
           //
           std::list<std::string> recordRoutes;
           SIPRoute::msgGetRecordRoutes(pResponse.get(), recordRoutes);
+
+          if (!recordRoutes.empty())
+              leg2.routeSet.clear();
 
           for (std::list<std::string>::iterator iter = recordRoutes.begin();
             iter != recordRoutes.end(); iter++)
