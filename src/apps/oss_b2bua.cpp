@@ -333,6 +333,7 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionString('L', "log-file", "Specify the application log file.");
 
   options.addOptionString('i', "interface-address", "The IP Address where the B2BUA will listener for connections.");
+  options.addOptionString('x', "external-address", "The Public IP Address if the B2BUA is behind a firewall.");
   options.addOptionInt('p', "port", "The port where the B2BUA will listen for connections.");
   options.addOptionString('t', "target-address", "IP Address, Host or DNS/SRV address of your SIP Server.");
   options.addOptionFlag('r', "allow-relay", "Allow relaying of transactions towards SIP Servers other than the one specified in the target-domain.");
@@ -500,6 +501,8 @@ void prepareListenerInfo(Config& config, ServiceOptions& options)
     OSS_LOG_FATAL("Unable to bind to interface " << config.address << ":" << config.port << "!");
     _exit(-1);
   }
+
+  options.getOption("external-address", config.externalAddress);
 }
 
 void prepareTargetInfo(Config& config, ServiceOptions& options)

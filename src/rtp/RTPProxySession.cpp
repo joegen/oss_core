@@ -445,6 +445,9 @@ void RTPProxySession::handleInitialSDPOffer(
   _hasOfferedAudioProxy = false;
   _hasOfferedVideoProxy = false;
   _hasOfferedFaxProxy = false;
+  _leg1Identifier = "";
+  _leg2Identifier = "";
+  _lastOfferIndex = 0;
 
   bool forceCreateProxy = rtpAttribute.forceCreate || rtpAttribute.forcePEAEncryption;
 
@@ -488,7 +491,9 @@ void RTPProxySession::handleInitialSDPOffer(
       throw SDPException("Unable to parse media address from SDP offer.");
 
     bool createProxy = false;
-    if (!forceCreateProxy && mediaAddress.isValid()
+    if (mediaAddress.compare(routeLocalInterface, false /*don't include port*/))
+      createProxy = false;
+    else if (!forceCreateProxy && mediaAddress.isValid()
       && mediaAddress.isPrivate() && mediaAddress != packetSourceIP)
       createProxy = true;
     else if(forceCreateProxy)
@@ -581,7 +586,9 @@ void RTPProxySession::handleInitialSDPOffer(
       throw SDPException("Unable to parse media address from SDP offer.");
 
     bool createProxy = false;
-    if (!forceCreateProxy && mediaAddress.isValid()
+    if (mediaAddress.compare(routeLocalInterface, false /*don't include port*/))
+      createProxy = false;
+    else if (!forceCreateProxy && mediaAddress.isValid()
       && mediaAddress.isPrivate() && mediaAddress != packetSourceIP)
       createProxy = true;
     else if(forceCreateProxy)
@@ -676,7 +683,9 @@ void RTPProxySession::handleInitialSDPOffer(
       throw SDPException("Unable to parse media address from SDP offer.");
 
     bool createProxy = false;
-    if (!forceCreateProxy && mediaAddress.isValid()
+    if (mediaAddress.compare(routeLocalInterface, false /*don't include port*/))
+      createProxy = false;
+    else if (!forceCreateProxy && mediaAddress.isValid()
       && mediaAddress.isPrivate() && mediaAddress != packetSourceIP)
       createProxy = true;
     else if(forceCreateProxy)
@@ -1016,6 +1025,10 @@ void RTPProxySession::handleInitialSDPAnswer(
     sdp = offer.toString();
     dumpStateFile();
   }
+  else
+  {
+    setInactive();
+  }
 }
 
 void RTPProxySession::handleSDPOffer(
@@ -1070,11 +1083,28 @@ void RTPProxySession::handleSDPOffer(
     return;
   }
 
-
+  OSS_LOG_DEBUG(_logId << " SDP Session " << _identifier << " processing session update (OFFER) from leg " << legIndex);
   //
   // Process audio session
   //
   SDPMedia::Ptr audio = offer.getMedia(SDPMedia::TYPE_AUDIO);
+  SDPMedia::Ptr video = offer.getMedia(SDPMedia::TYPE_VIDEO);
+  SDPMedia::Ptr fax = offer.getMedia(SDPMedia::TYPE_FAX);
+  if ((audio && !_isAudioProxyNegotiated) ||
+    (video && !_isVideoProxyNegotiated) ||
+    (fax && !_isFaxProxyNegotiated))
+  {
+    //
+    // Although this is not really a new session
+    // treat it as one since media is being modified.
+    // Close the current stream and treat as a preliminary offer
+    //
+    stop();
+    handleInitialSDPOffer(sentBy, packetSourceIP, packetLocalInterface, route,
+      routeLocalInterface, requestType, sdp, rtpAttribute);
+    return;
+  }
+
   if (!audio && _isAudioProxyNegotiated)
   {
     //
@@ -1165,93 +1195,11 @@ void RTPProxySession::handleSDPOffer(
     _hasOfferedAudioProxy = true;
 
   }
-  else if (audio && !_isAudioProxyNegotiated)
-  {
-    //
-    // Audio wasnt existing before and is now added in an offer
-    //
-    std::string address = audio->getAddress();
-    OSS::IPAddress mediaAddress;
-    bool hasMediaLevelAddress = !address.empty();
-    if (hasMediaLevelAddress)
-      mediaAddress = address;
-    else if (!sessionAddress.empty())
-      mediaAddress = sessionAddress;
-    else
-      throw SDPException("Unable to parse media address from SDP offer.");
-
-    bool createProxy = false;
-    if (!forceCreateProxy && mediaAddress.isValid()
-      && mediaAddress.isPrivate() && mediaAddress != packetSourceIP)
-      createProxy = true;
-    else if(forceCreateProxy)
-      createProxy = true;
-
-    if (createProxy)
-    {
-      //
-      // Initialize the rtp proxy
-      //
-      OSS::IPAddress leg1DataListener = packetLocalInterface;
-      OSS::IPAddress leg2DataListener = routeLocalInterface;
-      OSS::IPAddress leg1ControlListener = packetLocalInterface;
-      OSS::IPAddress leg2ControlListener = routeLocalInterface;
-      if (_audio.open(leg1DataListener, leg2DataListener, leg1ControlListener, leg2ControlListener))
-      {
-        unsigned short dataPort = audio->getDataPort();
-        unsigned short controlPort = audio->getControlPort();
-        _audio.data().leg1Destination() = boost::asio::ip::udp::endpoint(mediaAddress.address(), dataPort);
-        _audio.control().leg1Destination() = boost::asio::ip::udp::endpoint(mediaAddress.address(), controlPort);
-        //
-        // rewrite the SDP to be presented to leg2
-        //
-        OSS::IPAddress dataAddress = _audio.data().getLeg2Address();
-        OSS::IPAddress controlAddress = _audio.control().getLeg2Address();
-
-        if (hasSessionAddress)
-        {
-          if (!hasChangedSessionAddress && !isBlackhole)
-          {
-            if (dataAddress.externalAddress().empty())
-              offer.changeAddress(dataAddress.toString(), "IP4");
-            else
-              offer.changeAddress(dataAddress.externalAddress(), "IP4");
-
-            hasChangedSessionAddress = true;
-          }
-
-          if (hasMediaLevelAddress)
-          {
-            if (dataAddress.externalAddress().empty())
-              audio->setAddressV4(dataAddress.toString());
-            else
-              audio->setAddressV4(dataAddress.externalAddress());
-          }
-        }
-        else
-        {
-          if (dataAddress.externalAddress().empty())
-            audio->setAddressV4(dataAddress.toString());
-          else
-            audio->setAddressV4(dataAddress.externalAddress());
-        }
-
-        if (!isBlackhole)
-        {
-          audio->setDataPort(dataAddress.getPort());
-          audio->setControlPort(controlAddress.getPort());
-        }
-
-        _hasOfferedAudioProxy = true;
-        _isAudioProxyNegotiated = false;
-      }
-    }
-  }
 
   //
   // Process video session
   //
-  SDPMedia::Ptr video = offer.getMedia(SDPMedia::TYPE_VIDEO);
+  
   if (!video && _isVideoProxyNegotiated)
   {
     //
@@ -1342,93 +1290,11 @@ void RTPProxySession::handleSDPOffer(
     _hasOfferedVideoProxy = true;
 
   }
-  else if (video && !_isVideoProxyNegotiated)
-  {
-    //
-    // Video wasnt existing before and is now added in an offer
-    //
-    std::string address = video->getAddress();
-    OSS::IPAddress mediaAddress;
-    bool hasMediaLevelAddress = !address.empty();
-    if (hasMediaLevelAddress)
-      mediaAddress = address;
-    else if (!sessionAddress.empty())
-      mediaAddress = sessionAddress;
-    else
-      throw SDPException("Unable to parse media address from SDP offer.");
-
-    bool createProxy = false;
-    if (!forceCreateProxy && mediaAddress.isValid()
-      && mediaAddress.isPrivate() && mediaAddress != packetSourceIP)
-      createProxy = true;
-    else if(forceCreateProxy)
-      createProxy = true;
-
-    if (createProxy)
-    {
-      //
-      // Initialize the rtp proxy
-      //
-      OSS::IPAddress leg1DataListener = packetLocalInterface;
-      OSS::IPAddress leg2DataListener = routeLocalInterface;
-      OSS::IPAddress leg1ControlListener = packetLocalInterface;
-      OSS::IPAddress leg2ControlListener = routeLocalInterface;
-      if (_video.open(leg1DataListener, leg2DataListener, leg1ControlListener, leg2ControlListener))
-      {
-        unsigned short dataPort = video->getDataPort();
-        unsigned short controlPort = video->getControlPort();
-        _video.data().leg1Destination() = boost::asio::ip::udp::endpoint(mediaAddress.address(), dataPort);
-        _video.control().leg1Destination() = boost::asio::ip::udp::endpoint(mediaAddress.address(), controlPort);
-        //
-        // rewrite the SDP to be presented to leg2
-        //
-        OSS::IPAddress dataAddress = _video.data().getLeg2Address();
-        OSS::IPAddress controlAddress = _video.control().getLeg2Address();
-
-        if (hasSessionAddress)
-        {
-          if (!hasChangedSessionAddress && !isBlackhole)
-          {
-            if (dataAddress.externalAddress().empty())
-              offer.changeAddress(dataAddress.toString(), "IP4");
-            else
-              offer.changeAddress(dataAddress.externalAddress(), "IP4");
-
-            hasChangedSessionAddress = true;
-          }
-
-          if (hasMediaLevelAddress)
-          {
-            if (dataAddress.externalAddress().empty())
-              video->setAddressV4(dataAddress.toString());
-            else
-              video->setAddressV4(dataAddress.externalAddress());
-          }
-        }
-        else
-        {
-          if (dataAddress.externalAddress().empty())
-            video->setAddressV4(dataAddress.toString());
-          else
-            video->setAddressV4(dataAddress.externalAddress());
-        }
-
-        if (!isBlackhole)
-        {
-          video->setDataPort(dataAddress.getPort());
-          video->setControlPort(controlAddress.getPort());
-        }
-
-        _hasOfferedVideoProxy = true;
-        _isVideoProxyNegotiated = false;
-      }
-    }
-  }
-
+  
   //
   // Process fax session
   //
-  SDPMedia::Ptr fax = offer.getMedia(SDPMedia::TYPE_FAX);
+  
   if (!fax && _isFaxProxyNegotiated)
   {
     //
@@ -1519,105 +1385,7 @@ void RTPProxySession::handleSDPOffer(
     _hasOfferedFaxProxy = true;
 
   }
-  else if (fax && !_isFaxProxyNegotiated)
-  {
-    //
-    // Fax wasnt existing before and is now added in an offer
-    //
-    if (!audio && !video)
-    {
-      OSS_LOG_WARNING(_logId << "RTP: Reinitializing fresh negotiation for T.38");
-      //
-      // This is a new session. Close the current stream and treat as a preliminary offer
-      //
-      stop();
-      handleInitialSDPOffer(sentBy, packetSourceIP, packetLocalInterface, route,
-        routeLocalInterface, requestType, sdp, rtpAttribute);
-      return;
-    }
-    else
-    {
-      OSS_LOG_WARNING(_logId << "RTP: Not reinitalizing session for T.38 due to existence of previous media.");
-
-      std::string address = fax->getAddress();
-      OSS::IPAddress mediaAddress;
-      bool hasMediaLevelAddress = !address.empty();
-      if (hasMediaLevelAddress)
-        mediaAddress = address;
-      else if (!sessionAddress.empty())
-        mediaAddress = sessionAddress;
-      else
-        throw SDPException("Unable to parse media address from SDP offer.");
-
-      bool createProxy = false;
-      if (!forceCreateProxy && mediaAddress.isValid()
-        && mediaAddress.isPrivate() && mediaAddress != packetSourceIP)
-        createProxy = true;
-      else if(forceCreateProxy)
-        createProxy = true;
-
-      if (createProxy)
-      {
-        //
-        // Initialize the rtp proxy
-        //
-        OSS::IPAddress leg1DataListener = packetLocalInterface;
-        OSS::IPAddress leg2DataListener = routeLocalInterface;
-        OSS::IPAddress leg1ControlListener = packetLocalInterface;
-        OSS::IPAddress leg2ControlListener = routeLocalInterface;
-        if (_fax.open(leg1DataListener, leg2DataListener, leg1ControlListener, leg2ControlListener))
-        {
-          unsigned short dataPort = fax->getDataPort();
-          unsigned short controlPort = fax->getControlPort();
-          _fax.data().leg1Destination() = boost::asio::ip::udp::endpoint(mediaAddress.address(), dataPort);
-          _fax.control().leg1Destination() = boost::asio::ip::udp::endpoint(mediaAddress.address(), controlPort);
-          //
-          // rewrite the SDP to be presented to leg2
-          //
-          OSS::IPAddress dataAddress = _fax.data().getLeg2Address();
-          OSS::IPAddress controlAddress = _fax.control().getLeg2Address();
-
-          if (hasSessionAddress)
-          {
-            if (!hasChangedSessionAddress && !isBlackhole)
-            {
-              if (dataAddress.externalAddress().empty())
-                offer.changeAddress(dataAddress.toString(), "IP4");
-              else
-                offer.changeAddress(dataAddress.externalAddress(), "IP4");
-
-              hasChangedSessionAddress = true;
-            }
-
-            if (hasMediaLevelAddress)
-            {
-              if (dataAddress.externalAddress().empty())
-                fax->setAddressV4(dataAddress.toString());
-              else
-                fax->setAddressV4(dataAddress.externalAddress());
-            }
-          }
-          else
-          {
-            if (dataAddress.externalAddress().empty())
-              fax->setAddressV4(dataAddress.toString());
-            else
-              fax->setAddressV4(dataAddress.externalAddress());
-          }
-
-          if (!isBlackhole)
-          {
-            fax->setDataPort(dataAddress.getPort());
-            fax->setControlPort(controlAddress.getPort());
-          }
-
-          _hasOfferedFaxProxy = true;
-          _isFaxProxyNegotiated = false;
-        }
-      }
-    }
-  }
-
+  
   if (_hasOfferedAudioProxy || _hasOfferedVideoProxy || _hasOfferedFaxProxy)
   {
     sdp = offer.toString();
@@ -1686,6 +1454,8 @@ void RTPProxySession::handleSDPAnswer(
   }
 
   _lastOfferIndex = 0;
+
+  OSS_LOG_DEBUG(_logId << " SDP Session " << _identifier << " processing session update (ANSWER) from leg " << legIndex);
 
   //
   // Process audio session
