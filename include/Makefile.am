@@ -203,7 +203,8 @@ nobase_include_HEADERS = \
     OSS/Net/Firewall.h \
     OSS/Net/oss_carp.h \
     OSS/Net/Carp.h \
-    OSS/UTL/AdaptiveDelay.h
+    OSS/UTL/AdaptiveDelay.h \
+    OSS/UTL/FastRandom.h
 
 #    OSS/websocketpp/common.hpp \
 #    OSS/websocketpp/connection.hpp \
