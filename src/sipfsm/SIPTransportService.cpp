@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -52,8 +50,12 @@ SIPTransportService::SIPTransportService(SIPFSMDispatch* pDispatch):
 
 SIPTransportService::~SIPTransportService()
 {
-  
-
+  if (_pIoServiceThread)
+  {
+    _pIoServiceThread->join();
+    delete _pIoServiceThread;
+    _pIoServiceThread = 0;
+  }
 }
 
 void SIPTransportService::initialize(const boost::filesystem::path& cfgDirectory)
