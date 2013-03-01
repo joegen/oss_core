@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -68,15 +66,7 @@ SIPTransaction::Ptr SIPTransactionPool::findTransaction(const SIPMessage::Ptr& p
   if (!pMsg->getTransactionId(id))
     return SIPTransaction::Ptr();
 
-  SIPTransaction::Ptr trn = findTransaction(id, canCreateTrn);
-
-  if (trn)
-  {
-    SIPTransaction::Ptr child = findChildTransaction(pMsg, pTransport, trn);
-    if(child)
-      return child;
-  }
-  return trn;
+  return findTransaction(id, canCreateTrn);
 }
 
 

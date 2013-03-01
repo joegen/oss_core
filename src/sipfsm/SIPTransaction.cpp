@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -47,9 +45,24 @@ SIPTransaction::SIPTransaction():
   _dialogTarget(),
   _willSendAckFor2xx(false),
   _isXOREncrypted(false),
-  _isInitialRequest(true),
-  _isChildTransaction(false)
+  _pParent(0)
 {
+}
+
+SIPTransaction::SIPTransaction(SIPTransaction* pParent) :
+  _type(TYPE_UNKNOWN),
+  _owner(0),
+  _transportService(0),
+  _state(TRN_STATE_IDLE),
+  _localAddress(),
+  _remoteAddress(),
+  _sendAddress(),
+  _dialogTarget(),
+  _willSendAckFor2xx(false),
+  _isXOREncrypted(false),
+  _pParent(pParent)
+{
+
 }
 	
 SIPTransaction::~SIPTransaction()
@@ -77,45 +90,71 @@ void SIPTransaction::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
 {
   OSS::mutex_lock lock(_mutex);
 
-  if (_isInitialRequest)
+  bool isAck = pMsg->isRequest("ACK");
+
+  if (pMsg->isRequest() && !_pInitialRequest && !isAck)
+    _pInitialRequest = pMsg;
+
+  if (_logId.empty())
+    _logId = pMsg->createContextId(true);
+
+  if (!_transport)
+    _transport = pTransport;
+
+  if (!_localAddress.isValid())
+    _localAddress = pTransport->getLocalAddress();
+
+  if (!_remoteAddress.isValid())
+    _remoteAddress = pTransport->getRemoteAddress();
+
+  if (SIPXOR::isEnabled() && !_isXOREncrypted)
   {
-    _isInitialRequest = false;
+    std::string isXOR;
+    _isXOREncrypted = pMsg->getProperty("xor", isXOR) && isXOR == "1";
+  }
+  
 
-    if (_logId.empty())
-      _logId = pMsg->createContextId(true);
+  if (isParent())
+  {
+    //
+    // Only log if this is the parent transaction
+    //
+    std::ostringstream logMsg;
+    logMsg << _logId << "<<< " << pMsg->startLine()
+    << " LEN: " << pTransport->getLastReadCount()
+    << " SRC: " << _remoteAddress.toIpPortString()
+    << " DST: " << _localAddress.toIpPortString()
+    << " EXT: " << "[" << pTransport->getExternalAddress() << "]"
+    << " FURI: " << pMsg->hdrGet("from")
+    << " ENC: " << _isXOREncrypted
+    << " PROT: " << pTransport->getTransportScheme();
+    OSS::log_information(logMsg.str());
 
-    if (!_transport)
-      _transport = pTransport;
-
-    if (!_localAddress.isValid())
-      _localAddress = pTransport->getLocalAddress();
-
-    if (!_remoteAddress.isValid())
-      _remoteAddress = pTransport->getRemoteAddress();
-
-    if (SIPXOR::isEnabled())
-    {
-      std::string isXOR;
-      _isXOREncrypted = pMsg->getProperty("xor", isXOR) && isXOR == "1";
-    }
+    if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
+      OSS::log_debug(pMsg->createLoggerData());
   }
 
-  std::ostringstream logMsg;
-  logMsg << _logId << "<<< " << pMsg->startLine()
-  << " LEN: " << pTransport->getLastReadCount()
-  << " SRC: " << _remoteAddress.toIpPortString()
-  << " DST: " << _localAddress.toIpPortString()
-  << " EXT: " << "[" << pTransport->getExternalAddress() << "]"
-  << " FURI: " << pMsg->hdrGet("from") 
-  << " ENC: " << _isXOREncrypted
-  << " PROT: " << pTransport->getTransportScheme();
-  OSS::log_information(logMsg.str());
 
-  if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
-    OSS::log_debug(pMsg->createLoggerData());
-  
-  if (_fsm)
+  //
+  // If this is a request and is not an ACK, then the parent IST fsm must always handle it
+  //
+  if (pMsg->isRequest() && isParent() && !isAck)
+  {
     _fsm->onReceivedMessage(pMsg, pTransport);
+  }
+  else
+  {
+    //
+    // This is a response or an ACK and the transaction could have branched out
+    //
+    SIPTransaction::Ptr pBranch = findBranch(pMsg);
+    if (!pBranch)
+      _fsm->onReceivedMessage(pMsg, pTransport);
+    else
+      pBranch->onReceivedMessage(pMsg, pTransport);
+  }
+
+  
 }
 
 void SIPTransaction::sendRequest(
@@ -126,9 +165,14 @@ void SIPTransaction::sendRequest(
 {
   OSS::mutex_lock lock(_mutex);
 
-  if (_isInitialRequest)
+  if (!pRequest->isRequest())
   {
-    _isInitialRequest = false;
+    throw OSS::SIP::SIPException("Sending a REQUEST using sendRequest() is illegal!");
+  }
+
+  if (!_pInitialRequest)
+  {
+    _pInitialRequest = pRequest;
     if (_logId.empty())
       _logId = pRequest->createContextId(true);
     
@@ -218,49 +262,64 @@ void SIPTransaction::sendResponse(
   if (!pResponse->isResponse())
     throw OSS::SIP::SIPException("Sending a REQUEST using sendResponse() is illegal!");
 
-  if (!_transport)
+  if (!_transport && isParent())
     throw OSS::SIP::SIPException("Transport Not Ready!");
+  else if (!isParent())
+    _transport = _pParent->_transport;
 
   if (_sendAddress.getPort() == 0)
     _sendAddress = sendAddress;
 
-  if (_transport->isReliableTransport())
-  {
-    if (_transport->writeKeepAlive())
-    {
-      writeMessage(pResponse);
-    }
-    else
-    {
-      //
-      // Keep-alive failed so create a new transport
-      //
-      if (_localAddress.isValid() && _sendAddress.isValid())
-      {
-        //
-        // According to RFC 3261, if there is any transport failure, we must try to
-        // re-estabish a connectoin to the via sentby parameter instead
-        //
-        std::string transport;
-        if (SIPVia::msgGetTopViaTransport(pResponse.get(), transport))
-        {
-          _transport = _transportService->createClientTransport(_localAddress, _sendAddress, transport);
-          writeMessage(pResponse);
-        }
-      }
-      else
-      {
-        OSS_LOG_ERROR("SIPTransaction::sendResponse - Uanble to re-establish transport to send response.");
-      }
+  SIPTransaction::Ptr pBranch = findBranch(pResponse);
 
-    }
+  if (pBranch)
+  {
+    pBranch->sendResponse(pResponse, sendAddress);
+    return;
   }
   else
   {
     //
-    // This is UDP so a keep-alive check won't do us any good
+    // No branch is found.  This instance will handle the response
     //
-    writeMessage(pResponse, _sendAddress);
+    if (_transport->isReliableTransport())
+    {
+      if (_transport->writeKeepAlive())
+      {
+        writeMessage(pResponse);
+      }
+      else
+      {
+        //
+        // Keep-alive failed so create a new transport
+        //
+        if (_localAddress.isValid() && _sendAddress.isValid())
+        {
+          //
+          // According to RFC 3261, if there is any transport failure, we must try to
+          // re-estabish a connectoin to the via sentby parameter instead
+          //
+          std::string transport;
+          if (SIPVia::msgGetTopViaTransport(pResponse.get(), transport))
+          {
+            _transport = _transportService->createClientTransport(_localAddress, _sendAddress, transport);
+            writeMessage(pResponse);
+          }
+        }
+        else
+        {
+          OSS_LOG_ERROR("SIPTransaction::sendResponse - Uanble to re-establish transport to send response.");
+        }
+
+      }
+    }
+    else
+    {
+      //
+      // This is UDP so a keep-alive check won't do us any good
+      //
+      writeMessage(pResponse, _sendAddress);
+    }
   }
 }
 
@@ -337,7 +396,14 @@ void SIPTransaction::terminate()
    setState(TRN_STATE_TERMINATED);
   _fsm->cancelAllTimers();
   _fsm->onTerminate();
-  _owner->removeTransaction(_id);
+
+  if (isParent())
+  {
+    _owner->removeTransaction(_id);
+    OSS::mutex_critic_sec_lock lock(_branchesMutex);
+    for (Branches::iterator iter = _branches.begin(); iter != _branches.end(); iter++)
+      iter->second->terminate();
+  }
 }
 
 void SIPTransaction::setState(int state)
@@ -381,114 +447,52 @@ void SIPTransaction::informTU(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTr
     _responseTU(SIPTransaction::Error(), pMsg, pTransport, shared_from_this());
 }
 
-SIPTransaction::Ptr SIPTransaction::createChildTransactionFromResponse(const SIPMessage::Ptr& pMsg, const SIPTransportSession::Ptr& pTransport, bool mayExist)
+
+SIPTransaction::Ptr SIPTransaction::findBranch(const SIPMessage::Ptr& pRequest)
 {
-  SIPTransaction::Ptr pChild;
-  std::string toHeader = pMsg->hdrGet("to");
-  if (toHeader.empty())
-    return pChild; /// return a NULL child
-
-  std::string tag;
-  SIPTo to(toHeader);
-  to.getTag(tag);
-
-  if (tag.empty())
-    return pChild;
-
-  if (mayExist)
-  {
-    pChild = findChildTransaction(tag);
-    if (pChild)
-      return pChild; /// The child already exists
-  }
-
-  pChild = createChildTransactionFromResponse(tag, false);
-
-  if (pChild)
-  {
-    pChild->_transport = _transport;
-  }
-
-  return pChild;
-}
-
-SIPTransaction::Ptr SIPTransaction::createChildTransactionFromResponse(const std::string& id, bool mayExist)
-{
-  SIPTransaction::Ptr pChild;
-  if (mayExist)
-  {
-    pChild = findChildTransaction(id);
-    if (pChild)
-      return pChild; /// The child already exists
-  }
-
-  OSS::mutex_lock lock(_mutex);
-  pChild = SIPTransaction::Ptr(new SIPTransaction());
-  pChild->_isChildTransaction = true;
-
   //
-  // pChild->_parent is a weak pointer so there is no danger of cyclic pointer reference here
+  // Only a parent transaction can have branches
   //
-  pChild->_parent = shared_from_this();
-  _children[id] = pChild->shared_from_this();
-
-  pChild->_type = _type;
-  pChild->setId(id);
-  pChild->setLogId(_logId);
-
-  //
-  // A newly created ICT child must be set to TRN_STATE_CHILD regardless of the parents state
-  // Will be treated as TRYING
-  //
-  pChild->setState(TRN_STATE_CHILD);
-
-
-  //
-  // Sets the transaction pool pointer
-  //
-  pChild->_owner = _owner;
-  
-  //
-  // Attach an new FSM to child
-  //
-  pChild->_owner->onAttachFSM(pChild);
-
-  //
-  // Inherit from parent
-  //
-  pChild->_isXOREncrypted = _isXOREncrypted;
-  pChild->_localAddress = _localAddress;
-  pChild->_transportService = _transportService;
-  pChild->_responseTU = _responseTU;
-  pChild->_ackHandler = _ackHandler;
-
-  return pChild;
-}
-
-SIPTransaction::Ptr SIPTransaction::findChildTransactionFromResponse(const SIPMessage::Ptr& pMsg)
-{
-  SIPTransaction::Ptr pChild;
-
-  std::string toHeader = pMsg->hdrGet("to");
-  if (toHeader.empty())
-    return pChild; /// return a NULL child
-
-  std::string tag;
-  SIPTo to(toHeader);
-  to.getTag(tag);
-
-  return findChildTransaction(tag);
-}
-
-SIPTransaction::Ptr SIPTransaction::findChildTransaction(const std::string& id)
-{
-  OSS::mutex_lock lock(_mutex);
-
-  if (_children.find(id) == _children.end())
+  if(!isParent())
     return SIPTransaction::Ptr();
 
-  return _children.at(id);
+  OSS::mutex_critic_sec_lock lock(_branchesMutex);
+  SIPTransaction::Ptr foundBranch;
+  std::string branch = pRequest->getToTag();
+  if (branch.empty())
+    return SIPTransaction::Ptr();
+
+  Branches::iterator pBranch = _branches.find(branch);
+  
+  //
+  // Branch is non-existent.  Create a new one and attach a new FSM to it
+  //
+  if (pBranch == _branches.end())
+  {
+    foundBranch = SIPTransaction::Ptr(new SIPTransaction(this));
+    _owner->onAttachFSM(foundBranch);
+    _branches[branch] = foundBranch;
+  }
+  else
+  {
+    foundBranch = pBranch->second;
+  }
+  return foundBranch;
 }
+
+bool SIPTransaction::allBranchesCompleted() const
+{
+  OSS::mutex_critic_sec_lock lock(_branchesMutex);
+  for (Branches::const_iterator iter = _branches.begin(); iter != _branches.end(); iter++)
+  {
+    if (!iter->second->fsm()->isCompleted())
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
 
 } } // namespace OSS::SIP
 

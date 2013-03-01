@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -40,10 +38,13 @@ SIPNictPool::~SIPNictPool()
 
 void SIPNictPool::onAttachFSM(const SIPTransaction::Ptr& pTransaction)
 {
-  pTransaction->type() = SIPTransaction::TYPE_NICT;
-  pTransaction->fsm() = SIPNict::Ptr(new SIPNict(_ioService, _timerProps));
-  pTransaction->fsm()->setOwner(new SIPTransaction::WeakPtr(pTransaction));
-  pTransaction->fsm()->dispatch() = dispatch();
+  if (!pTransaction->fsm())
+  {
+    pTransaction->type() = SIPTransaction::TYPE_NICT;
+    pTransaction->fsm() = SIPNict::Ptr(new SIPNict(_ioService, _timerProps));
+    pTransaction->fsm()->setOwner(new SIPTransaction::WeakPtr(pTransaction));
+    pTransaction->fsm()->dispatch() = dispatch();
+  }
 }
 
 

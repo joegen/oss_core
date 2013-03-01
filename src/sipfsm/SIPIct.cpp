@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -42,6 +40,7 @@ SIPIct::SIPIct(
   _timerBFunc = boost::bind(&SIPIct::handleInviteTimeout, this);
   _timerDFunc = boost::bind(&SIPIct::handleDelayedTerminate, this);
   _timerMaxLifetimeFunc = boost::bind(&SIPIct::handleDelayedTerminate, this);
+  startTimerMaxLifetime(300000); /// five minutes
 }
 
 SIPIct::~SIPIct()
@@ -72,8 +71,6 @@ bool SIPIct::onSendMessage(SIPMessage::Ptr pMsg)
       startTimerA(_timerAValue);
 
     startTimerB(_timerAValue*64);
-
-    startTimerMaxLifetime(300000); /// five minutes
     return true;
   }
   else if (pMsg->isRequest("ACK"))
@@ -95,15 +92,27 @@ void SIPIct::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
   if (!pMsg->isResponse() || !pTransaction || pTransaction->getState() == SIPTransaction::TRN_STATE_TERMINATED)
     return;
 
+  SIPTransaction* pParent = pTransaction->getParent();
+
   switch (pTransaction->getState())
   {
-  case SIPTransaction::TRN_STATE_CHILD:
+  case SIPTransaction::TRN_STATE_IDLE:
   case TRYING:
     cancelTimerA();
     cancelTimerB();
+
+    if (pParent)
+    {
+      pParent->fsm()->cancelTimerA();
+      pParent->fsm()->cancelTimerB();
+    }
+
     if (pMsg->is1xx())
     {
       pTransaction->setState(PROCEEDING);
+      if (pParent->getState() < PROCEEDING)
+        pParent->setState(PROCEEDING);
+
       pTransaction->informTU(pMsg, pTransport);
     }
     else if (pMsg->is2xx())
@@ -309,6 +318,14 @@ void SIPIct::handleDelayedTerminate()
 SIPIct::Ptr SIPIct::clone() const
 {
   return SIPIct::Ptr();
+}
+
+bool SIPIct::isCompleted() const
+{
+  SIPTransaction::Ptr pTransaction = static_cast<SIPTransaction::WeakPtr*>(_owner)->lock();
+  if (!pTransaction)
+    return true; /// If we can't lock the transaction pointer it means it is termianted
+  return  pTransaction->getState() >= COMPLETED;
 }
 
 } } // OSS::SIP
