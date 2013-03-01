@@ -5,6 +5,8 @@
 #include <sstream>
 #include "OSS/Core.h"
 #include "OSS/UTL/AdaptiveDelay.h"
+#include "OSS/UTL/FastRandom.h"
+
 
 TEST(TestFoundation, blocking_queue)
 {
@@ -107,4 +109,115 @@ TEST(TestFoundation, adaptive_timer)
     ASSERT_TRUE( actual - expected <= resolution);
   else if (expected > actual)
     ASSERT_TRUE( expected - actual  <= resolution);
+}
+
+TEST(TestFoundation, random_number_generator)
+{
+  //
+  // Generate 100000 random numbers and make sure they are unique
+  //
+  const int iterations = 100000;
+  std::vector<unsigned int> numbers;
+  numbers.reserve(iterations);
+
+  OSS::UTL::FastRandom rng(time(0), time(0));
+
+  OSS::UInt64 start = OSS::getTime();
+  for (int i = 0; i < iterations; i++)
+  {
+    numbers.push_back(rng());
+  }
+  OSS::UInt64 done = OSS::getTime() - start;
+  
+  unsigned int duplicates = 0;
+  for (int i = 0; i < iterations; i++)
+  {
+    unsigned int num = numbers[i];
+    int occurence = 0;
+    for (int j = 0; j < iterations; j++)
+    {
+      if (num == numbers[j])
+        occurence++;
+    }
+    //
+    // Insist that only 2 occurence of each number generated is allowed
+    //
+    ASSERT_TRUE(occurence <= 2);
+    if (occurence > 1)
+      duplicates++;
+  }
+  //
+  // Assure 99% accuracy
+  //
+  ASSERT_TRUE(duplicates < iterations * 0.01);
+
+  numbers.clear();
+  start = OSS::getTime();
+  for (int i = 0; i < iterations; i++)
+  {
+    numbers.push_back(OSS::getRandom());
+  }
+  OSS::UInt64 done2 = OSS::getTime() - start;
+
+  unsigned int duplicates2 = 0;
+  for (int i = 0; i < iterations; i++)
+  {
+    unsigned int num = numbers[i];
+    int occurence = 0;
+    for (int j = 0; j < iterations; j++)
+    {
+      if (num == numbers[j])
+        occurence++;
+    }
+    //
+    // Insist that only 2 occurence of each number generated is allowed
+    //
+    ASSERT_TRUE(occurence <= 2);
+    if (occurence > 1)
+      duplicates2++;
+  }
+  //
+  // Assure 99% accuracy
+  //
+  ASSERT_TRUE(duplicates2 < iterations * 0.01);
+
+  numbers.clear();
+  start = OSS::getTime();
+  for (int i = 0; i < iterations; i++)
+  {
+    numbers.push_back(rng.non_deterministic_rand());
+  }
+  OSS::UInt64 done3 = OSS::getTime() - start;
+
+  unsigned int duplicates3 = 0;
+  for (int i = 0; i < iterations; i++)
+  {
+    unsigned int num = numbers[i];
+    int occurence = 0;
+    for (int j = 0; j < iterations; j++)
+    {
+      if (num == numbers[j])
+        occurence++;
+    }
+    //
+    // Insist that only 2 occurence of each number generated is allowed
+    //
+    ASSERT_TRUE(occurence <= 2);
+    if (occurence > 1)
+      duplicates3++;
+  }
+  //
+  // Assure 99% accuracy
+  //
+  ASSERT_TRUE(duplicates3 < iterations * 0.01);
+
+  std::cout << "FastRandom-time: " << done << " millisecond(s)" << std::endl;
+  std::cout << "FastRandom-duplicates: " << duplicates << std::endl;
+
+  std::cout << "OSS::getRandom-time: " << done2 << " millisecond(s)" << std::endl;
+  std::cout << "OSS::getRandom-duplicates: " << duplicates2 << std::endl;
+
+  std::cout << "FastRandom-time-nondet: " << done3 << " millisecond(s)" << std::endl;
+  std::cout << "FastRandom-duplicates-nondet: " << duplicates3 << std::endl;
+
 }

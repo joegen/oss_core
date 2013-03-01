@@ -1041,7 +1041,6 @@ void RTPProxySession::handleSDPOffer(
   std::string& sdp,
   RTPProxy::Attributes& rtpAttribute)
 {
-  bool forceCreateProxy = rtpAttribute.forceCreate;
   SDPSession offer(sdp.c_str());
   std::string sessionAddress = offer.getAddress();
   bool isBlackhole = (sessionAddress == "0.0.0.0");

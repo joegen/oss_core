@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -550,6 +548,16 @@ public:
     /// Returns the buffer containing bytes that are dropped during idle state.
     /// This is normally used to determine if the consume() method has dropped
     /// leading CRLF bytes
+
+  std::string getFromTag() const;
+    /// Return the tag parameter of the From header.
+
+  std::string getToTag() const;
+    /// Return the to tag parameter of the To header;
+
+  std::string getTopViaBranch() const;
+    /// Return the top via branhc parameter
+
 protected:
   boost::tribool consumeOne(char input);
   enum ConsumeState
