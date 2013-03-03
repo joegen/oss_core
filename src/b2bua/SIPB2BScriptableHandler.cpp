@@ -760,6 +760,11 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
   ///
   /// If the body is supported, the return value must be a null-Ptr.
 {
+  std::string contentType =  pRequest->hdrGet("content-type");
+  OSS::string_to_lower(contentType);
+  if (contentType != "application/sdp")
+    return OSS::SIP::SIPMessage::Ptr();
+
   std::string noRTPProxy;
   if (pTransaction->getProperty("no-rtp-proxy", noRTPProxy) && noRTPProxy == "1")
     return OSS::SIP::SIPMessage::Ptr();
@@ -903,6 +908,11 @@ void SIPB2BScriptableHandler::onProcessResponseBody(
   // Ignore OPTIONS response
   //
   if (pResponse->isResponseTo("OPTIONS"))
+    return;
+
+  std::string contentType = pResponse->hdrGet("content-type");
+  OSS::string_to_lower(contentType);
+  if (contentType != "application/sdp")
     return;
 
   std::string noRTPProxy;
