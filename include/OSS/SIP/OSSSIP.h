@@ -102,6 +102,15 @@ public:
     ///
     /// This must be set before calling the OSSSIP::run() method
 
+  OSS::socket_address_list& wsListeners();
+    /// Returns the WebSocket Listener vector.
+    ///
+    /// All interfaces where the WebSocket listener should bind to
+    /// must be push_back()ed into this vector.  The vector accepts
+    /// a tuple object of type OSS::OSS::IPAddress.
+    ///
+    /// This must be set before calling the OSSSIP::run() method
+
   OSS::socket_address_list& tlsListeners();
     /// Returns the TLS Listener vector.
     ///
@@ -130,6 +139,7 @@ public:
 
   void transportInit(unsigned short udpPortBase, unsigned short udpPortMax,
     unsigned short tcpPortBase, unsigned short tcpPortMax,
+    unsigned short wsPortBase, unsigned short wsPortMax,
     unsigned short tlsPortBase, unsigned short tlsPortMax);
     /// Initialize the SIP Transport.  This is similar to transportInit()
     /// Except that ports are determined based on the first available port
@@ -259,9 +269,11 @@ private:
   //
   bool _enableUDP;
   bool _enableTCP;
+  bool _enableWS;
   bool _enableTLS;
   OSS::socket_address_list _udpListeners;
   OSS::socket_address_list _tcpListeners;
+  OSS::socket_address_list _wsListeners;
   OSS::socket_address_list _tlsListeners;
   std::string _tlsCertFile;
   std::string _tlsDiffieHellmanParamFile;
@@ -295,6 +307,11 @@ inline OSS::socket_address_list& OSSSIP::udpListeners()
 inline OSS::socket_address_list& OSSSIP::tcpListeners()
 {
   return _tcpListeners;
+}
+
+inline OSS::socket_address_list& OSSSIP::wsListeners()
+{
+  return _wsListeners;
 }
 
 inline OSS::socket_address_list& OSSSIP::tlsListeners()

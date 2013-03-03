@@ -41,9 +41,11 @@ OSSSIP::OSSSIP() :
   _fsmDispatch(),
   _enableUDP(true),
   _enableTCP(true),
+  _enableWS(true),
   _enableTLS(false),
   _udpListeners(),
   _tcpListeners(),
+  _wsListeners(),
   _tlsListeners(),
   _tlsCertFile(),
   _tlsDiffieHellmanParamFile(),
@@ -64,9 +66,10 @@ void OSSSIP::transportInit()
 {
   bool hasUDP = _udpListeners.size() > 0;
   bool hasTCP = _tcpListeners.size() > 0;
+  bool hasWS  = _wsListeners.size() > 0;
   bool hasTLS = _tcpListeners.size() > 0;
   
-  if (!hasUDP && !hasTCP && !hasTLS)
+  if (!hasUDP && !hasTCP && !hasWS && !hasTLS)
     throw OSS::SIP::SIPException("No Listener Address Configured");
 
   //
@@ -98,6 +101,20 @@ void OSSSIP::transportInit()
   }
 
   //
+  // Prepare the WebSocket Transport
+  //
+  if (_enableWS)
+  {
+    for (std::size_t i = 0; i < _wsListeners.size(); i++)
+    {
+      OSS::IPAddress& iface = _wsListeners[i];
+      std::string ip = iface.address().to_string();
+      std::string port = OSS::string_from_number(iface.getPort());
+      _fsmDispatch.transport().addWSTransport(ip, port, iface.externalAddress());
+    }
+  }
+
+  //
   // Prepare the TLS Transport
   //
   if (_enableTLS)
@@ -114,6 +131,7 @@ void OSSSIP::transportInit()
 
 void OSSSIP::transportInit(unsigned short udpPortBase, unsigned short udpPortMax,
     unsigned short tcpPortBase, unsigned short tcpPortMax,
+    unsigned short wsPortBase, unsigned short wsPortMax,
     unsigned short tlsPortBase, unsigned short tlsPortMax)
 {
   OSS_VERIFY(udpPortBase <= udpPortMax);
@@ -122,9 +140,10 @@ void OSSSIP::transportInit(unsigned short udpPortBase, unsigned short udpPortMax
 
   bool hasUDP = _udpListeners.size() > 0;
   bool hasTCP = _tcpListeners.size() > 0;
+  bool hasWS = _wsListeners.size() > 0;
   bool hasTLS = _tcpListeners.size() > 0;
 
-  if (!hasUDP && !hasTCP && !hasTLS)
+  if (!hasUDP && !hasTCP && !hasWS && !hasTLS)
     throw OSS::SIP::SIPException("No Listener Address Configured");
 
   //
@@ -132,6 +151,7 @@ void OSSSIP::transportInit(unsigned short udpPortBase, unsigned short udpPortMax
   //
   hasUDP = false;
   hasTCP = false;
+  hasWS = false;
   hasTLS = false;
 
   //
@@ -189,6 +209,33 @@ void OSSSIP::transportInit(unsigned short udpPortBase, unsigned short udpPortMax
   }
 
   //
+  // Prepare the WebSocket Transport
+  //
+  if (_enableWS)
+  {
+    for (std::size_t i = 0; i < _wsListeners.size(); i++)
+    {
+      OSS::IPAddress& iface = _wsListeners[i];
+      std::string ip = iface.address().to_string();
+      for(unsigned short p = wsPortBase; p <= wsPortMax; p++)
+      {
+        try
+        {
+          std::string port = OSS::string_from_number<unsigned short>(p);
+          _fsmDispatch.transport().addWSTransport(ip, port,iface.externalAddress());
+          iface.setPort(p);
+          hasWS = true;
+          break;
+        }
+        catch(...)
+        {
+          continue;
+        }
+      }
+    }
+  }
+
+  //
   // Prepare the TLS Transport
   //
   if (_enableTLS)
@@ -215,7 +262,7 @@ void OSSSIP::transportInit(unsigned short udpPortBase, unsigned short udpPortMax
     }
   }
 
-  if (!hasUDP && !hasTCP && !hasTLS)
+  if (!hasUDP && !hasTCP && !hasWS && !hasTLS)
     throw OSS::SIP::SIPException("No Listener Address Configured");
 }
 
@@ -243,6 +290,7 @@ void OSSSIP::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 
     bool tlsEnabled = iface.exists("tls-enabled") && (bool)iface["tls-enabled"];
     bool tcpEnabled = iface.exists("tcp-enabled") && (bool)iface["tcp-enabled"];
+    bool wsEnabled = iface.exists("ws-enabled") && (bool)iface["ws-enabled"];
     
     bool udpEnabled = true;
     if (iface.exists("udp-enabled"))
@@ -256,28 +304,14 @@ void OSSSIP::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       if (iface.exists("default"))
       {
         hasFoundDefault = ((bool)iface["default"]);
-        if (hasFoundDefault  && udpEnabled)
+        bool transportEnabled = udpEnabled || tcpEnabled || wsEnabled || tlsEnabled;
+
+        if (hasFoundDefault  && transportEnabled)
         {
           OSS::IPAddress listener;
           listener = ip;
           listener.externalAddress() = external;
           listener.setPort(sipPort);
-          _fsmDispatch.transport().defaultListenerAddress() = listener;
-        }
-        else if (hasFoundDefault  && tcpEnabled)
-        {
-          OSS::IPAddress listener;
-          listener.externalAddress() = external;
-          listener = ip;
-          listener.setPort(sipPort);
-          _fsmDispatch.transport().defaultListenerAddress() = listener;
-        }
-        else if (hasFoundDefault  && tlsEnabled)
-        {
-          OSS::IPAddress listener;
-          listener.externalAddress() = external;
-          listener = ip;
-          listener.setPort(tlsPort);
           _fsmDispatch.transport().defaultListenerAddress() = listener;
         }
       }
@@ -299,6 +333,15 @@ void OSSSIP::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       listener.externalAddress() = external;
       listener.setPort(sipPort);
       _tcpListeners.push_back(listener);
+    }
+
+    if (wsEnabled)
+    {
+      OSS::IPAddress listener;
+      listener = ip;
+      listener.externalAddress() = external;
+      listener.setPort(sipPort);
+      _wsListeners.push_back(listener);
     }
 
     if (tlsEnabled)
@@ -351,6 +394,14 @@ void OSSSIP::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       listener.setPort(port);
       _fsmDispatch.transport().defaultListenerAddress() = listener;
     }
+    else if (iface.exists("ws-enabled") && (bool)iface["ws-enabled"])
+    {
+      int port = iface.exists("sip-port") ? (int)iface["sip-port"] : 5060;
+      OSS::IPAddress listener;
+      listener = ip;
+      listener.setPort(port);
+      _fsmDispatch.transport().defaultListenerAddress() = listener;
+    }
     else if (iface.exists("tls-enabled") && (bool)iface["tls-enabled"])
     {
       int port = iface.exists("tls-port") ? (int)iface["tsl-port"] : 5061;
@@ -378,6 +429,25 @@ void OSSSIP::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       OSS_LOG_ERROR("Unable to set TCP port base " << tcpPortBase << "-" << tcpPortMax << " Using default values.");
     }
   }
+
+  //
+  // Set the TCP port range
+  //
+  if (listeners.exists("sip-ws-port-base") && listeners.exists("sip-ws-port-max"))
+  {
+    unsigned int wsPortBase = listeners["sip-ws-port-base"];
+    unsigned int wsPortMax = listeners["sip-ws-port-max"];
+    if (wsPortBase < wsPortMax && wsPortBase > 0)
+    {
+      OSS_LOG_INFO("Setting WebSocket port range to " << wsPortBase << "-" << wsPortMax);
+      transport().setWSPortRange((unsigned short)wsPortBase, (unsigned short)wsPortMax);
+    }
+    else
+    {
+      OSS_LOG_ERROR("Unable to set WebSocket port base " << wsPortBase << "-" << wsPortMax << " Using default values.");
+    }
+  }
+
 
   if (listeners.exists("packet-rate-ratio"))
   {

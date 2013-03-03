@@ -101,8 +101,17 @@ public:
     listener.setPort(config.port);
     stack().udpListeners().push_back(listener);
     stack().tcpListeners().push_back(listener);
+
+
+    OSS::IPAddress wsListener;
+    wsListener = _config.address;
+    wsListener.externalAddress() = _config.externalAddress;
+    wsListener.setPort(config.port + 1000);
+    stack().wsListeners().push_back(wsListener);
+
     stack().transport().defaultListenerAddress() = listener;
     stack().transport().setTCPPortRange(TCP_PORT_BASE, TCP_PORT_MAX);
+    stack().transport().setWSPortRange(40000, 50000);
     stack().transportInit();
 
     registerDefaultHandler(dynamic_cast<SIPB2BHandler*>(this));
@@ -402,6 +411,7 @@ bool ipRouteGet(const std::string& destination, std::string& source, std::string
 
 bool testListen(const Config& config)
 {
+	//TODO: Add WebSocket listen test here
   OSS::socket_handle tcpSock = OSS::socket_tcp_server_create();
   if (!tcpSock)
     return false;

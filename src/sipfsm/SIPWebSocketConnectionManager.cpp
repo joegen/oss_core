@@ -58,7 +58,7 @@ void SIPWebSocketConnectionManager::add(SIPWebSocketConnection::Ptr conn)
   OSS_VERIFY_NULL(pConnection);
 
   if (!pConnection->getIdentifier())
-    pConnection->setIdentifier((OSS::UInt64)pConnection->_pServer.get());
+    pConnection->setIdentifier((OSS::UInt64)pConnection->_pServerConnection.get());
 
   _connections[conn->getIdentifier()] = conn;
   OSS_LOG_INFO("SIPWebSocketConnection Added transport (" << pConnection->getIdentifier() << ") "
@@ -74,7 +74,7 @@ void SIPWebSocketConnectionManager::start(SIPWebSocketConnection::Ptr conn)
   OSS_VERIFY_NULL(pConnection);
 
   if (!pConnection->getIdentifier())
-    pConnection->setIdentifier((OSS::UInt64)pConnection->_pServer.get());
+    pConnection->setIdentifier((OSS::UInt64)pConnection->_pServerConnection.get());
 
   _connections[conn->getIdentifier()] = conn;
 

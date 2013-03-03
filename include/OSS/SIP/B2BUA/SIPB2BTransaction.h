@@ -186,7 +186,7 @@ protected:
   SIPTransaction::Ptr _pServerTransaction;
 
   SIPMessage::Ptr _pClientRequest;
-  SIPTransportSession::Ptr _pClientTransport; 
+  SIPTransportSession::Ptr _pClientTransport;
   SIPTransaction::Ptr _pClientTransaction;
 
   SIPB2BTransactionManager* _pManager;
@@ -212,6 +212,7 @@ protected:
 
   OSS::dns_srv_record_list _udpSrvTargets;
   OSS::dns_srv_record_list _tcpSrvTargets;
+  OSS::dns_srv_record_list _wsSrvTargets;
   OSS::dns_srv_record_list _tlsSrvTargets;
   unsigned int _failoverCount;
   OSS::IPAddress _localInterface;

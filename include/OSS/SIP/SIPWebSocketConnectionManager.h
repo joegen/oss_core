@@ -57,7 +57,7 @@
 #include <map>
 #include <boost/asio.hpp>
 #include <boost/noncopyable.hpp>
-#include "SIPWebSocketConnection.h"
+#include "OSS/SIP/SIPWebSocketConnection.h"
 #include "OSS/Thread.h"
 
 

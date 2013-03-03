@@ -206,19 +206,18 @@ liboss_core_la_SOURCES =  \
     net/FirewallRule.cpp \
     net/Firewall.cpp \
     net/Carp.cpp \
-    utl/AdaptiveDelay.cpp
-
-#    sipfsm/SIPWebSocketConnection.cpp \
-#    sipfsm/SIPWebSocketListener.cpp \
-#    sipfsm/SIPWebSocketConnectionManager.cpp \
-#    ws/websocketpp/src/base64/base64.cpp \
-#    ws/websocketpp/src/md5/md5.c \
-#    ws/websocketpp/src/messages/data.cpp \
-#    ws/websocketpp/src/network_utilities.cpp \
-#    ws/websocketpp/src/processors/hybi_header.cpp \
-#    ws/websocketpp/src/processors/hybi_util.cpp \
-#    ws/websocketpp/src/sha1/sha1.cpp \
-#    ws/websocketpp/src/uri.cpp
+    utl/AdaptiveDelay.cpp \
+    sipfsm/SIPWebSocketConnection.cpp \
+    sipfsm/SIPWebSocketListener.cpp \
+    sipfsm/SIPWebSocketConnectionManager.cpp \
+    ws/websocketpp/src/base64/base64.cpp \
+    ws/websocketpp/src/md5/md5.c \
+    ws/websocketpp/src/messages/data.cpp \
+    ws/websocketpp/src/network_utilities.cpp \
+    ws/websocketpp/src/processors/hybi_header.cpp \
+    ws/websocketpp/src/processors/hybi_util.cpp \
+    ws/websocketpp/src/sha1/sha1.cpp \
+    ws/websocketpp/src/uri.cpp
 
 
 bin_PROGRAMS = \

@@ -65,7 +65,6 @@ void SIPTCPListener::run()
 
 void SIPTCPListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE userData)
 {
-  
   if (!e)
   {
     OSS_LOG_DEBUG("SIPTCPListener::handleAccept STARTING new connection");

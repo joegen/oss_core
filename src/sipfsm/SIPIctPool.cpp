@@ -59,6 +59,7 @@ SIPTransaction::Ptr SIPIctPool::findChildTransaction(const SIPMessage::Ptr& pMsg
       //
       // transaction is already a child.
       //
+    	//TODO: What was the intention with this code? Maybe a return is missing?
       SIPTransaction::Ptr();
     }
 
