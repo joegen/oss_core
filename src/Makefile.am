@@ -190,6 +190,7 @@ liboss_core_la_SOURCES =  \
     b2bua/SIPB2BTransaction.cpp \
     b2bua/SIPB2BScriptableHandler.cpp \
     b2bua/SIPB2BTransactionManager.cpp \
+    b2bua/SIPB2BDialogStateManager.cpp \
     b2bua/SIPB2BContact.cpp \
     js/JSBase.cpp \
     js/JSSIPMessage.cpp \
