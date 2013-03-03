@@ -274,16 +274,13 @@ void SIPB2BDialogStateManager::populateFromStore()
 {
   OSS::UInt64 timeStamp = OSS::getTime();
   DialogList dialogs;
-  if (!_dataStore.getAll)
-    return;
-
-  _dataStore.getAll(dialogs);
+  _dataStore.dbGetAll(dialogs);
   for (DialogList::const_iterator iter = dialogs.begin(); iter != dialogs.end(); iter++)
   {
     if (((timeStamp - iter->sessionAge) / 1000) < 60)
       addDialog(iter->leg1.callId, *iter);
     else
-      _dataStore.removeSession(iter->sessionId);
+      _dataStore.dbRemoveSession(iter->sessionId);
   }
 }
 
@@ -392,7 +389,7 @@ void SIPB2BDialogStateManager::removeDialog(const std::string& callId, const std
     if (dialogList.empty())
       _dialogs.remove(callId);
   }
-  _dataStore.removeSession(sessionId);
+  _dataStore.dbRemoveSession(sessionId);
 }
 
 bool SIPB2BDialogStateManager::findDialog(const SIPB2BTransaction::Ptr& pTransaction, const SIPMessage::Ptr& pMsg, DialogData& dialogData, const std::string& sessionId)
@@ -688,7 +685,7 @@ void SIPB2BDialogStateManager::onUpdateInitialUASState(
         std::string noRTPProxy;
         leg1.noRtpProxy = (pTransaction->getProperty("no-rtp-proxy", noRTPProxy) && noRTPProxy == "1");
 
-        _dataStore.persist(dialogData);
+        _dataStore.dbPersist(dialogData);
 
         //if (pResponse->is2xx())
         updateDialog(sessionId, leg1, 1);
@@ -790,7 +787,7 @@ void SIPB2BDialogStateManager::onUpdateInitialUACState(
 
 
       addDialog(leg2.callId, dialogData);
-      _dataStore.persist(dialogData);
+      _dataStore.dbPersist(dialogData);
     }
     catch(OSS::Exception e)
     {
@@ -871,7 +868,7 @@ void SIPB2BDialogStateManager::onUpdateMidCallUASState(
         }
 
         updateDialog(dialogData.sessionId, *pLeg, boost::lexical_cast<int>(legIndexNumber));
-        _dataStore.persist(dialogData);
+        _dataStore.dbPersist(dialogData);
       }
       catch(OSS::Exception e)
       {
@@ -947,7 +944,7 @@ void SIPB2BDialogStateManager::onUpdateMidCallUACState(
       }
 
       updateDialog(dialogData);
-      _dataStore.persist(dialogData);
+      _dataStore.dbPersist(dialogData);
     }
     catch(OSS::Exception e)
     {
@@ -1038,7 +1035,7 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
     if (pLeg->encryption == "xor")
       pMsg->setProperty("xor", "1");
 
-    _dataStore.persist(dialogData);
+    _dataStore.dbPersist(dialogData);
 
     pMsg->hdrRemove("call-id");
     pMsg->hdrRemove("from");
@@ -1463,7 +1460,7 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
       pMsg->hdrSet("Content-Length", clen.c_str());
       pLeg->localSdp = sdp;
 
-      _dataStore.persist(dialogData);
+      _dataStore.dbPersist(dialogData);
       updateDialog(dialogData);
     }
 
@@ -1494,32 +1491,32 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
 
 bool SIPB2BDialogStateManager::findRegistration(const std::string& key, RegList& regList)
 {
-  return _dataStore.getReg(key, regList);
+  return _dataStore.dbGetReg(key, regList);
 }
 
 bool SIPB2BDialogStateManager::findOneRegistration(const std::string& key, RegData& regData)
 {
-  return _dataStore.getOneReg(key, regData);
+  return _dataStore.dbGetOneReg(key, regData);
 }
 
 void SIPB2BDialogStateManager::addRegistration(const RegData& regData)
 {
-  _dataStore.persistReg(regData);
+  _dataStore.dbPersistReg(regData);
 }
 
 void SIPB2BDialogStateManager::removeRegistration(const std::string& key)
 {
-  _dataStore.removeReg(key);
+  _dataStore.dbRemoveReg(key);
 }
 
 void SIPB2BDialogStateManager::removeAllRegistration(const std::string& key)
 {
-  _dataStore.removeAllReg(key);
+  _dataStore.dbRemoveAllReg(key);
 }
 
 void SIPB2BDialogStateManager::getAllRegistrationRecords(RegList& regList)
 {
-  _dataStore.getAllReg(regList);
+  _dataStore.dbGetAllReg(regList);
 }
 
 
