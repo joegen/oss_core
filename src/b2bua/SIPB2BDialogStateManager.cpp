@@ -1354,13 +1354,13 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
     }
 
     //
-    // User request URI if no route is set
+    // Use request URI if no route is set
     //
-    if (!targetAddress.isValid())
+    std::string host;
+    unsigned short port = 0;
+    if (!targetAddress.isValid() && transportScheme != "WS")
     {
       SIPURI requestTarget = remoteContact.getURI();
-      std::string host;
-      unsigned short port = 0;
       requestTarget.getHostPort(host, port);
       OSS::dns_host_record_list hosts = OSS::dns_lookup_host(host);
       if (!hosts.empty())
@@ -1387,7 +1387,7 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
       targetAddress = IPAddress::fromV4IPPort(remoteIp.c_str());
     }
 
-    if (!targetAddress.isValid())
+    if (!targetAddress.isValid() && transportScheme != "WS")
       throw B2BUAStateException("Unable to determine target for ACK request");
 
     std::ostringstream cacheId;
@@ -1465,6 +1465,12 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
     }
 
     pMsg->commitData();
+
+    std::string finalTarget;
+    if (targetAddress.isValid())
+      finalTarget = targetAddress.toIpPortString();
+    else
+      finalTarget = host;
 
     std::ostringstream logMsg;
     logMsg << logId << ">>> " << pMsg->startLine()
