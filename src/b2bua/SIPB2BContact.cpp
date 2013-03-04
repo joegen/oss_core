@@ -64,6 +64,8 @@ bool SIPB2BContact::transform(SIPB2BTransactionManager* pManager,
       transportScheme = "tcp";
     else if (via.find("2.0/tls") != std::string::npos)
       transportScheme = "tls";
+    else if (via.find("2.0/ws") != std::string::npos)
+      transportScheme = "ws";
   }
 
   OSS::IPAddress iface = localInterface;
