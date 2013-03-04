@@ -117,10 +117,14 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     AC_SUBST(OSS_IP_TABLES)
     CXXFLAGS="-DOSS_IP_TABLES=\\\"$OSS_IP_TABLES\\\" $CXXFLAGS"
 
-    AC_CHECK_LIB(boost_thread, main, [BOOST_LIBS="-lboost_date_time -lboost_filesystem -lboost_system -lboost_thread -lboost_program_options -lboost_iostreams -lboost_regex"],
-        [AC_CHECK_LIB(boost_thread-mt, main,
-        [BOOST_LIBS="-lboost_date_time-mt -lboost_filesystem-mt -lboost_system-mt -lboost_thread-mt -lboost_program_options-mt -lboost_iostreams-mt -lboost_regex-mt -lboost_random"],
+    AC_CHECK_LIB(boost_thread-mt, main,
+        [BOOST_LIBS="-lboost_date_time-mt -lboost_filesystem-mt -lboost_system-mt -lboost_thread-mt -lboost_program_options-mt -lboost_iostreams-mt -lboost_regex-mt"],
+        [AC_CHECK_LIB(boost_thread, main,
+        [BOOST_LIBS="-lboost_date_time -lboost_filesystem -lboost_system -lboost_thread -lboost_program_options -lboost_iostreams -lboost_regex"],
         [AC_MSG_ERROR("no boost thread found")])])
+    AC_CHECK_LIB(boost_random-mt, main, [BOOST_LIBS="$BOOST_LIBS -lboost_random-mt"],
+        [AC_CHECK_LIB(boost_random, main,
+        [BOOST_LIBS="$BOOST_LIBS -lboost_random"])])
     AC_SUBST(BOOST_LIBS)
 
 
