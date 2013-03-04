@@ -34,6 +34,7 @@
 #define TCP_PORT_BASE 20000
 #define TCP_PORT_MAX  30000
 #define RTP_PROXY_THREAD_COUNT 10
+#define EXTERNAL_IP_HOST_URL "myip.ossapp.com"
 
 using namespace OSS;
 using namespace OSS::SIP;
@@ -80,19 +81,6 @@ public:
     _config(config)
   {
     //
-    // Register Datastore functions
-    //
-    datastore().persist = boost::bind(&OSSB2BUA::dbPersist, this, _1);
-    datastore().getAll = boost::bind(&OSSB2BUA::dbGetAll, this, _1);
-    datastore().removeSession = boost::bind(&OSSB2BUA::dbRemoveSession, this, _1);
-    datastore().removeAllDialogs = boost::bind(&OSSB2BUA::dbRemoveAllDialogs, this, _1);
-    datastore().persistReg = boost::bind(&OSSB2BUA::dbPersistReg, this, _1);
-    datastore().getOneReg = boost::bind(&OSSB2BUA::dbGetOneReg, this, _1, _2);
-    datastore().getReg = boost::bind(&OSSB2BUA::dbGetReg, this, _1, _2);
-    datastore().removeReg = boost::bind(&OSSB2BUA::dbRemoveReg, this, _1);
-    datastore().removeAllReg = boost::bind(&OSSB2BUA::dbRemoveAllReg, this, _1);
-    datastore().getAllReg = boost::bind(&OSSB2BUA::dbGetAllReg, this, _1);
-    //
     // Initialize the transport
     //
     OSS::IPAddress listener;
@@ -115,128 +103,6 @@ public:
     stack().transportInit();
 
     registerDefaultHandler(dynamic_cast<SIPB2BHandler*>(this));
-  }
-
-  bool dbPersist(const DialogData& dialogData)
-  {
-    mutex_critic_sec_lock lock(_storageMutex);
-    std::string data;
-    dialogData.toJsonString(data);
-    _dialogs[dialogData.sessionId] = data;
-    return true;
-  }
-  void dbGetAll(DialogList& dialogs)
-  {
-    mutex_critic_sec_lock lock(_storageMutex);
-    for (Storage::const_iterator iter = _dialogs.begin(); iter != _dialogs.end(); iter++)
-    {
-      DialogData dialog;
-      dialog.fromJsonString(iter->second);
-      dialogs.push_back(dialog);
-    }
-  }
-
-  void dbRemoveSession(const std::string& sessionId)
-  {
-    mutex_critic_sec_lock lock(_storageMutex);
-    _dialogs.erase(sessionId);
-  }
-
-  void dbRemoveAllDialogs(const std::string& callId)
-  {
-    std::vector<std::string> deleteThese;
-    DialogList dialogs;
-    dbGetAll(dialogs);
-
-    //
-    // Only lock the mutex after dbGetAll (it's non-recursive!)
-    //
-    mutex_critic_sec_lock lock(_storageMutex);
-    for (DialogList::const_iterator iter = dialogs.begin(); iter != dialogs.end(); iter++)
-      if (iter->leg1.callId == callId)
-        deleteThese.push_back(iter->sessionId);
-
-    for (std::vector<std::string>::const_iterator iter = deleteThese.begin(); iter != deleteThese.end(); iter++)
-      _dialogs.erase(*iter);
-  }
-
-  bool dbPersistReg(const RegData& regData)
-  {
-    mutex_critic_sec_lock lock(_storageMutex);
-    if (regData.key.empty() || regData.aor.empty() || regData.contact.empty())
-    {
-      OSS_LOG_ERROR("Invalid registration record.");
-      return false;
-    }
-    std::string data;
-    regData.toJsonString(data);
-    OSS_LOG_INFO("Persisting registration " << regData.key << " for AOR: " << regData.aor << " Binding: " << regData.contact);
-    _registry[regData.key] = data;
-    return true;
-  }
-
-  bool dbGetOneReg(const std::string& regId, RegData& regData)
-  {
-    mutex_critic_sec_lock lock(_storageMutex);
-    OSS_LOG_INFO("OSSB2BUA::getOneReg " << regId);
-    std::string data;
-    if (_registry.find(regId) == _registry.end())
-    {
-      OSS_LOG_INFO("Unable to find registration for " << regId );
-      return false;
-    }
-    OSS_LOG_INFO("OSSB2BUA::getOneReg " << regId << " FOUND");
-    data = _registry[regId];
-    regData.fromJsonString(data);
-    OSS_LOG_INFO("Found registration for " << regData.key << " AOR: " << regData.aor << " Binding: " << regData.contact);
-    return true;
-  }
-
-  bool dbGetReg(const std::string& regIdPrefix, RegList& regData)
-  {
-    mutex_critic_sec_lock lock(_storageMutex);
-    for (Storage::const_iterator iter = _registry.begin(); iter != _registry.end(); iter++)
-    {
-      if (OSS::string_starts_with(iter->first, regIdPrefix.c_str()))
-      {
-        RegData data;
-        data.fromJsonString(iter->second);
-        regData.push_back(data);
-      }
-    }
-    return true;
-  }
-
-  void dbRemoveReg(const std::string& regId)
-  {
-    mutex_critic_sec_lock lock(_storageMutex);
-    _registry.erase(regId);
-  }
-
-  void dbRemoveAllReg(const std::string& regIdPrefix)
-  {
-    std::vector<std::string> deleteThese;
-    RegList regs;
-    dbGetReg(regIdPrefix, regs);
-    //
-    // Only lock the mutex after dbGetReg (it's non-recursive!)
-    //
-    mutex_critic_sec_lock lock(_storageMutex);
-    for (RegList::const_iterator iter = regs.begin(); iter != regs.end(); iter++)
-        deleteThese.push_back(iter->key);
-    for (std::vector<std::string>::const_iterator iter = deleteThese.begin(); iter != deleteThese.end(); iter++)
-      _registry.erase(*iter);
-  }
-
-  void dbGetAllReg(RegList& regs)
-  {
-    mutex_critic_sec_lock lock(_storageMutex);
-    for (Storage::const_iterator iter = _registry.begin(); iter != _registry.end(); iter++)
-    {
-      RegData data;
-      data.fromJsonString(iter->second);
-      regs.push_back(data);
-    }
   }
 
   bool run()
@@ -343,6 +209,7 @@ bool prepareOptions(ServiceOptions& options)
 
   options.addOptionString('i', "interface-address", "The IP Address where the B2BUA will listener for connections.");
   options.addOptionString('x', "external-address", "The Public IP Address if the B2BUA is behind a firewall.");
+  options.addOptionFlag('X', "guess-external-address", "If this flag is set, the external IP will be automatically assigned.");
   options.addOptionInt('p', "port", "The port where the B2BUA will listen for connections.");
   options.addOptionString('t', "target-address", "IP Address, Host or DNS/SRV address of your SIP Server.");
   options.addOptionFlag('r', "allow-relay", "Allow relaying of transactions towards SIP Servers other than the one specified in the target-domain.");
@@ -456,6 +323,65 @@ bool testListen(const Config& config)
   return true;
 }
 
+std::string getExternalIp(const std::string& host, const std::string& path)
+{
+  std::string ip;
+  OSS::dns_host_record_list targets = dns_lookup_host(host);
+  if (targets.empty())
+  {
+    OSS_LOG_ERROR("Unable to resolve HTTP server " << host);
+    return ip;
+  }
+
+  
+  OSS::socket_handle sock = OSS::socket_tcp_client_create();
+  if (!sock)
+    return ip;
+
+  try
+  {
+    std::ostringstream strm;
+    strm << "GET " << path << " HTTP/1.0" << "\r\n"
+      << "Host: " << host << "\r\n"
+      << "User-Agent: oss_b2bua" << "\r\n\r\n";
+    OSS::socket_tcp_client_connect(sock, *targets.begin(), 80, 5000);
+    if (!socket_tcp_client_send_bytes(sock, strm.str().c_str(), strm.str().length()))
+    {
+      OSS_LOG_ERROR("Unable to send to HTTP server at " << host);
+    }
+    
+    std::string reply;
+
+    while (true)
+    {
+      char buff[256];
+      int len = socket_tcp_client_receive_bytes(sock, buff, 256);
+      if (!len)
+        break;
+      reply += std::string(buff, len);
+    }
+
+    if (!reply.empty())
+    {
+      OSS::SIP::SIPMessage msg(reply);
+      ip = msg.getBody();
+    }
+
+  }
+  catch(std::exception& e)
+  {
+    OSS_LOG_ERROR("Unable to connect to HTTP server at " << host << " Error: " << e.what());
+  }
+
+  if (sock)
+  {
+    OSS::socket_tcp_client_shutdown(sock);
+    OSS::socket_free(sock);
+  }
+
+  return ip;
+}
+
 void prepareListenerInfo(Config& config, ServiceOptions& options)
 {
   if (!options.getOption("interface-address", config.address))
@@ -513,6 +439,11 @@ void prepareListenerInfo(Config& config, ServiceOptions& options)
   }
 
   options.getOption("external-address", config.externalAddress);
+
+  if (config.externalAddress.empty() && options.hasOption("guess-external-address"))
+  {
+    config.externalAddress = getExternalIp(EXTERNAL_IP_HOST_URL, "/");
+  }
 }
 
 void prepareTargetInfo(Config& config, ServiceOptions& options)
@@ -544,6 +475,12 @@ void prepareLogger(ServiceOptions& options)
     if (!options.getOption("log-level", priorityLevel))
       priorityLevel = 6;
     OSS::logger_init(logFile, (OSS::LogPriority)priorityLevel, pattern, compress ? "true" : "false", boost::lexical_cast<std::string>(purgeCount));
+  }
+  else
+  {
+    if (!options.getOption("log-level", priorityLevel))
+      priorityLevel = 6;
+    OSS::log_reset_level((OSS::LogPriority)priorityLevel);
   }
 }
 
