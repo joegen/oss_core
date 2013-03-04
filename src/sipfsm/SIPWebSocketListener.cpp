@@ -80,17 +80,17 @@ SIPWebSocketListener::SIPWebSocketListener(
     _connectionManager(connectionManager),
     _resolver(pTransportService->ioService())
 {
-	if (PRIO_DEBUG == log_get_level())
-	{
-		_pServerEndPoint->alog().set_level(websocketpp::log::alevel::ALL);
-		_pServerEndPoint->elog().set_level(websocketpp::log::elevel::ALL);
-	}
-
 	_pServerThread = 0;
 	_pClientThread = 0;
 
 	_pServerAcceptHandler = websocketpp::server::handler::ptr(new ServerAcceptHandler(*this));
 	_pServerEndPoint = new websocketpp::server(_pServerAcceptHandler);
+
+  if (PRIO_DEBUG == log_get_level())
+	{
+		_pServerEndPoint->alog().set_level(websocketpp::log::alevel::ALL);
+		_pServerEndPoint->elog().set_level(websocketpp::log::elevel::ALL);
+	}
 
 //	_pClientHandler = websocketpp::client::handler::ptr(new ClientHandler(*this));
 //	_pClientEndPoint = new websocketpp::client(_pClientHandler);
