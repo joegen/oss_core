@@ -59,7 +59,7 @@ static boost::filesystem::path _logDirectory;;
 static OSS::mutex_critic_sec _consoleMutex;
 static bool _enableConsoleLogging = true;
 static bool _enableLogging = true;
-
+static LogPriority _consoleLogLevel = PRIO_INFORMATION;
   /*
 enum LogPriority
 {
@@ -125,14 +125,17 @@ void log_reset_level(LogPriority level)
 {
   if (!_enableLogging)
     return;
-  OSS_VERIFY_NULL(_pLogger);
-  _pLogger->setLevel(level);
+
+  if (_pLogger)
+    _pLogger->setLevel(level);
+
+  _consoleLogLevel = level;
 }
 
 LogPriority log_get_level()
 {
   if (!_enableLogging || !_pLogger)
-    return PRIO_NONE;
+    return _consoleLogLevel;
 
   return static_cast<LogPriority>(_pLogger->getLevel());
 }
@@ -188,7 +191,7 @@ void log_fatal(const std::string& log)
   if (!_enableLogging)
     return;
 
-  if(!_pLogger && _enableConsoleLogging)
+  if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_FATAL)
   {
     _consoleMutex.lock();
     std::cout << "[FATAL] " << log << std::endl;
@@ -203,7 +206,7 @@ void log_critical(const std::string& log)
   if (!_enableLogging)
     return;
 
-  if(!_pLogger && _enableConsoleLogging)
+  if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_CRITICAL)
   {
     _consoleMutex.lock();
     std::cout << "[CRITICAL] " << log << std::endl;
@@ -221,7 +224,7 @@ void log_error(const std::string& log)
   if (!_enableLogging)
     return;
 
-  if(!_pLogger && _enableConsoleLogging)
+  if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_ERROR)
   {
     _consoleMutex.lock();
     std::cout << "[ERROR] " << log << std::endl;
@@ -236,7 +239,7 @@ void log_warning(const std::string& log)
   if (!_enableLogging)
     return;
 
-  if(!_pLogger && _enableConsoleLogging)
+  if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_WARNING)
   {
     _consoleMutex.lock();
     std::cout << "[WARNING] " << log << std::endl;
@@ -251,7 +254,7 @@ void log_notice(const std::string& log)
   if (!_enableLogging)
     return;
 
-  if(!_pLogger && _enableConsoleLogging)
+  if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_NOTICE)
   {
     _consoleMutex.lock();
     std::cout << "[NOTICE] " << log << std::endl;
@@ -267,7 +270,7 @@ void log_information(const std::string& log)
   if (!_enableLogging)
     return;
 
-  if(!_pLogger && _enableConsoleLogging)
+  if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_INFORMATION)
   {
     _consoleMutex.lock();
     std::cout << "[INFORMATION] " << log << std::endl;
@@ -283,7 +286,7 @@ void log_debug(const std::string& log)
   if (!_enableLogging)
     return;
 
-  if(!_pLogger && _enableConsoleLogging)
+  if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_DEBUG)
   {
     _consoleMutex.lock();
     std::cout << "[DEBUG] " << log << std::endl;
@@ -299,7 +302,7 @@ void log_trace(const std::string& log)
   if (!_enableLogging)
     return;
 
-  if(!_pLogger && _enableConsoleLogging)
+  if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_TRACE)
   {
     _consoleMutex.lock();
     std::cout << "[TRACE] " << log << std::endl;
