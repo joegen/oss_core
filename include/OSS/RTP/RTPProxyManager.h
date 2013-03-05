@@ -185,6 +185,9 @@ public:
     /// If this flag is true, state files for RTP will be stored in the diretory
     /// specified by _rtpStateDirectory.  The default value is false and is
     /// set together with _rtpStateDirectory.
+
+  void disable();
+    /// Disable the RTP proxy.
 private:
   boost::asio::io_service _ioService;
   mutable OSS::mutex_critic_sec _sessionListMutex;
@@ -209,6 +212,7 @@ private:
   xmlrpc_c::serverAbyss* _pRpcServer;
   unsigned short _rpcServerPort;
   bool _persistStateFiles;
+  bool _enabled;
 
   friend class RTPProxy;
   friend class RTPProxySession;
@@ -286,6 +290,11 @@ inline RTPProxySessionList& RTPProxyManager::sessionList()
 inline bool RTPProxyManager::persistStateFiles() const
 {
   return _persistStateFiles;
+}
+
+inline void RTPProxyManager::disable()
+{
+  _enabled = false;
 }
 
 } } //OSS::RTP

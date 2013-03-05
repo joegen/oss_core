@@ -134,7 +134,8 @@ RTPProxyManager::RTPProxyManager(int houseKeepingInterval) :
   _pRpcServerThread(0),
   _pRpcServer(0),
   _rpcServerPort(0),
-  _persistStateFiles(false)
+  _persistStateFiles(false),
+  _enabled(true)
 {
 }
 
@@ -286,6 +287,9 @@ void RTPProxyManager::handleSDP(
   std::string& sdp,
   RTPProxy::Attributes& rtpAttribute)
 {
+
+  if (!_enabled)
+    return;
 
   OSS_LOG_DEBUG( logId << "Handling SDP: " 
     << " session-id=" << sessionId
