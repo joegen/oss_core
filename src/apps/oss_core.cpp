@@ -19,6 +19,9 @@
 //
 
 #include <execinfo.h>
+#include <sys/resource.h>
+#include <signal.h>
+
 #include <Poco/Exception.h>
 
 #include "OSS/Application.h"
@@ -30,6 +33,7 @@
 #include "OSS/SIP/B2BUA/SIPB2BTransactionManager.h"
 #include "OSS/SIP/B2BUA/SIPB2BScriptableHandler.h"
 #include "OSS/SIP/B2BUA/SIPB2BDialogStateManager.h"
+#include "OSS/Net/TurnServer.h"
 
 #define TCP_PORT_BASE 20000
 #define TCP_PORT_MAX  30000
@@ -123,6 +127,27 @@ public:
 }; // class OSSB2BUA
 
 
+void setSystemParameters()
+{
+	srandom((unsigned int) time(0));
+	setlocale(LC_ALL, "C");
+
+	/* Ignore SIGPIPE from TCP sockets */
+	signal(SIGPIPE, SIG_IGN);
+
+	{
+		struct rlimit rlim;
+		if(getrlimit(RLIMIT_NOFILE, &rlim)<0) {
+			perror("Cannot get system limit");
+		} else {
+			rlim.rlim_cur = rlim.rlim_max;
+			if(setrlimit(RLIMIT_NOFILE, &rlim)<0) {
+				perror("Cannot set system limit");
+			}
+		}
+	}
+}
+
 void  daemonize(int argc, char** argv, bool& isDaemon)
 {
   for (int i = 0; i < argc; i++)
@@ -195,27 +220,6 @@ static void globalCatch()
   std::abort();
 }
 
-bool prepareOptions(ServiceOptions& options)
-{
-  options.addOptionFlag('h', "help", "Display help information.");
-  options.addOptionFlag('D', "daemonize", "Run as system daemon.");
-  options.addOptionString('P', "pid-file", "PID file when running as daemon.");
-
-  options.addOptionInt('l', "log-level",
-      "Specify the application log priority level."
-      "Valid level is between 0-7.  "
-      "0 (EMERG) 1 (ALERT) 2 (CRIT) 3 (ERR) 4 (WARNING) 5 (NOTICE) 6 (INFO) 7 (DEBUG)");
-  options.addOptionString('L', "log-file", "Specify the application log file.");
-
-  options.addOptionString('i', "interface-address", "The IP Address where the B2BUA will listener for connections.");
-  options.addOptionString('x', "external-address", "The Public IP Address if the B2BUA is behind a firewall.");
-  options.addOptionFlag('X', "guess-external-address", "If this flag is set, the external IP will be automatically assigned.");
-  options.addOptionInt('p', "port", "The port where the B2BUA will listen for connections.");
-  options.addOptionString('t', "target-address", "IP Address, Host or DNS/SRV address of your SIP Server.");
-  options.addOptionFlag('r', "allow-relay", "Allow relaying of transactions towards SIP Servers other than the one specified in the target-domain.");
-  return options.parseOptions();
-}
-
 void saveProcessId(ServiceOptions& options)
 {
   std::string pidFilePath;
@@ -276,52 +280,6 @@ bool ipRouteGet(const std::string& destination, std::string& source, std::string
   return !source.empty() && !gateway.empty();
 }
 
-bool testListen(const Config& config)
-{
-	//TODO: Add WebSocket listen test here
-  OSS::socket_handle tcpSock = OSS::socket_tcp_server_create();
-  if (!tcpSock)
-    return false;
-  try
-  {
-    OSS::socket_tcp_server_bind(tcpSock, config.address, config.port, false);
-  }
-  catch(std::exception& e)
-  {
-    OSS_LOG_ERROR(e.what());
-    OSS::socket_free(tcpSock);
-    return false;
-  }
-  catch(...)
-  {
-    OSS_LOG_ERROR("Unknown socket bind exception.");
-    OSS::socket_free(tcpSock);
-    return false;
-  }
-  OSS::socket_free(tcpSock);
-  
-  OSS::socket_handle udpSock = OSS::socket_udp_create();
-  if (!udpSock)
-    return false;
-  try
-  {
-    OSS::socket_udp_bind(udpSock, config.address, config.port, false);
-  }
-  catch(std::exception& e)
-  {
-    OSS_LOG_ERROR(e.what());
-    OSS::socket_free(udpSock);
-    return false;
-  }
-  catch(...)
-  {
-    OSS_LOG_ERROR("Unknown socket bind exception.");
-    OSS::socket_free(udpSock);
-    return false;
-  }
-  OSS::socket_free(udpSock);
-  return true;
-}
 
 std::string getExternalIp(const std::string& host, const std::string& path)
 {
@@ -432,12 +390,6 @@ void prepareListenerInfo(Config& config, ServiceOptions& options)
     config.port = 5060;
   }
   
-  if (!testListen(config))
-  {
-    OSS_LOG_FATAL("Unable to bind to interface " << config.address << ":" << config.port << "!");
-    _exit(-1);
-  }
-
   options.getOption("external-address", config.externalAddress);
 
   if (config.externalAddress.empty() && options.hasOption("guess-external-address"))
@@ -484,8 +436,36 @@ void prepareLogger(ServiceOptions& options)
   }
 }
 
+bool prepareOptions(ServiceOptions& options)
+{
+  options.addOptionFlag('h', "help", "Display help information.");
+  options.addOptionFlag('D', "daemonize", "Run as system daemon.");
+  options.addOptionString('P', "pid-file", "PID file when running as daemon.");
+
+  options.addOptionInt('l', "log-level",
+      "Specify the application log priority level."
+      "Valid level is between 0-7.  "
+      "0 (EMERG) 1 (ALERT) 2 (CRIT) 3 (ERR) 4 (WARNING) 5 (NOTICE) 6 (INFO) 7 (DEBUG)");
+  options.addOptionString('L', "log-file", "Specify the application log file.");
+
+  options.addOptionString('i', "interface-address", "The IP Address where the B2BUA will listener for connections.");
+  options.addOptionString('x', "external-address", "The Public IP Address if the B2BUA is behind a firewall.");
+  options.addOptionFlag('X', "guess-external-address", "If this flag is set, the external IP will be automatically assigned.");
+  options.addOptionInt('p', "port", "The port where the B2BUA will listen for connections.");
+  options.addOptionString('t', "target-address", "IP Address, Host or DNS/SRV address of your SIP Server.");
+  options.addOptionFlag('r', "allow-relay", "Allow relaying of transactions towards SIP Servers other than the one specified in the target-domain.");
+  options.addOptionFlag('n', "no-rtp-proxy", "Disable built in media relay.");
+  options.addOptionFlag('T', "enable-turn-relay", "Run the built in turn server.");
+  options.addOptionString('c', "turn-cert-file", "The certificate file to be used for TLS and DTLS.");
+  options.addOptionString('k', "turn-pkey-file", "The private key file to be used for TLS and DTLS.");
+  
+  return options.parseOptions();
+}
+
 int main(int argc, char** argv)
 {
+  setSystemParameters();
+
   bool isDaemon = false;
   daemonize(argc, argv, isDaemon);
 
@@ -510,7 +490,21 @@ int main(int argc, char** argv)
   {
     OSSB2BUA ua(config);
     ua.run();
+
+    if (options.hasOption("no-rtp-proxy"))
+      ua.rtpProxy().disable();
+
+    if (options.hasOption("enable-turn-relay"))
+    {
+
+      options.getOption("turn-cert-file", OSS::Net::TurnServer::instance().config().cert);
+      options.getOption("turn-pkey-file", OSS::Net::TurnServer::instance().config().pkey);
+      OSS::Net::TurnServer::instance().run();
+    }
+
     OSS::app_wait_for_termination_request();
+    ua.stop();
+    _exit(0);
   }
   catch(std::exception& e)
   {
