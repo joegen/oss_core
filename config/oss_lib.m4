@@ -158,7 +158,11 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     #
     # TURN dependencies
     #
-    AC_CHECK_LIB(event, main, [], [AC_MSG_ERROR("libevent Library not found")])
+    AC_CHECK_LIB(event, main, [], [AC_MSG_ERROR("LibEvent2 Library not found")])
+    AC_CHECK_LIB(event_openssl, main, [], [AC_MSG_ERROR("LibEvent2 SSL Library not found")])
+    AC_CHECK_LIB(event_pthreads, main, [], [AC_MSG_ERROR("LibEvent2 SSL Library not found")])
+
+
 
     OSS_CORE_DEP_LIBS=""
     OSS_CORE_DEP_LIBS+=" -lgtest "
@@ -178,7 +182,6 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     OSS_CORE_DEP_LIBS+=" -lxmlrpc "
     OSS_CORE_DEP_LIBS+=" -lxmlrpc_client++  "
     OSS_CORE_DEP_LIBS+=" -lxmlrpc_server_abyss++ "
-    OSS_CORE_DEP_LIBS+=" -levent "
 
     AC_SUBST(OSS_CORE_DEP_LIBS, "$BOOST_LIBS $POCO_LIBS $OSS_CORE_DEP_LIBS")
 
