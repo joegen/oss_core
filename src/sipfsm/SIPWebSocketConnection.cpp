@@ -41,10 +41,6 @@ void SIPWebSocketConnection::ServerReadWriteHandler::on_close(websocketpp::serve
 
 void SIPWebSocketConnection::ServerReadWriteHandler::on_message(websocketpp::server::connection_ptr pConnection, websocketpp::server::handler::message_ptr pMsg)
 {
-  	OSS_LOG_DEBUG("SIPWebSocketConnection::ServerReadWriteHandler::on_message"
-  			" header:" << pMsg->get_header() <<
-  			" payload:" << pMsg->get_payload());
-
   	boost::system::error_code ec;
   	std::string payload = pMsg->get_payload();
   	_rConnection.handleRead(ec, payload.size(), &payload);
@@ -109,11 +105,6 @@ void SIPWebSocketConnection::stop()
 	{
 		_pServerConnection->close(websocketpp::close::status::NORMAL);
 	}
-
-//	if (_pClientConnection)
-//	{
-//		_pClientConnection->close(websocketpp::close::status::NORMAL);
-//	}
 }
 
 void SIPWebSocketConnection::handleRead(const boost::system::error_code& e, std::size_t bytes_transferred, OSS_HANDLE userData)
@@ -228,10 +219,6 @@ void SIPWebSocketConnection::writeMessage(SIPMessage::Ptr msg)
 	if (_pServerConnection)
 	{
 		_pServerConnection->send(msg->data(), websocketpp::frame::opcode::BINARY);
-	}
-	else if (_pClientConnection)
-	{
-		_pClientConnection->send(msg->data(), websocketpp::frame::opcode::BINARY);
 	}
 }
 

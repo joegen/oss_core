@@ -88,13 +88,6 @@ public:
 		SIPWebSocketListener& _rListener;
 	};
 
-	//TODO: This is not yet implemented
-  class ClientHandler : public websocketpp::client::handler
-  {
-  public:
-    ClientHandler(SIPWebSocketListener& listener);
-    SIPWebSocketListener& _listener;
-  };
 
 public:
 
@@ -127,9 +120,6 @@ protected:
 
   websocketpp::server::handler::ptr _pServerAcceptHandler;
   websocketpp::server* _pServerEndPoint;
-
-  websocketpp::client::handler::ptr _pClientHandler;
-  websocketpp::client* _pClientEndPoint;
 
   SIPWebSocketConnectionManager& _connectionManager;
   boost::asio::ip::tcp::resolver _resolver;

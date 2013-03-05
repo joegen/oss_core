@@ -76,7 +76,6 @@ SIPWebSocketListener::SIPWebSocketListener(
   SIPWebSocketConnectionManager& connectionManager) :
     SIPListener(pTransportService, address, port),
     _pServerEndPoint(0),
-    _pClientEndPoint(0),
     _connectionManager(connectionManager),
     _resolver(pTransportService->ioService())
 {
@@ -92,8 +91,6 @@ SIPWebSocketListener::SIPWebSocketListener(
 		_pServerEndPoint->elog().set_level(websocketpp::log::elevel::ALL);
 	}
 
-//	_pClientHandler = websocketpp::client::handler::ptr(new ClientHandler(*this));
-//	_pClientEndPoint = new websocketpp::client(_pClientHandler);
 }
 
 SIPWebSocketListener::~SIPWebSocketListener()
@@ -109,9 +106,6 @@ SIPWebSocketListener::~SIPWebSocketListener()
 
   delete _pServerEndPoint;
   _pServerEndPoint = 0;
-
-//  delete _pClientEndPoint;
-//  _pClientEndPoint = 0;
 }
 
 void SIPWebSocketListener::run()

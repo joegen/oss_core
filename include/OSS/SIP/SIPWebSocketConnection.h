@@ -59,8 +59,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include "OSS/SIP/SIP.h"
 #include "OSS/SIP/SIPMessage.h"
-
-#include "OSS/websocketpp/roles/client.hpp"
+#include "OSS/websocketpp/logger/logger.hpp"
 #include "OSS/websocketpp/roles/server.hpp"
 #include "OSS/websocketpp/websocketpp.hpp"
 #include "OSS/SIP/SIPTransportSession.h"
@@ -162,8 +161,6 @@ public:
   websocketpp::server::connection_ptr _pServerConnection;
   websocketpp::server::handler::ptr _pServerConnectionHandler;
 
-  websocketpp::client::connection_ptr _pClientConnection;
-  websocketpp::server::handler::ptr _pClientConnectionHandler;
 protected:
   SIPWebSocketConnectionManager& _connectionManager;
     /// The manager for this connection.

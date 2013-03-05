@@ -343,7 +343,6 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
     bool isAlive = false;
     if (!transportId.empty())
     {
-      OSS_LOG_INFO("SIPTransportService::createClientTransport - Finding persistent connection with ID " <<  transportId);
       pWSConnection = _wsConMgr.findConnectionById(OSS::string_to_number<OSS::UInt64>(transportId.c_str()));
       if (pWSConnection)
         isAlive = pWSConnection->writeKeepAlive();
@@ -351,20 +350,20 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
 
     if (!pWSConnection)
     {
-      OSS_LOG_WARNING("SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
-          << ". Trying remote-address=" << remoteAddress.toIpPortString());
       pWSConnection = _wsConMgr.findConnectionByAddress(remoteAddress);
       if (pWSConnection)
         isAlive = pWSConnection->writeKeepAlive();
     }
 
-    if (!pWSConnection || !isAlive)
+    if (!pWSConnection)
     {
-      OSS_LOG_WARNING("SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
-          << " with remote-address=" << remoteAddress.toIpPortString()
-          << " creating new connection.");
-      pWSConnection = createClientWsTransport(localAddress, remoteAddress);
+      OSS_LOG_WARNING("SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId);
     }
+    else if (!isAlive)
+    {
+      return SIPTransportSession::Ptr();
+    }
+    
     return pWSConnection;
   }
   else if (proto == "TLS" || proto == "tls")
@@ -391,10 +390,10 @@ SIPTransportSession::Ptr SIPTransportService::createClientWsTransport(
     const OSS::IPAddress& localAddress,
     const OSS::IPAddress& remoteAddress)
 {
-  SIPTransportSession::Ptr pWSConnection(new SIPWebSocketConnection(_wsConMgr));
-  pWSConnection->clientBind(localAddress, _tcpPortBase, _tcpPortMax);
-  pWSConnection->clientConnect(remoteAddress);
-  return pWSConnection;
+  //
+  // We dont have a concept of client connection for websockets
+  //
+  return SIPTransportSession::Ptr();
 }
 
 void SIPTransportService::sendUDPKeepAlive(const OSS::IPAddress& localAddress,
