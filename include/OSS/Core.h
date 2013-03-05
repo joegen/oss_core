@@ -178,6 +178,12 @@ std::string OSS_API boost_path(const boost::filesystem::path& path);
 
 bool OSS_API boost_temp_file(std::string& tempfile);
 
+void vectorToCArray(const std::vector<std::string>& args, char*** argv);
+  /// Convert a vector to argv format
+
+void freeCArray(int argc, char*** argv);
+  /// Free the array allocated by vectorToCArray
+
 } // OSS
 
 

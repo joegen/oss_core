@@ -384,5 +384,27 @@ bool boost_temp_file(std::string& tempfile)
 #endif
 }
 
+void vectorToCArray(const std::vector<std::string>& args, char*** argv)
+{
+  *argv = (char**)std::malloc((args.size() + 1) * sizeof(char*));
+  int i=0;
+  for(std::vector<std::string>::const_iterator iter = args.begin();
+      iter != args.end();
+      iter++, ++i)
+  {
+    std::string arg = *iter;
+    (*argv)[i] = (char*)std::malloc((arg.length()+1) * sizeof(char));
+    std::strcpy((*argv)[i], arg.c_str());
+  }
+  (*argv)[args.size()] = NULL; // argv must be NULL terminated
+}
+
+void freeCArray(int argc, char*** argv)
+{
+  for (int i = 0; i < argc; i++)
+    free((*argv)[i]);
+  free(*argv);
+}
+
 } // OSS
 
