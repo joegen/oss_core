@@ -983,7 +983,8 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
   std::string targetLeg;
   std::string sessionId;
   DialogData dialogData;
-
+  std::string transportScheme = "UDP";
+  
   try
   {
     if (!findDialog(pTransaction, pMsg, logId,  senderLeg, targetLeg, sessionId, dialogData))
@@ -1070,7 +1071,7 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
     //
     _pTransactionManager->getInternalAddress(localAddress, localAddress);
 
-    std::string transportScheme = "UDP";
+    
 
     transportScheme = pLeg->targetTransport;
     OSS::string_to_upper(transportScheme);
@@ -1133,7 +1134,7 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
     //
     // User request URI if no route is set
     //
-    if (!targetAddress.isValid())
+    if (!targetAddress.isValid() && transportScheme != "WS")
     {
       SIPURI requestTarget = remoteContact.getURI();
       std::string host;
@@ -1165,7 +1166,7 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
         targetAddress = IPAddress::fromV4IPPort(pLeg->remoteIp.c_str());
     }
 
-    if (!targetAddress.isValid())
+    if (!targetAddress.isValid() && transportScheme != "WS")
     {
       SIPMessage::Ptr serverError = pMsg->createResponse(SIPMessage::CODE_481_TransactionDoesNotExist, "Unable to determine dialog target");
       return serverError;
@@ -1177,7 +1178,7 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
     return serverError;
   }
 
-  if (!targetAddress.isValid())
+  if (!targetAddress.isValid() && transportScheme != "WS")
   {
     SIPMessage::Ptr serverError = pMsg->createResponse(SIPMessage::CODE_500_InternalServerError, "Can't Resolve Requested Target");
     return serverError;
