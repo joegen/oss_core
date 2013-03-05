@@ -139,6 +139,7 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     AC_CHECK_LIB(hiredis, main, [], [AC_MSG_ERROR("Redis client library not found")])
     AC_CHECK_LIB(config++, main, [], [AC_MSG_ERROR("libconfig C++ library not found")])
     AC_CHECK_LIB(v8, main, [], [AC_MSG_ERROR("Google V8 Javascript engine not found")])
+    AC_CHECK_LIB(gtest, main, [], [AC_MSG_ERROR("Google Test Framework not found")])
     AC_CHECK_LIB(ltdl, main, [], [AC_MSG_ERROR("libltdl not found")])
     AC_CHECK_LIB(mcrypt, main, [], [AC_MSG_ERROR("Mcrypt Encryption Library not found")])
     AC_CHECK_LIB(ssl, main, [], [AC_MSG_ERROR("SSL Development Library not found")])
@@ -154,7 +155,17 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     AC_CHECK_LIB(xmlrpc_client++, main, [], [AC_MSG_ERROR("XML RPC C++ client classes not found")])
     AC_CHECK_LIB(xmlrpc_server_abyss++, main, [], [AC_MSG_ERROR("XML RPC C++ server classes not found")])
 
+    #
+    # TURN dependencies
+    #
+    AC_CHECK_LIB(event, main, [], [AC_MSG_ERROR("LibEvent2 Library not found")])
+    AC_CHECK_LIB(event_openssl, main, [], [AC_MSG_ERROR("LibEvent2 SSL Library not found")])
+    AC_CHECK_LIB(event_pthreads, main, [], [AC_MSG_ERROR("LibEvent2 SSL Library not found")])
+
+
+
     OSS_CORE_DEP_LIBS=""
+    OSS_CORE_DEP_LIBS+=" -lgtest "
     OSS_CORE_DEP_LIBS+=" -lhiredis "
     OSS_CORE_DEP_LIBS+=" -lconfig++  "
     OSS_CORE_DEP_LIBS+=" -lv8  "
@@ -227,7 +238,7 @@ AC_DEFUN([SFAC_LIB_CORE],
     foundpath=""
     SFAC_ARG_WITH_LIB([liboss_carp.la],
             [osscarplib],
-            [ --with-osscarplib=<dir> portability library path ],
+            [ --with-osscarplib=<dir> carp library path ],
             [oss_carpLib])
 
     if test x_$foundpath != x_; then
@@ -237,6 +248,20 @@ AC_DEFUN([SFAC_LIB_CORE],
         foundpath=${prefix}/lib
     fi
     AC_SUBST(LIB_OSS_CARP_LA, "$foundpath/liboss_carp.la")
+
+    foundpath=""
+    SFAC_ARG_WITH_LIB([liboss_turn.la],
+            [ossturnlib],
+            [ --with-ossturnlib=<dir> turn library path ],
+            [oss_turnLib])
+
+    if test x_$foundpath != x_; then
+        AC_MSG_RESULT($foundpath)
+    else
+        AC_MSG_WARN([    assuming it will be in '${prefix}/lib'])
+        foundpath=${prefix}/lib
+    fi
+    AC_SUBST(LIB_OSS_TURN_LA, "$foundpath/liboss_turn.la")
 
     AC_REQUIRE([SFAC_LIB_CORE_FLAGS])
 
