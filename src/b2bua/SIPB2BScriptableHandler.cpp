@@ -769,6 +769,13 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
   if (pTransaction->getProperty("no-rtp-proxy", noRTPProxy) && noRTPProxy == "1")
     return OSS::SIP::SIPMessage::Ptr();
 
+  //
+  // do not handle SDP for SIP over websockets.  It is using ICE
+  // to traverse NAT.  Media anchor will mess that up.
+  //
+  if (pTransaction->serverTransport() && pTransaction->serverTransport()->getTransportScheme() == "ws")
+    return OSS::SIP::SIPMessage::Ptr();
+  
   std::string sessionId;
   OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
 
@@ -917,6 +924,13 @@ void SIPB2BScriptableHandler::onProcessResponseBody(
 
   std::string noRTPProxy;
   if (pTransaction->getProperty("no-rtp-proxy", noRTPProxy) && noRTPProxy == "1")
+    return;
+
+  //
+  // do not handle SDP for SIP over websockets.  It is using ICE
+  // to traverse NAT.  Media anchor will mess that up.
+  //
+  if (pTransaction->serverTransport() && pTransaction->serverTransport()->getTransportScheme() == "ws")
     return;
 
   //
