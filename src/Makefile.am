@@ -130,6 +130,7 @@ liboss_core_la_CXXFLAGS =
 	-fno-gcse -O0 -fno-implement-inlines -fno-default-inline 
 
 liboss_core_la_SOURCES =  \
+    boost_pch.hpp \
     DNS.cpp \
     Endian.cpp \
     Application.cpp \
@@ -349,3 +350,10 @@ oss_carp_SOURCES = apps/oss_carp.cpp
 
 
 DISTCLEANFILES = Makefile.in
+
+#
+# Build rule for Boost precompiled header
+#
+BUILT_SOURCES = boost_pch.hpp.gch
+%.hpp.gch: %.hpp
+	$(CXX) -D_REENTRANT -D_FILE_OFFSET_BITS=64 -fno-gcse -O0 -fno-implement-inlines -g -O2 -fmessage-length=0 -Wall -Wformat -Wwrite-strings -Wpointer-arith -fPIC -DPIC -c $<
