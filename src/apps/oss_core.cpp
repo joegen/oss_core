@@ -18,9 +18,11 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+
 #include <execinfo.h>
 #include <sys/resource.h>
 #include <signal.h>
+
 
 #include <Poco/Exception.h>
 
@@ -33,7 +35,15 @@
 #include "OSS/SIP/B2BUA/SIPB2BTransactionManager.h"
 #include "OSS/SIP/B2BUA/SIPB2BScriptableHandler.h"
 #include "OSS/SIP/B2BUA/SIPB2BDialogStateManager.h"
+
+
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#if ENABLE_TURN
 #include "OSS/Net/TurnServer.h"
+#endif
 
 #define TCP_PORT_BASE 20000
 #define TCP_PORT_MAX  30000
@@ -455,10 +465,13 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionString('t', "target-address", "IP Address, Host or DNS/SRV address of your SIP Server.");
   options.addOptionFlag('r', "allow-relay", "Allow relaying of transactions towards SIP Servers other than the one specified in the target-domain.");
   options.addOptionFlag('n', "no-rtp-proxy", "Disable built in media relay.");
+
+#if ENABLE_TURN
   options.addOptionFlag('T', "enable-turn-relay", "Run the built in turn server.");
   options.addOptionString('c', "turn-cert-file", "The certificate file to be used for TLS and DTLS.");
   options.addOptionString('k', "turn-pkey-file", "The private key file to be used for TLS and DTLS.");
-  
+#endif
+
   return options.parseOptions();
 }
 
@@ -494,6 +507,7 @@ int main(int argc, char** argv)
     if (options.hasOption("no-rtp-proxy"))
       ua.rtpProxy().disable();
 
+#if ENABLE_TURN
     if (options.hasOption("enable-turn-relay"))
     {
 
@@ -501,6 +515,7 @@ int main(int argc, char** argv)
       options.getOption("turn-pkey-file", OSS::Net::TurnServer::instance().config().pkey);
       OSS::Net::TurnServer::instance().run();
     }
+#endif
 
     OSS::app_wait_for_termination_request();
     ua.stop();

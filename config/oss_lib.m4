@@ -155,14 +155,6 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     AC_CHECK_LIB(xmlrpc_client++, main, [], [AC_MSG_ERROR("XML RPC C++ client classes not found")])
     AC_CHECK_LIB(xmlrpc_server_abyss++, main, [], [AC_MSG_ERROR("XML RPC C++ server classes not found")])
 
-    #
-    # TURN dependencies
-    #
-    AC_CHECK_LIB(event, main, [], [AC_MSG_ERROR("LibEvent2 Library not found")])
-    AC_CHECK_LIB(event_openssl, main, [], [AC_MSG_ERROR("LibEvent2 SSL Library not found")])
-    AC_CHECK_LIB(event_pthreads, main, [], [AC_MSG_ERROR("LibEvent2 SSL Library not found")])
-
-
 
     OSS_CORE_DEP_LIBS=""
     OSS_CORE_DEP_LIBS+=" -lgtest "
@@ -182,6 +174,30 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     OSS_CORE_DEP_LIBS+=" -lxmlrpc "
     OSS_CORE_DEP_LIBS+=" -lxmlrpc_client++  "
     OSS_CORE_DEP_LIBS+=" -lxmlrpc_server_abyss++ "
+
+    #
+    # Check for TURN dependencies
+    #
+    AM_CONDITIONAL([HAVE_EVENT], false)
+    AM_CONDITIONAL([HAVE_EVENT_SSL], false)
+    AM_CONDITIONAL([HAVE_EVENT_THREAD], false)
+    AC_CHECK_LIB(event, main, [], [AM_CONDITIONAL([HAVE_EVENT], true)])
+    AC_CHECK_LIB(event_openssl, main, [], [AM_CONDITIONAL([HAVE_EVENT_SSL], true)])
+    AC_CHECK_LIB(event_pthreads, main, [], [AM_CONDITIONAL([HAVE_EVENT_THREAD], true)])
+
+    AM_CONDITIONAL([ENABLE_TURN], false)
+    AM_COND_IF([HAVE_EVENT],
+        [AM_COND_IF([HAVE_EVENT_SSL],
+        [AM_COND_IF([HAVE_EVENT_THREAD],
+        [AM_CONDITIONAL([ENABLE_TURN], true)],
+        [AM_CONDITIONAL([ENABLE_TURN], false)])],
+        [AM_CONDITIONAL([ENABLE_TURN], false)])],
+        [AM_CONDITIONAL([ENABLE_TURN], false)])
+
+AM_CONDITIONAL([ENABLE_TURN], false)
+
+    AM_COND_IF([ENABLE_TURN], [OSS_CORE_DEP_LIBS+=" -levent -levent_openssl -levent_pthreads "])
+    AM_COND_IF([ENABLE_TURN], [AC_DEFINE(ENABLE_TURN, [1], [Define if libevent 2 libraries are found])])
 
     AC_SUBST(OSS_CORE_DEP_LIBS, "$BOOST_LIBS $POCO_LIBS $OSS_CORE_DEP_LIBS")
 
