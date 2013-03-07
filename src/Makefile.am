@@ -1,6 +1,15 @@
 SUBDIRS = .
 
-lib_LTLIBRARIES = liboss_carp.la liboss_turn.la liboss_core.la
+corelibs = liboss_carp.la
+corelibldadd = @OSS_CORE_DEP_LIBS@ liboss_core.la liboss_carp.la
+if ENABLE_TURN
+    corelibs += liboss_turn.la
+    corelibldadd += liboss_turn.la
+endif
+corelibs += liboss_core.la
+
+
+lib_LTLIBRARIES = $(corelibs)
 
 localedir = $(datadir)/locale -DLOCALEDIR=\"$(localedir)\"
 
@@ -18,11 +27,7 @@ version_Current=@OSS_CORE_VERSION_CURRENT@
 version_Revision=@OSS_CORE_VERSION_REVISION@
 version_Age=@OSS_CORE_VERSION_AGE@
 
-LDADD = \
-    @OSS_CORE_DEP_LIBS@ \
-    liboss_core.la \
-    liboss_carp.la \
-    liboss_turn.la
+LDADD = $(corelibldadd)
 
 LDFLAGS = -rdynamic
 
@@ -58,54 +63,57 @@ liboss_carp_la_SOURCES = \
 	net/carp/log.h \
 	net/carp/syslognames.h
 
-liboss_turn_la_LDFLAGS = -version-info @OSS_CORE_VERSION_INFO@
-liboss_turn_la_LIBADD = @OSS_CORE_DEP_LIBS@
-liboss_turn_la_CPPFLAGS = -D__USE_OPENSSL__
+if ENABLE_TURN
 
-liboss_turn_la_SOURCES = \
-    net/turn/client++/TurnMsgLib.h \
-    net/turn/client/ns_turn_msg_addr.c \
-    net/turn/client/ns_turn_utils.c \
-    net/turn/client/ns_turn_msg_defs.h \
-    net/turn/client/ns_turn_ioaddr.h \
-    net/turn/client/ns_turn_msg.h \
-    net/turn/client/ns_turn_msg_addr.h \
-    net/turn/client/ns_turn_ioaddr.c \
-    net/turn/client/ns_turn_utils.h \
-    net/turn/client/ns_turn_msg.c \
-    net/turn/server/ns_turn_allocation.h \
-    net/turn/server/ns_turn_khash.h \
-    net/turn/server/ns_turn_ioalib.h \
-    net/turn/server/ns_turn_server.c \
-    net/turn/server/ns_turn_allocation.c \
-    net/turn/server/ns_turn_maps_rtcp.h \
-    net/turn/server/ns_turn_maps_rtcp.c \
-    net/turn/server/ns_turn_maps.c \
-    net/turn/server/ns_turn_session.h \
-    net/turn/server/ns_turn_server.h \
-    net/turn/server/ns_turn_maps.h \
-    net/turn/ns_turn_defs.h \
-    net/turn/apps/relay/dtls_listener.c \
-    net/turn/apps/relay/ns_ioalib_impl.h \
-    net/turn/apps/relay/turn_ports.h \
-    net/turn/apps/relay/tcp_listener.c \
-    net/turn/apps/relay/userdb.c \
-    net/turn/apps/relay/udp_listener.c \
-    net/turn/apps/relay/udp_listener.h \
-    net/turn/apps/relay/tcp_listener.h \
-    net/turn/apps/relay/dtls_listener.h \
-    net/turn/apps/relay/tls_listener.h \
-    net/turn/apps/relay/mainrelay.c \
-    net/turn/apps/relay/mainrelay.h \
-    net/turn/apps/relay/userdb.h \
-    net/turn/apps/relay/turn_ports.c \
-    net/turn/apps/relay/ns_ioalib_engine_impl.c \
-    net/turn/apps/relay/tls_listener.c \
-    net/turn/apps/relay/turnmutex.c \
-    net/turn/apps/common/apputils.c \
-    net/turn/apps/common/stun_buffer.h \
-    net/turn/apps/common/stun_buffer.c \
-    net/turn/apps/common/apputils.h
+    liboss_turn_la_LDFLAGS = -version-info @OSS_CORE_VERSION_INFO@
+    liboss_turn_la_LIBADD = @OSS_CORE_DEP_LIBS@
+    liboss_turn_la_CPPFLAGS = -D__USE_OPENSSL__
+
+    liboss_turn_la_SOURCES = \
+        net/turn/client++/TurnMsgLib.h \
+        net/turn/client/ns_turn_msg_addr.c \
+        net/turn/client/ns_turn_utils.c \
+        net/turn/client/ns_turn_msg_defs.h \
+        net/turn/client/ns_turn_ioaddr.h \
+        net/turn/client/ns_turn_msg.h \
+        net/turn/client/ns_turn_msg_addr.h \
+        net/turn/client/ns_turn_ioaddr.c \
+        net/turn/client/ns_turn_utils.h \
+        net/turn/client/ns_turn_msg.c \
+        net/turn/server/ns_turn_allocation.h \
+        net/turn/server/ns_turn_khash.h \
+        net/turn/server/ns_turn_ioalib.h \
+        net/turn/server/ns_turn_server.c \
+        net/turn/server/ns_turn_allocation.c \
+        net/turn/server/ns_turn_maps_rtcp.h \
+        net/turn/server/ns_turn_maps_rtcp.c \
+        net/turn/server/ns_turn_maps.c \
+        net/turn/server/ns_turn_session.h \
+        net/turn/server/ns_turn_server.h \
+        net/turn/server/ns_turn_maps.h \
+        net/turn/ns_turn_defs.h \
+        net/turn/apps/relay/dtls_listener.c \
+        net/turn/apps/relay/ns_ioalib_impl.h \
+        net/turn/apps/relay/turn_ports.h \
+        net/turn/apps/relay/tcp_listener.c \
+        net/turn/apps/relay/userdb.c \
+        net/turn/apps/relay/udp_listener.c \
+        net/turn/apps/relay/udp_listener.h \
+        net/turn/apps/relay/tcp_listener.h \
+        net/turn/apps/relay/dtls_listener.h \
+        net/turn/apps/relay/tls_listener.h \
+        net/turn/apps/relay/mainrelay.c \
+        net/turn/apps/relay/mainrelay.h \
+        net/turn/apps/relay/userdb.h \
+        net/turn/apps/relay/turn_ports.c \
+        net/turn/apps/relay/ns_ioalib_engine_impl.c \
+        net/turn/apps/relay/tls_listener.c \
+        net/turn/apps/relay/turnmutex.c \
+        net/turn/apps/common/apputils.c \
+        net/turn/apps/common/stun_buffer.h \
+        net/turn/apps/common/stun_buffer.c \
+        net/turn/apps/common/apputils.h
+endif
 
 
 liboss_core_la_LDFLAGS = \
@@ -272,20 +280,22 @@ liboss_core_la_SOURCES =  \
     net/FirewallRule.cpp \
     net/Firewall.cpp \
     net/Carp.cpp \
-    net/TurnServer.cpp \
     utl/AdaptiveDelay.cpp \
     sipfsm/SIPWebSocketConnection.cpp \
     sipfsm/SIPWebSocketListener.cpp \
     sipfsm/SIPWebSocketConnectionManager.cpp \
-    ws/websocketpp/src/base64/base64.cpp \
-    ws/websocketpp/src/md5/md5.c \
-    ws/websocketpp/src/messages/data.cpp \
-    ws/websocketpp/src/network_utilities.cpp \
-    ws/websocketpp/src/processors/hybi_header.cpp \
-    ws/websocketpp/src/processors/hybi_util.cpp \
-    ws/websocketpp/src/sha1/sha1.cpp \
-    ws/websocketpp/src/uri.cpp
+    ws/src/base64/base64.cpp \
+    ws/src/md5/md5.c \
+    ws/src/messages/data.cpp \
+    ws/src/network_utilities.cpp \
+    ws/src/processors/hybi_header.cpp \
+    ws/src/processors/hybi_util.cpp \
+    ws/src/sha1/sha1.cpp \
+    ws/src/uri.cpp
 
+if ENABLE_TURN
+    liboss_core_la_SOURCES += net/TurnServer.cpp
+endif
 
 bin_PROGRAMS = \
     oss_core_unit_test \
