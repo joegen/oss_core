@@ -241,12 +241,9 @@
 #include <cstdlib>
 #include <fstream>
 #include <boost/assert.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
-#include <boost/bind.hpp>
-#include <boost/asio.hpp>
-#include <boost/thread.hpp>
+
 
 #if defined(OSS_OS_FAMILY_WINDOWS)
 #include <Windows.h>

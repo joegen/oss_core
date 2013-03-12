@@ -26,8 +26,9 @@
 #define JSBase_H_INCLUDED
 
 #include "OSS/OSS.h"
-#include "boost/noncopyable.hpp"
-#include "boost/tuple/tuple.hpp"
+#include <boost/filesystem.hpp>
+#include <boost/noncopyable.hpp>
+#include <boost/tuple/tuple.hpp>
 
 #include "OSS/JS/JS.h"
 #include "OSS/Thread.h"

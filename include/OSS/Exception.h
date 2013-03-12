@@ -27,6 +27,7 @@
 
 
 #include <stdexcept>
+#include <boost/system/system_error.hpp>
 #include <boost/system/error_code.hpp>
 #include "OSS/OSS.h"
 

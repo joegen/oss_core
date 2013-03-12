@@ -21,6 +21,7 @@
 
 
 #include <sys/select.h>
+#include <sys/time.h>
 #include "OSS/Core.h"
 #include "OSS/UTL/AdaptiveDelay.h"
 

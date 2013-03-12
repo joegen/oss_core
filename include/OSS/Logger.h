@@ -28,6 +28,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <boost/filesystem.hpp>
 
 #include "OSS/OSS.h"
 
