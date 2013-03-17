@@ -1,11 +1,6 @@
-
-// OSS Software Solutions Application Programmer Interface
-// Package: B2BUA
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
-// Package: B2BUA
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -1762,6 +1757,7 @@ void SIPB2BScriptableHandler::handleOptionsResponse(
   //
   // Only report errors to the queue
   //
+#define FORKING_ENABLED 1
 
   if (e)
   {

@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -58,7 +56,7 @@ public:
   typedef boost::shared_ptr<OSS::Exception> Error;
   typedef boost::function<void(const SIPTransaction::Error&, const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> Callback;
 	typedef boost::function<void(const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> RequestCallback;
-  
+  typedef std::map<std::string, SIPTransaction::Ptr> Branches;
   enum Type
   {
     TYPE_UNKNOWN,
@@ -69,21 +67,14 @@ public:
   };
   
   SIPTransaction();
-		/// Creates the SIPTransaction.
+    /// Creates the SIPTransaction.
+
+  SIPTransaction(SIPTransaction* pParent);
+    /// Creates a new child transaction
 
   ~SIPTransaction();
-		/// Destroys the SIPTransaction, cancelling all pending tasks.
+    /// Destroys the SIPTransaction, cancelling all pending tasks.
 	
-  void onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport);
-    /// This method is called when a SIP message is received from the transport.
-    ///
-    /// The SIP message will simply be passed to the FSM 
-    /// where the transaction state will be processed.
-    ///
-    /// Take note that this is called directly from the 
-    /// transport proactor thread and should therefore
-    /// not block and result to a transport sleep.
-
   void informTU(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport);
     /// Propagate the SIP message to the upper layer
     ///
@@ -184,6 +175,30 @@ public:
     /// Send a new SIP (ACK REQUEST) message to the Network.
     ///
     /// This method is used by ICT to ACK 2xx responses
+
+  const std::string& getLogId() const;
+    /// Return the transaction logid
+
+  void setLogId(const std::string& logId);
+    /// Set the transaction log id
+
+  bool isXOREncrypted() const;
+    /// Returns true if this transaction is XOR encrypted
+
+  SIPMessage::Ptr getInitialRequest() const;
+
+  bool allBranchesCompleted() const;
+    /// Returns true if all branches are already in completed or terminated state
+protected:
+  void onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport);
+    /// This method is called when a SIP message is received from the transport.
+    ///
+    /// The SIP message will simply be passed to the FSM
+    /// where the transaction state will be processed.
+    ///
+    /// Take note that this is called directly from the
+    /// transport proactor thread and should therefore
+    /// not block and result to a transport sleep.
 
   void writeMessage(SIPMessage::Ptr pMsg);
     /// Send a message using the transaction transport.
@@ -291,34 +306,21 @@ public:
     /// Handler for ACK request for IST.
     ///
 
-  const std::string& getLogId() const;
-    /// Return the transaction logid
-
-  void setLogId(const std::string& logId);
-    /// Set the transaction log id
-
-  bool isXOREncrypted() const;
-    /// Returns true if this transaction is XOR encrypted
-
-  SIPTransaction::Ptr createChildTransactionFromResponse(const SIPMessage::Ptr& pMsg, const SIPTransportSession::Ptr& pTransport, bool mayExist);
-  SIPTransaction::Ptr createChildTransactionFromResponse(const std::string& id, bool mayExist);
-    /// Creates a new child transaction due to a forked response.
-    /// If the transaction already exists, the existing pointer will be returned.
-    /// A new transaction will be created if one does not exist
-
-  SIPTransaction::Ptr findChildTransactionFromResponse(const SIPMessage::Ptr& pMsg);
-  SIPTransaction::Ptr findChildTransaction(const std::string& id);
-    /// Returns the pointer to a child transaction.
-    /// Null will be returned if the transaction does not exists
-
   void setRemoteTag(const std::string& tag);
     /// Set the remote tag for early dialogs.
 
   const std::string& getRemoteTag();
     /// Get the remote tag for early dialogs
 
-  bool isChildTransaction() const;
+  SIPTransaction* getParent();
+    /// Returns a the parent transaction.
 
+  SIPTransaction::Ptr findBranch(const SIPMessage::Ptr& pRequest);
+    /// Find the brach that would handle the request or create a new one
+    /// if it does not exists
+
+  bool isParent() const;
+    /// Return true if this transaction is the parent transaction
 
 protected:
   SIPTransaction::Callback _responseTU;
@@ -342,12 +344,23 @@ private:
   mutable OSS::mutex_read_write _stateMutex;
   std::string _logId;
   bool _isXOREncrypted;
-  bool _isInitialRequest;
-  SIPTransaction::WeakPtr _parent;
+  SIPTransaction* _pParent;
   std::map<std::string, SIPTransaction::Ptr> _children;
   std::string _remoteTag;
-  bool _isChildTransaction;
-	friend class SIPTransactionPool;
+  mutable OSS::mutex_critic_sec _branchesMutex;
+  Branches _branches;
+  SIPMessage::Ptr _pInitialRequest;
+  friend class SIPTransactionPool;
+  friend class SIPIstPool;
+  friend class SIPNistPool;
+  friend class SIPIctPool;
+  friend class SIPNictPool;
+  friend class SIPIst;
+  friend class SIPNist;
+  friend class SIPIct;
+  friend class SIPNict;
+  friend class SIPFSMDispatch;
+
 };
 
 
@@ -439,9 +452,19 @@ inline const std::string& SIPTransaction::getRemoteTag()
   return _remoteTag;
 }
 
-inline bool SIPTransaction::isChildTransaction() const
+inline SIPTransaction* SIPTransaction::getParent()
 {
-  return _isChildTransaction;
+  return _pParent;
+}
+
+inline SIPMessage::Ptr SIPTransaction::getInitialRequest() const
+{
+  return _pInitialRequest;
+}
+
+inline bool SIPTransaction::isParent() const
+{
+  return _pParent == 0;
 }
 
 } } // namespace OSS::SIP

@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -208,7 +206,8 @@ public:
   SIPMessage::Ptr getRequest() const;
     /// Returns a pointer to the request
 
-
+  virtual bool isCompleted() const = 0;
+    /// Returns true if state is already completed or terminated
 protected:
   SIPMessage::Ptr _pRequest;
   boost::asio::io_service& _ioService;

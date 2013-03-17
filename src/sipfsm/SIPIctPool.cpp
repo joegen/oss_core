@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -41,54 +39,13 @@ SIPIctPool::~SIPIctPool()
 
 void SIPIctPool::onAttachFSM(const SIPTransaction::Ptr& pTransaction)
 {
-  pTransaction->type() = SIPTransaction::TYPE_ICT;
-  pTransaction->fsm() = SIPIct::Ptr(new SIPIct(_ioService, _timerProps));
-  pTransaction->fsm()->setOwner(new SIPTransaction::WeakPtr(pTransaction));
-  pTransaction->fsm()->dispatch() = dispatch();
-}
-
-SIPTransaction::Ptr SIPIctPool::findChildTransaction(const SIPMessage::Ptr& pMsg, const SIPTransportSession::Ptr& pTransport, const SIPTransaction::Ptr& pParent)
-{
-  if (!dispatch()->getEnableIctForking())
-    return SIPTransaction::Ptr();
-
-  if (pMsg->isMidDialog())
+  if (!pTransaction->fsm())
   {
-    if (pParent->isChildTransaction())
-    {
-      //
-      // transaction is already a child.
-      //
-    	//TODO: What was the intention with this code? Maybe a return is missing?
-      SIPTransaction::Ptr();
-    }
-
-    SIPTo to;
-    to = pMsg->hdrGet("to");
-    std::string toTag;
-    toTag = to.getHeaderParam("tag");
-
-    if (pParent->getRemoteTag().empty())
-    {
-      pParent->setRemoteTag(toTag);
-      return SIPTransaction::Ptr();
-    }
-    else if (pParent->getRemoteTag() != toTag)
-    {
-      //
-      // We got a fork
-      //
-      return pParent->createChildTransactionFromResponse(pMsg, pTransport, true);
-    }
+    pTransaction->type() = SIPTransaction::TYPE_ICT;
+    pTransaction->fsm() = SIPIct::Ptr(new SIPIct(_ioService, _timerProps));
+    pTransaction->fsm()->setOwner(new SIPTransaction::WeakPtr(pTransaction));
+    pTransaction->fsm()->dispatch() = dispatch();
   }
-  else if (pMsg->isRequest())
-  {
-    //
-    // TODO!  This is a request that was forked downstream
-    //
-  }
-
-  return SIPTransaction::Ptr();
 }
 
 
