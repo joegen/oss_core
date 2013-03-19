@@ -69,7 +69,7 @@ public:
   SIPTransaction();
     /// Creates the SIPTransaction.
 
-  SIPTransaction(SIPTransaction* pParent);
+  SIPTransaction(SIPTransaction::Ptr pParent);
     /// Creates a new child transaction
 
   ~SIPTransaction();
@@ -312,7 +312,7 @@ protected:
   const std::string& getRemoteTag();
     /// Get the remote tag for early dialogs
 
-  SIPTransaction* getParent();
+  SIPTransaction::Ptr getParent();
     /// Returns a the parent transaction.
 
   SIPTransaction::Ptr findBranch(const SIPMessage::Ptr& pRequest);
@@ -334,10 +334,10 @@ protected:
   SIPTransaction::Callback _ackHandler;
   Type _type;
 private:
-	SIPTransaction(const SIPTransaction&);
-	SIPTransaction& operator = (const SIPTransaction&);
+  SIPTransaction(const SIPTransaction&);
+  SIPTransaction& operator = (const SIPTransaction&);
   std::string _id;
-	SIPTransactionPool* _owner;
+  SIPTransactionPool* _owner;
   SIPFsm::Ptr _fsm;
   SIPTransportSession::Ptr _transport;
   SIPTransportService* _transportService;
@@ -351,7 +351,8 @@ private:
   mutable OSS::mutex_read_write _stateMutex;
   std::string _logId;
   bool _isXOREncrypted;
-  SIPTransaction* _pParent;
+  WeakPtr _pParent;
+  bool _isParent;
   std::map<std::string, SIPTransaction::Ptr> _children;
   std::string _remoteTag;
   mutable OSS::mutex_critic_sec _branchesMutex;
@@ -459,11 +460,6 @@ inline const std::string& SIPTransaction::getRemoteTag()
   return _remoteTag;
 }
 
-inline SIPTransaction* SIPTransaction::getParent()
-{
-  return _pParent;
-}
-
 inline SIPMessage::Ptr SIPTransaction::getInitialRequest() const
 {
   return _pInitialRequest;
@@ -471,7 +467,7 @@ inline SIPMessage::Ptr SIPTransaction::getInitialRequest() const
 
 inline bool SIPTransaction::isParent() const
 {
-  return _pParent == 0;
+  return _isParent;
 }
 
 } } // namespace OSS::SIP

@@ -89,6 +89,8 @@ void SIPNict::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr p
 
   bool is2xx = pMsg->is2xx();
 
+  SIPTransaction::Ptr pParent = pTransaction->getParent();
+
   switch (pTransaction->getState())
   {
   case SIPTransaction::TRN_STATE_IDLE:
@@ -96,8 +98,8 @@ void SIPNict::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr p
     if (pMsg->is1xx())
     {
       pTransaction->setState(PROCEEDING);
-      if (!pTransaction->isParent() && pTransaction->getParent()->getState() < PROCEEDING)
-        pTransaction->getParent()->setState(PROCEEDING);
+      if (!pTransaction->isParent() && pParent && pParent->getState() < PROCEEDING)
+        pParent->setState(PROCEEDING);
 
       pTransaction->informTU(pMsg, pTransport);
     }
@@ -120,9 +122,13 @@ void SIPNict::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr p
         //
         cancelTimerE();
         cancelTimerF();
-        pTransaction->getParent()->fsm()->cancelTimerE();
-        pTransaction->getParent()->fsm()->cancelTimerF();
-        pTransaction->getParent()->setState(COMPLETED);
+
+        if (pParent)
+        {
+          pParent->fsm()->cancelTimerE();
+          pParent->fsm()->cancelTimerF();
+          pParent->setState(COMPLETED);
+        }
       }
       else if (!pTransaction->isParent() && !is2xx)
       {
@@ -134,11 +140,11 @@ void SIPNict::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr p
         cancelTimerE();
         cancelTimerF();
 
-        if (pTransaction->getParent()->getBranchCount() == 1)
+        if (pParent && pParent->getBranchCount() == 1)
         {
-          pTransaction->getParent()->fsm()->cancelTimerE();
-          pTransaction->getParent()->fsm()->cancelTimerF();
-          pTransaction->getParent()->setState(COMPLETED);
+          pParent->fsm()->cancelTimerE();
+          pParent->fsm()->cancelTimerF();
+          pParent->setState(COMPLETED);
         }
       }
 
@@ -156,8 +162,10 @@ void SIPNict::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr p
       {
         pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
         if (is2xx || pTransaction->allBranchesCompleted())
-          pTransaction->getParent()->setState(SIPTransaction::TRN_STATE_TERMINATED);
-
+        {
+          if (pParent)
+            pParent->setState(SIPTransaction::TRN_STATE_TERMINATED);
+        }
       }
     }
     break;
@@ -185,9 +193,12 @@ void SIPNict::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr p
         //
         cancelTimerE();
         cancelTimerF();
-        pTransaction->getParent()->fsm()->cancelTimerE();
-        pTransaction->getParent()->fsm()->cancelTimerF();
-        pTransaction->getParent()->setState(COMPLETED);
+        if (pParent)
+        {
+          pParent->fsm()->cancelTimerE();
+          pParent->fsm()->cancelTimerF();
+          pParent->setState(COMPLETED);
+        }
       }
       else if (!pTransaction->isParent() && !is2xx)
       {
@@ -199,11 +210,14 @@ void SIPNict::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr p
         cancelTimerE();
         cancelTimerF();
 
-        if (pTransaction->getParent()->getBranchCount() == 1)
+        if (pParent)
         {
-          pTransaction->getParent()->fsm()->cancelTimerE();
-          pTransaction->getParent()->fsm()->cancelTimerF();
-          pTransaction->getParent()->setState(COMPLETED);
+          if (pParent->getBranchCount() == 1)
+          {
+            pParent->fsm()->cancelTimerE();
+            pParent->fsm()->cancelTimerF();
+            pParent->setState(COMPLETED);
+          }
         }
       }
       
@@ -220,7 +234,8 @@ void SIPNict::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr p
       {
         pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
         if (is2xx || pTransaction->allBranchesCompleted())
-          pTransaction->getParent()->setState(SIPTransaction::TRN_STATE_TERMINATED);
+          if (pParent)
+            pParent->setState(SIPTransaction::TRN_STATE_TERMINATED);
 
       }
     }
@@ -232,8 +247,8 @@ void SIPNict::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr p
   if (pTransaction->getState() == SIPTransaction::TRN_STATE_TERMINATED)
       pTransaction->terminate();
 
-  if (pTransaction->getParent() && pTransaction->getParent()->getState() == SIPTransaction::TRN_STATE_TERMINATED)
-      pTransaction->getParent()->terminate();
+  if (pParent && pParent->getState() == SIPTransaction::TRN_STATE_TERMINATED)
+      pParent->terminate();
 
 }
 
@@ -297,16 +312,18 @@ void SIPNict::handleDelayedTerminate()
   if (pTransaction->getState() == SIPTransaction::TRN_STATE_TERMINATED)
     return;
 
+  SIPTransaction::Ptr pParent = pTransaction->getParent();
+
   if (pTransaction->isParent())
   {
     pTransaction->terminate();
   }
-  else if (pTransaction->getParent()->allBranchesCompleted())
+  else if (pParent && pParent->allBranchesCompleted())
   {
     //
     // all branches will terminate with the parent
     //
-    pTransaction->getParent()->terminate();
+    pParent->terminate();
   }
 }
 

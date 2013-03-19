@@ -45,11 +45,12 @@ SIPTransaction::SIPTransaction():
   _dialogTarget(),
   _willSendAckFor2xx(false),
   _isXOREncrypted(false),
-  _pParent(0)
+  _pParent(),
+  _isParent(true)
 {
 }
 
-SIPTransaction::SIPTransaction(SIPTransaction* pParent) :
+SIPTransaction::SIPTransaction(SIPTransaction::Ptr pParent) :
   _type(TYPE_UNKNOWN),
   _owner(0),
   _transportService(0),
@@ -60,10 +61,11 @@ SIPTransaction::SIPTransaction(SIPTransaction* pParent) :
   _dialogTarget(),
   _willSendAckFor2xx(false),
   _isXOREncrypted(false),
-  _pParent(pParent)
+  _pParent(pParent),
+  _isParent(false)
 {
-  _id = _pParent->getId();
-  _logId = _pParent->getLogId();
+  _id = pParent->getId();
+  _logId = pParent->getLogId();
   std::ostringstream logMsg;
   logMsg << _logId << "Transaction " << _id << " isParent=" << (isParent() ? "Yes" : "No") << " CREATED";
   OSS::log_debug(logMsg.str());
@@ -134,23 +136,28 @@ void SIPTransaction::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
   //
   // If this is a request and is not an ACK, then the parent IST fsm must always handle it
   //
-  if (pMsg->isRequest() && isParent() && !isAck)
+  if (isParent() && pMsg->isRequest() && !isAck)
   {
     _fsm->onReceivedMessage(pMsg, pTransport);
   }
-  else
+  else if (!pMsg->isRequest() || isAck)
   {
     //
     // This is a response or an ACK and the transaction could have branched out
     //
-    SIPTransaction::Ptr pBranch = findBranch(pMsg);
-    if (!pBranch)
+    if (!isParent())
+    {
       _fsm->onReceivedMessage(pMsg, pTransport);
+    }
     else
-      pBranch->onReceivedMessage(pMsg, pTransport);
+    {
+      SIPTransaction::Ptr pBranch = findBranch(pMsg);
+      if (pBranch)
+        pBranch->onReceivedMessage(pMsg, pTransport);
+      else
+        _fsm->onReceivedMessage(pMsg, pTransport);
+    }
   }
-
-  
 }
 
 void SIPTransaction::sendRequest(
@@ -258,10 +265,12 @@ void SIPTransaction::sendResponse(
   if (!pResponse->isResponse())
     throw OSS::SIP::SIPException("Sending a REQUEST using sendResponse() is illegal!");
 
+  SIPTransaction::Ptr pParent = getParent();
+
   if (!_transport && isParent())
     throw OSS::SIP::SIPException("Transport Not Ready!");
-  else if (!isParent())
-    _transport = _pParent->_transport;
+  else if (!isParent() && pParent)
+    _transport = pParent->_transport;
 
   if (_sendAddress.getPort() == 0)
     _sendAddress = sendAddress;
@@ -278,7 +287,7 @@ void SIPTransaction::sendResponse(
     //
     // No branch is found.  This instance will handle the response
     //
-    if (_transport->isReliableTransport())
+    if (_transport && _transport->isReliableTransport())
     {
       if (_transport->writeKeepAlive())
       {
@@ -304,17 +313,21 @@ void SIPTransaction::sendResponse(
         }
         else
         {
-          OSS_LOG_ERROR("SIPTransaction::sendResponse - Uanble to re-establish transport to send response.");
+          OSS_LOG_ERROR("SIPTransaction::sendResponse - Unable to re-establish transport to send response.");
         }
 
       }
     }
-    else
+    else if (_transport)
     {
       //
       // This is UDP so a keep-alive check won't do us any good
       //
       writeMessage(pResponse, _sendAddress);
+    }
+    else
+    {
+      OSS_LOG_ERROR("SIPTransaction::sendResponse - Transport is NULL.");
     }
   }
 }
@@ -405,11 +418,6 @@ void SIPTransaction::terminate()
     }
     _owner->removeTransaction(_id);
   }
-  else
-  {
-    OSS_VERIFY_NULL(_pParent);
-    _pParent->onBranchTerminated(shared_from_this());
-  }
 }
 
 void SIPTransaction::onBranchTerminated(const SIPTransaction::Ptr& pBranch)
@@ -457,6 +465,22 @@ void SIPTransaction::informTU(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTr
     _responseTU(SIPTransaction::Error(), pMsg, pTransport, shared_from_this());
 }
 
+SIPTransaction::Ptr SIPTransaction::getParent()
+{
+  SIPTransaction::Ptr pParent;
+  if (!_isParent)
+  {
+    try
+    {
+      pParent = _pParent.lock();
+    }
+    catch(...)
+    {
+    }
+  }
+  return pParent;
+}
+
 std::size_t SIPTransaction::getBranchCount() const
 {
   OSS::mutex_critic_sec_lock lock(_branchesMutex);
@@ -484,7 +508,7 @@ SIPTransaction::Ptr SIPTransaction::findBranch(const SIPMessage::Ptr& pRequest)
   //
   if (pBranch == _branches.end())
   {
-    foundBranch = SIPTransaction::Ptr(new SIPTransaction(this));
+    foundBranch = SIPTransaction::Ptr(new SIPTransaction(shared_from_this()));
     _owner->onAttachFSM(foundBranch);
     foundBranch->fsm()->setRequest(fsm()->getRequest());
     foundBranch->_owner = _owner;

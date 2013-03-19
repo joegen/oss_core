@@ -92,7 +92,7 @@ void SIPIct::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
   if (!pMsg->isResponse() || !pTransaction || pTransaction->getState() == SIPTransaction::TRN_STATE_TERMINATED)
     return;
 
-  SIPTransaction* pParent = pTransaction->getParent();
+  SIPTransaction::Ptr pParent = pTransaction->getParent();
 
   switch (pTransaction->getState())
   {
@@ -130,8 +130,8 @@ void SIPIct::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
           pTransaction->setState(SIPTransaction::TRN_STATE_ACK_PENDING);
           startTimerD();
         }
-      else
-        pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
+        else
+          pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
       }
     }
     else if (pMsg->isErrorResponse())

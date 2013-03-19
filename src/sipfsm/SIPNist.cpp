@@ -139,16 +139,18 @@ void SIPNist::handleDelayedTerminate()
   if (pTransaction->getState() == SIPTransaction::TRN_STATE_TERMINATED)
     return;
 
+  SIPTransaction::Ptr pParent = pTransaction->getParent();
+
   if (pTransaction->isParent())
   {
     pTransaction->terminate();
   }
-  else if (pTransaction->getParent()->allBranchesCompleted())
+  else if (pParent && pParent->allBranchesCompleted())
   {
     //
     // all branches will terminate with the parent
     //
-    pTransaction->getParent()->terminate();
+    pParent->terminate();
   }
 }
 
