@@ -38,22 +38,9 @@ public:
   virtual void onAttachFSM(const SIPTransaction::Ptr& pTransaction);
     /// Attach an FSM to a new created transaction
 
-  void addAckableTransaction(const std::string& dialogId, SIPTransaction::Ptr trn);
-    /// Promote the IST as a dialog so that ACK requests will properly be mapped
-
-  SIPTransaction::Ptr findAckableTransaction(const std::string& dialogId);
-    /// Returns a smart pointer to the ACKable IST
-
-  void removeAckableTransaction(const std::string& dialogId);
-    /// Remove the the ACKable transaction from the pool
-
 protected:
   SIPIstPool(SIPFSMDispatch* dispatch);
   virtual ~SIPIstPool();
-  
-  OSS::mutex_critic_sec _ackPoolMutex;
-  TransactionPool _ackPool;
-
   friend class SIPFSMDispatch;
 };
 

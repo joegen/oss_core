@@ -49,28 +49,7 @@ void SIPIstPool::onAttachFSM(const SIPTransaction::Ptr& pTransaction)
   }
 }
 
-void SIPIstPool::addAckableTransaction(const std::string& dialogId, SIPTransaction::Ptr trn)
-{
-  OSS::mutex_critic_sec_lock lock(_ackPoolMutex);
-  TransactionPool::iterator iter = _ackPool.find(dialogId);
-  if (iter == _ackPool.end())
-    _ackPool[dialogId] = trn;
-}
 
-SIPTransaction::Ptr SIPIstPool::findAckableTransaction(const std::string& dialogId)
-{
-  OSS::mutex_critic_sec_lock lock(_ackPoolMutex);
-  TransactionPool::iterator iter = _ackPool.find(dialogId);
-  if (iter != _ackPool.end())
-    return iter->second;
-  return SIPTransaction::Ptr();
-}
-
-void SIPIstPool::removeAckableTransaction(const std::string& dialogId)
-{
-  OSS::mutex_critic_sec_lock lock(_ackPoolMutex);
-  _ackPool.erase(dialogId);
-}
 
 } } // OSS::SIP
 

@@ -118,21 +118,7 @@ void SIPIct::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
     else if (pMsg->is2xx())
     {
       pTransaction->informTU(pMsg, pTransport);
-
-      if (!pTransaction->willSendAckFor2xx())
-      {
-        pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
-      }
-      else
-      {
-        if (!pTransport->isReliableTransport())
-        {
-          pTransaction->setState(SIPTransaction::TRN_STATE_ACK_PENDING);
-          startTimerD();
-        }
-        else
-          pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
-      }
+      pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
     }
     else if (pMsg->isErrorResponse())
     {
@@ -164,23 +150,8 @@ void SIPIct::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
       }
       #endif
       pTransaction->informTU(pMsg, pTransport);
+      pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
 
-      if (!pTransaction->willSendAckFor2xx())
-      {
-        pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
-      }
-      else
-      {
-        if (!pTransport->isReliableTransport())
-        {
-          pTransaction->setState(SIPTransaction::TRN_STATE_ACK_PENDING);
-          startTimerD();
-        }
-        else
-        {
-          pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
-        }
-      }
     }
     else if (pMsg->isErrorResponse())
     {
@@ -197,23 +168,6 @@ void SIPIct::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
         pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
       }
     }
-    break;
-  case SIPTransaction::TRN_STATE_ACK_PENDING:
-    {//localize
-      OSS::mutex_critic_sec_lock lock(_ackMutex);
-      if (_pAck )
-      {
-        if (pMsg->is2xx())
-        {
-          if (pTransaction->transport()->isReliableTransport())
-            pTransaction->transport()->writeMessage(_pAck);
-          else
-            pTransaction->transport()->writeMessage(_pAck,
-            pTransaction->dialogTarget().toString(),
-              OSS::string_from_number<unsigned short>(pTransaction->dialogTarget().getPort()));
-        }
-      }
-    }//localize
     break;
   case COMPLETED:
     break;

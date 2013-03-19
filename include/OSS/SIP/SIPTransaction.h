@@ -49,8 +49,7 @@ class OSS_API SIPTransaction: public boost::enable_shared_from_this<SIPTransacti
 public:
   static const int TRN_STATE_CHILD = 0xFC;
   static const int TRN_STATE_IDLE = 0x00;
-  static const int TRN_STATE_ACK_PENDING = 0xFE;
-  static const int TRN_STATE_TERMINATED = 0xFF;
+   static const int TRN_STATE_TERMINATED = 0xFF;
   typedef boost::shared_ptr<SIPTransaction> Ptr;
   typedef boost::weak_ptr<SIPTransaction> WeakPtr;
   typedef boost::shared_ptr<OSS::Exception> Error;
@@ -116,35 +115,6 @@ public:
       const SIPMessage::Ptr& pRequest,
       const OSS::IPAddress& sendAddress);
     /// Send a new SIP (RESPONSE) message to the Network.
-    ///
-    /// This is a none-blocking function call for sending
-    /// SIP (RESPONSE) messages to the network.  
-    ///
-    /// For UDP, The remote address must be in the form of an IP address.
-    /// OSSSIP supports both IPV4 and IPV6 destinations.
-    /// DNS lookup will not be performed by the transport layer.
-    /// Thus, this method expects that the remote address has 
-    /// already been resolved using the mechanisms exposed by
-    /// OSSADNS or a third party DNS client if required.
-    ///
-    /// Applications may also opt to send using the remoteAddress
-    /// which is directly accessible via the transaction if the
-    /// applicaiton is sure that the remote endpoint expects the
-    /// responses to be received using the same transport it was sent.
-    ///
-    /// Take note that via processing is not handled in the transaction layer.
-    /// This is an intentional behavior to allow the application layer
-    /// to perform proprietary NAT traversal techniques.
-    ///
-    /// The send address MAY be set to anything if the transport is reliable like TCP or TLS
-    /// since it will be ignored.  TCP and TLS will always use the same transport used
-    /// to send the server transaction request.
-
-  void sendResponse(
-      const SIPMessage::Ptr& pRequest,
-      const OSS::IPAddress& sendAddress,
-      SIPTransaction::Callback callback);
-    /// Send a new SIP ACKable (RESPONSE) message to the Network.
     ///
     /// This is a none-blocking function call for sending
     /// SIP (RESPONSE) messages to the network.  
@@ -293,19 +263,6 @@ protected:
   SIPTransaction::Type& type();
     /// Returns the type of transaction (ICT, IST, NICT, NIST)
 
-  bool& willSendAckFor2xx();
-    /// Returns a direct reference to the flag indicating
-    /// whether INVITE trasnactions would terminate after
-    /// sending or receipt of a 2xx response.
-    ///
-    /// UA implementation would usually set this to false
-    /// so that retransmissions of the 2xx response will still
-    /// be caught by the transaction.
-
-  SIPTransaction::Callback& ackHandler();
-    /// Handler for ACK request for IST.
-    ///
-
   void setRemoteTag(const std::string& tag);
     /// Set the remote tag for early dialogs.
 
@@ -331,7 +288,6 @@ protected:
 
 protected:
   SIPTransaction::Callback _responseTU;
-  SIPTransaction::Callback _ackHandler;
   Type _type;
 private:
   SIPTransaction(const SIPTransaction&);
@@ -346,7 +302,6 @@ private:
   OSS::IPAddress _remoteAddress;
   OSS::IPAddress _sendAddress;
   OSS::IPAddress _dialogTarget; 
-  bool _willSendAckFor2xx;
   mutable OSS::mutex _mutex;
   mutable OSS::mutex_read_write _stateMutex;
   std::string _logId;
@@ -420,19 +375,9 @@ inline SIPTransaction::Type& SIPTransaction::type()
   return _type;
 }
 
-inline bool& SIPTransaction::willSendAckFor2xx()
-{
-  return _willSendAckFor2xx;
-}
-
 inline OSS::IPAddress& SIPTransaction::dialogTarget()
 {
   return _dialogTarget;
-}
-
-inline SIPTransaction::Callback& SIPTransaction::ackHandler()
-{
-  return _ackHandler;
 }
 
 inline const std::string& SIPTransaction::getLogId() const

@@ -162,7 +162,7 @@ void SIPIst::handleRetransmitResponse()
     return;
 
   OSS::mutex_critic_sec_lock responseLock(_responseMutex);
-  if (_pResponse && (pTransaction->getState() == COMPLETED || pTransaction->getState() == SIPTransaction::TRN_STATE_ACK_PENDING))
+  if (_pResponse && (pTransaction->getState() == COMPLETED))
   {
     if (pTransaction->transport()->isReliableTransport())
       pTransaction->transport()->writeMessage(_pResponse);
@@ -186,18 +186,6 @@ void SIPIst::handleACKTimeout()
   SIPTransaction::Ptr pTransaction = static_cast<SIPTransaction::WeakPtr*>(_owner)->lock();
   if (!pTransaction)
     return;
-
-  if (pTransaction->getState() == SIPTransaction::TRN_STATE_ACK_PENDING)
-  {
-    if (!_ackId.empty())
-      _istPool->removeAckableTransaction(_ackId);
-
-    if (pTransaction->ackHandler())
-      pTransaction->ackHandler()(SIPTransaction::Error(new OSS::SIP::SIPException("ACK Transaction Timeout")),
-      SIPMessage::Ptr(), 
-      SIPTransportSession::Ptr(), 
-      pTransaction->shared_from_this());
-  }
   pTransaction->terminate();
 }
 

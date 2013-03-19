@@ -43,7 +43,6 @@ SIPTransaction::SIPTransaction():
   _remoteAddress(),
   _sendAddress(),
   _dialogTarget(),
-  _willSendAckFor2xx(false),
   _isXOREncrypted(false),
   _pParent(),
   _isParent(true)
@@ -59,7 +58,6 @@ SIPTransaction::SIPTransaction(SIPTransaction::Ptr pParent) :
   _remoteAddress(),
   _sendAddress(),
   _dialogTarget(),
-  _willSendAckFor2xx(false),
   _isXOREncrypted(false),
   _pParent(pParent),
   _isParent(false)
@@ -118,20 +116,23 @@ void SIPTransaction::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
     std::string isXOR;
     _isXOREncrypted = pMsg->getProperty("xor", isXOR) && isXOR == "1";
   }
-  
-  std::ostringstream logMsg;
-  logMsg << _logId << "<<< " << pMsg->startLine()
-  << " LEN: " << pTransport->getLastReadCount()
-  << " SRC: " << _remoteAddress.toIpPortString()
-  << " DST: " << _localAddress.toIpPortString()
-  << " EXT: " << "[" << pTransport->getExternalAddress() << "]"
-  << " FURI: " << pMsg->hdrGet("from")
-  << " ENC: " << _isXOREncrypted
-  << " PROT: " << pTransport->getTransportScheme();
-  OSS::log_information(logMsg.str());
 
-  if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
-    OSS::log_debug(pMsg->createLoggerData());
+  if (isParent())
+  {
+    std::ostringstream logMsg;
+    logMsg << _logId << "<<< " << pMsg->startLine()
+    << " LEN: " << pTransport->getLastReadCount()
+    << " SRC: " << _remoteAddress.toIpPortString()
+    << " DST: " << _localAddress.toIpPortString()
+    << " EXT: " << "[" << pTransport->getExternalAddress() << "]"
+    << " FURI: " << pMsg->hdrGet("from")
+    << " ENC: " << _isXOREncrypted
+    << " PROT: " << pTransport->getTransportScheme();
+    OSS::log_information(logMsg.str());
+
+    if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
+      OSS::log_debug(pMsg->createLoggerData());
+  }
 
   //
   // If this is a request and is not an ACK, then the parent IST fsm must always handle it
@@ -249,16 +250,6 @@ void SIPTransaction::sendAckFor2xx(
 }
 
 void SIPTransaction::sendResponse(
-      const SIPMessage::Ptr& pRequest,
-      const OSS::IPAddress& sendAddress,
-      SIPTransaction::Callback callback)
-{
-  if (!_ackHandler)
-    _ackHandler = callback;
-  sendResponse(pRequest, sendAddress);
-}
-
-void SIPTransaction::sendResponse(
   const SIPMessage::Ptr& pResponse,
   const OSS::IPAddress& sendAddress)
 {
@@ -348,17 +339,14 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg)
     pMsg->setProperty("xor", "1");
   }
 
-  if (isParent())
-  {
-    std::ostringstream logMsg;
-    logMsg << _logId << ">>> " << pMsg->startLine()
-    << " LEN: " << pMsg->data().size()
-    << " SRC: " << _transport->getLocalAddress().toIpPortString()
-    << " DST: " << _transport->getRemoteAddress().toIpPortString()
-    << " ENC: " << _isXOREncrypted
-    << " PROT: " << _transport->getTransportScheme();
-    OSS::log_information(logMsg.str());
-  }
+  std::ostringstream logMsg;
+  logMsg << _logId << ">>> " << pMsg->startLine()
+  << " LEN: " << pMsg->data().size()
+  << " SRC: " << _transport->getLocalAddress().toIpPortString()
+  << " DST: " << _transport->getRemoteAddress().toIpPortString()
+  << " ENC: " << _isXOREncrypted
+  << " PROT: " << _transport->getTransportScheme();
+  OSS::log_information(logMsg.str());
 
   if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
     OSS::log_debug(pMsg->createLoggerData());
@@ -386,20 +374,20 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg, const OSS::IPAddress& re
 
   if (_fsm->onSendMessage(pMsg))
   {
-      std::ostringstream logMsg;
-      logMsg << _logId << ">>> " << pMsg->startLine()
-      << " LEN: " << pMsg->data().size()
-      << " SRC: " << _transport->getLocalAddress().toIpPortString()
-      << " DST: " << remoteAddress.toIpPortString()
-      << " ENC: " << _isXOREncrypted
-      << " PROT: " << _transport->getTransportScheme();
-      OSS::log_information(logMsg.str());
-      if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
-        OSS::log_debug(pMsg->createLoggerData());
+    std::ostringstream logMsg;
+    logMsg << _logId << ">>> " << pMsg->startLine()
+    << " LEN: " << pMsg->data().size()
+    << " SRC: " << _transport->getLocalAddress().toIpPortString()
+    << " DST: " << remoteAddress.toIpPortString()
+    << " ENC: " << _isXOREncrypted
+    << " PROT: " << _transport->getTransportScheme();
+    OSS::log_information(logMsg.str());
+    if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
+      OSS::log_debug(pMsg->createLoggerData());
 
-     _transport->writeMessage(pMsg, 
-      remoteAddress.toString(),
-      OSS::string_from_number<unsigned short>(remoteAddress.getPort()));
+    _transport->writeMessage(pMsg,
+    remoteAddress.toString(),
+    OSS::string_from_number<unsigned short>(remoteAddress.getPort()));
   }
 }
 
