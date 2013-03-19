@@ -41,7 +41,7 @@ class OSS_API SIPIst:
 public:
   enum State
   {
-    PROCEEDING,
+    PROCEEDING=1,
     COMPLETED,
     CONFIRMED
   };

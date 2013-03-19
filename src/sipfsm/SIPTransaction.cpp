@@ -62,14 +62,18 @@ SIPTransaction::SIPTransaction(SIPTransaction* pParent) :
   _isXOREncrypted(false),
   _pParent(pParent)
 {
-
+  _id = _pParent->getId();
+  _logId = _pParent->getLogId();
+  std::ostringstream logMsg;
+  logMsg << _logId << "Transaction " << _id << " isParent=" << (isParent() ? "Yes" : "No") << " CREATED";
+  OSS::log_debug(logMsg.str());
 }
 	
 SIPTransaction::~SIPTransaction()
 {
-  //std::ostringstream logMsg;
-  //logMsg << _logId << "Transaction " << _id << " DESTROYED";
-  //OSS::log_debug(logMsg.str());
+  std::ostringstream logMsg;
+  logMsg << _logId << "Transaction " << _id << " isParent=" << (isParent() ? "Yes" : "No") << " DESTROYED";
+  OSS::log_debug(logMsg.str());
 }
 
 SIPTransaction::SIPTransaction(const SIPTransaction&)
@@ -113,27 +117,19 @@ void SIPTransaction::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
     _isXOREncrypted = pMsg->getProperty("xor", isXOR) && isXOR == "1";
   }
   
+  std::ostringstream logMsg;
+  logMsg << _logId << "<<< " << pMsg->startLine()
+  << " LEN: " << pTransport->getLastReadCount()
+  << " SRC: " << _remoteAddress.toIpPortString()
+  << " DST: " << _localAddress.toIpPortString()
+  << " EXT: " << "[" << pTransport->getExternalAddress() << "]"
+  << " FURI: " << pMsg->hdrGet("from")
+  << " ENC: " << _isXOREncrypted
+  << " PROT: " << pTransport->getTransportScheme();
+  OSS::log_information(logMsg.str());
 
-  if (isParent())
-  {
-    //
-    // Only log if this is the parent transaction
-    //
-    std::ostringstream logMsg;
-    logMsg << _logId << "<<< " << pMsg->startLine()
-    << " LEN: " << pTransport->getLastReadCount()
-    << " SRC: " << _remoteAddress.toIpPortString()
-    << " DST: " << _localAddress.toIpPortString()
-    << " EXT: " << "[" << pTransport->getExternalAddress() << "]"
-    << " FURI: " << pMsg->hdrGet("from")
-    << " ENC: " << _isXOREncrypted
-    << " PROT: " << pTransport->getTransportScheme();
-    OSS::log_information(logMsg.str());
-
-    if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
-      OSS::log_debug(pMsg->createLoggerData());
-  }
-
+  if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
+    OSS::log_debug(pMsg->createLoggerData());
 
   //
   // If this is a request and is not an ACK, then the parent IST fsm must always handle it
@@ -339,14 +335,17 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg)
     pMsg->setProperty("xor", "1");
   }
 
-  std::ostringstream logMsg;
-  logMsg << _logId << ">>> " << pMsg->startLine()
-  << " LEN: " << pMsg->data().size()
-  << " SRC: " << _transport->getLocalAddress().toIpPortString()
-  << " DST: " << _transport->getRemoteAddress().toIpPortString()
-  << " ENC: " << _isXOREncrypted
-  << " PROT: " << _transport->getTransportScheme();
-  OSS::log_information(logMsg.str());
+  if (isParent())
+  {
+    std::ostringstream logMsg;
+    logMsg << _logId << ">>> " << pMsg->startLine()
+    << " LEN: " << pMsg->data().size()
+    << " SRC: " << _transport->getLocalAddress().toIpPortString()
+    << " DST: " << _transport->getRemoteAddress().toIpPortString()
+    << " ENC: " << _isXOREncrypted
+    << " PROT: " << _transport->getTransportScheme();
+    OSS::log_information(logMsg.str());
+  }
 
   if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
     OSS::log_debug(pMsg->createLoggerData());
@@ -363,7 +362,7 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg, const OSS::IPAddress& re
 
   if (!_transport)
   {
-    OSS_LOG_ERROR("SIPTransaction::writeMessage does not ahve a transport to use");
+    OSS_LOG_ERROR("SIPTransaction::writeMessage does not have a transport to use");
     return;
   }
 
@@ -399,11 +398,22 @@ void SIPTransaction::terminate()
 
   if (isParent())
   {
+    {
+      OSS::mutex_critic_sec_lock lock(_branchesMutex);
+      for (Branches::iterator iter = _branches.begin(); iter != _branches.end(); iter++)
+        iter->second->terminate();
+    }
     _owner->removeTransaction(_id);
-    OSS::mutex_critic_sec_lock lock(_branchesMutex);
-    for (Branches::iterator iter = _branches.begin(); iter != _branches.end(); iter++)
-      iter->second->terminate();
   }
+  else
+  {
+    OSS_VERIFY_NULL(_pParent);
+    _pParent->onBranchTerminated(shared_from_this());
+  }
+}
+
+void SIPTransaction::onBranchTerminated(const SIPTransaction::Ptr& pBranch)
+{
 }
 
 void SIPTransaction::setState(int state)
@@ -447,6 +457,11 @@ void SIPTransaction::informTU(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTr
     _responseTU(SIPTransaction::Error(), pMsg, pTransport, shared_from_this());
 }
 
+std::size_t SIPTransaction::getBranchCount() const
+{
+  OSS::mutex_critic_sec_lock lock(_branchesMutex);
+  return _branches.size();
+}
 
 SIPTransaction::Ptr SIPTransaction::findBranch(const SIPMessage::Ptr& pRequest)
 {
@@ -471,6 +486,9 @@ SIPTransaction::Ptr SIPTransaction::findBranch(const SIPMessage::Ptr& pRequest)
   {
     foundBranch = SIPTransaction::Ptr(new SIPTransaction(this));
     _owner->onAttachFSM(foundBranch);
+    foundBranch->fsm()->setRequest(fsm()->getRequest());
+    foundBranch->_owner = _owner;
+    foundBranch->_responseTU = _responseTU;
     _branches[branch] = foundBranch;
   }
   else

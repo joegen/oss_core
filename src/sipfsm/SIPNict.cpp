@@ -39,7 +39,6 @@ SIPNict::SIPNict(
   _timerFFunc = boost::bind(&SIPNict::handleRequestTimeout, this);
   _timerKFunc = boost::bind(&SIPNict::handleDelayedTerminate, this);
   _timerMaxLifetimeFunc = boost::bind(&SIPNict::handleDelayedTerminate, this);
-  startTimerMaxLifetime(300000); /// five minutes
 }
 
 SIPNict::~SIPNict()
@@ -54,6 +53,7 @@ bool SIPNict::onSendMessage(SIPMessage::Ptr pMsg)
 
   if (pTransaction->getState() == SIPTransaction::TRN_STATE_IDLE)
   {
+    startTimerMaxLifetime(300000); /// five minutes
     _pRequest = pMsg;
     pTransaction->setState(TRYING);
 
@@ -103,7 +103,7 @@ void SIPNict::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr p
     }
     else 
     {
-      if (pTransaction->isParent() || !is2xx)
+      if (pTransaction->isParent() && !is2xx)
       {
         //
         // If we are the parent or this is and error response
@@ -123,6 +123,23 @@ void SIPNict::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr p
         pTransaction->getParent()->fsm()->cancelTimerE();
         pTransaction->getParent()->fsm()->cancelTimerF();
         pTransaction->getParent()->setState(COMPLETED);
+      }
+      else if (!pTransaction->isParent() && !is2xx)
+      {
+        //
+        // If this is a branch and it is an error reponse,
+        // then cancel both parent timers as well if there
+        // is only one branch
+        //
+        cancelTimerE();
+        cancelTimerF();
+
+        if (pTransaction->getParent()->getBranchCount() == 1)
+        {
+          pTransaction->getParent()->fsm()->cancelTimerE();
+          pTransaction->getParent()->fsm()->cancelTimerF();
+          pTransaction->getParent()->setState(COMPLETED);
+        }
       }
 
       pTransaction->setState(COMPLETED);
@@ -151,7 +168,7 @@ void SIPNict::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr p
     }
     else 
     {
-      if (pTransaction->isParent() || !is2xx)
+      if (pTransaction->isParent() && !is2xx)
       {
         //
         // If we are the parent or this is and error response
@@ -164,13 +181,30 @@ void SIPNict::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr p
       {
         //
         // If this is a branch and it is a 2xx reponse,
-        // then cancel both parents timers as sell
+        // then cancel both parent timers as sell
         //
         cancelTimerE();
         cancelTimerF();
         pTransaction->getParent()->fsm()->cancelTimerE();
         pTransaction->getParent()->fsm()->cancelTimerF();
         pTransaction->getParent()->setState(COMPLETED);
+      }
+      else if (!pTransaction->isParent() && !is2xx)
+      {
+        //
+        // If this is a branch and it is an error reponse,
+        // then cancel both parent timers as well if there
+        // is only one branch
+        //
+        cancelTimerE();
+        cancelTimerF();
+
+        if (pTransaction->getParent()->getBranchCount() == 1)
+        {
+          pTransaction->getParent()->fsm()->cancelTimerE();
+          pTransaction->getParent()->fsm()->cancelTimerF();
+          pTransaction->getParent()->setState(COMPLETED);
+        }
       }
       
       pTransaction->setState(COMPLETED);
@@ -198,7 +232,7 @@ void SIPNict::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr p
   if (pTransaction->getState() == SIPTransaction::TRN_STATE_TERMINATED)
       pTransaction->terminate();
 
-  if (pTransaction->getParent()->getState() == SIPTransaction::TRN_STATE_TERMINATED)
+  if (pTransaction->getParent() && pTransaction->getParent()->getState() == SIPTransaction::TRN_STATE_TERMINATED)
       pTransaction->getParent()->terminate();
 
 }
@@ -263,11 +297,17 @@ void SIPNict::handleDelayedTerminate()
   if (pTransaction->getState() == SIPTransaction::TRN_STATE_TERMINATED)
     return;
 
-  cancelTimerK();
-  cancelTimerE();
-  cancelTimerF();
-
-  pTransaction->terminate();
+  if (pTransaction->isParent())
+  {
+    pTransaction->terminate();
+  }
+  else if (pTransaction->getParent()->allBranchesCompleted())
+  {
+    //
+    // all branches will terminate with the parent
+    //
+    pTransaction->getParent()->terminate();
+  }
 }
 
 bool SIPNict::isCompleted() const

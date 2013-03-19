@@ -36,7 +36,6 @@ SIPNist::SIPNist(
 {
   _timerJFunc = boost::bind(&SIPNist::handleDelayedTerminate, this);
   _timerMaxLifetimeFunc = boost::bind(&SIPNist::handleDelayedTerminate, this);
-  startTimerMaxLifetime(300000); /// five minutes
 }
 
 SIPNist::~SIPNist()
@@ -51,6 +50,7 @@ void SIPNist::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr p
 
   if (pTransaction->getState() == SIPTransaction::TRN_STATE_IDLE)
   {
+    startTimerMaxLifetime(300000); /// five minutes
     _pRequest = pMsg;
     pTransaction->setState(TRYING);
     if (dispatch()->requestHandler())
@@ -107,9 +107,7 @@ bool SIPNist::onSendMessage(SIPMessage::Ptr pMsg)
   _pResponse = pMsg;
   }//localize
 
-  
-
-  if (pTransaction->getState() == TRYING)
+  if (pTransaction->getState() <= PROCEEDING)
   {
     if (pMsg->is1xx())
     {
@@ -137,7 +135,21 @@ void SIPNist::handleDelayedTerminate()
   SIPTransaction::Ptr pTransaction = static_cast<SIPTransaction::WeakPtr*>(_owner)->lock();
   if (!pTransaction)
     return;
-  pTransaction->terminate();
+
+  if (pTransaction->getState() == SIPTransaction::TRN_STATE_TERMINATED)
+    return;
+
+  if (pTransaction->isParent())
+  {
+    pTransaction->terminate();
+  }
+  else if (pTransaction->getParent()->allBranchesCompleted())
+  {
+    //
+    // all branches will terminate with the parent
+    //
+    pTransaction->getParent()->terminate();
+  }
 }
 
 bool SIPNist::isCompleted() const

@@ -38,7 +38,7 @@ class OSS_API SIPNict:
 public:
   enum State
   {
-    TRYING,
+    TRYING=1,
     PROCEEDING,
     COMPLETED
   };

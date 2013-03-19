@@ -48,7 +48,7 @@ class OSS_API SIPTransaction: public boost::enable_shared_from_this<SIPTransacti
 {
 public:
   static const int TRN_STATE_CHILD = 0xFC;
-  static const int TRN_STATE_IDLE = 0xFD;
+  static const int TRN_STATE_IDLE = 0x00;
   static const int TRN_STATE_ACK_PENDING = 0xFE;
   static const int TRN_STATE_TERMINATED = 0xFF;
   typedef boost::shared_ptr<SIPTransaction> Ptr;
@@ -321,6 +321,13 @@ protected:
 
   bool isParent() const;
     /// Return true if this transaction is the parent transaction
+
+  void onBranchTerminated(const SIPTransaction::Ptr& pBranch);
+    /// Called from SIPTransaction::termiante to signal the parent transaction
+    /// that a child has terminated
+
+  std::size_t getBranchCount() const;
+    /// Returns the number of active branches
 
 protected:
   SIPTransaction::Callback _responseTU;

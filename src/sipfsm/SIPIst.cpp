@@ -42,7 +42,6 @@ SIPIst::SIPIst(
   _timerHFunc = boost::bind(&SIPIst::handleACKTimeout, this);
   _timerIFunc = boost::bind(&SIPIst::handleDelayedTerminate, this);
   _timerMaxLifetimeFunc = boost::bind(&SIPIst::handleDelayedTerminate, this);
-  startTimerMaxLifetime(300000); /// five minutes
 }
 
 SIPIst::~SIPIst()
@@ -60,6 +59,7 @@ void SIPIst::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
 
   if (pMsg->isRequest() && pTransaction->getState() == SIPTransaction::TRN_STATE_IDLE)
   {
+     startTimerMaxLifetime(300000); /// five minutes
     _pRequest = pMsg;
     pTransaction->setState(PROCEEDING);
     if (dispatch()->requestHandler())
@@ -130,7 +130,7 @@ bool SIPIst::onSendMessage(SIPMessage::Ptr pMsg)
   _pResponse = pMsg;
   }//localize
 
-  if (pTransaction->getState() == PROCEEDING)
+  if (pTransaction->getState() <= PROCEEDING)
   {
     if (pMsg->is1xx())
     {

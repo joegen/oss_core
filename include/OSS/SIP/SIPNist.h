@@ -40,7 +40,7 @@ class OSS_API SIPNist:
 public:
   enum State
   {
-    TRYING,
+    TRYING=1,
     PROCEEDING,
     COMPLETED
   };

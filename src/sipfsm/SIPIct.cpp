@@ -40,7 +40,6 @@ SIPIct::SIPIct(
   _timerBFunc = boost::bind(&SIPIct::handleInviteTimeout, this);
   _timerDFunc = boost::bind(&SIPIct::handleDelayedTerminate, this);
   _timerMaxLifetimeFunc = boost::bind(&SIPIct::handleDelayedTerminate, this);
-  startTimerMaxLifetime(300000); /// five minutes
 }
 
 SIPIct::~SIPIct()
@@ -55,6 +54,7 @@ bool SIPIct::onSendMessage(SIPMessage::Ptr pMsg)
 
   if (pTransaction->getState() == SIPTransaction::TRN_STATE_IDLE)
   {
+    startTimerMaxLifetime(300000); /// five minutes
     _pRequest = pMsg;
     pTransaction->setState(TRYING);
 
@@ -110,7 +110,7 @@ void SIPIct::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
     if (pMsg->is1xx())
     {
       pTransaction->setState(PROCEEDING);
-      if (pParent->getState() < PROCEEDING)
+      if (pParent && pParent->getState() < PROCEEDING)
         pParent->setState(PROCEEDING);
 
       pTransaction->informTU(pMsg, pTransport);
@@ -176,8 +176,10 @@ void SIPIct::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
           pTransaction->setState(SIPTransaction::TRN_STATE_ACK_PENDING);
           startTimerD();
         }
-      else
-        pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
+        else
+        {
+          pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
+        }
       }
     }
     else if (pMsg->isErrorResponse())

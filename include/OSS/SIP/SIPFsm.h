@@ -206,6 +206,8 @@ public:
   SIPMessage::Ptr getRequest() const;
     /// Returns a pointer to the request
 
+  void setRequest(const SIPMessage::Ptr& pRequest);
+
   virtual bool isCompleted() const = 0;
     /// Returns true if state is already completed or terminated
 protected:
@@ -352,6 +354,11 @@ inline SIPFSMDispatch*& SIPFsm::dispatch()
 inline SIPMessage::Ptr SIPFsm::getRequest() const
 {
   return _pRequest;
+}
+
+inline void SIPFsm::setRequest(const SIPMessage::Ptr& pRequest)
+{
+  _pRequest = pRequest;
 }
 
 } } // OSS::SIP
