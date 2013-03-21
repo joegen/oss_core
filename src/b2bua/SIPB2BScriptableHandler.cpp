@@ -1479,10 +1479,13 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
     //
     // Remove the rtp proxies if they were created.
     //
-    try
+    if (pTransaction->clientTransaction() && pTransaction->clientTransaction()->allBranchesCompleted())
     {
-      rtpProxy().removeSession(sessionId);
-    }catch(...){}
+      try
+      {
+        rtpProxy().removeSession(sessionId);
+      }catch(...){}
+    }
   }
   else // Any response that isn't covered by the if else block
   {
@@ -1589,7 +1592,7 @@ void SIPB2BScriptableHandler::onProcessAckFor2xxRequest(
     catch(OSS::Exception e)
     {
       std::ostringstream logMsg;
-      logMsg << logId << "Unable to process ACK.  Exception: " << e.message();
+      logMsg << logId << "Exception: " << e.message();
       OSS::log_warning(logMsg.str());
     }
   }
@@ -1642,10 +1645,13 @@ void SIPB2BScriptableHandler::onTransactionError(
     //
     // Remove the rtp proxies if they were created
     //
-    try
+    if (pTransaction->clientTransaction() && pTransaction->clientTransaction()->allBranchesCompleted())
     {
-      rtpProxy().removeSession(sessionId);
-    }catch(...){}
+      try
+      {
+        rtpProxy().removeSession(sessionId);
+      }catch(...){}
+    }
   }
 }
 

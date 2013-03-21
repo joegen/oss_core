@@ -163,6 +163,14 @@ public:
   bool allBranchesTerminated() const;
     /// Returns true if all branches are already in terminated state
 
+  std::size_t getBranchCount() const;
+    /// Returns the number of active branches
+
+  std::string getTypeString() const;
+    /// Return the transaction type as a string
+
+  Type getType() const;
+    /// Returns the transaction type
 protected:
   void onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport);
     /// This method is called when a SIP message is received from the transport.
@@ -286,9 +294,6 @@ protected:
   void onBranchTerminated(const SIPTransaction::Ptr& pBranch);
     /// Called from SIPTransaction::termiante to signal the parent transaction
     /// that a child has terminated
-
-  std::size_t getBranchCount() const;
-    /// Returns the number of active branches
 
 protected:
   SIPTransaction::Callback _responseTU;
@@ -418,6 +423,11 @@ inline SIPMessage::Ptr SIPTransaction::getInitialRequest() const
 inline bool SIPTransaction::isParent() const
 {
   return _isParent;
+}
+
+inline SIPTransaction::Type SIPTransaction::getType() const
+{
+  return _type;
 }
 
 } } // namespace OSS::SIP

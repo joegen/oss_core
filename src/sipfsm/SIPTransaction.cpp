@@ -50,7 +50,7 @@ SIPTransaction::SIPTransaction():
 }
 
 SIPTransaction::SIPTransaction(SIPTransaction::Ptr pParent) :
-  _type(TYPE_UNKNOWN),
+  _type(pParent->getType()),
   _owner(0),
   _transportService(0),
   _state(TRN_STATE_IDLE),
@@ -65,14 +65,14 @@ SIPTransaction::SIPTransaction(SIPTransaction::Ptr pParent) :
   _id = pParent->getId();
   _logId = pParent->getLogId();
   std::ostringstream logMsg;
-  logMsg << _logId << "Transaction " << _id << " isParent=" << (isParent() ? "Yes" : "No") << " CREATED";
+  logMsg << _logId << getTypeString() << " " << _id << " CREATED";
   OSS::log_debug(logMsg.str());
 }
 	
 SIPTransaction::~SIPTransaction()
 {
   std::ostringstream logMsg;
-  logMsg << _logId << "Transaction " << _id << " isParent=" << (isParent() ? "Yes" : "No") << " DESTROYED";
+  logMsg << _logId << getTypeString() << " " << _id << " isParent=" << (isParent() ? "Yes" : "No") << " DESTROYED";
   OSS::log_debug(logMsg.str());
 }
 
@@ -88,6 +88,21 @@ SIPTransaction& SIPTransaction::operator = (const SIPTransaction&)
 SIPTransactionPool*& SIPTransaction::owner()
 {
   return _owner;
+}
+
+std::string SIPTransaction::getTypeString() const
+{
+  if (TYPE_UNKNOWN == _type)
+    return "Unknown";
+  else if (TYPE_ICT == _type)
+    return "InviteClientTransaction";
+  else if (TYPE_IST == _type)
+    return "InviteServerTransaction";
+  else if (TYPE_NICT == _type)
+    return "NonInviteClientTrasaction";
+  else if (TYPE_NIST == _type)
+    return "NonInviteServerTransaction";
+  return "Unknow";
 }
 
 void SIPTransaction::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport)

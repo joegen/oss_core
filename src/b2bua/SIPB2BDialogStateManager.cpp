@@ -404,6 +404,8 @@ bool SIPB2BDialogStateManager::findDialog(const SIPB2BTransaction::Ptr& pTransac
 
   SIPFrom from = pMsg->hdrGet("from");
   SIPTo to = pMsg->hdrGet("to");
+  std::string fromTag = from.getTag();
+  std::string toTag = to.getTag();
 
   OSS_LOG_DEBUG("Finding dialog for Call-ID: " << callId << " SessionId: (" << sessionId << ")");
 
@@ -428,8 +430,13 @@ bool SIPB2BDialogStateManager::findDialog(const SIPB2BTransaction::Ptr& pTransac
       {
         if (iter->sessionId == sessionId)
         {
-          dialogData = *iter;
-          return true;
+          std::string leg1ToTag = SIPFrom::getTag(iter->leg1.to);
+          std::string leg2ToTag = SIPFrom::getTag(iter->leg2.to);
+          if (toTag == leg1ToTag || toTag == leg2ToTag)
+          {
+            dialogData = *iter;
+            return true;
+          }
         }
       }
       OSS_LOG_WARNING("Multiple sessions exist for Call-ID: " << callId << " but non of them is Session-ID: " << sessionId);
@@ -439,8 +446,6 @@ bool SIPB2BDialogStateManager::findDialog(const SIPB2BTransaction::Ptr& pTransac
     // Do it the hard way
     //
     std::string tag;
-    std::string fromTag = from.getTag();
-    std::string toTag = to.getTag();
     if (pMsg->isRequest())
       tag = toTag;
     else
@@ -1489,7 +1494,7 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
   catch(OSS::Exception e)
   {
     std::ostringstream logMsg;
-    logMsg << logId << "Unable to process ACK.  Exception: " << e.message();
+    logMsg << logId << "Exception: " << e.message();
     OSS::log_warning(logMsg.str());
     throw;
   }
