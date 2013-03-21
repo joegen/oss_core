@@ -119,64 +119,51 @@ void SIPIct::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
     {
       pTransaction->informTU(pMsg, pTransport);
       pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
+      //
+      // The first 2xx response sets the transaction-set to terminated
+      //
+      if (pParent)
+        pParent->setState(SIPTransaction::TRN_STATE_TERMINATED);
     }
     else if (pMsg->isErrorResponse())
     {
       pTransaction->setState(COMPLETED);
       pTransaction->informTU(pMsg, pTransport);
-      if (!pTransport->isReliableTransport())
-        startTimerD();
-      else
-        pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
+      handleSendAck(pMsg, pTransport);
     }
     break;
   case PROCEEDING:
     if (pMsg->is1xx())
     {
-      #if 0
-      if (dispatch()->dialogHandler())
-      {
-        dispatch()->dialogHandler()(pMsg, pTransport, pTransaction->shared_from_this());
-      }
-      #endif
       pTransaction->informTU(pMsg, pTransport);
     }
     else if (pMsg->is2xx())
     {
-      #if 0
-      if (dispatch()->dialogHandler())
-      {
-        dispatch()->dialogHandler()(pMsg, pTransport, pTransaction->shared_from_this());
-      }
-      #endif
       pTransaction->informTU(pMsg, pTransport);
       pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
-
+      //
+      // The first 2xx response sets the transaction-set to terminated
+      //
+      if (pParent)
+        pParent->setState(SIPTransaction::TRN_STATE_TERMINATED);
     }
     else if (pMsg->isErrorResponse())
     {
       pTransaction->setState(COMPLETED);
       pTransaction->informTU(pMsg, pTransport);
-      if (!pTransport->isReliableTransport())
-        startTimerD();
-      else
-      {
-        //
-        // Send ACK right away for reliable transports then set state to terminated
-        //
-        handleSendAck(pMsg, pTransport);
-        pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
-      }
+      handleSendAck(pMsg, pTransport);
     }
     break;
   case COMPLETED:
     break;
   }
 
-  if (pMsg->isErrorResponse() && pTransaction->getState() == COMPLETED)
-    handleSendAck(pMsg, pTransport);
-  else if (pTransaction->getState() == SIPTransaction::TRN_STATE_TERMINATED)
+  if (pTransaction->getState() == SIPTransaction::TRN_STATE_TERMINATED)
+  {
     pTransaction->terminate();
+    if (pParent && pParent->allBranchesTerminated())
+      pParent->terminate();
+  }
 }
 
 void SIPIct::handleRetransmitInvite()
@@ -218,6 +205,8 @@ void SIPIct::handleSendAck(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTrans
   if (!pTransaction)
     return;
 
+  pTransaction->setState(COMPLETED);
+
   SIPMessage::Ptr ack = SIPMessage::Ptr(new SIPMessage());
   *(ack.get()) = *(_pRequest.get());
   
@@ -256,19 +245,17 @@ void SIPIct::handleSendAck(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTrans
     OSS::log_debug(ack->createLoggerData());
 
   if (pTransport->isReliableTransport())
+  {
     pTransport->writeMessage(ack);
+    pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
+  }
   else
+  {
+    startTimerD();
     pTransport->writeMessage(ack, 
     pTransaction->remoteAddress().toString(),
       OSS::string_from_number<unsigned short>(pTransaction->remoteAddress().getPort()));
-}
-
-void SIPIct::handleDelayedTerminate()
-{
-  SIPTransaction::Ptr pTransaction = static_cast<SIPTransaction::WeakPtr*>(_owner)->lock();
-  if (!pTransaction)
-    return;
-  pTransaction->terminate();
+  }
 }
 
 SIPIct::Ptr SIPIct::clone() const

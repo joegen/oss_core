@@ -245,7 +245,7 @@ public:
     ///
     /// If this callback is not set, the request will be silently dropped.
 
-  void setUnknownInviteTransactionHandler(const SIPFSMDispatch::UnknownTransactionCallback& handler);
+  void setAckFor2xxTransactionHandler(const SIPFSMDispatch::UnknownTransactionCallback& handler);
     /// This function sets the callback handler for ACK and 200 OK retranmissions.
     ///
     /// If this callback is not set, the request will be silently dropped.
@@ -337,9 +337,9 @@ inline void OSSSIP::setRequestHandler(const SIPTransaction::RequestCallback& han
   _fsmDispatch.requestHandler() = handler;
 }
 
-inline void OSSSIP::setUnknownInviteTransactionHandler(const SIPFSMDispatch::UnknownTransactionCallback& handler)
+inline void OSSSIP::setAckFor2xxTransactionHandler(const SIPFSMDispatch::UnknownTransactionCallback& handler)
 {
-  _fsmDispatch.unknownInviteTransactionHandler() = handler;
+  _fsmDispatch.ackFor2xxTransactionHandler() = handler;
 }
 
 inline SIPTransportService& OSSSIP::transport()

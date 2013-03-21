@@ -102,7 +102,7 @@ public:
   SIPTransaction::RequestCallback& requestHandler();
     /// Handler for incoming server transaction requests
 
-  UnknownTransactionCallback& unknownInviteTransactionHandler();
+  UnknownTransactionCallback& ackFor2xxTransactionHandler();
     /// Handler for SIP messages not linked to a transaction
 
   void stop();
@@ -131,7 +131,7 @@ private:
   SIPIstPool _ist;
   SIPNistPool _nist;
   SIPTransaction::RequestCallback _requestHandler;
-  UnknownTransactionCallback _unknownInviteTransactionHandler;
+  UnknownTransactionCallback _ackFor2xxTransactionHandler;
   StringPairCache _istBlocker;
   bool _enableIctForking;
 };
@@ -161,9 +161,9 @@ inline SIPTransaction::RequestCallback& SIPFSMDispatch::requestHandler()
   return _requestHandler;
 }
 
-inline SIPFSMDispatch::UnknownTransactionCallback& SIPFSMDispatch::unknownInviteTransactionHandler()
+inline SIPFSMDispatch::UnknownTransactionCallback& SIPFSMDispatch::ackFor2xxTransactionHandler()
 {
-  return _unknownInviteTransactionHandler;
+  return _ackFor2xxTransactionHandler;
 }
 
 inline void SIPFSMDispatch::blockIst(const std::string& id)

@@ -1512,12 +1512,12 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
 
 }
 
-void SIPB2BScriptableHandler::onProcessUnknownInviteRequest(
+void SIPB2BScriptableHandler::onProcessAckFor2xxRequest(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport)
 {
   std::string logId = pMsg->createContextId(true);
-  OSS_LOG_DEBUG(logId << "Processing orphaned invite request " << pMsg->startLine());
+  OSS_LOG_DEBUG(logId << "Processing ACK for 2xx request " << pMsg->startLine());
   {
     std::string isXOREncrypted = "0";
     pMsg->getProperty("xor", isXOREncrypted);

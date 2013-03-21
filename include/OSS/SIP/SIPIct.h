@@ -80,9 +80,6 @@ public:
   void handleAlertingTimeout();
     /// Callback function for Alerting Timer expiration
 
-  void handleDelayedTerminate();
-    /// Callback function for Timer D expiration
-
   SIPIct::Ptr clone() const;
 
   bool isCompleted() const;

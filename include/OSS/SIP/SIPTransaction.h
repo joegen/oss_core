@@ -159,6 +159,10 @@ public:
 
   bool allBranchesCompleted() const;
     /// Returns true if all branches are already in completed or terminated state
+
+  bool allBranchesTerminated() const;
+    /// Returns true if all branches are already in terminated state
+
 protected:
   void onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport);
     /// This method is called when a SIP message is received from the transport.
@@ -323,6 +327,7 @@ private:
   friend class SIPIct;
   friend class SIPNict;
   friend class SIPFSMDispatch;
+  friend class SIPFsm;
 
 };
 

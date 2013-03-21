@@ -514,12 +514,17 @@ bool SIPTransaction::allBranchesCompleted() const
 {
   OSS::mutex_critic_sec_lock lock(_branchesMutex);
   for (Branches::const_iterator iter = _branches.begin(); iter != _branches.end(); iter++)
-  {
     if (!iter->second->fsm()->isCompleted())
-    {
       return false;
-    }
-  }
+  return true;
+}
+
+bool SIPTransaction::allBranchesTerminated() const
+{
+  OSS::mutex_critic_sec_lock lock(_branchesMutex);
+  for (Branches::const_iterator iter = _branches.begin(); iter != _branches.end(); iter++)
+    if (iter->second->getState() != SIPTransaction::TRN_STATE_TERMINATED)
+      return false;
   return true;
 }
 

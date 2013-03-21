@@ -210,6 +210,10 @@ public:
 
   virtual bool isCompleted() const = 0;
     /// Returns true if state is already completed or terminated
+
+  virtual void handleDelayedTerminate();
+    /// Callback for timers that requires termination of transactions
+
 protected:
   SIPMessage::Ptr _pRequest;
   boost::asio::io_service& _ioService;

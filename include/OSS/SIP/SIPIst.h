@@ -74,9 +74,6 @@ public:
   void handleACKTimeout();
     /// Callback function for Timer H expiration
 
-  void handleDelayedTerminate();
-    /// Callback function for Timer Maxlifetime expiration
-
   SIPIstPool*& istPool();
     /// Returns a direct pointer to the IST Pool
 

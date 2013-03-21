@@ -70,9 +70,6 @@ public:
   void handleRequestTimeout();
     /// Callback function for Timer F expiration
 
-  void handleDelayedTerminate();
-    /// Callback function for Timer K expiration
-
   virtual bool isCompleted() const;
 
   unsigned long _timerEValue;

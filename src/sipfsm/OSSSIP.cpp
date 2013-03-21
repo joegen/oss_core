@@ -528,6 +528,8 @@ void OSSSIP::sendRequestDirect(const SIPMessage::Ptr& pRequest,
   {
     std::string transportId;
     pRequest->getProperty("transport-id", transportId);
+    if (transportId.empty())
+      transportId="0";
     OSS_LOG_DEBUG("Sending request directly protocol=" << transport << " id=" << transportId);
     SIPTransportSession::Ptr client = _fsmDispatch.transport().createClientTransport(localAddress, remoteAddress, transport, transportId);
     if (client)

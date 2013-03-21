@@ -229,7 +229,18 @@ void SIPFsm::cancelAllTimers()
 
 void SIPFsm::onTerminate()
 {
+}
 
+void SIPFsm::handleDelayedTerminate()
+{
+  SIPTransaction::Ptr pTransaction = static_cast<SIPTransaction::WeakPtr*>(_owner)->lock();
+  if (!pTransaction)
+    return;
+
+  SIPTransaction::Ptr pParent = pTransaction->getParent();
+  pTransaction->terminate();
+  if (pParent && pParent->allBranchesTerminated())
+    pParent->terminate();
 }
 
 } } // OSS::SIP

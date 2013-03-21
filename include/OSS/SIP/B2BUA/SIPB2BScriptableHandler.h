@@ -312,7 +312,7 @@ public:
   //
   // INVITE handlers
   //
-  virtual void onProcessUnknownInviteRequest(
+  virtual void onProcessAckFor2xxRequest(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport);
     /// Callback for ACK and 200 OK retransmission for INVITE

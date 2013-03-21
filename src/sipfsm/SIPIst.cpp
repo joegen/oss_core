@@ -189,15 +189,6 @@ void SIPIst::handleACKTimeout()
   pTransaction->terminate();
 }
 
-void SIPIst::handleDelayedTerminate()
-{
-  SIPTransaction::Ptr pTransaction = static_cast<SIPTransaction::WeakPtr*>(_owner)->lock();
-  if (!pTransaction)
-    return;
-
-  pTransaction->terminate();
-}
-
 void SIPIst::onTerminate()
 {
   if (!_transactionId.empty() && _istPool)

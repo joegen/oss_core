@@ -66,9 +66,6 @@ public:
     /// when a SIP message is needed to be sent to the transport 
     /// coming from the core layer. 
 
-  void handleDelayedTerminate();
-    /// Callback function for Timer J and Timer Maxlifetime expiration
-
   virtual bool isCompleted() const;
 private: 
   SIPMessage::Ptr _pResponse;

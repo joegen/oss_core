@@ -154,13 +154,13 @@ void SIPFSMDispatch::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
         // No IST is existing in the ackable Pool.
         // Report this ACK as orphaned to the UA CORE
         //
-        if (_unknownInviteTransactionHandler)
-          _unknownInviteTransactionHandler(pMsg, pTransport);
+        if (_ackFor2xxTransactionHandler)
+          _ackFor2xxTransactionHandler(pMsg, pTransport);
     }
     else if (transactionType == SIPTransaction::TYPE_ICT && pMsg->is2xx())
     {
-      if (_unknownInviteTransactionHandler)
-        _unknownInviteTransactionHandler(pMsg, pTransport);
+      if (_ackFor2xxTransactionHandler)
+        _ackFor2xxTransactionHandler(pMsg, pTransport);
     }
     else
     {

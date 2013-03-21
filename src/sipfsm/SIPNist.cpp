@@ -130,30 +130,6 @@ bool SIPNist::onSendMessage(SIPMessage::Ptr pMsg)
 }
 
 
-void SIPNist::handleDelayedTerminate()
-{
-  SIPTransaction::Ptr pTransaction = static_cast<SIPTransaction::WeakPtr*>(_owner)->lock();
-  if (!pTransaction)
-    return;
-
-  if (pTransaction->getState() == SIPTransaction::TRN_STATE_TERMINATED)
-    return;
-
-  SIPTransaction::Ptr pParent = pTransaction->getParent();
-
-  if (pTransaction->isParent())
-  {
-    pTransaction->terminate();
-  }
-  else if (pParent && pParent->allBranchesCompleted())
-  {
-    //
-    // all branches will terminate with the parent
-    //
-    pParent->terminate();
-  }
-}
-
 bool SIPNist::isCompleted() const
 {
   SIPTransaction::Ptr pTransaction = static_cast<SIPTransaction::WeakPtr*>(_owner)->lock();
