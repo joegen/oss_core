@@ -26,8 +26,8 @@ namespace RTP {
 
 
 RTPProxyTuple::RTPProxyTuple(RTPProxyManager* pManager, RTPProxySession* pSession, const std::string& identifier, bool isXORDisabled) :
-  _data(new RTPProxy(RTPProxy::Data, pManager, pSession, identifier + "-data", isXORDisabled)),
-  _control(new RTPProxy(RTPProxy::Control, pManager, pSession, identifier + "-control", isXORDisabled)),
+  _data(new RTPProxy(RTPProxy::Data, pManager, pSession, identifier + "-data", isXORDisabled)),//TODO:magic value
+  _control(new RTPProxy(RTPProxy::Control, pManager, pSession, identifier + "-control", isXORDisabled)),//TODO:magic value
   _identifier(identifier),
   _pManager(pManager),
   _pSession(pSession)
@@ -46,6 +46,7 @@ bool RTPProxyTuple::open(
   OSS::IPAddress& leg1ControlListener,
   OSS::IPAddress& leg2ControlListener)
 {
+	 //TODO:document how retry is calculated
   int retry = (_pManager->getUDPPortMax() - _pManager->getUDPPortBase()) / 2;
   
   for (int i = 0; i < retry; i++)

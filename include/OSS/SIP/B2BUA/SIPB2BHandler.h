@@ -1,10 +1,6 @@
-// OSS Software Solutions Application Programmer Interface
-// Package: B2BUA
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
-// Basic definitions for the OSS Core SDK.
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -227,7 +223,7 @@ public:
     /// headers to the desired application-specific values for as long
     /// as it wont conflict with dialog creation states.
 
-  virtual void onProcessUnknownInviteRequest(
+  virtual void onProcessAckFor2xxRequest(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport){};
     /// Call back for ACK and 200 OK request for INVITE handler

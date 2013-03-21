@@ -1,7 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -58,7 +57,7 @@ void SIPWebSocketConnectionManager::add(SIPWebSocketConnection::Ptr conn)
   OSS_VERIFY_NULL(pConnection);
 
   if (!pConnection->getIdentifier())
-    pConnection->setIdentifier((OSS::UInt64)pConnection->_pServer.get());
+    pConnection->setIdentifier((OSS::UInt64)pConnection->_pServerConnection.get());
 
   _connections[conn->getIdentifier()] = conn;
   OSS_LOG_INFO("SIPWebSocketConnection Added transport (" << pConnection->getIdentifier() << ") "
@@ -74,7 +73,7 @@ void SIPWebSocketConnectionManager::start(SIPWebSocketConnection::Ptr conn)
   OSS_VERIFY_NULL(pConnection);
 
   if (!pConnection->getIdentifier())
-    pConnection->setIdentifier((OSS::UInt64)pConnection->_pServer.get());
+    pConnection->setIdentifier((OSS::UInt64)pConnection->_pServerConnection.get());
 
   _connections[conn->getIdentifier()] = conn;
 

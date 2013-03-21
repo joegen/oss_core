@@ -1,10 +1,6 @@
-// OSS Software Solutions Application Programmer Interface
-// Package: OSSAPI
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
-// Basic definitions for the OSS Core SDK.
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -382,6 +378,28 @@ bool boost_temp_file(std::string& tempfile)
   tempfile += Poco::TemporaryFile::tempName();
   return true;
 #endif
+}
+
+void vectorToCArray(const std::vector<std::string>& args, char*** argv)
+{
+  *argv = (char**)std::malloc((args.size() + 1) * sizeof(char*));
+  int i=0;
+  for(std::vector<std::string>::const_iterator iter = args.begin();
+      iter != args.end();
+      iter++, ++i)
+  {
+    std::string arg = *iter;
+    (*argv)[i] = (char*)std::malloc((arg.length()+1) * sizeof(char));
+    std::strcpy((*argv)[i], arg.c_str());
+  }
+  (*argv)[args.size()] = NULL; // argv must be NULL terminated
+}
+
+void freeCArray(int argc, char*** argv)
+{
+  for (int i = 0; i < argc; i++)
+    free((*argv)[i]);
+  free(*argv);
 }
 
 } // OSS

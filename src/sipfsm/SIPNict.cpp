@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -55,6 +53,7 @@ bool SIPNict::onSendMessage(SIPMessage::Ptr pMsg)
 
   if (pTransaction->getState() == SIPTransaction::TRN_STATE_IDLE)
   {
+    startTimerMaxLifetime(300000); /// five minutes
     _pRequest = pMsg;
     pTransaction->setState(TRYING);
 
@@ -72,7 +71,6 @@ bool SIPNict::onSendMessage(SIPMessage::Ptr pMsg)
       startTimerE(_timerEValue);
 
     startTimerF(_timerEValue*64);
-    startTimerMaxLifetime(300000); /// five minutes
     return true;
   }
   return false;
@@ -89,25 +87,86 @@ void SIPNict::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr p
   if (!pMsg->isResponse() || state == SIPTransaction::TRN_STATE_TERMINATED || state == COMPLETED)
     return;
 
+  bool is2xx = pMsg->is2xx();
+
+  SIPTransaction::Ptr pParent = pTransaction->getParent();
+
   switch (pTransaction->getState())
   {
+  case SIPTransaction::TRN_STATE_IDLE:
   case TRYING:
     if (pMsg->is1xx())
     {
       pTransaction->setState(PROCEEDING);
+      if (!pTransaction->isParent() && pParent && pParent->getState() < PROCEEDING)
+        pParent->setState(PROCEEDING);
+
       pTransaction->informTU(pMsg, pTransport);
     }
     else 
     {
-      cancelTimerE();
-      cancelTimerF();
+      if (pTransaction->isParent() && !is2xx)
+      {
+        //
+        // If we are the parent or this is and error response
+        // cancel e and f timers
+        //
+        cancelTimerE();
+        cancelTimerF();
+      }
+      else if (!pTransaction->isParent() && is2xx)
+      {
+        //
+        // If this is a branch and it is a 2xx reponse,
+        // then cancel both parents timers as sell
+        //
+        cancelTimerE();
+        cancelTimerF();
+
+        if (pParent)
+        {
+          pParent->fsm()->cancelTimerE();
+          pParent->fsm()->cancelTimerF();
+          pParent->setState(COMPLETED);
+        }
+      }
+      else if (!pTransaction->isParent() && !is2xx)
+      {
+        //
+        // If this is a branch and it is an error reponse,
+        // then cancel both parent timers as well if there
+        // is only one branch
+        //
+        cancelTimerE();
+        cancelTimerF();
+
+        if (pParent && pParent->getBranchCount() == 1)
+        {
+          pParent->fsm()->cancelTimerE();
+          pParent->fsm()->cancelTimerF();
+          pParent->setState(COMPLETED);
+        }
+      }
+
       pTransaction->setState(COMPLETED);
       pTransaction->informTU(pMsg, pTransport);
       
       if (!pTransport->isReliableTransport())
+      {
+        //
+        // Start the longest time we want to handle retransmissions of 200 OK
+        //
         startTimerK();
+      }
       else
+      {
         pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
+        if (is2xx || pTransaction->allBranchesCompleted())
+        {
+          if (pParent)
+            pParent->setState(SIPTransaction::TRN_STATE_TERMINATED);
+        }
+      }
     }
     break;
   case PROCEEDING:
@@ -117,14 +176,68 @@ void SIPNict::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr p
     }
     else 
     {
-      cancelTimerE();
-      cancelTimerF();
+      if (pTransaction->isParent() && !is2xx)
+      {
+        //
+        // If we are the parent or this is and error response
+        // cancel e and f timers
+        //
+        cancelTimerE();
+        cancelTimerF();
+      }
+      else if (!pTransaction->isParent() && is2xx)
+      {
+        //
+        // If this is a branch and it is a 2xx reponse,
+        // then cancel both parent timers as sell
+        //
+        cancelTimerE();
+        cancelTimerF();
+        if (pParent)
+        {
+          pParent->fsm()->cancelTimerE();
+          pParent->fsm()->cancelTimerF();
+          pParent->setState(COMPLETED);
+        }
+      }
+      else if (!pTransaction->isParent() && !is2xx)
+      {
+        //
+        // If this is a branch and it is an error reponse,
+        // then cancel both parent timers as well if there
+        // is only one branch
+        //
+        cancelTimerE();
+        cancelTimerF();
+
+        if (pParent)
+        {
+          if (pParent->getBranchCount() == 1)
+          {
+            pParent->fsm()->cancelTimerE();
+            pParent->fsm()->cancelTimerF();
+            pParent->setState(COMPLETED);
+          }
+        }
+      }
+      
       pTransaction->setState(COMPLETED);
       pTransaction->informTU(pMsg, pTransport);
       if (!pTransport->isReliableTransport())
+      {
+        //
+        // Start the longest time we want to handle retransmissions of 200 OK
+        //
         startTimerK();
+      }
       else
+      {
         pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
+        if (is2xx || pTransaction->allBranchesCompleted())
+          if (pParent)
+            pParent->setState(SIPTransaction::TRN_STATE_TERMINATED);
+
+      }
     }
     break;
   case COMPLETED:
@@ -132,7 +245,11 @@ void SIPNict::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr p
   }
 
   if (pTransaction->getState() == SIPTransaction::TRN_STATE_TERMINATED)
-    pTransaction->terminate();
+      pTransaction->terminate();
+
+  if (pParent && pParent->getState() == SIPTransaction::TRN_STATE_TERMINATED)
+      pParent->terminate();
+
 }
 
 void SIPNict::handleRetransmitRequest()
@@ -186,20 +303,12 @@ void SIPNict::handleRequestTimeout()
   pTransaction->terminate();
 }
 
-void SIPNict::handleDelayedTerminate()
+bool SIPNict::isCompleted() const
 {
   SIPTransaction::Ptr pTransaction = static_cast<SIPTransaction::WeakPtr*>(_owner)->lock();
   if (!pTransaction)
-    return;
-
-  if (pTransaction->getState() == SIPTransaction::TRN_STATE_TERMINATED)
-    return;
-
-  cancelTimerK();
-  cancelTimerE();
-  cancelTimerF();
-
-  pTransaction->terminate();
+    return true; /// If we can't lock the transaction pointer it means it is termianted
+  return  pTransaction->getState() >= COMPLETED;
 }
 
 } } // OSS::SIP

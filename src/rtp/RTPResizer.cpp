@@ -28,7 +28,7 @@ namespace RTP {
 
 RTPResizer::RTPResizer(RTPProxy* pProxy, unsigned int legIndex) :
   _pProxy(pProxy),
-  _queue(18, 80, 10, 10, 0),
+  _queue(18, 80, 10, 10, 0), //TODO: magic values
   _samples(0),
   _lastTick(0),
   _duration(0),
@@ -49,7 +49,7 @@ void RTPResizer::setSamples(int samples)
 {
   _samples = samples;
   _queue.setPacketizationTargetTime(samples);
-  _duration = (samples * 1000);
+  _duration = (samples * 1000);//TODO: magic values
 }
 
 int RTPResizer::getSamples() const
@@ -63,7 +63,7 @@ OSS::UInt64 RTPResizer::getTime()
   struct timeval sTimeVal, ret;
 	gettimeofday( &sTimeVal, NULL );
   timersub(&sTimeVal, &_bootTime, &ret);
-  return (OSS::UInt64)( (sTimeVal.tv_sec * 1000000) + sTimeVal.tv_usec );
+  return (OSS::UInt64)( (sTimeVal.tv_sec * 1000000) + sTimeVal.tv_usec ); //TODO: magic values
 }
 
 void RTPResizer::wait()
@@ -117,7 +117,7 @@ void RTPResizer::wait()
 
   if (nextWait)
   {
-    timeval sTimeout = { (long int)(nextWait / 1000000), (long int)( nextWait % 1000000 ) };
+    timeval sTimeout = { (long int)(nextWait / 1000000), (long int)( nextWait % 1000000 ) };//TODO: magic values
     select( 0, 0, 0, 0, &sTimeout );
   }
 }

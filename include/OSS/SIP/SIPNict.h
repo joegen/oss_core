@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -40,7 +38,7 @@ class OSS_API SIPNict:
 public:
   enum State
   {
-    TRYING,
+    TRYING=1,
     PROCEEDING,
     COMPLETED
   };
@@ -72,8 +70,7 @@ public:
   void handleRequestTimeout();
     /// Callback function for Timer F expiration
 
-  void handleDelayedTerminate();
-    /// Callback function for Timer K expiration
+  virtual bool isCompleted() const;
 
   unsigned long _timerEValue;
   unsigned long _timerEMultiplier;

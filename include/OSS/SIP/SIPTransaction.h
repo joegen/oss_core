@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -50,15 +48,14 @@ class OSS_API SIPTransaction: public boost::enable_shared_from_this<SIPTransacti
 {
 public:
   static const int TRN_STATE_CHILD = 0xFC;
-  static const int TRN_STATE_IDLE = 0xFD;
-  static const int TRN_STATE_ACK_PENDING = 0xFE;
-  static const int TRN_STATE_TERMINATED = 0xFF;
+  static const int TRN_STATE_IDLE = 0x00;
+   static const int TRN_STATE_TERMINATED = 0xFF;
   typedef boost::shared_ptr<SIPTransaction> Ptr;
   typedef boost::weak_ptr<SIPTransaction> WeakPtr;
   typedef boost::shared_ptr<OSS::Exception> Error;
   typedef boost::function<void(const SIPTransaction::Error&, const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> Callback;
 	typedef boost::function<void(const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> RequestCallback;
-  
+  typedef std::map<std::string, SIPTransaction::Ptr> Branches;
   enum Type
   {
     TYPE_UNKNOWN,
@@ -69,21 +66,14 @@ public:
   };
   
   SIPTransaction();
-		/// Creates the SIPTransaction.
+    /// Creates the SIPTransaction.
+
+  SIPTransaction(SIPTransaction::Ptr pParent);
+    /// Creates a new child transaction
 
   ~SIPTransaction();
-		/// Destroys the SIPTransaction, cancelling all pending tasks.
+    /// Destroys the SIPTransaction, cancelling all pending tasks.
 	
-  void onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport);
-    /// This method is called when a SIP message is received from the transport.
-    ///
-    /// The SIP message will simply be passed to the FSM 
-    /// where the transaction state will be processed.
-    ///
-    /// Take note that this is called directly from the 
-    /// transport proactor thread and should therefore
-    /// not block and result to a transport sleep.
-
   void informTU(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport);
     /// Propagate the SIP message to the upper layer
     ///
@@ -149,41 +139,48 @@ public:
     /// since it will be ignored.  TCP and TLS will always use the same transport used
     /// to send the server transaction request.
 
-  void sendResponse(
-      const SIPMessage::Ptr& pRequest,
-      const OSS::IPAddress& sendAddress,
-      SIPTransaction::Callback callback);
-    /// Send a new SIP ACKable (RESPONSE) message to the Network.
-    ///
-    /// This is a none-blocking function call for sending
-    /// SIP (RESPONSE) messages to the network.  
-    ///
-    /// For UDP, The remote address must be in the form of an IP address.
-    /// OSSSIP supports both IPV4 and IPV6 destinations.
-    /// DNS lookup will not be performed by the transport layer.
-    /// Thus, this method expects that the remote address has 
-    /// already been resolved using the mechanisms exposed by
-    /// OSSADNS or a third party DNS client if required.
-    ///
-    /// Applications may also opt to send using the remoteAddress
-    /// which is directly accessible via the transaction if the
-    /// applicaiton is sure that the remote endpoint expects the
-    /// responses to be received using the same transport it was sent.
-    ///
-    /// Take note that via processing is not handled in the transaction layer.
-    /// This is an intentional behavior to allow the application layer
-    /// to perform proprietary NAT traversal techniques.
-    ///
-    /// The send address MAY be set to anything if the transport is reliable like TCP or TLS
-    /// since it will be ignored.  TCP and TLS will always use the same transport used
-    /// to send the server transaction request.
-
   void sendAckFor2xx(
     const SIPMessage::Ptr& pAck,
     const OSS::IPAddress& dialogTarget);
     /// Send a new SIP (ACK REQUEST) message to the Network.
     ///
     /// This method is used by ICT to ACK 2xx responses
+
+  const std::string& getLogId() const;
+    /// Return the transaction logid
+
+  void setLogId(const std::string& logId);
+    /// Set the transaction log id
+
+  bool isXOREncrypted() const;
+    /// Returns true if this transaction is XOR encrypted
+
+  SIPMessage::Ptr getInitialRequest() const;
+
+  bool allBranchesCompleted() const;
+    /// Returns true if all branches are already in completed or terminated state
+
+  bool allBranchesTerminated() const;
+    /// Returns true if all branches are already in terminated state
+
+  std::size_t getBranchCount() const;
+    /// Returns the number of active branches
+
+  std::string getTypeString() const;
+    /// Return the transaction type as a string
+
+  Type getType() const;
+    /// Returns the transaction type
+protected:
+  void onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport);
+    /// This method is called when a SIP message is received from the transport.
+    ///
+    /// The SIP message will simply be passed to the FSM
+    /// where the transaction state will be processed.
+    ///
+    /// Take note that this is called directly from the
+    /// transport proactor thread and should therefore
+    /// not block and result to a transport sleep.
 
   void writeMessage(SIPMessage::Ptr pMsg);
     /// Send a message using the transaction transport.
@@ -278,57 +275,34 @@ public:
   SIPTransaction::Type& type();
     /// Returns the type of transaction (ICT, IST, NICT, NIST)
 
-  bool& willSendAckFor2xx();
-    /// Returns a direct reference to the flag indicating
-    /// whether INVITE trasnactions would terminate after
-    /// sending or receipt of a 2xx response.
-    ///
-    /// UA implementation would usually set this to false
-    /// so that retransmissions of the 2xx response will still
-    /// be caught by the transaction.
-
-  SIPTransaction::Callback& ackHandler();
-    /// Handler for ACK request for IST.
-    ///
-
-  const std::string& getLogId() const;
-    /// Return the transaction logid
-
-  void setLogId(const std::string& logId);
-    /// Set the transaction log id
-
-  bool isXOREncrypted() const;
-    /// Returns true if this transaction is XOR encrypted
-
-  SIPTransaction::Ptr createChildTransactionFromResponse(const SIPMessage::Ptr& pMsg, const SIPTransportSession::Ptr& pTransport, bool mayExist);
-  SIPTransaction::Ptr createChildTransactionFromResponse(const std::string& id, bool mayExist);
-    /// Creates a new child transaction due to a forked response.
-    /// If the transaction already exists, the existing pointer will be returned.
-    /// A new transaction will be created if one does not exist
-
-  SIPTransaction::Ptr findChildTransactionFromResponse(const SIPMessage::Ptr& pMsg);
-  SIPTransaction::Ptr findChildTransaction(const std::string& id);
-    /// Returns the pointer to a child transaction.
-    /// Null will be returned if the transaction does not exists
-
   void setRemoteTag(const std::string& tag);
     /// Set the remote tag for early dialogs.
 
   const std::string& getRemoteTag();
     /// Get the remote tag for early dialogs
 
-  bool isChildTransaction() const;
+  SIPTransaction::Ptr getParent();
+    /// Returns a the parent transaction.
 
+  SIPTransaction::Ptr findBranch(const SIPMessage::Ptr& pRequest);
+    /// Find the brach that would handle the request or create a new one
+    /// if it does not exists
+
+  bool isParent() const;
+    /// Return true if this transaction is the parent transaction
+
+  void onBranchTerminated(const SIPTransaction::Ptr& pBranch);
+    /// Called from SIPTransaction::termiante to signal the parent transaction
+    /// that a child has terminated
 
 protected:
   SIPTransaction::Callback _responseTU;
-  SIPTransaction::Callback _ackHandler;
   Type _type;
 private:
-	SIPTransaction(const SIPTransaction&);
-	SIPTransaction& operator = (const SIPTransaction&);
+  SIPTransaction(const SIPTransaction&);
+  SIPTransaction& operator = (const SIPTransaction&);
   std::string _id;
-	SIPTransactionPool* _owner;
+  SIPTransactionPool* _owner;
   SIPFsm::Ptr _fsm;
   SIPTransportSession::Ptr _transport;
   SIPTransportService* _transportService;
@@ -337,17 +311,29 @@ private:
   OSS::IPAddress _remoteAddress;
   OSS::IPAddress _sendAddress;
   OSS::IPAddress _dialogTarget; 
-  bool _willSendAckFor2xx;
   mutable OSS::mutex _mutex;
   mutable OSS::mutex_read_write _stateMutex;
   std::string _logId;
   bool _isXOREncrypted;
-  bool _isInitialRequest;
-  SIPTransaction::WeakPtr _parent;
+  WeakPtr _pParent;
+  bool _isParent;
   std::map<std::string, SIPTransaction::Ptr> _children;
   std::string _remoteTag;
-  bool _isChildTransaction;
-	friend class SIPTransactionPool;
+  mutable OSS::mutex_critic_sec _branchesMutex;
+  Branches _branches;
+  SIPMessage::Ptr _pInitialRequest;
+  friend class SIPTransactionPool;
+  friend class SIPIstPool;
+  friend class SIPNistPool;
+  friend class SIPIctPool;
+  friend class SIPNictPool;
+  friend class SIPIst;
+  friend class SIPNist;
+  friend class SIPIct;
+  friend class SIPNict;
+  friend class SIPFSMDispatch;
+  friend class SIPFsm;
+
 };
 
 
@@ -399,19 +385,9 @@ inline SIPTransaction::Type& SIPTransaction::type()
   return _type;
 }
 
-inline bool& SIPTransaction::willSendAckFor2xx()
-{
-  return _willSendAckFor2xx;
-}
-
 inline OSS::IPAddress& SIPTransaction::dialogTarget()
 {
   return _dialogTarget;
-}
-
-inline SIPTransaction::Callback& SIPTransaction::ackHandler()
-{
-  return _ackHandler;
 }
 
 inline const std::string& SIPTransaction::getLogId() const
@@ -439,9 +415,19 @@ inline const std::string& SIPTransaction::getRemoteTag()
   return _remoteTag;
 }
 
-inline bool SIPTransaction::isChildTransaction() const
+inline SIPMessage::Ptr SIPTransaction::getInitialRequest() const
 {
-  return _isChildTransaction;
+  return _pInitialRequest;
+}
+
+inline bool SIPTransaction::isParent() const
+{
+  return _isParent;
+}
+
+inline SIPTransaction::Type SIPTransaction::getType() const
+{
+  return _type;
 }
 
 } } // namespace OSS::SIP

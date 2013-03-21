@@ -74,7 +74,7 @@ bool RTPPacket::parse(const u_char* packet, unsigned int size)
 
   memcpy(&_packet, packet, size);
   _packetSize = size;
-  return _packet.version == 2;
+  return _packet.version == 2; //TODO: magic value
 }
 
 

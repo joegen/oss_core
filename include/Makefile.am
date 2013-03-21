@@ -203,38 +203,42 @@ nobase_include_HEADERS = \
     OSS/Net/Firewall.h \
     OSS/Net/oss_carp.h \
     OSS/Net/Carp.h \
-    OSS/UTL/AdaptiveDelay.h
-
-#    OSS/websocketpp/common.hpp \
-#    OSS/websocketpp/connection.hpp \
-#    OSS/websocketpp/endpoint.hpp \
-#    OSS/websocketpp/network_utilities.hpp \
-#    OSS/websocketpp/shared_const_buffer.hpp \
-#    OSS/websocketpp/uri.hpp \
-#    OSS/websocketpp/websocket_frame.hpp \
-#    OSS/websocketpp/websocketpp.hpp \
-#    OSS/websocketpp/base64/base64.h \
-#    OSS/websocketpp/http/parser.hpp \
-#    OSS/websocketpp/http/constants.hpp \
-#    OSS/websocketpp/logger/logger.hpp \
-#    OSS/websocketpp/md5/md5.h \
-#    OSS/websocketpp/md5/md5.hpp \
-#    OSS/websocketpp/messages/control.hpp \
-#    OSS/websocketpp/messages/data.hpp \
-#    OSS/websocketpp/processors/hybi.hpp \
-#    OSS/websocketpp/processors/hybi_header.hpp \
-#    OSS/websocketpp/processors/hybi_legacy.hpp \
-#    OSS/websocketpp/processors/hybi_util.hpp \
-#    OSS/websocketpp/processors/processor.hpp \
-#    OSS/websocketpp/rng/blank_rng.hpp \
-#    OSS/websocketpp/rng/boost_rng.hpp \
-#    OSS/websocketpp/roles/client.hpp \
-#    OSS/websocketpp/roles/server.hpp \
-#    OSS/websocketpp/sha1/sha1.h \
-#    OSS/websocketpp/sockets/plain.hpp \
-#    OSS/websocketpp/sockets/socket_base.hpp \
-#    OSS/websocketpp/sockets/tls.hpp \
-#    OSS/websocketpp/utf8_validator/utf8_validator.hpp
+    OSS/Net/TurnServer.h \
+    OSS/UTL/AdaptiveDelay.h \
+    OSS/UTL/FastRandom.h \
+    OSS/websocketpp/common.hpp \
+    OSS/websocketpp/connection.hpp \
+    OSS/websocketpp/endpoint.hpp \
+    OSS/websocketpp/network_utilities.hpp \
+    OSS/websocketpp/shared_const_buffer.hpp \
+    OSS/websocketpp/uri.hpp \
+    OSS/websocketpp/websocket_frame.hpp \
+    OSS/websocketpp/websocketpp.hpp \
+    OSS/websocketpp/base64/base64.h \
+    OSS/websocketpp/http/parser.hpp \
+    OSS/websocketpp/http/constants.hpp \
+    OSS/websocketpp/logger/logger.hpp \
+    OSS/websocketpp/md5/md5.h \
+    OSS/websocketpp/md5/md5.hpp \
+    OSS/websocketpp/messages/control.hpp \
+    OSS/websocketpp/messages/data.hpp \
+    OSS/websocketpp/processors/hybi.hpp \
+    OSS/websocketpp/processors/hybi_header.hpp \
+    OSS/websocketpp/processors/hybi_legacy.hpp \
+    OSS/websocketpp/processors/hybi_util.hpp \
+    OSS/websocketpp/processors/processor.hpp \
+    OSS/websocketpp/rng/blank_rng.hpp \
+    OSS/websocketpp/rng/boost_rng.hpp \
+    OSS/websocketpp/roles/client.hpp \
+    OSS/websocketpp/roles/server.hpp \
+    OSS/websocketpp/sha1/sha1.h \
+    OSS/websocketpp/sockets/plain.hpp \
+    OSS/websocketpp/sockets/socket_base.hpp \
+    OSS/websocketpp/sockets/tls.hpp \
+    OSS/websocketpp/utf8_validator/utf8_validator.hpp \
+    OSS/SIP/SIPWebSocketConnection.h \
+    OSS/SIP/SIPWebSocketConnectionManager.h \
+    OSS/SIP/SIPWebSocketListener.h
 
 
 DISTCLEANFILES = Makefile.in

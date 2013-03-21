@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -43,7 +41,7 @@ class OSS_API SIPIst:
 public:
   enum State
   {
-    PROCEEDING,
+    PROCEEDING=1,
     COMPLETED,
     CONFIRMED
   };
@@ -76,13 +74,12 @@ public:
   void handleACKTimeout();
     /// Callback function for Timer H expiration
 
-  void handleDelayedTerminate();
-    /// Callback function for Timer Maxlifetime expiration
-
   SIPIstPool*& istPool();
     /// Returns a direct pointer to the IST Pool
 
   void onTerminate();
+
+  virtual bool isCompleted() const;
 private: 
   SIPMessage::Ptr _pResponse;
   unsigned long _timerGValue;

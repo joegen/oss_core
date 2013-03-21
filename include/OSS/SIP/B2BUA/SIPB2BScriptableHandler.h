@@ -1,10 +1,6 @@
-// OSS Software Solutions Application Programmer Interface
-//
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
-// Package: B@BUA
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -316,7 +312,7 @@ public:
   //
   // INVITE handlers
   //
-  virtual void onProcessUnknownInviteRequest(
+  virtual void onProcessAckFor2xxRequest(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport);
     /// Callback for ACK and 200 OK retransmission for INVITE

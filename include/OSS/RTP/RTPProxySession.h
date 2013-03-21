@@ -391,6 +391,7 @@ inline void RTPProxySession::setResizerSamples(int leg1, int leg2)
   _resizerSamplesLeg1 = leg1;
   _resizerSamplesLeg2 = leg2;
   _audio.setResizerSamples(_resizerSamplesLeg1, _resizerSamplesLeg2);
+  //TODO: What about resizing video or fax?
 }
 
 inline int RTPProxySession::getResizerSamplesLeg1() const

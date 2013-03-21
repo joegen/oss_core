@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -152,32 +150,17 @@ void SIPFSMDispatch::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
     //
     if (transactionType == SIPTransaction::TYPE_IST && pMsg->isRequest("ACK"))
     {
-      //
-      // ACK for 2xx won't get matched to a transaction
-      // Transactions that are configured to handle ACK
-      // natively adds themselves to the ackable transaction list.
-      // This is an innovation above what the RFC specifies.
-
-      std::string dialogId = pMsg->getDialogId(false);
-      trn = _ist.findAckableTransaction(dialogId);
-      if (trn)
-      {
-        trn->onReceivedMessage(pMsg, pTransport);
-      }
-      else
-      {
         //
         // No IST is existing in the ackable Pool.
         // Report this ACK as orphaned to the UA CORE
         //
-        if (_unknownInviteTransactionHandler)
-          _unknownInviteTransactionHandler(pMsg, pTransport);
-      }
+        if (_ackFor2xxTransactionHandler)
+          _ackFor2xxTransactionHandler(pMsg, pTransport);
     }
     else if (transactionType == SIPTransaction::TYPE_ICT && pMsg->is2xx())
     {
-      if (_unknownInviteTransactionHandler)
-        _unknownInviteTransactionHandler(pMsg, pTransport);
+      if (_ackFor2xxTransactionHandler)
+        _ackFor2xxTransactionHandler(pMsg, pTransport);
     }
     else
     {

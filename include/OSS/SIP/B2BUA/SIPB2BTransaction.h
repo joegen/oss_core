@@ -1,10 +1,6 @@
-// OSS Software Solutions Application Programmer Interface
-// Package: B2BUA
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
-// Basic definitions for the OSS Core SDK.
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -186,7 +182,7 @@ protected:
   SIPTransaction::Ptr _pServerTransaction;
 
   SIPMessage::Ptr _pClientRequest;
-  SIPTransportSession::Ptr _pClientTransport; 
+  SIPTransportSession::Ptr _pClientTransport;
   SIPTransaction::Ptr _pClientTransaction;
 
   SIPB2BTransactionManager* _pManager;
@@ -212,6 +208,7 @@ protected:
 
   OSS::dns_srv_record_list _udpSrvTargets;
   OSS::dns_srv_record_list _tcpSrvTargets;
+  OSS::dns_srv_record_list _wsSrvTargets;
   OSS::dns_srv_record_list _tlsSrvTargets;
   unsigned int _failoverCount;
   OSS::IPAddress _localInterface;

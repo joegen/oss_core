@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -37,6 +35,7 @@
 #include "OSS/SIP/SIPTLSConnectionManager.h"
 #include "OSS/SIP/SIPUDPListener.h"
 #include "OSS/SIP/SIPTCPListener.h"
+#include "OSS/SIP/SIPWebSocketListener.h"
 #include "OSS/SIP/SIPTLSListener.h"
 
 
@@ -52,6 +51,7 @@ class OSS_API SIPTransportService: private boost::noncopyable
 public:
   typedef std::map<std::string, SIPUDPListener::Ptr> UDPListeners;
   typedef std::map<std::string, SIPTCPListener::Ptr> TCPListeners;
+  typedef std::map<std::string, SIPWebSocketListener::Ptr> WSListeners;
   typedef std::map<std::string, SIPTLSListener::Ptr> TLSListeners;
 
   SIPTransportService(SIPFSMDispatch* pDispatch);
@@ -93,6 +93,12 @@ public:
     /// If the transport already exists, this function will throw
     /// a SIPDuplicateTransport exception
 
+  void addWSTransport(std::string& ip, std::string& port, const std::string& externalIp);
+    /// Add a new WebSocket transport bound to the ip address and port.
+    ///
+    /// If the transport already exists, this function will throw
+    /// a SIPDuplicateTransport exception
+
   void addTLSTransport(
     std::string& ip, 
     std::string& port,
@@ -119,6 +125,11 @@ public:
     /// Creates a new client transport based
     /// on local and remote address tuples
 
+  SIPTransportSession::Ptr createClientWsTransport(
+    const OSS::IPAddress& localAddress,
+    const OSS::IPAddress& remoteAddress);
+    /// Creates a new client transport based
+    /// on local and remote address tuples
 
   std::list<std::string> resolve(
     const std::string& host,
@@ -152,6 +163,12 @@ public:
   bool isTcpEnabled() const;
     /// Flag whether TCP transport is enabled for this service
 
+  void setWsEnabled(bool enabled);
+    /// Enable or disable WebSocket transport;
+
+  bool isWsEnabled() const;
+    /// Flag whether WebSocket transport is enabled for this service
+
   void setTlsEnabled(bool enabled);
     /// Enable or disable TLS transport;
 
@@ -183,6 +200,9 @@ public:
   void setTCPPortRange(unsigned short base, unsigned short max);
     /// Set the TCP port range.  Applies to both TCP and TLS transports
 
+  void setWSPortRange(unsigned short base, unsigned short max);
+    /// Set the WebSocket port range.  Applies to both WebSocket and WebSocket Secure transports
+
   unsigned short getTCPPortBase() const;
     /// Return the minimum port for TCP clients
 
@@ -197,16 +217,22 @@ private:
   boost::asio::ip::tcp::resolver _resolver;
   SIPFSMDispatch* _pDispatch;
   SIPTCPConnectionManager _tcpConMgr;
+  SIPWebSocketConnectionManager _wsConMgr;
   SIPTLSConnectionManager _tlsConMgr;
   UDPListeners _udpListeners;
   TCPListeners _tcpListeners;
+  WSListeners _wsListeners;
   TLSListeners _tlsListeners;
   OSS::IPAddress _defaultListenerAddress;
   bool _udpEnabled;
   bool _tcpEnabled;
+  bool _wsEnabled;
   bool _tlsEnabled;
   unsigned short _tcpPortBase;
   unsigned short _tcpPortMax;
+  unsigned short _wsPortBase;
+  unsigned short _wsPortMax;
+
 };
 
 //
@@ -237,6 +263,16 @@ inline bool SIPTransportService::isTcpEnabled() const
   return _tcpEnabled;
 }
 
+inline void SIPTransportService::setWsEnabled(bool enabled)
+{
+  _wsEnabled = enabled;
+}
+
+inline bool SIPTransportService::isWsEnabled() const
+{
+  return _wsEnabled;
+}
+
 inline void SIPTransportService::setTlsEnabled(bool enabled)
 {
   _tlsEnabled = enabled;
@@ -253,6 +289,14 @@ inline void SIPTransportService::setTCPPortRange(unsigned short base, unsigned s
   _tcpPortBase = base;
   _tcpPortMax = max;
 }
+
+inline void SIPTransportService::setWSPortRange(unsigned short base, unsigned short max)
+{
+  OSS_VERIFY(base < max);
+  _wsPortBase = base;
+  _wsPortMax = max;
+}
+
 
 inline unsigned short SIPTransportService::getTCPPortBase() const
 {

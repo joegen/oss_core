@@ -1,10 +1,6 @@
-// OSS Software Solutions Application Programmer Interface
-//
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
-// Package: JS
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -26,8 +22,9 @@
 #define JSBase_H_INCLUDED
 
 #include "OSS/OSS.h"
-#include "boost/noncopyable.hpp"
-#include "boost/tuple/tuple.hpp"
+#include <boost/filesystem.hpp>
+#include <boost/noncopyable.hpp>
+#include <boost/tuple/tuple.hpp>
 
 #include "OSS/JS/JS.h"
 #include "OSS/Thread.h"

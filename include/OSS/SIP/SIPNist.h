@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -42,7 +40,7 @@ class OSS_API SIPNist:
 public:
   enum State
   {
-    TRYING,
+    TRYING=1,
     PROCEEDING,
     COMPLETED
   };
@@ -68,9 +66,7 @@ public:
     /// when a SIP message is needed to be sent to the transport 
     /// coming from the core layer. 
 
-  void handleDelayedTerminate();
-    /// Callback function for Timer J and Timer Maxlifetime expiration
-
+  virtual bool isCompleted() const;
 private: 
   SIPMessage::Ptr _pResponse;
   OSS::mutex_critic_sec _responseMutex;

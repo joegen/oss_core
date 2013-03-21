@@ -1,8 +1,6 @@
-
-// OSS Software Solutions Application Programmer Interface
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -21,6 +19,7 @@
 
 
 #include <sys/select.h>
+#include <sys/time.h>
 #include "OSS/Core.h"
 #include "OSS/UTL/AdaptiveDelay.h"
 

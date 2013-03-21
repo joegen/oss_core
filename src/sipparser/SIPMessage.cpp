@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -1462,6 +1460,39 @@ std::string SIPMessage::createLoggerData(SIPMessage* pMsg)
   }
   strm << CRLF << "};";
   return strm.str();
+}
+
+std::string SIPMessage::getFromTag() const
+{
+  std::string tag;
+  std::string from(hdrGet("from"));
+  if (!from.empty())
+  {
+    tag = SIPFrom::getTag(from);
+  }
+  return tag;
+}
+
+std::string SIPMessage::getToTag() const
+{
+  std::string tag;
+  std::string to(hdrGet("to"));
+  if (!to.empty())
+  {
+    tag = SIPFrom::getTag(to);
+  }
+  return tag;
+}
+
+std::string SIPMessage::getTopViaBranch() const
+{
+  std::string branch;
+  std::string via(hdrGet("via"));
+  if (!via.empty())
+  {
+    SIPVia::getBranch(via, branch);
+  }
+  return branch;
 }
 
 

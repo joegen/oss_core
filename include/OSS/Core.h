@@ -1,10 +1,6 @@
-// OSS Software Solutions Application Programmer Interface
-// Package: OSSAPI
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
-// Basic definitions for the OSS Core SDK.
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -177,6 +173,12 @@ std::string OSS_API boost_file_name(const boost::filesystem::path& path);
 std::string OSS_API boost_path(const boost::filesystem::path& path);
 
 bool OSS_API boost_temp_file(std::string& tempfile);
+
+void vectorToCArray(const std::vector<std::string>& args, char*** argv);
+  /// Convert a vector to argv format
+
+void freeCArray(int argc, char*** argv);
+  /// Free the array allocated by vectorToCArray
 
 } // OSS
 

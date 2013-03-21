@@ -1,10 +1,6 @@
-// OSS Software Solutions Application Programmer Interface
-// Package: B2BUA
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
-// Basic definitions for the OSS Core SDK.
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -42,7 +38,7 @@ SIPB2BTransactionManager::SIPB2BTransactionManager(int minThreadcount, int maxTh
   _pDefaultHandler(0)
 {
   _stack.setRequestHandler(boost::bind(&SIPB2BTransactionManager::handleRequest, this, _1, _2, _3));
-  _stack.setUnknownInviteTransactionHandler(boost::bind(&SIPB2BTransactionManager::handleUnknowInviteTransaction, this, _1, _2));
+  _stack.setAckFor2xxTransactionHandler(boost::bind(&SIPB2BTransactionManager::handleAckFor2xxTransaction, this, _1, _2));
 }
 
 SIPB2BTransactionManager::~SIPB2BTransactionManager()
@@ -93,23 +89,23 @@ void SIPB2BTransactionManager::handleRequest(
 #endif
 }
 
-void SIPB2BTransactionManager::handleUnknowInviteTransaction(
+void SIPB2BTransactionManager::handleAckFor2xxTransaction(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport)
 {
   SIPB2BHandler::Ptr pHandler = findHandler(SIPB2BHandler::TYPE_INVITE);
   if (pHandler)
   {
-    if (_threadPool.schedule(boost::bind(&SIPB2BHandler::onProcessUnknownInviteRequest, pHandler, pMsg, pTransport)) == -1)
+    if (_threadPool.schedule(boost::bind(&SIPB2BHandler::onProcessAckFor2xxRequest, pHandler, pMsg, pTransport)) == -1)
     {
-      OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleUnknowInviteTransaction");
+      OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleAckFor2xxTransaction");
     }
   }
   else if (_pDefaultHandler)
   {
-    if (_threadPool.schedule(boost::bind(&SIPB2BHandler::onProcessUnknownInviteRequest, _pDefaultHandler, pMsg, pTransport)) == -1)
+    if (_threadPool.schedule(boost::bind(&SIPB2BHandler::onProcessAckFor2xxRequest, _pDefaultHandler, pMsg, pTransport)) == -1)
     {
-      OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleUnknowInviteTransaction");
+      OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleAckFor2xxTransaction");
     }
   }
 }
