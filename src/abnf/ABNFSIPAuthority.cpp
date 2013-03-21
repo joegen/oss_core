@@ -1,6 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSABNF
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
+// Library: OSS_CORE - Foundation API for SIP B2BUA
+// Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Copyright (c) OSS Software Solutions
 //

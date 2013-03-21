@@ -123,18 +123,19 @@ RTPProxyManager::RTPProxyManager(int houseKeepingInterval) :
   _ioService(),
   _houseKeepingInterval(houseKeepingInterval),
   _houseKeepingTimer(_ioService, boost::posix_time::milliseconds(houseKeepingInterval)),
-  _rtpProxyUDPPortBase(30000),
-  _rtpProxyUDPPortMax(60000),
+  _rtpProxyUDPPortBase(30000), //TODO: magic value
+  _rtpProxyUDPPortMax(60000), //TODO: magic value
   _rtpProxyUDPPortCurrent(0),
   _rtpProxyThreadCount(0),
   _readTimeout(0),
-  _rtpSessionMax(1000),
+  _rtpSessionMax(1000), //TODO: magic value
   _canRecycleState(true),
   _hasRtpDb(false),
   _pRpcServerThread(0),
   _pRpcServer(0),
   _rpcServerPort(0),
-  _persistStateFiles(false)
+  _persistStateFiles(false),
+  _enabled(true)
 {
 }
 
@@ -168,8 +169,11 @@ void RTPProxyManager::run(int threadCount, int readTimeout)
 
 bool RTPProxyManager::redisConnect(const std::vector<RedisClient::ConnectionInfo>& connections)
 {
+	//TODO: What if _redisClient is already connected?
+
   for (std::vector<RedisClient::ConnectionInfo>::const_iterator iter = connections.begin(); iter != connections.end(); iter++)
   {
+	  //TODO: This needs to be disconnected on destructor or stop
     if (!_redisClient.connect(iter->host, iter->port, iter->password, RedisClient::SBC_RTPDB))
     {
       OSS_LOG_ERROR("Unable to add rtp proxy database - " << iter->host << ":" << iter->port);
@@ -284,6 +288,9 @@ void RTPProxyManager::handleSDP(
   RTPProxy::Attributes& rtpAttribute)
 {
 
+  if (!_enabled)
+    return;
+
   OSS_LOG_DEBUG( logId << "Handling SDP: " 
     << " session-id=" << sessionId
     << " sent-by=" << sentBy.toIpPortString()
@@ -330,6 +337,7 @@ void RTPProxyManager::handleSDP(
         proxy->to() = rtpAttribute.to;
       }
 
+      //TODO: Document why aren't sessions always counted
       if (rtpAttribute.countSessions)
       {
         proxy->setMonitoredRoute(route.toString());
@@ -373,6 +381,9 @@ void RTPProxyManager::handleSDP(const std::string& /*method*/,
   std::string lid;
   try
   {
+	  //TODO: Refactor json encoding/decoding of args so that all json
+	  //operations for handleSDP are done in the same place to minimize the risk
+	  // of mistyping something.
     json::String logId = args["logId"];
     lid = logId.Value();
     json::String sessionId = args["sessionId"];
@@ -495,6 +506,7 @@ void RTPProxyManager::collectInactiveSessions()
   while( iter != _sessionList.end() )
   {
     RTPProxySession::Ptr proxy = iter->second;
+    //TODO: Document criteria to consider a session inactive
     if (proxy && (proxy->isVoiceInactive() || proxy->isAuthTimeout()))
     {
       if (!proxy->getMonitoredRoute().empty())
@@ -519,12 +531,12 @@ unsigned short RTPProxyManager::getNextAvailablePortTuple()
   _csPortMutex.lock();
   if (_rtpProxyUDPPortCurrent == 0)
   {
-    _rtpProxyUDPPortCurrent = _rtpProxyUDPPortBase + 2;
+    _rtpProxyUDPPortCurrent = _rtpProxyUDPPortBase + 2; //TODO: magic value
     _csPortMutex.unlock();
     return _rtpProxyUDPPortBase;
   }
   unsigned short current = _rtpProxyUDPPortCurrent;
-  _rtpProxyUDPPortCurrent += 2;
+  _rtpProxyUDPPortCurrent += 2; //TODO: magic value
   if (_rtpProxyUDPPortCurrent > _rtpProxyUDPPortMax)
     _rtpProxyUDPPortCurrent = _rtpProxyUDPPortBase;
   _csPortMutex.unlock();

@@ -787,7 +787,7 @@ void RTPProxySession::handleInitialSDPAnswer(
 
   SDPSession offer(sdp.c_str());
   std::string sessionAddress = offer.getAddress();
-  bool isBlackhole = sessionAddress == "0.0.0.0";
+  bool isBlackhole = sessionAddress == "0.0.0.0"; //TODO: magic values
   bool hasSessionAddress = (!sessionAddress.empty());
   bool hasChangedSessionAddress = false;
   //
@@ -801,7 +801,7 @@ void RTPProxySession::handleInitialSDPAnswer(
     throw SDPException("Unable to parse session-id from SDP offer.");
   }
   std::vector<std::string> oLineTokens = OSS::string_tokenize(oLine, " ");
-  if (oLineTokens.size() != 6 || oLineTokens[1].empty() || oLineTokens[5].empty())
+  if (oLineTokens.size() != 6 || oLineTokens[1].empty() || oLineTokens[5].empty())//TODO: magic values
   {
     throw SDPException("Unable to parse session-id from SDP offer.");
   }
@@ -1041,7 +1041,6 @@ void RTPProxySession::handleSDPOffer(
   std::string& sdp,
   RTPProxy::Attributes& rtpAttribute)
 {
-  bool forceCreateProxy = rtpAttribute.forceCreate;
   SDPSession offer(sdp.c_str());
   std::string sessionAddress = offer.getAddress();
   bool isBlackhole = (sessionAddress == "0.0.0.0");
@@ -1421,7 +1420,7 @@ void RTPProxySession::handleSDPAnswer(
     throw SDPException("Unable to parse session-id from SDP offer.");
   }
   std::vector<std::string> oLineTokens = OSS::string_tokenize(oLine, " ");
-  if (oLineTokens.size() != 6 || oLineTokens[1].empty() || oLineTokens[5].empty())
+  if (oLineTokens.size() != 6 || oLineTokens[1].empty() || oLineTokens[5].empty()) //TODO:magic values
   {
     throw SDPException("Unable to parse session-id from SDP offer.");
   }

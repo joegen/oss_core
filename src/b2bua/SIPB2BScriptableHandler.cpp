@@ -1,11 +1,6 @@
-
-// OSS Software Solutions Application Programmer Interface
-// Package: B2BUA
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
-// Package: B2BUA
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -760,10 +755,22 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
   ///
   /// If the body is supported, the return value must be a null-Ptr.
 {
+  std::string contentType =  pRequest->hdrGet("content-type");
+  OSS::string_to_lower(contentType);
+  if (contentType != "application/sdp")
+    return OSS::SIP::SIPMessage::Ptr();
+
   std::string noRTPProxy;
   if (pTransaction->getProperty("no-rtp-proxy", noRTPProxy) && noRTPProxy == "1")
     return OSS::SIP::SIPMessage::Ptr();
 
+  //
+  // do not handle SDP for SIP over websockets.  It is using ICE
+  // to traverse NAT.  Media anchor will mess that up.
+  //
+  if (pTransaction->serverTransport() && pTransaction->serverTransport()->getTransportScheme() == "ws")
+    return OSS::SIP::SIPMessage::Ptr();
+  
   std::string sessionId;
   OSS_VERIFY(pTransaction->getProperty("session-id", sessionId));
 
@@ -905,8 +912,20 @@ void SIPB2BScriptableHandler::onProcessResponseBody(
   if (pResponse->isResponseTo("OPTIONS"))
     return;
 
+  std::string contentType = pResponse->hdrGet("content-type");
+  OSS::string_to_lower(contentType);
+  if (contentType != "application/sdp")
+    return;
+
   std::string noRTPProxy;
   if (pTransaction->getProperty("no-rtp-proxy", noRTPProxy) && noRTPProxy == "1")
+    return;
+
+  //
+  // do not handle SDP for SIP over websockets.  It is using ICE
+  // to traverse NAT.  Media anchor will mess that up.
+  //
+  if (pTransaction->serverTransport() && pTransaction->serverTransport()->getTransportScheme() == "ws")
     return;
 
   //
@@ -1460,10 +1479,13 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
     //
     // Remove the rtp proxies if they were created.
     //
-    try
+    if (pTransaction->clientTransaction() && pTransaction->clientTransaction()->allBranchesCompleted())
     {
-      rtpProxy().removeSession(sessionId);
-    }catch(...){}
+      try
+      {
+        rtpProxy().removeSession(sessionId);
+      }catch(...){}
+    }
   }
   else // Any response that isn't covered by the if else block
   {
@@ -1493,12 +1515,12 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
 
 }
 
-void SIPB2BScriptableHandler::onProcessUnknownInviteRequest(
+void SIPB2BScriptableHandler::onProcessAckFor2xxRequest(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport)
 {
   std::string logId = pMsg->createContextId(true);
-  OSS_LOG_DEBUG(logId << "Processing orphaned invite request " << pMsg->startLine());
+  OSS_LOG_DEBUG(logId << "Processing ACK for 2xx request " << pMsg->startLine());
   {
     std::string isXOREncrypted = "0";
     pMsg->getProperty("xor", isXOREncrypted);
@@ -1570,7 +1592,7 @@ void SIPB2BScriptableHandler::onProcessUnknownInviteRequest(
     catch(OSS::Exception e)
     {
       std::ostringstream logMsg;
-      logMsg << logId << "Unable to process ACK.  Exception: " << e.message();
+      logMsg << logId << "Exception: " << e.message();
       OSS::log_warning(logMsg.str());
     }
   }
@@ -1623,10 +1645,13 @@ void SIPB2BScriptableHandler::onTransactionError(
     //
     // Remove the rtp proxies if they were created
     //
-    try
+    if (pTransaction->clientTransaction() && pTransaction->clientTransaction()->allBranchesCompleted())
     {
-      rtpProxy().removeSession(sessionId);
-    }catch(...){}
+      try
+      {
+        rtpProxy().removeSession(sessionId);
+      }catch(...){}
+    }
   }
 }
 
@@ -1738,6 +1763,7 @@ void SIPB2BScriptableHandler::handleOptionsResponse(
   //
   // Only report errors to the queue
   //
+#define FORKING_ENABLED 1
 
   if (e)
   {

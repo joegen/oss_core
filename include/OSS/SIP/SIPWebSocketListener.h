@@ -1,7 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -52,10 +51,12 @@
 #ifndef OSS_SIPWEBSOCKETLISTENER_H_INCLUDED
 #define	OSS_SIPWEBSOCKETLISTENER_H_INCLUDED
 
+#include <boost/noncopyable.hpp>
 
+#include "OSS/SIP/SIPListener.h"
 #include "OSS/SIP/SIPWebSocketConnection.h"
 #include "OSS/SIP/SIPWebSocketConnectionManager.h"
-#include "OSS/SIP/SIPListener.h"
+
 #include "OSS/Thread.h"
 
 
@@ -65,27 +66,27 @@ namespace SIP {
 
 class SIPFSMDispatch;
 
-class SIPWebSocketListener : public OSS::SIP::SIPListener
+class SIPWebSocketListener :
+		public OSS::SIP::SIPListener,
+		private boost::noncopyable
 {
-protected:
-  class ServerHandler : public websocketpp::server::handler
-  {
-  public:
-    ServerHandler(SIPWebSocketListener& listener);
-    void on_message(websocketpp::server::connection_ptr pConnection, websocketpp::server::handler::message_ptr pMsg);
-    void on_handshake_init(websocketpp::server::connection_ptr pConnection);
-    SIPWebSocketListener& _listener;
-    friend class SIPWebSocketListener;
-  };
+public:
 
-  class ClientHandler : public websocketpp::client::handler
-  {
-  public:
-    ClientHandler(SIPWebSocketListener& listener);
-    void on_message(websocketpp::client::connection_ptr pConnection, websocketpp::client::handler::message_ptr pMsg);
-    SIPWebSocketListener& _listener;
-    friend class SIPWebSocketListener;
-  };
+	typedef boost::shared_ptr<SIPWebSocketListener> Ptr;
+
+	// Handler for new websocket connections. This will just accept the connection
+	// and pass it to the connection manager
+	class ServerAcceptHandler : public websocketpp::server::handler
+	{
+	public:
+		ServerAcceptHandler(SIPWebSocketListener& listener);
+
+		void on_fail(websocketpp::server::connection_ptr pConnection);
+		void on_open(websocketpp::server::connection_ptr pConnection);
+
+		SIPWebSocketListener& _rListener;
+	};
+
 
 public:
 
@@ -111,56 +112,26 @@ public:
 
   virtual void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter);
     /// Handle completion of the connect operation.
-
   
 protected:
-  void internal_run();
+  void run_server();
+  void run_client();
 
-  void on_message(websocketpp::server::connection_ptr pConnection, websocketpp::server::handler::message_ptr pMsg);
-  void on_message(websocketpp::client::connection_ptr pConnection, websocketpp::client::handler::message_ptr pMsg);
-  websocketpp::server::handler::ptr _pServerHandler;
+  websocketpp::server::handler::ptr _pServerAcceptHandler;
   websocketpp::server* _pServerEndPoint;
-  websocketpp::client::handler::ptr _pClientHandler;
-  websocketpp::client* _pClientEndPoint;
+
   SIPWebSocketConnectionManager& _connectionManager;
-  boost::asio::ip::tcp::resolver* _pResolver;
+  boost::asio::ip::tcp::resolver _resolver;
+  /// The resolver service;
+
   boost::thread* _pServerThread;
   boost::thread* _pClientThread;
-    /// The resolver service;
-  friend class ServerHandler;
-  friend class ClientHandler;
 };
 
 
 //
 // Inlines
 //
-
-inline SIPWebSocketListener::ClientHandler::ClientHandler(SIPWebSocketListener& listener) :
-  _listener(listener)
-{
-}
-
-inline void SIPWebSocketListener::ClientHandler::on_message(websocketpp::client::connection_ptr pConnection, websocketpp::client::handler::message_ptr pMsg)
-{
-  _listener.on_message(pConnection, pMsg);
-}
-
-inline SIPWebSocketListener::ServerHandler::ServerHandler(SIPWebSocketListener& listener) :
-  _listener(listener)
-{
-}
-
-inline void SIPWebSocketListener::ServerHandler::on_message(websocketpp::server::connection_ptr pConnection, websocketpp::server::handler::message_ptr pMsg)
-{
-  _listener.on_message(pConnection, pMsg);
-}
-
-inline void SIPWebSocketListener::ServerHandler::on_handshake_init(websocketpp::server::connection_ptr pConnection)
-{
-  boost::system::error_code ec;
-  _listener.handleAccept(ec, &pConnection);
-}
 
 } } // OSS::SIP
 

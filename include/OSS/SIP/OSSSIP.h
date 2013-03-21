@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -102,6 +100,15 @@ public:
     ///
     /// This must be set before calling the OSSSIP::run() method
 
+  OSS::socket_address_list& wsListeners();
+    /// Returns the WebSocket Listener vector.
+    ///
+    /// All interfaces where the WebSocket listener should bind to
+    /// must be push_back()ed into this vector.  The vector accepts
+    /// a tuple object of type OSS::OSS::IPAddress.
+    ///
+    /// This must be set before calling the OSSSIP::run() method
+
   OSS::socket_address_list& tlsListeners();
     /// Returns the TLS Listener vector.
     ///
@@ -130,6 +137,7 @@ public:
 
   void transportInit(unsigned short udpPortBase, unsigned short udpPortMax,
     unsigned short tcpPortBase, unsigned short tcpPortMax,
+    unsigned short wsPortBase, unsigned short wsPortMax,
     unsigned short tlsPortBase, unsigned short tlsPortMax);
     /// Initialize the SIP Transport.  This is similar to transportInit()
     /// Except that ports are determined based on the first available port
@@ -237,7 +245,7 @@ public:
     ///
     /// If this callback is not set, the request will be silently dropped.
 
-  void setUnknownInviteTransactionHandler(const SIPFSMDispatch::UnknownTransactionCallback& handler);
+  void setAckFor2xxTransactionHandler(const SIPFSMDispatch::UnknownTransactionCallback& handler);
     /// This function sets the callback handler for ACK and 200 OK retranmissions.
     ///
     /// If this callback is not set, the request will be silently dropped.
@@ -259,9 +267,11 @@ private:
   //
   bool _enableUDP;
   bool _enableTCP;
+  bool _enableWS;
   bool _enableTLS;
   OSS::socket_address_list _udpListeners;
   OSS::socket_address_list _tcpListeners;
+  OSS::socket_address_list _wsListeners;
   OSS::socket_address_list _tlsListeners;
   std::string _tlsCertFile;
   std::string _tlsDiffieHellmanParamFile;
@@ -297,6 +307,11 @@ inline OSS::socket_address_list& OSSSIP::tcpListeners()
   return _tcpListeners;
 }
 
+inline OSS::socket_address_list& OSSSIP::wsListeners()
+{
+  return _wsListeners;
+}
+
 inline OSS::socket_address_list& OSSSIP::tlsListeners()
 {
   return _tlsListeners;
@@ -322,9 +337,9 @@ inline void OSSSIP::setRequestHandler(const SIPTransaction::RequestCallback& han
   _fsmDispatch.requestHandler() = handler;
 }
 
-inline void OSSSIP::setUnknownInviteTransactionHandler(const SIPFSMDispatch::UnknownTransactionCallback& handler)
+inline void OSSSIP::setAckFor2xxTransactionHandler(const SIPFSMDispatch::UnknownTransactionCallback& handler)
 {
-  _fsmDispatch.unknownInviteTransactionHandler() = handler;
+  _fsmDispatch.ackFor2xxTransactionHandler() = handler;
 }
 
 inline SIPTransportService& OSSSIP::transport()

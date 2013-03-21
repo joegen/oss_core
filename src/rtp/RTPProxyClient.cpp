@@ -64,6 +64,8 @@ void RTPProxyClient::handleSDP(
       //
       //  Call the RPC
       //
+    	//TODO: Refactor this piece to have translation from params to json and viceversa
+    	// in one place.
       json::Object params;
       params["logId"] = json::String(logId);
       params["sessionId"] = json::String(sessionId);
@@ -93,7 +95,7 @@ void RTPProxyClient::handleSDP(
       rpcParams.add(xmlrpc_c::value_string(jsonParams.str()));
       xmlrpc_c::rpcPtr proc(methodName, rpcParams);
       std::ostringstream rpcUrl;
-      rpcUrl << "http://" << _rpcHost.toIpPortString() << "/RPC2";
+      rpcUrl << "http://" << _rpcHost.toIpPortString() << "/RPC2"; //TODO: magic value
       xmlrpc_c::carriageParm_curl0 requestUri(rpcUrl.str());
 
       OSS_LOG_DEBUG("[RPC] RTPProxyClient::handleSDP POST: " << rpcUrl.str());
@@ -145,7 +147,7 @@ void RTPProxyClient::removeSession(const std::string& sessionId)
       rpcParams.add(xmlrpc_c::value_string(jsonParams.str()));
       xmlrpc_c::rpcPtr proc(methodName, rpcParams);
       std::ostringstream rpcUrl;
-      rpcUrl << "http://" << _rpcHost.toIpPortString() << "/RPC2";
+      rpcUrl << "http://" << _rpcHost.toIpPortString() << "/RPC2"; //TODO: magic value
       xmlrpc_c::carriageParm_curl0 requestUri(rpcUrl.str());
 
       OSS_LOG_DEBUG("[RPC] RTPProxyClient::removeSession POST: " << rpcUrl.str());

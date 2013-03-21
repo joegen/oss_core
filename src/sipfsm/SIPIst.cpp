@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -59,10 +57,10 @@ void SIPIst::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
   if (_transactionId.empty())
     _transactionId = pTransaction->getId();
 
-  if (pTransaction->getState() == SIPTransaction::TRN_STATE_IDLE)
+  if (pMsg->isRequest() && pTransaction->getState() == SIPTransaction::TRN_STATE_IDLE)
   {
+     startTimerMaxLifetime(300000); /// five minutes
     _pRequest = pMsg;
-    startTimerMaxLifetime(300000); /// five minutes
     pTransaction->setState(PROCEEDING);
     if (dispatch()->requestHandler())
     {
@@ -132,7 +130,7 @@ bool SIPIst::onSendMessage(SIPMessage::Ptr pMsg)
   _pResponse = pMsg;
   }//localize
 
-  if (pTransaction->getState() == PROCEEDING)
+  if (pTransaction->getState() <= PROCEEDING)
   {
     if (pMsg->is1xx())
     {
@@ -164,7 +162,7 @@ void SIPIst::handleRetransmitResponse()
     return;
 
   OSS::mutex_critic_sec_lock responseLock(_responseMutex);
-  if (_pResponse && (pTransaction->getState() == COMPLETED || pTransaction->getState() == SIPTransaction::TRN_STATE_ACK_PENDING))
+  if (_pResponse && (pTransaction->getState() == COMPLETED))
   {
     if (pTransaction->transport()->isReliableTransport())
       pTransaction->transport()->writeMessage(_pResponse);
@@ -188,27 +186,6 @@ void SIPIst::handleACKTimeout()
   SIPTransaction::Ptr pTransaction = static_cast<SIPTransaction::WeakPtr*>(_owner)->lock();
   if (!pTransaction)
     return;
-
-  if (pTransaction->getState() == SIPTransaction::TRN_STATE_ACK_PENDING)
-  {
-    if (!_ackId.empty())
-      _istPool->removeAckableTransaction(_ackId);
-
-    if (pTransaction->ackHandler())
-      pTransaction->ackHandler()(SIPTransaction::Error(new OSS::SIP::SIPException("ACK Transaction Timeout")),
-      SIPMessage::Ptr(), 
-      SIPTransportSession::Ptr(), 
-      pTransaction->shared_from_this());
-  }
-  pTransaction->terminate();
-}
-
-void SIPIst::handleDelayedTerminate()
-{
-  SIPTransaction::Ptr pTransaction = static_cast<SIPTransaction::WeakPtr*>(_owner)->lock();
-  if (!pTransaction)
-    return;
-
   pTransaction->terminate();
 }
 
@@ -222,6 +199,14 @@ void SIPIst::onTerminate()
       pDispatch->blockIst(_transactionId);
     }
   }
+}
+
+bool SIPIst::isCompleted() const
+{
+  SIPTransaction::Ptr pTransaction = static_cast<SIPTransaction::WeakPtr*>(_owner)->lock();
+  if (!pTransaction)
+    return true; /// If we can't lock the transaction pointer it means it is termianted
+  return  pTransaction->getState() >= COMPLETED;
 }
 
 } } // OSS::SIP

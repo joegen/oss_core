@@ -1,10 +1,6 @@
-// OSS Software Solutions Application Programmer Interface
-// Package: B2BUA
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
-// Basic definitions for the OSS Core SDK.
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -387,7 +383,7 @@ bool SIPB2BTransaction::isFailoverCandidate(
   if (_pClientRequest->isMidDialog())
     return false;
 
-  if (_udpSrvTargets.size() <= 1 || _tcpSrvTargets.size() <= 1 || _tlsSrvTargets.size() <= 1)
+  if (_udpSrvTargets.size() <= 1 || _tcpSrvTargets.size() <= 1 || _wsSrvTargets.size() <= 1 || _tlsSrvTargets.size() <= 1)
     return false;
 
   std::string transport;
@@ -396,6 +392,8 @@ bool SIPB2BTransaction::isFailoverCandidate(
   if (transport == "udp" && _failoverCount + 1 >= _udpSrvTargets.size())
     return false;
   else if (transport == "tcp" && _failoverCount + 1 >= _tcpSrvTargets.size())
+    return false;
+  else if (transport == "ws" && _failoverCount + 1 >= _wsSrvTargets.size())
     return false;
   else if (transport == "tls" && _failoverCount + 1 >= _tlsSrvTargets.size())
     return false;
@@ -430,6 +428,7 @@ void SIPB2BTransaction::runFailoverTask()
   _failoverCount++;
   OSS::IPAddress target;
 
+  //TODO: Duplicate code below, can be refactored to use one method for all proto
   if (transport == "udp")
   {
     if (_failoverCount >= _udpSrvTargets.size())
@@ -478,6 +477,31 @@ void SIPB2BTransaction::runFailoverTask()
     if (targetPort == 0)
       targetPort = 5060;
     target = _tcpSrvTargets.begin()->get<1>();
+    target.setPort(targetPort);
+  }
+  else if (transport == "ws")
+  {
+    if (_failoverCount >= _wsSrvTargets.size())
+    {
+      SIPMessage::Ptr serverError = _pServerRequest->createResponse(480, "All Routes Exhausted");
+      OSS::IPAddress target;
+      if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
+      {
+        if (target.isValid())
+          _pServerTransaction->sendResponse(serverError, target);
+      }
+
+      std::ostringstream errorMsg;
+      errorMsg << _logId << "Fatal Exception while calling SIPB2BTransaction::runFailoverTask() - Failover count exceeds WebSocket records available";
+      OSS::log_error(errorMsg.str());
+      releaseInternalRef();
+      return;
+    }
+
+    unsigned short targetPort = _wsSrvTargets.begin()->get<2>();
+    if (targetPort == 0)
+      targetPort = 5060;
+    target = _wsSrvTargets.begin()->get<1>();
     target.setPort(targetPort);
   }
   else if (transport == "tls")
@@ -816,6 +840,7 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
   static OSS::ABNF::ABNFEvaluate<OSS::ABNF::ABNFSIPIPV4Address> isIPV4;
   static OSS::ABNF::ABNFEvaluate<OSS::ABNF::ABNFSIPIPV6Address> isIPV6;
 
+  //TODO: Duplicate code below. Can be refactored to use one helper func for all protos
   if (!port && !isIPV4(host.c_str()) && !isIPV6(host.c_str()))
   {
     //
@@ -830,6 +855,12 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
     srvHost += host;
     if ((transport.empty() || transport == "tcp") && scheme != "sips")
       _tcpSrvTargets = OSS::dns_lookup_srv(srvHost);
+
+    srvHost = "_sip._ws.";
+    srvHost += host;
+    if ((transport.empty() || transport == "ws") && scheme != "sips")
+      _wsSrvTargets = OSS::dns_lookup_srv(srvHost);
+
 
     if (!_udpSrvTargets.empty())
     {
@@ -858,7 +889,20 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
       pClientRequest->setProperty("target-transport", "tcp");
     }
 
-    if (_udpSrvTargets.empty() && _tcpSrvTargets.empty())
+    if (!_wsSrvTargets.empty())
+    {
+      //
+      // sort then get the first transport
+      //
+      unsigned short targetPort = _wsSrvTargets.begin()->get<2>();
+      if (targetPort == 0)
+        targetPort = 5060;
+      target = _wsSrvTargets.begin()->get<1>();
+      target.setPort(targetPort);
+      pClientRequest->setProperty("target-transport", "ws");
+    }
+
+    if (_udpSrvTargets.empty() && _tcpSrvTargets.empty() && _wsSrvTargets.empty())
     {
       OSS::dns_host_record_list hosts = OSS::dns_lookup_host(host);
       if (hosts.empty())

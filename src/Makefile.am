@@ -1,14 +1,35 @@
 SUBDIRS = .
 
-lib_LTLIBRARIES = liboss_carp.la liboss_core.la
+corelibs = liboss_carp.la
+corelibldadd = @OSS_CORE_DEP_LIBS@ liboss_core.la liboss_carp.la
+if ENABLE_TURN
+    corelibs += liboss_turn.la
+    corelibldadd += liboss_turn.la
+endif
+corelibs += liboss_core.la
+
+
+lib_LTLIBRARIES = $(corelibs)
 
 localedir = $(datadir)/locale -DLOCALEDIR=\"$(localedir)\"
-INCLUDES = -I$(top_srcdir)/include
+
+INCLUDES = \
+    -I$(top_srcdir)/include \
+    -I$(top_srcdir)/src/net/turn \
+    -I$(top_srcdir)/src/net/turn/carp \
+    -I$(top_srcdir)/src/net/turn/client \
+    -I$(top_srcdir)/src/net/turn/client++ \
+    -I$(top_srcdir)/src/net/turn/server \
+    -I$(top_srcdir)/src/net/turn/apps/common \
+    -I$(top_srcdir)/src/net/turn/apps/relay
 
 version_Current=@OSS_CORE_VERSION_CURRENT@
 version_Revision=@OSS_CORE_VERSION_REVISION@
 version_Age=@OSS_CORE_VERSION_AGE@
 
+LDADD = $(corelibldadd)
+
+LDFLAGS = -rdynamic
 
 liboss_carp_la_LDFLAGS = -version-info @OSS_CORE_VERSION_INFO@
 
@@ -42,6 +63,58 @@ liboss_carp_la_SOURCES = \
 	net/carp/log.h \
 	net/carp/syslognames.h
 
+if ENABLE_TURN
+
+    liboss_turn_la_LDFLAGS = -version-info @OSS_CORE_VERSION_INFO@
+    liboss_turn_la_LIBADD = @OSS_CORE_DEP_LIBS@
+    liboss_turn_la_CPPFLAGS = -D__USE_OPENSSL__
+
+    liboss_turn_la_SOURCES = \
+        net/turn/client++/TurnMsgLib.h \
+        net/turn/client/ns_turn_msg_addr.c \
+        net/turn/client/ns_turn_utils.c \
+        net/turn/client/ns_turn_msg_defs.h \
+        net/turn/client/ns_turn_ioaddr.h \
+        net/turn/client/ns_turn_msg.h \
+        net/turn/client/ns_turn_msg_addr.h \
+        net/turn/client/ns_turn_ioaddr.c \
+        net/turn/client/ns_turn_utils.h \
+        net/turn/client/ns_turn_msg.c \
+        net/turn/server/ns_turn_allocation.h \
+        net/turn/server/ns_turn_khash.h \
+        net/turn/server/ns_turn_ioalib.h \
+        net/turn/server/ns_turn_server.c \
+        net/turn/server/ns_turn_allocation.c \
+        net/turn/server/ns_turn_maps_rtcp.h \
+        net/turn/server/ns_turn_maps_rtcp.c \
+        net/turn/server/ns_turn_maps.c \
+        net/turn/server/ns_turn_session.h \
+        net/turn/server/ns_turn_server.h \
+        net/turn/server/ns_turn_maps.h \
+        net/turn/ns_turn_defs.h \
+        net/turn/apps/relay/dtls_listener.c \
+        net/turn/apps/relay/ns_ioalib_impl.h \
+        net/turn/apps/relay/turn_ports.h \
+        net/turn/apps/relay/tcp_listener.c \
+        net/turn/apps/relay/userdb.c \
+        net/turn/apps/relay/udp_listener.c \
+        net/turn/apps/relay/udp_listener.h \
+        net/turn/apps/relay/tcp_listener.h \
+        net/turn/apps/relay/dtls_listener.h \
+        net/turn/apps/relay/tls_listener.h \
+        net/turn/apps/relay/mainrelay.c \
+        net/turn/apps/relay/mainrelay.h \
+        net/turn/apps/relay/userdb.h \
+        net/turn/apps/relay/turn_ports.c \
+        net/turn/apps/relay/ns_ioalib_engine_impl.c \
+        net/turn/apps/relay/tls_listener.c \
+        net/turn/apps/relay/turnmutex.c \
+        net/turn/apps/common/apputils.c \
+        net/turn/apps/common/stun_buffer.h \
+        net/turn/apps/common/stun_buffer.c \
+        net/turn/apps/common/apputils.h
+endif
+
 
 liboss_core_la_LDFLAGS = \
 	-version-info @OSS_CORE_VERSION_INFO@
@@ -57,6 +130,7 @@ liboss_core_la_CXXFLAGS =
 	-fno-gcse -O0 -fno-implement-inlines -fno-default-inline 
 
 liboss_core_la_SOURCES =  \
+    boost_pch.hpp \
     DNS.cpp \
     Endian.cpp \
     Application.cpp \
@@ -190,6 +264,7 @@ liboss_core_la_SOURCES =  \
     b2bua/SIPB2BTransaction.cpp \
     b2bua/SIPB2BScriptableHandler.cpp \
     b2bua/SIPB2BTransactionManager.cpp \
+    b2bua/SIPB2BDialogStateManager.cpp \
     b2bua/SIPB2BContact.cpp \
     js/JSBase.cpp \
     js/JSSIPMessage.cpp \
@@ -206,35 +281,33 @@ liboss_core_la_SOURCES =  \
     net/FirewallRule.cpp \
     net/Firewall.cpp \
     net/Carp.cpp \
-    utl/AdaptiveDelay.cpp
+    utl/AdaptiveDelay.cpp \
+    sipfsm/SIPWebSocketConnection.cpp \
+    sipfsm/SIPWebSocketListener.cpp \
+    sipfsm/SIPWebSocketConnectionManager.cpp \
+    ws/src/base64/base64.cpp \
+    ws/src/md5/md5.c \
+    ws/src/messages/data.cpp \
+    ws/src/network_utilities.cpp \
+    ws/src/processors/hybi_header.cpp \
+    ws/src/processors/hybi_util.cpp \
+    ws/src/sha1/sha1.cpp \
+    ws/src/uri.cpp
 
-#    sipfsm/SIPWebSocketConnection.cpp \
-#    sipfsm/SIPWebSocketListener.cpp \
-#    sipfsm/SIPWebSocketConnectionManager.cpp \
-#    ws/websocketpp/src/base64/base64.cpp \
-#    ws/websocketpp/src/md5/md5.c \
-#    ws/websocketpp/src/messages/data.cpp \
-#    ws/websocketpp/src/network_utilities.cpp \
-#    ws/websocketpp/src/processors/hybi_header.cpp \
-#    ws/websocketpp/src/processors/hybi_util.cpp \
-#    ws/websocketpp/src/sha1/sha1.cpp \
-#    ws/websocketpp/src/uri.cpp
-
+if ENABLE_TURN
+    liboss_core_la_SOURCES += net/TurnServer.cpp
+endif
 
 bin_PROGRAMS = \
     oss_core_unit_test \
     oss_garp \
     oss_carp \
-    oss_b2bua
+    oss_core
 
 oss_core_unit_test_CXXFLAGS = \
 	${common_cxx_flags} \
 	-fno-gcse -O0 -fno-implement-inlines -fno-default-inline
 
-oss_core_unit_test_LDFLAGS = -rdynamic
-	
-
-oss_core_unit_test_LDADD = @OSS_CORE_DEP_LIBS@ liboss_core.la liboss_carp.la -lgtest
 
 oss_core_unit_test_SOURCES = \
 	unit_test/TestSuite.cpp \
@@ -257,28 +330,30 @@ oss_core_unit_test_SOURCES = \
 #        unit_test/TestWebSocket.cpp
 
 #
-# oss_b2bua - A simple back-to-back user agent
+# oss_core - A simple back-to-back user agent
 #
-oss_b2bua_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
-oss_b2bua_LDFLAGS = -rdynamic
-oss_b2bua_LDADD = @OSS_CORE_DEP_LIBS@ liboss_core.la liboss_carp.la -lgtest
-oss_b2bua_SOURCES = apps/oss_b2bua.cpp
+oss_core_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
+oss_core_SOURCES = apps/oss_core.cpp
 
 #
 # oss_garp - tool for sending gratuitous ARP requests
 #
 oss_garp_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
-oss_garp_LDFLAGS = -rdynamic
-oss_garp_LDADD = @OSS_CORE_DEP_LIBS@ liboss_core.la liboss_carp.la -lgtest
 oss_garp_SOURCES = apps/oss_garp.cpp
 
 #
 # oss_carp - tool for Common Address Redundancy Protocol
 #
 oss_carp_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
-oss_carp_LDFLAGS = -rdynamic
-oss_carp_LDADD = @OSS_CORE_DEP_LIBS@ liboss_core.la liboss_carp.la -lgtest
+#oss_carp_LDFLAGS = -rdynamic
 oss_carp_SOURCES = apps/oss_carp.cpp
 
 
 DISTCLEANFILES = Makefile.in
+
+#
+# Build rule for Boost precompiled header
+#
+BUILT_SOURCES = boost_pch.hpp.gch
+%.hpp.gch: %.hpp
+	$(CXX) -D_REENTRANT -D_FILE_OFFSET_BITS=64 -fno-gcse -O0 -fno-implement-inlines -g -O2 -fmessage-length=0 -Wall -Wformat -Wwrite-strings -Wpointer-arith -fPIC -DPIC -c $<

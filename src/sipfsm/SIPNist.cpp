@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -52,8 +50,8 @@ void SIPNist::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr p
 
   if (pTransaction->getState() == SIPTransaction::TRN_STATE_IDLE)
   {
-    _pRequest = pMsg;
     startTimerMaxLifetime(300000); /// five minutes
+    _pRequest = pMsg;
     pTransaction->setState(TRYING);
     if (dispatch()->requestHandler())
     {
@@ -109,9 +107,7 @@ bool SIPNist::onSendMessage(SIPMessage::Ptr pMsg)
   _pResponse = pMsg;
   }//localize
 
-  
-
-  if (pTransaction->getState() == TRYING)
+  if (pTransaction->getState() <= PROCEEDING)
   {
     if (pMsg->is1xx())
     {
@@ -134,12 +130,12 @@ bool SIPNist::onSendMessage(SIPMessage::Ptr pMsg)
 }
 
 
-void SIPNist::handleDelayedTerminate()
+bool SIPNist::isCompleted() const
 {
   SIPTransaction::Ptr pTransaction = static_cast<SIPTransaction::WeakPtr*>(_owner)->lock();
   if (!pTransaction)
-    return;
-  pTransaction->terminate();
+    return true; /// If we can't lock the transaction pointer it means it is termianted
+  return  pTransaction->getState() >= COMPLETED;
 }
 
 } } // OSS::SIP

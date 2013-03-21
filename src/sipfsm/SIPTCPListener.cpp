@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -65,7 +63,6 @@ void SIPTCPListener::run()
 
 void SIPTCPListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE userData)
 {
-  
   if (!e)
   {
     OSS_LOG_DEBUG("SIPTCPListener::handleAccept STARTING new connection");

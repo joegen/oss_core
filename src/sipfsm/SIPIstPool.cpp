@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -40,36 +38,18 @@ SIPIstPool::~SIPIstPool()
 
 void SIPIstPool::onAttachFSM(const SIPTransaction::Ptr& pTransaction)
 {
-  pTransaction->type() = SIPTransaction::TYPE_IST;
-  SIPIst::Ptr ist(new SIPIst(_ioService, _timerProps));
-  dynamic_cast<SIPIst*>(ist.get())->istPool() = this;
-  pTransaction->fsm() = ist;
-  pTransaction->fsm()->setOwner(new SIPTransaction::WeakPtr(pTransaction));
-  pTransaction->fsm()->dispatch() = dispatch();
+  if (!pTransaction->fsm())
+  {
+    pTransaction->type() = SIPTransaction::TYPE_IST;
+    SIPIst::Ptr ist(new SIPIst(_ioService, _timerProps));
+    dynamic_cast<SIPIst*>(ist.get())->istPool() = this;
+    pTransaction->fsm() = ist;
+    pTransaction->fsm()->setOwner(new SIPTransaction::WeakPtr(pTransaction));
+    pTransaction->fsm()->dispatch() = dispatch();
+  }
 }
 
-void SIPIstPool::addAckableTransaction(const std::string& dialogId, SIPTransaction::Ptr trn)
-{
-  OSS::mutex_critic_sec_lock lock(_ackPoolMutex);
-  TransactionPool::iterator iter = _ackPool.find(dialogId);
-  if (iter == _ackPool.end())
-    _ackPool[dialogId] = trn;
-}
 
-SIPTransaction::Ptr SIPIstPool::findAckableTransaction(const std::string& dialogId)
-{
-  OSS::mutex_critic_sec_lock lock(_ackPoolMutex);
-  TransactionPool::iterator iter = _ackPool.find(dialogId);
-  if (iter != _ackPool.end())
-    return iter->second;
-  return SIPTransaction::Ptr();
-}
-
-void SIPIstPool::removeAckableTransaction(const std::string& dialogId)
-{
-  OSS::mutex_critic_sec_lock lock(_ackPoolMutex);
-  _ackPool.erase(dialogId);
-}
 
 } } // OSS::SIP
 

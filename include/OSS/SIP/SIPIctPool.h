@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -44,9 +42,6 @@ protected:
 
   virtual ~SIPIctPool();
     /// Destroys the ICT Pool object
-
-  virtual SIPTransaction::Ptr findChildTransaction(const SIPMessage::Ptr& pMsg, const SIPTransportSession::Ptr& pTransport, const SIPTransaction::Ptr& pParent);
-    /// Determines if parent transaction can be forked.  returns child if it can be forked.  null if not
  
   friend class SIPFSMDispatch;
 };

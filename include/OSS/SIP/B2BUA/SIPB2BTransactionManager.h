@@ -1,10 +1,6 @@
-// OSS Software Solutions Application Programmer Interface
-// Package: B2BUA
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
-// Basic definitions for the OSS Core SDK.
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -332,7 +328,7 @@ protected:
     const OSS::SIP::SIPTransaction::Ptr& pTransaction);
     /// This is the incoming request callback that will be attached to the stack
 
-  void handleUnknowInviteTransaction(
+  void handleAckFor2xxTransaction(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport);
     /// Handler of ACK and 200 Ok retransmission

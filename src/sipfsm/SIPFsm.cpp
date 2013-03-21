@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -231,7 +229,18 @@ void SIPFsm::cancelAllTimers()
 
 void SIPFsm::onTerminate()
 {
+}
 
+void SIPFsm::handleDelayedTerminate()
+{
+  SIPTransaction::Ptr pTransaction = static_cast<SIPTransaction::WeakPtr*>(_owner)->lock();
+  if (!pTransaction)
+    return;
+
+  SIPTransaction::Ptr pParent = pTransaction->getParent();
+  pTransaction->terminate();
+  if (pParent && pParent->allBranchesTerminated())
+    pParent->terminate();
 }
 
 } } // OSS::SIP

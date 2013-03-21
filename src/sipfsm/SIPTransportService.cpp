@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -38,12 +36,14 @@ SIPTransportService::SIPTransportService(SIPFSMDispatch* pDispatch):
   _resolver(_ioService),
   _pDispatch(pDispatch),
   _tcpConMgr(_pDispatch),
+  _wsConMgr(_pDispatch),
   _tlsConMgr(_pDispatch),
   _udpListeners(),
   _tcpListeners(),
   _tlsListeners(),
   _udpEnabled(true),
   _tcpEnabled(true),
+  _wsEnabled(true),
   _tlsEnabled(false),
   _tcpPortBase(10000),
   _tcpPortMax(20000)
@@ -52,8 +52,12 @@ SIPTransportService::SIPTransportService(SIPFSMDispatch* pDispatch):
 
 SIPTransportService::~SIPTransportService()
 {
-  
-
+  if (_pIoServiceThread)
+  {
+    _pIoServiceThread->join();
+    delete _pIoServiceThread;
+    _pIoServiceThread = 0;
+  }
 }
 
 void SIPTransportService::initialize(const boost::filesystem::path& cfgDirectory)
@@ -90,6 +94,12 @@ void SIPTransportService::run()
     OSS_LOG_INFO("Started TCP Listener " << iter->first);
   }
 
+  for (WSListeners::iterator iter = _wsListeners.begin(); iter != _wsListeners.end(); iter++)
+  {
+    iter->second->run();
+    OSS_LOG_INFO("Started WebSocket Listener " << iter->first);
+  }
+
   for (TLSListeners::iterator iter = _tlsListeners.begin(); iter != _tlsListeners.end(); iter++)
   {
     iter->second->run();
@@ -112,11 +122,13 @@ void SIPTransportService::handleStop()
   for (udpIter = _udpListeners.begin(); udpIter != _udpListeners.end(); udpIter++)
     udpIter->second->handleStop();
   
-
   TCPListeners::iterator tcpIter;
   for (tcpIter = _tcpListeners.begin(); tcpIter != _tcpListeners.end(); tcpIter++)
     tcpIter->second->handleStop();
-  
+
+  WSListeners::iterator wsIter;
+  for (wsIter = _wsListeners.begin(); wsIter != _wsListeners.end(); wsIter++)
+    wsIter->second->handleStop();
 
   TLSListeners::iterator tlsIter;
   for (tlsIter = _tlsListeners.begin(); tlsIter != _tlsListeners.end(); tlsIter++)
@@ -141,6 +153,8 @@ bool SIPTransportService::isLocalTransport(const OSS::IPAddress& transportAddres
     return true;
   else if (_tcpListeners.find(key) != _tcpListeners.end())
     return true;
+  else if (_wsListeners.find(key) != _wsListeners.end())
+    return true;
   else if (_tlsListeners.find(key) != _tlsListeners.end())
     return true;
   return false;
@@ -156,6 +170,8 @@ bool SIPTransportService::isLocalTransport(const std::string& proto,
     return _udpListeners.find(key) != _udpListeners.end();
   else if (proto == "tcp")
     return _tcpListeners.find(key) != _tcpListeners.end();
+  else if (proto == "ws")
+    return _wsListeners.find(key) != _wsListeners.end();
   else if (proto == "tls")
     return _tlsListeners.find(key) != _tlsListeners.end();
   return false;
@@ -195,6 +211,23 @@ void SIPTransportService::addTCPTransport(std::string& ip, std::string& port, co
   if (!ec)
     SIPTransportSession::rateLimit().clearAddress(whiteList, true);
   OSS_LOG_INFO("TCP SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
+}
+
+void SIPTransportService::addWSTransport(std::string& ip, std::string& port, const std::string& externalIp)
+{
+  OSS_LOG_INFO("Adding WebSocket SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
+  std::string key;
+  OSS::string_sprintf_string<256>(key, "%s:%s", ip.c_str(), port.c_str());
+  if (_wsListeners.find(key) != _wsListeners.end())
+    throw OSS::SIP::SIPException("Duplicate WebSocket transport while calling addWSTransport()");
+  SIPWebSocketListener::Ptr pWsListener = SIPWebSocketListener::Ptr(new SIPWebSocketListener(this, ip, port, _wsConMgr));
+  pWsListener->setExternalAddress(externalIp);
+  _wsListeners[key] = pWsListener;
+  boost::system::error_code ec;
+  boost::asio::ip::address whiteList = boost::asio::ip::address::from_string(ip, ec);
+  if (!ec)
+    SIPTransportSession::rateLimit().clearAddress(whiteList, true);
+  OSS_LOG_INFO("WebSocket SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
 }
 
 void SIPTransportService::addTLSTransport(
@@ -300,6 +333,39 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
     }
     return pTCPConnection;
   }
+  else if (proto == "WS" || proto == "ws")
+  {
+    SIPTransportSession::Ptr pWSConnection;
+
+    //
+    // Recycle old connection if it's still there
+    //
+    bool isAlive = false;
+    if (!transportId.empty())
+    {
+      pWSConnection = _wsConMgr.findConnectionById(OSS::string_to_number<OSS::UInt64>(transportId.c_str()));
+      if (pWSConnection)
+        isAlive = pWSConnection->writeKeepAlive();
+    }
+
+    if (!pWSConnection)
+    {
+      pWSConnection = _wsConMgr.findConnectionByAddress(remoteAddress);
+      if (pWSConnection)
+        isAlive = pWSConnection->writeKeepAlive();
+    }
+
+    if (!pWSConnection)
+    {
+      OSS_LOG_WARNING("SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId);
+    }
+    else if (!isAlive)
+    {
+      return SIPTransportSession::Ptr();
+    }
+    
+    return pWSConnection;
+  }
   else if (proto == "TLS" || proto == "tls")
   {
     //
@@ -318,6 +384,16 @@ SIPTransportSession::Ptr SIPTransportService::createClientTcpTransport(
   pTCPConnection->clientBind(localAddress, _tcpPortBase, _tcpPortMax);
   pTCPConnection->clientConnect(remoteAddress);
   return pTCPConnection;
+}
+
+SIPTransportSession::Ptr SIPTransportService::createClientWsTransport(
+    const OSS::IPAddress& localAddress,
+    const OSS::IPAddress& remoteAddress)
+{
+  //
+  // We dont have a concept of client connection for websockets
+  //
+  return SIPTransportSession::Ptr();
 }
 
 void SIPTransportService::sendUDPKeepAlive(const OSS::IPAddress& localAddress,
@@ -362,6 +438,7 @@ bool SIPTransportService::getExternalAddress(
   //
   // UDP and TCP always have the same port map so just use UDP
   //
+  // TODO: Does WebSockets have the same port ???
   if (getExternalAddress("udp", internalIp, externalIp))
     return true;
   else if (getExternalAddress("tls", internalIp, externalIp))
@@ -393,6 +470,15 @@ bool SIPTransportService::getExternalAddress(
       return true;
     }
   }
+  else if (proto == "ws" || proto == "WS")
+  {
+    WSListeners::const_iterator iter = _wsListeners.find(key);
+    if (iter != _wsListeners.end())
+    {
+      externalIp = iter->second->getExternalAddress();
+      return true;
+    }
+  }
   else if (proto == "tls" || proto == "TLS")
   {
     TLSListeners::const_iterator iter = _tlsListeners.find(key);
@@ -413,7 +499,7 @@ bool SIPTransportService::getInternalAddress(
   //
   // UDP and TCP always have the same port map so just use UDP
   //
-
+	  // TODO: Does WebSockets have the same port ???
   if (isLocalTransport(externalIp))
   {
     internalIp = externalIp;
@@ -469,6 +555,20 @@ bool SIPTransportService::getInternalAddress(
   {
     for (TCPListeners::const_iterator iter = _tcpListeners.begin();
       iter != _tcpListeners.end(); iter++)
+    {
+      unsigned short port = OSS::string_to_number<unsigned short>(iter->second->getPort().c_str());
+      if (iter->second->getExternalAddress() == ip && port == externalIp.getPort())
+      {
+        internalIp = OSS::IPAddress(iter->second->getAddress(), port);
+        internalIp.externalAddress() = ip;
+        return true;
+      }
+    }
+  }
+  else if (proto == "ws" || proto == "WS")
+  {
+    for (WSListeners::const_iterator iter = _wsListeners.begin();
+      iter != _wsListeners.end(); iter++)
     {
       unsigned short port = OSS::string_to_number<unsigned short>(iter->second->getPort().c_str());
       if (iter->second->getExternalAddress() == ip && port == externalIp.getPort())

@@ -1,10 +1,6 @@
-// OSS Software Solutions Application Programmer Interface
-// Package: OSSAPI
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
-// Basic definitions for the OSS Core SDK.
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -241,12 +237,9 @@
 #include <cstdlib>
 #include <fstream>
 #include <boost/assert.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
-#include <boost/bind.hpp>
-#include <boost/asio.hpp>
-#include <boost/thread.hpp>
+
 
 #if defined(OSS_OS_FAMILY_WINDOWS)
 #include <Windows.h>

@@ -1,8 +1,6 @@
-// Library: OSS Software Solutions Application Programmer Interface
-// Package: OSSSIP
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -112,10 +110,7 @@ public:
   void stop();
     /// Forcibly terminate all transactions
 
-  virtual SIPTransaction::Ptr findChildTransaction(const SIPMessage::Ptr& pMsg, const SIPTransportSession::Ptr& pTransport, const SIPTransaction::Ptr& parent);
-    /// Called within findTransaction to determine if forking is required
-
-protected:
+ protected:
   boost::asio::io_service& _ioService;
   SIPTransactionTimers _timerProps;
 
@@ -141,10 +136,6 @@ inline SIPFSMDispatch* SIPTransactionPool::dispatch()
   return _pDispatch;
 }
 
-inline SIPTransaction::Ptr SIPTransactionPool::findChildTransaction(const SIPMessage::Ptr& /*pMsg*/, const SIPTransportSession::Ptr& /*pTransport*/, const SIPTransaction::Ptr& /*parent*/)
-{
-  return SIPTransaction::Ptr();
-}
 
 } } // OSS::SIP
 #endif //SIP_SIPTransactionPool_INCLUDED

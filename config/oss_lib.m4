@@ -117,10 +117,14 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     AC_SUBST(OSS_IP_TABLES)
     CXXFLAGS="-DOSS_IP_TABLES=\\\"$OSS_IP_TABLES\\\" $CXXFLAGS"
 
-    AC_CHECK_LIB(boost_thread, main, [BOOST_LIBS="-lboost_date_time -lboost_filesystem -lboost_system -lboost_thread -lboost_program_options -lboost_iostreams -lboost_regex"],
-        [AC_CHECK_LIB(boost_thread-mt, main,
+    AC_CHECK_LIB(boost_thread-mt, main,
         [BOOST_LIBS="-lboost_date_time-mt -lboost_filesystem-mt -lboost_system-mt -lboost_thread-mt -lboost_program_options-mt -lboost_iostreams-mt -lboost_regex-mt"],
+        [AC_CHECK_LIB(boost_thread, main,
+        [BOOST_LIBS="-lboost_date_time -lboost_filesystem -lboost_system -lboost_thread -lboost_program_options -lboost_iostreams -lboost_regex"],
         [AC_MSG_ERROR("no boost thread found")])])
+    AC_CHECK_LIB(boost_random-mt, main, [BOOST_LIBS="$BOOST_LIBS -lboost_random-mt"],
+        [AC_CHECK_LIB(boost_random, main,
+        [BOOST_LIBS="$BOOST_LIBS -lboost_random"])])
     AC_SUBST(BOOST_LIBS)
 
 
@@ -135,6 +139,7 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     AC_CHECK_LIB(hiredis, main, [], [AC_MSG_ERROR("Redis client library not found")])
     AC_CHECK_LIB(config++, main, [], [AC_MSG_ERROR("libconfig C++ library not found")])
     AC_CHECK_LIB(v8, main, [], [AC_MSG_ERROR("Google V8 Javascript engine not found")])
+    AC_CHECK_LIB(gtest, main, [], [AC_MSG_ERROR("Google Test Framework not found")])
     AC_CHECK_LIB(ltdl, main, [], [AC_MSG_ERROR("libltdl not found")])
     AC_CHECK_LIB(mcrypt, main, [], [AC_MSG_ERROR("Mcrypt Encryption Library not found")])
     AC_CHECK_LIB(ssl, main, [], [AC_MSG_ERROR("SSL Development Library not found")])
@@ -150,7 +155,9 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     AC_CHECK_LIB(xmlrpc_client++, main, [], [AC_MSG_ERROR("XML RPC C++ client classes not found")])
     AC_CHECK_LIB(xmlrpc_server_abyss++, main, [], [AC_MSG_ERROR("XML RPC C++ server classes not found")])
 
+
     OSS_CORE_DEP_LIBS=""
+    OSS_CORE_DEP_LIBS+=" -lgtest "
     OSS_CORE_DEP_LIBS+=" -lhiredis "
     OSS_CORE_DEP_LIBS+=" -lconfig++  "
     OSS_CORE_DEP_LIBS+=" -lv8  "
@@ -167,6 +174,31 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     OSS_CORE_DEP_LIBS+=" -lxmlrpc "
     OSS_CORE_DEP_LIBS+=" -lxmlrpc_client++  "
     OSS_CORE_DEP_LIBS+=" -lxmlrpc_server_abyss++ "
+
+    #
+    # Check for TURN dependencies
+    #
+
+    AC_CHECK_LIB([event], [main], [], libevent_found=no)
+    AC_CHECK_LIB([event_openssl], [main], [], libevent_ssl_found=no)
+    AC_CHECK_LIB([event_pthreads], [main], [], libevent_thread_found=no)
+
+    AM_CONDITIONAL([ENABLE_TURN], false)
+    if test "x$libevent_thread" = "xno" -a "x$libevent_thread" = "xno"; then
+        echo "libevent 2 not found.  Disabling TURN compilation"
+    else
+        if test "x$libevent_thread_found" = "xno" -a "x$libevent_thread_found" = "xno"; then
+            echo "libevent 2 not found.  Disabling TURN compilation"
+        else
+            if test "x$libevent_ssl_found" = "xno" -a "x$libevent_ssl_found" = "xno"; then
+               echo "libevent 2 not found.  Disabling TURN compilation"
+            else
+               echo "TURN compilation enabled"
+               AM_CONDITIONAL([ENABLE_TURN], true)
+               AC_DEFINE([ENABLE_TURN], [1], [Flags TURN compilation due to the presence of libevent 2])
+            fi
+        fi
+    fi
 
     AC_SUBST(OSS_CORE_DEP_LIBS, "$BOOST_LIBS $POCO_LIBS $OSS_CORE_DEP_LIBS")
 
@@ -223,7 +255,7 @@ AC_DEFUN([SFAC_LIB_CORE],
     foundpath=""
     SFAC_ARG_WITH_LIB([liboss_carp.la],
             [osscarplib],
-            [ --with-osscarplib=<dir> portability library path ],
+            [ --with-osscarplib=<dir> carp library path ],
             [oss_carpLib])
 
     if test x_$foundpath != x_; then
@@ -233,6 +265,20 @@ AC_DEFUN([SFAC_LIB_CORE],
         foundpath=${prefix}/lib
     fi
     AC_SUBST(LIB_OSS_CARP_LA, "$foundpath/liboss_carp.la")
+
+    foundpath=""
+    SFAC_ARG_WITH_LIB([liboss_turn.la],
+            [ossturnlib],
+            [ --with-ossturnlib=<dir> turn library path ],
+            [oss_turnLib])
+
+    if test x_$foundpath != x_; then
+        AC_MSG_RESULT($foundpath)
+    else
+        AC_MSG_WARN([    assuming it will be in '${prefix}/lib'])
+        foundpath=${prefix}/lib
+    fi
+    AC_SUBST(LIB_OSS_TURN_LA, "$foundpath/liboss_turn.la")
 
     AC_REQUIRE([SFAC_LIB_CORE_FLAGS])
 

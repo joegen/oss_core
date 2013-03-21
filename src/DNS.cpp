@@ -1,10 +1,6 @@
-// OSS Software Solutions Application Programmer Interface
-// Package: OSSAPI
-// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
-//
-// Basic definitions for the OSS Core SDK.
-//
+// Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -271,14 +267,15 @@ DNS_STATUS DnsQuery_A(const char * service,
 
   *results = 0;
 
-  res_ninit(&_res);
+  struct __res_state statbuf;
+  res_ninit(&statbuf);
 
   union {
     HEADER hdr;
     unsigned char buf[PACKETSZ];
   } reply;
 
-  int replyLen = res_nsearch(&_res, service, C_IN, requestType, (unsigned char *)&reply, sizeof(reply));
+  int replyLen = res_nsearch(&statbuf, service, C_IN, requestType, (unsigned char *)&reply, sizeof(reply));
 
   if (replyLen < 1)
     return -1;
@@ -305,9 +302,11 @@ DNS_STATUS DnsQuery_A(const char * service,
        ntohs(reply.hdr.arcount),
        results)) {
     DnsRecordListFree(*results, 0);
+    res_nclose(&statbuf);
     return -1;
   }
 
+  res_nclose(&statbuf);
   return 0;
 }
 

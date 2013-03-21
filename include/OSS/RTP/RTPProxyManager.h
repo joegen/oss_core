@@ -48,6 +48,7 @@ namespace RTP {
   
 
 typedef boost::unordered_map<std::string, RTPProxySession::Ptr> RTPProxySessionList;
+//TODO: Document the usage of RTPProxyCounter
 typedef std::map<std::string, std::size_t> RTPProxyCounter;
 
 class OSS_API RTPProxyManager : private boost::noncopyable
@@ -55,13 +56,13 @@ class OSS_API RTPProxyManager : private boost::noncopyable
 public:
   
 
-  RTPProxyManager(int houseKeepingInterval = 5000);
+  RTPProxyManager(int houseKeepingInterval = 5000);//TODO:magic value
     /// Creates a new RTPProxyManager
 
   ~RTPProxyManager();
     /// Destroys the RTPProxyManager
 
-  void run(int threadCount, int readTimeout = 600000);
+  void run(int threadCount, int readTimeout = 600000);//TODO:magic value
     /// Runs the io service for async operations
     ///
     /// The threadCount parameter specifies the number
@@ -80,7 +81,7 @@ public:
   void recycleState();
     /// This method recycle state files that weren't deleted by the previous
     /// instance.  Assuming this was dues to a restart, recycling state would
-    /// allow the preiously affected streams to recontinue as if nothing happened.
+    /// allow the previously affected streams to recontinue as if nothing happened.
 
   void stop();
     /// Stop the event loop.  This function will block until all threads have exited.
@@ -184,6 +185,9 @@ public:
     /// If this flag is true, state files for RTP will be stored in the diretory
     /// specified by _rtpStateDirectory.  The default value is false and is
     /// set together with _rtpStateDirectory.
+
+  void disable();
+    /// Disable the RTP proxy.
 private:
   boost::asio::io_service _ioService;
   mutable OSS::mutex_critic_sec _sessionListMutex;
@@ -208,6 +212,7 @@ private:
   xmlrpc_c::serverAbyss* _pRpcServer;
   unsigned short _rpcServerPort;
   bool _persistStateFiles;
+  bool _enabled;
 
   friend class RTPProxy;
   friend class RTPProxySession;
@@ -285,6 +290,11 @@ inline RTPProxySessionList& RTPProxyManager::sessionList()
 inline bool RTPProxyManager::persistStateFiles() const
 {
   return _persistStateFiles;
+}
+
+inline void RTPProxyManager::disable()
+{
+  _enabled = false;
 }
 
 } } //OSS::RTP
