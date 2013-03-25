@@ -278,6 +278,8 @@ private:
   std::string _tlsPassword;
 };
 
+typedef OSSSIP SIPStack;
+
 //
 // Inlines
 //

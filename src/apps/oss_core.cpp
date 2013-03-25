@@ -191,44 +191,6 @@ void  daemonize(int argc, char** argv, bool& isDaemon)
   }
 }
 
-static void globalCatch()
-{
-#define catch_global_print(msg)  \
-  std::ostringstream bt; \
-  bt << msg << std::endl; \
-  void* trace_elems[20]; \
-  int trace_elem_count(backtrace( trace_elems, 20 )); \
-  char** stack_syms(backtrace_symbols(trace_elems, trace_elem_count)); \
-  for (int i = 0 ; i < trace_elem_count ; ++i ) \
-    bt << stack_syms[i] << std::endl; \
-  OSS_LOG_CRITICAL(bt.str().c_str()); \
-  std::cerr << bt.str().c_str(); \
-  free(stack_syms);
-
-  try
-  {
-      throw;
-  }
-  catch (std::string& e)
-  {
-    catch_global_print(e.c_str());
-  }
-  catch (boost::exception& e)
-  {
-    catch_global_print(diagnostic_information(e).c_str());
-  }
-  catch (std::exception& e)
-  {
-    catch_global_print(e.what());
-  }
-  catch (...)
-  {
-    catch_global_print("Error occurred. Unknown exception type.");
-  }
-
-  std::abort();
-}
-
 void saveProcessId(ServiceOptions& options)
 {
   std::string pidFilePath;
@@ -423,41 +385,9 @@ void prepareTargetInfo(Config& config, ServiceOptions& options)
   }
 }
 
-void prepareLogger(ServiceOptions& options)
-{
-  std::string logFile;
-  int priorityLevel = 6;
-  bool compress = true;
-  int purgeCount = 7;
-  std::string pattern = "%h-%M-%S.%i: %t";
-
-  if (options.getOption("log-file", logFile) && !logFile.empty())
-  {
-    if (!options.getOption("log-level", priorityLevel))
-      priorityLevel = 6;
-    OSS::logger_init(logFile, (OSS::LogPriority)priorityLevel, pattern, compress ? "true" : "false", boost::lexical_cast<std::string>(purgeCount));
-  }
-  else
-  {
-    if (!options.getOption("log-level", priorityLevel))
-      priorityLevel = 6;
-    OSS::log_reset_level((OSS::LogPriority)priorityLevel);
-  }
-}
-
 bool prepareOptions(ServiceOptions& options)
 {
-  options.addOptionFlag('h', "help", "Display help information.");
-  options.addOptionFlag('D', "daemonize", "Run as system daemon.");
-  options.addOptionString('P', "pid-file", "PID file when running as daemon.");
-
-  options.addOptionInt('l', "log-level",
-      "Specify the application log priority level."
-      "Valid level is between 0-7.  "
-      "0 (EMERG) 1 (ALERT) 2 (CRIT) 3 (ERR) 4 (WARNING) 5 (NOTICE) 6 (INFO) 7 (DEBUG)");
-  options.addOptionString('L', "log-file", "Specify the application log file.");
-
-  options.addOptionString('i', "interface-address", "The IP Address where the B2BUA will listener for connections.");
+  options.addOptionString('i', "interface-address", "The IP Address where the B2BUA will listen for connections.");
   options.addOptionString('x', "external-address", "The Public IP Address if the B2BUA is behind a firewall.");
   options.addOptionFlag('X', "guess-external-address", "If this flag is set, the external IP will be automatically assigned.");
   options.addOptionInt('p', "port", "The port where the B2BUA will listen for connections.");
@@ -481,11 +411,11 @@ int main(int argc, char** argv)
   bool isDaemon = false;
   daemonize(argc, argv, isDaemon);
 
-  std::set_terminate(globalCatch);
+  std::set_terminate(&ServiceOptions::catch_global);
 
   OSS::OSS_init();
 
-  ServiceOptions options(argc, argv, "OSSB2BUA");
+  ServiceOptions options(argc, argv, "oss_core", VERSION, "Copyright (c) OSS Software Solutions");
   if (!prepareOptions(options) || options.hasOption("help"))
   {
     options.displayUsage(std::cout);
@@ -493,7 +423,6 @@ int main(int argc, char** argv)
   }
 
   saveProcessId(options);
-  prepareLogger(options);
   Config config;
   prepareListenerInfo(config, options);
   prepareTargetInfo(config, options);
