@@ -12,6 +12,7 @@ nobase_include_HEADERS = \
     OSS/BlockingQueue.h \
     OSS/Exception.h \
     OSS/ServiceDaemon.h \
+    OSS/ServiceOptions.h \
     OSS/FramedTcpListener.h \
     OSS/FramedTcpClient.h \
     OSS/Crypto.h \
@@ -168,6 +169,7 @@ nobase_include_HEADERS = \
     OSS/SIP/B2BUA/SIPB2BContact.h \
     OSS/SIP/B2BUA/SIPB2BDialogData.h \
     OSS/SIP/B2BUA/SIPB2BDialogStateManager.h \
+    OSS/SIP/B2BUA/SIPB2BStateAgent.h \
     OSS/STUN/VovidaSTUN.inl \
     OSS/STUN/VovidaUDP.h \
     OSS/STUN/STUNMappedAddress.h \

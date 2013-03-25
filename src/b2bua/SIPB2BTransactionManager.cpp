@@ -35,7 +35,8 @@ SIPB2BTransactionManager::SIPB2BTransactionManager(int minThreadcount, int maxTh
   _threadPool(minThreadcount, maxThreadCount),
   _stack(),
   _useSourceAddressForResponses(false),
-  _pDefaultHandler(0)
+  _pDefaultHandler(0),
+  _stateAgent(this)
 {
   _stack.setRequestHandler(boost::bind(&SIPB2BTransactionManager::handleRequest, this, _1, _2, _3));
   _stack.setAckFor2xxTransactionHandler(boost::bind(&SIPB2BTransactionManager::handleAckFor2xxTransaction, this, _1, _2));
@@ -72,11 +73,19 @@ void SIPB2BTransactionManager::handleRequest(
   const OSS::SIP::SIPTransportSession::Ptr& pTransport, 
   const OSS::SIP::SIPTransaction::Ptr& pTransaction)
 {
+  //
+  // We will give the state agent a glimpse of the request.  It may opt to
+  // process it and send out a response.  If it returns true,
+  // we will return immediately and let it handle the transaction
+  //
+  if (_stateAgent.handleRequest(pMsg, pTransport, pTransaction))
+    return;
+
   SIPB2BTransaction* b2bTransaction = onCreateB2BTransaction(pMsg, pTransport, pTransaction);
   if (!b2bTransaction)
     return;
   
-#if 0
+#if SEND_ERROR_ON_B2BUA_THREAD_DEPLETION
   if (_threadPool.schedule(boost::bind(&SIPB2BTransaction::runTask, b2bTransaction)) == -1)
   {
     OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleRequest");
@@ -85,7 +94,14 @@ void SIPB2BTransactionManager::handleRequest(
     delete b2bTransaction;
   }
 #else
-  b2bTransaction->runTask();
+  //
+  // The idea here is that if the threadpool runs out of threads, then we will directly
+  // call runTask using the current thread which would effectively block the transport.
+  // This is a good thing because blocking the transport yields our threadpool
+  // allowing it to recover.
+  //
+  if (_threadPool.schedule(boost::bind(&SIPB2BTransaction::runTask, b2bTransaction)) == -1)
+    b2bTransaction->runTask();
 #endif
 }
 

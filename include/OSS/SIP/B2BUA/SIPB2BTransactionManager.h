@@ -37,7 +37,7 @@
 #include "OSS/SIP/SIPTransaction.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 #include "OSS/SIP/B2BUA/SIPB2BHandler.h"
-
+#include "OSS/SIP/B2BUA/SIPB2BStateAgent.h"
 
 
 namespace OSS {
@@ -321,6 +321,9 @@ public:
 
   void setUserAgentName(const std::string& userAgentName);
     /// Set the user-agent name.
+
+  SIPB2BStateAgent& stateAgent();
+    /// Returns a reference to the state agent
 protected:
   void handleRequest(
     const OSS::SIP::SIPMessage::Ptr& pMsg, 
@@ -382,6 +385,7 @@ private:
   PostRouteCallback _postRouteCallback;
   std::string _userAgentName;
   SIPB2BHandler* _pDefaultHandler;
+  SIPB2BStateAgent _stateAgent;
 };
 
 //
@@ -474,6 +478,12 @@ inline void SIPB2BTransactionManager::registerDefaultHandler(SIPB2BHandler* pDef
 {
   _pDefaultHandler = pDefaultHandler;
 }
+
+inline SIPB2BStateAgent& SIPB2BTransactionManager::stateAgent()
+{
+  return _stateAgent;
+}
+
 
 } } } // OSS::SIP::B2BUA
 
