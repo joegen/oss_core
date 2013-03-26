@@ -122,12 +122,10 @@ TEST(TestFoundation, random_number_generator)
 
   OSS::UTL::FastRandom rng(time(0), time(0));
 
-  OSS::UInt64 start = OSS::getTime();
   for (int i = 0; i < iterations; i++)
   {
     numbers.push_back(rng());
   }
-  OSS::UInt64 done = OSS::getTime() - start;
   
   unsigned int duplicates = 0;
   for (int i = 0; i < iterations; i++)
@@ -152,12 +150,10 @@ TEST(TestFoundation, random_number_generator)
   ASSERT_TRUE(duplicates < iterations * 0.01);
 
   numbers.clear();
-  start = OSS::getTime();
   for (int i = 0; i < iterations; i++)
   {
     numbers.push_back(OSS::getRandom());
   }
-  OSS::UInt64 done2 = OSS::getTime() - start;
 
   unsigned int duplicates2 = 0;
   for (int i = 0; i < iterations; i++)
@@ -181,13 +177,12 @@ TEST(TestFoundation, random_number_generator)
   //
   ASSERT_TRUE(duplicates2 < iterations * 0.01);
 
+#if FRAND_HAS_BOOST_RANDOM_DEVICE
   numbers.clear();
-  start = OSS::getTime();
   for (int i = 0; i < iterations; i++)
   {
     numbers.push_back(rng.non_deterministic_rand());
   }
-  OSS::UInt64 done3 = OSS::getTime() - start;
 
   unsigned int duplicates3 = 0;
   for (int i = 0; i < iterations; i++)
@@ -210,14 +205,7 @@ TEST(TestFoundation, random_number_generator)
   // Assure 99% accuracy
   //
   ASSERT_TRUE(duplicates3 < iterations * 0.01);
+#endif
 
-  std::cout << "FastRandom-time: " << done << " millisecond(s)" << std::endl;
-  std::cout << "FastRandom-duplicates: " << duplicates << std::endl;
-
-  std::cout << "OSS::getRandom-time: " << done2 << " millisecond(s)" << std::endl;
-  std::cout << "OSS::getRandom-duplicates: " << duplicates2 << std::endl;
-
-  std::cout << "FastRandom-time-nondet: " << done3 << " millisecond(s)" << std::endl;
-  std::cout << "FastRandom-duplicates-nondet: " << duplicates3 << std::endl;
 
 }

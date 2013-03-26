@@ -51,9 +51,10 @@ class FastRandomBase
 public:
   FastRandomBase(BaseType seed1, BaseType seed2) :
     _s1(seed1),
-    _s2(seed2),
-    _gen(_rng, boost::random::uniform_int_distribution<>(0,
-      std::numeric_limits<BaseType>::max()))
+    _s2(seed2)
+ #if FRAND_HAS_BOOST_RANDOM_DEVICE
+    ,_gen(_rng, boost::random::uniform_int_distribution<>(0, std::numeric_limits<BaseType>::max()))
+#endif
   {
   }
 
