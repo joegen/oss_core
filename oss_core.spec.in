@@ -147,18 +147,23 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %doc CONTRIBUTORS README NEWS TODO ChangeLog %name.configlog
 %attr(755,root,root) %{_bindir}/oss_core_unit_test
+%attr(755,root,root) %{_bindir}/oss_core
+%attr(755,root,root) %{_bindir}/oss_carp
+%attr(755,root,root) %{_bindir}/oss_garp
 %attr(755,root,root) %{_libdir}/liboss_core.la
 %attr(755,root,root) %{_libdir}/liboss_core.so*
-
+%attr(755,root,root) %{_libdir}/liboss_carp.la
+%attr(755,root,root) %{_libdir}/liboss_carp.so*
 
 %files devel
 %defattr(644,root,root,755)
 %{_libdir}/liboss_core.la
 %{_libdir}/liboss_core.a
+%{_libdir}/liboss_carp.la
+%{_libdir}/liboss_carp.a
 
 %dir %attr(755,root,root) %{_includedir}/OSS
 %{_includedir}/OSS/*
-%{_includedir}/json/*
 
 
 %post
