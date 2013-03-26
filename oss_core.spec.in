@@ -44,6 +44,8 @@ Requires: xmlrpc-c-client
 Requires: xmlrpc-c-client++
 Requires: xmlrpc-c-c++
 
+BuildRequires: libevent-devel
+Requires: libevent
 
 
 BuildRequires: poco-devel
