@@ -1,4 +1,4 @@
-# The OSS Core library currently provides classes that encapsulate functions and operations for:
+## The OSS Core library currently provides classes that encapsulate functions and operations for:
 
     * SIP ABNF Parser
     * SIP Finite State Machines
@@ -19,12 +19,10 @@ To list build dependencies
 To list runtime dependencies
 
   grep '^Requires' oss_core/oss_core.spec.in | awk '{print $2}'
-
-# OSS Core Library build environment is influenced by [sipXecs](http://www.sipfoundry.org) build setup.
   
 ## Building From Source (CentOS or Fedora)
 ------------------------------------------
-  
+### OSS Core Library build environment is influenced by [sipXecs](http://www.sipfoundry.org) build setup.
 ### Download the source code from https://github.com/joegen/oss_core and build it
     git clone https://github.com/joegen/oss_core.git
     cd oss_core
