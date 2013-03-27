@@ -37,6 +37,7 @@ static void usage(void)
         "--advskew=<skew> (-k <skew>): advertisement skew (0-255)\n"
         "--upscript=<file> (-u <file>): run <file> to become a master\n"
         "--downscript=<file> (-d <file>): run <file> to become a backup\n"
+        "--garpscript=<file> (-g <file>): run <file> when a gratuitous ARP is sent\n"
         "--deadratio=<ratio> (-r <ratio>): ratio to consider a host as dead\n"
         "--shutdown (-z): call shutdown script at exit\n"
         "--daemonize (-B): run in background\n"
@@ -86,63 +87,8 @@ static void die_mem(void)
     exit(EXIT_FAILURE);
 }
 
-int oss_carp_run(struct oss_carp_options* pOptions)
-{
-  free(interface);
-  if ((interface = strdup(pOptions->interface_name)) == NULL)
-    die_mem();
 
-  if (inet_pton(AF_INET, pOptions->real_ip, &srcip) == 0)
-  {
-    logfile(LOG_ERR, _("Invalid address: [%s]"), pOptions->real_ip);
-    return 1;
-  }
-  
-  free(vaddr_arg);
-  if (inet_pton(AF_INET, pOptions->virtual_ip, &vaddr) == 0) {
-      logfile(LOG_ERR, _("Invalid address: [%s]"), pOptions->virtual_ip);
-      return 1;
-  }
-  vaddr_arg = strdup(pOptions->virtual_ip);
-
-  vhid = pOptions->virtual_id;
-
-  free(pass);
-  if ((pass = strdup(pOptions->password)) == NULL)
-  {
-    die_mem();
-  }
-
-  free(upscript);
-  if ((upscript = strdup(pOptions->up_script)) == NULL)
-  {
-    die_mem();
-  }
-  
-  free(downscript);
-  if ((downscript = strdup(pOptions->down_script)) == NULL)
-  {
-    die_mem();
-  }
-
-  preempt = pOptions->preempt;
-
-  init_rand();
-  if (docarp() != 0) {
-    return 2;
-  }
-
-  #ifndef SAVE_DESCRIPTORS
-  if (no_syslog == 0) {
-    closelog();
-  }
-  #endif
-
-  return 0;
-}
-
-#if 0
-int oss_carp_run_(int argc, char *argv[])
+int oss_carp_run(int argc, char *argv[])
 {
     int option_index = 0;
     int fodder;
@@ -250,6 +196,13 @@ int oss_carp_run_(int argc, char *argv[])
             }
             break;
         }
+        case 'g': {
+            free(garpscript);
+            if ((garpscript = strdup(optarg)) == NULL) {
+                die_mem();
+            }
+            break;
+        }
         case 'r': {
             dead_ratio = (unsigned int) strtoul(optarg, NULL, 0);
             break;
@@ -305,8 +258,9 @@ int oss_carp_run_(int argc, char *argv[])
         openlog("ucarp", LOG_PID, syslog_facility);
     }
 #endif    
-    if (interface == NULL || *interface == 0) {        
-        interface = pcap_lookupdev(NULL);
+    if (interface == NULL || *interface == 0) {
+        char errbuf[PCAP_ERRBUF_SIZE];
+        interface = pcap_lookupdev(errbuf);
         if (interface == NULL || *interface == 0) {
             logfile(LOG_ERR, _("You must supply a network interface"));
             return 1;
@@ -343,7 +297,6 @@ int oss_carp_run_(int argc, char *argv[])
         logfile(LOG_ERR, _("Dead ratio can't be zero"));
         return 1;
     }
-    dodaemonize();
     init_rand();
     if (docarp() != 0) {
         return 2;
@@ -358,4 +311,4 @@ int oss_carp_run_(int argc, char *argv[])
     return 0;
 }
 
-#endif
+

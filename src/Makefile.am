@@ -11,7 +11,7 @@ corelibs += liboss_core.la
 
 lib_LTLIBRARIES = $(corelibs)
 
-localedir = $(datadir)/locale -DLOCALEDIR=\"$(localedir)\"
+localedir = $(datadir)/locale
 
 INCLUDES = \
     -I$(top_srcdir)/include \
@@ -34,6 +34,8 @@ LDFLAGS = -rdynamic
 liboss_carp_la_LDFLAGS = -version-info @OSS_CORE_VERSION_INFO@
 
 liboss_carp_la_LIBADD = $(LTLIBINTL)
+
+liboss_carp_la_CFLAGS = -DLOCALEDIR=\"$(localedir)\"
 
 liboss_carp_la_SOURCES = \
 	net/carp/gettext.h \

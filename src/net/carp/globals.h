@@ -19,6 +19,7 @@ GLOBAL(unsigned int dead_ratio, DEFAULT_DEAD_RATIO);
 GLOBAL0(unsigned char advskew);
 GLOBAL0(char *upscript);
 GLOBAL0(char *downscript);
+GLOBAL0(char *garpscript);
 GLOBAL0(signed char preempt);
 GLOBAL0(signed char neutral);
 GLOBAL0(signed char shutdown_at_exit);
@@ -32,4 +33,10 @@ GLOBAL0(char *vaddr_arg);
 GLOBAL0(char *xparam);
 GLOBAL(unsigned char inaddr_carp_group[4], { 224 _COMA_ 0 _COMA_ 0 _COMA_ 18 });
 GLOBAL0(sig_atomic_t received_signal);
+
+typedef void (*on_state_change_t)(int state);
+GLOBAL(on_state_change_t on_state_change, NULL);
+
+typedef void (*on_gratuitous_arp_t)();
+GLOBAL(on_gratuitous_arp_t on_gratuitous_arp, NULL);
 #endif

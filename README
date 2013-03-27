@@ -1,4 +1,14 @@
-# OSS Core Library build environment is influenced by [sipXecs](http://www.sipfoundry.org) build setup.
+# The OSS Core library currently provides classes that encapsulate functions and operations for:
+
+    * SIP ABNF Parser
+    * SIP Finite State Machines
+    * SIP B2B User Agent
+    * Java Script Engine using Google V8
+    * SIP Over Websockets
+    * STUN/TURN server
+    * RTP Proxy
+    * CARP High Availability
+    * Session Border Controller Implementation
 
 ## Prerequisites (CentOS or Fedora)
 -----------------------------------
@@ -9,6 +19,8 @@ To list build dependencies
 To list runtime dependencies
 
   grep '^Requires' oss_core/oss_core.spec.in | awk '{print $2}'
+
+# OSS Core Library build environment is influenced by [sipXecs](http://www.sipfoundry.org) build setup.
   
 ## Building From Source (CentOS or Fedora)
 ------------------------------------------
@@ -22,6 +34,7 @@ To list runtime dependencies
     mkdir -p .build
     cd .build
     ../configure
+    make
   
 ## Building RPMS (CentOS or Fedora)
 -----------------------------------

@@ -75,22 +75,19 @@ Prefix: %_prefix
 BuildRoot: %{_tmppath}/%name-%version-root
 
 %description
-This library provides a set of classes that provide an operating
-system abstraction from a majority of OS provided functions. All of
-the sipX projects use this library to ensure easy porting to any
-operating system. The library currently provides classes that
+oss_core is a high level library implementation of a SIP B2BUA
+The library currently provides classes that
 encapsulate functions and operations for:
 
-  * Threads
-  * Locks and Mutexes
-  * Semaphores
-  * Messages and Queues
-  * Timers
-  * Time and Date
-  * Sockets
-  * File and Directory
-  * Operating System Processes
-  * Dynamic loading of shared libraries and symbols
+    * SIP ABNF Parser
+    * SIP Finite State Machines
+    * SIP B2B User Agent
+    * Java Script Engine using Google V8
+    * SIP Over Websockets
+    * STUN/TURN server
+    * RTP Proxy
+    * CARP High Availability
+
 
 %if %{_vendor} == suse
 %debug_package
@@ -105,25 +102,18 @@ Summary: Header files for %name
 
 
 %description devel
-This library provides a set of classes that provide an operating
-system abstraction from a majority of OS provided functions. All of
-the sipX projects use this library to ensure easy porting to any
-operating system. The library currently provides classes that
+oss_core is a high level library implementation of a SIP B2BUA
+The library currently provides classes that
 encapsulate functions and operations for:
 
-  * Threads
-  * Locks and Mutexes
-  * Semaphores
-  * Messages and Queues
-  * Timers
-  * Time and Date
-  * Sockets
-  * File and Directory
-  * Operating System Processes
-  * Dynamic loading of shared libraries and symbols
-
-This package contains the neccessary header files and static libraries
-helpful to build projects from the sipX library
+    * SIP ABNF Parser
+    * SIP Finite State Machines
+    * B2BUA
+    * Java Script Engine using Google V8
+    * SIP Over Websockets
+    * STUN/TURN server
+    * RTP Proxy
+    * CARP High Availability
 
 %prep
 %setup -q
@@ -154,6 +144,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_libdir}/liboss_core.so*
 %attr(755,root,root) %{_libdir}/liboss_carp.la
 %attr(755,root,root) %{_libdir}/liboss_carp.so*
+%if 0%{?fedora} >= 16
+%attr(755,root,root) %{_libdir}/liboss_turn.la
+%attr(755,root,root) %{_libdir}/liboss_turn.so*
+%endif
+
 
 %files devel
 %defattr(644,root,root,755)
@@ -161,10 +156,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/liboss_core.a
 %{_libdir}/liboss_carp.la
 %{_libdir}/liboss_carp.a
+%if 0%{?fedora} >= 16
+%attr(755,root,root) %{_libdir}/liboss_turn.la
+%attr(755,root,root) %{_libdir}/liboss_turn.a
+%endif
 
 %dir %attr(755,root,root) %{_includedir}/OSS
 %{_includedir}/OSS/*
 
 
 %post
-

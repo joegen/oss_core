@@ -43,10 +43,26 @@
 #include "spawn.h"
 #include "log.h"
 #include "carp_p.h"
+#include "OSS/Net/oss_carp.h"
 
 #ifdef WITH_DMALLOC
 # include <dmalloc.h>
 #endif
+
+void carp_set_state_callback(on_state_change_t cb)
+{
+  on_state_change = cb;
+}
+
+void carp_set_garp_callback(on_gratuitous_arp_t cb)
+{
+  on_gratuitous_arp = cb;
+}
+
+const char* carp_get_garp_script()
+{
+  return garpscript;
+}
 
 static void carp_set_state(struct carp_softc *sc, int state)
 {
@@ -62,11 +78,17 @@ static void carp_set_state(struct carp_softc *sc, int state)
         if ((sc->sc_state != INIT) || (neutral != 1)) {
             (void) spawn_handler(dev_desc_fd, downscript);
         }
+        if (on_state_change)
+          (*on_state_change)(state);
         break;
     case MASTER:
         logfile(LOG_WARNING, _("Switching to state: MASTER"));
         (void) spawn_handler(dev_desc_fd, upscript);
-        gratuitous_arp(dev_desc_fd);        
+        gratuitous_arp(dev_desc_fd);
+        if (on_state_change)
+          (*on_state_change)(state);
+        if (on_gratuitous_arp)
+          (*on_gratuitous_arp)();
         break;
     default:
         logfile(LOG_ERR, _("Unknown state: [%d]"), (int) state);
@@ -321,6 +343,8 @@ static void carp_send_ad(struct carp_softc *sc)
     if (sc->sc_delayed_arp == 0) {
         if (sc->sc_state == MASTER) {
             gratuitous_arp(dev_desc_fd);
+            if (on_gratuitous_arp)
+              (*on_gratuitous_arp)();
         }
         sc->sc_delayed_arp = -1;
     }    
@@ -609,6 +633,8 @@ static void packethandler(unsigned char *dummy,
                 (timercmp(&sc_tv, &ch_tv, ==) &&
          iphead.ip_src.s_addr > srcip.s_addr)) {
         gratuitous_arp(dev_desc_fd);
+        if (on_gratuitous_arp)
+          (*on_gratuitous_arp)();
         sc.sc_delayed_arp = 2; /* and yet another in 2 ticks */
         logfile(LOG_WARNING, _("Non-preferred master advertising: "
                        "reasserting control of VIP with another gratuitous arp"));

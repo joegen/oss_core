@@ -44,21 +44,14 @@
 extern "C" {
 #endif
 
-
-struct oss_carp_options
-{
-  const char* interface_name;
-  const char* real_ip;
-  const char* virtual_ip;
-  unsigned char virtual_id;
-  const char* password;
-  const char* up_script;
-  const char* down_script;
-  int preempt;
-};
-
-int oss_carp_run(struct oss_carp_options* pOptions);
+int oss_carp_run(int argc, char *argv[]);
 int gratuitous_arp(const int dev_desc_fd);
+typedef void (*on_state_change_cb)(int state);
+void carp_set_state_callback(on_state_change_cb cb);
+typedef void (*on_gratuitous_arp_cb)();
+void carp_set_garp_callback(on_gratuitous_arp_cb cb);
+void carp_call_down_script();
+const char* carp_get_garp_script();
 
 #ifdef	__cplusplus
 }

@@ -387,6 +387,7 @@ void prepareTargetInfo(Config& config, ServiceOptions& options)
 
 bool prepareOptions(ServiceOptions& options)
 {
+  options.addDaemonOptions();
   options.addOptionString('i', "interface-address", "The IP Address where the B2BUA will listen for connections.");
   options.addOptionString('x', "external-address", "The Public IP Address if the B2BUA is behind a firewall.");
   options.addOptionFlag('X', "guess-external-address", "If this flag is set, the external IP will be automatically assigned.");

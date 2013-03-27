@@ -44,6 +44,7 @@
 
 #include "OSS/Core.h"
 #include "OSS/Net.h"
+#include "OSS/ServiceOptions.h"
 
 
 namespace OSS {
@@ -61,12 +62,46 @@ protected:
   ~Carp();
 
 public:
+  struct Config
+  {
+    std::string interface; // bind interface <if>
+    std::string srcip; // source (real) IP address of that host
+    unsigned char vhid; // virtual IP identifier (1-255)
+    std::string pass; // password
+    std::string passfile; // read password from file
+    bool preempt; // becomes a master as soon as possible
+    bool neutral; // don't run downscript at start if backup
+    std::string addr; // virtual shared IP address
+    int advbase; // (-b <seconds>): advertisement frequency
+    unsigned char advskew; // advertisement skew (0-255)
+    std::string upscript; // run <file> to become a master
+    std::string downscript; // run <file> to become a backup
+    std::string garpscript; // run <file> when a gratuitous ARP is sent
+    int deadratio; // ratio to consider a host as dead
+    bool shutdown; // shutdown script at exit
+    bool ignoreifstate; // ignore interface state (down, no carrier)
+    bool nomcast; // use broadcast (instead of multicast) advertisements
+    std::string xparam; // extra paramter to be sent to upscript
+  };
+  
   static Carp* instance();
   static bool getMacAddress(const std::string& ethInterface, unsigned char* hwaddr);
   static bool sendGratuitousArp(const std::string& ethInterface, const std::string& ipAddress);
 
+  Config& config();
+  bool parseOptions(ServiceOptions& options);
+private:
+  Config _config;
 };
 
+//
+// INLINES
+//
+
+inline Carp::Config& Carp::config()
+{
+  return _config;
+}
 
 
 } } // OSS::Net

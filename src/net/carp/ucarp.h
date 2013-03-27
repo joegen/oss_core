@@ -225,6 +225,7 @@ RETSIGTYPE sighandler_usr(const int sig);
 char *build_bpf_rule(void);
 void logfile(const int crit, const char *format, ...);
 
+
 #include "globals.h"
 
 #endif

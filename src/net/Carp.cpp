@@ -275,6 +275,54 @@ bool Carp::sendGratuitousArp(const std::string& ethInterface, const std::string&
 }
 
 
+bool Carp::parseOptions(ServiceOptions& options)
+{
+  //--interface=<if> (-i <if>): bind interface <if>
+  options.addOptionString('i', "interface", "bind interface");
+  //--srcip=<ip> (-s <ip>): source (real) IP address of that host
+  options.addOptionString('s', "srcip", "source (real) IP address of that host");
+  //--vhid=<id> (-v <id>): virtual IP identifier (1-255)
+  options.addOptionInt('v', "vhid", "virtual IP identifier (1-255)");
+  //--pass=<pass> (-p <pass>): password
+  options.addOptionString('p', "pass", "password");
+  //--passfile=<file> (-o <file>): read password from file
+  options.addOptionString('o', "passfile", "read password from file");
+  //--preempt (-P): becomes a master as soon as possible
+  options.addOptionFlag('P', "preempt", "becomes a master as soon as possible");
+  //--neutral (-n): don't run downscript at start if backup
+  options.addOptionFlag('n', "neutral", "don't run downscript at start if backup");
+  //--addr=<ip> (-a <ip>): virtual shared IP address
+  options.addOptionString('a', "addr", "virtual shared IP address");
+  //--advbase=<seconds> (-b <seconds>): advertisement frequency
+  options.addOptionInt('b', "advbase", "advertisement frequency");
+  //--advskew=<skew> (-k <skew>): advertisement skew (0-255)
+  options.addOptionInt('k', "advskew", "advertisement skew (0-255)");
+  //--upscript=<file> (-u <file>): run <file> to become a master
+  options.addOptionString('u', "upscript", "run <file> to become a master");
+  //--downscript=<file> (-d <file>): run <file> to become a backup
+  options.addOptionString('d', "downscript", "run <file> to become a backup");
+  //--garpscript=<file> (-g <file>): run <file> when a gratuitous ARP is sent
+  options.addOptionString('g', "garpscript", "run <file> when a gratuitous ARP is sent");
+  //--deadratio=<ratio> (-r <ratio>): ratio to consider a host as dead
+  options.addOptionInt('r', "deadratio", "ratio to consider a host as dead");
+  //--shutdown (-z): call shutdown script at exit
+  options.addOptionFlag('z', "shutdown", "call shutdown script at exit");
+  //--ignoreifstate (-S): ignore interface state (down, no carrier)
+  options.addOptionFlag('S', "ignoreifstate", "ignore interface state (down, no carrier)");
+  //--nomcast (-M): use broadcast (instead of multicast) advertisements
+  options.addOptionFlag('M', "nomcast", "use broadcast (instead of multicast) advertisements");
+  //--xparam=<value> (-x): extra parameter to send to up/down scripts
+  options.addOptionString('x', "xparam", "extra parameter to send to up/down scripts");
+
+  if (!options.parseOptions())
+    return false;
+
+  //
+  // Initialize the config
+  //
+  return true;
+}
+
 
 } } // OSS::Net
 
