@@ -37,84 +37,33 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <cstdlib>
-#include <cassert>
-#include <csignal>
-#include <sys/types.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <execinfo.h>
-#include <fcntl.h>
-#include <sstream>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
 
-extern "C"
-{
-  #include "OSS/Net/oss_carp.h"
-}
+#include "OSS/Application.h"
+#include "OSS/ServiceOptions.h"
 
-#include "OSS/Exec/Command.h"
+#include "OSS/Net/Carp.h"
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-enum carp_state{ INIT = 0, BACKUP, MASTER };
-
-void on_state_change(int state)
-{
-  //
-  // Add your custom code here
-  //
-}
-
-void on_gratuitous_arp()
-{
-  if (carp_get_garp_script())
-  {
-    OSS::Exec::Command cmd(carp_get_garp_script());
-    cmd.execute();
-  }
-}
-
-void daemonize(int argc, char** argv)
-{
-  bool isDaemon = false;
-  for (int i = 0; i < argc; i++)
-  {
-    std::string arg = argv[i];
-    if (arg == "-B" || arg == "--daemonize")
-    {
-      isDaemon = true;
-      break;
-    }
-  }
-
-  if (isDaemon)
-  {
-     int pid = 0;
-   if(getppid() == 1)
-     return;
-   pid=fork();
-   if (pid<0) exit(1); /* fork error */
-   if (pid>0) exit(0); /* parent exits */
-   /* child (daemon) continues */
-   setsid(); /* obtain a new process group */
-
-   for (int descriptor = getdtablesize();descriptor >= 0;--descriptor)
-   {
-     close(descriptor); /* close all descriptors we have inheritted from parent*/
-   }
-
-   int h = open("/dev/null",O_RDWR); dup(h); dup(h); /* handle standard I/O */
-
-   ::close(STDIN_FILENO);
-  }
-}
 
 int main(int argc, char** argv)
 {
-  daemonize(argc, argv);
-  carp_set_state_callback(&on_state_change);
-  carp_set_garp_callback(&on_gratuitous_arp);
-  return oss_carp_run(argc, argv);
+  bool isDaemon = false;
+  OSS::ServiceOptions::daemonize(argc, argv, isDaemon);
+  std::set_terminate(&OSS::ServiceOptions::catch_global);
+  OSS::OSS_init();
+
+  OSS::Net::Carp* pInstance = OSS::Net::Carp::instance();
+
+  OSS::ServiceOptions config(argc, argv, "oss_carp", VERSION, "Copyright (c) OSS Software Solutions");
+  if (pInstance->parseOptions(config))
+  {
+    pInstance->run();
+    OSS::app_wait_for_termination_request();
+  }
+  delete pInstance;
+  pInstance = 0;
+  OSS::OSS_deinit();
+  return 0;
 }

@@ -2,7 +2,6 @@
 #define DEFINE_GLOBALS 1
 
 #include <config.h>
-#include "OSS/Net/oss_carp.h"
 #include "ucarp.h"
 #ifndef HAVE_GETOPT_LONG
 # include "bsd-getopt_long.h"

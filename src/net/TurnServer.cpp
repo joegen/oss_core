@@ -208,10 +208,8 @@ void TurnServer::run()
     args << "--no-auth";
 
   std::vector<std::string> tokens = OSS::string_tokenize(args.str(), " ");
-
   char** argv;
   OSS::vectorToCArray(tokens, &argv);
-  
   turn_server_run(tokens.size(), argv);
 
   freeCArray(tokens.size(), &argv);

@@ -5,6 +5,11 @@
 # include <dmalloc.h>
 #endif
 
+void carp_set_log_callback(on_log_callback_t cb)
+{
+  on_log_callback = cb;
+}
+
 void logfile(const int crit, const char *format, ...)
 {
     const char *urgency;    
@@ -32,7 +37,16 @@ void logfile(const int crit, const char *format, ...)
     default:
         urgency = "";
     }
-    if (no_syslog == 0) {
+
+    if (no_syslog == 0) 
+    {
+
+      if (on_log_callback)
+      {
+        (*on_log_callback)(crit, line);
+      }
+      else
+      {
 #ifdef SAVE_DESCRIPTORS
         openlog("ucarp", LOG_PID, syslog_facility);
 #endif
@@ -40,8 +54,10 @@ void logfile(const int crit, const char *format, ...)
 #ifdef SAVE_DESCRIPTORS
         closelog();
 #endif
-    }    
-    if (daemonize == 0) {
+      }
+    }
+#if 0
+    if (!on_log_callback && daemonize == 0) {
         switch (crit) {
         case LOG_WARNING:
         case LOG_ERR:
@@ -50,6 +66,7 @@ void logfile(const int crit, const char *format, ...)
         default:
             printf("%s%s\n", urgency, line);
         }
-    }    
+    }
+#endif
     va_end(va);
 }

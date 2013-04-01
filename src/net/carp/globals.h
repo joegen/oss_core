@@ -1,6 +1,8 @@
 #ifndef __GLOBALS_H__
 #define __GLOBALS_H__ 1
 
+#include "OSS/Net/oss_carp.h"
+
 #ifdef DEFINE_GLOBALS
 # define GLOBAL0(A) A
 # define GLOBAL(A, B) A = B
@@ -39,4 +41,10 @@ GLOBAL(on_state_change_t on_state_change, NULL);
 
 typedef void (*on_gratuitous_arp_t)();
 GLOBAL(on_gratuitous_arp_t on_gratuitous_arp, NULL);
+
+typedef void (*on_log_callback_t)(int level, const char* line);
+GLOBAL(on_log_callback_t on_log_callback, NULL);
+
+typedef void (*on_received_signal_t)(int sig);
+GLOBAL(on_received_signal_t on_received_signal, NULL);
 #endif

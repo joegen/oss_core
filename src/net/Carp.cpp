@@ -41,9 +41,28 @@
 #include <pcap.h>
 #include <net/ethernet.h>
 #include <net/if_arp.h>
+#include <cstdlib>
+#include <cassert>
+#include <csignal>
+#include <sys/types.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <execinfo.h>
+#include <fcntl.h>
+#include <sstream>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+
+extern "C"
+{
+  #include "OSS/Net/oss_carp.h"
+}
+
 #include "OSS/Logger.h"
 #include "OSS/Net/Carp.h"
-#include "OSS/Net/oss_carp.h"
+#include "OSS/Exec/Command.h"
 
 
 namespace OSS {
@@ -63,12 +82,27 @@ const int PCAP_TIMEOUT = 1000;
 # define HWINFO_TYPE SOCK_DGRAM
 #endif
 
-Carp::Carp()
+Carp* Carp::_pInstance = 0;
+
+Carp::Carp() :
+  _pRunThread(0)
 {
 }
 
 Carp::~Carp()
 {
+  if (_pRunThread)
+  {
+    _pRunThread->join();
+    delete _pRunThread;
+  }
+}
+
+Carp* Carp::instance()
+{
+  if (!Carp::_pInstance)
+    Carp::_pInstance = new Carp();
+  return Carp::_pInstance;
 }
 
 bool Carp::getMacAddress(const std::string& ethInterface, unsigned char* hwaddr)
@@ -275,32 +309,46 @@ bool Carp::sendGratuitousArp(const std::string& ethInterface, const std::string&
 }
 
 
+Carp::Config::Config()
+{
+  vhid = 0; // virtual IP identifier (1-255)
+  preempt = false; // becomes a master as soon as possible
+  neutral = false; // don't run downscript at start if backup
+  advbase = 0; // (-b <seconds>): advertisement frequency
+  advskew = 0; // advertisement skew (0-255)
+  deadratio = 0; // ratio to consider a host as dead
+  shutdown = false; // shutdown script at exit
+  ignoreifstate = false; // ignore interface state (down, no carrier)
+  nomcast = false; // use broadcast (instead of multicast) advertisements
+}
 bool Carp::parseOptions(ServiceOptions& options)
 {
+  options.addDaemonOptions();
+
   //--interface=<if> (-i <if>): bind interface <if>
-  options.addOptionString('i', "interface", "bind interface");
+  options.addRequiredString('i', "interface", "bind interface");
   //--srcip=<ip> (-s <ip>): source (real) IP address of that host
-  options.addOptionString('s', "srcip", "source (real) IP address of that host");
+  options.addRequiredString('s', "srcip", "source (real) IP address of that host");
   //--vhid=<id> (-v <id>): virtual IP identifier (1-255)
-  options.addOptionInt('v', "vhid", "virtual IP identifier (1-255)");
+  options.addRequiredInt('V', "vhid", "virtual IP identifier (1-255)");
   //--pass=<pass> (-p <pass>): password
   options.addOptionString('p', "pass", "password");
   //--passfile=<file> (-o <file>): read password from file
   options.addOptionString('o', "passfile", "read password from file");
   //--preempt (-P): becomes a master as soon as possible
-  options.addOptionFlag('P', "preempt", "becomes a master as soon as possible");
+  options.addOptionFlag('E', "preempt", "becomes a master as soon as possible");
   //--neutral (-n): don't run downscript at start if backup
   options.addOptionFlag('n', "neutral", "don't run downscript at start if backup");
   //--addr=<ip> (-a <ip>): virtual shared IP address
-  options.addOptionString('a', "addr", "virtual shared IP address");
+  options.addRequiredString('a', "addr", "virtual shared IP address");
   //--advbase=<seconds> (-b <seconds>): advertisement frequency
   options.addOptionInt('b', "advbase", "advertisement frequency");
   //--advskew=<skew> (-k <skew>): advertisement skew (0-255)
   options.addOptionInt('k', "advskew", "advertisement skew (0-255)");
   //--upscript=<file> (-u <file>): run <file> to become a master
-  options.addOptionString('u', "upscript", "run <file> to become a master");
+  options.addRequiredString('u', "upscript", "run <file> to become a master");
   //--downscript=<file> (-d <file>): run <file> to become a backup
-  options.addOptionString('d', "downscript", "run <file> to become a backup");
+  options.addRequiredString('d', "downscript", "run <file> to become a backup");
   //--garpscript=<file> (-g <file>): run <file> when a gratuitous ARP is sent
   options.addOptionString('g', "garpscript", "run <file> when a gratuitous ARP is sent");
   //--deadratio=<ratio> (-r <ratio>): ratio to consider a host as dead
@@ -320,7 +368,164 @@ bool Carp::parseOptions(ServiceOptions& options)
   //
   // Initialize the config
   //
+
+
+  //--interface=<if> (-i <if>): bind interface <if>
+  options.getOption("interface", _config.interface);
+  //--srcip=<ip> (-s <ip>): source (real) IP address of that host
+  options.getOption("srcip", _config.srcip);
+  //--vhid=<id> (-v <id>): virtual IP identifier (1-255)
+  options.getOption("vhid", _config.vhid);
+  //--pass=<pass> (-p <pass>): password
+  options.getOption("pass", _config.pass);
+  //--passfile=<file> (-o <file>): read password from file
+  options.getOption("passfile", _config.passfile);
+  //--preempt (-P): becomes a master as soon as possible
+  _config.preempt = options.hasOption("preempt");
+  //--neutral (-n): don't run downscript at start if backup
+  _config.neutral = options.hasOption("neutral");
+  //--addr=<ip> (-a <ip>): virtual shared IP address
+  options.getOption("addr", _config.addr);
+  //--advbase=<seconds> (-b <seconds>): advertisement frequency
+  options.getOption("advbase", _config.advbase);
+  //--advskew=<skew> (-k <skew>): advertisement skew (0-255)
+  options.getOption("advskew", _config.advskew);
+  //--upscript=<file> (-u <file>): run <file> to become a master
+  options.getOption("upscript", _config.upscript);
+  //--downscript=<file> (-d <file>): run <file> to become a backup
+  options.getOption("downscript", _config.downscript);
+  //--garpscript=<file> (-g <file>): run <file> when a gratuitous ARP is sent
+  options.getOption("garpscript", _config.garpscript);
+  //--deadratio=<ratio> (-r <ratio>): ratio to consider a host as dead
+  options.getOption("deadratio", _config.deadratio);
+  //--shutdown (-z): call shutdown script at exit
+  _config.shutdown = options.hasOption("shutdown");
+  //--ignoreifstate (-S): ignore interface state (down, no carrier)
+  _config.ignoreifstate = options.hasOption("ignoreifstate");
+  //--nomcast (-M): use broadcast (instead of multicast) advertisements
+  _config.nomcast = options.hasOption("nomcast");
+  //--xparam=<value> (-x): extra parameter to send to up/down scripts
+  options.getOption("xparam", _config.xparam);
+
+
   return true;
+}
+
+void Carp::run()
+{
+  if (!_pRunThread)
+  {
+    _pRunThread = new boost::thread(boost::bind(&Carp::run, this));
+    return;
+  }
+
+  std::ostringstream args;
+  args << "Carp ";
+
+  if (!_config.interface.empty())
+    args << " --interface " << _config.interface;
+
+  if (!_config.srcip.empty())
+    args << " --srcip " << _config.srcip;
+
+  if (_config.vhid)
+    args << " --vhid " << _config.vhid;
+
+  if (!_config.pass.empty())
+    args << " --pass " << _config.pass;
+
+  if (!_config.passfile.empty())
+    args << " --passfile " << _config.passfile;
+
+  if (_config.preempt)
+    args << " --preempt ";
+
+  if (_config.neutral)
+    args << " --neutral ";
+
+  if (!_config.addr.empty())
+    args << " --addr " << _config.addr;
+
+  if (_config.advbase)
+    args << " --advbase " << _config.advbase;
+
+  if (!_config.advskew)
+    args << " --advskew " << _config.advskew;
+
+  if (!_config.upscript.empty())
+    args << " --upscript " << _config.upscript;
+
+  if (!_config.downscript.empty())
+    args << " --downscript " << _config.downscript;
+
+  if (!_config.garpscript.empty())
+    args << " --garpscript " << _config.garpscript;
+
+  if (_config.deadratio)
+    args << " --deadratio " << _config.deadratio;
+
+  if (_config.shutdown)
+    args << " --shutdown ";
+
+  if (_config.ignoreifstate)
+    args << " --ignoreifstate";
+
+  if (_config.nomcast)
+    args << " --nomcast";
+
+  if (!_config.xparam.empty())
+    args << " --xparam " << _config.xparam;
+
+  char** argv;
+  std::vector<std::string> tokens = OSS::string_tokenize(args.str(), " ");
+  OSS::vectorToCArray(tokens, &argv);
+
+  carp_set_state_callback(&Carp::on_state_change);
+  carp_set_garp_callback(&Carp::on_gratuitous_arp);
+  carp_set_log_callback(&Carp::on_log_event);
+  carp_set_signal_handler(&Carp::on_received_signal);
+
+  oss_carp_run(tokens.size(), argv);
+
+  freeCArray(tokens.size(), &argv);
+}
+
+void Carp::on_state_change(int state)
+{
+  //
+  // Add your custom code here
+  //
+}
+
+void Carp::on_gratuitous_arp()
+{
+  if (carp_get_garp_script())
+  {
+    OSS::Exec::Command cmd(carp_get_garp_script());
+    cmd.execute();
+  }
+}
+
+void Carp::on_log_event(int level, const char* log)
+{
+  if (!level)
+    level = 1;
+
+  OSS::log(log, (OSS::LogPriority)level);
+}
+
+void Carp::on_received_signal(int sig)
+{
+  switch (sig)
+  {
+    case SIGINT:
+    case SIGQUIT:
+    case SIGTERM:
+      _exit(0);
+    case SIGUSR1:
+    case SIGUSR2:
+      break;
+  }
 }
 
 

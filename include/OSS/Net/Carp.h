@@ -42,6 +42,8 @@
 #define	OSS_CARP_H_INCLUDED
 
 
+#include <boost/thread.hpp>
+
 #include "OSS/Core.h"
 #include "OSS/Net.h"
 #include "OSS/ServiceOptions.h"
@@ -59,21 +61,24 @@ protected:
   // ucarp - http://www.pureftpd.org/project/ucarp
   //
   Carp();
-  ~Carp();
 
 public:
+  ~Carp();
+  
+  enum carp_state{ INIT = 0, BACKUP, MASTER };
   struct Config
   {
+    Config();
     std::string interface; // bind interface <if>
     std::string srcip; // source (real) IP address of that host
-    unsigned char vhid; // virtual IP identifier (1-255)
+    int vhid; // virtual IP identifier (1-255)
     std::string pass; // password
     std::string passfile; // read password from file
     bool preempt; // becomes a master as soon as possible
     bool neutral; // don't run downscript at start if backup
     std::string addr; // virtual shared IP address
     int advbase; // (-b <seconds>): advertisement frequency
-    unsigned char advskew; // advertisement skew (0-255)
+    int advskew; // advertisement skew (0-255)
     std::string upscript; // run <file> to become a master
     std::string downscript; // run <file> to become a backup
     std::string garpscript; // run <file> when a gratuitous ARP is sent
@@ -90,8 +95,21 @@ public:
 
   Config& config();
   bool parseOptions(ServiceOptions& options);
+
+  void run();
 private:
+  static void on_state_change(int state);
+  static void on_gratuitous_arp();
+  static void on_log_event(int level, const char* log);
+  static void on_received_signal(int sig);
+
+  static Carp* _pInstance;
   Config _config;
+  boost::thread* _pRunThread;
+
+
+  typedef boost::function<void(int)> StateChangeCallback;
+  typedef boost::function<void()> GratuitousArpCallback;
 };
 
 //

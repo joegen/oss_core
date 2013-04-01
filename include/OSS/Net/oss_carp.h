@@ -52,6 +52,10 @@ typedef void (*on_gratuitous_arp_cb)();
 void carp_set_garp_callback(on_gratuitous_arp_cb cb);
 void carp_call_down_script();
 const char* carp_get_garp_script();
+typedef void (*on_log_cb_t)(int level, const char* line);
+void carp_set_log_callback(on_log_cb_t cb);
+typedef void (*on_received_signal_cb_t)(int sig);
+void carp_set_signal_handler(on_received_signal_cb_t cb);
 
 #ifdef	__cplusplus
 }

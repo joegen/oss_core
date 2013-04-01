@@ -43,7 +43,7 @@
 #include "spawn.h"
 #include "log.h"
 #include "carp_p.h"
-#include "OSS/Net/oss_carp.h"
+
 
 #ifdef WITH_DMALLOC
 # include <dmalloc.h>
@@ -62,6 +62,11 @@ void carp_set_garp_callback(on_gratuitous_arp_t cb)
 const char* carp_get_garp_script()
 {
   return garpscript;
+}
+
+void carp_set_signal_handler(on_received_signal_t cb)
+{
+  on_received_signal = cb;
 }
 
 static void carp_set_state(struct carp_softc *sc, int state)
@@ -688,7 +693,11 @@ RETSIGTYPE sighandler_exit(const int sig)
     if (sc.sc_state != BACKUP) {
         (void) spawn_handler(dev_desc_fd, downscript);
     }
-    _exit(EXIT_SUCCESS);
+
+    if (on_received_signal)
+      (*on_received_signal)(sig);
+    else
+      _exit(EXIT_SUCCESS);
 }
 
 RETSIGTYPE sighandler_usr(const int sig)
@@ -701,6 +710,9 @@ RETSIGTYPE sighandler_usr(const int sig)
     received_signal=2;
     break;
     }
+
+    if (on_received_signal)
+      (*on_received_signal)(sig);
 }
 
 char *build_bpf_rule(void)

@@ -76,10 +76,21 @@ public:
   void addOptionIntVector(char shortForm, const std::string& optionName, const std::string description, OptionType type = ConfigOption);
   void addOptionIntVector(const std::string& optionName, const std::string description, OptionType type = ConfigOption);
   //
+  // Mandatory flags
+  //
+  void addRequiredString(char shortForm, const std::string& optionName, const std::string description, OptionType type = ConfigOption);
+  void addRequiredString(const std::string& optionName, const std::string description, OptionType type = ConfigOption);
+  void addRequiredInt(char shortForm, const std::string& optionName, const std::string description, OptionType type = ConfigOption);
+  void addRequiredInt(const std::string& optionName, const std::string description, OptionType type = ConfigOption);
+  void addRequiredStringVector(char shortForm, const std::string& optionName, const std::string description, OptionType type = ConfigOption);
+  void addRequiredStringVector(const std::string& optionName, const std::string description, OptionType type = ConfigOption);
+  void addRequiredIntVector(char shortForm, const std::string& optionName, const std::string description, OptionType type = ConfigOption);
+  void addRequiredIntVector(const std::string& optionName, const std::string description, OptionType type = ConfigOption);
+  //
   // Standard daemon options
   //
   void addDaemonOptions();
-  static void  daemonize(int argc, char** argv);
+  static void  daemonize(int argc, char** argv, bool isDaemon);
   static void catch_global();
 
   bool parseOptions();
@@ -119,6 +130,7 @@ protected:
   boost::property_tree::ptree _ptree;
   bool _hasConfig;
   bool _isConfigOnly;
+  std::vector<std::string> _required;
 };
 
 inline ServiceOptions::ServiceOptions(int argc, char** argv,
@@ -213,13 +225,13 @@ inline bool ServiceOptions::parseOptions()
     if (hasOption("help", false))
     {
       displayUsage(std::cout);
-      exit(0);
+      _exit(0);
     }
 
     if (hasOption("version", false))
     {
       displayVersion(std::cout);
-      exit(0);
+      _exit(0);
     }
 
     if (hasOption("pid-file", false))
@@ -236,7 +248,7 @@ inline bool ServiceOptions::parseOptions()
         displayUsage(std::cerr);
         std::cerr << std::endl << "ERROR: You must specify pid-file location!" << std::endl;
         std::cerr.flush();
-        exit(-1);
+        _exit(-1);
       }
       _isDaemon = true;
     }
@@ -258,8 +270,21 @@ inline bool ServiceOptions::parseOptions()
           displayUsage(std::cerr);
           std::cerr << std::endl << "ERROR: Unable to open input file " << _configFile << "!" << std::endl;
           std::cerr.flush();
-          exit(-1);
+          _exit(-1);
         }
+      }
+    }
+
+    //
+    // Check for required options
+    //
+    for (std::vector<std::string>::iterator iter = _required.begin(); iter != _required.end(); iter++)
+    {
+      if (!hasOption(*iter, false))
+      {
+        std::cout << "Error: Missing required parameter " << *iter << "!" << std::endl;
+        displayUsage(std::cout);
+        _exit(0);
       }
     }
 
@@ -634,13 +659,59 @@ inline bool ServiceOptions::getOption(const std::string& optionName, bool& value
 }
 
 
+inline void ServiceOptions::addRequiredString(char shortForm, const std::string& optionName, const std::string description, OptionType type)
+{
+  _required.push_back(optionName);
+  addOptionString(shortForm, optionName, description, type);
+}
+
+inline void ServiceOptions::addRequiredString(const std::string& optionName, const std::string description, OptionType type)
+{
+  _required.push_back(optionName);
+  addOptionString(optionName, description, type);
+}
+
+inline void ServiceOptions::addRequiredInt(char shortForm, const std::string& optionName, const std::string description, OptionType type)
+{
+  _required.push_back(optionName);
+  addOptionInt(shortForm, optionName, description, type);
+}
+
+inline void ServiceOptions::addRequiredInt(const std::string& optionName, const std::string description, OptionType type)
+{
+  _required.push_back(optionName);
+  addOptionInt(optionName, description, type);
+}
+
+inline void ServiceOptions::addRequiredStringVector(char shortForm, const std::string& optionName, const std::string description, OptionType type)
+{
+  _required.push_back(optionName);
+  addOptionStringVector(shortForm, optionName, description, type);
+}
+inline void ServiceOptions::addRequiredStringVector(const std::string& optionName, const std::string description, OptionType type)
+{
+  _required.push_back(optionName);
+  addOptionStringVector(optionName, description, type);
+}
+
+inline void ServiceOptions::addRequiredIntVector(char shortForm, const std::string& optionName, const std::string description, OptionType type)
+{
+  _required.push_back(optionName);
+  addOptionIntVector(shortForm, optionName, description, type);
+}
+inline void ServiceOptions::addRequiredIntVector(const std::string& optionName, const std::string description, OptionType type)
+{
+  _required.push_back(optionName);
+  addOptionIntVector(optionName, description, type);
+}
+
 inline ServiceOptions::~ServiceOptions()
 {
 }
 
-inline void  ServiceOptions::daemonize(int argc, char** argv)
+inline void  ServiceOptions::daemonize(int argc, char** argv, bool isDaemon)
 {
-  bool isDaemon = false;
+  isDaemon = false;
   for (int i = 0; i < argc; i++)
   {
     std::string arg = argv[i];
