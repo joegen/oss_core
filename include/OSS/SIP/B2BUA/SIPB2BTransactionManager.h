@@ -37,7 +37,7 @@
 #include "OSS/SIP/SIPTransaction.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 #include "OSS/SIP/B2BUA/SIPB2BHandler.h"
-#include "OSS/SIP/B2BUA/SIPB2BStateAgent.h"
+#include "OSS/SIP/B2BUA/SIPB2BUserAgentHandlerList.h"
 
 
 namespace OSS {
@@ -322,8 +322,18 @@ public:
   void setUserAgentName(const std::string& userAgentName);
     /// Set the user-agent name.
 
-  SIPB2BStateAgent& stateAgent();
-    /// Returns a reference to the state agent
+  void addUserAgentHandler(SIPB2BUserAgentHandler* pHandler);
+    /// Register a user agent handler
+
+   bool registerPlugin(const std::string& name, const std::string& path);
+    /// Register a plugin.
+    ///
+    /// This function registers a UserAgent handler derrived from
+    /// SIPB2BUserAgent handler from a .so file.  Handlers can hijack back to back
+    /// transactions before they get processed by the scripting layer.
+    /// If a handler "handled" the transaction, the scripting layer
+    /// will no longer process the transaction and instead, let the handler
+    /// respond to the transaction.
 protected:
   void handleRequest(
     const OSS::SIP::SIPMessage::Ptr& pMsg, 
@@ -385,7 +395,12 @@ private:
   PostRouteCallback _postRouteCallback;
   std::string _userAgentName;
   SIPB2BHandler* _pDefaultHandler;
-  SIPB2BStateAgent _stateAgent;
+
+  //
+  // Plugins
+  //
+  SIPB2BUserAgentHandlerList _userAgentHandler;
+  SIPB2BUserAgentHandlerLoader _pluginLoader;
 };
 
 //
@@ -479,10 +494,6 @@ inline void SIPB2BTransactionManager::registerDefaultHandler(SIPB2BHandler* pDef
   _pDefaultHandler = pDefaultHandler;
 }
 
-inline SIPB2BStateAgent& SIPB2BTransactionManager::stateAgent()
-{
-  return _stateAgent;
-}
 
 
 } } } // OSS::SIP::B2BUA

@@ -17,47 +17,56 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#ifndef OSS_SIPSTATEAGENT_H_INCLUDED
-#define	OSS_SIPSTATEAGENT_H_INCLUDED
+#ifndef OSS_SIPB2BUSERAGENTHANDLERLIST_H_INCLUDED
+#define	OSS_SIPB2BUSERAGENTHANDLERLIST_H_INCLUDED
 
 
-#include <boost/noncopyable.hpp>
-#include <boost/function.hpp>
-#include "OSS/SIP/OSSSIP.h"
-
+#include "OSS/Thread.h"
+#include "OSS/SIP/B2BUA/SIPB2BUserAgentHandler.h"
+#include "OSS/DynamicHashTable.h"
 
 namespace OSS {
 namespace SIP {
 namespace B2BUA {
 
-class SIPB2BTransactionManager;
 
-class SIPB2BStateAgent : boost::noncopyable
+class SIPB2BUserAgentHandlerList : boost::noncopyable
 {
 public:
+  struct Item
+  {
+    SIPB2BUserAgentHandler* handler;
+    bool operator < (const SIPB2BUserAgentHandlerList::Item& h) const;
+  };
 
-  typedef boost::function<bool(
-    SIPB2BStateAgent&,
-    const OSS::SIP::SIPMessage::Ptr&,
-    const OSS::SIP::SIPTransportSession::Ptr&,
-    const OSS::SIP::SIPTransaction::Ptr&)> Handler;
+  SIPB2BUserAgentHandlerList();
 
-  SIPB2BStateAgent(SIPB2BTransactionManager* pB2BUA);
-  ~SIPB2BStateAgent();
+  ~SIPB2BUserAgentHandlerList();
 
-  bool handleRequest(
+  void addHandler(SIPB2BUserAgentHandler* pHandler);
+
+  SIPB2BUserAgentHandler::Action operator()(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport,
     const OSS::SIP::SIPTransaction::Ptr& pTransaction);
-
-protected:
-  SIPB2BTransactionManager* _pB2BUA;
-  Handler _handler;
+private:
+  std::list<Item> _handlers;
+  OSS::mutex_critic_sec _mutex;
 };
 
+
+//
+// Inlines
+//
+
+inline bool SIPB2BUserAgentHandlerList::Item::operator < (const SIPB2BUserAgentHandlerList::Item& h) const
+{
+  return handler->priority() < h.handler->priority();
+}
 
 } } } // OSS::SIP::B2BUA
 
 
-#endif	// OSS_SIPSTATEAGENT_H_INCLUDED
+
+#endif	/// OSS_SIPB2BUSERAGENTHANDLERLIST_H_INCLUDED
 

@@ -35,8 +35,7 @@ SIPB2BTransactionManager::SIPB2BTransactionManager(int minThreadcount, int maxTh
   _threadPool(minThreadcount, maxThreadCount),
   _stack(),
   _useSourceAddressForResponses(false),
-  _pDefaultHandler(0),
-  _stateAgent(this)
+  _pDefaultHandler(0)
 {
   _stack.setRequestHandler(boost::bind(&SIPB2BTransactionManager::handleRequest, this, _1, _2, _3));
   _stack.setAckFor2xxTransactionHandler(boost::bind(&SIPB2BTransactionManager::handleAckFor2xxTransaction, this, _1, _2));
@@ -73,13 +72,28 @@ void SIPB2BTransactionManager::handleRequest(
   const OSS::SIP::SIPTransportSession::Ptr& pTransport, 
   const OSS::SIP::SIPTransaction::Ptr& pTransaction)
 {
-  //
-  // We will give the state agent a glimpse of the request.  It may opt to
-  // process it and send out a response.  If it returns true,
-  // we will return immediately and let it handle the transaction
-  //
-  if (_stateAgent.handleRequest(pMsg, pTransport, pTransaction))
+  SIPB2BUserAgentHandler::Action action = _userAgentHandler(pMsg, pTransport, pTransaction);
+  if (action == SIPB2BUserAgentHandler::Deny)
+  {
+    //
+    // send a forbidden
+    //
+    OSS::log_error(pMsg->createContextId(true) + "SIPB2BTransactionManager::handleRequest - User Agent handler returned DENY");
+    SIPMessage::Ptr serverError = pMsg->createResponse(403);
+    pTransaction->sendResponse(serverError, pTransport->getRemoteAddress());
     return;
+  }
+  else if (action == SIPB2BUserAgentHandler::Handled)
+  {
+    //
+    // Simply return.  A handler took ownership of the transaction
+    //
+    return;
+  }
+
+  //
+  // No user agent handler too the transaction.
+  //
 
   SIPB2BTransaction* b2bTransaction = onCreateB2BTransaction(pMsg, pTransport, pTransaction);
   if (!b2bTransaction)
@@ -560,6 +574,31 @@ bool SIPB2BTransactionManager::postRetargetTransaction(
   // Returning true here will mean the scripting engine will not be called
   //
   return false;
+}
+
+void SIPB2BTransactionManager::addUserAgentHandler(SIPB2BUserAgentHandler* pHandler)
+{
+  pHandler->setUserAgent(this);
+  _userAgentHandler.addHandler(pHandler);
+}
+bool SIPB2BTransactionManager::registerPlugin(const std::string& name, const std::string& path)
+{
+  try
+  {
+    _pluginLoader.loadLibrary(path);
+    SIPB2BUserAgentHandler* _pHandler = _pluginLoader.create(name);
+    if (_pHandler)
+    {
+      addUserAgentHandler(_pHandler);
+    }
+  }
+  catch(std::exception& e)
+  {
+    OSS_LOG_ERROR("SIPB2BTransactionManager::registerPlugin - Unable to load plugin " << path << " Error: " << e.what());
+    return false;
+  }
+
+  return true;
 }
 
 

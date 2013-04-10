@@ -169,7 +169,8 @@ nobase_include_HEADERS = \
     OSS/SIP/B2BUA/SIPB2BContact.h \
     OSS/SIP/B2BUA/SIPB2BDialogData.h \
     OSS/SIP/B2BUA/SIPB2BDialogStateManager.h \
-    OSS/SIP/B2BUA/SIPB2BStateAgent.h \
+    OSS/SIP/B2BUA/SIPB2BUserAgentHandler.h \
+    OSS/SIP/B2BUA/SIPB2BUserAgentHandlerList.h \
     OSS/STUN/VovidaSTUN.inl \
     OSS/STUN/VovidaUDP.h \
     OSS/STUN/STUNMappedAddress.h \

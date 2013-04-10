@@ -18,7 +18,8 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#include "OSS/SIP/B2BUA/SIPB2BStateAgent.h"
+
+#include "OSS/SIP/B2BUA/SIPB2BUserAgentHandlerList.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransactionManager.h"
 
 
@@ -27,26 +28,42 @@ namespace SIP {
 namespace B2BUA {
 
 
-SIPB2BStateAgent::SIPB2BStateAgent(SIPB2BTransactionManager* pB2BUA) :
-  _pB2BUA(pB2BUA)
+
+SIPB2BUserAgentHandlerList::SIPB2BUserAgentHandlerList()
 {
 }
 
-SIPB2BStateAgent::~SIPB2BStateAgent()
+SIPB2BUserAgentHandlerList::~SIPB2BUserAgentHandlerList()
 {
 }
 
-bool SIPB2BStateAgent::handleRequest(
-  const OSS::SIP::SIPMessage::Ptr& pMsg,
-  const OSS::SIP::SIPTransportSession::Ptr& pTransport,
-  const OSS::SIP::SIPTransaction::Ptr& pTransaction)
+
+
+void SIPB2BUserAgentHandlerList::addHandler(SIPB2BUserAgentHandler* pHandler)
 {
-  if (!_handler)
-    return false;
-  return _handler(*this, pMsg, pTransport, pTransaction);
+  OSS::mutex_critic_sec_lock lock(_mutex);
+  Item item;
+  item.handler = pHandler;
+  _handlers.push_back(item);
+  _handlers.sort();
 }
 
+SIPB2BUserAgentHandler::Action SIPB2BUserAgentHandlerList::operator()(
+    const OSS::SIP::SIPMessage::Ptr& pMsg,
+    const OSS::SIP::SIPTransportSession::Ptr& pTransport,
+    const OSS::SIP::SIPTransaction::Ptr& pTransaction)
+{
+  OSS::mutex_critic_sec_lock lock(_mutex);
+  SIPB2BUserAgentHandler::Action action = SIPB2BUserAgentHandler::Continue;
+  for (std::list<Item>::iterator iter = _handlers.begin(); iter != _handlers.end(); iter++)
+  {
+    action = iter->handler->handleRequest(pMsg, pTransport, pTransaction);
+    if (action != SIPB2BUserAgentHandler::Continue)
+      return action;
+  }
 
+  return action;
+}
 
 } } } // OSS::SIP::B2BUA
 
