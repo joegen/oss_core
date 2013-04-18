@@ -262,6 +262,9 @@ liboss_core_la_SOURCES =  \
     stun/STUNMappedAddress.cpp \
     stun/STUNServer.cpp \
     stun/STUNClient.cpp \
+    ua/SIPSessionState.cpp \
+    ua/SIPSession.cpp \
+    ua/SIPSessionManager.cpp \
     b2bua/SIPB2BClientTransaction.cpp \
     b2bua/SIPB2BTransaction.cpp \
     b2bua/SIPB2BScriptableHandler.cpp \

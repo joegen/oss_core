@@ -160,6 +160,9 @@ nobase_include_HEADERS = \
     OSS/SIP/SIPUDPConnection.h \
     OSS/SIP/SIPTCPConnectionManager.h \
     OSS/SIP/SIPNistPool.h \
+    OSS/SIP/UA/SIPSessionState.h \
+    OSS/SIP/UA/SIPSession.h \
+    OSS/SIP/UA/SIPSessionManager.h \
     OSS/SIP/B2BUA/B2BUA.h \
     OSS/SIP/B2BUA/SIPB2BClientTransaction.h \
     OSS/SIP/B2BUA/SIPB2BHandler.h \
