@@ -415,7 +415,18 @@ unsigned short SDPMedia::getDataPort() const
     {
       std::vector<std::string> tokens = OSS::string_tokenize(iter->value(), " ");
       if (tokens.size() > 2)
-        const_cast<SDPMedia*>(this)->_dataPort = OSS::string_to_number<unsigned short>(tokens[1].c_str());
+      {
+        if (tokens[1].find("/") == std::string::npos)
+        {
+          const_cast<SDPMedia*>(this)->_dataPort = OSS::string_to_number<unsigned short>(tokens[1].c_str());
+        }
+        else
+        {
+          std::vector<std::string> subTokens = OSS::string_tokenize(tokens[1], "/");
+          if (subTokens.size() == 2)
+            const_cast<SDPMedia*>(this)->_dataPort = OSS::string_to_number<unsigned short>(subTokens[0].c_str());
+        }
+      }
     }
   }
   return _dataPort;
