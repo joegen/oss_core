@@ -93,7 +93,7 @@ public:
   static void  daemonize(int argc, char** argv, bool isDaemon);
   static void catch_global();
 
-  bool parseOptions();
+  bool parseOptions(bool verbose = false);
   void prepareLogger();
   void displayUsage(std::ostream& strm) const;
   void displayVersion(std::ostream& strm) const;
@@ -177,7 +177,7 @@ inline void ServiceOptions::addDaemonOptions()
 }
 
 
-inline bool ServiceOptions::parseOptions()
+inline bool ServiceOptions::parseOptions(bool verbose)
 {
 
   if (_isConfigOnly)
@@ -189,8 +189,9 @@ inline bool ServiceOptions::parseOptions()
     }
     catch(const std::exception& e)
     {
+      if(verbose)
         std::cerr << _daemonName << " is not able to parse the options - " << e.what() << std::endl;
-        return false;
+      return false;
     }
     return true;
   }
@@ -294,7 +295,8 @@ inline bool ServiceOptions::parseOptions()
   {
     if (!onParseUnknownOptions(_argc, _argv))
     {
-      std::cerr << _daemonName << " is not able to parse the options - " << e.what() << std::endl;
+      if(verbose)
+        std::cerr << _daemonName << " is not able to parse the options - " << e.what() << std::endl;
       return false;
     }
   }
