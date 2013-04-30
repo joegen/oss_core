@@ -74,7 +74,7 @@ public:
     _tcpPort(6379),
     _db(0)
   {
-
+    OSS_LOG_INFO("[REDIS] << Redis client CREATED - " << _tcpHost << ":" << _tcpPort);
   }
 
   RedisClient(const std::string& tcpHost, int tcpPort) :
@@ -84,6 +84,7 @@ public:
     _tcpPort(tcpPort),
     _db(0)
   {
+    OSS_LOG_INFO("[REDIS] << Redis client CREATED - " << _tcpHost << ":" << _tcpPort);
   }
 
   RedisClient(const std::string& unixSocketPath) :
@@ -118,9 +119,11 @@ public:
     mutex_lock lock(_mutex);
     if (_type == TCP)
     {
+      OSS_LOG_INFO("[REDIS] Connecting to tcp:" << _tcpHost << ":" << _tcpPort);
       _context = redisConnect(_tcpHost.c_str(), _tcpPort);
     }else if (_type == UNIX)
     {
+      OSS_LOG_INFO("[REDIS] Connecting to unix:" << _unixSocketPath);
       _context = redisConnectUnix(_unixSocketPath.c_str());
     }
 
@@ -301,10 +304,20 @@ protected:
     mutex_lock lock(_mutex);
 
     if (!_context)
+    {
+      OSS_LOG_WARNING("[REDIS] Context is NULL when calling execute.  Creating a new context.");
       if (!connect())
+      {
+        OSS_LOG_ERROR("[REDIS] Connect FAILED.  Unable to create a new context for execution.");
         return 0;
+      }
+    }
+
     if (!_context)
+    {
+      OSS_LOG_ERROR("[REDIS] Connect FAILED.  Unable to create a new context for execution.");
       return 0;
+    }
 
     redisReply* reply = 0;
     reply = (redisReply*)redisCommandArgv(_context, argc, (const char**)argv, 0);
@@ -316,6 +329,9 @@ protected:
         _lastError = "Unknown exception";
       freeReply(reply);
       reply = 0;
+
+      OSS_LOG_ERROR("[REDIS] Execute FAILED.  - " << _lastError);
+
       if (_context->err == REDIS_ERR_EOF || _context->err == REDIS_ERR_IO)
       {
         //
