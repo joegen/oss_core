@@ -123,12 +123,39 @@ public:
     {
       _context = redisConnectUnix(_unixSocketPath.c_str());
     }
-    if (_context == 0)
+
+    if (!_context)
+    {
+      if (_type == TCP)
+      {
+        OSS_LOG_ERROR("[REDIS] Unable to connect to tcp:" << _tcpHost << ":" << _tcpPort);
+      }else if (_type == UNIX)
+      {
+        OSS_LOG_ERROR("[REDIS] Unable to connect to unix:" << _unixSocketPath);
+      }
       return false;
+    }
+    else
+    {
+      if (_type == TCP)
+      {
+        OSS_LOG_ERROR("[REDIS] Connected to tcp:" << _tcpHost << ":" << _tcpPort);
+      }else if (_type == UNIX)
+      {
+        OSS_LOG_ERROR("[REDIS] Connected to unix:" << _unixSocketPath);
+      }
+    }
 
     if (_context->err)
     {
       _lastError = _context->errstr;
+      if (_type == TCP)
+      {
+        OSS_LOG_ERROR("[REDIS] Error connecting to tcp:" << _tcpHost << ":" << _tcpPort << " - " << _lastError);
+      }else if (_type == UNIX)
+      {
+        OSS_LOG_ERROR("[REDIS] Error connecting to unix:" << _unixSocketPath << " - " << _lastError);
+      }
       return false;
     }
 
@@ -145,9 +172,30 @@ public:
         authenticated = reply->type == REDIS_REPLY_STATUS && strcasecmp(reply->str,"ok") == 0;
         freeReply(reply);
         reply = 0;
+        if (!authenticated)
+        {
+          if (_type == TCP)
+          {
+            OSS_LOG_ERROR("[REDIS] Unable to authenticate with tcp:" << _tcpHost << ":" << _tcpPort);
+          }else if (_type == UNIX)
+          {
+            OSS_LOG_ERROR("[REDIS] Unable to authenticate with unix:" << _unixSocketPath);
+          }
+
+          disconnect();
+          return false;
+        }
       }
-      if (!authenticated)
+      else
       {
+        if (_type == TCP)
+        {
+          OSS_LOG_ERROR("[REDIS] Unable to authenticate with tcp:" << _tcpHost << ":" << _tcpPort << " - NOREPLY");
+        }else if (_type == UNIX)
+        {
+          OSS_LOG_ERROR("[REDIS] Unable to authenticate with unix:" << _unixSocketPath << " - NOREPLY");
+        }
+
         disconnect();
         return false;
       }
@@ -160,11 +208,38 @@ public:
       if (reply)
       {
         selected = reply->type == REDIS_REPLY_STATUS && strcasecmp(reply->str,"ok") == 0;
+
+        if (!selected)
+        {
+          if (reply->type == REDIS_REPLY_STATUS)
+          {
+            if (_type == TCP)
+            {
+              OSS_LOG_ERROR("[REDIS] Unable to select database from tcp:" << _tcpHost << ":" << _tcpPort << " - " << reply->str);
+            }else if (_type == UNIX)
+            {
+              OSS_LOG_ERROR("[REDIS] Unable to select database from unix:" << _unixSocketPath << " - " << reply->str);
+            }
+          }
+
+          disconnect();
+          return false;
+        }
+
         freeReply(reply);
         reply = 0;
+
       }
-      if (!selected)
+      else
       {
+        if (_type == TCP)
+        {
+          OSS_LOG_ERROR("[REDIS] Unable to select database from tcp:" << _tcpHost << ":" << _tcpPort << " - NOREPLY");
+        }else if (_type == UNIX)
+        {
+          OSS_LOG_ERROR("[REDIS] Unable to select database from unix:" << _unixSocketPath << " - NOREPLY");
+        }
+
         disconnect();
         return false;
       }
@@ -342,18 +417,18 @@ protected:
     {
       if (!reply)
       {
-        OSS_LOG_ERROR("Redis::getStatusString - NULL reply received.");
+        OSS_LOG_ERROR("[REDIS] Redis::getStatusString - NULL reply received.");
       }
       else
       {
         if (!(reply->type == REDIS_REPLY_STATUS || reply->type == REDIS_REPLY_ERROR))
         {
-           OSS_LOG_ERROR("Redis::getStatusString - Reply is of wrong type.  Expecting " << REDIS_REPLY_STATUS
+           OSS_LOG_ERROR("[REDIS] Redis::getStatusString - Reply is of wrong type.  Expecting " << REDIS_REPLY_STATUS
              << " or " << REDIS_REPLY_ERROR << " but we got " << reply->type);
         }
         else if (reply->len <= 0)
         {
-          OSS_LOG_ERROR("Redis::getStatusString - Empty reply received.");
+          OSS_LOG_ERROR("[REDIS] Redis::getStatusString - Empty reply received.");
         }
       }
     }
@@ -446,15 +521,15 @@ public:
       }
       catch(const std::exception& e)
       {
-        OSS_LOG_ERROR("RedisClient::Set ERROR: " << e.what());
+        OSS_LOG_ERROR("[REDIS] RedisClient::Set ERROR: " << e.what());
       }
 
     }
     std::string status = getStatusString(args);
 
-    if (status != "ok")
+    if (!status.empty() && status != "ok")
     {
-      OSS_LOG_ERROR("RedisClient::Get ERROR: " << status);
+      OSS_LOG_ERROR("[REDIS]  RedisClient::Get ERROR: " << status);
     }
 
     return status == "ok";
@@ -514,7 +589,7 @@ public:
     }
     catch(std::exception& error)
     {
-      OSS_LOG_ERROR("RedisClient::Get ERROR: " << error.what());
+      OSS_LOG_ERROR("[REDIS] RedisClient::Get ERROR: " << error.what());
       return false;
     }
     return true;
@@ -561,12 +636,12 @@ public:
       }
       catch(std::exception& e)
       {
-        OSS_LOG_ERROR("JSON Parser exception: " << e.what());
+        OSS_LOG_ERROR("[REDIS] JSON Parser exception: " << e.what());
         return false;
       }
       catch(...)
       {
-        OSS_LOG_ERROR("Unknown JSON Parser exception.");
+        OSS_LOG_ERROR("[REDIS] Unknown JSON Parser exception.");
         return false;
       }
     }
