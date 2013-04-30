@@ -28,6 +28,7 @@
 #include "OSS/JSON/reader.h"
 #include "OSS/JSON/writer.h"
 #include "OSS/JSON/elements.h"
+#include "OSS/Core.h"
 #include <map>
 
 
