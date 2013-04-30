@@ -338,6 +338,25 @@ protected:
     {
       value = std::string(reply->str, reply->len);
     }
+    else
+    {
+      if (!reply)
+      {
+        OSS_LOG_ERROR("Redis::getStatusString - NULL reply received.");
+      }
+      else
+      {
+        if (!(reply->type == REDIS_REPLY_STATUS || reply->type == REDIS_REPLY_ERROR))
+        {
+           OSS_LOG_ERROR("Redis::getStatusString - Reply is of wrong type.  Expecting " << REDIS_REPLY_STATUS
+             << " or " << REDIS_REPLY_ERROR << " but we got " << reply->type);
+        }
+        else if (reply->len <= 0)
+        {
+          OSS_LOG_ERROR("Redis::getStatusString - Empty reply received.");
+        }
+      }
+    }
 
     if (reply)
       const_cast<RedisClient*>(this)->freeReply(reply);
