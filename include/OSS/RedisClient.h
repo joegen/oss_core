@@ -734,7 +734,7 @@ protected:
   int _db;
 };
 
-class RedisBroadcastClient : public RedisClient
+class RedisBroadcastClient
 {
 public:
   typedef std::map<std::string, RedisClient*> Pool;
