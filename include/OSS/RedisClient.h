@@ -542,7 +542,7 @@ public:
 
     }
     std::string status = getStatusString(args);
-
+    OSS::string_to_lower(status);
     if (!status.empty() && status != "ok")
     {
       OSS_LOG_ERROR("[REDIS]  RedisClient::Get ERROR: " << status);
