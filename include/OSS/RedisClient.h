@@ -425,10 +425,19 @@ public:
         args.push_back(boost::lexical_cast<std::string>(expires));
         args.push_back(value);
       }
-      catch(...){}
+      catch(const std::exception& e)
+      {
+        OSS_LOG_ERROR("RedisClient::Set ERROR: " << e.what());
+      }
 
     }
     std::string status = getStatusString(args);
+
+    if (status != "ok")
+    {
+      OSS_LOG_ERROR("RedisClient::Get ERROR: " << status);
+    }
+
     return status == "ok";
   }
 
