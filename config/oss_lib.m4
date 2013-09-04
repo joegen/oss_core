@@ -82,11 +82,21 @@ AC_DEFUN([SFAC_AUTOMAKE_VERSION],[
 # for both the INC and LIB paths 
 # AND the paths are added to the CFLAGS and CXXFLAGS
 
+AC_DEFUN([SF_MISSING_DEP],[
+  if test "x$enable_dep_check" != "xno"; then
+    AC_MSG_ERROR([$1])
+  fi
+])
+
 
 AC_DEFUN([SFAC_LIB_CORE_FLAGS],
 [
     AC_REQUIRE([SFAC_INIT_FLAGS])
     AC_REQUIRE([CHECK_SSL])
+
+    AC_ARG_ENABLE(dep-check,
+      AS_HELP_STRING([--disable-dep-check],
+      [Do not check for dependencies other then those required for dist target]))
 
     OSSLIBSCOREINC=$foundpath
     CFLAGS="-I${prefix}/include $CFLAGS"
@@ -106,14 +116,14 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     #
     # Check if iproute2 is installed
     #
-    AC_CHECK_FILE(/sbin/ip, [OSS_IP_ROUTE_2="/sbin/ip"], [AC_MSG_ERROR("Install iproute2 package")])
+    AC_CHECK_FILE(/sbin/ip, [OSS_IP_ROUTE_2="/sbin/ip"], [SF_MISSING_DEP("Install iproute2 package")])
     AC_SUBST(OSS_IP_ROUTE_2)
     CXXFLAGS="-DOSS_IP_ROUTE_2=\\\"$OSS_IP_ROUTE_2\\\" $CXXFLAGS"
 
     #
     # Check if iptables is installed
     #
-    AC_CHECK_FILE(/sbin/iptables, [OSS_IP_TABLES="/sbin/iptables"], [AC_MSG_ERROR("Install iptables package")])
+    AC_CHECK_FILE(/sbin/iptables, [OSS_IP_TABLES="/sbin/iptables"], [SF_MISSING_DEP("Install iptables package")])
     AC_SUBST(OSS_IP_TABLES)
     CXXFLAGS="-DOSS_IP_TABLES=\\\"$OSS_IP_TABLES\\\" $CXXFLAGS"
 
@@ -121,7 +131,7 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
         [BOOST_LIBS="-lboost_date_time-mt -lboost_filesystem-mt -lboost_system-mt -lboost_thread-mt -lboost_program_options-mt -lboost_iostreams-mt -lboost_regex-mt"],
         [AC_CHECK_LIB(boost_thread, main,
         [BOOST_LIBS="-lboost_date_time -lboost_filesystem -lboost_system -lboost_thread -lboost_program_options -lboost_iostreams -lboost_regex"],
-        [AC_MSG_ERROR("no boost thread found")])])
+        [SF_MISSING_DEP("no boost thread found")])])
     AC_CHECK_LIB(boost_random-mt, main, [BOOST_LIBS="$BOOST_LIBS -lboost_random-mt"],
         [AC_CHECK_LIB(boost_random, main,
         [BOOST_LIBS="$BOOST_LIBS -lboost_random"])])
@@ -130,30 +140,30 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
 
     AC_CHECK_LIB(PocoFoundation, main,
         [POCO_LIBS="-lPocoFoundation -lPocoUtil -lPocoNet -lPocoXML"],
-        [AC_MSG_ERROR("Poco C++ Library not found")])
-    AC_CHECK_LIB(PocoUtil, main,[], [AC_MSG_ERROR("PocoUtil C++ Library not found")])
-    AC_CHECK_LIB(PocoNet, main,[], [AC_MSG_ERROR("PocoNet C++ Library not found")])
-    AC_CHECK_LIB(PocoXML, main,[], [AC_MSG_ERROR("PocoXML C++ Library not found")])
+        [SF_MISSING_DEP("Poco C++ Library not found")])
+    AC_CHECK_LIB(PocoUtil, main,[], [SF_MISSING_DEP("PocoUtil C++ Library not found")])
+    AC_CHECK_LIB(PocoNet, main,[], [SF_MISSING_DEP("PocoNet C++ Library not found")])
+    AC_CHECK_LIB(PocoXML, main,[], [SF_MISSING_DEP("PocoXML C++ Library not found")])
     AC_SUBST(POCO_LIBS)
 
-    AC_CHECK_LIB(hiredis, main, [], [AC_MSG_ERROR("Redis client library not found")])
-    AC_CHECK_LIB(config++, main, [], [AC_MSG_ERROR("libconfig C++ library not found")])
-    AC_CHECK_LIB(v8, main, [], [AC_MSG_ERROR("Google V8 Javascript engine not found")])
-    AC_CHECK_LIB(gtest, main, [], [AC_MSG_ERROR("Google Test Framework not found")])
-    AC_CHECK_LIB(ltdl, main, [], [AC_MSG_ERROR("libltdl not found")])
-    AC_CHECK_LIB(mcrypt, main, [], [AC_MSG_ERROR("Mcrypt Encryption Library not found")])
-    AC_CHECK_LIB(ssl, main, [], [AC_MSG_ERROR("SSL Development Library not found")])
-    AC_CHECK_LIB(crypto, main, [], [AC_MSG_ERROR("libcrypto not found")])
-    AC_CHECK_LIB(pthread, main, [], [AC_MSG_ERROR("libpthread not found")])
-    AC_CHECK_LIB(dl, main, [], [AC_MSG_ERROR("libdl not found")])
-    AC_CHECK_LIB(rt, main, [], [AC_MSG_ERROR("librt not found")])
-    AC_CHECK_LIB(crypt, main, [], [AC_MSG_ERROR("libcrypt not found")])
-    AC_CHECK_LIB(resolv, main, [], [AC_MSG_ERROR("libresolv not found")])
-    AC_CHECK_LIB(pcap, main, [], [AC_MSG_ERROR("libpcap not found")])
-    AC_CHECK_LIB(gtest, main, [], [AC_MSG_ERROR("Google Test Framework not found")])
-    AC_CHECK_LIB(xmlrpc, main, [], [AC_MSG_ERROR("XML RPC C Foundation classes not found")])
-    AC_CHECK_LIB(xmlrpc_client++, main, [], [AC_MSG_ERROR("XML RPC C++ client classes not found")])
-    AC_CHECK_LIB(xmlrpc_server_abyss++, main, [], [AC_MSG_ERROR("XML RPC C++ server classes not found")])
+    AC_CHECK_LIB(hiredis, main, [], [SF_MISSING_DEP("Redis client library not found")])
+    AC_CHECK_LIB(config++, main, [], [SF_MISSING_DEP("libconfig C++ library not found")])
+    AC_CHECK_LIB(v8, main, [], [SF_MISSING_DEP("Google V8 Javascript engine not found")])
+    AC_CHECK_LIB(gtest, main, [], [SF_MISSING_DEP("Google Test Framework not found")])
+    AC_CHECK_LIB(ltdl, main, [], [SF_MISSING_DEP("libltdl not found")])
+    AC_CHECK_LIB(mcrypt, main, [], [SF_MISSING_DEP("Mcrypt Encryption Library not found")])
+    AC_CHECK_LIB(ssl, main, [], [SF_MISSING_DEP("SSL Development Library not found")])
+    AC_CHECK_LIB(crypto, main, [], [SF_MISSING_DEP("libcrypto not found")])
+    AC_CHECK_LIB(pthread, main, [], [SF_MISSING_DEP("libpthread not found")])
+    AC_CHECK_LIB(dl, main, [], [SF_MISSING_DEP("libdl not found")])
+    AC_CHECK_LIB(rt, main, [], [SF_MISSING_DEP("librt not found")])
+    AC_CHECK_LIB(crypt, main, [], [SF_MISSING_DEP("libcrypt not found")])
+    AC_CHECK_LIB(resolv, main, [], [SF_MISSING_DEP("libresolv not found")])
+    AC_CHECK_LIB(pcap, main, [], [SF_MISSING_DEP("libpcap not found")])
+    AC_CHECK_LIB(gtest, main, [], [SF_MISSING_DEP("Google Test Framework not found")])
+    AC_CHECK_LIB(xmlrpc, main, [], [SF_MISSING_DEP("XML RPC C Foundation classes not found")])
+    AC_CHECK_LIB(xmlrpc_client++, main, [], [SF_MISSING_DEP("XML RPC C++ client classes not found")])
+    AC_CHECK_LIB(xmlrpc_server_abyss++, main, [], [SF_MISSING_DEP("XML RPC C++ server classes not found")])
 
 
     OSS_CORE_DEP_LIBS=""
@@ -184,18 +194,25 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     AC_CHECK_LIB([event_pthreads], [main], [], libevent_thread_found=no)
 
     AM_CONDITIONAL([ENABLE_TURN], false)
-    if test "x$libevent_thread" = "xno" -a "x$libevent_thread" = "xno"; then
-        echo "libevent 2 not found.  Disabling TURN compilation"
-    else
-        if test "x$libevent_thread_found" = "xno" -a "x$libevent_thread_found" = "xno"; then
+
+    AC_ARG_ENABLE(turn,
+      AC_HELP_STRING([--enable-turn], [Build TURN Server]),
+      enable_turn=yes)
+
+    if test "x$enable_turn" == "xyes"; then
+        if test "x$libevent_thread" = "xno" -a "x$libevent_thread" = "xno"; then
             echo "libevent 2 not found.  Disabling TURN compilation"
         else
-            if test "x$libevent_ssl_found" = "xno" -a "x$libevent_ssl_found" = "xno"; then
-               echo "libevent 2 not found.  Disabling TURN compilation"
+            if test "x$libevent_thread_found" = "xno" -a "x$libevent_thread_found" = "xno"; then
+                echo "libevent 2 not found.  Disabling TURN compilation"
             else
-               echo "TURN compilation enabled"
-               AM_CONDITIONAL([ENABLE_TURN], true)
-               AC_DEFINE([ENABLE_TURN], [1], [Flags TURN compilation due to the presence of libevent 2])
+                if test "x$libevent_ssl_found" = "xno" -a "x$libevent_ssl_found" = "xno"; then
+                   echo "libevent 2 not found.  Disabling TURN compilation"
+                else
+                   echo "TURN compilation enabled"
+                   AM_CONDITIONAL([ENABLE_TURN], true)
+                   AC_DEFINE([ENABLE_TURN], [1], [Flags TURN compilation due to the presence of libevent 2])
+                fi
             fi
         fi
     fi
@@ -206,18 +223,6 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
 
 AC_DEFUN([SFAC_LIB_CORE],
 [
-    SFAC_ARG_WITH_INCLUDE([OSS/Core.h],
-            [osscoreinc],
-            [ --with-osscoreinc=<dir> portability include path ],
-            [oss_coreLib])
-
-    if test x_$foundpath != x_; then
-        AC_MSG_RESULT($foundpath)
-        OSSLIBSCOREINC=$foundpath
-        CFLAGS="-I$OSSLIBSCOREINC $CFLAGS"
-        CXXFLAGS="-I$OSSLIBSCOREINC $CXXFLAGS"
-    fi
-    
     foundpath=""
 
     SFAC_ARG_WITH_INCLUDE([OSS/Core.h],
@@ -266,19 +271,25 @@ AC_DEFUN([SFAC_LIB_CORE],
     fi
     AC_SUBST(LIB_OSS_CARP_LA, "$foundpath/liboss_carp.la")
 
-    foundpath=""
-    SFAC_ARG_WITH_LIB([liboss_turn.la],
-            [ossturnlib],
-            [ --with-ossturnlib=<dir> turn library path ],
-            [oss_turnLib])
+    AC_ARG_ENABLE(turn,
+      AC_HELP_STRING([--enable-turn], [Build TURN Server]),
+      enable_turn=yes)
 
-    if test x_$foundpath != x_; then
-        AC_MSG_RESULT($foundpath)
-    else
-        AC_MSG_WARN([    assuming it will be in '${prefix}/lib'])
-        foundpath=${prefix}/lib
+    if test "x$enable_turn" == "xyes"; then
+        foundpath=""
+        SFAC_ARG_WITH_LIB([liboss_turn.la],
+                [ossturnlib],
+                [ --with-ossturnlib=<dir> turn library path ],
+                [oss_turnLib])
+
+        if test x_$foundpath != x_; then
+            AC_MSG_RESULT($foundpath)
+        else
+            AC_MSG_WARN([    assuming it will be in '${prefix}/lib'])
+            foundpath=${prefix}/lib
+        fi
+        AC_SUBST(LIB_OSS_TURN_LA, "$foundpath/liboss_turn.la")
     fi
-    AC_SUBST(LIB_OSS_TURN_LA, "$foundpath/liboss_turn.la")
 
     AC_REQUIRE([SFAC_LIB_CORE_FLAGS])
 
