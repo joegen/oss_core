@@ -137,6 +137,8 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
         [BOOST_LIBS="$BOOST_LIBS -lboost_random"])])
     AC_SUBST(BOOST_LIBS)
 
+    CXXFLAGS="-DBOOST_THREAD_DONT_USE_CHRONO $CXXFLAGS"
+
 
     AC_CHECK_LIB(PocoFoundation, main,
         [POCO_LIBS="-lPocoFoundation -lPocoUtil -lPocoNet -lPocoXML"],
