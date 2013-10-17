@@ -64,6 +64,7 @@ SIPTransaction::SIPTransaction(SIPTransaction::Ptr pParent) :
 {
   _id = pParent->getId();
   _logId = pParent->getLogId();
+  _pInitialRequest = pParent->getInitialRequest();
   std::ostringstream logMsg;
   logMsg << _logId << getTypeString() << " " << _id << " CREATED";
   OSS::log_debug(logMsg.str());
