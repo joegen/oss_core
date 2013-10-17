@@ -1763,15 +1763,9 @@ void SIPB2BScriptableHandler::handleOptionsResponse(
   //
   // Only report errors to the queue
   //
-#define FORKING_ENABLED 1
-
-  if (e)
+  if ((pMsg && pMsg->is4xx(480)) || e)
   {
-#ifdef FORKING_ENABLED
     SIPMessage::Ptr pRequest = pTransaction->getInitialRequest();
-#else
-    SIPMessage::Ptr pRequest = pTransaction->fsm()->getRequest();
-#endif
     SIPFrom from = pRequest->hdrGet("from");
     std::string user = from.getUser();
     if (user != "exit")
