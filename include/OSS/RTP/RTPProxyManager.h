@@ -188,6 +188,9 @@ public:
 
   void disable();
     /// Disable the RTP proxy.
+  
+  void alwaysProxyMedia(bool alwaysProxyMedia = true);
+    /// Global flag to always enable media proxying regardless of the handler option parameter
 private:
   boost::asio::io_service _ioService;
   mutable OSS::mutex_critic_sec _sessionListMutex;
@@ -213,6 +216,7 @@ private:
   unsigned short _rpcServerPort;
   bool _persistStateFiles;
   bool _enabled;
+  bool _alwaysProxyMedia;
 
   friend class RTPProxy;
   friend class RTPProxySession;
@@ -295,6 +299,11 @@ inline bool RTPProxyManager::persistStateFiles() const
 inline void RTPProxyManager::disable()
 {
   _enabled = false;
+}
+
+inline void RTPProxyManager::alwaysProxyMedia(bool alwaysProxyMedia)
+{
+  _alwaysProxyMedia = alwaysProxyMedia;
 }
 
 } } //OSS::RTP

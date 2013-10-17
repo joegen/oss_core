@@ -135,7 +135,8 @@ RTPProxyManager::RTPProxyManager(int houseKeepingInterval) :
   _pRpcServer(0),
   _rpcServerPort(0),
   _persistStateFiles(false),
-  _enabled(true)
+  _enabled(true),
+  _alwaysProxyMedia(false)
 {
 }
 
@@ -303,6 +304,9 @@ void RTPProxyManager::handleSDP(
 
   bool verbose = rtpAttribute.verbose;
   
+  if (_alwaysProxyMedia)
+    rtpAttribute.forceCreate = true;
+  
   RTPProxySession::Ptr proxy;
   if (requestType == RTPProxySession::INVITE || requestType == RTPProxySession::INVITE_RESPONSE)
   {
@@ -423,7 +427,7 @@ void RTPProxyManager::handleSDP(const std::string& /*method*/,
     attr.to = attr_to.Value();
     attr.verbose = attr_verbose.Value();
     attr.isRemoteRpc = true;
-
+    
     handleSDP(logId_, sessionId_, sentBy_, packetSourceIP_, packetLocalInterface_, route_, routeLocalInterface_, requestType_, sdp_, attr);
 
     response["sdp"] = json::String(sdp_);
