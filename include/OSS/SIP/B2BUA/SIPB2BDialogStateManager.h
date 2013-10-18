@@ -111,6 +111,13 @@ protected:
   void populateFromStore();
 
   void updateSessionAge();
+  
+  void encodeRouteSet(  DialogData::LegInfo* pLeg,
+                      const std::string& method,
+                      const SIPFrom& remoteContact,
+                      const SIPMessage::Ptr& pMsg,
+                      std::string& transportScheme,
+                      OSS::IPAddress& targetAddress  );
 
 public:
   SIPMessage::Ptr onMidDialogTransactionCreated(

@@ -960,6 +960,58 @@ void SIPB2BDialogStateManager::onUpdateMidCallUACState(
   }
 }
 
+void SIPB2BDialogStateManager::encodeRouteSet(  DialogData::LegInfo* pLeg,
+                      const std::string& method,
+                      const SIPFrom& remoteContact,
+                      const SIPMessage::Ptr& pMsg,
+                      std::string& transportScheme,
+                      OSS::IPAddress& targetAddress  )
+{
+  if (pLeg->routeSet.size() > 0)
+  {
+    int topRouteIndex = pLeg->routeSet.size() - 1;
+    
+    SIPFrom topRoute = pLeg->routeSet[topRouteIndex];
+    bool strictRoute = topRoute.data().find(";lr") == std::string::npos;
+    if (strictRoute)
+    {
+      std::ostringstream sline;
+      sline << method << " " << topRoute.getURI() << " SIP/2.0";
+      pMsg->startLine() = sline.str();
+      std::ostringstream newRoute;
+      newRoute << "<" << remoteContact.getURI() << ">";
+      pLeg->routeSet[topRouteIndex] = newRoute.str();
+    }
+
+    for (std::vector<std::string>::iterator iter = pLeg->routeSet.begin();
+      iter != pLeg->routeSet.end(); iter++)
+    {
+      SIPRoute::msgAddRoute(pMsg.get(), *iter);
+    }
+
+    SIPURI topRouteURI = topRoute.getURI();
+
+    std::string host;
+    unsigned short port = 0;
+    topRouteURI.getHostPort(host, port);
+
+    OSS::dns_host_record_list hosts = OSS::dns_lookup_host(host);
+    if (!hosts.empty())
+    {
+      if (port == 0)
+        port = 5060;
+      targetAddress = *(hosts.begin());
+      targetAddress.setPort(port);
+      std::string scheme;
+      if (topRouteURI.getParam("transport", scheme))
+      {
+        transportScheme = scheme;
+        boost::to_upper(transportScheme);
+      }
+    }
+  }
+}
+
 SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
   SIPMessage::Ptr& pMsg,
   SIPB2BTransaction::Ptr pTransaction,
@@ -1093,49 +1145,9 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
       branch);
 
     pMsg->hdrSet("Via", via.c_str());
-
-    if (pLeg->routeSet.size() > 0)
-    {
-      SIPFrom topRoute = pLeg->routeSet[0];
-      bool strictRoute = topRoute.data().find(";lr") == std::string::npos;
-      if (strictRoute)
-      {
-        std::ostringstream sline;
-        sline << method << " " << topRoute.getURI() << " SIP/2.0";
-        pMsg->startLine() = sline.str();
-        std::ostringstream newRoute;
-        newRoute << "<" << remoteContact.getURI() << ">";
-        pLeg->routeSet[0] = newRoute.str();
-      }
-
-      for (std::vector<std::string>::iterator iter = pLeg->routeSet.begin();
-        iter != pLeg->routeSet.end(); iter++)
-      {
-        SIPRoute::msgAddRoute(pMsg.get(), *iter);
-      }
-
-      SIPURI topRouteURI = topRoute.getURI();
-
-      std::string host;
-      unsigned short port = 0;
-      topRouteURI.getHostPort(host, port);
-
-      OSS::dns_host_record_list hosts = OSS::dns_lookup_host(host);
-      if (!hosts.empty())
-      {
-        if (port == 0)
-          port = 5060;
-        targetAddress = *(hosts.begin());
-        targetAddress.setPort(port);
-        std::string scheme;
-        if (topRouteURI.getParam("transport", scheme))
-        {
-          transportScheme = scheme;
-          boost::to_upper(transportScheme);
-        }
-      }
-    }
-
+    
+    encodeRouteSet(pLeg, method, remoteContact, pMsg, transportScheme, targetAddress);
+    
     //
     // User request URI if no route is set
     //
@@ -1317,47 +1329,7 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
     SIPCSeq cseq = pMsg->hdrGet("cseq");
     cseq.setMethod("INVITE");
 
-    std::vector<std::string> routeList = pLeg->routeSet;
-    if (routeList.size() > 0)
-    {
-      SIPFrom topRoute = routeList[0];
-      bool strictRoute = topRoute.data().find(";lr") == std::string::npos;
-      if (strictRoute)
-      {
-        std::ostringstream sline;
-        sline << "ACK " << topRoute.getURI() << " SIP/2.0";
-        pMsg->startLine() = sline.str();
-        std::ostringstream newRoute;
-        newRoute << "<" << remoteContact.getURI() << ">";
-        routeList[0] = newRoute.str();
-      }
-
-      for (std::vector<std::string>::iterator iter = routeList.begin();
-        iter != routeList.end(); iter++)
-      {
-        SIPRoute::msgAddRoute(pMsg.get(), *iter);
-      }
-
-      SIPURI topRouteURI = topRoute.getURI();
-
-      std::string host;
-      unsigned short port = 0;
-      topRouteURI.getHostPort(host, port);
-
-      OSS::dns_host_record_list hosts = OSS::dns_lookup_host(host);
-      if (!hosts.empty())
-      {
-        if (port == 0)
-          port = 5060;
-        OSS_LOG_INFO("Setting target from route Address: " << host << " Port: " << port);
-        targetAddress = *(hosts.begin());
-        targetAddress.setPort(port);
-        std::string scheme;
-        if (topRouteURI.getParam("transport", scheme))
-          transportScheme = scheme;
-        boost::to_upper(transportScheme);
-      }
-    }
+    encodeRouteSet(pLeg, "ACK", remoteContact, pMsg, transportScheme, targetAddress);
 
     //
     // Use request URI if no route is set
