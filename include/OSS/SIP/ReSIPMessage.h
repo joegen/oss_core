@@ -48,7 +48,7 @@ namespace SIP {
     explicit ReSIPMessage(const resip::SipMessage& packet)
     {
       std::ostringstream strm;
-      packet.encode(strm);
+      strm << packet;
       _data = strm.str();
       parse();
     }
@@ -56,7 +56,7 @@ namespace SIP {
     ReSIPMessage& operator=(const resip::SipMessage& packet)
     {
       std::ostringstream strm;
-      packet.encode(strm);
+      strm << packet;
       _data = strm.str();
 
       _finalized = false;
