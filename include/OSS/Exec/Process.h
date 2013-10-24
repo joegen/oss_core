@@ -85,6 +85,7 @@ public:
   static void killAllDefunct(const std::string& process);
   bool isAlive() const;
   bool& noChild();
+  void setInitializeWait(unsigned int ms);
 protected:
   void internalExecuteAndMonitor(int intialWait);
   std::string _processName;
@@ -108,7 +109,7 @@ protected:
   bool _monitored;
   bool _isAlive;
   bool _noChild;
-
+  unsigned int _initWait;
 };
 
 //
@@ -123,6 +124,11 @@ inline bool Process::isAlive() const
 inline bool& Process::noChild()
 {
   return _noChild;
+}
+
+inline void Process::setInitializeWait(unsigned int ms)
+{
+  _initWait = ms;
 }
 
 } }  // OSS::Exec

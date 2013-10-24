@@ -43,6 +43,8 @@
 #include <signal.h>
 
 
+#define PROC_INIT_WAIT 10000
+
 
 namespace OSS {
 namespace Exec {
@@ -175,7 +177,8 @@ Process::Process(const std::string& processName, const std::string& startupComma
   _unmonitor(false),
   _monitored(false),
   _isAlive(false),
-  _noChild(false)
+  _noChild(false),
+  _initWait(0)
 {
   
 }
@@ -206,9 +209,11 @@ pid_t Process::pollPid(const std::string& process, const std::string& pidFile, i
         {
           procd << "/status";
           std::string procName;
-          if (getStatusHeader(procd.str().c_str(), "name", procName) && procName == process)
-            return pid;
 
+          if (getStatusHeader(procd.str().c_str(), "name", procName) && OSS::string_starts_with(process, procName.c_str()));
+          {
+            return pid;
+          }
         }
       }
     }
@@ -369,7 +374,7 @@ bool Process::exists(double& currentMem, double& currentCpu)
     procd << "/status";
     std::string procName;
     if (!_processName.empty())
-      ok = (getStatusHeader(procd.str().c_str(), "name", procName) && procName == _processName);
+      ok = (getStatusHeader(procd.str().c_str(), "name", procName) && OSS::string_starts_with(_processName, procName.c_str()));
     else
       ok = true;
   }
@@ -516,7 +521,7 @@ int Process::countProcessInstances(const std::string& process)
       {
         boost::filesystem::path statusFile = operator/(iter->path(), "status");
         std::string procName;
-        if (getStatusHeader(OSS::boost_path(statusFile), "name", procName) && procName == process)
+        if (getStatusHeader(OSS::boost_path(statusFile), "name", procName) && OSS::string_starts_with(process, procName.c_str()))
         {
           ++instances;
         }
@@ -540,7 +545,7 @@ pid_t Process::getProcessId(const std::string& process, bool /*includeDefunct*/)
 
       boost::filesystem::path statusFile = operator/(iter->path(), "status");
       std::string procName;
-      if (getStatusHeader(OSS::boost_path(statusFile), "name", procName) && procName == process)
+      if (getStatusHeader(OSS::boost_path(statusFile), "name", procName) && OSS::string_starts_with(process, procName.c_str()))
         return OSS::string_to_number<pid_t>(OSS::boost_file_name(iter->path()).c_str());
     }
   }
@@ -568,7 +573,7 @@ void Process::killAll(const std::string& process, int signal)
       {
         boost::filesystem::path statusFile = operator/(iter->path(), "status");
         std::string procName;
-        if (getStatusHeader(OSS::boost_path(statusFile), "name", procName) && procName == process)
+        if (getStatusHeader(OSS::boost_path(statusFile), "name", procName) && OSS::string_starts_with(process, procName.c_str()))
           ::kill(OSS::string_to_number<pid_t>(OSS::boost_file_name(iter->path()).c_str()), signal);
       }
     }
@@ -590,7 +595,7 @@ bool Process::executeAndMonitor()
   _maxCpuUsage = 0.0;
   _maxMemUsage = 0.0;
 
-  _pMonitorThread = new boost::thread(boost::bind(&Process::internalExecuteAndMonitor, this, 5000));
+  _pMonitorThread = new boost::thread(boost::bind(&Process::internalExecuteAndMonitor, this, _initWait ? _initWait : PROC_INIT_WAIT));
 
   return true;
 }
@@ -606,7 +611,7 @@ bool Process::executeAndMonitorMem(double maxMemPercent)
   _maxCpuUsage = 0.0;
   _maxMemUsage = maxMemPercent;
 
-  _pMonitorThread = new boost::thread(boost::bind(&Process::internalExecuteAndMonitor, this, 5000));
+  _pMonitorThread = new boost::thread(boost::bind(&Process::internalExecuteAndMonitor, this, _initWait ? _initWait : PROC_INIT_WAIT));
 
   return true;
 }
@@ -622,7 +627,7 @@ bool Process::executeAndMonitorCpu(double maxCpuPercent)
   _maxCpuUsage = maxCpuPercent;
   _maxMemUsage = 0.0;
 
-  _pMonitorThread = new boost::thread(boost::bind(&Process::internalExecuteAndMonitor, this, 5000));
+  _pMonitorThread = new boost::thread(boost::bind(&Process::internalExecuteAndMonitor, this, _initWait ? _initWait : PROC_INIT_WAIT));
 
   return true;
 }
@@ -638,7 +643,7 @@ bool Process::executeAndMonitorMemCpu(double maxMemPercent, double maxCpuPercent
   _maxCpuUsage = maxCpuPercent;
   _maxMemUsage = maxCpuPercent;
 
-  _pMonitorThread = new boost::thread(boost::bind(&Process::internalExecuteAndMonitor, this, 5000));
+  _pMonitorThread = new boost::thread(boost::bind(&Process::internalExecuteAndMonitor, this, _initWait ? _initWait : PROC_INIT_WAIT));
 
   return true;
 }

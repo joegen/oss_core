@@ -143,10 +143,10 @@ public:
     {
       if (_type == TCP)
       {
-        OSS_LOG_ERROR("[REDIS] Connected to tcp:" << _tcpHost << ":" << _tcpPort);
+        OSS_LOG_INFO("[REDIS] Connected to tcp:" << _tcpHost << ":" << _tcpPort);
       }else if (_type == UNIX)
       {
-        OSS_LOG_ERROR("[REDIS] Connected to unix:" << _unixSocketPath);
+        OSS_LOG_INFO("[REDIS] Connected to unix:" << _unixSocketPath);
       }
     }
 
