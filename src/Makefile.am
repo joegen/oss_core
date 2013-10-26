@@ -152,6 +152,7 @@ liboss_core_la_SOURCES =  \
     StackTrace.cpp \
     exec/Command.cpp \
     exec/Process.cpp \
+    exec/ManagedDaemon.cpp \
     exec/stringtoargcargv.cpp \
     abnf/ABNFSIPURIParameter.cpp \
     abnf/ABNFSIPScheme.cpp \
