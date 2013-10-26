@@ -33,6 +33,7 @@ nobase_include_HEADERS = \
     OSS/IPCQueue.h \
     OSS/Exec/Process.h \
     OSS/Exec/Command.h \
+    OSS/Exec/ManagedDaemon.h \
     OSS/Exec/pstream.h \
     OSS/Exec/stringtoargcargv.h \
     OSS/ABNF/ABNFSIPUserInfo.h \
