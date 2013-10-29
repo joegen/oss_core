@@ -532,7 +532,7 @@ int Process::countProcessInstances(const std::string& process)
 }
 
 
-pid_t Process::getProcessId(const std::string& process, bool /*includeDefunct*/)
+pid_t Process::getProcessId(const std::string& process)
 {
   if ( !boost::filesystem::exists("/proc"))
     return -1;

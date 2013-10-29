@@ -26,11 +26,17 @@
 //
 
 
+#include "OSS/Core.h"
+#include "OSS/Logger.h"
 #include "OSS/Exec/ManagedDaemon.h"
 
 
 namespace OSS {
 namespace Exec {
+
+
+const int STOP_YIELD_TIME = 100; /// yield time in milliseconds
+const int STOP_MAX_YIELD_TIME = 15000; /// maximum yield time in milliseconds
 
 
 ManagedDaemon::ManagedDaemon(
@@ -46,40 +52,75 @@ ManagedDaemon::ManagedDaemon(
     _runDirectory(runDirectory),
     _pProcess(0)
 {
+  boost::filesystem::path path(_path.c_str());
+  std::string prog = OSS::boost_file_name(path);
+  
+  if (prog.empty())
+  {
+    OSS_LOG_ERROR("ManagedDaemon::ManagedDaemon - Unable to parse executable from " << _path);
+    return;
+  }
+  
+  //Process(const std::string& processName, const std::string& startupCommand, const std::string& shutdownCommand = "", const std::string& pidFile = "");
+  _pProcess = new Process(prog, startupScript, shutdownScript, pidFile);
+    
 }
 
 ManagedDaemon::~ManagedDaemon()
 {
+  stop();
+  delete _pProcess;
 }
   
-bool ManagedDaemon::isAlive() const
-{
-  return false;
-}
-
-int ManagedDaemon::getPid() const
-{
-  return -1;
-}
-
 bool ManagedDaemon::readMessage(std::string& message, bool blocking)
-{
-  return false;
-}
-
-bool ManagedDaemon::stop()
 {
   return false;
 }
 
 bool ManagedDaemon::start()
 {
-  return false;
+  OSS_ASSERT(_pProcess);
+  stop(); /// stop all lingering process
+  return _pProcess->executeAndMonitor();
 }
+
+bool ManagedDaemon::stop()
+{
+  //
+  // Unmonitor the process so it doesn't get restarted
+  //
+  _pProcess->unmonitor();
+  
+  //
+  // Send the process a SIGTERM
+  //
+  Process::killAll(_alias, SIGTERM);
+  int totalYieldTime = 0;
+  for (pid_t pid = getProcessId(); (pid = getProcessId()) == -1 && totalYieldTime < STOP_MAX_YIELD_TIME; totalYieldTime += STOP_YIELD_TIME)
+  {
+    OSS::thread_sleep(STOP_YIELD_TIME); // sleep for 100 milliseconds
+  }
+  
+  //
+  // Send the process a SIGKILL
+  //
+  Process::killAll(_alias, SIGKILL);
+  totalYieldTime = 0;
+  for (pid_t pid = getProcessId(); (pid = getProcessId()) == -1 && totalYieldTime < STOP_MAX_YIELD_TIME; totalYieldTime += STOP_YIELD_TIME)
+  {
+    OSS::thread_sleep(STOP_YIELD_TIME); // sleep for 100 milliseconds
+  }
+
+  return getProcessId() == -1;
+}
+
+
 
 bool ManagedDaemon::restart()
 {
-  return false;
+  if (!stop())
+    return false;
+  return start();
 }
 
 Process::Action ManagedDaemon::onDeadProcess(int consecutiveCount)

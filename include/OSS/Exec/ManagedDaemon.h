@@ -65,7 +65,7 @@ public:
   ///  true : Process is running
   ///  false : Process is dead
   
-  int getPid() const;
+  pid_t getProcessId() const;
   /// Description: Get the PID of the running process
   /// Returns:
   ///   - None Zero positive integer if the process is running
@@ -82,20 +82,28 @@ public:
   ///   - false : If there are no message in the queue
   ///   - true : If an IPC message has been read
   
-  bool stop();
-  /// Description: Stops the running process.
-  /// Returns:
-  ///   - true : Successful operation
-  ///   - false : Unable to stop the running process
-  
   bool start();
   /// Description: Starts the running process.
   /// Returns:
   ///   - true : Successful operation
   ///   - false : Unable to start the process 
   
+  bool stop();
+  /// Description: Stops the running process.  Sends a SIGTERM first then 
+  ///   sends a SIGKILL if the process lingers
+  /// Returns:
+  ///   - true : Successful operation
+  ///   - false : Unable to stop the running process
+  
+  bool shutdown();
+  /// Description:  Like stop() except that this function used the shutdown 
+  ///   script to terminate the process then sends a SIGKILL if the process lingers.
+  /// Returns:
+  ///   - true : Successful operation
+  ///   - false : Unable to stop the running process
+  
   bool restart();
-  /// Description:  Restarts a running process
+  /// Description:  Restarts a running process.  This is equivalent to calling stop() followed by a start()
   /// Returns:
   ///   - true : Successful operation
   ///   - false : Unable to start the process 
@@ -151,6 +159,23 @@ inline const std::string& ManagedDaemon::getPath() const
 inline const std::string& ManagedDaemon::getRunDirectory() const
 {
   return _runDirectory;
+}
+
+inline bool ManagedDaemon::isAlive() const
+{
+  OSS_ASSERT(_pProcess);
+  return _pProcess->isAlive();
+}
+
+inline pid_t ManagedDaemon::getProcessId() const
+{
+  return Process::getProcessId(_alias);
+}
+
+inline bool ManagedDaemon::shutdown()
+{
+  OSS_ASSERT(_pProcess);
+  return _pProcess->shutDown(SIGKILL);
 }
 
 } } // OSS::Exec

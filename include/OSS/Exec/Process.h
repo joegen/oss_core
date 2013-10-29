@@ -80,12 +80,13 @@ public:
   Action onCpuViolation(int consecutiveHits, double cpu);
 
   static int countProcessInstances(const std::string& process);
-  static int getProcessId(const std::string& process, bool includeDefunct = false);
+  static int getProcessId(const std::string& process);
   static void killAll(const std::string& process, int signal);
   static void killAllDefunct(const std::string& process);
   bool isAlive() const;
   bool& noChild();
   void setInitializeWait(unsigned int ms);
+  pid_t getPID() const;
 protected:
   void internalExecuteAndMonitor(int intialWait);
   std::string _processName;
@@ -129,6 +130,11 @@ inline bool& Process::noChild()
 inline void Process::setInitializeWait(unsigned int ms)
 {
   _initWait = ms;
+}
+
+inline pid_t Process::getPID() const
+{
+  return _pid;
 }
 
 } }  // OSS::Exec
