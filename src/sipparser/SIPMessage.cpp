@@ -47,7 +47,7 @@ static ABNFEvaluate<ABNFSIPStatusLine> statusLineVerify;
 
 SIPMessage::SIPMessage() :
   _consumeState(IDLE),
-  _finalized(false),
+  _finalized(true),
   _headerOffSet(0),
   _expectedBodyLen(0),
   _isResponse(boost::indeterminate),

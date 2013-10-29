@@ -393,7 +393,7 @@ SIPMessage::Ptr SIPB2BTransactionManager::onProcessRequestBody(
   {
     return _pDefaultHandler->onProcessRequestBody(pRequest, pTransaction);
   }
-  return pRequest->createResponse(405, "No Corresponding Handler");
+  return SIPMessage::Ptr();
 }
 
 void SIPB2BTransactionManager::onProcessResponseBody(
