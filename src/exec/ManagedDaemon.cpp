@@ -31,6 +31,13 @@
 #include "OSS/Exec/ManagedDaemon.h"
 
 
+std::string get_queue_path(char type, const std::string& runDir, const std::string& alias)
+{
+  std::ostringstream path;
+  path << runDir << "/" << alias << "-" << type << "-" << DAEMON_IPC_QUEUE_SUFFIX;
+  return path.str();
+}
+
 namespace OSS {
 namespace Exec {
 
@@ -47,6 +54,7 @@ ManagedDaemon::ManagedDaemon(
   const std::string& shutdownScript,
   const std::string& pidFile,
   int maxRestart) :
+    IPCJsonBidirectionalQueue(get_queue_path('r', runDirectory, alias), get_queue_path('w', runDirectory, alias)),
     _path(executablePath),
     _alias(alias),
     _runDirectory(runDirectory),
@@ -129,6 +137,13 @@ Process::Action ManagedDaemon::onDeadProcess(int consecutiveCount)
     return Process::ProcessRestart;
   else
     return Process::ProcessBackoff;
+}
+
+void ManagedDaemon::onReceivedIPCMessage(const json::Object& params)
+{
+  //
+  // Does nothing
+  //
 }
   
 } } // OSS::Exec

@@ -29,6 +29,9 @@
 #include <cstring>
 #include <iostream>
 
+#include <boost/thread.hpp>
+#include <boost/noncopyable.hpp>
+
 #include "OSS/JSON/reader.h"
 #include "OSS/JSON/writer.h"
 #include "OSS/JSON/elements.h"
@@ -88,10 +91,16 @@ public:
     //
     // close the queue
     //
-    if (_open)
-      msgctl(_qid, IPC_RMID, 0);
+    close();
   }
 
+  void close()
+  {
+    if (_open)
+      msgctl(_qid, IPC_RMID, 0);
+    _open = false;
+  }
+  
   bool read(Message& message, bool blocking = true)
   {
     if (!_open)
@@ -153,8 +162,16 @@ public:
 
   ~IPCQueueWriter()
   {
+    close();
   }
 
+  void close()
+  {
+    if (_open)
+      msgctl(_qid, IPC_RMID, 0);
+    _open = false;
+  }
+  
   bool write(Message& message, bool blocking = true)
   {
     if (!_open)
@@ -268,8 +285,19 @@ public:
 
   ~IPCQueue()
   {
+    close();
     delete _pReader;
     delete _pWriter;
+  }
+  
+  void close()
+  {
+    if (_pReader)
+      _pReader->close();
+    
+    if (_pWriter)
+      _pWriter->close();
+      
   }
 
   bool write(const std::string& buff, bool blocking  = true)
@@ -456,6 +484,53 @@ public:
   }
 
 };
+
+
+class IPCJsonBidirectionalQueue : boost::noncopyable
+{
+public:
+  IPCJsonBidirectionalQueue(const std::string& readQueuePath,
+                     const std::string& writeQueuePath) :
+    _reader(readQueuePath, IPCQueue::READER),
+    _writer(writeQueuePath, IPCQueue::WRITER)
+  {
+    _pThread = new boost::thread(boost::bind(&IPCJsonBidirectionalQueue::receiveIPCMessage, this));
+  }
+
+  virtual ~IPCJsonBidirectionalQueue()
+  {
+    _reader.close();
+    _writer.close();
+    _pThread->join();
+    delete _pThread;
+  }
+
+  
+  virtual void onReceivedIPCMessage(const json::Object& params) = 0;
+  
+  bool sendIPCMessage(const json::Object& params)
+  {
+    return _writer.write(params, false);
+  }
+
+protected:
+  
+  void receiveIPCMessage()
+  {
+    while(_reader.isOpen())
+    {
+      json::Object params;
+      if (_reader.read(params, true))
+        onReceivedIPCMessage(params);
+    }
+  }
+
+private:
+  IPCJsonQueue _reader;
+  IPCJsonQueue _writer;
+  boost::thread* _pThread;
+};
+
 
 } // OSS
 
