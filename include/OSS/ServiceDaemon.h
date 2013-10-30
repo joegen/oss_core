@@ -23,6 +23,7 @@
 #include "OSS/OSS.h"
 #include "OSS/Application.h"
 #include "OSS/ServiceOptions.h"
+#include "OSS/IPCQueue.h"
 
 
 namespace OSS {
@@ -30,23 +31,6 @@ namespace OSS {
 class OSS_API ServiceDaemon : public ServiceOptions, boost::noncopyable
 {
 public:
-  struct ProcessStatus
-  {
-    std::string user;
-    int pid;
-    double cpu;
-    double mem;
-    int vsz;
-    int rss;
-    std::string tty;
-    std::string stat;
-    std::string start;
-    std::string time;
-    std::string command;
-  };
-
-  typedef std::map<int, ProcessStatus> ProcessStatusMap;
-
   ServiceDaemon(int argc, char** argv, const std::string& daemonName);
   virtual ~ServiceDaemon();
 

@@ -8,11 +8,8 @@ namespace OSS {
 
 
 ServiceDaemon::ServiceDaemon(int argc, char** argv, const std::string& daemonName) :
-  ServiceOptions(argc, argv, daemonName)
+  ServiceOptions(argc, argv, daemonName, "1.1.1", "OSS Software Solutions")
 {
-  addOptionFlag('h', "help", "Display help information.");
-  addOptionFlag('D', "daemonize", "Run as system daemon.");
-  addOptionString('p', "pid-file", "PID file when running as daemon.");
 }
 
 ServiceDaemon::~ServiceDaemon()
@@ -26,21 +23,6 @@ int ServiceDaemon::pre_initialize()
   // Parse command line options
   //
   parseOptions();
-
-  if (hasOption("daemonize"))
-  {
-    if (!hasOption("pid-file"))
-    {
-      std::cerr << "You need to specify a PID file when running as daemon!" << std::endl;
-      displayUsage(std::cerr);
-      return -1;
-    }
-
-    getOption("pid-file", _pidFile);
-    OSS::app_set_pid_file(_pidFile);
-    daemonize();
-  }
-
 
   return 0;
 }

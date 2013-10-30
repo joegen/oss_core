@@ -326,41 +326,41 @@ bool Carp::parseOptions(ServiceOptions& options)
   options.addDaemonOptions();
 
   //--interface=<if> (-i <if>): bind interface <if>
-  options.addRequiredString('i', "interface", "bind interface");
+  options.addOptionString('i', "interface", "bind interface", ServiceOptions::CommandLineOption, true);
   //--srcip=<ip> (-s <ip>): source (real) IP address of that host
-  options.addRequiredString('s', "srcip", "source (real) IP address of that host");
+  options.addOptionString('s', "srcip", "source (real) IP address of that host", ServiceOptions::CommandLineOption, true);
   //--vhid=<id> (-v <id>): virtual IP identifier (1-255)
-  options.addRequiredInt('V', "vhid", "virtual IP identifier (1-255)");
+  options.addOptionInt('V', "vhid", "virtual IP identifier (1-255)", ServiceOptions::CommandLineOption, true);
   //--pass=<pass> (-p <pass>): password
-  options.addOptionString('p', "pass", "password");
+  options.addOptionString('p', "pass", "password", ServiceOptions::CommandLineOption, false);
   //--passfile=<file> (-o <file>): read password from file
-  options.addOptionString('o', "passfile", "read password from file");
+  options.addOptionString('o', "passfile", "read password from file", ServiceOptions::CommandLineOption, false);
   //--preempt (-P): becomes a master as soon as possible
-  options.addOptionFlag('E', "preempt", "becomes a master as soon as possible");
+  options.addOptionFlag('E', "preempt", "becomes a master as soon as possible", ServiceOptions::CommandLineOption);
   //--neutral (-n): don't run downscript at start if backup
-  options.addOptionFlag('n', "neutral", "don't run downscript at start if backup");
+  options.addOptionFlag('n', "neutral", "don't run downscript at start if backup", ServiceOptions::CommandLineOption);
   //--addr=<ip> (-a <ip>): virtual shared IP address
-  options.addRequiredString('a', "addr", "virtual shared IP address");
+  options.addOptionString('a', "addr", "virtual shared IP address", ServiceOptions::CommandLineOption, true);
   //--advbase=<seconds> (-b <seconds>): advertisement frequency
-  options.addOptionInt('b', "advbase", "advertisement frequency");
+  options.addOptionInt('b', "advbase", "advertisement frequency", ServiceOptions::CommandLineOption, false);
   //--advskew=<skew> (-k <skew>): advertisement skew (0-255)
-  options.addOptionInt('k', "advskew", "advertisement skew (0-255)");
+  options.addOptionInt('k', "advskew", "advertisement skew (0-255)", ServiceOptions::CommandLineOption, false);
   //--upscript=<file> (-u <file>): run <file> to become a master
-  options.addRequiredString('u', "upscript", "run <file> to become a master");
+  options.addOptionString('u', "upscript", "run <file> to become a master", ServiceOptions::CommandLineOption, true);
   //--downscript=<file> (-d <file>): run <file> to become a backup
-  options.addRequiredString('d', "downscript", "run <file> to become a backup");
+  options.addOptionString('d', "downscript", "run <file> to become a backup", ServiceOptions::CommandLineOption, true);
   //--garpscript=<file> (-g <file>): run <file> when a gratuitous ARP is sent
-  options.addOptionString('g', "garpscript", "run <file> when a gratuitous ARP is sent");
+  options.addOptionString('g', "garpscript", "run <file> when a gratuitous ARP is sent", ServiceOptions::CommandLineOption, false);
   //--deadratio=<ratio> (-r <ratio>): ratio to consider a host as dead
-  options.addOptionInt('r', "deadratio", "ratio to consider a host as dead");
+  options.addOptionInt('r', "deadratio", "ratio to consider a host as dead", ServiceOptions::CommandLineOption, false);
   //--shutdown (-z): call shutdown script at exit
-  options.addOptionFlag('z', "shutdown", "call shutdown script at exit");
+  options.addOptionFlag('z', "shutdown", "call shutdown script at exit", ServiceOptions::CommandLineOption);
   //--ignoreifstate (-S): ignore interface state (down, no carrier)
-  options.addOptionFlag('S', "ignoreifstate", "ignore interface state (down, no carrier)");
+  options.addOptionFlag('S', "ignoreifstate", "ignore interface state (down, no carrier)", ServiceOptions::CommandLineOption);
   //--nomcast (-M): use broadcast (instead of multicast) advertisements
-  options.addOptionFlag('M', "nomcast", "use broadcast (instead of multicast) advertisements");
+  options.addOptionFlag('M', "nomcast", "use broadcast (instead of multicast) advertisements", ServiceOptions::CommandLineOption);
   //--xparam=<value> (-x): extra parameter to send to up/down scripts
-  options.addOptionString('x', "xparam", "extra parameter to send to up/down scripts");
+  options.addOptionString('x', "xparam", "extra parameter to send to up/down scripts", ServiceOptions::CommandLineOption, false);
 
   if (!options.parseOptions())
     return false;
@@ -381,9 +381,9 @@ bool Carp::parseOptions(ServiceOptions& options)
   //--passfile=<file> (-o <file>): read password from file
   options.getOption("passfile", _config.passfile);
   //--preempt (-P): becomes a master as soon as possible
-  _config.preempt = options.hasOption("preempt");
+  _config.preempt = options.hasOption("preempt", true);
   //--neutral (-n): don't run downscript at start if backup
-  _config.neutral = options.hasOption("neutral");
+  _config.neutral = options.hasOption("neutral", true);
   //--addr=<ip> (-a <ip>): virtual shared IP address
   options.getOption("addr", _config.addr);
   //--advbase=<seconds> (-b <seconds>): advertisement frequency
@@ -399,11 +399,11 @@ bool Carp::parseOptions(ServiceOptions& options)
   //--deadratio=<ratio> (-r <ratio>): ratio to consider a host as dead
   options.getOption("deadratio", _config.deadratio);
   //--shutdown (-z): call shutdown script at exit
-  _config.shutdown = options.hasOption("shutdown");
+  _config.shutdown = options.hasOption("shutdown", true);
   //--ignoreifstate (-S): ignore interface state (down, no carrier)
-  _config.ignoreifstate = options.hasOption("ignoreifstate");
+  _config.ignoreifstate = options.hasOption("ignoreifstate", true);
   //--nomcast (-M): use broadcast (instead of multicast) advertisements
-  _config.nomcast = options.hasOption("nomcast");
+  _config.nomcast = options.hasOption("nomcast", true);
   //--xparam=<value> (-x): extra parameter to send to up/down scripts
   options.getOption("xparam", _config.xparam);
 
