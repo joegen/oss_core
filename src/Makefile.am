@@ -141,7 +141,6 @@ liboss_core_la_SOURCES =  \
     Logger.cpp \
     Crypto.cpp \
     ServiceDaemon.cpp \
-    ServiceOptions.cpp \
     Cache.cpp \
     Compress.cpp \
     OSS.cpp \

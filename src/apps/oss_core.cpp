@@ -363,7 +363,7 @@ void prepareListenerInfo(Config& config, ServiceOptions& options)
   
   options.getOption("external-address", config.externalAddress);
 
-  if (config.externalAddress.empty() && options.hasOption("guess-external-address", true))
+  if (config.externalAddress.empty() && options.hasOption("guess-external-address"))
   {
     config.externalAddress = getExternalIp(EXTERNAL_IP_HOST_URL, "/");
   }
@@ -373,7 +373,7 @@ void prepareTargetInfo(Config& config, ServiceOptions& options)
 {
   if (options.getOption("target-address", config.target) && !config.target.empty())
   {
-    config.allowRelay = options.hasOption("allow-relay", true);
+    config.allowRelay = options.hasOption("allow-relay");
   }
   else
   {
@@ -388,18 +388,18 @@ void prepareTargetInfo(Config& config, ServiceOptions& options)
 bool prepareOptions(ServiceOptions& options)
 {
   options.addDaemonOptions();
-  options.addOptionString('i', "interface-address", "The IP Address where the B2BUA will listen for connections.", ServiceOptions::CommandLineOption, false);
-  options.addOptionString('x', "external-address", "The Public IP Address if the B2BUA is behind a firewall.", ServiceOptions::CommandLineOption, false);
-  options.addOptionFlag('X', "guess-external-address", "If this flag is set, the external IP will be automatically assigned.", ServiceOptions::CommandLineOption);
-  options.addOptionInt('p', "port", "The port where the B2BUA will listen for connections.", ServiceOptions::CommandLineOption, false);
-  options.addOptionString('t', "target-address", "IP Address, Host or DNS/SRV address of your SIP Server.", ServiceOptions::CommandLineOption, false);
-  options.addOptionFlag('r', "allow-relay", "Allow relaying of transactions towards SIP Servers other than the one specified in the target-domain.", ServiceOptions::CommandLineOption);
-  options.addOptionFlag('n', "no-rtp-proxy", "Disable built in media relay.", ServiceOptions::CommandLineOption);
+  options.addOptionString('i', "interface-address", "The IP Address where the B2BUA will listen for connections.");
+  options.addOptionString('x', "external-address", "The Public IP Address if the B2BUA is behind a firewall.");
+  options.addOptionFlag('X', "guess-external-address", "If this flag is set, the external IP will be automatically assigned.");
+  options.addOptionInt('p', "port", "The port where the B2BUA will listen for connections.");
+  options.addOptionString('t', "target-address", "IP Address, Host or DNS/SRV address of your SIP Server.");
+  options.addOptionFlag('r', "allow-relay", "Allow relaying of transactions towards SIP Servers other than the one specified in the target-domain.");
+  options.addOptionFlag('n', "no-rtp-proxy", "Disable built in media relay.");
 
 #if ENABLE_TURN
-  options.addOptionFlag('T', "enable-turn-relay", "Run the built in turn server.", ServiceOptions::CommandLineOption, false);
-  options.addOptionString('c', "turn-cert-file", "The certificate file to be used for TLS and DTLS.", ServiceOptions::CommandLineOption, false);
-  options.addOptionString('k', "turn-pkey-file", "The private key file to be used for TLS and DTLS.", ServiceOptions::CommandLineOption, false);
+  options.addOptionFlag('T', "enable-turn-relay", "Run the built in turn server.");
+  options.addOptionString('c', "turn-cert-file", "The certificate file to be used for TLS and DTLS.");
+  options.addOptionString('k', "turn-pkey-file", "The private key file to be used for TLS and DTLS.");
 #endif
 
   return options.parseOptions();
@@ -417,7 +417,7 @@ int main(int argc, char** argv)
   OSS::OSS_init();
 
   ServiceOptions options(argc, argv, "oss_core", VERSION, "Copyright (c) OSS Software Solutions");
-  if (!prepareOptions(options) || options.hasOption("help", false))
+  if (!prepareOptions(options) || options.hasOption("help"))
   {
     options.displayUsage(std::cout);
     _exit(-1);
@@ -433,11 +433,11 @@ int main(int argc, char** argv)
     OSSB2BUA ua(config);
     ua.run();
 
-    if (options.hasOption("no-rtp-proxy", false))
+    if (options.hasOption("no-rtp-proxy"))
       ua.rtpProxy().disable();
 
 #if ENABLE_TURN
-    if (options.hasOption("enable-turn-relay", false))
+    if (options.hasOption("enable-turn-relay"))
     {
 
       options.getOption("turn-cert-file", OSS::Net::TurnServer::instance().config().cert);
