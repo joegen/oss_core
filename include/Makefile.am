@@ -34,6 +34,7 @@ nobase_include_HEADERS = \
     OSS/Exec/Process.h \
     OSS/Exec/Command.h \
     OSS/Exec/ManagedDaemon.h \
+    OSS/Exec/ManagedDaemonRunner.h \
     OSS/Exec/pstream.h \
     OSS/Exec/stringtoargcargv.h \
     OSS/ABNF/ABNFSIPUserInfo.h \

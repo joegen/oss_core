@@ -23,54 +23,62 @@
 #include "OSS/OSS.h"
 #include "OSS/Application.h"
 #include "OSS/ServiceOptions.h"
+#include "OSS/IPCQueue.h"
 
 
 namespace OSS {
 
-class OSS_API ServiceDaemon : public ServiceOptions, boost::noncopyable
+class OSS_API ServiceDaemon : public ServiceOptions
 {
 public:
-  struct ProcessStatus
-  {
-    std::string user;
-    int pid;
-    double cpu;
-    double mem;
-    int vsz;
-    int rss;
-    std::string tty;
-    std::string stat;
-    std::string start;
-    std::string time;
-    std::string command;
-  };
-
-  typedef std::map<int, ProcessStatus> ProcessStatusMap;
-
   ServiceDaemon(int argc, char** argv, const std::string& daemonName);
   virtual ~ServiceDaemon();
 
   
   virtual int initialize() = 0;
   virtual int main() = 0;
-
-  int pre_initialize();
-  int post_initialize();
-  int post_main();
+  virtual int pre_initialize();
+  virtual int post_initialize();
+  virtual int post_main();
+  
+  const std::string& getProcPath() const;
+  const std::string& getProcName() const;
+  const std::string& getRunDirectory() const;
   
 protected:
-  void daemonize();
-  std::string _pidFile;
+  std::string _procPath;
+  std::string _procName;
+  std::string _runDir;
   friend int main(int argc, char** argv);
 
 };
 
+//
+// Inlines
+//
+
+inline const std::string& ServiceDaemon::getProcPath() const
+{
+  return _procPath;
+}
+
+inline const std::string& ServiceDaemon::getProcName() const
+{
+  return _procName;
+}
+
+inline const std::string& ServiceDaemon::getRunDirectory() const
+{
+  return _runDir;
+}
 
 } // OSS
 
 #define DAEMONIZE(Daemon, daemonName) \
 int main(int argc, char** argv) \
 { \
+  bool isDaemon = false; \
+  ServiceOptions::daemonize(argc, argv, isDaemon); \
   Daemon daemon(argc, argv, daemonName); \
   int ret = 0; \
   ret = daemon.pre_initialize(); \

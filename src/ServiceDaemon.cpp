@@ -1,3 +1,5 @@
+
+#include "OSS/Core.h"
 #include "OSS/ServiceDaemon.h"
 #include "OSS/Exec/Command.h"
 #include "OSS/Exec/Process.h"
@@ -7,12 +9,16 @@
 namespace OSS {
 
 
+
 ServiceDaemon::ServiceDaemon(int argc, char** argv, const std::string& daemonName) :
   ServiceOptions(argc, argv, daemonName)
 {
-  addOptionFlag('h', "help", "Display help information.");
-  addOptionFlag('D', "daemonize", "Run as system daemon.");
-  addOptionString('p', "pid-file", "PID file when running as daemon.");
+  _procPath = argv[0];
+  boost::filesystem::path procPath(_procPath.c_str());
+  _procName = OSS::boost_file_name(procPath);
+  
+  addDaemonOptions();
+  addOptionString("run-directory", "The directory where application data would be stored.");
 }
 
 ServiceDaemon::~ServiceDaemon()
@@ -25,25 +31,28 @@ int ServiceDaemon::pre_initialize()
   //
   // Parse command line options
   //
-  parseOptions();
-
-  if (hasOption("daemonize"))
+  if (!parseOptions())
+    return -1;
+  
+  
+  std::string newRunDir;
+  if (getOption("run-directory", newRunDir) && !newRunDir.empty())
   {
-    if (!hasOption("pid-file"))
-    {
-      std::cerr << "You need to specify a PID file when running as daemon!" << std::endl;
-      displayUsage(std::cerr);
-      return -1;
-    }
-
-    getOption("pid-file", _pidFile);
-    OSS::app_set_pid_file(_pidFile);
-    daemonize();
+    _runDir = newRunDir;
   }
-
-
+  else
+  {
+    _runDir = OSS::boost_path(boost::filesystem::current_path());
+  }
+  
+  OSS_ASSERT(!_runDir.empty());
+  
+  ::chdir(_runDir.c_str());
+  
   return 0;
 }
+
+
 
 int ServiceDaemon::post_initialize()
 {
@@ -54,32 +63,6 @@ int ServiceDaemon::post_main()
 {
   return 0;
 }
-
-void ServiceDaemon::daemonize()
-{
-  pid_t pid;
-  if ((pid = fork()) < 0)
-  {
-    std::cerr << "Unable to fork daemon!"  << std::endl;
-    std::cerr.flush();
-    _exit(0);
-  }
-  else if (pid != 0)
-  {
-    _exit(0);
-  }
-  setpgrp();
-  ::close(STDIN_FILENO);
-
-  if (!_pidFile.empty())
-  {
-    std::ofstream ostr(_pidFile.c_str());
-    if (ostr.good())
-      ostr << getpid() << std::endl;
-  }
-}
-
-
 
 
 }

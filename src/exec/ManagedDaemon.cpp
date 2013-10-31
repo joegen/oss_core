@@ -1,4 +1,3 @@
-
 // OSS Software Solutions Application Programmer Interface
 // Author: Joegen E. Baclor - mailto:joegen@ossapp.com
 //
@@ -26,124 +25,52 @@
 //
 
 
-#include "OSS/Core.h"
-#include "OSS/Logger.h"
 #include "OSS/Exec/ManagedDaemon.h"
 
 
-std::string get_queue_path(char type, const std::string& runDir, const std::string& alias)
+namespace OSS {
+namespace Exec {
+    
+std::string ManagedDaemon::get_queue_path(char type, const std::string& runDir, const std::string& alias)
 {
   std::ostringstream path;
   path << runDir << "/" << alias << "-" << type << "-" << DAEMON_IPC_QUEUE_SUFFIX;
   return path.str();
 }
 
-namespace OSS {
-namespace Exec {
 
-
-const int STOP_YIELD_TIME = 100; /// yield time in milliseconds
-const int STOP_MAX_YIELD_TIME = 15000; /// maximum yield time in milliseconds
-
-
-ManagedDaemon::ManagedDaemon(
-  const std::string& executablePath, 
-  const std::string& alias,
-  const std::string& runDirectory,
-  const std::string& startupScript,
-  const std::string& shutdownScript,
-  const std::string& pidFile,
-  int maxRestart) :
-    IPCJsonBidirectionalQueue(get_queue_path('r', runDirectory, alias), get_queue_path('w', runDirectory, alias)),
-    _path(executablePath),
-    _alias(alias),
-    _runDirectory(runDirectory),
-    _pProcess(0)
+ManagedDaemon::ManagedDaemon(int argc, char** argv, const std::string& daemonName) :
+  ServiceDaemon(argc, argv, daemonName),
+  _pIPC(0)
 {
-  boost::filesystem::path path(_path.c_str());
-  std::string prog = OSS::boost_file_name(path);
-  
-  if (prog.empty())
-  {
-    OSS_LOG_ERROR("ManagedDaemon::ManagedDaemon - Unable to parse executable from " << _path);
-    return;
-  }
-  
-  //Process(const std::string& processName, const std::string& startupCommand, const std::string& shutdownCommand = "", const std::string& pidFile = "");
-  _pProcess = new Process(prog, startupScript, shutdownScript, pidFile);
-    
 }
 
 ManagedDaemon::~ManagedDaemon()
 {
-  stop();
-  delete _pProcess;
+  delete _pIPC;
 }
+
+int ManagedDaemon::pre_initialize()
+{
+  int ret = ServiceDaemon::pre_initialize();
+  if (ret != 0)
+    return ret;
+    
+  _pIPC = new DaemonIPC(*this, ManagedDaemon::get_queue_path('0', getRunDirectory(), getProcName()),  ManagedDaemon::get_queue_path('1', getRunDirectory(), getProcName()));
   
-bool ManagedDaemon::readMessage(std::string& message, bool blocking)
-{
-  return false;
+  return 0;
 }
 
-bool ManagedDaemon::start()
+bool ManagedDaemon::sendIPCMessage(const json::Object& message)
 {
-  OSS_ASSERT(_pProcess);
-  stop(); /// stop all lingering process
-  return _pProcess->executeAndMonitor();
-}
-
-bool ManagedDaemon::stop()
-{
-  //
-  // Unmonitor the process so it doesn't get restarted
-  //
-  _pProcess->unmonitor();
-  
-  //
-  // Send the process a SIGTERM
-  //
-  Process::killAll(_alias, SIGTERM);
-  int totalYieldTime = 0;
-  for (pid_t pid = getProcessId(); (pid = getProcessId()) == -1 && totalYieldTime < STOP_MAX_YIELD_TIME; totalYieldTime += STOP_YIELD_TIME)
-  {
-    OSS::thread_sleep(STOP_YIELD_TIME); // sleep for 100 milliseconds
-  }
-  
-  //
-  // Send the process a SIGKILL
-  //
-  Process::killAll(_alias, SIGKILL);
-  totalYieldTime = 0;
-  for (pid_t pid = getProcessId(); (pid = getProcessId()) == -1 && totalYieldTime < STOP_MAX_YIELD_TIME; totalYieldTime += STOP_YIELD_TIME)
-  {
-    OSS::thread_sleep(STOP_YIELD_TIME); // sleep for 100 milliseconds
-  }
-
-  return getProcessId() == -1;
-}
-
-
-
-bool ManagedDaemon::restart()
-{
-  if (!stop())
+  if (!_pIPC)
     return false;
-  return start();
+  return _pIPC->sendIPCMessage(message);
 }
-
-Process::Action ManagedDaemon::onDeadProcess(int consecutiveCount)
-{
-  if (_maxRestart > consecutiveCount)
-    return Process::ProcessRestart;
-  else
-    return Process::ProcessBackoff;
-}
-
-void ManagedDaemon::onReceivedIPCMessage(const json::Object& params)
-{
-  //
-  // Does nothing
-  //
-}
+ 
   
 } } // OSS::Exec
+
+
+
+
