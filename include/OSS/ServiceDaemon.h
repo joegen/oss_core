@@ -78,7 +78,7 @@ inline const std::string& ServiceDaemon::getRunDirectory() const
 int main(int argc, char** argv) \
 { \
   bool isDaemon = false; \
-  ServiceOptions::daemonize(argc, argv, isDaemon); \
+  OSS::ServiceOptions::daemonize(argc, argv, isDaemon); \
   Daemon daemon(argc, argv, daemonName); \
   int ret = 0; \
   ret = daemon.pre_initialize(); \
