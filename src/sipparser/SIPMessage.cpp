@@ -1473,6 +1473,38 @@ std::string SIPMessage::getFromTag() const
   return tag;
 }
 
+std::string SIPMessage::getFromHost() const
+{
+  std::string from(hdrGet("from"));
+  std::string host;
+  SIPFrom::getHost(from, host);
+  return host;
+}
+
+std::string SIPMessage::getFromHostPort() const
+{
+  std::string from(hdrGet("from"));
+  std::string host;
+  SIPFrom::getHostPort(from, host);
+  return host;
+}
+
+std::string SIPMessage::getToHost() const
+{
+  std::string to(hdrGet("to"));
+  std::string host;
+  SIPFrom::getHost(to, host);
+  return host;
+}
+
+std::string SIPMessage::getToHostPort() const
+{
+  std::string to(hdrGet("to"));
+  std::string host;
+  SIPFrom::getHostPort(to, host);
+  return host;
+}
+
 std::string SIPMessage::getToTag() const
 {
   std::string tag;

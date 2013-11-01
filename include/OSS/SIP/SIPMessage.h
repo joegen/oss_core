@@ -551,6 +551,18 @@ public:
 
   std::string getFromTag() const;
     /// Return the tag parameter of the From header.
+  
+  std::string getFromHost() const;
+    /// Return the from host (no port)
+  
+  std::string getFromHostPort() const;
+    /// Return the from host (including port)
+  
+  std::string getToHost() const;
+    /// Return the from host (no port)
+  
+  std::string getToHostPort() const;
+    /// Return the from host (including port)
 
   std::string getToTag() const;
     /// Return the to tag parameter of the To header;
