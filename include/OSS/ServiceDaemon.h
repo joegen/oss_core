@@ -79,6 +79,7 @@ int main(int argc, char** argv) \
 { \
   bool isDaemon = false; \
   OSS::ServiceOptions::daemonize(argc, argv, isDaemon); \
+  OSS::OSS_init(); \
   Daemon daemon(argc, argv, daemonName); \
   int ret = 0; \
   ret = daemon.pre_initialize(); \
