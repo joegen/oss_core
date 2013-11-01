@@ -34,7 +34,7 @@ namespace Exec {
 std::string ManagedDaemon::get_queue_path(char type, const std::string& runDir, const std::string& alias)
 {
   std::ostringstream path;
-  path << runDir << "/" << alias << "-" << type << "-" << DAEMON_IPC_QUEUE_SUFFIX;
+  path << runDir << "/" << alias << "-" << type << DAEMON_IPC_QUEUE_SUFFIX;
   return path.str();
 }
 
