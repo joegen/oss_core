@@ -49,6 +49,8 @@ class OSS_API SIPB2BTransactionManager : private boost::noncopyable
 {
 public:
   typedef std::map<SIPB2BHandler::MessageType, SIPB2BHandler::Ptr> MessageHandlers;
+  typedef std::map<std::string, SIPB2BHandler::Ptr> DomainRouters;
+  
   typedef boost::function<SIPMessage::Ptr(
     SIPMessage::Ptr& pRequest,
     SIPMessage::Ptr& pResponse,
@@ -227,6 +229,9 @@ public:
     /// handlers when transactions are already active will
     /// most likely result to a corrupt map container and invalidate
     /// iterators
+  
+  void registerDomainRouter(const std::string& domain, SIPB2BHandler::Ptr handler);
+    /// Register a specific handler for routing messages for a particular domain
 
   void registerDefaultHandler(SIPB2BHandler* pDefaultHandler);
     /// Register a default handler. This special handler will take care of all
@@ -371,6 +376,9 @@ protected:
 
   SIPB2BHandler::Ptr findHandler(SIPB2BHandler::MessageType type) const;
     /// Returns the iterator for the request handler if one is registered
+  
+  SIPB2BHandler::Ptr findDomainRouter(const OSS::SIP::SIPMessage::Ptr& pMsg) const;
+    /// Returns the iterator for the domain router if one is registered
 public:
   virtual SIPMessage::Ptr postMidDialogTransactionCreated(
     const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction);
@@ -390,6 +398,7 @@ private:
   OSS::mutex_critic_sec _csDialogsMutex;
   bool _useSourceAddressForResponses;
   MessageHandlers _handlers;
+  DomainRouters _domainRouters;
   boost::filesystem::path _transportConfigurationFile;
   std::string _sipConfigFile;
   PostRouteCallback _postRouteCallback;

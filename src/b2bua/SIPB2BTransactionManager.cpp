@@ -159,6 +159,14 @@ void SIPB2BTransactionManager::registerHandler(SIPB2BHandler::Ptr handler)
   _handlers[handler->getType()] = handler;
 }
 
+void SIPB2BTransactionManager::registerDomainRouter(const std::string& domain, SIPB2BHandler::Ptr handler)
+{
+  OSS_ASSERT(handler);
+  handler->initialize();
+  _domainRouters[domain] = handler;
+}
+    /// Register a specific handler for routing messages for a particular domain
+
 static SIPB2BHandler::MessageType getMessageType(const SIPMessage::Ptr& pRequest)
 {
   std::string cseq = pRequest->hdrGet("cseq");
@@ -238,7 +246,16 @@ SIPB2BHandler::Ptr SIPB2BTransactionManager::findHandler(SIPB2BHandler::MessageT
     return iter->second;
   return SIPB2BHandler::Ptr();
 }
-    /// Returns the iterator for the request handler if one is registered
+
+SIPB2BHandler::Ptr SIPB2BTransactionManager::findDomainRouter(const OSS::SIP::SIPMessage::Ptr& pMsg) const
+{
+  std::string domain = pMsg->getFromHost();
+  DomainRouters::const_iterator iter = _domainRouters.find(domain);
+  if (iter != _domainRouters.end() && iter->second)
+    return iter->second;
+  return SIPB2BHandler::Ptr();
+}
+
 
 SIPMessage::Ptr SIPB2BTransactionManager::onTransactionCreated(
   const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction)
@@ -290,7 +307,12 @@ SIPMessage::Ptr SIPB2BTransactionManager::onRouteTransaction(
   OSS::IPAddress& localInterface,
   OSS::IPAddress& target)
 {
-  SIPB2BHandler::Ptr pHandler = findHandler(pRequest);
+  SIPB2BHandler::Ptr pHandler = findDomainRouter(pRequest);
+  if (!pHandler)
+  {
+    pHandler = findHandler(pRequest);
+  }
+  
   if (pHandler)
   {
     SIPMessage::Ptr result = pHandler->onRouteTransaction(pRequest, pTransaction, localInterface, target);
