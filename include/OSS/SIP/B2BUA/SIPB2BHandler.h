@@ -71,19 +71,22 @@ public:
     /// Destroyes the B2BHandler
 
   virtual SIPMessage::Ptr onTransactionCreated(
-    const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction) = 0;
+    const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction)
+  { return SIPMessage::Ptr(); };
     /// Called by runtask signalling the creation of the transaction.
     /// This prcedes any other transaction callbacks and therefore is the best place
     /// to initialize anything that would be needed by the transaction processing
 
   virtual bool onClientTransactionCreated(
-    const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction) = 0;
+    const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction)
+  { return true; };
     /// Called by runtask signalling the creation of the transaction.
     /// This prcedes any other transaction callbacks and therefore is the best place
     /// to initialize anything that would be needed by the transaction processing
 
   virtual SIPMessage::Ptr onAuthenticateTransaction(
-    const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction) = 0;
+    const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction)
+  { return SIPMessage::Ptr(); };
     /// Authenticate the new Transaction request,
     ///
     /// This method is called from the B2B Transaction runTask().
@@ -101,7 +104,8 @@ public:
     SIPMessage::Ptr& pRequest,
     SIPB2BTransaction::Ptr pTransaction,
     OSS::IPAddress& localInterface,
-    OSS::IPAddress& target) = 0;
+    OSS::IPAddress& target)
+  { return SIPMessage::Ptr(); };
     /// Route the new request.
     ///
     /// This method expects that the application will format the request-uri
@@ -120,7 +124,8 @@ public:
     SIPMessage::Ptr& pRequest,
     SIPB2BTransaction::Ptr pTransaction,
     OSS::IPAddress& localInterface,
-    OSS::IPAddress& target) = 0;
+    OSS::IPAddress& target)
+  { return false; };
     /// Route the new request.
     ///
     /// This method expects that the application will format the request-uri
@@ -137,12 +142,14 @@ public:
 
   virtual void onProcessClientResponse(
     SIPMessage::Ptr& pResponse,
-    SIPB2BTransaction::Ptr pTransaction) = 0;
+    SIPB2BTransaction::Ptr pTransaction)
+  {};
     /// Process the newly received response
 
   virtual SIPMessage::Ptr onProcessRequestBody(
     SIPMessage::Ptr& pRequest,
-    SIPB2BTransaction::Ptr pTransaction) = 0;
+    SIPB2BTransaction::Ptr pTransaction)
+  { return SIPMessage::Ptr(); };
     /// This method allows the application to
     /// process the body of the request
     /// before it gets sent out.
@@ -159,7 +166,8 @@ public:
 
   virtual void onProcessResponseBody(
     SIPMessage::Ptr& pRequest,
-    SIPB2BTransaction::Ptr pTransaction) = 0;
+    SIPB2BTransaction::Ptr pTransaction)
+  {};
     /// This method allows the application to
     /// process the body of the response
     /// before it gets sent out.
@@ -172,7 +180,8 @@ public:
 
   virtual void onProcessOutbound(
     SIPMessage::Ptr& pRequest,
-    SIPB2BTransaction::Ptr pTransaction) = 0;
+    SIPB2BTransaction::Ptr pTransaction)
+  {};
     /// This is the last chance for the application to process
     /// the outbound request before it gets sent out to the transport.
     ///
@@ -185,14 +194,16 @@ public:
     const OSS::SIP::SIPMessage::Ptr& pRequest,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport,
     SIPB2BTransaction::Ptr pTransaction,
-    OSS::IPAddress& target) = 0;
+    OSS::IPAddress& target)
+  { return false; };
    /// This is normally the place where the application can specify the
    /// target for a reponse.
 
   virtual SIPMessage::Ptr onGenerateLocalResponse(
     const OSS::SIP::SIPMessage::Ptr& pRequest,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport,
-    SIPB2BTransaction::Ptr pTransaction) = 0;
+    SIPB2BTransaction::Ptr pTransaction)
+  { return SIPMessage::Ptr(); };
     /// This will be called by the B2BUA if the transaction property "generate-local-response"
     /// is set to 1 by the route handler.  This is used by the applicaiton layer to allow
     /// transactions to directly respond to the request without waiting for the remote
@@ -201,20 +212,23 @@ public:
   virtual SIPMessage::Ptr onInvokeLocalHandler(
     const OSS::SIP::SIPMessage::Ptr& pRequest,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport,
-    SIPB2BTransaction::Ptr pTransaction) = 0;
+    SIPB2BTransaction::Ptr pTransaction)
+  { return SIPMessage::Ptr(); };
     /// This will be called by the B2BUA if the transaction property "invoke-local-handler"
     /// is set to 1 by the route handler.  This is used by the applicaiton layer to allow
     /// transactions to process a request locally.  Example is local registration.
 
   virtual void onProcessResponseInbound(
     SIPMessage::Ptr& pResponse,
-    SIPB2BTransaction::Ptr pTransaction) = 0;
+    SIPB2BTransaction::Ptr pTransaction)
+  {};
     /// Process the newly received response
 
 
   virtual void onProcessResponseOutbound(
     SIPMessage::Ptr& pResponse,
-    SIPB2BTransaction::Ptr pTransaction) = 0;
+    SIPB2BTransaction::Ptr pTransaction)
+  {};
     /// This is the last chance for the application to process
     /// the outbound response before it gets sent out to the transport.
     ///
@@ -231,7 +245,8 @@ public:
   virtual void onTransactionError(
     OSS::SIP::SIPTransaction::Error e,
     SIPMessage::Ptr pErrorResponse,
-    SIPB2BTransaction::Ptr pTransaction) = 0;
+    SIPB2BTransaction::Ptr pTransaction)
+  {};
     /// Signals that an error occured on the transaction
     ///
     /// The transaction will be destroyed automatically after this function call
@@ -239,22 +254,26 @@ public:
   virtual void onClientTransactionError(
     OSS::SIP::SIPTransaction::Error e,
     SIPMessage::Ptr pErrorResponse,
-    SIPB2BTransaction::Ptr pTransaction) = 0;
+    SIPB2BTransaction::Ptr pTransaction)
+  {};
     /// Signals that an error occured on the transaction
     ///
     /// The transaction will be destroyed automatically after this function call
 
-  virtual void onDestroyTransaction(SIPB2BTransaction::Ptr pTransaction) = 0;
+  virtual void onDestroyTransaction(SIPB2BTransaction::Ptr pTransaction)
+  {};
     /// Signals that trhe transaction is about to be destroyed.
     /// This function will not invalidate the shared pointers
     /// to the transaction.  It is a mere indication that the transaction
     /// thread would now destroy its internal reference to the transaction.
 
 
-  virtual void initialize() = 0;
+  virtual void initialize()
+  {};
     /// Called by the B2BUA when the handler is first registered
 
-  virtual void deinitialize() = 0;
+  virtual void deinitialize()
+  {};
     /// Called by the B2BUA before a handler is destroyed
 
   MessageType getType() const;
