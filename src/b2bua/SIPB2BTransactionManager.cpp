@@ -308,11 +308,15 @@ SIPMessage::Ptr SIPB2BTransactionManager::onRouteTransaction(
   OSS::IPAddress& target)
 {
   SIPB2BHandler::Ptr pHandler = findDomainRouter(pRequest);
-  if (!pHandler)
+  if (pHandler)
   {
-    pHandler = findHandler(pRequest);
+    bool handled = false;
+    SIPMessage::Ptr result = pHandler->onRouteTransaction(pRequest, pTransaction, localInterface, target, handled);
+    if (handled)
+      return result;
   }
   
+  pHandler = findHandler(pRequest);
   if (pHandler)
   {
     SIPMessage::Ptr result = pHandler->onRouteTransaction(pRequest, pTransaction, localInterface, target);

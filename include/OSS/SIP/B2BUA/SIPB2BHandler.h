@@ -106,6 +106,14 @@ public:
     OSS::IPAddress& localInterface,
     OSS::IPAddress& target)
   { return SIPMessage::Ptr(); };
+  
+  virtual SIPMessage::Ptr onRouteTransaction(
+    SIPMessage::Ptr& pRequest,
+    SIPB2BTransaction::Ptr pTransaction,
+    OSS::IPAddress& localInterface,
+    OSS::IPAddress& target,
+    bool& handled)
+  { return SIPMessage::Ptr(); };
     /// Route the new request.
     ///
     /// This method expects that the application will format the request-uri
@@ -119,6 +127,9 @@ public:
     ///
     /// Both Local Interface and Target address that the request would use
     /// must be set by the application layer
+  
+  
+
 
   virtual bool onRouteClientTransaction(
     SIPMessage::Ptr& pRequest,
