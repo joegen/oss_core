@@ -111,7 +111,7 @@ bool JSWorker::initialize(JSBase* pJS, const boost::filesystem::path& script,
   V8LOCK;
 
 #if ENABLE_V8_PREEMPTION
-  OSS_LOG_INFO("Google V8 Preemption ENABLED");
+  //OSS_LOG_INFO("Google V8 Preemption ENABLED");
   return pJS->internalInitialize(script, functionName, extensionGlobals);
 #else
   JSWorker::_pJSBase = pJS;
@@ -466,7 +466,7 @@ static v8::Handle<v8::String> read_directory(const boost::filesystem::path& dire
           {
             if (OSS::string_ends_with(fileName, ".js"))
             {
-              OSS_LOG_INFO("Google V8 is loading " << currentFile);
+              //OSS_LOG_INFO("Google V8 is loading " << currentFile);
               FILE* file = fopen(OSS::boost_path(currentFile).c_str(), "rb");
               if (file == NULL)
               {
@@ -486,7 +486,7 @@ static v8::Handle<v8::String> read_directory(const boost::filesystem::path& dire
               }
               fclose(file);
               data += chars;
-              OSS_LOG_INFO("Google V8 " << currentFile << " LOADED");
+              //OSS_LOG_INFO("Google V8 " << currentFile << " LOADED");
               delete[] chars;
             }
 
@@ -566,7 +566,7 @@ bool JSBase::internalInitialize(
     return false;
   }
 
-  OSS_LOG_INFO("Google V8 JSBase::internalInitialize INVOKED");
+  //OSS_LOG_INFO("Google V8 JSBase::internalInitialize INVOKED");
 
   // Create a handle scope to hold the temporary references.
   v8::HandleScope handle_scope;
@@ -626,7 +626,7 @@ bool JSBase::internalInitialize(
   
   
 
-  OSS_LOG_INFO("Google V8 is loading context for " << _script);
+  //OSS_LOG_INFO("Google V8 is loading context for " << _script);
   // Create a template for the global object where we set the
   // built-in global functions.
   //v8::Handle<v8::ObjectTemplate> global = v8::ObjectTemplate::New();
@@ -639,7 +639,7 @@ bool JSBase::internalInitialize(
   //
   // Initialize subclass global functions
   //
-  OSS_LOG_INFO("Google V8 is initializing global exports for " << _script);
+  //OSS_LOG_INFO("Google V8 is initializing global exports for " << _script);
   initGlobalFuncs(_globalTemplate);
 
   //
@@ -661,7 +661,7 @@ bool JSBase::internalInitialize(
   // within it.
   v8::Context::Scope context_scope(context);
 
-  OSS_LOG_INFO("Google V8 context for " << _script << " CREATED");
+  //OSS_LOG_INFO("Google V8 context for " << _script << " CREATED");
 
   //
   // We're just about to compile the script; set up an error handler to
@@ -691,12 +691,12 @@ bool JSBase::internalInitialize(
 
       if (helperScript.IsEmpty())
       {
-        OSS_LOG_INFO("Google V8 global.detail for " << _script << " failed to compile.");
+        //OSS_LOG_INFO("Google V8 global.detail for " << _script << " failed to compile.");
         // The script failed to compile; bail out.
         return false;
       }
 
-      OSS_LOG_INFO("Google V8 is compiling global.detail for " << _script);
+      //OSS_LOG_INFO("Google V8 is compiling global.detail for " << _script);
       v8::Handle<v8::Script> compiledHelper = v8::Script::Compile(helperScript);
       if (compiledHelper.IsEmpty())
       {
@@ -704,7 +704,7 @@ bool JSBase::internalInitialize(
         return false;
       }
 
-      OSS_LOG_INFO("Google V8 is running global.detail for " << _script);
+     // OSS_LOG_INFO("Google V8 is running global.detail for " << _script);
        // Run the script!
       v8::Handle<v8::Value> result = compiledHelper->Run();
       if (result.IsEmpty())
@@ -713,7 +713,7 @@ bool JSBase::internalInitialize(
         reportException(try_catch, true);
         return false;
       }
-      OSS_LOG_INFO("Google V8 global.detail for " << _script << " EXECUTED");
+     // OSS_LOG_INFO("Google V8 global.detail for " << _script << " EXECUTED");
     }
     catch(OSS::Exception e)
     {
@@ -724,7 +724,7 @@ bool JSBase::internalInitialize(
   }
   else
   {
-    OSS_LOG_INFO("Google V8 context for " << _script << " is unable to load global exports from " << helpers.string());
+    OSS_LOG_ERROR("Google V8 context for " << _script << " is unable to load global exports from " << helpers.string());
   }
   //
   // Compile the helpers
@@ -759,7 +759,7 @@ bool JSBase::internalInitialize(
               //
               // Compile it!
               //
-              OSS_LOG_INFO("Google V8 is compiling helper script " << currentFile);
+              //OSS_LOG_INFO("Google V8 is compiling helper script " << currentFile);
               v8::Handle<v8::String> helperScript;
               helperScript = read_file(OSS::boost_path(currentFile));
               if (helperScript.IsEmpty())
@@ -800,7 +800,7 @@ bool JSBase::internalInitialize(
   //
   // Compile the main script script
   //
-  OSS_LOG_INFO("Google V8 is compiling main script " << _script);
+  //OSS_LOG_INFO("Google V8 is compiling main script " << _script);
   v8::Handle<v8::String> script;
   script = read_file(OSS::boost_path(_script));
 
@@ -812,7 +812,7 @@ bool JSBase::internalInitialize(
     return false;
   }
 
-  OSS_LOG_INFO("Google V8 is running main script " << _script);
+  //OSS_LOG_INFO("Google V8 is running main script " << _script);
   // Run the script!
   v8::Handle<v8::Value> result = compiled_script->Run();
   if (result.IsEmpty())
