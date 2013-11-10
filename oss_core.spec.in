@@ -1,5 +1,7 @@
 #!BuildIgnore: post-build-checks
-# see http://lizards.opensuse.org/2008/09/08/opensuse-build-service-build-checks/
+
+%define has_turn_lib 0
+
 Name: @PACKAGE@
 Version: @VERSION@
 Release: @PACKAGE_REVISION@
@@ -144,11 +146,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_libdir}/liboss_core.so*
 %attr(755,root,root) %{_libdir}/liboss_carp.la
 %attr(755,root,root) %{_libdir}/liboss_carp.so*
+
+%if %{has_turn_lib}
 %if 0%{?fedora} >= 16
 %attr(755,root,root) %{_libdir}/liboss_turn.la
 %attr(755,root,root) %{_libdir}/liboss_turn.so*
 %endif
-
+%endif
 
 %files devel
 %defattr(644,root,root,755)
@@ -156,9 +160,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/liboss_core.a
 %{_libdir}/liboss_carp.la
 %{_libdir}/liboss_carp.a
+
+%if %{has_turn_lib}
 %if 0%{?fedora} >= 16
 %attr(755,root,root) %{_libdir}/liboss_turn.la
 %attr(755,root,root) %{_libdir}/liboss_turn.a
+%endif
 %endif
 
 %dir %attr(755,root,root) %{_includedir}/OSS
