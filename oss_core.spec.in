@@ -1,6 +1,10 @@
 #!BuildIgnore: post-build-checks
 
-%define has_turn_lib 0
+%if 0%{?fedora} >= 16
+%define build_turn 1
+%else
+%define build_turn 0
+%endif
 
 Name: @PACKAGE@
 Version: @VERSION@
@@ -124,7 +128,11 @@ mv %{_builddir}/%name-%version/%name-rpmlintrc %{_sourcedir}
 
 %build
 autoreconf -if
+%if %{build_turn}
 %configure @OSSLIBS_RPM_CONFIGURE_OPTIONS@
+%else
+%configure @OSSLIBS_RPM_CONFIGURE_OPTIONS@ --enable-turn
+%endif
 cp config.log %name.configlog
 make %{_smp_mflags} all
 
@@ -142,16 +150,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/oss_core
 %attr(755,root,root) %{_bindir}/oss_carp
 %attr(755,root,root) %{_bindir}/oss_garp
-%attr(755,root,root) %{_libdir}/liboss_core.la
 %attr(755,root,root) %{_libdir}/liboss_core.so*
-%attr(755,root,root) %{_libdir}/liboss_carp.la
 %attr(755,root,root) %{_libdir}/liboss_carp.so*
 
-%if %{has_turn_lib}
-%if 0%{?fedora} >= 16
-%attr(755,root,root) %{_libdir}/liboss_turn.la
+%if %{build_turn}
 %attr(755,root,root) %{_libdir}/liboss_turn.so*
-%endif
 %endif
 
 %files devel
@@ -161,11 +164,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/liboss_carp.la
 %{_libdir}/liboss_carp.a
 
-%if %{has_turn_lib}
-%if 0%{?fedora} >= 16
+%if %{build_turn}
 %attr(755,root,root) %{_libdir}/liboss_turn.la
 %attr(755,root,root) %{_libdir}/liboss_turn.a
-%endif
 %endif
 
 %dir %attr(755,root,root) %{_includedir}/OSS
@@ -173,3 +174,5 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %post
+
+
