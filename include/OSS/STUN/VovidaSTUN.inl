@@ -45,7 +45,7 @@ static void
 computeHmac(char* hmac, const char* input, int length, const char* key, int keySize);
 
 static bool 
-stunParseAtrAddress( char* body, unsigned int hdrLen,  StunAtrAddress4& result )
+vovida_stun_ParseAtrAddress( char* body, unsigned int hdrLen,  VovidaStunAtrAddress4& result )
 {
    if ( hdrLen != 8 )
    {
@@ -78,7 +78,7 @@ stunParseAtrAddress( char* body, unsigned int hdrLen,  StunAtrAddress4& result )
 }
 
 static bool 
-stunParseAtrChangeRequest( char* body, unsigned int hdrLen,  StunAtrChangeRequest& result )
+vovida_stun_ParseAtrChangeRequest( char* body, unsigned int hdrLen,  VovidaStunAtrChangeRequest& result )
 {
    if ( hdrLen != 4 )
    {
@@ -96,7 +96,7 @@ stunParseAtrChangeRequest( char* body, unsigned int hdrLen,  StunAtrChangeReques
 }
 
 static bool 
-stunParseAtrError( char* body, unsigned int hdrLen,  StunAtrError& result )
+vovida_stun_ParseAtrError( char* body, unsigned int hdrLen,  VovidaStunAtrError& result )
 {
    if ( hdrLen >= sizeof(result) )
    {
@@ -118,7 +118,7 @@ stunParseAtrError( char* body, unsigned int hdrLen,  StunAtrError& result )
 }
 
 static bool 
-stunParseAtrUnknown( char* body, unsigned int hdrLen,  StunAtrUnknown& result )
+vovida_stun_ParseAtrUnknown( char* body, unsigned int hdrLen,  VovidaStunAtrUnknown& result )
 {
    if ( hdrLen >= sizeof(result) )
    {
@@ -139,7 +139,7 @@ stunParseAtrUnknown( char* body, unsigned int hdrLen,  StunAtrUnknown& result )
 
 
 static bool 
-stunParseAtrString( char* body, unsigned int hdrLen,  StunAtrString& result )
+vovida_stun_ParseAtrString( char* body, unsigned int hdrLen,  VovidaStunAtrString& result )
 {
    if ( hdrLen >= STUN_MAX_STRING )
    {
@@ -163,7 +163,7 @@ stunParseAtrString( char* body, unsigned int hdrLen,  StunAtrString& result )
 
 
 static bool 
-stunParseAtrIntegrity( char* body, unsigned int hdrLen,  StunAtrIntegrity& result )
+vovida_stun_ParseAtrIntegrity( char* body, unsigned int hdrLen,  VovidaStunAtrIntegrity& result )
 {
    if ( hdrLen != 20)
    {
@@ -179,29 +179,29 @@ stunParseAtrIntegrity( char* body, unsigned int hdrLen,  StunAtrIntegrity& resul
 
 
 bool
-stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose)
+vovida_stun_ParseMessage( char* buf, unsigned int bufLen, VovidaStunMessage& msg, bool verbose)
 {
-   if (verbose) clog << "Received stun message: " << bufLen << " bytes" << endl;
+   if (verbose) clog << "Received vovida_stun_ message: " << bufLen << " bytes" << endl;
    memset(&msg, 0, sizeof(msg));
 	
-   if (sizeof(StunMsgHdr) > bufLen)
+   if (sizeof(VovidaStunMsgHdr) > bufLen)
    {
       clog << "Bad message" << endl;
       return false;
    }
 	
-   memcpy(&msg.msgHdr, buf, sizeof(StunMsgHdr));
+   memcpy(&msg.msgHdr, buf, sizeof(VovidaStunMsgHdr));
    msg.msgHdr.msgType = ntohs(msg.msgHdr.msgType);
    msg.msgHdr.msgLength = ntohs(msg.msgHdr.msgLength);
 	
-   if (msg.msgHdr.msgLength + sizeof(StunMsgHdr) != bufLen)
+   if (msg.msgHdr.msgLength + sizeof(VovidaStunMsgHdr) != bufLen)
    {
       clog << "Message header length doesn't match message size: "
            << msg.msgHdr.msgLength << " - " << bufLen << endl;
       return false;
    }
 	
-   char* body = buf + sizeof(StunMsgHdr);
+   char* body = buf + sizeof(VovidaStunMsgHdr);
    unsigned int size = msg.msgHdr.msgLength;
 	
    //clog << "bytes after header = " << size << endl;
@@ -210,7 +210,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
    {
       // !jf! should check that there are enough bytes left in the buffer
 		
-      StunAtrHdr* attr = reinterpret_cast<StunAtrHdr*>(body);
+      VovidaStunAtrHdr* attr = reinterpret_cast<VovidaStunAtrHdr*>(body);
 		
       unsigned int attrLen = ntohs(attr->length);
       int atrType = ntohs(attr->type);
@@ -230,7 +230,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
       {
          case MappedAddress:
             msg.hasMappedAddress = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  msg.mappedAddress )== false )
+            if ( vovida_stun_ParseAtrAddress(  body,  attrLen,  msg.mappedAddress )== false )
             {
                clog << "problem parsing MappedAddress" << endl;
                return false;
@@ -244,7 +244,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
 
          case ResponseAddress:
             msg.hasResponseAddress = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  msg.responseAddress )== false )
+            if ( vovida_stun_ParseAtrAddress(  body,  attrLen,  msg.responseAddress )== false )
             {
                clog << "problem parsing ResponseAddress" << endl;
                return false;
@@ -257,7 +257,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
 				
          case ChangeRequest:
             msg.hasChangeRequest = true;
-            if (stunParseAtrChangeRequest( body, attrLen, msg.changeRequest) == false)
+            if (vovida_stun_ParseAtrChangeRequest( body, attrLen, msg.changeRequest) == false)
             {
                clog << "problem parsing ChangeRequest" << endl;
                return false;
@@ -270,7 +270,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
 				
          case SourceAddress:
             msg.hasSourceAddress = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  msg.sourceAddress )== false )
+            if ( vovida_stun_ParseAtrAddress(  body,  attrLen,  msg.sourceAddress )== false )
             {
                clog << "problem parsing SourceAddress" << endl;
                return false;
@@ -283,7 +283,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
 				
          case ChangedAddress:
             msg.hasChangedAddress = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  msg.changedAddress )== false )
+            if ( vovida_stun_ParseAtrAddress(  body,  attrLen,  msg.changedAddress )== false )
             {
                clog << "problem parsing ChangedAddress" << endl;
                return false;
@@ -296,7 +296,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
 				
          case Username: 
             msg.hasUsername = true;
-            if (stunParseAtrString( body, attrLen, msg.username) == false)
+            if (vovida_stun_ParseAtrString( body, attrLen, msg.username) == false)
             {
                clog << "problem parsing Username" << endl;
                return false;
@@ -310,7 +310,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
 				
          case Password: 
             msg.hasPassword = true;
-            if (stunParseAtrString( body, attrLen, msg.password) == false)
+            if (vovida_stun_ParseAtrString( body, attrLen, msg.password) == false)
             {
                clog << "problem parsing Password" << endl;
                return false;
@@ -323,7 +323,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
 				
          case MessageIntegrity:
             msg.hasMessageIntegrity = true;
-            if (stunParseAtrIntegrity( body, attrLen, msg.messageIntegrity) == false)
+            if (vovida_stun_ParseAtrIntegrity( body, attrLen, msg.messageIntegrity) == false)
             {
                clog << "problem parsing MessageIntegrity" << endl;
                return false;
@@ -341,7 +341,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
 				
          case ErrorCode:
             msg.hasErrorCode = true;
-            if (stunParseAtrError(body, attrLen, msg.errorCode) == false)
+            if (vovida_stun_ParseAtrError(body, attrLen, msg.errorCode) == false)
             {
                clog << "problem parsing ErrorCode" << endl;
                return false;
@@ -357,7 +357,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
 				
          case UnknownAttribute:
             msg.hasUnknownAttributes = true;
-            if (stunParseAtrUnknown(body, attrLen, msg.unknownAttributes) == false)
+            if (vovida_stun_ParseAtrUnknown(body, attrLen, msg.unknownAttributes) == false)
             {
                clog << "problem parsing UnknownAttribute" << endl;
                return false;
@@ -366,7 +366,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
 				
          case ReflectedFrom:
             msg.hasReflectedFrom = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  msg.reflectedFrom ) == false )
+            if ( vovida_stun_ParseAtrAddress(  body,  attrLen,  msg.reflectedFrom ) == false )
             {
                clog << "problem parsing ReflectedFrom" << endl;
                return false;
@@ -375,7 +375,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
 				
          case XorMappedAddress:
             msg.hasXorMappedAddress = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  msg.xorMappedAddress ) == false )
+            if ( vovida_stun_ParseAtrAddress(  body,  attrLen,  msg.xorMappedAddress ) == false )
             {
                clog << "problem parsing XorMappedAddress" << endl;
                return false;
@@ -396,7 +396,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
 				
          case ServerName: 
             msg.hasServerName = true;
-            if (stunParseAtrString( body, attrLen, msg.serverName) == false)
+            if (vovida_stun_ParseAtrString( body, attrLen, msg.serverName) == false)
             {
                clog << "problem parsing ServerName" << endl;
                return false;
@@ -409,7 +409,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
 				
          case SecondaryAddress:
             msg.hasSecondaryAddress = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  msg.secondaryAddress ) == false )
+            if ( vovida_stun_ParseAtrAddress(  body,  attrLen,  msg.secondaryAddress ) == false )
             {
                clog << "problem parsing secondaryAddress" << endl;
                return false;
@@ -462,7 +462,7 @@ encode(char* buf, const char* data, unsigned int length)
 
 
 static char* 
-encodeAtrAddress4(char* ptr, UInt16 type, const StunAtrAddress4& atr)
+encodeAtrAddress4(char* ptr, UInt16 type, const VovidaStunAtrAddress4& atr)
 {
    ptr = encode16(ptr, type);
    ptr = encode16(ptr, 8);
@@ -475,7 +475,7 @@ encodeAtrAddress4(char* ptr, UInt16 type, const StunAtrAddress4& atr)
 }
 
 static char* 
-encodeAtrChangeRequest(char* ptr, const StunAtrChangeRequest& atr)
+encodeAtrChangeRequest(char* ptr, const VovidaStunAtrChangeRequest& atr)
 {
    ptr = encode16(ptr, ChangeRequest);
    ptr = encode16(ptr, 4);
@@ -484,7 +484,7 @@ encodeAtrChangeRequest(char* ptr, const StunAtrChangeRequest& atr)
 }
 
 static char* 
-encodeAtrError(char* ptr, const StunAtrError& atr)
+encodeAtrError(char* ptr, const VovidaStunAtrError& atr)
 {
    ptr = encode16(ptr, ErrorCode);
    ptr = encode16(ptr, 6 + atr.sizeReason);
@@ -497,7 +497,7 @@ encodeAtrError(char* ptr, const StunAtrError& atr)
 
 
 static char* 
-encodeAtrUnknown(char* ptr, const StunAtrUnknown& atr)
+encodeAtrUnknown(char* ptr, const VovidaStunAtrUnknown& atr)
 {
    ptr = encode16(ptr, UnknownAttribute);
    ptr = encode16(ptr, 2+2*atr.numAttributes);
@@ -518,7 +518,7 @@ encodeXorOnly(char* ptr)
 
 
 static char* 
-encodeAtrString(char* ptr, UInt16 type, const StunAtrString& atr)
+encodeAtrString(char* ptr, UInt16 type, const VovidaStunAtrString& atr)
 {
    assert(atr.sizeValue % 4 == 0);
 	
@@ -530,7 +530,7 @@ encodeAtrString(char* ptr, UInt16 type, const StunAtrString& atr)
 
 
 static char* 
-encodeAtrIntegrity(char* ptr, const StunAtrIntegrity& atr)
+encodeAtrIntegrity(char* ptr, const VovidaStunAtrIntegrity& atr)
 {
    ptr = encode16(ptr, MessageIntegrity);
    ptr = encode16(ptr, 20);
@@ -540,13 +540,13 @@ encodeAtrIntegrity(char* ptr, const StunAtrIntegrity& atr)
 
 
 unsigned int
-stunEncodeMessage( const StunMessage& msg, 
+vovida_stun_EncodeMessage( const VovidaStunMessage& msg, 
                    char* buf, 
                    unsigned int bufLen, 
-                   const StunAtrString& password, 
+                   const VovidaStunAtrString& password, 
                    bool verbose)
 {
-   assert(bufLen >= sizeof(StunMsgHdr));
+   assert(bufLen >= sizeof(VovidaStunMsgHdr));
    char* ptr = buf;
 	
    ptr = encode16(ptr, msg.msgHdr.msgType);
@@ -554,7 +554,7 @@ stunEncodeMessage( const StunMessage& msg,
    ptr = encode16(ptr, 0);
    ptr = encode(ptr, reinterpret_cast<const char*>(msg.msgHdr.id.octet), sizeof(msg.msgHdr.id));
 	
-   if (verbose) clog << "Encoding stun message: " << endl;
+   if (verbose) clog << "Encoding vovida_stun_ message: " << endl;
    if (msg.hasMappedAddress)
    {
       if (verbose) clog << "Encoding MappedAddress: " << msg.mappedAddress.ipv4 << endl;
@@ -636,18 +636,18 @@ stunEncodeMessage( const StunMessage& msg,
    {
       if (verbose) clog << "HMAC with password: " << password.value << endl;
 		
-      StunAtrIntegrity integrity;
+      VovidaStunAtrIntegrity integrity;
       computeHmac(integrity.hash, buf, int(ptr-buf) , password.value, password.sizeValue);
       ptr = encodeAtrIntegrity(ptr, integrity);
    }
    if (verbose) clog << endl;
 	
-   encode16(lengthp, UInt16(ptr - buf - sizeof(StunMsgHdr)));
+   encode16(lengthp, UInt16(ptr - buf - sizeof(VovidaStunMsgHdr)));
    return int(ptr - buf);
 }
 
 int 
-stunRand()
+vovida_stun_Rand()
 {
    // return 32 bits of random stuff
    assert( sizeof(int) == 4 );
@@ -704,12 +704,12 @@ stunRand()
 
 /// return a random number to use as a port 
 int
-stunRandomPort()
+vovida_stun_RandomPort()
 {
    int min=0x4000;
    int max=0x7FFF;
 	
-   int ret = stunRand();
+   int ret = vovida_stun_Rand();
    ret = ret|min;
    ret = ret&max;
 	
@@ -760,9 +760,9 @@ toHex(const char* buffer, int bufferSize, char* output)
 }
 
 void
-stunCreateUserName(const StunAddress4& source, StunAtrString* username)
+vovida_stun_CreateUserName(const VovidaStunAddress4& source, VovidaStunAtrString* username)
 {
-   UInt64 time = stunGetSystemTimeSecs();
+   UInt64 time = vovida_stun_GetSystemTimeSecs();
    time -= (time % 20*60);
    //UInt64 hitime = time >> 32;
    UInt64 lotime = time & 0xFFFFFFFF;
@@ -771,7 +771,7 @@ stunCreateUserName(const StunAddress4& source, StunAtrString* username)
    sprintf(buffer,
            "%08x:%08x:%08x:", 
            UInt32(source.addr),
-           UInt32(stunRand()),
+           UInt32(vovida_stun_Rand()),
            UInt32(lotime));
    assert( strlen(buffer) < 1024 );
 	
@@ -798,7 +798,7 @@ stunCreateUserName(const StunAddress4& source, StunAtrString* username)
 }
 
 void
-stunCreatePassword(const StunAtrString& username, StunAtrString* password)
+vovida_stun_CreatePassword(const VovidaStunAtrString& username, VovidaStunAtrString* password)
 {
    char hmac[20];
    char key[] = "Fluffy";
@@ -813,7 +813,7 @@ stunCreatePassword(const StunAtrString& username, StunAtrString* password)
 
 
 UInt64
-stunGetSystemTimeSecs()
+vovida_stun_GetSystemTimeSecs()
 {
    UInt64 time=0;
 #if defined(WIN32)  
@@ -830,7 +830,7 @@ stunGetSystemTimeSecs()
    return time;
 }
 
-
+#if 0
 ostream& operator<< ( ostream& strm, const UInt128& r )
 {
    strm << int(r.octet[0]);
@@ -841,9 +841,10 @@ ostream& operator<< ( ostream& strm, const UInt128& r )
     
    return strm;
 }
+#endif
 
 ostream& 
-operator<<( ostream& strm, const StunAddress4& addr)
+operator<<( ostream& strm, const VovidaStunAddress4& addr)
 {
    UInt32 ip = addr.addr;
    strm << ((int)(ip>>24)&0xFF) << ".";
@@ -859,7 +860,7 @@ operator<<( ostream& strm, const StunAddress4& addr)
 
 // returns true if it scucceeded
 bool 
-stunParseHostName( const char* peerName,
+vovida_stun_ParseHostName( const char* peerName,
                UInt32& ip,
                UInt16& portVal,
                UInt16 defaultPort )
@@ -960,13 +961,13 @@ stunParseHostName( const char* peerName,
 
 
 bool
-stunParseServerName( const char* name, StunAddress4& addr)
+vovida_stun_ParseServerName( const char* name, VovidaStunAddress4& addr)
 {
    assert(name);
 	
    // TODO - put in DNS SRV stuff.
 	
-   bool ret = stunParseHostName( name, addr.addr, addr.port, 3478); 
+   bool ret = vovida_stun_ParseHostName( name, addr.addr, addr.port, 3478); 
    if ( ret != true ) 
    {
        addr.port=0xFFFF;
@@ -976,7 +977,7 @@ stunParseServerName( const char* name, StunAddress4& addr)
 
 
 static void
-stunCreateErrorResponse(StunMessage& response, int cl, int number, const char* msg)
+vovida_stun_CreateErrorResponse(VovidaStunMessage& response, int cl, int number, const char* msg)
 {
    response.msgHdr.msgType = BindErrorResponseMsg;
    response.hasErrorCode = true;
@@ -987,7 +988,7 @@ stunCreateErrorResponse(StunMessage& response, int cl, int number, const char* m
 
 #if 0
 static void
-stunCreateSharedSecretErrorResponse(StunMessage& response, int cl, int number, const char* msg)
+vovida_stun_CreateSharedSecretErrorResponse(VovidaStunMessage& response, int cl, int number, const char* msg)
 {
    response.msgHdr.msgType = SharedSecretErrorResponseMsg;
    response.hasErrorCode = true;
@@ -998,32 +999,32 @@ stunCreateSharedSecretErrorResponse(StunMessage& response, int cl, int number, c
 #endif
 
 static void
-stunCreateSharedSecretResponse(const StunMessage& request, const StunAddress4& source, StunMessage& response)
+vovida_stun_CreateSharedSecretResponse(const VovidaStunMessage& request, const VovidaStunAddress4& source, VovidaStunMessage& response)
 {
    response.msgHdr.msgType = SharedSecretResponseMsg;
    response.msgHdr.id = request.msgHdr.id;
 	
    response.hasUsername = true;
-   stunCreateUserName( source, &response.username);
+   vovida_stun_CreateUserName( source, &response.username);
 	
    response.hasPassword = true;
-   stunCreatePassword( response.username, &response.password);
+   vovida_stun_CreatePassword( response.username, &response.password);
 }
 
 
-// This funtion takes a single message sent to a stun server, parses
+// This funtion takes a single message sent to a vovida_stun_ server, parses
 // and constructs an apropriate repsonse - returns true if message is
 // valid
 bool
-stunServerProcessMsg( char* buf,
+vovida_stun_ServerProcessMsg( char* buf,
                       unsigned int bufLen,
-                      StunAddress4& from, 
-                      StunAddress4& secondary,
-                      StunAddress4& myAddr,
-                      StunAddress4& altAddr, 
-                      StunMessage* resp,
-                      StunAddress4* destination,
-                      StunAtrString* hmacPassword,
+                      VovidaStunAddress4& from, 
+                      VovidaStunAddress4& secondary,
+                      VovidaStunAddress4& myAddr,
+                      VovidaStunAddress4& altAddr, 
+                      VovidaStunMessage* resp,
+                      VovidaStunAddress4* destination,
+                      VovidaStunAtrString* hmacPassword,
                       bool* changePort,
                       bool* changeIp,
                       bool verbose)
@@ -1036,8 +1037,8 @@ stunServerProcessMsg( char* buf,
    *changeIp = false;
    *changePort = false;
 	
-   StunMessage req;
-   bool ok = stunParseMessage( buf,bufLen, req, verbose);
+   VovidaStunMessage req;
+   bool ok = vovida_stun_ParseMessage( buf,bufLen, req, verbose);
 	
    if (!ok)      // Complete garbage, drop it on the floor
    {
@@ -1046,8 +1047,8 @@ stunServerProcessMsg( char* buf,
    }
    if (verbose) clog << "Request parsed ok" << endl;
 	
-   StunAddress4 mapped = req.mappedAddress.ipv4;
-   StunAddress4 respondTo = req.responseAddress.ipv4;
+   VovidaStunAddress4 mapped = req.mappedAddress.ipv4;
+   VovidaStunAddress4 respondTo = req.responseAddress.ipv4;
    UInt32 flags = req.changeRequest.value;
 	
    switch (req.msgHdr.msgType)
@@ -1055,8 +1056,8 @@ stunServerProcessMsg( char* buf,
       case SharedSecretRequestMsg:
          if(verbose) clog << "Received SharedSecretRequestMsg on udp. send error 433." << endl;
          // !cj! - should fix so you know if this came over TLS or UDP
-         stunCreateSharedSecretResponse(req, from, *resp);
-         //stunCreateSharedSecretErrorResponse(*resp, 4, 33, "this request must be over TLS");
+         vovida_stun_CreateSharedSecretResponse(req, from, *resp);
+         //vovida_stun_CreateSharedSecretErrorResponse(*resp, 4, 33, "this request must be over TLS");
          return true;
 			
       case BindRequestMsg:
@@ -1067,7 +1068,7 @@ stunServerProcessMsg( char* buf,
             if (0) // !jf! mustAuthenticate
             {
                if(verbose) clog << "Received BindRequest with no MessageIntegrity. Sending 401." << endl;
-               stunCreateErrorResponse(*resp, 4, 1, "Missing MessageIntegrity");
+               vovida_stun_CreateErrorResponse(*resp, 4, 1, "Missing MessageIntegrity");
                return true;
             }
          }
@@ -1076,7 +1077,7 @@ stunServerProcessMsg( char* buf,
             if (!req.hasUsername)
             {
                if (verbose) clog << "No UserName. Send 432." << endl;
-               stunCreateErrorResponse(*resp, 4, 32, "No UserName and contains MessageIntegrity");
+               vovida_stun_CreateErrorResponse(*resp, 4, 32, "No UserName and contains MessageIntegrity");
                return true;
             }
             else
@@ -1088,7 +1089,7 @@ stunServerProcessMsg( char* buf,
                   if (0)
                   {
                      // !jf! if the credentials are stale 
-                     stunCreateErrorResponse(*resp, 4, 30, "Stale credentials on BindRequest");
+                     vovida_stun_CreateErrorResponse(*resp, 4, 30, "Stale credentials on BindRequest");
                      return true;
                   }
                   else
@@ -1110,7 +1111,7 @@ stunServerProcessMsg( char* buf,
                      if (memcmp(buf, hmac, 20) != 0)
                      {
                         if (verbose) clog << "MessageIntegrity is bad. Sending " << endl;
-                        stunCreateErrorResponse(*resp, 4, 3, "Unknown username. Try test with password 1234");
+                        vovida_stun_CreateErrorResponse(*resp, 4, 3, "Unknown username. Try test with password 1234");
                         return true;
                      }
 							
@@ -1216,7 +1217,7 @@ stunServerProcessMsg( char* buf,
          {
             // this creates the password that will be used in the HMAC when then
             // messages is sent
-            stunCreatePassword( req.username, hmacPassword );
+            vovida_stun_CreatePassword( req.username, hmacPassword );
          }
 				
          if (req.hasUsername && (req.username.sizeValue > 64 ) )
@@ -1245,8 +1246,8 @@ stunServerProcessMsg( char* buf,
 }
 
 bool
-stunInitServer(StunServerInfo& info, const StunAddress4& myAddr,
-               const StunAddress4& altAddr, int startMediaPort, bool verbose )
+vovida_stun_InitServer(VovidaStunServerInfo& info, const VovidaStunAddress4& myAddr,
+               const VovidaStunAddress4& altAddr, int startMediaPort, bool verbose )
 {
    assert( myAddr.port != 0 );
    assert( altAddr.port!= 0 );
@@ -1268,7 +1269,7 @@ stunInitServer(StunServerInfo& info, const StunAddress4& myAddr,
 
       for (int i=0; i<MAX_MEDIA_RELAYS; ++i)
       {
-         StunMediaRelay* relay = &info.relays[i];
+         VovidaStunMediaRelay* relay = &info.relays[i];
          relay->relayPort = startMediaPort+i;
          relay->fd = 0;
          relay->expireTime = 0;
@@ -1279,19 +1280,19 @@ stunInitServer(StunServerInfo& info, const StunAddress4& myAddr,
       info.relay = false;
    }
    
-   if ((info.myFd = openPort(myAddr.port, myAddr.addr,verbose)) == INVALID_SOCKET)
+   if ((info.myFd = udp_openPort(myAddr.port, myAddr.addr,verbose)) == INVALID_SOCKET)
    {
       clog << "Can't open " << myAddr << endl;
-      stunStopServer(info);
+      vovida_stun_StopServer(info);
 
       return false;
    }
    //if (verbose) clog << "Opened " << myAddr.addr << ":" << myAddr.port << " --> " << info.myFd << endl;
 
-   if ((info.altPortFd = openPort(altAddr.port,myAddr.addr,verbose)) == INVALID_SOCKET)
+   if ((info.altPortFd = udp_openPort(altAddr.port,myAddr.addr,verbose)) == INVALID_SOCKET)
    {
       clog << "Can't open " << myAddr << endl;
-      stunStopServer(info);
+      vovida_stun_StopServer(info);
       return false;
    }
    //if (verbose) clog << "Opened " << myAddr.addr << ":" << altAddr.port << " --> " << info.altPortFd << endl;
@@ -1300,10 +1301,10 @@ stunInitServer(StunServerInfo& info, const StunAddress4& myAddr,
    info.altIpFd = INVALID_SOCKET;
    if (  altAddr.addr != 0 )
    {
-      if ((info.altIpFd = openPort( myAddr.port, altAddr.addr,verbose)) == INVALID_SOCKET)
+      if ((info.altIpFd = udp_openPort( myAddr.port, altAddr.addr,verbose)) == INVALID_SOCKET)
       {
          clog << "Can't open " << altAddr << endl;
-         stunStopServer(info);
+         vovida_stun_StopServer(info);
          return false;
       }
       //if (verbose) clog << "Opened " << altAddr.addr << ":" << myAddr.port << " --> " << info.altIpFd << endl;;
@@ -1311,10 +1312,10 @@ stunInitServer(StunServerInfo& info, const StunAddress4& myAddr,
    
    info.altIpPortFd = INVALID_SOCKET;
    if (  altAddr.addr != 0 )
-   {  if ((info.altIpPortFd = openPort(altAddr.port, altAddr.addr,verbose)) == INVALID_SOCKET)
+   {  if ((info.altIpPortFd = udp_openPort(altAddr.port, altAddr.addr,verbose)) == INVALID_SOCKET)
       {
          clog << "Can't open " << altAddr << endl;
-         stunStopServer(info);
+         vovida_stun_StopServer(info);
          return false;
       }
       //if (verbose) clog << "Opened " << altAddr.addr << ":" << altAddr.port << " --> " << info.altIpPortFd << endl;;
@@ -1324,7 +1325,7 @@ stunInitServer(StunServerInfo& info, const StunAddress4& myAddr,
 }
 
 void
-stunStopServer(StunServerInfo& info)
+vovida_stun_StopServer(VovidaStunServerInfo& info)
 {
    if (info.myFd > 0) closesocket(info.myFd);
    if (info.altPortFd > 0) closesocket(info.altPortFd);
@@ -1335,7 +1336,7 @@ stunStopServer(StunServerInfo& info)
    {
       for (int i=0; i<MAX_MEDIA_RELAYS; ++i)
       {
-         StunMediaRelay* relay = &info.relays[i];
+         VovidaStunMediaRelay* relay = &info.relays[i];
          if (relay->fd)
          {
             closesocket(relay->fd);
@@ -1347,7 +1348,7 @@ stunStopServer(StunServerInfo& info)
 
 
 bool
-stunServerProcess(StunServerInfo& info, bool verbose)
+vovida_stun_ServerProcess(VovidaStunServerInfo& info, bool verbose)
 {
    char msg[STUN_MAX_MESSAGE_SIZE];
    int msgLen = sizeof(msg);
@@ -1380,7 +1381,7 @@ stunServerProcess(StunServerInfo& info, bool verbose)
    {
       for (int i=0; i<MAX_MEDIA_RELAYS; ++i)
       {
-         StunMediaRelay* relay = &info.relays[i];
+         VovidaStunMediaRelay* relay = &info.relays[i];
          if (relay->fd)
          {
             FD_SET(relay->fd, &fdSet);
@@ -1415,7 +1416,7 @@ stunServerProcess(StunServerInfo& info, bool verbose)
    }
    else if (e >= 0)
    {
-      StunAddress4 from;
+      VovidaStunAddress4 from;
 
       // do the media relaying
       if (info.relay)
@@ -1423,7 +1424,7 @@ stunServerProcess(StunServerInfo& info, bool verbose)
          time_t now = time(0);
          for (int i=0; i<MAX_MEDIA_RELAYS; ++i)
          {
-            StunMediaRelay* relay = &info.relays[i];
+            VovidaStunMediaRelay* relay = &info.relays[i];
             if (relay->fd)
             {
                if (FD_ISSET(relay->fd, &fdSet))
@@ -1431,11 +1432,11 @@ stunServerProcess(StunServerInfo& info, bool verbose)
                   char msg[MAX_RTP_MSG_SIZE];
                   int msgLen = sizeof(msg);
                   
-                  StunAddress4 rtpFrom;
-                  ok = getMessage( relay->fd, msg, &msgLen, &rtpFrom.addr, &rtpFrom.port ,verbose);
+                  VovidaStunAddress4 rtpFrom;
+                  ok = udp_getMessage( relay->fd, msg, &msgLen, &rtpFrom.addr, &rtpFrom.port ,verbose);
                   if (ok)
                   {
-                     sendMessage(info.myFd, msg, msgLen, relay->destination.addr, relay->destination.port, verbose);
+                     udp_sendMessage(info.myFd, msg, msgLen, relay->destination.addr, relay->destination.port, verbose);
                      relay->expireTime = now + MEDIA_RELAY_TIMEOUT;
                      if ( verbose ) clog << "Relay packet on " 
                                          << relay->fd 
@@ -1459,28 +1460,28 @@ stunServerProcess(StunServerInfo& info, bool verbose)
          if (verbose) clog << "received on A1:P1" << endl;
          recvAltIp = false;
          recvAltPort = false;
-         ok = getMessage( info.myFd, msg, &msgLen, &from.addr, &from.port,verbose );
+         ok = udp_getMessage( info.myFd, msg, &msgLen, &from.addr, &from.port,verbose );
       }
       else if (FD_ISSET(info.altPortFd, &fdSet))
       {
          if (verbose) clog << "received on A1:P2" << endl;
          recvAltIp = false;
          recvAltPort = true;
-         ok = getMessage( info.altPortFd, msg, &msgLen, &from.addr, &from.port,verbose );
+         ok = udp_getMessage( info.altPortFd, msg, &msgLen, &from.addr, &from.port,verbose );
       }
       else if ( (info.altIpFd!=INVALID_SOCKET) && FD_ISSET(info.altIpFd,&fdSet))
       {
          if (verbose) clog << "received on A2:P1" << endl;
          recvAltIp = true;
          recvAltPort = false;
-         ok = getMessage( info.altIpFd, msg, &msgLen, &from.addr, &from.port ,verbose);
+         ok = udp_getMessage( info.altIpFd, msg, &msgLen, &from.addr, &from.port ,verbose);
       }
       else if ( (info.altIpPortFd!=INVALID_SOCKET) && FD_ISSET(info.altIpPortFd, &fdSet))
       {
          if (verbose) clog << "received on A2:P2" << endl;
          recvAltIp = true;
          recvAltPort = true;
-         ok = getMessage( info.altIpPortFd, msg, &msgLen, &from.addr, &from.port,verbose );
+         ok = udp_getMessage( info.altIpPortFd, msg, &msgLen, &from.addr, &from.port,verbose );
       }
       else
       {
@@ -1492,7 +1493,7 @@ stunServerProcess(StunServerInfo& info, bool verbose)
       {
          for (int i=0; i<MAX_MEDIA_RELAYS; ++i)
          {
-            StunMediaRelay* relay = &info.relays[i];
+            VovidaStunMediaRelay* relay = &info.relays[i];
             if (relay->destination.addr == from.addr && 
                 relay->destination.port == from.port)
             {
@@ -1506,12 +1507,12 @@ stunServerProcess(StunServerInfo& info, bool verbose)
          {
             for (int i=0; i<MAX_MEDIA_RELAYS; ++i)
             {
-               StunMediaRelay* relay = &info.relays[i];
+               VovidaStunMediaRelay* relay = &info.relays[i];
                if (relay->fd == 0)
                {
                   if ( verbose ) clog << "Open relay port " << relay->relayPort << endl;
                   
-                  relay->fd = openPort(relay->relayPort, info.myAddr.addr, verbose);
+                  relay->fd = udp_openPort(relay->relayPort, info.myAddr.addr, verbose);
                   relay->destination.addr = from.addr;
                   relay->destination.port = from.port;
                   relay->expireTime = time(0) + MEDIA_RELAY_TIMEOUT;
@@ -1538,12 +1539,12 @@ stunServerProcess(StunServerInfo& info, bool verbose)
       bool changePort = false;
       bool changeIp = false;
 		
-      StunMessage resp;
-      StunAddress4 dest;
-      StunAtrString hmacPassword;  
+      VovidaStunMessage resp;
+      VovidaStunAddress4 dest;
+      VovidaStunAtrString hmacPassword;  
       hmacPassword.sizeValue = 0;
 
-      StunAddress4 secondary;
+      VovidaStunAddress4 secondary;
       secondary.port = 0;
       secondary.addr = 0;
                
@@ -1555,7 +1556,7 @@ stunServerProcess(StunServerInfo& info, bool verbose)
          from.port = relayPort;
       }
       
-      ok = stunServerProcessMsg( msg, msgLen, from, secondary,
+      ok = vovida_stun_ServerProcessMsg( msg, msgLen, from, secondary,
                                  recvAltIp ? info.altAddr : info.myAddr,
                                  recvAltIp ? info.myAddr : info.altAddr, 
                                  &resp,
@@ -1574,7 +1575,7 @@ stunServerProcess(StunServerInfo& info, bool verbose)
       char buf[STUN_MAX_MESSAGE_SIZE];
       int len = sizeof(buf);
       		
-      len = stunEncodeMessage( resp, buf, len, hmacPassword,verbose );
+      len = vovida_stun_EncodeMessage( resp, buf, len, hmacPassword,verbose );
 		
       if ( dest.addr == 0 )  ok=false;
       if ( dest.port == 0 ) ok=false;
@@ -1617,7 +1618,7 @@ stunServerProcess(StunServerInfo& info, bool verbose)
 	
          if ( sendFd != INVALID_SOCKET )
          {
-            sendMessage( sendFd, buf, len, dest.addr, dest.port, verbose );
+            udp_sendMessage( sendFd, buf, len, dest.addr, dest.port, verbose );
          }
       }
    }
@@ -1626,7 +1627,7 @@ stunServerProcess(StunServerInfo& info, bool verbose)
 }
 
 int 
-stunFindLocalInterfaces(UInt32* addresses,int maxRet)
+vovida_stun_FindLocalInterfaces(UInt32* addresses,int maxRet)
 {
 #if defined(WIN32) || defined(__sparc__)
    return 0;
@@ -1693,8 +1694,8 @@ stunFindLocalInterfaces(UInt32* addresses,int maxRet)
 
 
 void
-stunBuildReqSimple( StunMessage* msg,
-                    const StunAtrString& username,
+vovida_stun_BuildReqSimple( VovidaStunMessage* msg,
+                    const VovidaStunAtrString& username,
                     bool changePort, bool changeIp, unsigned int id )
 {
    assert( msg );
@@ -1705,7 +1706,7 @@ stunBuildReqSimple( StunMessage* msg,
    for ( int i=0; i<16; i=i+4 )
    {
       assert(i+3<16);
-      int r = stunRand();
+      int r = vovida_stun_Rand();
       msg->msgHdr.id.octet[i+0]= r>>0;
       msg->msgHdr.id.octet[i+1]= r>>8;
       msg->msgHdr.id.octet[i+2]= r>>16;
@@ -1730,8 +1731,8 @@ stunBuildReqSimple( StunMessage* msg,
 
 
 static void 
-stunSendTest( Socket myFd, StunAddress4& dest, 
-              const StunAtrString& username, const StunAtrString& password, 
+vovida_stun_SendTest( Socket myFd, VovidaStunAddress4& dest, 
+              const VovidaStunAtrString& username, const VovidaStunAtrString& password, 
               int testNum, bool verbose )
 { 
    assert( dest.addr != 0 );
@@ -1763,24 +1764,24 @@ stunSendTest( Socket myFd, StunAddress4& dest,
          assert(0);
    }
 	
-   StunMessage req;
-   memset(&req, 0, sizeof(StunMessage));
+   VovidaStunMessage req;
+   memset(&req, 0, sizeof(VovidaStunMessage));
 	
-   stunBuildReqSimple( &req, username, 
+   vovida_stun_BuildReqSimple( &req, username, 
                        changePort , changeIP , 
                        testNum );
 	
    char buf[STUN_MAX_MESSAGE_SIZE];
    int len = STUN_MAX_MESSAGE_SIZE;
 	
-   len = stunEncodeMessage( req, buf, len, password,verbose );
+   len = vovida_stun_EncodeMessage( req, buf, len, password,verbose );
 	
    if ( verbose )
    {
       clog << "About to send msg of len " << len << " to " << dest << endl;
    }
 	
-   sendMessage( myFd, buf, len, dest.addr, dest.port, verbose );
+   udp_sendMessage( myFd, buf, len, dest.addr, dest.port, verbose );
 	
    // add some delay so the packets don't get sent too quickly 
 #ifdef WIN32 // !cj! TODO - should fix this up in windows
@@ -1795,24 +1796,24 @@ stunSendTest( Socket myFd, StunAddress4& dest,
 
 
 void 
-stunGetUserNameAndPassword(  const StunAddress4& dest, 
-                             StunAtrString* username,
-                             StunAtrString* password)
+vovida_stun_GetUserNameAndPassword(  const VovidaStunAddress4& dest, 
+                             VovidaStunAtrString* username,
+                             VovidaStunAtrString* password)
 { 
    // !cj! This is totally bogus - need to make TLS connection to dest and get a
    // username and password to use 
-   stunCreateUserName(dest, username);
-   stunCreatePassword(*username, password);
+   vovida_stun_CreateUserName(dest, username);
+   vovida_stun_CreatePassword(*username, password);
 }
 
 
 void 
-stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr )
+vovida_stun_Test( VovidaStunAddress4& dest, int testNum, bool verbose, VovidaStunAddress4* sAddr )
 { 
    assert( dest.addr != 0 );
    assert( dest.port != 0 );
 	
-   int port = stunRandomPort();
+   int port = vovida_stun_RandomPort();
    UInt32 interfaceIp=0;
    if (sAddr)
    {
@@ -1822,36 +1823,36 @@ stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr )
         port = sAddr->port;
       }
    }
-   Socket myFd = openPort(port,interfaceIp,verbose);
+   Socket myFd = udp_openPort(port,interfaceIp,verbose);
 	
-   StunAtrString username;
-   StunAtrString password;
+   VovidaStunAtrString username;
+   VovidaStunAtrString password;
 	
    username.sizeValue = 0;
    password.sizeValue = 0;
 	
 #ifdef USE_TLS
-   stunGetUserNameAndPassword( dest, username, password );
+   vovida_stun_GetUserNameAndPassword( dest, username, password );
 #endif
 	
-   stunSendTest( myFd, dest, username, password, testNum, verbose );
+   vovida_stun_SendTest( myFd, dest, username, password, testNum, verbose );
     
    char msg[STUN_MAX_MESSAGE_SIZE];
    int msgLen = STUN_MAX_MESSAGE_SIZE;
 	
-   StunAddress4 from;
-   getMessage( myFd,
+   VovidaStunAddress4 from;
+   udp_getMessage( myFd,
                msg,
                &msgLen,
                &from.addr,
                &from.port,verbose );
 	
-   StunMessage resp;
-   memset(&resp, 0, sizeof(StunMessage));
+   VovidaStunMessage resp;
+   memset(&resp, 0, sizeof(VovidaStunMessage));
 	
    if ( verbose ) clog << "Got a response" << endl;
-   bool ok = stunParseMessage( msg,msgLen, resp,verbose );
-	
+   vovida_stun_ParseMessage( msg,msgLen, resp,verbose );
+#if 0
    if ( verbose )
    {
       clog << "\t ok=" << ok << endl;
@@ -1860,7 +1861,7 @@ stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr )
       clog << "\t changedAddr=" << resp.changedAddress.ipv4 << endl;
       clog << endl;
    }
-	
+#endif	
    if (sAddr)
    {
       sAddr->port = resp.mappedAddress.ipv4.port;
@@ -1870,12 +1871,12 @@ stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr )
 
 
 NatType
-stunNatType( StunAddress4& dest, 
+vovida_stun_NatType( VovidaStunAddress4& dest, 
              bool verbose,
              bool* preservePort, // if set, is return for if NAT preservers ports or not
              bool* hairpin,  // if set, is the return for if NAT will hairpin packets
              int port, // port to use for the test, 0 to choose random port
-             StunAddress4* sAddr // NIC to use 
+             VovidaStunAddress4* sAddr // NIC to use 
    )
 { 
    assert( dest.addr != 0 );
@@ -1888,20 +1889,20 @@ stunNatType( StunAddress4& dest,
 	
    if ( port == 0 )
    {
-      port = stunRandomPort();
+      port = vovida_stun_RandomPort();
    }
    UInt32 interfaceIp=0;
    if (sAddr)
    {
       interfaceIp = sAddr->addr;
    }
-   Socket myFd1 = openPort(port,interfaceIp,verbose);
-   Socket myFd2 = openPort(port+1,interfaceIp,verbose);
+   Socket myFd1 = udp_openPort(port,interfaceIp,verbose);
+   Socket myFd2 = udp_openPort(port+1,interfaceIp,verbose);
 
    if ( ( myFd1 == INVALID_SOCKET) || ( myFd2 == INVALID_SOCKET) )
    {
         cerr << "Some problem opening port/interface to send on" << endl;
-       return StunTypeFailure; 
+       return VovidaStunTypeFailure; 
    }
 
    assert( myFd1 != INVALID_SOCKET );
@@ -1909,11 +1910,11 @@ stunNatType( StunAddress4& dest,
     
    bool respTestI=false;
    bool isNat=true;
-   StunAddress4 testImappedAddr;
+   VovidaStunAddress4 testImappedAddr;
    bool respTestI2=false; 
    bool mappedIpSame = true;
-   StunAddress4 testI2mappedAddr;
-   StunAddress4 testI2dest=dest;
+   VovidaStunAddress4 testI2mappedAddr;
+   VovidaStunAddress4 testI2dest=dest;
    bool respTestII=false;
    bool respTestIII=false;
 
@@ -1922,14 +1923,14 @@ stunNatType( StunAddress4& dest,
 	
    memset(&testImappedAddr,0,sizeof(testImappedAddr));
 	
-   StunAtrString username;
-   StunAtrString password;
+   VovidaStunAtrString username;
+   VovidaStunAtrString password;
 	
    username.sizeValue = 0;
    password.sizeValue = 0;
 	
 #ifdef USE_TLS 
-   stunGetUserNameAndPassword( dest, username, password );
+   vovida_stun_GetUserNameAndPassword( dest, username, password );
 #endif
 	
    int count=0;
@@ -1955,7 +1956,7 @@ stunNatType( StunAddress4& dest,
       {
          // error occured
          cerr << "Error " << e << " " << strerror(e) << " in select" << endl;
-        return StunTypeFailure; 
+        return VovidaStunTypeFailure; 
      }
       else if ( err == 0 )
       {
@@ -1964,7 +1965,7 @@ stunNatType( StunAddress4& dest,
 			
          if ( !respTestI ) 
          {
-            stunSendTest( myFd1, dest, username, password, 1 ,verbose );
+            vovida_stun_SendTest( myFd1, dest, username, password, 1 ,verbose );
          }         
 			
          if ( (!respTestI2) && respTestI ) 
@@ -1973,18 +1974,18 @@ stunNatType( StunAddress4& dest,
             if (  ( testI2dest.addr != 0 ) &&
                   ( testI2dest.port != 0 ) )
             {
-               stunSendTest( myFd1, testI2dest, username, password, 10  ,verbose);
+               vovida_stun_SendTest( myFd1, testI2dest, username, password, 10  ,verbose);
             }
          }
 			
          if ( !respTestII )
          {
-            stunSendTest( myFd2, dest, username, password, 2 ,verbose );
+            vovida_stun_SendTest( myFd2, dest, username, password, 2 ,verbose );
          }
 			
          if ( !respTestIII )
          {
-            stunSendTest( myFd2, dest, username, password, 3 ,verbose );
+            vovida_stun_SendTest( myFd2, dest, username, password, 3 ,verbose );
          }
 			
          if ( respTestI && (!respTestHairpin) )
@@ -1992,7 +1993,7 @@ stunNatType( StunAddress4& dest,
             if (  ( testImappedAddr.addr != 0 ) &&
                   ( testImappedAddr.port != 0 ) )
             {
-               stunSendTest( myFd1, testImappedAddr, username, password, 11 ,verbose );
+               vovida_stun_SendTest( myFd1, testImappedAddr, username, password, 11 ,verbose );
             }
          }
       }
@@ -2021,18 +2022,18 @@ stunNatType( StunAddress4& dest,
                   char msg[STUN_MAX_MESSAGE_SIZE];
                   int msgLen = sizeof(msg);
                   						
-                  StunAddress4 from;
+                  VovidaStunAddress4 from;
 						
-                  getMessage( myFd,
+                  udp_getMessage( myFd,
                               msg,
                               &msgLen,
                               &from.addr,
                               &from.port,verbose );
 						
-                  StunMessage resp;
-                  memset(&resp, 0, sizeof(StunMessage));
+                  VovidaStunMessage resp;
+                  memset(&resp, 0, sizeof(VovidaStunMessage));
 						
-                  stunParseMessage( msg,msgLen, resp,verbose );
+                  vovida_stun_ParseMessage( msg,msgLen, resp,verbose );
 						
                   if ( verbose )
                   {
@@ -2117,7 +2118,7 @@ stunNatType( StunAddress4& dest,
 	
    // see if we can bind to this address 
    //cerr << "try binding to " << testImappedAddr << endl;
-   Socket s = openPort( 0/*use ephemeral*/, testImappedAddr.addr, false );
+   Socket s = udp_openPort( 0/*use ephemeral*/, testImappedAddr.addr, false );
    if ( s != INVALID_SOCKET )
    {
       closesocket(s);
@@ -2150,7 +2151,7 @@ stunNatType( StunAddress4& dest,
       {
          if (respTestII)
          {
-            return StunTypeConeNat;
+            return VovidaStunTypeConeNat;
          }
          else
          {
@@ -2158,16 +2159,16 @@ stunNatType( StunAddress4& dest,
             {
                if ( respTestIII )
                {
-                  return StunTypeRestrictedNat;
+                  return VovidaStunTypeRestrictedNat;
                }
                else
                {
-                  return StunTypePortRestrictedNat;
+                  return VovidaStunTypePortRestrictedNat;
                }
             }
             else
             {
-               return StunTypeSymNat;
+               return VovidaStunTypeSymNat;
             }
          }
       }
@@ -2175,17 +2176,17 @@ stunNatType( StunAddress4& dest,
       {
          if (respTestII)
          {
-            return StunTypeOpen;
+            return VovidaStunTypeOpen;
          }
          else
          {
-            return StunTypeSymFirewall;
+            return VovidaStunTypeSymFirewall;
          }
       }
    }
    else
    {
-      return StunTypeBlocked;
+      return VovidaStunTypeBlocked;
    }
 #else
    if ( respTestI ) // not blocked 
@@ -2196,50 +2197,50 @@ stunNatType( StunAddress4& dest,
          {
             if (respTestII)
             {
-               return StunTypeIndependentFilter;
+               return VovidaStunTypeIndependentFilter;
             }
             else
             {
                if ( respTestIII )
                {
-                  return StunTypeDependentFilter;
+                  return VovidaStunTypeDependentFilter;
                }
                else
                {
-                  return StunTypePortDependedFilter;
+                  return VovidaStunTypePortDependedFilter;
                }
             }
          }
          else // mappedIp is not same 
          {
-            return StunTypeDependentMapping;
+            return VovidaStunTypeDependentMapping;
          }
       }
       else  // isNat is false
       {
          if (respTestII)
          {
-            return StunTypeOpen;
+            return VovidaStunTypeOpen;
          }
          else
          {
-            return StunTypeFirewall;
+            return VovidaStunTypeFirewall;
          }
       }
    }
    else
    {
-      return StunTypeBlocked;
+      return VovidaStunTypeBlocked;
    }
 #endif
 	
-   return StunTypeUnknown;
+   return VovidaStunTypeUnknown;
 }
 
 
 int
-stunOpenSocket( StunAddress4& dest, StunAddress4* mapAddr, 
-                int port, StunAddress4* srcAddr, 
+vovida_stun_OpenSocket( VovidaStunAddress4& dest, VovidaStunAddress4* mapAddr, 
+                int port, VovidaStunAddress4* srcAddr, 
                 bool verbose )
 {
    assert( dest.addr != 0 );
@@ -2248,7 +2249,7 @@ stunOpenSocket( StunAddress4& dest, StunAddress4* mapAddr,
    
    if ( port == 0 )
    {
-      port = stunRandomPort();
+      port = vovida_stun_RandomPort();
    }
    unsigned int interfaceIp = 0;
    if ( srcAddr )
@@ -2256,7 +2257,7 @@ stunOpenSocket( StunAddress4& dest, StunAddress4* mapAddr,
       interfaceIp = srcAddr->addr;
    }
    
-   Socket myFd = openPort(port,interfaceIp,verbose);
+   Socket myFd = udp_openPort(port,interfaceIp,verbose);
    if (myFd == INVALID_SOCKET)
    {
       return myFd;
@@ -2265,34 +2266,34 @@ stunOpenSocket( StunAddress4& dest, StunAddress4* mapAddr,
    char msg[STUN_MAX_MESSAGE_SIZE];
    int msgLen = sizeof(msg);
 	
-   StunAtrString username;
-   StunAtrString password;
+   VovidaStunAtrString username;
+   VovidaStunAtrString password;
 	
    username.sizeValue = 0;
    password.sizeValue = 0;
 	
 #ifdef USE_TLS
-   stunGetUserNameAndPassword( dest, username, password );
+   vovida_stun_GetUserNameAndPassword( dest, username, password );
 #endif
 	
-   stunSendTest(myFd, dest, username, password, 1, 0/*false*/ );
+   vovida_stun_SendTest(myFd, dest, username, password, 1, 0/*false*/ );
 	
-   StunAddress4 from;
+   VovidaStunAddress4 from;
 	
-   getMessage( myFd, msg, &msgLen, &from.addr, &from.port,verbose );
+   udp_getMessage( myFd, msg, &msgLen, &from.addr, &from.port,verbose );
 	
-   StunMessage resp;
-   memset(&resp, 0, sizeof(StunMessage));
+   VovidaStunMessage resp;
+   memset(&resp, 0, sizeof(VovidaStunMessage));
 	
-   bool ok = stunParseMessage( msg, msgLen, resp,verbose );
+   bool ok = vovida_stun_ParseMessage( msg, msgLen, resp,verbose );
    if (!ok)
    {
       return -1;
    }
 	
-   StunAddress4 mappedAddr = resp.mappedAddress.ipv4;
+   VovidaStunAddress4 mappedAddr = resp.mappedAddress.ipv4;
 
-   //clog << "--- stunOpenSocket --- " << endl;
+   //clog << "--- vovida_stun_OpenSocket --- " << endl;
    //clog << "\treq  id=" << req.id << endl;
    //clog << "\tresp id=" << id << endl;
    //clog << "\tmappedAddr=" << mappedAddr << endl;
@@ -2304,9 +2305,9 @@ stunOpenSocket( StunAddress4& dest, StunAddress4* mapAddr,
 
 
 bool
-stunOpenSocketPair( StunAddress4& dest, StunAddress4* mapAddr, 
+vovida_stun_OpenSocketPair( VovidaStunAddress4& dest, VovidaStunAddress4* mapAddr, 
                     int* fd1, int* fd2, 
-                    int port, StunAddress4* srcAddr, 
+                    int port, VovidaStunAddress4* srcAddr, 
                     bool verbose )
 {
    assert( dest.addr!= 0 );
@@ -2317,7 +2318,7 @@ stunOpenSocketPair( StunAddress4& dest, StunAddress4* mapAddr,
 	
    if ( port == 0 )
    {
-      port = stunRandomPort();
+      port = vovida_stun_RandomPort();
    }
 	
    *fd1=-1;
@@ -2326,7 +2327,7 @@ stunOpenSocketPair( StunAddress4& dest, StunAddress4* mapAddr,
    char msg[STUN_MAX_MESSAGE_SIZE];
    int msgLen =sizeof(msg);
 	
-   StunAddress4 from;
+   VovidaStunAddress4 from;
    int fd[NUM];
    int i;
 	
@@ -2338,7 +2339,7 @@ stunOpenSocketPair( StunAddress4& dest, StunAddress4* mapAddr,
 
    for( i=0; i<NUM; i++)
    {
-      fd[i] = openPort( (port == 0) ? 0 : (port + i), 
+      fd[i] = udp_openPort( (port == 0) ? 0 : (port + i), 
                         interfaceIp, verbose);
       if (fd[i] < 0) 
       {
@@ -2350,35 +2351,35 @@ stunOpenSocketPair( StunAddress4& dest, StunAddress4* mapAddr,
       }
    }
 	
-   StunAtrString username;
-   StunAtrString password;
+   VovidaStunAtrString username;
+   VovidaStunAtrString password;
 	
    username.sizeValue = 0;
    password.sizeValue = 0;
 	
 #ifdef USE_TLS
-   stunGetUserNameAndPassword( dest, username, password );
+   vovida_stun_GetUserNameAndPassword( dest, username, password );
 #endif
 	
    for( i=0; i<NUM; i++)
    {
-      stunSendTest(fd[i], dest, username, password, 1/*testNum*/, verbose );
+      vovida_stun_SendTest(fd[i], dest, username, password, 1/*testNum*/, verbose );
    }
 	
-   StunAddress4 mappedAddr[NUM];
+   VovidaStunAddress4 mappedAddr[NUM];
    for( i=0; i<NUM; i++)
    {
       msgLen = sizeof(msg)/sizeof(*msg);
-      getMessage( fd[i],
+      udp_getMessage( fd[i],
                   msg,
                   &msgLen,
                   &from.addr,
                   &from.port ,verbose);
 		
-      StunMessage resp;
-      memset(&resp, 0, sizeof(StunMessage));
+      VovidaStunMessage resp;
+      memset(&resp, 0, sizeof(VovidaStunMessage));
 		
-      bool ok = stunParseMessage( msg, msgLen, resp, verbose );
+      bool ok = vovida_stun_ParseMessage( msg, msgLen, resp, verbose );
       if (!ok) 
       {
          return false;
@@ -2389,7 +2390,7 @@ stunOpenSocketPair( StunAddress4& dest, StunAddress4* mapAddr,
 	
    if (verbose)
    {               
-      clog << "--- stunOpenSocketPair --- " << endl;
+      clog << "--- vovida_stun_OpenSocketPair --- " << endl;
       for( i=0; i<NUM; i++)
       {
          clog << "\t mappedAddr=" << mappedAddr[i] << endl;

@@ -24,7 +24,7 @@ typedef unsigned long long UInt64;
 #endif
 typedef struct { unsigned char octet[16]; }  UInt128;
 
-/// define a structure to hold a stun address 
+/// define a structure to hold a vovida_stun_ address 
 const UInt8  IPv4Family = 0x01;
 const UInt8  IPv6Family = 0x02;
 
@@ -32,7 +32,7 @@ const UInt8  IPv6Family = 0x02;
 const UInt32 ChangeIpFlag   = 0x04;
 const UInt32 ChangePortFlag = 0x02;
 
-// define  stun attribute
+// define  vovida_stun_ attribute
 const UInt16 MappedAddress    = 0x0001;
 const UInt16 ResponseAddress  = 0x0002;
 const UInt16 ChangeRequest    = 0x0003;
@@ -49,7 +49,7 @@ const UInt16 XorOnly          = 0x0021;
 const UInt16 ServerName       = 0x8022;
 const UInt16 SecondaryAddress = 0x8050; // Non standard extention
 
-// define types for a stun message 
+// define types for a vovida_stun_ message 
 const UInt16 BindRequestMsg               = 0x0001;
 const UInt16 BindResponseMsg              = 0x0101;
 const UInt16 BindErrorResponseMsg         = 0x0111;
@@ -62,32 +62,32 @@ typedef struct
       UInt16 msgType;
       UInt16 msgLength;
       UInt128 id;
-} StunMsgHdr;
+} VovidaStunMsgHdr;
 
 
 typedef struct
 {
       UInt16 type;
       UInt16 length;
-} StunAtrHdr;
+} VovidaStunAtrHdr;
 
 typedef struct
 {
       UInt16 port;
       UInt32 addr;
-} StunAddress4;
+} VovidaStunAddress4;
 
 typedef struct
 {
       UInt8 pad;
       UInt8 family;
-      StunAddress4 ipv4;
-} StunAtrAddress4;
+      VovidaStunAddress4 ipv4;
+} VovidaStunAtrAddress4;
 
 typedef struct
 {
       UInt32 value;
-} StunAtrChangeRequest;
+} VovidaStunAtrChangeRequest;
 
 typedef struct
 {
@@ -96,24 +96,24 @@ typedef struct
       UInt8 number;
       char reason[STUN_MAX_STRING];
       UInt16 sizeReason;
-} StunAtrError;
+} VovidaStunAtrError;
 
 typedef struct
 {
       UInt16 attrType[STUN_MAX_UNKNOWN_ATTRIBUTES];
       UInt16 numAttributes;
-} StunAtrUnknown;
+} VovidaStunAtrUnknown;
 
 typedef struct
 {
       char value[STUN_MAX_STRING];      
       UInt16 sizeValue;
-} StunAtrString;
+} VovidaStunAtrString;
 
 typedef struct
 {
       char hash[20];
-} StunAtrIntegrity;
+} VovidaStunAtrIntegrity;
 
 typedef enum 
 {
@@ -122,77 +122,77 @@ typedef enum
    HmacBadUserName,
    HmacUnkownUserName,
    HmacFailed,
-} StunHmacStatus;
+} VovidaStunHmacStatus;
 
 typedef struct
 {
-      StunMsgHdr msgHdr;
+      VovidaStunMsgHdr msgHdr;
 	
       bool hasMappedAddress;
-      StunAtrAddress4  mappedAddress;
+      VovidaStunAtrAddress4  mappedAddress;
 	
       bool hasResponseAddress;
-      StunAtrAddress4  responseAddress;
+      VovidaStunAtrAddress4  responseAddress;
 	
       bool hasChangeRequest;
-      StunAtrChangeRequest changeRequest;
+      VovidaStunAtrChangeRequest changeRequest;
 	
       bool hasSourceAddress;
-      StunAtrAddress4 sourceAddress;
+      VovidaStunAtrAddress4 sourceAddress;
 	
       bool hasChangedAddress;
-      StunAtrAddress4 changedAddress;
+      VovidaStunAtrAddress4 changedAddress;
 	
       bool hasUsername;
-      StunAtrString username;
+      VovidaStunAtrString username;
 	
       bool hasPassword;
-      StunAtrString password;
+      VovidaStunAtrString password;
 	
       bool hasMessageIntegrity;
-      StunAtrIntegrity messageIntegrity;
+      VovidaStunAtrIntegrity messageIntegrity;
 	
       bool hasErrorCode;
-      StunAtrError errorCode;
+      VovidaStunAtrError errorCode;
 	
       bool hasUnknownAttributes;
-      StunAtrUnknown unknownAttributes;
+      VovidaStunAtrUnknown unknownAttributes;
 	
       bool hasReflectedFrom;
-      StunAtrAddress4 reflectedFrom;
+      VovidaStunAtrAddress4 reflectedFrom;
 
       bool hasXorMappedAddress;
-      StunAtrAddress4  xorMappedAddress;
+      VovidaStunAtrAddress4  xorMappedAddress;
 	
       bool xorOnly;
 
       bool hasServerName;
-      StunAtrString serverName;
+      VovidaStunAtrString serverName;
       
       bool hasSecondaryAddress;
-      StunAtrAddress4 secondaryAddress;
-} StunMessage; 
+      VovidaStunAtrAddress4 secondaryAddress;
+} VovidaStunMessage; 
 
 
 // Define enum with different types of NAT 
 typedef enum 
 {
-   StunTypeUnknown=0,
-   StunTypeFailure,
-   StunTypeOpen,
-   StunTypeBlocked,
+   VovidaStunTypeUnknown=0,
+   VovidaStunTypeFailure,
+   VovidaStunTypeOpen,
+   VovidaStunTypeBlocked,
 
-   StunTypeIndependentFilter,
-   StunTypeDependentFilter,
-   StunTypePortDependedFilter,
-   StunTypeDependentMapping,
+   VovidaStunTypeIndependentFilter,
+   VovidaStunTypeDependentFilter,
+   VovidaStunTypePortDependedFilter,
+   VovidaStunTypeDependentMapping,
 
-   //StunTypeConeNat,
-   //StunTypeRestrictedNat,
-   //StunTypePortRestrictedNat,
-   //StunTypeSymNat,
+   //VovidaStunTypeConeNat,
+   //VovidaStunTypeRestrictedNat,
+   //VovidaStunTypePortRestrictedNat,
+   //VovidaStunTypeSymNat,
    
-   StunTypeFirewall,
+   VovidaStunTypeFirewall,
 } NatType;
 
 #ifdef WIN32
@@ -209,63 +209,63 @@ typedef struct
 {
       int relayPort;       // media relay port
       int fd;              // media relay file descriptor
-      StunAddress4 destination; // NAT IP:port
+      VovidaStunAddress4 destination; // NAT IP:port
       time_t expireTime;      // if no activity after time, close the socket 
-} StunMediaRelay;
+} VovidaStunMediaRelay;
 
 typedef struct
 {
-      StunAddress4 myAddr;
-      StunAddress4 altAddr;
+      VovidaStunAddress4 myAddr;
+      VovidaStunAddress4 altAddr;
       Socket myFd;
       Socket altPortFd;
       Socket altIpFd;
       Socket altIpPortFd;
       bool relay; // true if media relaying is to be done
-      StunMediaRelay relays[MAX_MEDIA_RELAYS];
-} StunServerInfo;
+      VovidaStunMediaRelay relays[MAX_MEDIA_RELAYS];
+} VovidaStunServerInfo;
 
 bool
-stunParseMessage( char* buf, 
+vovida_stun_ParseMessage( char* buf, 
                   unsigned int bufLen, 
-                  StunMessage& message, 
+                  VovidaStunMessage& message, 
                   bool verbose );
 
 void
-stunBuildReqSimple( StunMessage* msg,
-                    const StunAtrString& username,
+vovida_stun_BuildReqSimple( VovidaStunMessage* msg,
+                    const VovidaStunAtrString& username,
                     bool changePort, bool changeIp, unsigned int id=0 );
 
 unsigned int
-stunEncodeMessage( const StunMessage& message, 
+vovida_stun_EncodeMessage( const VovidaStunMessage& message, 
                    char* buf, 
                    unsigned int bufLen, 
-                   const StunAtrString& password,
+                   const VovidaStunAtrString& password,
                    bool verbose);
 
 void
-stunCreateUserName(const StunAddress4& addr, StunAtrString* username);
+vovida_stun_CreateUserName(const VovidaStunAddress4& addr, VovidaStunAtrString* username);
 
 void 
-stunGetUserNameAndPassword(  const StunAddress4& dest, 
-                             StunAtrString* username,
-                             StunAtrString* password);
+vovida_stun_GetUserNameAndPassword(  const VovidaStunAddress4& dest, 
+                             VovidaStunAtrString* username,
+                             VovidaStunAtrString* password);
 
 void
-stunCreatePassword(const StunAtrString& username, StunAtrString* password);
+vovida_stun_CreatePassword(const VovidaStunAtrString& username, VovidaStunAtrString* password);
 
 int 
-stunRand();
+vovida_stun_Rand();
 
 UInt64
-stunGetSystemTimeSecs();
+vovida_stun_GetSystemTimeSecs();
 
-/// find the IP address of a the specified stun server - return false is fails parse 
+/// find the IP address of a the specified vovida_stun_ server - return false is fails parse 
 bool  
-stunParseServerName( const char* serverName, StunAddress4& stunServerAddr);
+vovida_stun_ParseServerName( const char* serverName, VovidaStunAddress4& vovida_stun_ServerAddr);
 
 bool 
-stunParseHostName( const char* peerName,
+vovida_stun_ParseHostName( const char* peerName,
                    UInt32& ip,
                    UInt16& portVal,
                    UInt16 defaultPort );
@@ -273,70 +273,71 @@ stunParseHostName( const char* peerName,
 /// return true if all is OK
 /// Create a media relay and do the STERN thing if startMediaPort is non-zero
 bool
-stunInitServer(StunServerInfo& info, 
-               const StunAddress4& myAddr, 
-               const StunAddress4& altAddr,
+vovida_stun_InitServer(VovidaStunServerInfo& info, 
+               const VovidaStunAddress4& myAddr, 
+               const VovidaStunAddress4& altAddr,
                int startMediaPort,
                bool verbose);
 
 void
-stunStopServer(StunServerInfo& info);
+vovida_stun_StopServer(VovidaStunServerInfo& info);
 
 /// return true if all is OK 
 bool
-stunServerProcess(StunServerInfo& info, bool verbose);
+vovida_stun_ServerProcess(VovidaStunServerInfo& info, bool verbose);
 
 /// returns number of address found - take array or addres 
 int 
-stunFindLocalInterfaces(UInt32* addresses, int maxSize );
+vovida_stun_FindLocalInterfaces(UInt32* addresses, int maxSize );
 
 void 
-stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* srcAddr=0 );
+vovida_stun_Test( VovidaStunAddress4& dest, int testNum, bool verbose, VovidaStunAddress4* srcAddr=0 );
 
 NatType
-stunNatType( StunAddress4& dest, bool verbose, 
+vovida_stun_NatType( VovidaStunAddress4& dest, bool verbose, 
              bool* preservePort=0, // if set, is return for if NAT preservers ports or not
              bool* hairpin=0 ,  // if set, is the return for if NAT will hairpin packets
              int port=0, // port to use for the test, 0 to choose random port
-             StunAddress4* sAddr=0 // NIC to use 
+             VovidaStunAddress4* sAddr=0 // NIC to use 
    );
 
-/// prints a StunAddress
+/// prints a VovidaStunAddress
 std::ostream& 
-operator<<( std::ostream& strm, const StunAddress4& addr);
+operator<<( std::ostream& strm, const VovidaStunAddress4& addr);
 
+#if 0
 std::ostream& 
 operator<< ( std::ostream& strm, const UInt128& );
-
+#endif
 
 bool
-stunServerProcessMsg( char* buf,
+vovida_stun_ServerProcessMsg( char* buf,
                       unsigned int bufLen,
-                      StunAddress4& from, 
-                      StunAddress4& myAddr,
-                      StunAddress4& altAddr, 
-                      StunMessage* resp,
-                      StunAddress4* destination,
-                      StunAtrString* hmacPassword,
+                      VovidaStunAddress4& from, 
+                      VovidaStunAddress4& myAddr,
+                      VovidaStunAddress4& altAddr, 
+                      VovidaStunMessage* resp,
+                      VovidaStunAddress4* destination,
+                      VovidaStunAtrString* hmacPassword,
                       bool* changePort,
                       bool* changeIp,
                       bool verbose);
 
 int
-stunOpenSocket( StunAddress4& dest, 
-                StunAddress4* mappedAddr, 
+vovida_stun_OpenSocket( VovidaStunAddress4& dest, 
+                VovidaStunAddress4* mappedAddr, 
                 int port=0, 
-                StunAddress4* srcAddr=0, 
+                VovidaStunAddress4* srcAddr=0, 
                 bool verbose=false );
 
 bool
-stunOpenSocketPair( StunAddress4& dest, StunAddress4* mappedAddr, 
+vovida_stun_OpenSocketPair( VovidaStunAddress4& dest, VovidaStunAddress4* mappedAddr, 
                     int* fd1, int* fd2, 
-                    int srcPort=0,  StunAddress4* srcAddr=0,
+                    int srcPort=0,  VovidaStunAddress4* srcAddr=0,
                     bool verbose=false);
 
 int
-stunRandomPort();
+vovida_stun_RandomPort();
 
 #endif
 

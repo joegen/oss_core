@@ -35,7 +35,7 @@ using namespace std;
 
 
 Socket
-openPort( unsigned short port, unsigned int interfaceIp, bool verbose )
+udp_openPort( unsigned short port, unsigned int interfaceIp, bool verbose )
 {
    Socket fd;
     
@@ -111,7 +111,7 @@ openPort( unsigned short port, unsigned int interfaceIp, bool verbose )
 
 
 bool 
-getMessage( Socket fd, char* buf, int* len,
+udp_getMessage( Socket fd, char* buf, int* len,
             unsigned int* srcIp, unsigned short* srcPort,
             bool verbose)
 {
@@ -180,7 +180,7 @@ getMessage( Socket fd, char* buf, int* len,
 
 
 bool 
-sendMessage( Socket fd, char* buf, int l, 
+udp_sendMessage( Socket fd, char* buf, int l, 
              unsigned int dstIp, unsigned short dstPort,
              bool verbose)
 {
@@ -255,7 +255,7 @@ sendMessage( Socket fd, char* buf, int l,
 
 
 void
-initNetwork()
+udp_initNetwork()
 {
 #ifdef WIN32 
    WORD wVersionRequested = MAKEWORD( 2, 2 );

@@ -73,27 +73,27 @@ inline int getErrno() { return errno; }
 /// port, if interfaceIp!=0 then use ONLY the interface specified instead of
 /// all of them  
 Socket
-openPort( unsigned short port, unsigned int interfaceIp,
+udp_openPort( unsigned short port, unsigned int interfaceIp,
           bool verbose);
 
 
 /// recive a UDP message 
 bool 
-getMessage( Socket fd, char* buf, int* len,
+udp_getMessage( Socket fd, char* buf, int* len,
             unsigned int* srcIp, unsigned short* srcPort,
             bool verbose);
 
 
 /// send a UDP message 
 bool 
-sendMessage( Socket fd, char* msg, int len, 
+udp_sendMessage( Socket fd, char* msg, int len, 
              unsigned int dstIp, unsigned short dstPort,
              bool verbose);
 
 
 /// set up network - does nothing in unix but needed for windows
 void
-initNetwork();
+udp_initNetwork();
 
 
 /* ====================================================================

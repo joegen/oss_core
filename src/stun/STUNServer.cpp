@@ -73,11 +73,11 @@ void STUNServer::run()
 
 void STUNServer::internal_run()
 {
-  StunAddress4 primaryAddr;
-  StunAddress4 secondaryAddr;
+  VovidaStunAddress4 primaryAddr;
+  VovidaStunAddress4 secondaryAddr;
 
-  stunParseServerName(_primaryIp.toString().c_str(), primaryAddr);
-  stunParseServerName(_secondaryIp.toString().c_str(), secondaryAddr);
+  vovida_stun_ParseServerName(_primaryIp.toString().c_str(), primaryAddr);
+  vovida_stun_ParseServerName(_secondaryIp.toString().c_str(), secondaryAddr);
 
   primaryAddr.port = _primaryIp.getPort();
   secondaryAddr.port = _secondaryIp.getPort();
@@ -88,22 +88,22 @@ void STUNServer::internal_run()
   if (secondaryAddr.port == 0)
     secondaryAddr.port = STUN_PORT + 1;
 
-  StunServerInfo* pInfo = new StunServerInfo();
+  VovidaStunServerInfo* pInfo = new VovidaStunServerInfo();
   _config = pInfo;
 
-  if (stunInitServer(*pInfo, primaryAddr, secondaryAddr, 0, 0))
+  if (vovida_stun_InitServer(*pInfo, primaryAddr, secondaryAddr, 0, 0))
   {
-    while (stunServerProcess(*pInfo, 0));
+    while (vovida_stun_ServerProcess(*pInfo, 0));
   }
   _exitSync.set();
 }
 
 void STUNServer::stop()
 {
-  StunServerInfo* pInfo = static_cast<StunServerInfo*>(_config);
+  VovidaStunServerInfo* pInfo = static_cast<VovidaStunServerInfo*>(_config);
   if (pInfo)
   {
-    stunStopServer(*pInfo);
+    vovida_stun_StopServer(*pInfo);
     delete pInfo;
     _exitSync.wait(10000);
   }
