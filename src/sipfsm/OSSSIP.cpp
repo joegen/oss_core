@@ -296,6 +296,7 @@ void OSSSIP::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 
     int sipPort = iface.exists("sip-port") ?  (int)iface["sip-port"] : 5060;
     int tlsPort = iface.exists("tls-port") ?  (int)iface["tls-port"] : 5061;
+    int wsPort = iface.exists("ws-port") ?  (int)iface["ws-port"] : 5062;
 
     if (!hasFoundDefault)
     {
@@ -338,7 +339,7 @@ void OSSSIP::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       OSS::IPAddress listener;
       listener = ip;
       listener.externalAddress() = external;
-      listener.setPort(sipPort);
+      listener.setPort(wsPort);
       _wsListeners.push_back(listener);
     }
 
