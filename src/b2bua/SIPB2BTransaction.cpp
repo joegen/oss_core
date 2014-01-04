@@ -54,8 +54,8 @@ SIPB2BTransaction::~SIPB2BTransaction()
 }
 
 bool SIPB2BTransaction::onRouteResponse(
-  const OSS::SIP::SIPMessage::Ptr& pRequest, 
-  const OSS::SIP::SIPTransportSession::Ptr& pTransport, 
+  const OSS::SIP::SIPMessage::Ptr& pRequest,
+  const OSS::SIP::SIPTransportSession::Ptr& pTransport,
   const OSS::SIP::SIPTransaction::Ptr& pTransaction,
   OSS::IPAddress& target)
 {
@@ -397,7 +397,7 @@ bool SIPB2BTransaction::isFailoverCandidate(
     return false;
   else if (transport == "tls" && _failoverCount + 1 >= _tlsSrvTargets.size())
     return false;
-  
+
   if (e)
   {
     if (_pManager->threadPool().schedule(boost::bind(&SIPB2BTransaction::runFailoverTask, shared_from_this())) == -1)
@@ -589,9 +589,9 @@ void SIPB2BTransaction::runFailoverTask()
 }
 
 void SIPB2BTransaction::handleResponse(
-  const OSS::SIP::SIPTransaction::Error& e, 
-  const OSS::SIP::SIPMessage::Ptr& pMsg, 
-  const OSS::SIP::SIPTransportSession::Ptr& pTransport, 
+  const OSS::SIP::SIPTransaction::Error& e,
+  const OSS::SIP::SIPMessage::Ptr& pMsg,
+  const OSS::SIP::SIPTransportSession::Ptr& pTransport,
   const OSS::SIP::SIPTransaction::Ptr& pTransaction)
 {
   if (e)
@@ -608,7 +608,7 @@ void SIPB2BTransaction::handleResponse(
   //
   if (isFailoverCandidate(e, pMsg, pTransport, pTransaction))
     return;
-  
+
   //
   // Push to the response queue
   //
@@ -850,7 +850,7 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
     srvHost += host;
     if ((transport.empty() || transport == "udp") && scheme != "sips")
       _udpSrvTargets =  OSS::dns_lookup_srv(srvHost);
-    
+
     srvHost = "_sip._tcp.";
     srvHost += host;
     if ((transport.empty() || transport == "tcp") && scheme != "sips")

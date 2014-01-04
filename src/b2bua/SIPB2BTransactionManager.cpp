@@ -252,7 +252,11 @@ SIPB2BHandler::Ptr SIPB2BTransactionManager::findDomainRouter(const OSS::SIP::SI
   std::string domain = pMsg->getFromHost();
   DomainRouters::const_iterator iter = _domainRouters.find(domain);
   if (iter != _domainRouters.end() && iter->second)
+  {
+    OSS_LOG_DEBUG(pMsg->createContextId(true) << "Found static route handler for domain " << domain);
     return iter->second;
+  }
+  OSS_LOG_DEBUG(pMsg->createContextId(true) << "No static handler found for domain " << domain);
   return SIPB2BHandler::Ptr();
 }
 
@@ -312,7 +316,7 @@ SIPMessage::Ptr SIPB2BTransactionManager::onRouteTransaction(
   {
     bool handled = false;
     SIPMessage::Ptr result = pHandler->onRouteTransaction(pRequest, pTransaction, localInterface, target, handled);
-    if (handled)
+    if (result)
       return result;
   }
   

@@ -83,7 +83,7 @@ public:
 
 		void on_fail(websocketpp::server::connection_ptr pConnection);
 		void on_open(websocketpp::server::connection_ptr pConnection);
-
+    void validate(websocketpp::server::connection_ptr pConnection);
 		SIPWebSocketListener& _rListener;
 	};
 

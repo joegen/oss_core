@@ -67,6 +67,11 @@ void SIPWebSocketListener::ServerAcceptHandler::on_open(websocketpp::server::con
 //  	}
 }
 
+void SIPWebSocketListener::ServerAcceptHandler::validate(websocketpp::server::connection_ptr pConnection)
+{
+  pConnection->select_subprotocol("sip");
+}
+
 SIPWebSocketListener::SIPWebSocketListener(
   SIPTransportService* pTransportService,
   const std::string& address,
