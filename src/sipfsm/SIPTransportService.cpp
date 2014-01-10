@@ -118,6 +118,7 @@ void SIPTransportService::stop()
   {
     _pIoServiceThread->join();
     delete _pIoServiceThread;
+    _pIoServiceThread = 0;
   }
 }
 
