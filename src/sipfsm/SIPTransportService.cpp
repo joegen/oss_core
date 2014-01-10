@@ -114,6 +114,11 @@ void SIPTransportService::stop()
   // Post a call to the stop function so that server::stop() is safe to call
   // from any thread.
   _ioService.post(boost::bind(&SIPTransportService::handleStop, this));
+  if (_pIoServiceThread)
+  {
+    _pIoServiceThread->join();
+    delete _pIoServiceThread;
+  }
 }
 
 void SIPTransportService::handleStop()
@@ -133,13 +138,8 @@ void SIPTransportService::handleStop()
   TLSListeners::iterator tlsIter;
   for (tlsIter = _tlsListeners.begin(); tlsIter != _tlsListeners.end(); tlsIter++)
     tlsIter->second->handleStop();
-  
+
   _ioService.stop();
-  if (_pIoServiceThread)
-  {
-    _pIoServiceThread->join();
-    delete _pIoServiceThread;
-  }
 
   _udpListeners.clear();
   _tcpListeners.clear();
