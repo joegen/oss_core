@@ -75,6 +75,9 @@ SIPTransaction::~SIPTransaction()
   std::ostringstream logMsg;
   logMsg << _logId << getTypeString() << " " << _id << " isParent=" << (isParent() ? "Yes" : "No") << " DESTROYED";
   OSS::log_debug(logMsg.str());
+
+  if (_terminateCallback)
+    _terminateCallback();
 }
 
 SIPTransaction::SIPTransaction(const SIPTransaction&)
@@ -181,7 +184,8 @@ void SIPTransaction::sendRequest(
     const SIPMessage::Ptr& pRequest,
     const OSS::IPAddress& localAddress,
     const OSS::IPAddress& remoteAddress,
-    SIPTransaction::Callback callback)
+    SIPTransaction::Callback callback,
+    SIPTransaction::TerminateCallback terminateCallback)
 {
   OSS::mutex_lock lock(_mutex);
 
@@ -205,6 +209,10 @@ void SIPTransaction::sendRequest(
 
   if (!_responseTU)
     _responseTU = callback;
+
+  if (!_terminateCallback)
+    _terminateCallback = terminateCallback;
+
 
   if (_localAddress.getPort() == 0)
     _localAddress = localAddress;

@@ -514,9 +514,10 @@ void OSSSIP::sendRequest(
   const SIPMessage::Ptr& pRequest,
   const OSS::IPAddress& localAddress,
   const OSS::IPAddress& remoteAddress,
-  SIPTransaction::Callback callback)
+  SIPTransaction::Callback callback,
+  SIPTransaction::TerminateCallback terminateCallback)
 {
-  _fsmDispatch.sendRequest(pRequest, localAddress, remoteAddress, callback);
+  _fsmDispatch.sendRequest(pRequest, localAddress, remoteAddress, callback, terminateCallback);
 }
 
 void OSSSIP::sendRequestDirect(const SIPMessage::Ptr& pRequest,

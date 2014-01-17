@@ -188,7 +188,8 @@ void SIPFSMDispatch::sendRequest(
   const SIPMessage::Ptr& pRequest,
   const OSS::IPAddress& localAddress,
   const OSS::IPAddress& remoteAddress,
-  SIPTransaction::Callback& callback)
+  SIPTransaction::Callback& callback,
+  SIPTransaction::TerminateCallback& terminateCallback)
 {
   if (!pRequest->isRequest())
     throw OSS::SIP::SIPException("Sending a response using sendRequest() method is illegal");
@@ -225,7 +226,7 @@ void SIPFSMDispatch::sendRequest(
       trn->localAddress() = localAddress;
       trn->remoteAddress() = remoteAddress;
     }
-    trn->sendRequest(pRequest, localAddress, remoteAddress, callback);
+    trn->sendRequest(pRequest, localAddress, remoteAddress, callback, terminateCallback);
   }
 }
 

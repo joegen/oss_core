@@ -73,7 +73,8 @@ public:
     const SIPMessage::Ptr& pRequest,
     const OSS::IPAddress& localAddress,
     const OSS::IPAddress& remoteAddress,
-    SIPTransaction::Callback& callback);
+    SIPTransaction::Callback& callback,
+    SIPTransaction::TerminateCallback& terminateCallback);
     /// Send a new SIP (REQUEST) message to the Network.
     ///
     /// This is a none-blocking function call for sending

@@ -26,6 +26,7 @@
 #include "OSS/ABNF/ABNFSIPIPV6Address.h"
 #include "OSS/SIP/SIPVia.h"
 
+#define THREADED_RESPONSE 0 /// Disable threadpool for response handling.  This is the desired default to avoid race conditions!
 
 namespace OSS {
 namespace SIP {
@@ -36,8 +37,7 @@ SIPB2BTransaction::SIPB2BTransaction(SIPB2BTransactionManager* pManager) :
   _pManager(pManager),
   _pInternalPtr(0),
   _hasSentLocalResponse(false),
-  _isMidDialog(false),
-  _failoverCount(0)
+  _isMidDialog(false)
 {
 }
 
@@ -341,11 +341,16 @@ void SIPB2BTransaction::runTask()
 
     OSS::SIP::SIPTransaction::Callback responseCallback
       = boost::bind(&SIPB2BTransaction::handleResponse, this, _1, _2, _3, _4);
+
+    OSS::SIP::SIPTransaction::TerminateCallback terminateCallback
+      = boost::bind(&SIPB2BTransaction::releaseInternalRef, this);
+
     _pManager->stack().sendRequest(
       _pClientRequest,
       _localInterface,
       outboundTarget,
-      responseCallback);
+      responseCallback,
+      terminateCallback);
 
     //
     // Take note that at this point, this transaction is in limbo
@@ -374,220 +379,6 @@ void SIPB2BTransaction::runTask()
   }
 }
 
-bool SIPB2BTransaction::isFailoverCandidate(
-    const OSS::SIP::SIPTransaction::Error& e,
-    const OSS::SIP::SIPMessage::Ptr& pMsg,
-    const OSS::SIP::SIPTransportSession::Ptr& pTransport,
-    const OSS::SIP::SIPTransaction::Ptr& pTransaction)
-{
-  if (_pClientRequest->isMidDialog())
-    return false;
-
-  if (_udpSrvTargets.size() <= 1 || _tcpSrvTargets.size() <= 1 || _wsSrvTargets.size() <= 1 || _tlsSrvTargets.size() <= 1)
-    return false;
-
-  std::string transport;
-  _pClientRequest->getProperty("target-transport", transport);
-
-  if (transport == "udp" && _failoverCount + 1 >= _udpSrvTargets.size())
-    return false;
-  else if (transport == "tcp" && _failoverCount + 1 >= _tcpSrvTargets.size())
-    return false;
-  else if (transport == "ws" && _failoverCount + 1 >= _wsSrvTargets.size())
-    return false;
-  else if (transport == "tls" && _failoverCount + 1 >= _tlsSrvTargets.size())
-    return false;
-
-  if (e)
-  {
-    if (_pManager->threadPool().schedule(boost::bind(&SIPB2BTransaction::runFailoverTask, shared_from_this())) == -1)
-    {
-      OSS::log_error(_logId + "No available thread to handle SIPB2BTransaction::runFailoverTask");
-      return false;
-    }
-    return true;
-  }
-
-  if (pMsg && pMsg->is5xx())
-  {
-    if (_pManager->threadPool().schedule(boost::bind(&SIPB2BTransaction::runFailoverTask, shared_from_this())) == -1)
-    {
-      OSS::log_error(_logId + "No available thread to handle SIPB2BTransaction::runFailoverTask");
-      return false;
-    }
-    return true;
-  }
-
-  return false;
-}
-
-void SIPB2BTransaction::runFailoverTask()
-{
-  std::string transport;
-  _pClientRequest->getProperty("target-transport", transport);
-  _failoverCount++;
-  OSS::IPAddress target;
-
-  //TODO: Duplicate code below, can be refactored to use one method for all proto
-  if (transport == "udp")
-  {
-    if (_failoverCount >= _udpSrvTargets.size())
-    {
-      SIPMessage::Ptr serverError = _pServerRequest->createResponse(480, "All Routes Exhausted");
-      OSS::IPAddress target;
-      if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
-      {
-        if (target.isValid())
-          _pServerTransaction->sendResponse(serverError, target);
-      }
-
-      std::ostringstream errorMsg;
-      errorMsg << _logId << "Fatal Exception while calling SIPB2BTransaction::runFailoverTask() - Failover count exceeds UDP records available";
-      OSS::log_error(errorMsg.str());
-      releaseInternalRef();
-      return;
-    }
-
-    unsigned short targetPort = _udpSrvTargets.begin()->get<2>();
-    if (targetPort == 0)
-      targetPort = 5060;
-    target = _udpSrvTargets.begin()->get<1>();
-    target.setPort(targetPort);
-  }
-  else if (transport == "tcp")
-  {
-    if (_failoverCount >= _tcpSrvTargets.size())
-    {
-      SIPMessage::Ptr serverError = _pServerRequest->createResponse(480, "All Routes Exhausted");
-      OSS::IPAddress target;
-      if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
-      {
-        if (target.isValid())
-          _pServerTransaction->sendResponse(serverError, target);
-      }
-
-      std::ostringstream errorMsg;
-      errorMsg << _logId << "Fatal Exception while calling SIPB2BTransaction::runFailoverTask() - Failover count exceeds TCP records available";
-      OSS::log_error(errorMsg.str());
-      releaseInternalRef();
-      return;
-    }
-
-    unsigned short targetPort = _tcpSrvTargets.begin()->get<2>();
-    if (targetPort == 0)
-      targetPort = 5060;
-    target = _tcpSrvTargets.begin()->get<1>();
-    target.setPort(targetPort);
-  }
-  else if (transport == "ws")
-  {
-    if (_failoverCount >= _wsSrvTargets.size())
-    {
-      SIPMessage::Ptr serverError = _pServerRequest->createResponse(480, "All Routes Exhausted");
-      OSS::IPAddress target;
-      if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
-      {
-        if (target.isValid())
-          _pServerTransaction->sendResponse(serverError, target);
-      }
-
-      std::ostringstream errorMsg;
-      errorMsg << _logId << "Fatal Exception while calling SIPB2BTransaction::runFailoverTask() - Failover count exceeds WebSocket records available";
-      OSS::log_error(errorMsg.str());
-      releaseInternalRef();
-      return;
-    }
-
-    unsigned short targetPort = _wsSrvTargets.begin()->get<2>();
-    if (targetPort == 0)
-      targetPort = 5060;
-    target = _wsSrvTargets.begin()->get<1>();
-    target.setPort(targetPort);
-  }
-  else if (transport == "tls")
-  {
-    if (_failoverCount >= _tlsSrvTargets.size())
-    {
-      SIPMessage::Ptr serverError = _pServerRequest->createResponse(480, "All Routes Exhausted");
-      OSS::IPAddress target;
-      if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
-      {
-        if (target.isValid())
-          _pServerTransaction->sendResponse(serverError, target);
-      }
-
-      std::ostringstream errorMsg;
-      errorMsg << _logId << "Fatal Exception while calling SIPB2BTransaction::runFailoverTask() - Failover count exceeds TLS records available";
-      OSS::log_error(errorMsg.str());
-      releaseInternalRef();
-      return;
-    }
-
-    unsigned short targetPort = _tlsSrvTargets.begin()->get<2>();
-    if (targetPort == 0)
-      targetPort = 5061;
-    target = _tlsSrvTargets.begin()->get<1>();
-    target.setPort(targetPort);
-  }
-
-  if (!target.isValid())
-  {
-    //
-    // Send a 500 server response and release the transaction
-    //
-    SIPMessage::Ptr serverError = _pServerRequest->createResponse(500, "DNS/SRV Error");
-    OSS::IPAddress target;
-    if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
-    {
-      if (target.isValid())
-        _pServerTransaction->sendResponse(serverError, target);
-    }
-
-    std::ostringstream errorMsg;
-    errorMsg << _logId << "Fatal Exception while calling SIPB2BTransaction::runFailoverTask() - Address not valid";
-    OSS::log_error(errorMsg.str());
-    releaseInternalRef();
-    return;
-  }
-
-  _pClientRequest->setProperty("target-address", target.toIpPortString());
-
-  //
-  // change the via branch parameter
-  //
-
-
-  //
-  // Prepare the new via
-  //
-  std::string oldVia;
-  SIPVia::msgGetTopVia(_pClientRequest.get(), oldVia);
-  SIPVia newVia(oldVia);
-  std::string branch;
-  SIPVia::getBranch(oldVia, branch);
-  _pClientRequest->hdrListRemove("Via");
-  std::ostringstream viaBranch;
-  viaBranch << "z9hG4bK" << OSS::string_hash(branch.c_str());
-  newVia.setParam("branch", viaBranch.str().c_str());
-  _pClientRequest->hdrListPrepend("Via", newVia.data());
-
-  //
-  // Commit the changes
-  //
-  _pClientRequest->commitData();
-
-  //
-  // Send the request
-  //
-  OSS::SIP::SIPTransaction::Callback responseCallback
-    = boost::bind(&SIPB2BTransaction::handleResponse, this, _1, _2, _3, _4);
-  _pManager->stack().sendRequest(
-    _pClientRequest,
-    _localInterface,
-    target,
-    responseCallback);
-}
-
 void SIPB2BTransaction::handleResponse(
   const OSS::SIP::SIPTransaction::Error& e,
   const OSS::SIP::SIPMessage::Ptr& pMsg,
@@ -604,24 +395,20 @@ void SIPB2BTransaction::handleResponse(
     _pClientTransport = pTransport;
 
   //
-  // Checks if this reponse needs to failvoer to another destination
-  //
-  if (isFailoverCandidate(e, pMsg, pTransport, pTransaction))
-    return;
-
-  //
   // Push to the response queue
   //
   _responseQueueMutex.lock();
   _responseQueue.push(pMsg);
   _responseQueueMutex.unlock();
 
-
-
+#if THREADED_RESPONSE
   if (_pManager->threadPool().schedule(boost::bind(&SIPB2BTransaction::runResponseTask, shared_from_this())) == -1)
   {
     OSS::log_error(_logId + "No available thread to handle SIPB2BTransaction::handleResponse");
   }
+#else
+  runResponseTask();
+#endif
 }
 
 void SIPB2BTransaction::runResponseTask()
@@ -633,12 +420,10 @@ void SIPB2BTransaction::runResponseTask()
     {
       OSS::IPAddress localInterface;
       OSS::IPAddress target;
-      std::string failoverAllowed;
       //
       // Signal the error and delete this transaction if a failover is not possible
       //
       _pManager->onTransactionError(_pTransactionError, SIPMessage::Ptr(), shared_from_this());
-      releaseInternalRef();
       return;
     }
 
@@ -688,7 +473,6 @@ void SIPB2BTransaction::runResponseTask()
           }
         }
       }
-      releaseInternalRef();
       return;
     }
     else if (response->is1xx())
@@ -755,8 +539,6 @@ void SIPB2BTransaction::runResponseTask()
           }
         }
       }
-
-      releaseInternalRef();
       return;
     }
   }
@@ -766,7 +548,6 @@ void SIPB2BTransaction::runResponseTask()
     errorMsg << _logId << "Fatal Exception while calling SIPB2BTransaction::runResponseTask() - "
             << e.message();
     OSS::log_error(errorMsg.str());
-    releaseInternalRef();
     return;
   }
 }

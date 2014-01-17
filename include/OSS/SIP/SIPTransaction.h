@@ -54,7 +54,8 @@ public:
   typedef boost::weak_ptr<SIPTransaction> WeakPtr;
   typedef boost::shared_ptr<OSS::Exception> Error;
   typedef boost::function<void(const SIPTransaction::Error&, const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> Callback;
-	typedef boost::function<void(const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> RequestCallback;
+	typedef boost::function<void()> TerminateCallback;
+  typedef boost::function<void(const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> RequestCallback;
   typedef std::map<std::string, SIPTransaction::Ptr> Branches;
   enum Type
   {
@@ -85,7 +86,8 @@ public:
     const SIPMessage::Ptr& pRequest,
     const OSS::IPAddress& localAddress,
     const OSS::IPAddress& remoteAddress,
-    SIPTransaction::Callback callback);
+    SIPTransaction::Callback callback,
+    SIPTransaction::TerminateCallback terminateCallback);
     /// Send a new SIP (REQUEST) message to the Network.
     ///
     /// This is a none-blocking function call for sending
@@ -297,6 +299,7 @@ protected:
 
 protected:
   SIPTransaction::Callback _responseTU;
+  SIPTransaction::TerminateCallback _terminateCallback;
   Type _type;
 private:
   SIPTransaction(const SIPTransaction&);

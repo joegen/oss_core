@@ -1907,7 +1907,7 @@ void SIPB2BScriptableHandler::sendOptionsKeepAlive(RegData& regData)
     if (!regData.transportId.empty())
       msg->setProperty("transport-id", regData.transportId.c_str());
 
-    _pTransactionManager->stack().sendRequest(msg, src, target, _keepAliveResponseCb);
+    _pTransactionManager->stack().sendRequest(msg, src, target, _keepAliveResponseCb, OSS::SIP::SIPTransaction::TerminateCallback());
   }
   catch(std::exception& e)
   {

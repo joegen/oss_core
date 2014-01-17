@@ -98,24 +98,6 @@ public:
     /// in this method.
     ///
   
-  virtual void runFailoverTask();
-    /// Execute the transaction tasks for handling DNS/SRV failover
-    ///
-    /// This method runs in its own thread and will not block any operation
-    /// in the subsystem.  It is therefore safe to call blocking functions
-    /// in this method.
-    ///
-
-  bool isFailoverCandidate(
-    const OSS::SIP::SIPTransaction::Error& e,
-    const OSS::SIP::SIPMessage::Ptr& pMsg,
-    const OSS::SIP::SIPTransportSession::Ptr& pTransport,
-    const OSS::SIP::SIPTransaction::Ptr& pTransaction);
-    /// This method is called from handleResponse() to check if a DNS/SRV
-    /// failover is applicable for the response type.  The standard behavior
-    /// is to failover on 5xx response or a local exception
-    /// has occured such as a transaction timeout
-
   bool onRouteResponse(
     const OSS::SIP::SIPMessage::Ptr& pRequest, 
     const OSS::SIP::SIPTransportSession::Ptr& pTransport, 
@@ -210,7 +192,6 @@ protected:
   OSS::dns_srv_record_list _tcpSrvTargets;
   OSS::dns_srv_record_list _wsSrvTargets;
   OSS::dns_srv_record_list _tlsSrvTargets;
-  unsigned int _failoverCount;
   OSS::IPAddress _localInterface;
   friend class SIPB2BTransactionManager;
 };

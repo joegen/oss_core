@@ -133,7 +133,8 @@ void SIPB2BClientTransaction::runTask()
       _pClientRequest,
       localInterface,
       outboundTarget,
-      responseCallback);
+      responseCallback,
+      OSS::SIP::SIPTransaction::TerminateCallback());
 
 
     //
