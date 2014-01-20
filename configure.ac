@@ -19,6 +19,13 @@ CHECK_LIBRT
 AC_SEARCH_LIBS([dlopen], [dl])
 SFAC_LIB_CORE_FLAGS
 AC_CHECK_FUNCS(setenv)
+
+CURRENT_DIR=`pwd`
+cd ${srcdir}
+OSS_CORE_SRCDIR=`pwd`
+AC_SUBST(OSS_CORE_SRCDIR)
+cd ${CURRENT_DIR}
+
 AC_CONFIG_FILES([
   Makefile
   include/Makefile

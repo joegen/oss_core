@@ -191,7 +191,7 @@ void SIPTransaction::sendRequest(
 
   if (!pRequest->isRequest())
   {
-    throw OSS::SIP::SIPException("Sending a REQUEST using sendRequest() is illegal!");
+    throw OSS::SIP::SIPException("Sending a RESPONSE using sendRequest() is illegal!");
   }
 
   if (!_pInitialRequest)

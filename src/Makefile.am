@@ -14,14 +14,14 @@ lib_LTLIBRARIES = $(corelibs)
 localedir = $(datadir)/locale
 
 INCLUDES = \
-    -I$(top_srcdir)/include \
-    -I$(top_srcdir)/src/net/turn \
-    -I$(top_srcdir)/src/net/turn/carp \
-    -I$(top_srcdir)/src/net/turn/client \
-    -I$(top_srcdir)/src/net/turn/client++ \
-    -I$(top_srcdir)/src/net/turn/server \
-    -I$(top_srcdir)/src/net/turn/apps/common \
-    -I$(top_srcdir)/src/net/turn/apps/relay
+    -I@OSS_CORE_SRCDIR@/include \
+    -I@OSS_CORE_SRCDIR@/src/net/turn/carp \
+    -I@OSS_CORE_SRCDIR@/src/net/turn \
+    -I@OSS_CORE_SRCDIR@/src/net/turn/client \
+    -I@OSS_CORE_SRCDIR@/src/net/turn/client++ \
+    -I@OSS_CORE_SRCDIR@/src/net/turn/server \
+    -I@OSS_CORE_SRCDIR@/src/net/turn/apps/common \
+    -I@OSS_CORE_SRCDIR@/src/net/turn/apps/relay
 
 version_Current=@OSS_CORE_VERSION_CURRENT@
 version_Revision=@OSS_CORE_VERSION_REVISION@
