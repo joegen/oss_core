@@ -33,7 +33,6 @@ SIPIct::SIPIct(
   const SIPTransactionTimers& timerProps) :
   SIPFsm(ioService, timerProps),
   _timerAValue(0),
-  _ackMutex(),
   _pAck()
 {
   _timerAFunc = boost::bind(&SIPIct::handleRetransmitInvite, this);
@@ -71,16 +70,9 @@ bool SIPIct::onSendMessage(SIPMessage::Ptr pMsg)
       startTimerA(_timerAValue);
 
     startTimerB(_timerAValue*64);
-    return true;
   }
-  else if (pMsg->isRequest("ACK"))
-  {
-    OSS::mutex_critic_sec_lock lock(_ackMutex);
-    if (!_pAck)
-      _pAck = pMsg;
-    return true;
-  }
-  return false;
+
+  return true;
 }
 
 void SIPIct::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport)
@@ -155,14 +147,23 @@ void SIPIct::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
     }
     break;
   case COMPLETED:
+    if (pMsg->isErrorResponse())
+    {
+      //
+      // Resend ACK but don't start timer.  It has already been started in prior states
+      //
+      handleSendAck(pMsg, pTransport, false);
+    }
     break;
   }
 
   if (pTransaction->getState() == SIPTransaction::TRN_STATE_TERMINATED)
   {
     pTransaction->terminate();
-    if (pParent && pParent->allBranchesTerminated())
+    if (pParent && pParent->getActiveBranchCount() == 0)
+    {
       pParent->terminate();
+    }
   }
 }
 
@@ -199,41 +200,44 @@ void SIPIct::handleInviteTimeout()
   pTransaction->terminate();
 }
 
-void SIPIct::handleSendAck(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport)
+void SIPIct::handleSendAck(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport, bool startTimer)
 {
   SIPTransaction::Ptr pTransaction = static_cast<SIPTransaction::WeakPtr*>(_owner)->lock();
-  if (!pTransaction)
+  if (!pTransaction || pTransaction->getState() == SIPTransaction::TRN_STATE_TERMINATED)
     return;
 
   pTransaction->setState(COMPLETED);
 
-  SIPMessage::Ptr ack = SIPMessage::Ptr(new SIPMessage());
-  *(ack.get()) = *(_pRequest.get());
-  
-  size_t methodPos = _pRequest->startLine().find(' ');
-  if (methodPos == std::string::npos)
-    return;
+  if (!_pAck)
+  {
+    _pAck = SIPMessage::Ptr(new SIPMessage());
+    *(_pAck.get()) = *(_pRequest.get());
 
-  ack->startLine() = "ACK";
-  ack->startLine() += _pRequest->startLine().c_str() + methodPos;
-  
-  ack->hdrSet("To", pMsg->hdrGet("to"));
+    size_t methodPos = _pRequest->startLine().find(' ');
+    if (methodPos == std::string::npos)
+      return;
 
-  SIPCSeq cSeq;
-  cSeq = _pRequest->hdrGet("cseq");
-  std::string ackCSeq = cSeq.getNumber();
-  ackCSeq += " ACK";
-  ack->hdrSet("CSeq", ackCSeq);
+    _pAck->startLine() = "ACK";
+    _pAck->startLine() += _pRequest->startLine().c_str() + methodPos;
 
-  ack->body() = "";
-  ack->hdrRemove("Content-Length");
-  ack->hdrRemove("Content-Type");
+    _pAck->hdrSet("To", pMsg->hdrGet("to"));
 
-  ack->commitData();
+    SIPCSeq cSeq;
+    cSeq = _pRequest->hdrGet("cseq");
+    std::string ackCSeq = cSeq.getNumber();
+    ackCSeq += " ACK";
+    _pAck->hdrSet("CSeq", ackCSeq);
+
+    _pAck->body() = "";
+    _pAck->hdrRemove("Content-Length");
+    _pAck->hdrRemove("Content-Type");
+
+    _pAck->commitData();
+  }
 
   std::ostringstream logMsg;
-  logMsg << pTransaction->getLogId() << ">>> " << ack->startLine()
-  << " LEN: " << ack->data().size()
+  logMsg << pTransaction->getLogId() << ">>> " << _pAck->startLine()
+  << " LEN: " << _pAck->data().size()
   << " SRC: " << pTransport->getLocalAddress().toIpPortString()
   << " DST: " << pTransaction->remoteAddress().toString()
   << " ENC: " << pTransaction->isXOREncrypted()
@@ -242,19 +246,22 @@ void SIPIct::handleSendAck(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTrans
   OSS::log_information(logMsg.str());
   
   if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
-    OSS::log_debug(ack->createLoggerData());
+    OSS::log_debug(_pAck->createLoggerData());
 
   if (pTransport->isReliableTransport())
   {
-    pTransport->writeMessage(ack);
+    pTransport->writeMessage(_pAck);
     pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
   }
   else
   {
-    startTimerD();
-    pTransport->writeMessage(ack, 
-    pTransaction->remoteAddress().toString(),
-      OSS::string_from_number<unsigned short>(pTransaction->remoteAddress().getPort()));
+    if (startTimer)
+    {
+      startTimerD();
+      pTransport->writeMessage(_pAck,
+      pTransaction->remoteAddress().toString(),
+        OSS::string_from_number<unsigned short>(pTransaction->remoteAddress().getPort()));
+    }
   }
 }
 

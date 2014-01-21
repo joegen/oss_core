@@ -45,7 +45,8 @@ SIPTransaction::SIPTransaction():
   _dialogTarget(),
   _isXOREncrypted(false),
   _pParent(),
-  _isParent(true)
+  _isParent(true),
+  _hasTerminated(false)
 {
 }
 
@@ -60,7 +61,8 @@ SIPTransaction::SIPTransaction(SIPTransaction::Ptr pParent) :
   _dialogTarget(),
   _isXOREncrypted(false),
   _pParent(pParent),
-  _isParent(false)
+  _isParent(false),
+  _hasTerminated(false)
 {
   _id = pParent->getId();
   _logId = pParent->getLogId();
@@ -75,9 +77,6 @@ SIPTransaction::~SIPTransaction()
   std::ostringstream logMsg;
   logMsg << _logId << getTypeString() << " " << _id << " isParent=" << (isParent() ? "Yes" : "No") << " DESTROYED";
   OSS::log_debug(logMsg.str());
-
-  if (_terminateCallback)
-    _terminateCallback();
 }
 
 SIPTransaction::SIPTransaction(const SIPTransaction&)
@@ -103,7 +102,7 @@ std::string SIPTransaction::getTypeString() const
   else if (TYPE_IST == _type)
     return "InviteServerTransaction";
   else if (TYPE_NICT == _type)
-    return "NonInviteClientTrasaction";
+    return "NonInviteClientTransaction";
   else if (TYPE_NIST == _type)
     return "NonInviteServerTransaction";
   return "Unknow";
@@ -417,18 +416,34 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg, const OSS::IPAddress& re
 
 void SIPTransaction::terminate()
 {
+  OSS::mutex_lock lock(_mutex);
+
+  if (_hasTerminated)
+    return;
+
    setState(TRN_STATE_TERMINATED);
   _fsm->cancelAllTimers();
   _fsm->onTerminate();
 
+  _hasTerminated = true;
+
   if (isParent())
   {
+    OSS_LOG_INFO(_logId << getTypeString() << " (parent) TERMINATED - child(ren) " << getActiveBranchCount());
     {
       OSS::mutex_critic_sec_lock lock(_branchesMutex);
       for (Branches::iterator iter = _branches.begin(); iter != _branches.end(); iter++)
         iter->second->terminate();
     }
+    
+    if (_terminateCallback)
+      _terminateCallback();
+
     _owner->removeTransaction(_id);
+  }
+  else
+  {
+    OSS_LOG_INFO(_logId << getTypeString() << " (child) TERMINATED - siblings " << getActiveBranchCount());
   }
 }
 
@@ -532,6 +547,18 @@ SIPTransaction::Ptr SIPTransaction::findBranch(const SIPMessage::Ptr& pRequest)
     foundBranch = pBranch->second;
   }
   return foundBranch;
+}
+
+std::size_t SIPTransaction::getActiveBranchCount() const
+{
+  OSS::mutex_critic_sec_lock lock(_branchesMutex);
+  std::size_t activeBranches = 0;
+  for (Branches::const_iterator iter = _branches.begin(); iter != _branches.end(); iter++)
+  {
+    if (iter->second->getState() != SIPTransaction::TRN_STATE_TERMINATED)
+      ++activeBranches;
+  }
+  return activeBranches;
 }
 
 bool SIPTransaction::allBranchesCompleted() const

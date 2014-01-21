@@ -66,7 +66,7 @@ public:
     /// when a SIP message is needed to be sent to the transport 
     /// coming from the core layer. 
 
-  void handleSendAck(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport);
+  void handleSendAck(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport, bool startTimer = true);
     /// Sends an ACK for 3xx-6xx responses
     ///
     /// Take note that ACK for 2xx should be handled by the UA layer
@@ -86,7 +86,6 @@ public:
 
 private: 
   unsigned long _timerAValue;
-  OSS::mutex_critic_sec _ackMutex;
   SIPMessage::Ptr _pAck;
 
   friend class SIPTransaction;

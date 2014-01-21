@@ -22,6 +22,7 @@
 #include "OSS/SIP/SIPFSMDispatch.h"
 #include "OSS/SIP/SIPTransaction.h"
 #include "OSS/SIP/SIPTransactionPool.h"
+#include "OSS/Logger.h"
 
 
 namespace OSS {
@@ -239,8 +240,23 @@ void SIPFsm::handleDelayedTerminate()
 
   SIPTransaction::Ptr pParent = pTransaction->getParent();
   pTransaction->terminate();
-  if (pParent && pParent->allBranchesTerminated())
-    pParent->terminate();
+
+  //if (pParent && pParent->allBranchesTerminated())
+  //  pParent->terminate();
+  
+  pTransaction->terminate();
+  if (pParent )
+  {
+    std::size_t activeBranches = pParent->getActiveBranchCount();
+    if (activeBranches == 0)
+    {
+      pParent->terminate();
+    }
+  }
+  else
+  {
+    OSS_ASSERT(pTransaction->isParent());
+  }
 }
 
 } } // OSS::SIP

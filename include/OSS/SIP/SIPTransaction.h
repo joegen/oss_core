@@ -166,7 +166,10 @@ public:
     /// Returns true if all branches are already in terminated state
 
   std::size_t getBranchCount() const;
-    /// Returns the number of active branches
+    /// Returns the total number of branches
+
+  std::size_t getActiveBranchCount() const;
+    /// Returns the total number of non-terminated branches
 
   std::string getTypeString() const;
     /// Return the transaction type as a string
@@ -325,6 +328,7 @@ private:
   mutable OSS::mutex_critic_sec _branchesMutex;
   Branches _branches;
   SIPMessage::Ptr _pInitialRequest;
+  bool _hasTerminated;
   friend class SIPTransactionPool;
   friend class SIPIstPool;
   friend class SIPNistPool;
