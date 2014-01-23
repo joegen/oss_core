@@ -140,8 +140,21 @@ bool ClassType::loadString(const std::string& config)
       tempFile.close();
       bool ok = load(fn);
       boost::filesystem::remove(fn);
+      
+      if (!ok)
+      {
+        OSS_LOG_ERROR("ClassType::loadString - Unable to load " << fn.c_str() << " for reading.");
+      }
       return ok;
     }
+    else
+    {
+      OSS_LOG_ERROR("ClassType::loadString - Unable to open " << fn.c_str() << " for writing.");
+    }
+  }
+  else
+  {
+    OSS_LOG_ERROR("ClassType::loadString - Unable to generate new temp filename");
   }
   return false;
 }

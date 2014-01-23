@@ -356,7 +356,7 @@ std::string boost_path(const boost::filesystem::path& path)
 #endif
 }
 
-
+#if 0
 bool boost_temp_file(std::string& tempfile)
 {
 #if defined(BOOST_FILESYSTEM_VERSION) && BOOST_FILESYSTEM_VERSION >= 3
@@ -373,11 +373,19 @@ bool boost_temp_file(std::string& tempfile)
   }
   return false;
 #else
-  tempfile = Poco::Path::temp();
+  /*tempfile = Poco::Path::temp();
   tempfile += "/";
-  tempfile += Poco::TemporaryFile::tempName();
+  tempfile += Poco::TemporaryFile::tempName();*/
+  tempfile = Poco::TemporaryFile::tempName();
   return true;
 #endif
+}
+#endif
+
+bool boost_temp_file(std::string& tempfile)
+{
+  tempfile = Poco::TemporaryFile::tempName();
+  return true;
 }
 
 void vectorToCArray(const std::vector<std::string>& args, char*** argv)
