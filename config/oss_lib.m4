@@ -27,7 +27,7 @@ AC_DEFUN([SFAC_INIT_FLAGS],
     	SF_CXX_WARNINGS="-Wall -Wformat -Wwrite-strings -Wpointer-arith"
     	#SF_CXX_WARNINGS="-fpermissive"
         CXXFLAGS="$CXXFLAGS $SF_CXX_C_FLAGS $SF_CXX_WARNINGS"
-    	CFLAGS="$CFLAGS $SF_CXX_C_FLAGS -Wnested-externs -Wmissing-declarations"
+    	CFLAGS="$CFLAGS $SF_CXX_C_FLAGS -Wnested-externs"
     elif test x_"${ax_cv_c_compiler_vendor}" = x_sun
     then
         SF_CXX_C_FLAGS="-D_REENTRANT -D_FILE_OFFSET_BITS=64 -mt -fast -v"

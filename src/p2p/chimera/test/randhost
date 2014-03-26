@@ -1,0 +1,23 @@
+#!/usr/bin/perl -W
+# $Id: randhost,v 1.6 2006/05/17 05:23:05 krishnap Exp $
+# Matthew Allen
+
+use strict;
+use warnings;
+
+if($#ARGV != 1) {
+  print STDERR "usage: randhost count hostname\n";
+  exit 1;
+}
+my $N = $ARGV[0];
+my $hostname = $ARGV[1];
+
+open(KEYS, "./keygen $N |");
+my @keys = <KEYS>;
+close(KEYS);
+
+for(my $i = 0; $i < $N ; $i++) {
+  my $port = 11111 + $i;
+  chomp($keys[$i]);
+  print "$hostname $port $keys[$i]\n";
+}

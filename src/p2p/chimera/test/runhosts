@@ -1,0 +1,59 @@
+#!/usr/bin/perl -W
+
+
+use warnings;
+
+if($#ARGV !=1){
+  print STDERR "usage: runhost keyfile \n";
+ # exit 1;
+}
+my $joinhost = "beast:2222" ;
+
+my $filename = $ARGV[0];
+open(KEYFILE, $filename);
+
+$i = 1;
+while ( $line = <KEYFILE> )
+{
+	chomp ( $line );
+	@token = split( / / , $line);
+        print "$i  ================= \n";
+	$i++;
+	@args = ("./test","-j", $joinhost , $token[1] , $token[2]);
+ 	sleep (1);
+	$pid = fork ;
+	if($pid == 0){
+		print "Executing: ";
+		print " $args[0] $args[1] $args[2] $args[3] $args[4] \n";
+		
+		exec(@args) == 0 or die "system @args failed: $?";
+		exit 1;
+	}
+	
+}
+
+close (KEYFILE);
+exit 1;
+
+$pid = fork ;
+if ($pid == 0 ) {
+  print "Child goes here \n" ;
+  exec(@args) == 0 or die "system @args failed: $?";
+  }
+  else { 
+    $pid = fork ;
+    if($pid == 0 ){ 	
+      @args1 = ("./bighost","-j", $joinhost ,"1113", "11112222");
+      exec(@args1) == 0 or die "system @args1 failed: $?";
+    }
+    else { 
+      print " PARENT 2\n";
+    }
+}
+
+
+#$exit_value  = $? >> 8;
+#$signal_num  = $? & 127;
+#$dumped_core = $? & 128;
+
+

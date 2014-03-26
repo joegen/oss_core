@@ -109,6 +109,7 @@ nobase_include_HEADERS = \
     OSS/Persistent/DataType.h \
     OSS/Persistent/Persistent.h \
     OSS/Persistent/Reference.h \
+    OSS/Persistent/KeyValueStore.h \
     OSS/SDP/rfc4566.txt \
     OSS/SDP/SDP.h \
     OSS/SDP/SDPHeader.h \
@@ -246,7 +247,9 @@ nobase_include_HEADERS = \
     OSS/websocketpp/utf8_validator/utf8_validator.hpp \
     OSS/SIP/SIPWebSocketConnection.h \
     OSS/SIP/SIPWebSocketConnectionManager.h \
-    OSS/SIP/SIPWebSocketListener.h
+    OSS/SIP/SIPWebSocketListener.h \
+    OSS/P2P/Overlay.h \
+    OSS/P2P/DhtStore.h
 
 
 DISTCLEANFILES = Makefile.in

@@ -1,0 +1,26 @@
+#!/usr/bin/perl -W
+# $Id: bigkill,v 1.4 2006/05/17 05:23:05 krishnap Exp $
+# Matthew Allen
+
+use strict;
+use warnings;
+
+if($#ARGV != 0 || $ARGV[0] < 1 || $ARGV[0] >= 100) {
+  print STDERR "usage: bigkill percent\n";
+  exit 1;
+}
+
+my @pids = ();
+open(PIDS, "ps -A | grep bighost |");
+while(!eof(PIDS)) {
+  my @input = split(" ", <PIDS>);
+  my $test = rand(100);
+  if($test < $ARGV[0]) {
+    push(@pids, $input[0]);
+  }
+}
+close(PIDS);
+
+for my $pid (@pids) {
+  system("kill -9 $pid");
+}

@@ -1,0 +1,65 @@
+#!/usr/bin/perl -W
+# $Id: graphmonkey,v 1.4 2006/05/21 03:08:16 krishnap Exp $
+# Matthew Allen
+
+use strict;
+use warnings;
+
+if($#ARGV != 0) {
+  print STDERR "usage: graphmonkey file\n";
+  exit 1;
+}
+
+my @hops = ();
+my $max = 0;
+open(FP, $ARGV[0]);
+while(!eof(FP)) {
+	my @input = split(" ", <FP>);
+	if(defined($input[0]))
+	{
+		if($input[0] eq "message" && $#input == 7) {
+			push(@hops, $input[4]);
+			if($input[4] > $max) { $max = $input[4]; }
+		} elsif($input[0] eq "message") {
+			push(@hops, -1);
+		}
+	}
+}
+close(FP);
+
+print "newgraph\n";
+print "xaxis\n  label : iteration\n";
+print "yaxis\n  label : hops\n";
+
+print "newcurve\n  linetype none\n  marktype xbar\n";
+print "  marksize 0.01 color 0.0 1.0 0.0\n  pts\n";
+for(my $i = 0; $i < $#hops; $i++) {
+  if($hops[$i] == -1) {
+#    print "    $i $max\n";
+  }
+}
+
+print "newcurve\n  linetype none\n  marktype circle\n";
+print "  marksize 0.01\n  color 1.0 0.0 0.0\n  pts\n";
+for(my $i = 0; $i < $#hops; $i++) {
+  if($hops[$i] >= 0) {
+    print "    $i $hops[$i]\n";
+  }
+}
+
+print "newcurve\n  linetype solid\n  marktype none\n";
+print "  color 0.0 0.0 1.0\n  pts\n";
+my @window = ();
+my $total = 0;
+for(my $i = 0; $i < $#hops; $i++) {
+  if($hops[$i] >= 0) {
+    push(@window, $hops[$i]);
+    $total += $hops[$i];
+    if($#window >= 50) {
+      my $tmp = shift(@window);
+      $total -= $tmp;
+    }
+    my $avg = $total / ($#window + 1);
+    print "    $i $avg\n";
+  }
+}

@@ -1,0 +1,127 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+if($#ARGV != 1) {
+  print STDERR "USAGE:percgraph file #nodes\n"; 
+  exit 1; 
+} 
+ 
+my $counter= -1; 
+my $dest =0; 
+my $counted=0; 
+my $p1=$ARGV[1]; 
+my $p2=$ARGV[1]*0.5; 
+ 
+my @dest=(); 
+my @dest2=(); 
+my @perc2=(); 
+my @perc=(); 
+my @perc3=(); 
+my @failed=(); 
+ 
+for(my $i = 0; $i < 200 ; $i++) { 
+  $dest[$i]="0"; 
+  $dest2[$i]="0"; 
+  $perc2[$i]=0; 
+  $perc[$i]=0; 
+  $perc3[$i]=0; 
+  $failed[$i]=0; 
+} 
+ 
+open(FP, $ARGV[0]); 
+my $fileName = $ARGV[0];
+ 
+while(!eof(FP)) { 
+  my @input = split(" ", <FP>); 
+  if($#input == 6  && $input[4] eq "delivered" ) { 
+    if($dest[$input[1]] eq "0"){ 
+      $dest[$input[1]]=$input[6]; 
+      $perc[$input[1]]=1; 
+    } 
+    elsif($dest[$input[1]] eq $input[6]){ 
+      $perc[$input[1]]= $perc[$input[1]]+1; 
+    } 
+    elsif($dest2[$input[1]] eq $input[6] || $dest2[$input[1]] eq "0"){ 
+      $dest2[$input[1]]=$input[6]; 
+      $perc2[$input[1]]= $perc2[$input[1]]+1; 
+ 
+    } 
+    else{ 
+      $perc3[$input[1]]=$perc3[$input[1]]+1; 
+    } 
+  } 
+  elsif($#input == 2  && $input[2] eq "failed" ) { 
+    $failed[$input[1]]++; 
+  } 
+} 
+ 
+close(FP); 
+ 
+ 
+ 
+for(my $i = 0; $i < 200; $i++) { 
+  if( $perc[$i] < $perc2[$i]){ 
+      my $tmp = $perc[$i]; 
+      $perc[$i] = $perc2[$i]; 
+      $perc2[$i] = $tmp; 
+  } 
+} 
+ 
+print "newgraph\n"; 
+print "xaxis\n  label : ROUNDS  (blue:failed) (Red:1st receiver) (green:2nd receiver\n"; 
+print "yaxis \n   min 0 max 100 label : Successful Received %\n"; 
+ 
+print "newcurve\n  linetype solid\n  marktype none\n"; 
+print "  marksize 0.01\n  color 1.0 0.0 0.0\n  pts\n"; 
+ 
+for(my $i = 0; $i < 100; $i++) { 
+  $perc[$i]=($perc[$i]/$p1)*100; 
+  print "    $i $perc[$i]\n"; 
+  #print "    $i $perc[$i] $perc2[$i] $failed[$i]\n"; 
+} 
+ 
+for(my $i = 100; $i < 200; $i++) { 
+   my $temp = `grep "initiating msg $i to" $fileName | wc -l`;
+   chomp($temp);
+   my $kk = $perc[$i];
+   $temp +=3; #buffer
+   $perc[$i]=($perc[$i]/$temp)*100; 
+   print "    $i $perc[$i]  $kk $temp\n"; 
+   #print "    $i $perc[$i] $perc2[$i] $failed[$i]\n"; 
+} 
+ 
+ 
+print "newcurve\n  linetype solid\n  marktype none\n"; 
+print "  marksize 0.01\n  color 0.0 1.0 0.0\n  pts\n"; 
+ 
+for(my $i = 0; $i < 100; $i++) { 
+  $perc2[$i]=($perc2[$i]/$p1)*100; 
+  print "    $i $perc2[$i]\n"; 
+} 
+ 
+for(my $i = 100; $i < $#perc2; $i++) { 
+   my $temp = `grep "initiating msg $i to" $fileName | wc -l`;
+   chomp($temp);
+   $temp +=3; #buffer
+   my $kk = $perc2[$i];
+   $perc2[$i]=($perc2[$i]/$temp)*100; 
+  print "    $i $perc2[$i] $kk $temp\n"; 
+} 
+ 
+ 
+exit(); 
+print "newcurve\n  linetype solid\n  marktype none\n"; 
+print "  marksize 0.01\n  color 0.0 0.0 1.0\n  pts\n"; 
+ 
+for(my $i = 0; $i < 100; $i++) { 
+  $failed[$i]=($failed[$i]/$p1)*100; 
+  print "    $i $failed[$i]\n"; 
+} 
+ 
+for(my $i = 100; $i < 200; $i++) { 
+  $failed[$i]=($failed[$i]/$p2)*100; 
+  print "    $i $failed[$i]\n"; 
+} 
+ 
+

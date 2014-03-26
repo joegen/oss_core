@@ -13,7 +13,7 @@ lib_LTLIBRARIES = $(corelibs)
 
 localedir = $(datadir)/locale
 
-INCLUDES = \
+AM_CPPFLAGS = \
     -I@OSS_CORE_SRCDIR@/include \
     -I@OSS_CORE_SRCDIR@/src/net/turn/carp \
     -I@OSS_CORE_SRCDIR@/src/net/turn \
@@ -118,6 +118,68 @@ if ENABLE_TURN
 endif
 
 
+
+CHIMERA_SOURCES = \
+	p2p/chimera/base.h \
+	p2p/chimera/chimera.h \
+	p2p/chimera/dllist.h \
+	p2p/chimera/dtime.h \
+	p2p/chimera/host.h \
+	p2p/chimera/include.h \
+	p2p/chimera/job_queue.h \
+	p2p/chimera/jrb.h \
+	p2p/chimera/jval.h \
+	p2p/chimera/key.h \
+	p2p/chimera/log.h \
+	p2p/chimera/message.h \
+	p2p/chimera/network.h \
+	p2p/chimera/priqueue.h \
+	p2p/chimera/route.h \
+	p2p/chimera/semaphore.h \
+	p2p/chimera/chimera.c \
+	p2p/chimera/network.c \
+	p2p/chimera/message.c \
+	p2p/chimera/log.c \
+	p2p/chimera/jrb.c \
+	p2p/chimera/jval.c \
+	p2p/chimera/key.c \
+	p2p/chimera/route.c \
+	p2p/chimera/host.c \
+	p2p/chimera/dllist.c \
+	p2p/chimera/job_queue.c \
+	p2p/chimera/dtime.c \
+	p2p/chimera/semaphore.c
+
+UDT4_SOURCES = \
+	p2p/udt/api.cpp \
+	p2p/udt/api.h \
+	p2p/udt/buffer.cpp \
+	p2p/udt/buffer.h \
+	p2p/udt/cache.cpp \
+	p2p/udt/cache.h \
+	p2p/udt/ccc.cpp \
+	p2p/udt/ccc.h \
+	p2p/udt/channel.cpp \
+	p2p/udt/channel.h \
+	p2p/udt/common.cpp \
+	p2p/udt/common.h \
+	p2p/udt/core.cpp \
+	p2p/udt/core.h \
+	p2p/udt/epoll.cpp \
+	p2p/udt/epoll.h \
+	p2p/udt/list.cpp \
+	p2p/udt/list.h \
+	p2p/udt/md5.h \
+	p2p/udt/packet.cpp \
+	p2p/udt/packet.h \
+	p2p/udt/queue.cpp \
+	p2p/udt/queue.h \
+	p2p/udt/udt.h \
+	p2p/udt/window.cpp \
+	p2p/udt/window.h
+
+
+
 liboss_core_la_LDFLAGS = \
 	-version-info @OSS_CORE_VERSION_INFO@
 
@@ -214,6 +276,9 @@ liboss_core_la_SOURCES =  \
     persistent/ClassType.cpp \
     persistent/DataType.cpp \
     persistent/Reference.cpp \
+    persistent/unqlite/unqlite.h \
+    persistent/unqlite/unqlite.c \
+    persistent/KeyValueStore.cpp \
     sdp/SDPHeader.cpp \
     sdp/SDPHeaderList.cpp \
     sdp/SDPMedia.cpp \
@@ -330,7 +395,11 @@ liboss_core_la_SOURCES =  \
     ws/src/sockets/plain.hpp \
     ws/src/sockets/socket_base.hpp \
     ws/src/sockets/tls.hpp \
-    ws/src/utf8_validator/utf8_validator.hpp
+    ws/src/utf8_validator/utf8_validator.hpp \
+    ${CHIMERA_SOURCES} \
+    ${UDT4_SOURCES} \
+    p2p/Overlay.cpp \
+    p2p/DhtStore.cpp
 
 if ENABLE_TURN
     liboss_core_la_SOURCES += net/TurnServer.cpp
@@ -364,7 +433,8 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestDNS.cpp \
 	unit_test/TestSIPURI.cpp \
 	unit_test/TestRTPPacket.cpp \
-	unit_test/TestFirewall.cpp
+	unit_test/TestFirewall.cpp \
+	unit_test/TestKeyValueStore.cpp
 #        unit_test/TestWebSocket.cpp
 
 #

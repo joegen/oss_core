@@ -1,0 +1,32 @@
+#!/usr/bin/perl -W
+# $Id: randhost_ssh,v 1.3 2006/05/17 05:23:05 krishnap Exp $
+# Matthew Allen
+
+use strict;
+use warnings;
+
+if($#ARGV != 1) {
+  print STDERR "usage: randhost count hostname\n";
+  exit 1;
+}
+my $N = $ARGV[0];
+my $hostfile = $ARGV[1];
+
+open(HOSTS, "< $hostfile") or die("could not open $hostfile");
+my @hosts = <HOSTS>;
+close(HOSTS);
+
+my $M = $N * ($#hosts + 1);
+open(KEYS, "./keygen $M |");
+my @keys = <KEYS>;
+close(KEYS);
+
+for my $host (@hosts) {
+  chomp($host);
+  for(my $i = 0; $i < $N ; $i++) {
+    my $port = 11111 + $i;
+    my $key = shift(@keys);
+    chomp($key);
+    print "$host $port $key\n";
+  }
+}
