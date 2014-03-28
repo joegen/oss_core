@@ -35,12 +35,18 @@
 /**
  *interval that members of leafset are checked to see if they are alive or not
  */
-#define LEAFSET_CHECK_PERIOD 20	/* seconds */
+static int LEAFSET_CHECK_PERIOD = 20;	/* seconds */
 
 /** GRACEPERIOD is the time that has to be elapsed before a node
  ** can be accepted to the network again after last send to it failed 
  */
-#define GRACEPERIOD  30		/* seconds */
+static int GRACEPERIOD  = 30;		/* seconds */
+
+void chimera_set_periods(int leafsetCheckPeriods, int nodeGracePeriod)
+{
+  LEAFSET_CHECK_PERIOD = leafsetCheckPeriods;
+  GRACEPERIOD = nodeGracePeriod;
+}
 
 
 int chimera_encodehosts (void *logs, char *s, int size, ChimeraHost ** host)

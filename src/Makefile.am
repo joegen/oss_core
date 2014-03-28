@@ -434,7 +434,8 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestSIPURI.cpp \
 	unit_test/TestRTPPacket.cpp \
 	unit_test/TestFirewall.cpp \
-	unit_test/TestKeyValueStore.cpp
+	unit_test/TestKeyValueStore.cpp \
+	unit_test/TestOverlay.cpp
 #        unit_test/TestWebSocket.cpp
 
 #

@@ -55,11 +55,11 @@ bool DhtStore::initialize(const std::string& dbPath, unsigned short localPort, c
   if (!_overlay.init(localPort))
     return false;
 
-  Overlay::MessageCallback putcb = boost::bind(&DhtStore::handlePut, this, _1, _2, _3, _4);
-  Overlay::MessageCallback getcb = boost::bind(&DhtStore::handleGet, this, _1, _2, _3, _4);
-  Overlay::MessageCallback delcb = boost::bind(&DhtStore::handleDelete, this, _1, _2, _3, _4);
-  Overlay::MessageCallback getrcb = boost::bind(&DhtStore::handleGetResponse, this, _1, _2, _3, _4);
-  Overlay::MessageCallback replcb = boost::bind(&DhtStore::handleReplicate, this, _1, _2, _3, _4);
+  Overlay::MessageCallback putcb = boost::bind(&DhtStore::handlePut, this, _1, _2, _3);
+  Overlay::MessageCallback getcb = boost::bind(&DhtStore::handleGet, this, _1, _2, _3);
+  Overlay::MessageCallback delcb = boost::bind(&DhtStore::handleDelete, this, _1, _2, _3);
+  Overlay::MessageCallback getrcb = boost::bind(&DhtStore::handleGetResponse, this, _1, _2, _3);
+  Overlay::MessageCallback replcb = boost::bind(&DhtStore::handleReplicate, this, _1, _2, _3);
 
   _overlay.registerMessageType(DHT_PUT, true, putcb);
   _overlay.registerMessageType(DHT_GET, true, getcb);
@@ -70,23 +70,23 @@ bool DhtStore::initialize(const std::string& dbPath, unsigned short localPort, c
   return _overlay.join(boostrapHost);
 }
 
-void DhtStore::handlePut(const std::string& senderKey, const std::string& messageKey, int messageType, const std::string& payload)
+void DhtStore::handlePut(const std::string& messageKey, int messageType, const std::string& payload)
 {
 }
 
-void DhtStore::handleGet(const std::string& senderKey, const std::string& messageKey, int messageType, const std::string& payload)
+void DhtStore::handleGet(const std::string& messageKey, int messageType, const std::string& payload)
 {
 }
 
-void DhtStore::handleDelete(const std::string& senderKey, const std::string& messageKey, int messageType, const std::string& payload)
+void DhtStore::handleDelete(const std::string& messageKey, int messageType, const std::string& payload)
 {
 }
 
-void DhtStore::handleGetResponse(const std::string& senderKey, const std::string& messageKey, int messageType, const std::string& payload)
+void DhtStore::handleGetResponse(const std::string& messageKey, int messageType, const std::string& payload)
 {
 }
 
-void DhtStore::handleReplicate(const std::string& senderKey, const std::string& messageKey, int messageType, const std::string& payload)
+void DhtStore::handleReplicate(const std::string& messageKey, int messageType, const std::string& payload)
 {
 }
 

@@ -27,10 +27,13 @@
 #include <vector>
 #include "OSS/Core.h"
 #include "OSS/IPAddress.h"
+#include "OSS/Thread.h"
 
 
 namespace OSS {
 namespace P2P {
+
+#define OVERLAY_MIN_MSG_TYPE 128
 
 class Overlay : boost::noncopyable
 {
@@ -49,21 +52,22 @@ public:
 
   typedef std::map<std::string, Node> NodeList;
   typedef boost::function<void(const Node&, bool )> UpdateCallback;
-  typedef boost::function<void(const std::string&, const std::string&, int, const std::string&)> MessageCallback;
+  typedef boost::function<void(const std::string&, int, const std::string&)> MessageCallback;
   typedef std::map<int, MessageCallback> MessageCallbackList;
+  typedef std::vector<std::string> LeafSet;
 
   Overlay();
   
   ~Overlay();
 
+  bool init(unsigned short port, int gracePeriod, int pingInterval);
   bool init(unsigned short port);
     // Create an overlay listening on a the specified port
+    // gracePeriod: Number of seconds elapsed before a failed node can be accepted back to the overlay
+    // pingInterval: Number of seconds the ping thread will check health of the leafset participants
     //
   bool join(const OSS::IPAddress& bootstrapHost);
     // Join an overlay with bootstrap host
-    //
-  bool setLocalKey(const std::string& key);
-    // Set the local identifier for this node
     //
   void onUpdate(const Node& node, bool joined);
     // Handler called when a host joined or left the overlay
@@ -71,21 +75,45 @@ public:
   void setUpdateHandler(const UpdateCallback& cb);
     // Set the onUpdateHandler
     //
-  void onMessage(const std::string& senderKey, const std::string& messageKey, int messageType, const std::string& payload);
+  void onMessage(const std::string& messageKey, int messageType, const std::string& payload);
     // Handler called when a new message has arrived from the overlay
     //
   bool registerMessageType(int messageType, bool sendAck, MessageCallback cb);
-    // Register a message type.  Any type that is not registered will be dropped
+    // Register a message type.  Any type that is not registered will be dropped.
+    // messageType MUST be greater or equal to OVERLAY_MIN_MSG_TYPE
     //
   bool sendMessage(int messageType, const std::string& key, const std::string& payload);
     // Send a message to the nearest endpoint identified by key
     //
+  void getNodeList(NodeList& nodes) const;
+    // Returns a reference to node lists
+    //
+  void getHostList(NodeList& nodes) const;
+    // Returns a reference to host lists
+    //
+  bool getNode(const std::string& nodeId, Node& node) const;
+    // Returns the node element identified by nodeId
+    //
+  bool getHost(const OSS::IPAddress& hostPort, Node& node) const;
+    // Returns the node element identified by host:port
+    //
+  const std::string& getNodeId() const;
+    // Returns the local node id
+    //
+  bool getRightLeafSet(LeafSet& leafset);
+  bool getRightLeafSet(LeafSet& leafset, int maxNodes) const;
+    // Returns the id collection of nodes to the right of the overlay
+
 private:
   UpdateCallback _updateCb;
   MessageCallbackList _messageCbList;
   NodeList _nodeList;
+  mutable OSS::mutex_read_write _nodeListMutex;
+  NodeList _hostList;
+  mutable OSS::mutex_read_write _hostListMutex;
   OSS_HANDLE _state;
   UserData _userData;
+  std::string _nodeId;
 };
 
 
@@ -95,6 +123,16 @@ private:
 inline void Overlay::setUpdateHandler(const UpdateCallback& cb)
 {
   _updateCb = cb;
+}
+
+inline const std::string& Overlay::getNodeId() const
+{
+  return _nodeId;
+}
+
+inline bool Overlay::getRightLeafSet(LeafSet& leafset)
+{
+  return getRightLeafSet(leafset, INT_MAX);
 }
 
 

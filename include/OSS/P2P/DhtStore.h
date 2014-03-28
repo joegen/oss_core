@@ -45,11 +45,11 @@ public:
   bool initialize(const std::string& dbPath, unsigned short localPort, const OSS::IPAddress& boostrapHost);
 
 protected:
-  void handlePut(const std::string& senderKey, const std::string& messageKey, int messageType, const std::string& payload);
-  void handleGet(const std::string& senderKey, const std::string& messageKey, int messageType, const std::string& payload);
-  void handleDelete(const std::string& senderKey, const std::string& messageKey, int messageType, const std::string& payload);
-  void handleGetResponse(const std::string& senderKey, const std::string& messageKey, int messageType, const std::string& payload);
-  void handleReplicate(const std::string& senderKey, const std::string& messageKey, int messageType, const std::string& payload);
+  void handlePut(const std::string& messageKey, int messageType, const std::string& payload);
+  void handleGet(const std::string& messageKey, int messageType, const std::string& payload);
+  void handleDelete(const std::string& messageKey, int messageType, const std::string& payload);
+  void handleGetResponse(const std::string& messageKey, int messageType, const std::string& payload);
+  void handleReplicate(const std::string& messageKey, int messageType, const std::string& payload);
 
 private:
   DhtStore();

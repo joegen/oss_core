@@ -23,6 +23,7 @@
 extern "C"
 {
   #include "chimera/chimera.h"
+  #include "chimera/route.h"
 }
 
 namespace OSS {
@@ -44,15 +45,15 @@ void overlay_deliver_upcall(ChimeraState* pState, Key* pKey, Message* pMsg)
 
   Overlay::UserData* userData = (Overlay::UserData*)pState->userData;
   if (userData)
-    userData->instance->onMessage(pMsg->source.keystr, pKey->keystr, pMsg->type, payload);
+    userData->instance->onMessage(pKey->keystr, pMsg->type, payload);
 }
 
-void Overlay::onMessage(const std::string& senderKey, const std::string& messageKey, int messageType, const std::string& payload)
+void Overlay::onMessage(const std::string& messageKey, int messageType, const std::string& payload)
 {
   MessageCallbackList::iterator iter = _messageCbList.find(messageType);
   if (iter != _messageCbList.end())
   {
-    (iter->second)(senderKey, messageKey, messageType, payload);
+    (iter->second)(messageKey, messageType, payload);
   }
 }
 
@@ -61,7 +62,11 @@ void overlay_update_upcall(ChimeraState* pState, Key* pKey, ChimeraHost* pHost, 
   Overlay::Node node;
   node.key = pKey->keystr;
   node.name = pHost->name;
-  node.hostPort = OSS::IPAddress(pHost->address);
+
+  unsigned char *ip = (unsigned char *)&(pHost->address);
+  std::ostringstream ipaddr;
+  ipaddr << (int)ip[0] << "." << (int)ip[1] << "." << (int)ip[2] << "." << (int)ip[3];
+  node.hostPort = OSS::IPAddress(ipaddr.str());
   node.hostPort.setPort(pHost->port);
 
   Overlay::UserData* userData = (Overlay::UserData*)pState->userData;
@@ -73,18 +78,38 @@ void Overlay::onUpdate(const Node& node, bool joined)
 {
   if (joined)
   {
-    _nodeList[node.key] = node;
+    {
+      OSS::mutex_write_lock lock(_nodeListMutex);
+      _nodeList[node.key] = node;
+    }
+    
+    {
+      OSS::mutex_write_lock lock(_hostListMutex);
+      _hostList[node.hostPort.toIpPortString()] = node;
+    }
   }
   else
   {
-    _nodeList.erase(node.key);
+    {
+      OSS::mutex_write_lock lock(_nodeListMutex);
+      _nodeList.erase(node.key);
+    }
+    
+    {
+      OSS::mutex_write_lock lock(_hostListMutex);
+      _hostList.erase(node.hostPort.toIpPortString());
+    }
   }
 
   if (_updateCb)
     _updateCb(node, joined);
 }
 
-
+bool Overlay::init(unsigned short port, int gracePeriod, int pingInterval)
+{
+  chimera_set_periods(pingInterval, gracePeriod);
+  return init(port);
+}
 
 bool Overlay::init(unsigned short port)
 {
@@ -93,6 +118,9 @@ bool Overlay::init(unsigned short port)
   {
     pState->userData = (void*)&_userData;
     _state = pState;
+    ChimeraGlobal *chglob = (ChimeraGlobal *) pState->chimera;
+    _nodeId = get_key_string(&chglob->me->key);
+  
     chimera_deliver(pState, overlay_deliver_upcall);
     chimera_update(pState, overlay_update_upcall);
   }
@@ -115,8 +143,8 @@ bool Overlay::join(const OSS::IPAddress& bootstrapHost)
 
   return true;
 }
-  // Join an overlay with bootstrap host
-  //
+
+#if 0
 bool Overlay::setLocalKey(const std::string& key)
 {
   ChimeraState* pState = static_cast<ChimeraState*>(_state);
@@ -131,9 +159,15 @@ bool Overlay::setLocalKey(const std::string& key)
   chimera_setkey(pState, localKey);
   return true;
 }
+#endif
 
 bool Overlay::registerMessageType(int messageType, bool sendAck, MessageCallback cb)
 {
+  //
+  // Make sure we do not collide with internal chimera message types
+  //
+  OSS_ASSERT (messageType >= OVERLAY_MIN_MSG_TYPE);
+
   ChimeraState* pState = static_cast<ChimeraState*>(_state);
   if (!pState)
     return false;
@@ -158,6 +192,75 @@ bool Overlay::sendMessage(int messageType, const std::string& key, const std::st
   chimera_send(pState, mykey, messageType, payload.size(), const_cast<char*>(payload.c_str()));
   return true;
 }
+
+void Overlay::getNodeList( Overlay::NodeList& nodes) const
+{
+  OSS::mutex_read_lock lock(_nodeListMutex);
+  nodes = _nodeList;
+}
+
+void Overlay::getHostList( Overlay::NodeList& nodes) const
+{
+  OSS::mutex_read_lock lock(_hostListMutex);
+  nodes = _hostList;
+}
+
+bool Overlay::getNode(const std::string& nodeId, Node& node) const
+{
+  OSS::mutex_read_lock lock(_nodeListMutex);
+  NodeList::const_iterator iter = _nodeList.find(nodeId);
+  if (iter == _nodeList.end())
+    return false;
+  node = iter->second;
+  return true;
+}
+
+bool Overlay::getHost(const OSS::IPAddress& hostPort, Node& node) const
+{
+  OSS::mutex_read_lock lock(_hostListMutex);
+  NodeList::const_iterator iter = _hostList.find(hostPort.toIpPortString());
+  if (iter == _hostList.end())
+    return false;
+  node = iter->second;
+  return true;
+}
+
+int leafset_size (ChimeraHost ** arr)
+{
+    int i = 0;
+    for (i = 0; arr[i] != NULL; i++);
+    return i;
+}
+
+bool Overlay::getRightLeafSet(LeafSet& leafset, int maxNodes) const
+{
+  ChimeraState* pState = static_cast<ChimeraState*>(_state);
+  if (!pState)
+    return false;
+
+  RouteGlobal *routeglob = (RouteGlobal *) pState->route;
+  OSS_ASSERT(routeglob);
+
+  pthread_mutex_lock (&routeglob->lock);
+
+  int rsize = 0;
+  for (rsize = 0; routeglob->rightleafset[rsize] != NULL; rsize++);
+
+  if (maxNodes < rsize)
+    rsize = maxNodes;
+
+  leafset.clear();
+
+  for (int i = 0; i < rsize; i++)
+  {
+    leafset.push_back(get_key_string(&routeglob->rightleafset[i]->key));
+  }
+
+  pthread_mutex_unlock (&routeglob->lock);
+
+  return !leafset.empty();
+}
+
 
 
 } }

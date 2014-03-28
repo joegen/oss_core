@@ -103,4 +103,10 @@ void chimera_send (ChimeraState * state, Key key, int type, int len,
  */
 int chimera_ping (ChimeraState * state, ChimeraHost * host);
 
+/**
+ ** chimera_set_periods:
+ ** set the grace period and check intervals for leafset
+ */
+void chimera_set_periods(int leafsetCheckPeriods, int nodeGracePeriod);
+
 #endif /* _CHIMERA_H_ */
