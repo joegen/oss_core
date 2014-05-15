@@ -123,8 +123,6 @@ encapsulate functions and operations for:
 
 %prep
 %setup -q
-# suse and obs build system
-mv %{_builddir}/%name-%version/%name-rpmlintrc %{_sourcedir}
 
 %build
 autoreconf -if
