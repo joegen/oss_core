@@ -141,7 +141,7 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
 
 
     AC_CHECK_LIB(PocoFoundation, main,
-        [POCO_LIBS="-lPocoFoundation -lPocoUtil -lPocoNet -lPocoXML"],
+        [POCO_LIBS="-lPocoFoundation -lPocoUtil -lPocoNet -lPocoNetSSL -lPocoXML"],
         [SF_MISSING_DEP("Poco C++ Library not found")])
     AC_CHECK_LIB(PocoUtil, main,[], [SF_MISSING_DEP("PocoUtil C++ Library not found")])
     AC_CHECK_LIB(PocoNet, main,[], [SF_MISSING_DEP("PocoNet C++ Library not found")])

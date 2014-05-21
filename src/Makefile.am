@@ -354,6 +354,7 @@ liboss_core_la_SOURCES =  \
     net/FirewallRule.cpp \
     net/Firewall.cpp \
     net/Carp.cpp \
+    net/HTTPServer.cpp \
     utl/AdaptiveDelay.cpp \
     sipfsm/SIPWebSocketConnection.cpp \
     sipfsm/SIPWebSocketListener.cpp \
