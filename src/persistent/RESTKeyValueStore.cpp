@@ -18,14 +18,25 @@
 //
 
 
+#include "OSS/Logger.h"
 #include "OSS/Persistent/RESTKeyValueStore.h"
 #include "Poco/Net/HTMLForm.h"
 #include "Poco/Net/HTTPBasicCredentials.h"
+#include "Poco/Net/HTTPClientSession.h"
+#include "Poco/Net/HTTPSClientSession.h"
+#include "Poco/StreamCopier.h"
+#include "Poco/Exception.h"
 
 
 using Poco::Net::HTMLForm;
 using Poco::Net::NameValueCollection;
 using Poco::Net::HTTPBasicCredentials;
+using Poco::Net::HTTPClientSession;
+using Poco::Net::HTTPSClientSession;
+using Poco::Net::HTTPResponse;
+using Poco::Net::HTTPRequest; 
+using Poco::StreamCopier;
+using Poco::Net::HTTPMessage;
   
 
 namespace OSS {
@@ -45,7 +56,6 @@ RESTKeyValueStore::RESTKeyValueStore(int maxQueuedConnections, int maxThreads) :
 
 RESTKeyValueStore::~RESTKeyValueStore()
 {
-  
 }
 
 bool RESTKeyValueStore::isAuthorized(Request& request, Response& response)
@@ -53,7 +63,7 @@ bool RESTKeyValueStore::isAuthorized(Request& request, Response& response)
   if (_user.empty())
     return true;
   
-  if (request.hasCredentials())
+  if (!request.hasCredentials())
   {
     response.requireAuthentication(request.getURI());
     response.send();
@@ -78,7 +88,7 @@ void RESTKeyValueStore::onHandleRequest(Request& request, Response& response)
   if (!form.empty() && form.has("key"))
   {
     std::string key = form.get("key");
-    
+
     if (request.getURI() == "/get")
     {
       _data.get(key, value);
@@ -100,9 +110,13 @@ void RESTKeyValueStore::onHandleRequest(Request& request, Response& response)
           _data.put(key, value);
         }
       }
+      else
+      {
+        _data.put(key, value);
+      }
       
     }
-    else if (request.getURI() == "/delete")
+    else if (request.getURI() == "/del")
     {
       _data.del(key);
     }
@@ -123,7 +137,153 @@ void RESTKeyValueStore::onHandleRequest(Request& request, Response& response)
     ostr << value;
   }
 }
+
+RESTKeyValueStore::Client::Client(const std::string& host, unsigned short port) :
+  _secure(false),
+  _host(host),
+  _port(port),
+  _sessionHandle(0)
+{
+}
+
+RESTKeyValueStore::Client::Client(const std::string& host, unsigned short port, bool secure) :
+  _secure(secure),
+  _host(host),
+  _port(port),
+  _sessionHandle(0)
+{
+}
+
+RESTKeyValueStore::Client::~Client()
+{
+  delete (HTTPClientSession*)_sessionHandle;
+}
+    
+bool RESTKeyValueStore::Client::set(const std::string& key, const std::string& value)
+{
+  return set(key, value, -1);
+}
+
+bool RESTKeyValueStore::Client::set(const std::string& key, const std::string& value, int expires)
+{
+  Params params;
+  params["key"] = key;
+  params["value"] = value;
   
+  if (expires > 0)
+  {
+    params["expire"] = OSS::string_from_number<int>(expires);
+  }
+  
+  std::string result;
+  
+  return execute_POST("/set", params, result);
+}
+
+bool RESTKeyValueStore::Client::get(const std::string& key, std::string& value)
+{
+  Params params;
+  params["key"] = key; 
+  return execute_POST("/get", params, value);
+}
+
+bool RESTKeyValueStore::Client::del(const std::string& key)
+{
+  Params params;
+  params["key"] = key; 
+  std::string value;
+  return execute_POST("/del", params, value);
+}
+
+void RESTKeyValueStore::Client::setCredentials(const std::string& user, const std::string& password)
+{
+  _user = user;
+  _password = password;
+}
+
+bool RESTKeyValueStore::Client::execute_POST(const std::string& path, const Params& params, std::string& result)
+{
+  return execute(HTTPRequest::HTTP_POST, path, params, result);
+}
+
+bool RESTKeyValueStore::Client::execute_GET(const std::string& path, const Params& params, std::string& result)
+{
+  return execute(HTTPRequest::HTTP_GET, path, params, result);
+}
+
+bool RESTKeyValueStore::Client::execute_PUT(const std::string& path, const Params& params, std::string& result)
+{
+  return execute(HTTPRequest::HTTP_PUT, path, params, result);
+}
+
+bool RESTKeyValueStore::Client::execute_DELETE(const std::string& path, const Params& params, std::string& result)
+{
+  return execute(HTTPRequest::HTTP_DELETE, path, params, result);
+}
+
+bool RESTKeyValueStore::Client::execute(const std::string& method, const std::string& path, const Params& params, std::string& result)
+{
+  if (params.empty())
+    return false;
+  
+  try
+  {
+    HTTPClientSession* pSession = 0;
+
+    if (!_sessionHandle)
+    {
+      if (!_secure)
+        pSession = new HTTPClientSession(_host, _port);
+      else
+        pSession = new HTTPSClientSession(_host, _port);
+        
+      _sessionHandle = (OSS_HANDLE)pSession;
+    }
+    else
+    {
+      pSession = (HTTPClientSession*)_sessionHandle;
+    }
+
+         
+    HTTPRequest req(method, path, HTTPMessage::HTTP_1_1);
+    
+    if (!_user.empty())
+    {
+      HTTPBasicCredentials cred(_user, _password);
+      cred.authenticate(req);
+    }
+    
+    HTMLForm form;
+    for (Params::const_iterator iter = params.begin(); iter != params.end(); iter++)
+    {
+      form.add(iter->first, iter->second);
+    }
+    
+    // Send the request.
+    form.prepareSubmit(req);
+    std::ostream& ostr = pSession->sendRequest(req);
+    form.write(ostr);
+    
+    // Receive the response.
+	  HTTPResponse res;
+	  std::istream& rs = pSession->receiveResponse(res);
+
+    std::ostringstream strm;
+    StreamCopier::copyStream(rs, strm);
+    
+    result = strm.str();
+    
+    return (res.getStatus() == HTTPResponse::HTTP_OK);
+  }
+  catch(Poco::Exception e)
+  {
+    OSS_LOG_ERROR("RESTKeyValueStore::Client::execute Exception: " << e.message())
+    delete (HTTPClientSession*)_sessionHandle;
+    _sessionHandle = 0;
+    return false;
+  }
+}
+    
 } }
 
 

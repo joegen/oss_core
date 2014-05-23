@@ -35,6 +35,46 @@ public:
   typedef OSS::Net::HTTPServer::Request Request;
   typedef OSS::Net::HTTPServer::Response Response;
   
+  class Client
+  {
+  public:
+    typedef std::map<std::string, std::string> Params;
+    
+    Client(const std::string& host, unsigned short port);
+    
+    Client(const std::string& host, unsigned short port, bool secure);
+    
+    ~Client();
+    
+    bool set(const std::string& key, const std::string& value);
+    
+    bool set(const std::string& key, const std::string& value, int expires);
+    
+    bool get(const std::string& key, std::string& value);
+    
+    bool del(const std::string& key);
+    
+    void setCredentials(const std::string& user, const std::string& password);
+    
+    bool execute_POST(const std::string& path, const Params& params, std::string& result);
+    
+    bool execute_GET(const std::string& path, const Params& params, std::string& result);
+    
+    bool execute_PUT(const std::string& path, const Params& params, std::string& result);
+    
+    bool execute_DELETE(const std::string& path, const Params& params, std::string& result);
+    
+    bool execute(const std::string& method, const std::string& path, const Params& params, std::string& result);
+    
+  private:
+    bool _secure;
+    std::string _host;
+    unsigned short _port;
+    std::string _user;
+    std::string _password;
+    OSS_HANDLE _sessionHandle;
+  };
+  
   RESTKeyValueStore();
   
   RESTKeyValueStore(int maxQueuedConnections, int maxThreads);
@@ -63,13 +103,12 @@ private:
 //
 inline bool RESTKeyValueStore::open(const std::string& dataFile)
 {
-  return _data.open(dataFile);
+  _data.open(dataFile); return _data.isOpen();
 }
 
 inline void RESTKeyValueStore::setCredentials(const std::string& user, const std::string& password)
 {
-  _user = user;
-  _password = password;
+  _user = user; _password = password;
 }
 
 inline void RESTKeyValueStore::setCustomHandler(const Handler& handler)

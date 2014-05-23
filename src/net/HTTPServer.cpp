@@ -114,12 +114,6 @@ HTTPServer::HTTPServer(int maxQueuedConnections, int maxThreads) :
 HTTPServer::~HTTPServer()
 {
   stop();
-  delete (ServerSocket*)_socketHandle;
-  delete (SecureServerSocket*)_secureSocketHandle;
-  delete (Poco::Net::HTTPServer*)_serverHandle;
-  _socketHandle = 0;
-  _serverHandle = 0;
-  _secureSocketHandle = 0;
 }
   
 bool HTTPServer::start(const std::string& address, unsigned short port, bool secure)
@@ -134,6 +128,7 @@ bool HTTPServer::start(const std::string& address, unsigned short port, bool sec
   _port = port;
   _isSecure = secure;
     
+  
   try
   {
     ServerSocket* pSocket = 0;
@@ -147,21 +142,23 @@ bool HTTPServer::start(const std::string& address, unsigned short port, bool sec
       }
       else
       {
-        SocketAddress sockAddress(_address);
-        pSocket = new ServerSocket(sockAddress, port);
+        SocketAddress sockAddress(_address, port);
+        pSocket = new ServerSocket(sockAddress);
+        
       }
       _socketHandle = (OSS_HANDLE)pSocket;
     }
     else
     {
+      Poco::Net::initializeSSL();
       if (_address.empty())
       {
         pSecureSocket = new SecureServerSocket(port);
       }
       else
       {
-        SocketAddress sockAddress(_address);
-        pSecureSocket = new SecureServerSocket(sockAddress, port);
+        SocketAddress sockAddress(_address, port);
+        pSecureSocket = new SecureServerSocket(sockAddress);
       }
       _secureSocketHandle = (OSS_HANDLE)pSecureSocket;
     }
@@ -183,12 +180,12 @@ bool HTTPServer::start(const std::string& address, unsigned short port, bool sec
     _serverHandle = (OSS_HANDLE)pHTTPServer;
 
     pHTTPServer->start();
-    
+       
     return true;
   }
-  catch(std::exception e)
+  catch(Poco::Exception e)
   {
-    OSS_LOG_ERROR("HTTPServer::start - Exception: " << e.what());
+    OSS_LOG_ERROR("HTTPServer::start - Exception: " << e.message());
     return false;
   }
 }
@@ -200,6 +197,18 @@ void HTTPServer::stop()
   {
     Poco::Net::HTTPServer* pHTTPServer = (Poco::Net::HTTPServer*)_serverHandle;
     pHTTPServer->stop();
+  }
+  
+  delete (ServerSocket*)_socketHandle;
+  delete (SecureServerSocket*)_secureSocketHandle;
+  delete (Poco::Net::HTTPServer*)_serverHandle;
+  _socketHandle = 0;
+  _serverHandle = 0;
+  _secureSocketHandle = 0;
+  
+  if (_isSecure)
+  {
+    Poco::Net::uninitializeSSL();
   }
 }
   

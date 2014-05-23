@@ -2,14 +2,28 @@
 #include "gtest/gtest.h"
 #include <boost/filesystem.hpp>
 #include "OSS/Persistent/KeyValueStore.h"
+#include "OSS/Persistent/RESTKeyValueStore.h"
 #include "OSS/Core.h"
+#include "Poco/Util/ServerApplication.h"
 
 using namespace OSS::Persistent;
+using namespace OSS::Net;
 
-KeyValueStore kv;
 #define kvfile "KeyValueStore.test"
+#define restkvfile "RESTKeyValueStore.test"
+#define restkvport 10111
+#define restkvhost "127.0.0.1"
 #define data "The Quick Brown fox Jumps Over The Lazy Dog!"
 #define iterations 10000
+
+KeyValueStore kv;
+RESTKeyValueStore restkv;
+RESTKeyValueStore::Client restkv_client(restkvhost, restkvport);
+RESTKeyValueStore::Client restkv_client_secure(restkvhost, restkvport, true);
+Poco::Util::ServerApplication app;
+
+
+
 
 TEST(KeyValueStoreTest, test_open_close)
 {
@@ -90,4 +104,45 @@ TEST(KeyValueStoreTest, test_update)
   ASSERT_TRUE(kv.get(key, result));
   ASSERT_STREQ(result.c_str(), updateData.c_str());
 }
+
+TEST(KeyValueStoreTest, test_rest_init)
+{
+  boost::filesystem::remove(restkvfile);
+  ASSERT_TRUE(restkv.open(restkvfile));
+  ASSERT_TRUE(restkv.start(restkvhost, restkvport, false));
+}
+
+TEST(KeyValueStoreTest, test_rest_set_get)
+{
+  ASSERT_TRUE(restkv_client.set("mykey", "myvalue"));
+  std::string result;
+  ASSERT_TRUE(restkv_client.get("mykey", result));
+  ASSERT_STREQ(result.c_str(), "myvalue");
+  ASSERT_TRUE(boost::filesystem::exists(restkvfile));
+}
+
+TEST(KeyValueStoreTest, test_rest_init_auth)
+{
+  restkv.stop();
+  restkv.setCredentials("user", "password");
+  ASSERT_TRUE(restkv.start(restkvhost, restkvport, false));
+}
+
+TEST(KeyValueStoreTest, test_rest_bad_auth)
+{
+  restkv_client.setCredentials("user", "badpass");
+  ASSERT_FALSE(restkv_client.set("mykey-auth", "myvalue-auth"));
+}
+
+TEST(KeyValueStoreTest, test_rest_set_get_auth)
+{
+  restkv_client.setCredentials("user", "password");
+  ASSERT_TRUE(restkv_client.set("mykey-auth", "myvalue-auth"));
+  std::string result;
+  ASSERT_TRUE(restkv_client.get("mykey-auth", result));
+  ASSERT_STREQ(result.c_str(), "myvalue-auth");
+  ASSERT_TRUE(boost::filesystem::exists(restkvfile));
+}
+
+
 
