@@ -110,6 +110,7 @@ nobase_include_HEADERS = \
     OSS/Persistent/Persistent.h \
     OSS/Persistent/Reference.h \
     OSS/Persistent/KeyValueStore.h \
+    OSS/Persistent/RESTKeyValueStore.h \
     OSS/SDP/rfc4566.txt \
     OSS/SDP/SDP.h \
     OSS/SDP/SDPHeader.h \

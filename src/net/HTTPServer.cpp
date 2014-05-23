@@ -170,7 +170,7 @@ bool HTTPServer::start(const std::string& address, unsigned short port, bool sec
 
     HTTPServerParams* pParams = new HTTPServerParams();
     _serverParamsHandle = (OSS_HANDLE)pParams;
-    s
+
     //
     // Grow the default pool so it has enough to accommodate this servers requirement 
     //

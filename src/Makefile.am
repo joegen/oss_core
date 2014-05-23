@@ -279,6 +279,7 @@ liboss_core_la_SOURCES =  \
     persistent/unqlite/unqlite.h \
     persistent/unqlite/unqlite.c \
     persistent/KeyValueStore.cpp \
+    persistent/RESTKeyValueStore.cpp \
     sdp/SDPHeader.cpp \
     sdp/SDPHeaderList.cpp \
     sdp/SDPMedia.cpp \
