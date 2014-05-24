@@ -54,17 +54,23 @@ public:
     
     bool kvDelete(const std::string& key);
     
+    bool restPUT(const std::string& path, const std::string& value, int& status);
+    
+    bool restGET(const std::string& path, std::string& result, int& status);
+    
+    bool restDELETE(const std::string& path, int& status);
+    
     void setCredentials(const std::string& user, const std::string& password);
     
-    bool execute_POST(const std::string& path, const Params& params, std::string& result);
+    bool execute_POST(const std::string& path, const Params& params, std::string& result, int& status);
     
-    bool execute_GET(const std::string& path, const Params& params, std::string& result);
+    bool execute_GET(const std::string& path, const Params& params, std::string& result, int& status);
     
-    bool execute_PUT(const std::string& path, const Params& params, std::string& result);
+    bool execute_PUT(const std::string& path, const Params& params, std::string& result, int& status);
     
-    bool execute_DELETE(const std::string& path, const Params& params, std::string& result);
+    bool execute_DELETE(const std::string& path, const Params& params, std::string& result, int& status);
     
-    bool execute(const std::string& method, const std::string& path, const Params& params, std::string& result);
+    bool execute(const std::string& method, const std::string& path, const Params& params, std::string& result, int& status);
     
   private:
     bool _secure;

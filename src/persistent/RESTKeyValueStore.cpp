@@ -176,15 +176,16 @@ bool RESTKeyValueStore::Client::kvSet(const std::string& key, const std::string&
   }
   
   std::string result;
-  
-  return execute_POST("/set", params, result);
+  int status = 0;
+  return execute_POST("/set", params, result,  status);
 }
 
 bool RESTKeyValueStore::Client::kvGet(const std::string& key, std::string& value)
 {
   Params params;
-  params["key"] = key; 
-  return execute_POST("/get", params, value);
+  params["key"] = key;
+  int status = 0;
+  return execute_POST("/get", params, value, status);
 }
 
 bool RESTKeyValueStore::Client::kvDelete(const std::string& key)
@@ -192,7 +193,8 @@ bool RESTKeyValueStore::Client::kvDelete(const std::string& key)
   Params params;
   params["key"] = key; 
   std::string value;
-  return execute_POST("/del", params, value);
+  int status = 0;
+  return execute_POST("/del", params, value, status);
 }
 
 void RESTKeyValueStore::Client::setCredentials(const std::string& user, const std::string& password)
@@ -201,28 +203,30 @@ void RESTKeyValueStore::Client::setCredentials(const std::string& user, const st
   _password = password;
 }
 
-bool RESTKeyValueStore::Client::execute_POST(const std::string& path, const Params& params, std::string& result)
+bool RESTKeyValueStore::Client::execute_POST(const std::string& path, const Params& params, std::string& result, int& status)
 {
-  return execute(HTTPRequest::HTTP_POST, path, params, result);
+  return execute(HTTPRequest::HTTP_POST, path, params, result, status);
 }
 
-bool RESTKeyValueStore::Client::execute_GET(const std::string& path, const Params& params, std::string& result)
+bool RESTKeyValueStore::Client::execute_GET(const std::string& path, const Params& params, std::string& result, int& status)
 {
-  return execute(HTTPRequest::HTTP_GET, path, params, result);
+  return execute(HTTPRequest::HTTP_GET, path, params, result, status);
 }
 
-bool RESTKeyValueStore::Client::execute_PUT(const std::string& path, const Params& params, std::string& result)
+bool RESTKeyValueStore::Client::execute_PUT(const std::string& path, const Params& params, std::string& result, int& status)
 {
-  return execute(HTTPRequest::HTTP_PUT, path, params, result);
+  return execute(HTTPRequest::HTTP_PUT, path, params, result,status);
 }
 
-bool RESTKeyValueStore::Client::execute_DELETE(const std::string& path, const Params& params, std::string& result)
+bool RESTKeyValueStore::Client::execute_DELETE(const std::string& path, const Params& params, std::string& result, int& status)
 {
-  return execute(HTTPRequest::HTTP_DELETE, path, params, result);
+  return execute(HTTPRequest::HTTP_DELETE, path, params, result, status);
 }
 
-bool RESTKeyValueStore::Client::execute(const std::string& method, const std::string& path, const Params& params, std::string& result)
+bool RESTKeyValueStore::Client::execute(const std::string& method, const std::string& path, const Params& params, std::string& result, int& status)
 {
+  status = 0;
+  
   if (params.empty())
     return false;
   
@@ -273,15 +277,37 @@ bool RESTKeyValueStore::Client::execute(const std::string& method, const std::st
     
     result = strm.str();
     
-    return (res.getStatus() == HTTPResponse::HTTP_OK);
+    status = res.getStatus();
+    
+    return (status == HTTPResponse::HTTP_OK);
   }
   catch(Poco::Exception e)
   {
     OSS_LOG_ERROR("RESTKeyValueStore::Client::execute Exception: " << e.message())
     delete (HTTPClientSession*)_sessionHandle;
-    _sessionHandle = 0;
     return false;
   }
+}
+
+bool RESTKeyValueStore::Client::restPUT(const std::string& path, const std::string& value, int& status)
+{
+  Params params;
+  params["value"] = value;
+  std::string result;
+  return execute_PUT(path, params, result, status);
+}
+    
+bool RESTKeyValueStore::Client::restGET(const std::string& path, std::string& result, int& status)
+{
+  Params params;
+  return execute_GET(path, params, result, status);
+}
+
+bool RESTKeyValueStore::Client::restDELETE(const std::string& path, int& status)
+{
+  Params params;
+  std::string result;
+  return execute_GET(path, params, result, status);
 }
     
 } }
