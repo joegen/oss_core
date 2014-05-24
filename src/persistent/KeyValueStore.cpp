@@ -33,6 +33,78 @@ extern "C"
 namespace OSS {
 namespace Persistent {
 
+  
+struct KeyConsumer
+{
+  std::string filter;
+  KeyValueStore::Keys* keys;
+};
+
+struct RecordConsumer
+{
+  std::string filter;
+  std::string key;
+  KeyValueStore::Records* records;
+};
+
+static int RecordConsumerCallback(const void *pData,unsigned int nDatalen,void *pUserData)
+{
+  RecordConsumer* pConsumer = static_cast<RecordConsumer*>(pUserData);
+  
+  if (pConsumer && nDatalen && pData)
+  {
+    std::string data((const char*)pData, nDatalen);
+    
+    if (pConsumer->key.empty())
+    {
+      //
+      // There is no key yet so we assume this is a key assignment
+      //
+      if (!pConsumer->filter.empty() && pConsumer->filter != "*")
+      {
+        if (!OSS::string_wildcard_compare(pConsumer->filter.c_str(), data))
+        {
+          return UNQLITE_OK;
+        }
+      }
+      
+      pConsumer->key = data;
+    }
+    else
+    {
+      //
+      // There is a key.  This is a data assignment
+      //
+      KeyValueStore::Record record;
+      record.key = pConsumer->key;
+      record.value = data;
+      pConsumer->records->push_back(record);
+      pConsumer->key.clear();
+    }
+  }
+  
+  return UNQLITE_OK;
+}
+
+static int KeyConsumerCallback(const void *pData,unsigned int nDatalen,void *pUserData)
+{
+  KeyConsumer* pConsumer = static_cast<KeyConsumer*>(pUserData);
+  
+  if (pConsumer && nDatalen && pData)
+  {
+    std::string data((const char*)pData, nDatalen);
+    
+    if (!pConsumer->filter.empty() && pConsumer->filter != "*")
+    {
+      if (!OSS::string_wildcard_compare(pConsumer->filter.c_str(), data))
+        return UNQLITE_OK;
+    }
+    
+    pConsumer->keys->push_back(data);
+  }
+  
+  return UNQLITE_OK;
+}
 
 KeyValueStore::KeyValueStore() :
   _pDbHandle(0)
@@ -245,9 +317,117 @@ bool KeyValueStore::del(const std::string& key)
     log_error();
     return false;
   }
+
   return true;
 }
 
+bool KeyValueStore::getKeys(const std::string& filter, Keys& keys)
+{
+  unqlite* pDbHandle = static_cast<unqlite*>(_pDbHandle);
+  if (!pDbHandle)
+  {
+    return false;
+  }
 
+  OSS::mutex_read_lock lock(_mutex);
+  
+  unqlite_kv_cursor* pCursor = 0;
+  
+  if (unqlite_kv_cursor_init(pDbHandle, &pCursor) != UNQLITE_OK || !pCursor)
+  {
+    log_error();
+    return false;
+  }
+  
+  KeyConsumer consumer;
+  consumer.filter = filter;
+  consumer.keys = &keys;
+  
+  /* Point to the first record */
+	for (
+    unqlite_kv_cursor_first_entry(pCursor); 
+    unqlite_kv_cursor_valid_entry(pCursor);
+    unqlite_kv_cursor_next_entry(pCursor))
+  {
+    unqlite_kv_cursor_key_callback(pCursor, KeyConsumerCallback,(void*)&consumer);
+  }
+  
+  unqlite_kv_cursor_release(pDbHandle, pCursor);
+  
+  return true;
+}
+
+bool KeyValueStore::getRecords(const std::string& filter, Records& records)
+{
+  unqlite* pDbHandle = static_cast<unqlite*>(_pDbHandle);
+  if (!pDbHandle)
+  {
+    return false;
+  }
+
+  OSS::mutex_read_lock lock(_mutex);
+  
+  unqlite_kv_cursor* pCursor = 0;
+  
+  if (unqlite_kv_cursor_init(pDbHandle, &pCursor) != UNQLITE_OK || !pCursor)
+  {
+    log_error();
+    return false;
+  }
+  
+  RecordConsumer consumer;
+  consumer.filter = filter;
+  consumer.records = &records;
+  
+  /* Point to the first record */
+	for (
+    unqlite_kv_cursor_first_entry(pCursor); 
+    unqlite_kv_cursor_valid_entry(pCursor);
+    unqlite_kv_cursor_next_entry(pCursor))
+  {
+    unqlite_kv_cursor_key_callback(pCursor, RecordConsumerCallback,(void*)&consumer);
+    if (!consumer.key.empty())
+    {
+      //
+      // We got a key so consume the data
+      //
+      unqlite_kv_cursor_data_callback(pCursor, RecordConsumerCallback,(void*)&consumer);
+    }
+  }
+  
+  unqlite_kv_cursor_release(pDbHandle, pCursor);
+  
+  return true;
+}
+
+bool KeyValueStore::delKeys(const std::string& filter)
+{
+  unqlite* pDbHandle = static_cast<unqlite*>(_pDbHandle);
+  if (!pDbHandle)
+    return false;
+  
+  Keys keys;
+  if (!getKeys(filter, keys))
+    return false;
+  
+  if (!keys.empty())
+  {
+    OSS::mutex_write_lock lock(_mutex);
+    for (Keys::const_iterator iter = keys.begin(); iter != keys.end(); iter++)
+    {
+      if (unqlite_kv_delete(pDbHandle, iter->c_str(), iter->size()) != UNQLITE_OK)
+      {
+        log_error();
+        return false;
+      }
+    }
+  }
+   
+  return true;
+}
 
 } } // OSS::Persistent
+
+
+
+

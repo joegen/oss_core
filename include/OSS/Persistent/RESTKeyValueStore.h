@@ -46,13 +46,13 @@ public:
     
     ~Client();
     
-    bool set(const std::string& key, const std::string& value);
+    bool kvSet(const std::string& key, const std::string& value);
     
-    bool set(const std::string& key, const std::string& value, int expires);
+    bool kvSet(const std::string& key, const std::string& value, int expires);
     
-    bool get(const std::string& key, std::string& value);
+    bool kvGet(const std::string& key, std::string& value);
     
-    bool del(const std::string& key);
+    bool kvDelete(const std::string& key);
     
     void setCredentials(const std::string& user, const std::string& password);
     

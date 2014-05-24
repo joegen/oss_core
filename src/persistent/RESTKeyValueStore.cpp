@@ -159,12 +159,12 @@ RESTKeyValueStore::Client::~Client()
   delete (HTTPClientSession*)_sessionHandle;
 }
     
-bool RESTKeyValueStore::Client::set(const std::string& key, const std::string& value)
+bool RESTKeyValueStore::Client::kvSet(const std::string& key, const std::string& value)
 {
-  return set(key, value, -1);
+  return kvSet(key, value, -1);
 }
 
-bool RESTKeyValueStore::Client::set(const std::string& key, const std::string& value, int expires)
+bool RESTKeyValueStore::Client::kvSet(const std::string& key, const std::string& value, int expires)
 {
   Params params;
   params["key"] = key;
@@ -180,14 +180,14 @@ bool RESTKeyValueStore::Client::set(const std::string& key, const std::string& v
   return execute_POST("/set", params, result);
 }
 
-bool RESTKeyValueStore::Client::get(const std::string& key, std::string& value)
+bool RESTKeyValueStore::Client::kvGet(const std::string& key, std::string& value)
 {
   Params params;
   params["key"] = key; 
   return execute_POST("/get", params, value);
 }
 
-bool RESTKeyValueStore::Client::del(const std::string& key)
+bool RESTKeyValueStore::Client::kvDelete(const std::string& key)
 {
   Params params;
   params["key"] = key; 

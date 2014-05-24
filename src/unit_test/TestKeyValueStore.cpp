@@ -105,6 +105,49 @@ TEST(KeyValueStoreTest, test_update)
   ASSERT_STREQ(result.c_str(), updateData.c_str());
 }
 
+TEST(KeyValueStoreTest, test_filter_multiple)
+{
+  std::string testdata = "test-data";
+  
+  for (int i = 0; i < 100;i++)
+  {
+    std::ostringstream strm;
+    strm << "getkey_a." << i;  
+    ASSERT_TRUE(kv.put(strm.str().c_str(), testdata.c_str()));
+  }
+  
+  for (int i = 0; i < 100;i++)
+  {
+    std::ostringstream strm;
+    strm << "getkey_b." << i;  
+    ASSERT_TRUE(kv.put(strm.str().c_str(), testdata.c_str()));
+  }
+  
+  KeyValueStore::Keys all, partial_a, partial_b;
+  ASSERT_TRUE(kv.getKeys("getkey_*", all));
+  ASSERT_EQ(all.size(), 200);
+  
+  ASSERT_TRUE(kv.getKeys("getkey_a*",  partial_a));
+  ASSERT_EQ(partial_a.size(), 100);
+  
+  ASSERT_TRUE(kv.getKeys("getkey_b*",  partial_b));
+  ASSERT_EQ(partial_b.size(), 100);
+  
+  KeyValueStore::Records partialrec_b;
+  
+  ASSERT_TRUE(kv.getRecords("getkey_b*",  partialrec_b));
+  ASSERT_EQ(partialrec_b.size(), 100);
+  
+  for (KeyValueStore::Records::const_iterator iter = partialrec_b.begin(); iter != partialrec_b.end(); iter++)
+    ASSERT_STREQ(iter->value.c_str(), testdata.c_str());
+  
+  ASSERT_TRUE(kv.delKeys("getkey_b*"));
+  partialrec_b.clear();
+  ASSERT_TRUE(kv.getRecords("getkey_b*",  partialrec_b));
+  ASSERT_EQ(partialrec_b.size(), 0);
+}
+
+
 TEST(KeyValueStoreTest, test_rest_init)
 {
   boost::filesystem::remove(restkvfile);
@@ -114,9 +157,9 @@ TEST(KeyValueStoreTest, test_rest_init)
 
 TEST(KeyValueStoreTest, test_rest_set_get)
 {
-  ASSERT_TRUE(restkv_client.set("mykey", "myvalue"));
+  ASSERT_TRUE(restkv_client.kvSet("mykey", "myvalue"));
   std::string result;
-  ASSERT_TRUE(restkv_client.get("mykey", result));
+  ASSERT_TRUE(restkv_client.kvGet("mykey", result));
   ASSERT_STREQ(result.c_str(), "myvalue");
   ASSERT_TRUE(boost::filesystem::exists(restkvfile));
 }
@@ -131,15 +174,15 @@ TEST(KeyValueStoreTest, test_rest_init_auth)
 TEST(KeyValueStoreTest, test_rest_bad_auth)
 {
   restkv_client.setCredentials("user", "badpass");
-  ASSERT_FALSE(restkv_client.set("mykey-auth", "myvalue-auth"));
+  ASSERT_FALSE(restkv_client.kvSet("mykey-auth", "myvalue-auth"));
 }
 
 TEST(KeyValueStoreTest, test_rest_set_get_auth)
 {
   restkv_client.setCredentials("user", "password");
-  ASSERT_TRUE(restkv_client.set("mykey-auth", "myvalue-auth"));
+  ASSERT_TRUE(restkv_client.kvSet("mykey-auth", "myvalue-auth"));
   std::string result;
-  ASSERT_TRUE(restkv_client.get("mykey-auth", result));
+  ASSERT_TRUE(restkv_client.kvGet("mykey-auth", result));
   ASSERT_STREQ(result.c_str(), "myvalue-auth");
   ASSERT_TRUE(boost::filesystem::exists(restkvfile));
 }

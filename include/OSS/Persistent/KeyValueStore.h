@@ -36,6 +36,15 @@ namespace Persistent {
 class KeyValueStore : boost::noncopyable
 {
 public:
+  struct Record
+  {
+    std::string key;
+    std::string value;
+  };
+  
+  typedef std::vector<std::string> Keys;
+  typedef std::vector<Record> Records;
+  
   KeyValueStore();
   
   KeyValueStore(const std::string& path);
@@ -55,7 +64,17 @@ public:
   bool get(const std::string& key, std::string& value);
 
   bool del(const std::string& key);
-
+  
+  bool getKeys(Keys& keys);
+  
+  bool getKeys(const std::string& filter, Keys& keys);
+  
+  bool getRecords(Records& records);
+  
+  bool getRecords(const std::string& filter, Records& records);
+  
+  bool delKeys(const std::string& filter);
+  
   const std::string getPath() const;
 private:
 
@@ -87,6 +106,16 @@ inline bool KeyValueStore::isOpen()
 inline const std::string KeyValueStore::getPath() const
 {
   return _path;
+}
+
+inline bool KeyValueStore::getKeys(Keys& keys)
+{
+  return getKeys("", keys);
+}
+
+inline bool KeyValueStore::getRecords(Records& records)
+{
+  return getRecords("", records);
 }
 
 } } // OSS::Persistent
