@@ -29,7 +29,6 @@ extern "C"
 }
 
 
-
 namespace OSS {
 namespace Persistent {
 
@@ -68,7 +67,17 @@ static int RecordConsumerCallback(const void *pData,unsigned int nDatalen,void *
         }
       }
       
-      pConsumer->key = data;
+      //
+      // Do not process expiration keys
+      //
+      if (!OSS::string_ends_with(pConsumer->key, PERSISTENT_STORE_EXPIRES_SUFFIX))
+      {
+        pConsumer->key = data;
+      }
+      else
+      {
+        return UNQLITE_OK;
+      }
     }
     else
     {
@@ -100,7 +109,17 @@ static int KeyConsumerCallback(const void *pData,unsigned int nDatalen,void *pUs
         return UNQLITE_OK;
     }
     
-    pConsumer->keys->push_back(data);
+    //
+    // Do not process expiration keys
+    //
+    if (!OSS::string_ends_with(data, PERSISTENT_STORE_EXPIRES_SUFFIX))
+    {
+      pConsumer->keys->push_back(data);
+    }
+    else
+    {
+      return UNQLITE_OK;
+    }
   }
   
   return UNQLITE_OK;
@@ -233,7 +252,7 @@ bool KeyValueStore::put(const std::string& key, const std::string& value, unsign
 
   OSS::UInt64 expires = OSS::getTime() + (expireInSeconds*1000);
   std::string expireString = OSS::string_from_number(expires);
-  std::string expireKey = key + std::string(".expires");
+  std::string expireKey = key + std::string(PERSISTENT_STORE_EXPIRES_SUFFIX);
 
   if (unqlite_kv_store(pDbHandle, expireKey.c_str(), expireKey.size(), expireString.c_str(), expireString.size()) != UNQLITE_OK)
   {
@@ -284,7 +303,7 @@ bool KeyValueStore::_get(const std::string& key, std::string& value)
 
 bool KeyValueStore::is_expired(const std::string& key)
 {
-  std::string expireKey = key + std::string(".expires");
+  std::string expireKey = key + std::string(PERSISTENT_STORE_EXPIRES_SUFFIX);
 
   std::string expires;
   if (!_get(expireKey, expires))
