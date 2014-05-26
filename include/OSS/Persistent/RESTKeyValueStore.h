@@ -28,6 +28,7 @@
 namespace OSS {
 namespace Persistent {
 
+#define REST_DEFAULT_ROOT_DOCUMENT "/root"
 
 class RESTKeyValueStore : public OSS::Net::HTTPServer
 {
@@ -92,15 +93,25 @@ public:
   void setCredentials(const std::string& user, const std::string& password);
   
   void setCustomHandler(const Handler& handler);
+  
+  void setRootDocument(const std::string& rootDocument);
+  
 protected:
   void onHandleRequest(Request& request, Response& response);
   
+  void onHandleRestRequest(Request& request, Response& response);
+  
   bool isAuthorized(Request& request, Response& response);
+  
+  void sendRestRecordsAsJson(const KeyValueStore::Records& records, Response& response);
+  
+  void sendRestRecordsAsValuePairs(const KeyValueStore::Records& records, Response& response);
   
 private:
   KeyValueStore _data;
   std::string _user;
   std::string _password;
+  std::string _rootDocument;
   Handler _customHandler;
 };
 

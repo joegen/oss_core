@@ -42,14 +42,18 @@ using Poco::Net::HTTPMessage;
 namespace OSS {
 namespace Persistent {
 
-    
-RESTKeyValueStore::RESTKeyValueStore()
+
+  
+  
+RESTKeyValueStore::RESTKeyValueStore() :
+  _rootDocument(REST_DEFAULT_ROOT_DOCUMENT)
 {
   setHandler(boost::bind(&RESTKeyValueStore::onHandleRequest, this, _1, _2));
 }
   
 RESTKeyValueStore::RESTKeyValueStore(int maxQueuedConnections, int maxThreads) :
-  OSS::Net::HTTPServer(maxQueuedConnections, maxThreads)
+  OSS::Net::HTTPServer(maxQueuedConnections, maxThreads),
+  _rootDocument(REST_DEFAULT_ROOT_DOCUMENT)
 {
   setHandler(boost::bind(&RESTKeyValueStore::onHandleRequest, this, _1, _2));
 }
@@ -79,6 +83,12 @@ void RESTKeyValueStore::onHandleRequest(Request& request, Response& response)
 { 
   if (!isAuthorized(request, response))
   {
+    return;
+  }
+  
+  if (OSS::string_starts_with(request.getURI(), _rootDocument.c_str()))
+  {
+    onHandleRestRequest(request, response);
     return;
   }
   
@@ -126,6 +136,11 @@ void RESTKeyValueStore::onHandleRequest(Request& request, Response& response)
       return;
     }
   }
+  else if (_customHandler)
+  {
+    _customHandler(request, response);
+    return;
+  }
   
   response.setChunkedTransferEncoding(true);
 	response.setContentType("text/plain");
@@ -137,6 +152,76 @@ void RESTKeyValueStore::onHandleRequest(Request& request, Response& response)
     ostr << value;
   }
 }
+
+void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response)
+{
+  std::string path = request.getURI();
+  if (OSS::string_ends_with(path, "/"))
+  {
+    path = OSS::string_left(request.getURI(), request.getURI().length() - 1);
+  }
+  
+  std::string filter = path + std::string("*");
+  
+  if (request.getMethod() == HTTPRequest::HTTP_GET)
+  {
+    KeyValueStore::Records records;
+    _data.getRecords(filter, records);
+    
+    if (records.empty())
+    {
+      response.setStatus(HTTPResponse::HTTP_REASON_NOT_FOUND);
+      response.send();
+      return;
+    }
+    
+    sendRestRecordsAsValuePairs(records, response);
+    return;
+  }
+  else if (request.getMethod() == HTTPRequest::HTTP_DELETE)
+  {
+    _data.delKeys(filter);
+    response.setStatus(HTTPResponse::HTTP_REASON_OK);
+    response.send();
+    return;
+  }
+  else if (request.getMethod() == HTTPRequest::HTTP_PUT || request.getMethod() == HTTPRequest::HTTP_POST)
+  {
+    HTMLForm form(request, request.stream());
+    if (!form.empty() && form.has("value"))
+    {
+      std::string value = form.get("value");
+      _data.put(path, value);
+      response.setStatus(HTTPResponse::HTTP_REASON_OK);
+      response.send();
+      return;
+    }
+  }
+  
+  //
+  // Send a 404 if it ever gets here
+  //
+  response.setStatus(HTTPResponse::HTTP_REASON_NOT_FOUND);
+  response.send();
+}
+
+ void RESTKeyValueStore::sendRestRecordsAsJson(const KeyValueStore::Records& records, Response& response)
+ {
+   
+ }
+ 
+void RESTKeyValueStore::sendRestRecordsAsValuePairs(const KeyValueStore::Records& records, Response& response)
+{
+  response.setChunkedTransferEncoding(true);
+  response.setContentType("text/plain");
+  std::ostream& ostr = response.send();
+
+  for (KeyValueStore::Records::const_iterator iter = records.begin(); iter != records.end(); iter++)
+  {
+    ostr << iter->key << ": " << iter->value << "\r\n";
+  }
+}
+
 
 RESTKeyValueStore::Client::Client(const std::string& host, unsigned short port) :
   _secure(false),
