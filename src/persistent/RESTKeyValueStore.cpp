@@ -43,7 +43,13 @@ namespace OSS {
 namespace Persistent {
 
 
-  
+//
+// Used for sorting records
+//
+static bool compare_records (KeyValueStore::Record& first, KeyValueStore::Record& second)
+{
+  return first.key.compare(second.key) <= 0;
+}
   
 RESTKeyValueStore::RESTKeyValueStore() :
   _rootDocument(REST_DEFAULT_ROOT_DOCUMENT)
@@ -76,7 +82,15 @@ bool RESTKeyValueStore::isAuthorized(Request& request, Response& response)
   
   HTTPBasicCredentials cred(request);
   
-  return cred.getUsername() == _user && cred.getPassword() == _password;
+  bool authorized = cred.getUsername() == _user && cred.getPassword() == _password;
+  
+  if (!authorized)
+  {
+    response.setStatus(HTTPResponse::HTTP_REASON_FORBIDDEN);
+    response.send();
+  }
+  
+  return authorized;
 }
 
 void RESTKeyValueStore::onHandleRequest(Request& request, Response& response)
@@ -175,7 +189,8 @@ void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response
       return;
     }
     
-    sendRestRecordsAsValuePairs(records, response);
+    sendRestRecordsAsJson(path, records, response);
+    
     return;
   }
   else if (request.getMethod() == HTTPRequest::HTTP_DELETE)
@@ -205,18 +220,42 @@ void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response
   response.send();
 }
 
- void RESTKeyValueStore::sendRestRecordsAsJson(const KeyValueStore::Records& records, Response& response)
- {
-   
- }
- 
-void RESTKeyValueStore::sendRestRecordsAsValuePairs(const KeyValueStore::Records& records, Response& response)
+void RESTKeyValueStore::sendRestRecordsAsJson(const std::string& path, const KeyValueStore::Records& records, Response& response)
 {
+  //
+  // sort the records
+  //
+  std::list<KeyValueStore::Record> sorted;
+  std::copy( records.begin(), records.end(), std::back_inserter(sorted));
+  sorted.sort(compare_records);
+  
+  
   response.setChunkedTransferEncoding(true);
   response.setContentType("text/plain");
   std::ostream& ostr = response.send();
 
-  for (KeyValueStore::Records::const_iterator iter = records.begin(); iter != records.end(); iter++)
+  for (std::list<KeyValueStore::Record>::const_iterator iter = sorted.begin(); iter != sorted.end(); iter++)
+  {
+    ostr << iter->key << ": " << iter->value << "\r\n";
+  }
+}
+
+
+void RESTKeyValueStore::sendRestRecordsAsValuePairs(const std::string& path, const KeyValueStore::Records& records, Response& response)
+{
+  //
+  // sort the records
+  //
+  std::list<KeyValueStore::Record> sorted;
+  std::copy( records.begin(), records.end(), std::back_inserter(sorted));
+  sorted.sort(compare_records);
+  
+  
+  response.setChunkedTransferEncoding(true);
+  response.setContentType("text/plain");
+  std::ostream& ostr = response.send();
+
+  for (std::list<KeyValueStore::Record>::const_iterator iter = sorted.begin(); iter != sorted.end(); iter++)
   {
     ostr << iter->key << ": " << iter->value << "\r\n";
   }
@@ -311,10 +350,7 @@ bool RESTKeyValueStore::Client::execute_DELETE(const std::string& path, const Pa
 bool RESTKeyValueStore::Client::execute(const std::string& method, const std::string& path, const Params& params, std::string& result, int& status)
 {
   status = 0;
-  
-  if (params.empty())
-    return false;
-  
+    
   try
   {
     HTTPClientSession* pSession = 0;
@@ -342,26 +378,32 @@ bool RESTKeyValueStore::Client::execute(const std::string& method, const std::st
       cred.authenticate(req);
     }
     
-    HTMLForm form;
-    for (Params::const_iterator iter = params.begin(); iter != params.end(); iter++)
+    if (!params.empty())
     {
-      form.add(iter->first, iter->second);
+      HTMLForm form;
+      for (Params::const_iterator iter = params.begin(); iter != params.end(); iter++)
+      {
+        form.add(iter->first, iter->second);
+      }
+
+      // Send the request.
+      form.prepareSubmit(req);
+      std::ostream& ostr = pSession->sendRequest(req);
+      form.write(ostr);
     }
-    
-    // Send the request.
-    form.prepareSubmit(req);
-    std::ostream& ostr = pSession->sendRequest(req);
-    form.write(ostr);
+    else
+    {
+      pSession->sendRequest(req);
+    }
     
     // Receive the response.
 	  HTTPResponse res;
-	  std::istream& rs = pSession->receiveResponse(res);
-
+    
+    std::istream& rs = pSession->receiveResponse(res);
     std::ostringstream strm;
     StreamCopier::copyStream(rs, strm);
-    
     result = strm.str();
-    
+
     status = res.getStatus();
     
     return (status == HTTPResponse::HTTP_OK);
@@ -370,6 +412,7 @@ bool RESTKeyValueStore::Client::execute(const std::string& method, const std::st
   {
     OSS_LOG_ERROR("RESTKeyValueStore::Client::execute Exception: " << e.message())
     delete (HTTPClientSession*)_sessionHandle;
+    _sessionHandle = 0;
     return false;
   }
 }

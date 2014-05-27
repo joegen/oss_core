@@ -103,9 +103,9 @@ protected:
   
   bool isAuthorized(Request& request, Response& response);
   
-  void sendRestRecordsAsJson(const KeyValueStore::Records& records, Response& response);
+  void sendRestRecordsAsJson(const std::string& path, const KeyValueStore::Records& records, Response& response);
   
-  void sendRestRecordsAsValuePairs(const KeyValueStore::Records& records, Response& response);
+  void sendRestRecordsAsValuePairs(const std::string& path, const KeyValueStore::Records& records, Response& response);
   
 private:
   KeyValueStore _data;

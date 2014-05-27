@@ -189,3 +189,36 @@ TEST(KeyValueStoreTest, test_rest_set_get_auth)
 
 
 
+TEST(KeyValueStoreTest, test_rest_put_get_auth)
+{ 
+  //
+  // Generate 20 random records
+  //
+  int status = 0;
+  std::string path = "/root/test-data";
+  for (int i = 0; i < 20; i++)
+  {
+    std::string dataId = OSS::string_create_uuid();
+    std::string element1 = OSS::string_create_uuid();
+    std::string element2 = OSS::string_create_uuid();
+    std::string element3 = OSS::string_create_uuid();
+    
+    std::ostringstream d1, d2, d3;
+
+    d1 << path << "/" << dataId << "/element1";
+    d2 << path << "/" << dataId << "/element2";
+    d3 << path << "/" << dataId << "/element3";
+    
+    ASSERT_TRUE(restkv_client.restPUT(d1.str(), element1, status));
+    ASSERT_TRUE(restkv_client.restPUT(d2.str(), element2, status));
+    ASSERT_TRUE(restkv_client.restPUT(d3.str(), element3, status));
+  }
+  
+  std::string result;
+  ASSERT_TRUE(restkv_client.restGET(path, result, status));
+  
+}
+
+
+
+
