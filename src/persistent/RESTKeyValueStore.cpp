@@ -66,6 +66,52 @@ RESTKeyValueStore::RESTKeyValueStore(int maxQueuedConnections, int maxThreads) :
 
 RESTKeyValueStore::~RESTKeyValueStore()
 {
+  for (KVStore::const_iterator iter = _kvStore.begin(); iter != _kvStore.end(); iter++)
+    delete iter->second;
+}
+
+KeyValueStore* RESTKeyValueStore::getStore(const std::string& path)
+{
+  std::vector<std::string> tokens = OSS::string_tokenize(path, "/");
+  if(tokens.size() < 3)
+    return 0;
+  
+  OSS::mutex_lock lock(_kvStoreMutex);
+  
+  KeyValueStore* pStore = 0;
+  std::string document = tokens[2];
+  
+  if (_kvStore.find(document) == _kvStore.end())
+  {
+    //
+    // Create a new store
+    //
+    std::ostringstream strm;
+    
+    if (!_dataDirectory.empty())
+      strm << _dataDirectory << "/" << document;
+    else
+      strm << document;
+    
+    
+    pStore = new KeyValueStore();
+    pStore->open(strm.str());
+    if (pStore->isOpen())
+    {
+     _kvStore.insert(std::pair<std::string, KeyValueStore*>(document, pStore));
+    }
+    else
+    {
+      delete pStore;
+      pStore = 0;
+    }
+  }
+  else
+  {
+    pStore = _kvStore.at(document);
+  }
+  
+  return pStore;
 }
 
 bool RESTKeyValueStore::isAuthorized(Request& request, Response& response)
@@ -103,6 +149,14 @@ void RESTKeyValueStore::onHandleRequest(Request& request, Response& response)
   if (OSS::string_starts_with(request.getURI(), _rootDocument.c_str()))
   {
     onHandleRestRequest(request, response);
+    return;
+  }
+  
+  
+  if (!_data.isOpen())
+  {
+    response.setStatus(HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
+    response.send();
     return;
   }
   
@@ -175,16 +229,46 @@ void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response
     path = OSS::string_left(request.getURI(), request.getURI().length() - 1);
   }
   
+  KeyValueStore* pStore = getStore(path);
+  
+  if (!pStore)
+  {
+    response.setStatus(HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
+    response.send();
+    return;
+  }
+  
+  std::vector<std::string> tokens = OSS::string_tokenize(path, "/");
+  
+  
+  if (tokens.size() == 3)
+  {
+    path = "";
+  }
+  else if (tokens.size() == 4)
+  {
+    path = tokens[3];
+  }
+  else if (tokens.size() == 5)
+  {
+    path = tokens[3] + std::string("/") + tokens[4];
+  }
+  else
+  {
+    response.setStatus(HTTPResponse::HTTP_BAD_REQUEST);
+    response.send();
+  }
+  
   std::string filter = path + std::string("*");
   
   if (request.getMethod() == HTTPRequest::HTTP_GET)
   {
     KeyValueStore::Records records;
-    _data.getRecords(filter, records);
+    pStore->getRecords(filter, records);
     
     if (records.empty())
     {
-      response.setStatus(HTTPResponse::HTTP_REASON_NOT_FOUND);
+      response.setStatus(HTTPResponse::HTTP_OK);
       response.send();
       return;
     }
@@ -195,19 +279,19 @@ void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response
   }
   else if (request.getMethod() == HTTPRequest::HTTP_DELETE)
   {
-    _data.delKeys(filter);
-    response.setStatus(HTTPResponse::HTTP_REASON_OK);
+    pStore->delKeys(filter);
+    response.setStatus(HTTPResponse::HTTP_OK);
     response.send();
     return;
   }
   else if (request.getMethod() == HTTPRequest::HTTP_PUT || request.getMethod() == HTTPRequest::HTTP_POST)
   {
     HTMLForm form(request, request.stream());
-    if (!form.empty() && form.has("value"))
+    if (!path.empty() && !form.empty() && form.has("value"))
     {
       std::string value = form.get("value");
-      _data.put(path, value);
-      response.setStatus(HTTPResponse::HTTP_REASON_OK);
+      pStore->put(path, value);
+      response.setStatus(HTTPResponse::HTTP_OK);
       response.send();
       return;
     }
@@ -216,7 +300,7 @@ void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response
   //
   // Send a 404 if it ever gets here
   //
-  response.setStatus(HTTPResponse::HTTP_REASON_NOT_FOUND);
+  response.setStatus(HTTPResponse::HTTP_NOT_FOUND);
   response.send();
 }
 

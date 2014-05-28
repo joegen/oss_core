@@ -35,6 +35,7 @@ class RESTKeyValueStore : public OSS::Net::HTTPServer
 public:
   typedef OSS::Net::HTTPServer::Request Request;
   typedef OSS::Net::HTTPServer::Response Response;
+  typedef std::map<std::string, KeyValueStore*> KVStore;
   
   class Client
   {
@@ -96,6 +97,9 @@ public:
   
   void setRootDocument(const std::string& rootDocument);
   
+  void setDataDirectory(const std::string& dataDirectory);
+  
+  KeyValueStore* getStore(const std::string& path);
 protected:
   void onHandleRequest(Request& request, Response& response);
   
@@ -112,6 +116,9 @@ private:
   std::string _user;
   std::string _password;
   std::string _rootDocument;
+  std::string _dataDirectory;
+  OSS::mutex _kvStoreMutex;
+  KVStore _kvStore;
   Handler _customHandler;
 };
 
@@ -131,6 +138,11 @@ inline void RESTKeyValueStore::setCredentials(const std::string& user, const std
 inline void RESTKeyValueStore::setCustomHandler(const Handler& handler)
 {
   _customHandler = handler;
+}
+
+inline void RESTKeyValueStore::setDataDirectory(const std::string& dataDirectory)
+{
+  _dataDirectory = dataDirectory;
 }
 
 } }

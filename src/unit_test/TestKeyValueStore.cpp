@@ -217,6 +217,8 @@ TEST(KeyValueStoreTest, test_rest_put_get_auth)
   std::string result;
   ASSERT_TRUE(restkv_client.restGET(path, result, status));
   
+  std::cout << result;
+  
 }
 
 
