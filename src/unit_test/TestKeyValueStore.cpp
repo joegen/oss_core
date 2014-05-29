@@ -191,31 +191,28 @@ TEST(KeyValueStoreTest, test_rest_set_get_auth)
 
 TEST(KeyValueStoreTest, test_rest_put_get_auth)
 { 
-  //
-  // Generate 20 random records
-  //
-  int status = 0;
-  std::string path = "/root/test-data";
-  for (int i = 0; i < 20; i++)
-  {
-    std::string dataId = OSS::string_create_uuid();
-    std::string element1 = OSS::string_create_uuid();
-    std::string element2 = OSS::string_create_uuid();
-    std::string element3 = OSS::string_create_uuid();
-    
-    std::ostringstream d1, d2, d3;
+  boost::filesystem::remove("people");
 
-    d1 << path << "/" << dataId << "/element1";
-    d2 << path << "/" << dataId << "/element2";
-    d3 << path << "/" << dataId << "/element3";
-    
-    ASSERT_TRUE(restkv_client.restPUT(d1.str(), element1, status));
-    ASSERT_TRUE(restkv_client.restPUT(d2.str(), element2, status));
-    ASSERT_TRUE(restkv_client.restPUT(d3.str(), element3, status));
-  }
+  int status = 0;
+ 
+  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/fname", "Joegen", status));
+  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/sname", "Baclor", status));
+  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/addr/street/name", "San Pablo Street", status));
+  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/addr/street/number", "17", status));
+  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/addr/city", "Pasig", status));
+  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/country/province", "MetroManila", status));
+  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/country/areaCode", "1603", status));
+  
+  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/fname", "Che", status));
+  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/sname", "Sto. Domingo", status));
+  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/addr/street/name", "San Pablo Street", status));
+  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/addr/street/number", "17", status));
+  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/addr/city", "Pasig", status));
+  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/country/province", "Bulacan", status));
+  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/country/areaCode", "1800", status));
   
   std::string result;
-  ASSERT_TRUE(restkv_client.restGET(path, result, status));
+  ASSERT_TRUE(restkv_client.restGET("/root/people/", result, status));
   
   std::cout << result;
   

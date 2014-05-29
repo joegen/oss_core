@@ -221,12 +221,23 @@ void RESTKeyValueStore::onHandleRequest(Request& request, Response& response)
   }
 }
 
+static void getPathVector(const std::string& path, std::vector<std::string>& pathVector)
+{
+  std::vector<std::string> tokens = OSS::string_tokenize(path, "/");
+  
+  for (std::vector<std::string>::const_iterator iter = tokens.begin(); iter != tokens.end(); iter++)
+  {
+    if (!iter->empty())
+      pathVector.push_back(*iter);
+  }
+}
+
 void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response)
 {
   std::string path = request.getURI();
-  if (OSS::string_ends_with(path, "/"))
+  if (!OSS::string_ends_with(path, "/"))
   {
-    path = OSS::string_left(request.getURI(), request.getURI().length() - 1);
+    path = path + std::string("/");
   }
   
   KeyValueStore* pStore = getStore(path);
@@ -238,27 +249,9 @@ void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response
     return;
   }
   
-  std::vector<std::string> tokens = OSS::string_tokenize(path, "/");
-  
-  
-  if (tokens.size() == 3)
-  {
-    path = "";
-  }
-  else if (tokens.size() == 4)
-  {
-    path = tokens[3];
-  }
-  else if (tokens.size() == 5)
-  {
-    path = tokens[3] + std::string("/") + tokens[4];
-  }
-  else
-  {
-    response.setStatus(HTTPResponse::HTTP_BAD_REQUEST);
-    response.send();
-  }
-  
+  std::vector<std::string> tokens;
+  getPathVector(path, tokens);
+   
   std::string filter = path + std::string("*");
   
   if (request.getMethod() == HTTPRequest::HTTP_GET)
@@ -273,8 +266,10 @@ void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response
       return;
     }
     
-    sendRestRecordsAsJson(path, records, response);
     
+    sendRestRecordsAsJson(tokens, records, response);
+    
+    //sendRestRecordsAsValuePairs(path, records, response);
     return;
   }
   else if (request.getMethod() == HTTPRequest::HTTP_DELETE)
@@ -304,24 +299,100 @@ void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response
   response.send();
 }
 
-void RESTKeyValueStore::sendRestRecordsAsJson(const std::string& path, const KeyValueStore::Records& records, Response& response)
+bool printOneRecord(std::size_t filterDepth, const std::string& resourceName, std::list<KeyValueStore::Record>& records, std::list<KeyValueStore::Record>::iterator& iter, std::ostream& ostr)
+{
+  //
+  // return false if there are no more records
+  //
+  if (iter == records.end())
+    return false;
+  
+  //
+  // This will hold the tokens of the current key
+  //
+  std::vector<std::string> keyTokens;
+  getPathVector(iter->key, keyTokens);
+  
+  //
+  // This will hold the depth of the current item in the tree
+  //
+  std::size_t keyDepth = keyTokens.size() - 1;
+  
+  //
+  // This will hold the offSet of the current key relative to the filter depth
+  //
+  std::size_t keyOffSet = keyDepth - filterDepth;
+  
+  if (keyOffSet == 0 && keyTokens[keyDepth] == resourceName)
+  {
+    //
+    // This is an exact match.  We print it out and consume the iterator
+    //
+    ostr << "\"" << keyTokens[keyTokens.size() -1] << "\": " << "\"" << iter->value << "\"";
+    iter++;
+  }
+  else if (keyOffSet > 0)
+  {
+    //
+    // The item falls under a group of elements under the filter tree
+    //
+    ostr << "\"" << keyTokens[filterDepth] << "\":  {";
+    
+   
+    while (true)
+    { 
+      std::string previousResource = keyTokens[filterDepth];
+      if (!printOneRecord(filterDepth + 1, keyTokens[filterDepth + 1], records, iter, ostr))
+        break;
+      
+      keyTokens.clear();
+      getPathVector(iter->key, keyTokens);
+      
+      if (filterDepth + 1 >= keyTokens.size())
+        break;
+      
+      if (previousResource != keyTokens[filterDepth])
+        break;
+      
+      ostr << ",";
+    }
+    
+    ostr << "}";
+  }
+  else 
+  {
+    return false;
+  }
+  
+  return iter != records.end();
+}
+
+void RESTKeyValueStore::sendRestJsonDocument(const std::vector<std::string>& pathVector, std::size_t depth, KeyValueStore::Records& unsorted, std::ostream& ostr)
 {
   //
   // sort the records
   //
-  std::list<KeyValueStore::Record> sorted;
-  std::copy( records.begin(), records.end(), std::back_inserter(sorted));
-  sorted.sort(compare_records);
+  std::list<KeyValueStore::Record> records;
+  std::copy( unsorted.begin(), unsorted.end(), std::back_inserter(records));
+  records.sort(compare_records);
   
-  
-  response.setChunkedTransferEncoding(true);
-  response.setContentType("text/plain");
-  std::ostream& ostr = response.send();
+ 
+  //
+  // Loop through the records
+  //
+  std::list<KeyValueStore::Record>::iterator iter = records.begin();
+  while (printOneRecord(depth, pathVector[depth], records, iter, ostr))
+    ostr << ",";
+}
 
-  for (std::list<KeyValueStore::Record>::const_iterator iter = sorted.begin(); iter != sorted.end(); iter++)
-  {
-    ostr << iter->key << ": " << iter->value << "\r\n";
-  }
+void RESTKeyValueStore::sendRestRecordsAsJson(const std::vector<std::string>& pathVector, KeyValueStore::Records& records, Response& response)
+{
+  response.setChunkedTransferEncoding(true);
+  response.setContentType("text/json");
+  std::ostream& ostr = response.send();
+  ostr << "{";
+  sendRestJsonDocument(pathVector, pathVector.size() - 1, records, ostr);
+  ostr << "}";
 }
 
 

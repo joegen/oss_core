@@ -107,7 +107,9 @@ protected:
   
   bool isAuthorized(Request& request, Response& response);
   
-  void sendRestRecordsAsJson(const std::string& path, const KeyValueStore::Records& records, Response& response);
+  void sendRestRecordsAsJson(const std::vector<std::string>& pathVector, KeyValueStore::Records& records, Response& response);
+  
+  void sendRestJsonDocument(const std::vector<std::string>& pathVector, std::size_t depth, KeyValueStore::Records& records, std::ostream& ostr);
   
   void sendRestRecordsAsValuePairs(const std::string& path, const KeyValueStore::Records& records, Response& response);
   
