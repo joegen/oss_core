@@ -132,7 +132,7 @@ bool RESTKeyValueStore::isAuthorized(Request& request, Response& response)
   
   if (!authorized)
   {
-    response.setStatus(HTTPResponse::HTTP_REASON_FORBIDDEN);
+    response.setStatus(HTTPResponse::HTTP_FORBIDDEN);
     response.send();
   }
   
@@ -285,6 +285,9 @@ void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response
     if (!path.empty() && !form.empty() && form.has("value"))
     {
       std::string value = form.get("value");
+      
+      OSS::string_replace(value, "\"", "\\\"");
+      OSS::string_replace(value, "\'", "\\\'");
       pStore->put(path, value);
       response.setStatus(HTTPResponse::HTTP_OK);
       response.send();
