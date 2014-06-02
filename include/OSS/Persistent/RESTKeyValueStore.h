@@ -47,32 +47,24 @@ public:
     Client(const std::string& host, unsigned short port, bool secure);
     
     ~Client();
-    
-    bool kvSet(const std::string& key, const std::string& value);
-    
-    bool kvSet(const std::string& key, const std::string& value, int expires);
-    
-    bool kvGet(const std::string& key, std::string& value);
-    
-    bool kvDelete(const std::string& key);
-    
+       
     bool restPUT(const std::string& path, const std::string& value, int& status);
     
-    bool restGET(const std::string& path, std::string& result, int& status);
+    bool restGET(const std::string& path, std::ostringstream& result, int& status);
     
     bool restDELETE(const std::string& path, int& status);
     
     void setCredentials(const std::string& user, const std::string& password);
     
-    bool execute_POST(const std::string& path, const Params& params, std::string& result, int& status);
+    bool execute_POST(const std::string& path, const Params& params, std::ostringstream& result, int& status);
     
-    bool execute_GET(const std::string& path, const Params& params, std::string& result, int& status);
+    bool execute_GET(const std::string& path, const Params& params, std::ostringstream& result, int& status);
     
-    bool execute_PUT(const std::string& path, const Params& params, std::string& result, int& status);
+    bool execute_PUT(const std::string& path, const Params& params, std::ostringstream& result, int& status);
     
-    bool execute_DELETE(const std::string& path, const Params& params, std::string& result, int& status);
+    bool execute_DELETE(const std::string& path, const Params& params, std::ostringstream& result, int& status);
     
-    bool execute(const std::string& method, const std::string& path, const Params& params, std::string& result, int& status);
+    bool execute(const std::string& method, const std::string& path, const Params& params, std::ostringstream& result, int& status);
     
   private:
     bool _secure;
@@ -88,9 +80,7 @@ public:
   RESTKeyValueStore(int maxQueuedConnections, int maxThreads);
 
   ~RESTKeyValueStore();
-  
-  bool open(const std::string& dataFile);
-  
+   
   void setCredentials(const std::string& user, const std::string& password);
   
   void setCustomHandler(const Handler& handler);
@@ -100,6 +90,12 @@ public:
   void setDataDirectory(const std::string& dataDirectory);
   
   KeyValueStore* getStore(const std::string& path);
+  
+  int restPUT(const std::string& path, const std::string& value);
+    
+  int restGET(const std::string& path, std::ostream& ostr);
+
+  int restDELETE(const std::string& path);
 protected:
   void onHandleRequest(Request& request, Response& response);
   
@@ -109,12 +105,11 @@ protected:
   
   void sendRestRecordsAsJson(const std::vector<std::string>& pathVector, KeyValueStore::Records& records, Response& response);
   
-  void sendRestJsonDocument(const std::vector<std::string>& pathVector, std::size_t depth, KeyValueStore::Records& records, std::ostream& ostr);
+  void createJSONDocument(const std::vector<std::string>& pathVector, std::size_t depth, KeyValueStore::Records& records, std::ostream& ostr);
   
   void sendRestRecordsAsValuePairs(const std::string& path, const KeyValueStore::Records& records, Response& response);
   
 private:
-  KeyValueStore _data;
   std::string _user;
   std::string _password;
   std::string _rootDocument;
@@ -127,10 +122,7 @@ private:
 //
 // Inlines
 //
-inline bool RESTKeyValueStore::open(const std::string& dataFile)
-{
-  _data.open(dataFile); return _data.isOpen();
-}
+
 
 inline void RESTKeyValueStore::setCredentials(const std::string& user, const std::string& password)
 {

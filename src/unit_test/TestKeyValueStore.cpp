@@ -1,10 +1,15 @@
 
 #include "gtest/gtest.h"
 #include <boost/filesystem.hpp>
+#include <Poco/StreamCopier.h>
 #include "OSS/Persistent/KeyValueStore.h"
 #include "OSS/Persistent/RESTKeyValueStore.h"
 #include "OSS/Core.h"
 #include "Poco/Util/ServerApplication.h"
+
+#include "OSS/JSON/reader.h"
+#include "OSS/JSON/writer.h"
+#include "OSS/JSON/elements.h"
 
 using namespace OSS::Persistent;
 using namespace OSS::Net;
@@ -148,59 +153,26 @@ TEST(KeyValueStoreTest, test_filter_multiple)
 }
 
 
-TEST(KeyValueStoreTest, test_rest_init)
-{
-  boost::filesystem::remove(restkvfile);
-  ASSERT_TRUE(restkv.open(restkvfile));
-  ASSERT_TRUE(restkv.start(restkvhost, restkvport, false));
-}
-
-TEST(KeyValueStoreTest, test_rest_set_get)
-{
-  ASSERT_TRUE(restkv_client.kvSet("mykey", "myvalue"));
-  std::string result;
-  ASSERT_TRUE(restkv_client.kvGet("mykey", result));
-  ASSERT_STREQ(result.c_str(), "myvalue");
-  ASSERT_TRUE(boost::filesystem::exists(restkvfile));
-}
-
 TEST(KeyValueStoreTest, test_rest_init_auth)
 {
-  restkv.stop();
   restkv.setCredentials("user", "password");
   ASSERT_TRUE(restkv.start(restkvhost, restkvport, false));
 }
-
-TEST(KeyValueStoreTest, test_rest_bad_auth)
-{
-  restkv_client.setCredentials("user", "badpass");
-  ASSERT_FALSE(restkv_client.kvSet("mykey-auth", "myvalue-auth"));
-}
-
-TEST(KeyValueStoreTest, test_rest_set_get_auth)
-{
-  restkv_client.setCredentials("user", "password");
-  ASSERT_TRUE(restkv_client.kvSet("mykey-auth", "myvalue-auth"));
-  std::string result;
-  ASSERT_TRUE(restkv_client.kvGet("mykey-auth", result));
-  ASSERT_STREQ(result.c_str(), "myvalue-auth");
-  ASSERT_TRUE(boost::filesystem::exists(restkvfile));
-}
-
-
 
 TEST(KeyValueStoreTest, test_rest_put_get_auth)
 { 
   boost::filesystem::remove("people");
 
   int status = 0;
+  
+  restkv_client.setCredentials("user", "password");
  
   ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/fname", "Joegen", status));
   ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/sname", "Baclor", status));
   ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/addr/street/name", "San Pablo Street", status));
   ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/addr/street/number", "17", status));
   ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/addr/city", "Pasig", status));
-  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/country/province", "MetroManila", status));
+  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/country/province", "Metro Manila", status));
   ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/country/areaCode", "1603", status));
   
   ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/fname", "Che", status));
@@ -210,12 +182,36 @@ TEST(KeyValueStoreTest, test_rest_put_get_auth)
   ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/addr/city", "Pasig", status));
   ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/country/province", "Bulacan", status));
   ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/country/areaCode", "1800", status));
+  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/quotes", "\"\"''", status));
   
-  std::string result;
+  std::ostringstream result;
   ASSERT_TRUE(restkv_client.restGET("/root/people/", result, status));
   
-  std::cout << result;
+  std::stringstream input;
+
+  input << result.str();
   
+  std::cout << result.str() << std::endl;
+   
+  try 
+  {
+    json::Object jsonObject;
+    json::Reader::Read(jsonObject, input);
+    json::Writer::Write(jsonObject, std::cout);
+    
+    ASSERT_TRUE(((json::String&)jsonObject["people"]["emp1"]["fname"]).Value() == "Joegen");
+    ASSERT_TRUE(((json::String&)jsonObject["people"]["emp2"]["fname"]).Value() == "Che");
+    
+    ASSERT_TRUE(((json::String&)jsonObject["people"]["emp1"]["country"]["province"]).Value() == "Metro Manila");
+    ASSERT_TRUE(((json::String&)jsonObject["people"]["emp2"]["country"]["province"]).Value() == "Bulacan");
+    
+    ASSERT_TRUE(((json::String&)jsonObject["people"]["emp2"]["quotes"]).Value() == "\"\"''");
+  }
+  catch(json::Exception e)
+  {
+    std::cout << e.what() << std::endl;
+    ASSERT_TRUE(false);
+  }
 }
 
 
