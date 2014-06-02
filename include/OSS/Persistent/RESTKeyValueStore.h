@@ -89,7 +89,7 @@ public:
   
   void setDataDirectory(const std::string& dataDirectory);
   
-  KeyValueStore* getStore(const std::string& path);
+  KeyValueStore* getStore(const std::string& path, bool createIfMissing);
   
   int restPUT(const std::string& path, const std::string& value);
     

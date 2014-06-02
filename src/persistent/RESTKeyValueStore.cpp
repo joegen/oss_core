@@ -53,6 +53,10 @@ static bool compare_records (KeyValueStore::Record& first, KeyValueStore::Record
 
 static void prepare_path(std::string& path)
 {
+  std::vector<std::string> tokens = OSS::string_tokenize(path, "?");
+  if (tokens.size() > 1)
+    path = tokens[0];
+  
   if (!OSS::string_ends_with(path, "/"))
   {
     path = path + std::string("/");
@@ -164,7 +168,7 @@ RESTKeyValueStore::~RESTKeyValueStore()
     delete iter->second;
 }
 
-KeyValueStore* RESTKeyValueStore::getStore(const std::string& path)
+KeyValueStore* RESTKeyValueStore::getStore(const std::string& path, bool createIfMissing)
 {
   std::vector<std::string> tokens = OSS::string_tokenize(path, "/");
   if(tokens.size() < 3)
@@ -177,27 +181,30 @@ KeyValueStore* RESTKeyValueStore::getStore(const std::string& path)
   
   if (_kvStore.find(document) == _kvStore.end())
   {
-    //
-    // Create a new store
-    //
-    std::ostringstream strm;
-    
-    if (!_dataDirectory.empty())
-      strm << _dataDirectory << "/" << document;
-    else
-      strm << document;
-    
-    
-    pStore = new KeyValueStore();
-    pStore->open(strm.str());
-    if (pStore->isOpen())
+    if (createIfMissing)
     {
-     _kvStore.insert(std::pair<std::string, KeyValueStore*>(document, pStore));
-    }
-    else
-    {
-      delete pStore;
-      pStore = 0;
+      //
+      // Create a new store
+      //
+      std::ostringstream strm;
+
+      if (!_dataDirectory.empty())
+        strm << _dataDirectory << "/" << document;
+      else
+        strm << document;
+
+
+      pStore = new KeyValueStore();
+      pStore->open(strm.str());
+      if (pStore->isOpen())
+      {
+       _kvStore.insert(std::pair<std::string, KeyValueStore*>(document, pStore));
+      }
+      else
+      {
+        delete pStore;
+        pStore = 0;
+      }
     }
   }
   else
@@ -262,7 +269,7 @@ int RESTKeyValueStore::restPUT(const std::string& path, const std::string& value
   std::string resource = path;
   prepare_path(resource);
   
-  KeyValueStore* pStore = getStore(resource);
+  KeyValueStore* pStore = getStore(resource, true);
   if (!pStore)
   {
     return HTTPResponse::HTTP_INTERNAL_SERVER_ERROR;
@@ -270,7 +277,12 @@ int RESTKeyValueStore::restPUT(const std::string& path, const std::string& value
   
   std::string data = value;
   OSS::string_replace(data, "\"", "\\\"");
-  pStore->put(resource, data);
+  if (!pStore->put(resource, data))
+  {
+    return HTTPResponse::HTTP_INTERNAL_SERVER_ERROR;
+  }
+  
+  
   
   return HTTPResponse::HTTP_OK;
 }
@@ -279,11 +291,11 @@ int RESTKeyValueStore::restGET(const std::string& path, std::ostream& ostr)
 {
   std::string resource = path;
   prepare_path(resource);
-  
-  KeyValueStore* pStore = getStore(resource);
+    
+  KeyValueStore* pStore = getStore(resource, false);
   if (!pStore)
   {
-    return HTTPResponse::HTTP_INTERNAL_SERVER_ERROR;
+    return HTTPResponse::HTTP_NOT_FOUND;
   }
   
   std::vector<std::string> tokens;
@@ -292,6 +304,11 @@ int RESTKeyValueStore::restGET(const std::string& path, std::ostream& ostr)
   
   KeyValueStore::Records records;
   pStore->getRecords(filter, records);
+  
+  if (records.empty())
+  {
+    return HTTPResponse::HTTP_NOT_FOUND;
+  }
  
   createJSONDocument(tokens, tokens.size() - 1, records, ostr);
   
@@ -303,10 +320,10 @@ int RESTKeyValueStore::restDELETE(const std::string& path)
   std::string resource = path;
   prepare_path(resource);
   
-  KeyValueStore* pStore = getStore(resource);
+  KeyValueStore* pStore = getStore(resource, false);
   if (!pStore)
   {
-    return HTTPResponse::HTTP_INTERNAL_SERVER_ERROR;
+    return HTTPResponse::HTTP_NOT_FOUND;
   }
   
   std::vector<std::string> tokens;
@@ -320,7 +337,25 @@ int RESTKeyValueStore::restDELETE(const std::string& path)
   
 void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response)
 {
-  if (request.getMethod() == HTTPRequest::HTTP_GET)
+  std::string action;
+  HTMLForm form(request, request.stream());
+  if (!form.empty() && form.has("action"))
+  {
+    action = form.get("action");
+    OSS::string_to_upper(action);
+  }
+  else
+  {
+    action = request.getMethod();
+  }
+  
+  std::string remoteAddress = request.clientAddress().toString();
+  OSS_LOG_INFO("RESTKeyValueStore::onHandleRestRequest -"
+    << " SRC: " << remoteAddress
+    << " Method: " << request.getMethod() 
+    << " URI: " << request.getURI());
+    
+  if (action == HTTPRequest::HTTP_GET)
   {
     std::ostringstream result;
     HTTPResponse::HTTPStatus status = (HTTPResponse::HTTPStatus)restGET(request.getURI(), result);
@@ -336,17 +371,17 @@ void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response
     response.send() << result.str();
     return;
   }
-  else if (request.getMethod() == HTTPRequest::HTTP_DELETE)
+  else if (action == HTTPRequest::HTTP_DELETE)
   {
     response.setStatus((HTTPResponse::HTTPStatus)restDELETE(request.getURI()));
     response.send();
     return;
   }
-  else if (request.getMethod() == HTTPRequest::HTTP_PUT || request.getMethod() == HTTPRequest::HTTP_POST)
+  else if (action == HTTPRequest::HTTP_PUT || action == HTTPRequest::HTTP_POST)
   {
-    HTMLForm form(request, request.stream());
     if (!form.empty() && form.has("value"))
     {
+      
       std::string value = form.get("value");
       response.setStatus((HTTPResponse::HTTPStatus)restPUT(request.getURI(), value));
       response.send();

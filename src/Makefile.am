@@ -411,7 +411,8 @@ bin_PROGRAMS = \
     oss_core_unit_test \
     oss_garp \
     oss_carp \
-    oss_core
+    oss_core \
+    oss_rest
 
 oss_core_unit_test_CXXFLAGS = \
 	${common_cxx_flags} \
@@ -458,6 +459,12 @@ oss_garp_SOURCES = apps/oss_garp.cpp
 oss_carp_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
 #oss_carp_LDFLAGS = -rdynamic
 oss_carp_SOURCES = apps/oss_carp.cpp
+
+#
+# oss_rest - REST Server implementation
+#
+oss_rest_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
+oss_rest_SOURCES = apps/oss_rest.cpp
 
 
 DISTCLEANFILES = Makefile.in
