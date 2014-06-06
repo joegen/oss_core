@@ -306,6 +306,7 @@ int RESTKeyValueStore::restGET(const std::string& path, std::ostream& ostr)
   KeyValueStore* pStore = getStore(resource, false);
   if (!pStore)
   {
+    std::cout << "STORE NOT FOUND" << std::endl;
     return HTTPResponse::HTTP_NOT_FOUND;
   }
   
@@ -318,6 +319,7 @@ int RESTKeyValueStore::restGET(const std::string& path, std::ostream& ostr)
   
   if (records.empty())
   {
+    std::cout << "RECORD NOT FOUND" << std::endl;
     return HTTPResponse::HTTP_NOT_FOUND;
   }
  

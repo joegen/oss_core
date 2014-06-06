@@ -11,12 +11,15 @@
 #include "OSS/JSON/writer.h"
 #include "OSS/JSON/elements.h"
 
+#include "OSS/Net/TLSManager.h"
+
 using namespace OSS::Persistent;
 using namespace OSS::Net;
 
 #define kvfile "KeyValueStore.test"
 #define restkvfile "RESTKeyValueStore.test"
 #define restkvport 10111
+#define restkv_secure_port 10112
 #define restkvhost "127.0.0.1"
 #define data "The Quick Brown fox Jumps Over The Lazy Dog!"
 #define iterations 10000
@@ -24,11 +27,9 @@ using namespace OSS::Net;
 KeyValueStore kv;
 RESTKeyValueStore restkv;
 RESTKeyValueStore::Client restkv_client(restkvhost, restkvport);
-RESTKeyValueStore::Client restkv_client_secure(restkvhost, restkvport, true);
-Poco::Util::ServerApplication app;
 
-
-
+RESTKeyValueStore restkv_secure;
+RESTKeyValueStore::Client restkv_client_secure(restkvhost, restkv_secure_port, true);
 
 TEST(KeyValueStoreTest, test_open_close)
 {
@@ -159,6 +160,8 @@ TEST(KeyValueStoreTest, test_rest_init_auth)
   ASSERT_TRUE(restkv.start(restkvhost, restkvport, false));
 }
 
+
+
 TEST(KeyValueStoreTest, test_rest_put_get_auth)
 { 
   boost::filesystem::remove("people");
@@ -212,6 +215,43 @@ TEST(KeyValueStoreTest, test_rest_put_get_auth)
     std::cout << e.what() << std::endl;
     ASSERT_TRUE(false);
   }
+}
+
+TEST(KeyValueStoreTest, test_rest_tls)
+{
+  if (!boost::filesystem::exists("rootcert.pem"))
+    return;
+  
+  if (!boost::filesystem::exists("any.pem"))
+    return;
+  
+  OSS::Net::TLSManager::instance().initialize("any.pem", "any.pem", "rootcert.pem", "secret", true, OSS::Net::TLSManager::VERIFY_RELAXED);
+  
+  restkv_secure.setCredentials("user", "password");
+  ASSERT_TRUE(restkv_secure.start(restkvhost, restkv_secure_port, true));
+  
+}
+
+TEST(KeyValueStoreTest, test_rest_tls_put_get)
+{
+  if (!boost::filesystem::exists("rootcert.pem"))
+    return;
+  
+  if (!boost::filesystem::exists("any.pem"))
+    return;
+  
+  int status;
+  restkv_client_secure.setCredentials("user", "password");
+  ASSERT_TRUE(restkv_client_secure.restPUT("/root/secure/test/item", "Secure Test", status));
+   
+  std::ostringstream result;
+  ASSERT_TRUE(restkv_client_secure.restGET("/root/secure/", result, status));
+  
+  std::stringstream input;
+
+  input << result.str();
+  
+  std::cout << result.str() << std::endl;
 }
 
 

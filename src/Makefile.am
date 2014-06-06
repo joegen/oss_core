@@ -356,6 +356,7 @@ liboss_core_la_SOURCES =  \
     net/Carp.cpp \
     net/HTTPServer.cpp \
     net/AccessControl.cpp \
+    net/TLSManager.cpp \
     utl/AdaptiveDelay.cpp \
     sipfsm/SIPWebSocketConnection.cpp \
     sipfsm/SIPWebSocketListener.cpp \

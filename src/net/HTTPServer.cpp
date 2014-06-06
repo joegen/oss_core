@@ -226,7 +226,7 @@ bool HTTPServer::isAuthorizedAddress(const std::string& host)
 {
   OSS::IPAddress addr(host);
   _accessControl.logPacket(addr.address(), -1);
-  return _accessControl.isBannedAddress(addr.address());
+  return !_accessControl.isBannedAddress(addr.address());
 }
   
 

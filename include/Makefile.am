@@ -215,6 +215,7 @@ nobase_include_HEADERS = \
     OSS/Net/TurnServer.h \
     OSS/Net/HTTPServer.h \
     OSS/Net/AccessControl.h \
+    OSS/Net/TLSManager.h \
     OSS/UTL/AdaptiveDelay.h \
     OSS/UTL/FastRandom.h \
     OSS/websocketpp/common.hpp \
