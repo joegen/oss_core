@@ -91,7 +91,7 @@ public:
   
   KeyValueStore* getStore(const std::string& path, bool createIfMissing);
   
-  int restPUT(const std::string& path, const std::string& value);
+  int restPUT(const std::string& path, const std::string& value, int expires);
     
   int restGET(const std::string& path, std::ostream& ostr);
 

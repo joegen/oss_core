@@ -17,8 +17,8 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#ifndef SIPTRANSPORTRATELIMITSTRATEGY_H
-#define	SIPTRANSPORTRATELIMITSTRATEGY_H
+#ifndef ACCESSCONTROL_H_INCLUDED
+#define	ACCESSCONTROL_H_INCLUDED
 
 
 #include <set>
@@ -32,14 +32,14 @@
 
 
 namespace OSS {
-namespace SIP {
+namespace Net {
 
-class SIPTransportRateLimitStrategy
+class AccessControl
 {
 public:
 
-  SIPTransportRateLimitStrategy();
-  ~SIPTransportRateLimitStrategy();
+  AccessControl();
+  ~AccessControl();
 
   void logPacket(const boost::asio::ip::address& source, std::size_t bytesRead);
 
@@ -90,47 +90,47 @@ private:
 // Inlines
 //
 
-inline bool& SIPTransportRateLimitStrategy::enabled()
+inline bool& AccessControl::enabled()
 {
   return _enabled;
 }
 
-inline unsigned long SIPTransportRateLimitStrategy::getPacketsPerSecondThreshold() const
+inline unsigned long AccessControl::getPacketsPerSecondThreshold() const
 {
   return _packetsPerSecondThreshold;
 }
 
-inline void SIPTransportRateLimitStrategy::setPacketsPerSecondThreshold(unsigned long threshold)
+inline void AccessControl::setPacketsPerSecondThreshold(unsigned long threshold)
 {
   _packetsPerSecondThreshold = threshold;
 }
 
-inline unsigned long SIPTransportRateLimitStrategy::getThresholdViolationRate() const
+inline unsigned long AccessControl::getThresholdViolationRate() const
 {
   return _thresholdViolationRate;
 }
 
-inline unsigned long SIPTransportRateLimitStrategy::getCurrentIterationCount() const
+inline unsigned long AccessControl::getCurrentIterationCount() const
 {
   return _currentIterationCount;
 }
 
-inline void SIPTransportRateLimitStrategy::setThresholdViolationRate(unsigned long threshold)
+inline void AccessControl::setThresholdViolationRate(unsigned long threshold)
 {
   _thresholdViolationRate = threshold;
 }
 
-inline bool& SIPTransportRateLimitStrategy::autoBanThresholdViolators()
+inline bool& AccessControl::autoBanThresholdViolators()
 {
   return _autoBanThresholdViolators;
 }
 
-inline void SIPTransportRateLimitStrategy::setBanLifeTime(int lifetime)
+inline void AccessControl::setBanLifeTime(int lifetime)
 {
   _banLifeTime = lifetime;
 }
 
-inline int SIPTransportRateLimitStrategy::getBanLifeTime() const
+inline int AccessControl::getBanLifeTime() const
 {
   return _banLifeTime;
 }
@@ -140,5 +140,5 @@ inline int SIPTransportRateLimitStrategy::getBanLifeTime() const
 } } // OSS::SIP
 
 
-#endif	/* SIPTRANSPORTRATELIMITSTRATEGY_H */
+#endif	/* ACCESSCONTROL_H_INCLUDED */
 

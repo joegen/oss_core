@@ -19,6 +19,7 @@
 
 #include "OSS/Net/HTTPServer.h"
 #include "OSS/Logger.h"
+#include "OSS/IPAddress.h"
 
 #include "Poco/Net/HTTPServer.h"
 #include "Poco/Net/HTTPRequestHandler.h"
@@ -75,20 +76,29 @@ public:
 class HTTPServerHandlerFactory: public HTTPRequestHandlerFactory
 {
 public:
-	HTTPServerHandlerFactory(HTTPServer::Handler& handler) :
-    _handler(handler)
+	HTTPServerHandlerFactory(HTTPServer* pServer, HTTPServer::Handler& handler) :
+    _handler(handler),
+    _pServer(pServer)
 	{
 	}
 
 	HTTPRequestHandler* createRequestHandler(const HTTPServerRequest& request)
 	{
     if (!_handler)
-      return false;
+      return 0;
+    
+    std::string src = request.clientAddress().host().toString();
+    //
+    // Check if this IP is allowed by the server
+    //
+    if (!_pServer->isAuthorizedAddress(src))
+      return 0;
     
 		return new HTTPServerRequestHandler(_handler);
 	}
   
   HTTPServer::Handler& _handler;
+  HTTPServer* _pServer;
 };
 
 HTTPServer::HTTPServer() :
@@ -176,7 +186,7 @@ bool HTTPServer::start(const std::string& address, unsigned short port, bool sec
     pParams->setMaxQueued(_maxQueuedConnections);
     pParams->setMaxThreads(_maxThreads);
 
-    Poco::Net::HTTPServer* pHTTPServer = new Poco::Net::HTTPServer(new HTTPServerHandlerFactory(_handler), _isSecure ? *pSecureSocket : *pSocket, pParams);
+    Poco::Net::HTTPServer* pHTTPServer = new Poco::Net::HTTPServer(new HTTPServerHandlerFactory(this, _handler), _isSecure ? *pSecureSocket : *pSocket, pParams);
     _serverHandle = (OSS_HANDLE)pHTTPServer;
 
     pHTTPServer->start();
@@ -210,6 +220,13 @@ void HTTPServer::stop()
   {
     Poco::Net::uninitializeSSL();
   }
+}
+
+bool HTTPServer::isAuthorizedAddress(const std::string& host)
+{
+  OSS::IPAddress addr(host);
+  _accessControl.logPacket(addr.address(), -1);
+  return _accessControl.isBannedAddress(addr.address());
 }
   
 

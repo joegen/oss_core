@@ -27,6 +27,7 @@
 #include "OSS/Net.h"
 #include "Poco/Net/HTTPServerRequest.h"
 #include "Poco/Net/HTTPServerResponse.h"
+#include "OSS/Net/AccessControl.h"
 
 namespace OSS {
 namespace Net {
@@ -55,7 +56,10 @@ public:
   unsigned short getPort() const;
 
   void setHandler(const Handler& handler);
+  
+  bool isAuthorizedAddress(const std::string& host);
 
+  AccessControl& accessControl();
 private:
   bool _isSecure;
   OSS_HANDLE _socketHandle;
@@ -67,6 +71,7 @@ private:
   std::string _address;
   unsigned short _port;
   Handler _handler;
+  AccessControl _accessControl;
 }; 
 
 //
@@ -91,6 +96,11 @@ inline unsigned short HTTPServer::getPort() const
 inline void HTTPServer::setHandler(const Handler& handler)
 {
   _handler = handler;
+}
+
+inline AccessControl& HTTPServer::accessControl()
+{
+  return _accessControl;
 }
   
 } } // OSS::Net

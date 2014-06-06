@@ -143,7 +143,6 @@ nobase_include_HEADERS = \
     OSS/SIP/SIPFsm.h \
     OSS/SIP/SIPTransportSession.h \
     OSS/SIP/SIPTCPListener.h \
-    OSS/SIP/SIPTransportRateLimitStrategy.h \
     OSS/SIP/SIPTransactionPool.h \
     OSS/SIP/SIPTransaction.h \
     OSS/SIP/SIPTLSConnectionManager.h \
@@ -215,6 +214,7 @@ nobase_include_HEADERS = \
     OSS/Net/Carp.h \
     OSS/Net/TurnServer.h \
     OSS/Net/HTTPServer.h \
+    OSS/Net/AccessControl.h \
     OSS/UTL/AdaptiveDelay.h \
     OSS/UTL/FastRandom.h \
     OSS/websocketpp/common.hpp \

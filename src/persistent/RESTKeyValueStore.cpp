@@ -264,7 +264,7 @@ void RESTKeyValueStore::onHandleRequest(Request& request, Response& response)
   response.send();
 }
 
-int RESTKeyValueStore::restPUT(const std::string& path, const std::string& value)
+int RESTKeyValueStore::restPUT(const std::string& path, const std::string& value, int expires)
 {
   std::string resource = path;
   prepare_path(resource);
@@ -277,9 +277,20 @@ int RESTKeyValueStore::restPUT(const std::string& path, const std::string& value
   
   std::string data = value;
   OSS::string_replace(data, "\"", "\\\"");
-  if (!pStore->put(resource, data))
+  
+  if (expires > 0)
   {
-    return HTTPResponse::HTTP_INTERNAL_SERVER_ERROR;
+    if (!pStore->put(resource, data, expires))
+    {
+      return HTTPResponse::HTTP_INTERNAL_SERVER_ERROR;
+    }
+  }
+  else
+  {
+    if (!pStore->put(resource, data))
+    {
+      return HTTPResponse::HTTP_INTERNAL_SERVER_ERROR;
+    }
   }
   
   
@@ -383,7 +394,15 @@ void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response
     {
       
       std::string value = form.get("value");
-      response.setStatus((HTTPResponse::HTTPStatus)restPUT(request.getURI(), value));
+      int expires = 0;
+      
+      if (form.has("expires"))
+      {
+        std::string strExpires = form.get("expires");
+        expires = OSS::string_to_number<int>(strExpires);
+      }
+      
+      response.setStatus((HTTPResponse::HTTPStatus)restPUT(request.getURI(), value, expires));
       response.send();
       return;
     }

@@ -1,3 +1,4 @@
+
 // Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
 // Contributor: Joegen Baclor - mailto:joegen@ossapp.com
@@ -17,15 +18,15 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#include "OSS/SIP/SIPTransportRateLimitStrategy.h"
+#include "OSS/Net/AccessControl.h"
 #include "OSS/Logger.h"
 #include "OSS/Net.h"
 
 namespace OSS {
-namespace SIP {
+namespace Net {
 
 
-SIPTransportRateLimitStrategy::SIPTransportRateLimitStrategy() :
+AccessControl::AccessControl() :
   _enabled(false),
   _packetsPerSecondThreshold(100),
   _thresholdViolationRate(50),
@@ -36,11 +37,11 @@ SIPTransportRateLimitStrategy::SIPTransportRateLimitStrategy() :
   _lastTime = boost::posix_time::microsec_clock::local_time();
 }
 
-SIPTransportRateLimitStrategy::~SIPTransportRateLimitStrategy()
+AccessControl::~AccessControl()
 {
 }
 
-void SIPTransportRateLimitStrategy::logPacket(const boost::asio::ip::address& source, std::size_t bytesRead)
+void AccessControl::logPacket(const boost::asio::ip::address& source, std::size_t bytesRead)
 {
   if (!_enabled)
     return;
@@ -98,7 +99,7 @@ void SIPTransportRateLimitStrategy::logPacket(const boost::asio::ip::address& so
   _packetCounterMutex.unlock();
 }
 
-bool SIPTransportRateLimitStrategy::isBannedAddress(const boost::asio::ip::address& source)
+bool AccessControl::isBannedAddress(const boost::asio::ip::address& source)
 {
   if (!_enabled)
     return false;
@@ -133,7 +134,7 @@ bool SIPTransportRateLimitStrategy::isBannedAddress(const boost::asio::ip::addre
   return banned;
 }
 
-void SIPTransportRateLimitStrategy::banAddress(const boost::asio::ip::address& source)
+void AccessControl::banAddress(const boost::asio::ip::address& source)
 {
   if (!_enabled)
     return;
@@ -142,7 +143,7 @@ void SIPTransportRateLimitStrategy::banAddress(const boost::asio::ip::address& s
   _packetCounterMutex.unlock();
 }
 
-void SIPTransportRateLimitStrategy::clearAddress(const boost::asio::ip::address& source, bool addToWhiteList)
+void AccessControl::clearAddress(const boost::asio::ip::address& source, bool addToWhiteList)
 {
   if (!_enabled)
     return;
@@ -154,7 +155,7 @@ void SIPTransportRateLimitStrategy::clearAddress(const boost::asio::ip::address&
 }
 
 
-void SIPTransportRateLimitStrategy::whiteListAddress(const boost::asio::ip::address& address)
+void AccessControl::whiteListAddress(const boost::asio::ip::address& address)
 {
   _packetCounterMutex.lock();
   if (_whiteList.find(address) == _whiteList.end())
@@ -165,7 +166,7 @@ void SIPTransportRateLimitStrategy::whiteListAddress(const boost::asio::ip::addr
   _packetCounterMutex.unlock();
 }
 
-void SIPTransportRateLimitStrategy::whiteListNetwork(const std::string& network)
+void AccessControl::whiteListNetwork(const std::string& network)
 {
   _packetCounterMutex.lock();
   if (_networkWhiteList.find(network) == _networkWhiteList.end())
@@ -173,7 +174,7 @@ void SIPTransportRateLimitStrategy::whiteListNetwork(const std::string& network)
   _packetCounterMutex.unlock();
 }
 
-bool SIPTransportRateLimitStrategy::isWhiteListed(const boost::asio::ip::address& address) const
+bool AccessControl::isWhiteListed(const boost::asio::ip::address& address) const
 {
   bool whiteListed = false;
   whiteListed = _whiteList.find(address) != _whiteList.end();
@@ -182,7 +183,7 @@ bool SIPTransportRateLimitStrategy::isWhiteListed(const boost::asio::ip::address
   return whiteListed;
 }
 
-bool SIPTransportRateLimitStrategy::isWhiteListedNetwork(const boost::asio::ip::address& address) const
+bool AccessControl::isWhiteListedNetwork(const boost::asio::ip::address& address) const
 {
   boost::system::error_code ec;
   std::string ipAddress = address.to_string(ec);

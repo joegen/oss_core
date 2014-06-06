@@ -27,8 +27,8 @@ namespace SIP {
 
 
 
-SIPTransportRateLimitStrategy SIPTransportSession::_rateLimit;
-SIPTransportRateLimitStrategy& SIPTransportSession::rateLimit()
+SIPTransportSession::SIPTransportRateLimitStrategy SIPTransportSession::_rateLimit;
+SIPTransportSession::SIPTransportRateLimitStrategy& SIPTransportSession::rateLimit()
 {
   return SIPTransportSession::_rateLimit;
 }

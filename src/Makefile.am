@@ -321,7 +321,6 @@ liboss_core_la_SOURCES =  \
     sipfsm/SIPTLSConnectionManager.cpp \
     sipfsm/OSSSIP.cpp \
     sipfsm/SIPListener.cpp \
-    sipfsm/SIPTransportRateLimitStrategy.cpp \
     sipfsm/SIPTransportSession.cpp \
     sipfsm/SIPFsm.cpp \
     sipfsm/SIPNict.cpp \
@@ -356,6 +355,7 @@ liboss_core_la_SOURCES =  \
     net/Firewall.cpp \
     net/Carp.cpp \
     net/HTTPServer.cpp \
+    net/AccessControl.cpp \
     utl/AdaptiveDelay.cpp \
     sipfsm/SIPWebSocketConnection.cpp \
     sipfsm/SIPWebSocketListener.cpp \

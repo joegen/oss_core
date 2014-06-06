@@ -28,7 +28,7 @@
 #include "OSS/Net.h"
 #include "OSS/SIP/SIP.h"
 #include "OSS/SIP/SIPMessage.h"
-#include "OSS/SIP/SIPTransportRateLimitStrategy.h"
+#include "OSS/Net/AccessControl.h"
 
 namespace OSS {
 namespace SIP {
@@ -49,6 +49,7 @@ class OSS_API SIPTransportSession
 {
 public:
   typedef boost::shared_ptr<SIPTransportSession> Ptr;
+  typedef OSS::Net::AccessControl SIPTransportRateLimitStrategy;
 
   SIPTransportSession();
     /// Creates a new SIPTransportSession
