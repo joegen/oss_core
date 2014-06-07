@@ -149,17 +149,30 @@ static bool printOneRecord(std::size_t filterDepth, const std::string& resourceN
   return iter != records.end();
 }
   
-RESTKeyValueStore::RESTKeyValueStore() :
-  _rootDocument(REST_DEFAULT_ROOT_DOCUMENT)
+RESTKeyValueStore::RESTKeyValueStore(RESTKeyValueStore* pParentStore) :
+  _rootDocument(REST_DEFAULT_ROOT_DOCUMENT),
+  _pParentStore(pParentStore)
 {
   setHandler(boost::bind(&RESTKeyValueStore::onHandleRequest, this, _1, _2));
+  
+  if (_pParentStore)
+  {
+    _rootDocument = _pParentStore->_rootDocument;
+    _dataDirectory = _pParentStore->_dataDirectory;
+  }
 }
   
-RESTKeyValueStore::RESTKeyValueStore(int maxQueuedConnections, int maxThreads) :
+RESTKeyValueStore::RESTKeyValueStore(int maxQueuedConnections, int maxThreads, RESTKeyValueStore* pParentStore) :
   OSS::Net::HTTPServer(maxQueuedConnections, maxThreads),
-  _rootDocument(REST_DEFAULT_ROOT_DOCUMENT)
+  _rootDocument(REST_DEFAULT_ROOT_DOCUMENT),
+  _pParentStore(pParentStore)
 {
   setHandler(boost::bind(&RESTKeyValueStore::onHandleRequest, this, _1, _2));
+  if (_pParentStore)
+  {
+    _rootDocument = _pParentStore->_rootDocument;
+    _dataDirectory = _pParentStore->_dataDirectory;
+  }
 }
 
 RESTKeyValueStore::~RESTKeyValueStore()
@@ -170,6 +183,9 @@ RESTKeyValueStore::~RESTKeyValueStore()
 
 KeyValueStore* RESTKeyValueStore::getStore(const std::string& path, bool createIfMissing)
 {
+  if (_pParentStore)
+    return _pParentStore->getStore(path, createIfMissing);
+  
   std::vector<std::string> tokens = OSS::string_tokenize(path, "/");
   if(tokens.size() < 3)
     return 0;
@@ -306,7 +322,6 @@ int RESTKeyValueStore::restGET(const std::string& path, std::ostream& ostr)
   KeyValueStore* pStore = getStore(resource, false);
   if (!pStore)
   {
-    std::cout << "STORE NOT FOUND" << std::endl;
     return HTTPResponse::HTTP_NOT_FOUND;
   }
   
@@ -319,7 +334,6 @@ int RESTKeyValueStore::restGET(const std::string& path, std::ostream& ostr)
   
   if (records.empty())
   {
-    std::cout << "RECORD NOT FOUND" << std::endl;
     return HTTPResponse::HTTP_NOT_FOUND;
   }
  
@@ -381,6 +395,7 @@ void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response
     }
     
     response.setChunkedTransferEncoding(true);
+    response.setContentType("application/json");
     response.send() << result.str();
     return;
   }

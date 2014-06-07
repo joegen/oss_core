@@ -75,9 +75,9 @@ public:
     OSS_HANDLE _sessionHandle;
   };
   
-  RESTKeyValueStore();
+  RESTKeyValueStore(RESTKeyValueStore* pParentStore = 0);
   
-  RESTKeyValueStore(int maxQueuedConnections, int maxThreads);
+  RESTKeyValueStore(int maxQueuedConnections, int maxThreads, RESTKeyValueStore* pParentStore = 0);
 
   ~RESTKeyValueStore();
    
@@ -96,6 +96,7 @@ public:
   int restGET(const std::string& path, std::ostream& ostr);
 
   int restDELETE(const std::string& path);
+
 protected:
   void onHandleRequest(Request& request, Response& response);
   
@@ -117,6 +118,7 @@ private:
   OSS::mutex _kvStoreMutex;
   KVStore _kvStore;
   Handler _customHandler;
+  RESTKeyValueStore* _pParentStore;
 };
 
 //

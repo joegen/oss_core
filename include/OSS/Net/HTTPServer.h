@@ -28,6 +28,7 @@
 #include "Poco/Net/HTTPServerRequest.h"
 #include "Poco/Net/HTTPServerResponse.h"
 #include "OSS/Net/AccessControl.h"
+#include "OSS/Net/TLSManager.h"
 
 namespace OSS {
 namespace Net {

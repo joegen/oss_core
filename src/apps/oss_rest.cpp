@@ -9,6 +9,9 @@
 #include "config.h"
 #endif
 
+#define DEFAULT_PORT 8010
+#define DEFAULT_SECURE_PORT 8011
+
 using namespace OSS;
 
 void setSystemParameters()
@@ -83,11 +86,13 @@ void saveProcessId(ServiceOptions& options)
 bool prepareOptions(ServiceOptions& options)
 {
   options.addDaemonOptions();
-  options.addOptionString('i', "host", "The IP Address where the REST Server will listen for connections.");
-  options.addOptionInt('p', "port", "The port where the B2BUA will listen for connections.");
-  options.addOptionString('d', "data-directory", "The directory where the REST Server will store data.");
-  options.addOptionString('u', "auth-user", "User for Basic/Digest authentication.");
-  options.addOptionString('w', "auth-password", "Password for Basic/Digest authentication.");
+  options.addOptionString("host", "The IP Address where the REST Server will listen for connections.");
+  options.addOptionInt("port", "The port where the B2BUA will listen for connections.");
+  options.addOptionString("secure-host", "The IP Address where the REST Server will listen for TLS connections.");
+  options.addOptionInt("secure-port", "The port where the B2BUA will listen for TLS connections.");
+  options.addOptionString("data-directory", "The directory where the REST Server will store data.");
+  options.addOptionString("auth-user", "User for Basic/Digest authentication.");
+  options.addOptionString("auth-password", "Password for Basic/Digest authentication.");
 
   return options.parseOptions();
 }
@@ -113,34 +118,57 @@ int main(int argc, char** argv)
   saveProcessId(options);
   
   OSS::Persistent::RESTKeyValueStore server;
+  OSS::Persistent::RESTKeyValueStore server_secure(&server);
   
   std::string user;
   std::string pass;
   std::string host;
-  int port = 8010;
+  int port = DEFAULT_PORT;
   std::string dataDir;
   options.getOption("auth-user", user);
   options.getOption("auth-password", pass);
   options.getOption("host", host);
-  options.getOption("port", port, 8010);
+  options.getOption("port", port, DEFAULT_PORT);
   options.getOption("data-directory", dataDir);
   
+  std::string secureHost;
+  int securePort = DEFAULT_SECURE_PORT;
+  
+  options.getOption("secure-host", secureHost);
+  options.getOption("secure-port", securePort, DEFAULT_SECURE_PORT);
+
+  
   if (!user.empty())
+  {
     server.setCredentials(user, pass);
+    server_secure.setCredentials(user, pass);
+  }
   
   if (!dataDir.empty())
+  {
     server.setDataDirectory(dataDir);
+    server_secure.setDataDirectory(dataDir);
+  }
   
   bool started = false;
+  bool secure_started = false;
   if (!host.empty())
     started = server.start(host, port, false);
   else
     started = server.start(port, false);
   
-  if (started)
+  OSS::Net::TLSManager::instance().initialize("any.pem", "any.pem", "rootcert.pem", "secret", true, OSS::Net::TLSManager::VERIFY_RELAXED);
+  
+  if (!secureHost.empty())
+    secure_started = server_secure.start(secureHost, securePort, true);
+  else
+    secure_started = server_secure.start(securePort, true);
+   
+  if (started || secure_started)
     options.waitForTerminationRequest();
   
   server.stop();
+  server_secure.stop();
   
   OSS::OSS_deinit();
   return 0;

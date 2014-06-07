@@ -28,7 +28,7 @@ KeyValueStore kv;
 RESTKeyValueStore restkv;
 RESTKeyValueStore::Client restkv_client(restkvhost, restkvport);
 
-RESTKeyValueStore restkv_secure;
+RESTKeyValueStore restkv_secure(&restkv);
 RESTKeyValueStore::Client restkv_client_secure(restkvhost, restkv_secure_port, true);
 
 TEST(KeyValueStoreTest, test_open_close)
@@ -252,6 +252,9 @@ TEST(KeyValueStoreTest, test_rest_tls_put_get)
   input << result.str();
   
   std::cout << result.str() << std::endl;
+  
+  std::ostringstream result2;
+  ASSERT_TRUE(restkv_client.restGET("/root/secure/", result2, status));
 }
 
 

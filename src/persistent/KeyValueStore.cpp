@@ -220,6 +220,11 @@ bool KeyValueStore::put(const std::string& key, const std::string& value)
     unqlite_rollback(pDbHandle);
     return false;
   }
+  
+  unqlite_commit(pDbHandle);
+  
+  std::cout << "RECORD COMMITED\r\n";
+  
   return true;
 }
 

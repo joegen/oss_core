@@ -107,10 +107,12 @@ void TLSManager::initializeServer(
   if (_gpContext)
     return;
   
+  bool loadDefaultCa = caLocation.empty();
+  
   if (!privateKeyFile.empty() && !certificateFile.empty())
-    _gpContext = new Poco::Net::Context(Poco::Net::Context::SERVER_USE, privateKeyFile, certificateFile, caLocation, convert_mode(verificationMode), 9, false, TLS_DEFAULT_CIPHER_LIST);
+    _gpContext = new Poco::Net::Context(Poco::Net::Context::SERVER_USE, privateKeyFile, certificateFile, caLocation, convert_mode(verificationMode), 9, loadDefaultCa, TLS_DEFAULT_CIPHER_LIST);
   else
-    _gpContext = new Poco::Net::Context(Poco::Net::Context::SERVER_USE, caLocation, convert_mode(verificationMode), 9, false, TLS_DEFAULT_CIPHER_LIST);
+    _gpContext = new Poco::Net::Context(Poco::Net::Context::SERVER_USE, caLocation, convert_mode(verificationMode), 9, loadDefaultCa, TLS_DEFAULT_CIPHER_LIST);
   static Poco::SharedPtr<Poco::Net::PrivateKeyPassphraseHandler> _gpPassphrase = new Passphrase(true, passPhrase);
 	static Poco::SharedPtr<Poco::Net::InvalidCertificateHandler> _gpAllowInvalidCert = new AllowInvalidCert(true, allowInvalidCert);
   Poco::Net::SSLManager::instance().initializeServer(_gpPassphrase, _gpAllowInvalidCert, _gpContext);
@@ -128,10 +130,12 @@ void TLSManager::initializeClient(
   if (_gpContext)
     return;
   
+  bool loadDefaultCa = caLocation.empty();
+  
   if (!privateKeyFile.empty() && !certificateFile.empty())
-    _gpContext = new Poco::Net::Context(Poco::Net::Context::CLIENT_USE, privateKeyFile, certificateFile, caLocation, convert_mode(verificationMode), 9, false, TLS_DEFAULT_CIPHER_LIST);
+    _gpContext = new Poco::Net::Context(Poco::Net::Context::CLIENT_USE, privateKeyFile, certificateFile, caLocation, convert_mode(verificationMode), 9, loadDefaultCa, TLS_DEFAULT_CIPHER_LIST);
   else
-    _gpContext = new Poco::Net::Context(Poco::Net::Context::CLIENT_USE, caLocation, convert_mode(verificationMode), 9, false, TLS_DEFAULT_CIPHER_LIST);
+    _gpContext = new Poco::Net::Context(Poco::Net::Context::CLIENT_USE, caLocation, convert_mode(verificationMode), 9, loadDefaultCa, TLS_DEFAULT_CIPHER_LIST);
   static Poco::SharedPtr<Poco::Net::PrivateKeyPassphraseHandler> _gpPassphrase = new Passphrase(false, passPhrase);
 	static Poco::SharedPtr<Poco::Net::InvalidCertificateHandler> _gpAllowInvalidCert = new AllowInvalidCert(false, allowInvalidCert);
   Poco::Net::SSLManager::instance().initializeClient(_gpPassphrase, _gpAllowInvalidCert, _gpContext);
