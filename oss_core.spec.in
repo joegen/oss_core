@@ -75,6 +75,9 @@ Requires: hiredis
 BuildRequires: gtest-devel
 Requires: gtest
 
+BuildRequires: leveldb-devel
+Requires: leveldb
+
 Source: %name-%version.tar.gz
 
 Prefix: %_prefix

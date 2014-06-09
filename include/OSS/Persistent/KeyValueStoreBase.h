@@ -21,6 +21,11 @@
 #ifndef OSS_KEYVALUESTOREBASE_H_INCLUDED
 #define OSS_KEYVALUESTOREBASE_H_INCLUDED
 
+
+#include "OSS/OSS.h"
+#include "OSS/Core.h"
+
+
 namespace OSS {
 namespace Persistent {
 

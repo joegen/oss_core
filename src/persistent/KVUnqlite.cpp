@@ -32,7 +32,7 @@ extern "C"
 
 #define PERSISTENT_STORE_MAX_VALUE_SIZE 65536
 #define PERSISTENT_STORE_MAX_KEY_SIZE 1024
-#define PERSISTENT_STORE_EXPIRES_SUFFIX ".KV_EXPIRES"
+static const std::string PERSISTENT_STORE_EXPIRES_SUFFIX = ".KV_EXPIRES";
 
 
 namespace OSS {
@@ -76,7 +76,7 @@ static int RecordConsumerCallback(const void *pData,unsigned int nDatalen,void *
       //
       // Do not process expiration keys
       //
-      if (!OSS::string_ends_with(pConsumer->key, PERSISTENT_STORE_EXPIRES_SUFFIX))
+      if (!OSS::string_ends_with(pConsumer->key, PERSISTENT_STORE_EXPIRES_SUFFIX.c_str()))
       {
         pConsumer->key = data;
       }
@@ -118,7 +118,7 @@ static int KeyConsumerCallback(const void *pData,unsigned int nDatalen,void *pUs
     //
     // Do not process expiration keys
     //
-    if (!OSS::string_ends_with(data, PERSISTENT_STORE_EXPIRES_SUFFIX))
+    if (!OSS::string_ends_with(data, PERSISTENT_STORE_EXPIRES_SUFFIX.c_str()))
     {
       pConsumer->keys->push_back(data);
     }
@@ -261,7 +261,7 @@ bool KVUnqlite::put(const std::string& key, const std::string& value, unsigned i
 
   OSS::UInt64 expires = OSS::getTime() + (expireInSeconds*1000);
   std::string expireString = OSS::string_from_number(expires);
-  std::string expireKey = key + std::string(PERSISTENT_STORE_EXPIRES_SUFFIX);
+  std::string expireKey = key + PERSISTENT_STORE_EXPIRES_SUFFIX;
 
   if (unqlite_kv_store(pDbHandle, expireKey.c_str(), expireKey.size(), expireString.c_str(), expireString.size()) != UNQLITE_OK)
   {
@@ -312,7 +312,7 @@ bool KVUnqlite::_get(const std::string& key, std::string& value)
 
 bool KVUnqlite::is_expired(const std::string& key)
 {
-  std::string expireKey = key + std::string(PERSISTENT_STORE_EXPIRES_SUFFIX);
+  std::string expireKey = key + PERSISTENT_STORE_EXPIRES_SUFFIX;
 
   std::string expires;
   if (!_get(expireKey, expires))
@@ -325,7 +325,7 @@ bool KVUnqlite::is_expired(const std::string& key)
 
 bool KVUnqlite::purge_expired(const std::string& key)
 {
-  std::string expireKey = key + std::string(".expires");
+  std::string expireKey = key + PERSISTENT_STORE_EXPIRES_SUFFIX;
   if (!del(key))
     return false;
   return del(expireKey);
