@@ -104,11 +104,11 @@ protected:
   
   bool isAuthorized(Request& request, Response& response);
   
-  void sendRestRecordsAsJson(const std::vector<std::string>& pathVector, KeyValueStore::Records& records, Response& response);
+  void sendRestRecordsAsJson(const std::vector<std::string>& pathVector, KVRecords& records, Response& response);
   
-  void createJSONDocument(const std::vector<std::string>& pathVector, std::size_t depth, KeyValueStore::Records& records, std::ostream& ostr);
+  void createJSONDocument(const std::vector<std::string>& pathVector, std::size_t depth, KVRecords& records, std::ostream& ostr);
   
-  void sendRestRecordsAsValuePairs(const std::string& path, const KeyValueStore::Records& records, Response& response);
+  void sendRestRecordsAsValuePairs(const std::string& path, const KVRecords& records, Response& response);
   
 private:
   std::string _user;

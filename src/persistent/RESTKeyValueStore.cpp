@@ -46,7 +46,7 @@ namespace Persistent {
 //
 // Used for sorting records
 //
-static bool compare_records (KeyValueStore::Record& first, KeyValueStore::Record& second)
+static bool compare_records (KVRecord& first, KVRecord& second)
 {
   return first.key.compare(second.key) <= 0;
 }
@@ -81,7 +81,7 @@ static std::string create_filter(const std::string& path)
   return path + std::string("*");
 }
 
-static bool printOneRecord(std::size_t filterDepth, const std::string& resourceName, std::list<KeyValueStore::Record>& records, std::list<KeyValueStore::Record>::iterator& iter, std::ostream& ostr)
+static bool printOneRecord(std::size_t filterDepth, const std::string& resourceName, std::list<KVRecord>& records, std::list<KVRecord>::iterator& iter, std::ostream& ostr)
 {
   //
   // return false if there are no more records
@@ -178,7 +178,10 @@ RESTKeyValueStore::RESTKeyValueStore(int maxQueuedConnections, int maxThreads, R
 RESTKeyValueStore::~RESTKeyValueStore()
 {
   for (KVStore::const_iterator iter = _kvStore.begin(); iter != _kvStore.end(); iter++)
+  {
+    iter->second->close();
     delete iter->second;
+  }
 }
 
 KeyValueStore* RESTKeyValueStore::getStore(const std::string& path, bool createIfMissing)
@@ -329,7 +332,7 @@ int RESTKeyValueStore::restGET(const std::string& path, std::ostream& ostr)
   get_path_vector(resource, tokens);
   std::string filter = create_filter(resource);
   
-  KeyValueStore::Records records;
+  KVRecords records;
   pStore->getRecords(filter, records);
   
   if (records.empty())
@@ -432,12 +435,12 @@ void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response
   response.send();
 }
 
-void RESTKeyValueStore::createJSONDocument(const std::vector<std::string>& pathVector, std::size_t depth, KeyValueStore::Records& unsorted, std::ostream& ostr)
+void RESTKeyValueStore::createJSONDocument(const std::vector<std::string>& pathVector, std::size_t depth, KVRecords& unsorted, std::ostream& ostr)
 {
   //
   // sort the records
   //
-  std::list<KeyValueStore::Record> records;
+  std::list<KVRecord> records;
   std::copy( unsorted.begin(), unsorted.end(), std::back_inserter(records));
   records.sort(compare_records);
   
@@ -446,13 +449,13 @@ void RESTKeyValueStore::createJSONDocument(const std::vector<std::string>& pathV
   // Loop through the records
   //
   ostr << "{";
-  std::list<KeyValueStore::Record>::iterator iter = records.begin();
+  std::list<KVRecord>::iterator iter = records.begin();
   while (printOneRecord(depth, pathVector[depth], records, iter, ostr))
     ostr << ",";
   ostr << "}";
 }
 
-void RESTKeyValueStore::sendRestRecordsAsJson(const std::vector<std::string>& pathVector, KeyValueStore::Records& records, Response& response)
+void RESTKeyValueStore::sendRestRecordsAsJson(const std::vector<std::string>& pathVector, KVRecords& records, Response& response)
 {
   response.setChunkedTransferEncoding(true);
   response.setContentType("text/json");
@@ -461,12 +464,12 @@ void RESTKeyValueStore::sendRestRecordsAsJson(const std::vector<std::string>& pa
 }
 
 
-void RESTKeyValueStore::sendRestRecordsAsValuePairs(const std::string& path, const KeyValueStore::Records& records, Response& response)
+void RESTKeyValueStore::sendRestRecordsAsValuePairs(const std::string& path, const KVRecords& records, Response& response)
 {
   //
   // sort the records
   //
-  std::list<KeyValueStore::Record> sorted;
+  std::list<KVRecord> sorted;
   std::copy( records.begin(), records.end(), std::back_inserter(sorted));
   sorted.sort(compare_records);
   
@@ -475,7 +478,7 @@ void RESTKeyValueStore::sendRestRecordsAsValuePairs(const std::string& path, con
   response.setContentType("text/plain");
   std::ostream& ostr = response.send();
 
-  for (std::list<KeyValueStore::Record>::const_iterator iter = sorted.begin(); iter != sorted.end(); iter++)
+  for (std::list<KVRecord>::const_iterator iter = sorted.begin(); iter != sorted.end(); iter++)
   {
     ostr << iter->key << ": " << iter->value << "\r\n";
   }

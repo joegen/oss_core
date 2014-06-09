@@ -278,7 +278,7 @@ liboss_core_la_SOURCES =  \
     persistent/Reference.cpp \
     persistent/unqlite/unqlite.h \
     persistent/unqlite/unqlite.c \
-    persistent/KeyValueStore.cpp \
+    persistent/KVUnqlite.cpp \
     persistent/RESTKeyValueStore.cpp \
     sdp/SDPHeader.cpp \
     sdp/SDPHeaderList.cpp \

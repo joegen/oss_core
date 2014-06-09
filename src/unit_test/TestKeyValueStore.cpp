@@ -22,7 +22,7 @@ using namespace OSS::Net;
 #define restkv_secure_port 10112
 #define restkvhost "127.0.0.1"
 #define data "The Quick Brown fox Jumps Over The Lazy Dog!"
-#define iterations 10000
+#define iterations 100
 
 KeyValueStore kv;
 RESTKeyValueStore restkv;
@@ -129,7 +129,7 @@ TEST(KeyValueStoreTest, test_filter_multiple)
     ASSERT_TRUE(kv.put(strm.str().c_str(), testdata.c_str()));
   }
   
-  KeyValueStore::Keys all, partial_a, partial_b;
+  KVKeys all, partial_a, partial_b;
   ASSERT_TRUE(kv.getKeys("getkey_*", all));
   ASSERT_EQ(all.size(), 200);
   
@@ -139,12 +139,12 @@ TEST(KeyValueStoreTest, test_filter_multiple)
   ASSERT_TRUE(kv.getKeys("getkey_b*",  partial_b));
   ASSERT_EQ(partial_b.size(), 100);
   
-  KeyValueStore::Records partialrec_b;
+  KVRecords partialrec_b;
   
   ASSERT_TRUE(kv.getRecords("getkey_b*",  partialrec_b));
   ASSERT_EQ(partialrec_b.size(), 100);
   
-  for (KeyValueStore::Records::const_iterator iter = partialrec_b.begin(); iter != partialrec_b.end(); iter++)
+  for (KVRecords::const_iterator iter = partialrec_b.begin(); iter != partialrec_b.end(); iter++)
     ASSERT_STREQ(iter->value.c_str(), testdata.c_str());
   
   ASSERT_TRUE(kv.delKeys("getkey_b*"));

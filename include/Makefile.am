@@ -109,6 +109,8 @@ nobase_include_HEADERS = \
     OSS/Persistent/DataType.h \
     OSS/Persistent/Persistent.h \
     OSS/Persistent/Reference.h \
+    OSS/Persistent/KVUnqlite.h \
+    OSS/Persistent/KeyValueStoreBase.h \
     OSS/Persistent/KeyValueStore.h \
     OSS/Persistent/RESTKeyValueStore.h \
     OSS/SDP/rfc4566.txt \
