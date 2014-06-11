@@ -70,7 +70,10 @@ public:
       return startT;
 
     char* t = startT;
-    for (size_t i = 0; i < 50; i++)
+    
+    const size_t iterations = 50;
+    
+    for (size_t i = 0; i < iterations; i++)
     {
       char c = *t;
       if (c == 0x00)
@@ -78,7 +81,7 @@ public:
 
       if (c == _value[i])
       {
-        if (_value[i+1] != 0x00)
+        if (iterations > i + 1 && _value[i+1] != 0x00)
         {
           t++;
           continue;
@@ -153,7 +156,10 @@ public:
   {
     char* startT = const_cast<char*>(_t);
     char* t = startT;
-    for(size_t i = 0; i < 50; i++ )
+    
+    const size_t iterations = 50;
+    
+    for(size_t i = 0; i < iterations; i++ )
     {
       char c = *t;
       if( c == 0x00 )
@@ -161,7 +167,7 @@ public:
 
       if( c == _value[i] )
       {
-        if( _value[i+1] != 0x00 )
+        if( iterations > i + 1 && _value[i+1] != 0x00 )
         {
           t++;
           continue;

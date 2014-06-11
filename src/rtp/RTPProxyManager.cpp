@@ -246,7 +246,9 @@ void RTPProxyManager::recycleState()
       _sessionListMutex.lock();
       RTPProxySession::Ptr session = RTPProxySession::reconstructFromRedis(this, *iter);
       if (session)
-        _sessionList[session->getIdentifier()] = session;
+      {
+        _sessionList.insert(std::pair<std::string, RTPProxySession::Ptr>(session->getIdentifier(), session));
+      }
       _sessionListMutex.unlock();
     }
   }
@@ -355,7 +357,7 @@ void RTPProxyManager::handleSDP(
         OSS_LOG_WARNING(logId << "RTP: Will be resizing packets to " << rtpAttribute.resizerSamplesLeg1 << "/" << rtpAttribute.resizerSamplesLeg2 << " ms samples");
         proxy->setResizerSamples(rtpAttribute.resizerSamplesLeg1, rtpAttribute.resizerSamplesLeg2);
       }
-      _sessionList[sessionId] = proxy;
+      _sessionList.insert(std::pair<std::string, RTPProxySession::Ptr>(sessionId, proxy));
     }
     _sessionListMutex.unlock();
   }

@@ -84,7 +84,7 @@ SIPTransaction::Ptr SIPTransactionPool::findTransaction(const std::string& id, b
   trn->owner() = this;
   onAttachFSM(trn);
   trn->setId(id);
-  _transactionPool[id] = trn;
+  _transactionPool.insert(std::pair<std::string, SIPTransaction::Ptr>(id, trn));
   return trn;
 }
 
