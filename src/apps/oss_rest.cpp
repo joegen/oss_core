@@ -96,7 +96,10 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionString("private-key-file", "Contains the path to the private key file used for encryption");
   options.addOptionString("certificate-file", "Contains the path to the certificate file (in PEM format)");
   options.addOptionString("ca-location", "Contains the path to the file or directory containing the CA/root certificates.");
+  options.addOptionString("pass-phrase", "Pass phrase if the private key is protected by a password.");
+  options.addOptionFlag("verify-client-certs", "The server sends a client certificate request to the and verify it.");
   options.addOptionFlag("secure-transport-only", "Set this flag if only TLS transport (https) will be allowed.");
+  
 
   return options.parseOptions();
 }
@@ -168,15 +171,19 @@ int main(int argc, char** argv)
   std::string privateKeyFile;
   std::string certificateFile;
   std::string caLocation;
+  std::string passPhrase;
   
   options.getOption("private-key-file", privateKeyFile);
   options.getOption("certificate-file", certificateFile);
   options.getOption("ca-location", caLocation);
+  options.getOption("pass-phrase", passPhrase);
   
   
   if (!caLocation.empty())
   {
-    OSS::Net::TLSManager::instance().initialize("any.pem", "any.pem", "rootcert.pem", "secret", true, OSS::Net::TLSManager::VERIFY_RELAXED);
+    bool verifyClientCerts = options.hasOption("verify-client-certs");
+    OSS::Net::TLSManager::instance().initialize(privateKeyFile, certificateFile, caLocation, passPhrase, true, 
+      verifyClientCerts ? OSS::Net::TLSManager::VERIFY_RELAXED : OSS::Net::TLSManager::VERIFY_NONE );
 
     if (!secureHost.empty())
       secure_started = server_secure.start(secureHost, securePort, true);
@@ -186,9 +193,9 @@ int main(int argc, char** argv)
    
   if (started || secure_started)
   {
-    OSS_LOG_NOTICE("REST Server STARTED." << std::endl
-      << "\tport: " << (started ? port : -1) << std::endl
-      << "\tsecure-port: " << (secure_started ? securePort : -1));
+    OSS_LOG_NOTICE("REST Server STARTED." 
+      << " port: " << (started ? port : -1) 
+      << " secure-port: " << (secure_started ? securePort : -1));
     options.waitForTerminationRequest();
   }
   
