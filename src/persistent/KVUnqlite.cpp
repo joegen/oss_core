@@ -32,7 +32,6 @@ extern "C"
 
 #define PERSISTENT_STORE_MAX_VALUE_SIZE 65536
 #define PERSISTENT_STORE_MAX_KEY_SIZE 1024
-static const std::string PERSISTENT_STORE_EXPIRES_SUFFIX = ".KV_EXPIRES";
 
 
 namespace OSS {
@@ -76,7 +75,7 @@ static int RecordConsumerCallback(const void *pData,unsigned int nDatalen,void *
       //
       // Do not process expiration keys
       //
-      if (!OSS::string_ends_with(pConsumer->key, PERSISTENT_STORE_EXPIRES_SUFFIX.c_str()))
+      if (!OSS::string_ends_with(pConsumer->key, PERSISTENT_STORE_EXPIRES_SUFFIX))
       {
         pConsumer->key = data;
       }
@@ -118,7 +117,7 @@ static int KeyConsumerCallback(const void *pData,unsigned int nDatalen,void *pUs
     //
     // Do not process expiration keys
     //
-    if (!OSS::string_ends_with(data, PERSISTENT_STORE_EXPIRES_SUFFIX.c_str()))
+    if (!OSS::string_ends_with(data, PERSISTENT_STORE_EXPIRES_SUFFIX))
     {
       pConsumer->keys->push_back(data);
     }
@@ -212,89 +211,23 @@ bool KVUnqlite::put(const std::string& key, const std::string& value)
   if (!pDbHandle)
     return false;
 
-  OSS::mutex_write_lock lock(_mutex);
-
- // if (unqlite_begin(pDbHandle) != UNQLITE_OK)
- // {
- //   log_error();
- //   return false;
- // }
 
   if (unqlite_kv_store(pDbHandle, key.c_str(), key.size(), value.c_str(), value.size()) != UNQLITE_OK)
   {
     log_error();
-   // unqlite_rollback(pDbHandle);
     return false;
   }
-  
-  //unqlite_commit(pDbHandle);
     
-  return true;
-}
-
-bool KVUnqlite::put(const std::string& key, const std::string& value, unsigned int expireInSeconds)
-{
-  if (key.size() > PERSISTENT_STORE_MAX_KEY_SIZE || value.size() > PERSISTENT_STORE_MAX_VALUE_SIZE)
-  {
-    OSS_LOG_ERROR("KVUnqlite::put:  Maximum data/ size exceeded");
-    return false;
-  }
-
-  unqlite* pDbHandle = static_cast<unqlite*>(_pDbHandle);
-  if (!pDbHandle)
-    return false;
-
-  OSS::mutex_write_lock lock(_mutex);
-
- // if (unqlite_begin(pDbHandle) != UNQLITE_OK)
- // {
- //   log_error();
- //   return false;
- // }
-
-  if (unqlite_kv_store(pDbHandle, key.c_str(), key.size(), value.c_str(), value.size()) != UNQLITE_OK)
-  {
-    log_error();
-  //  unqlite_rollback(pDbHandle);
-    return false;
-  }
-
-  OSS::UInt64 expires = OSS::getTime() + (expireInSeconds*1000);
-  std::string expireString = OSS::string_from_number(expires);
-  std::string expireKey = key + PERSISTENT_STORE_EXPIRES_SUFFIX;
-
-  if (unqlite_kv_store(pDbHandle, expireKey.c_str(), expireKey.size(), expireString.c_str(), expireString.size()) != UNQLITE_OK)
-  {
-    log_error();
-  //  unqlite_rollback(pDbHandle);
-    return false;
-  }
-
-  // unqlite_commit(pDbHandle);
-
   return true;
 }
 
 bool KVUnqlite::get(const std::string& key, std::string& value)
 {
-  if (is_expired(key))
-  {
-    purge_expired(key);
-    return false;
-  }
-    
-  return _get(key, value);
-}
-
-bool KVUnqlite::_get(const std::string& key, std::string& value)
-{
   unqlite* pDbHandle = static_cast<unqlite*>(_pDbHandle);
   if (!pDbHandle)
   {
     return false;
   }
-
-  OSS::mutex_read_lock lock(_mutex);
 
   char buff[PERSISTENT_STORE_MAX_VALUE_SIZE];
 
@@ -310,35 +243,11 @@ bool KVUnqlite::_get(const std::string& key, std::string& value)
   return true;
 }
 
-bool KVUnqlite::is_expired(const std::string& key)
-{
-  std::string expireKey = key + PERSISTENT_STORE_EXPIRES_SUFFIX;
-
-  std::string expires;
-  if (!_get(expireKey, expires))
-    return false;
-
-  OSS::UInt64 expireTime = OSS::string_to_number<OSS::UInt64>(expires);
-  
-  return expireTime <= OSS::getTime();
-}
-
-bool KVUnqlite::purge_expired(const std::string& key)
-{
-  std::string expireKey = key + PERSISTENT_STORE_EXPIRES_SUFFIX;
-  if (!del(key))
-    return false;
-  return del(expireKey);
-}
-
-
 bool KVUnqlite::del(const std::string& key)
 {
   unqlite* pDbHandle = static_cast<unqlite*>(_pDbHandle);
   if (!pDbHandle)
     return false;
-
-  OSS::mutex_write_lock lock(_mutex);
 
   if (unqlite_kv_delete(pDbHandle, key.c_str(), key.size()) != UNQLITE_OK)
   {
@@ -357,8 +266,6 @@ bool KVUnqlite::getKeys(const std::string& filter, Keys& keys)
     return false;
   }
 
-  OSS::mutex_read_lock lock(_mutex);
-  
   unqlite_kv_cursor* pCursor = 0;
   
   if (unqlite_kv_cursor_init(pDbHandle, &pCursor) != UNQLITE_OK || !pCursor)
@@ -393,8 +300,6 @@ bool KVUnqlite::getRecords(const std::string& filter, Records& records)
     return false;
   }
 
-  OSS::mutex_read_lock lock(_mutex);
-  
   unqlite_kv_cursor* pCursor = 0;
   
   if (unqlite_kv_cursor_init(pDbHandle, &pCursor) != UNQLITE_OK || !pCursor)
@@ -440,7 +345,6 @@ bool KVUnqlite::delKeys(const std::string& filter)
   
   if (!keys.empty())
   {
-    OSS::mutex_write_lock lock(_mutex);
     for (Keys::const_iterator iter = keys.begin(); iter != keys.end(); iter++)
     {
       if (unqlite_kv_delete(pDbHandle, iter->c_str(), iter->size()) != UNQLITE_OK)

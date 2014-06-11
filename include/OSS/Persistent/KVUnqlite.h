@@ -52,10 +52,8 @@ public:
 
   bool put(const std::string& key, const std::string& value);
 
-  bool put(const std::string& key, const std::string& value, unsigned int expireInSeconds);
-
   bool get(const std::string& key, std::string& value);
-
+  
   bool del(const std::string& key);
   
   bool getKeys(Keys& keys);
@@ -73,17 +71,9 @@ private:
 
   void log_error();
 
-  bool is_expired(const std::string& key);
-
-  bool purge_expired(const std::string& key);
-
-  bool _get(const std::string& key, std::string& value);
-
   OSS_HANDLE _pDbHandle;
 
   std::string _path;
-
-  OSS::mutex_read_write _mutex;
 };
 
 

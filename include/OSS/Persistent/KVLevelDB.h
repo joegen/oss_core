@@ -51,10 +51,8 @@ public:
 
   bool put(const std::string& key, const std::string& value);
 
-  bool put(const std::string& key, const std::string& value, unsigned int expireInSeconds);
-
   bool get(const std::string& key, std::string& value);
-
+  
   bool del(const std::string& key);
   
   bool getKeys(Keys& keys);

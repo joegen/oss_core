@@ -200,19 +200,18 @@ KeyValueStore* RESTKeyValueStore::getStore(const std::string& path, bool createI
   
   if (_kvStore.find(document) == _kvStore.end())
   {
-    if (createIfMissing)
+    //
+    // Create a new store
+    //
+    std::ostringstream strm;
+
+    if (!_dataDirectory.empty())
+      strm << _dataDirectory << "/" << document;
+    else
+      strm << document;
+      
+    if (createIfMissing || boost::filesystem::exists(strm.str()))
     {
-      //
-      // Create a new store
-      //
-      std::ostringstream strm;
-
-      if (!_dataDirectory.empty())
-        strm << _dataDirectory << "/" << document;
-      else
-        strm << document;
-
-
       pStore = new KeyValueStore();
       pStore->open(strm.str());
       if (pStore->isOpen())
@@ -224,6 +223,10 @@ KeyValueStore* RESTKeyValueStore::getStore(const std::string& path, bool createI
         delete pStore;
         pStore = 0;
       }
+    }
+    else
+    {
+      std::cerr << "NO STORE AVAILABLE for " << strm.str() << std::endl;
     }
   }
   else

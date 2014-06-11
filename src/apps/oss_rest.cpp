@@ -93,6 +93,10 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionString("data-directory", "The directory where the REST Server will store data.");
   options.addOptionString("auth-user", "User for Basic/Digest authentication.");
   options.addOptionString("auth-password", "Password for Basic/Digest authentication.");
+  options.addOptionString("private-key-file", "Contains the path to the private key file used for encryption");
+  options.addOptionString("certificate-file", "Contains the path to the certificate file (in PEM format)");
+  options.addOptionString("ca-location", "Contains the path to the file or directory containing the CA/root certificates.");
+  options.addOptionFlag("secure-transport-only", "Set this flag if only TLS transport (https) will be allowed.");
 
   return options.parseOptions();
 }
@@ -149,27 +153,58 @@ int main(int argc, char** argv)
     server.setDataDirectory(dataDir);
     server_secure.setDataDirectory(dataDir);
   }
-  
+  bool secureTransportOnly = options.hasOption("secure-transport-only");
   bool started = false;
   bool secure_started = false;
-  if (!host.empty())
-    started = server.start(host, port, false);
-  else
-    started = server.start(port, false);
   
-  OSS::Net::TLSManager::instance().initialize("any.pem", "any.pem", "rootcert.pem", "secret", true, OSS::Net::TLSManager::VERIFY_RELAXED);
+  if (!secureTransportOnly)
+  {
+    if (!host.empty())
+      started = server.start(host, port, false);
+    else
+      started = server.start(port, false);
+  }
+   
+  std::string privateKeyFile;
+  std::string certificateFile;
+  std::string caLocation;
   
-  if (!secureHost.empty())
-    secure_started = server_secure.start(secureHost, securePort, true);
-  else
-    secure_started = server_secure.start(securePort, true);
+  options.getOption("private-key-file", privateKeyFile);
+  options.getOption("certificate-file", certificateFile);
+  options.getOption("ca-location", caLocation);
+  
+  
+  if (!caLocation.empty())
+  {
+    OSS::Net::TLSManager::instance().initialize("any.pem", "any.pem", "rootcert.pem", "secret", true, OSS::Net::TLSManager::VERIFY_RELAXED);
+
+    if (!secureHost.empty())
+      secure_started = server_secure.start(secureHost, securePort, true);
+    else
+      secure_started = server_secure.start(securePort, true);
+  }
    
   if (started || secure_started)
+  {
+    OSS_LOG_NOTICE("REST Server STARTED." << std::endl
+      << "\tport: " << (started ? port : -1) << std::endl
+      << "\tsecure-port: " << (secure_started ? securePort : -1));
     options.waitForTerminationRequest();
+  }
   
-  server.stop();
-  server_secure.stop();
+  if (started)
+  {
+    OSS_LOG_NOTICE("Stopping HTTP service.");
+    server.stop();
+  }
+  
+  if (secure_started)
+  {
+    OSS_LOG_NOTICE("Stopping HTTPS service.");
+    server_secure.stop();
+  }
   
   OSS::OSS_deinit();
+  OSS_LOG_NOTICE("REST Server SHUTDOWN.");
   return 0;
 }

@@ -62,11 +62,6 @@ bool KVLevelDB::put(const std::string& key, const std::string& value)
   return _pDb->Put(leveldb::WriteOptions(), key, value).ok();
 }
 
-bool KVLevelDB::put(const std::string& key, const std::string& value, unsigned int expireInSeconds)
-{
-  return false;
-}
-
 bool KVLevelDB::get(const std::string& key, std::string& value)
 {
   return _pDb->Get(leveldb::ReadOptions(), key, &value).ok();

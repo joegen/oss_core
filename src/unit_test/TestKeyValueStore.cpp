@@ -33,7 +33,7 @@ RESTKeyValueStore::Client restkv_client_secure(restkvhost, restkv_secure_port, t
 
 TEST(KeyValueStoreTest, test_open_close)
 {
-  boost::filesystem::remove(kvfile);
+  boost::filesystem::remove_all(kvfile);
   ASSERT_FALSE(boost::filesystem::exists(kvfile));
   ASSERT_TRUE(kv.open(kvfile));
   ASSERT_TRUE(kv.isOpen());
@@ -41,7 +41,7 @@ TEST(KeyValueStoreTest, test_open_close)
   ASSERT_TRUE(boost::filesystem::exists(kvfile));
   ASSERT_TRUE(kv.close());
   ASSERT_FALSE(kv.isOpen());
-  boost::filesystem::remove(kvfile);
+  boost::filesystem::remove_all(kvfile);
   ASSERT_FALSE(boost::filesystem::exists(kvfile));
 
   //
@@ -164,7 +164,7 @@ TEST(KeyValueStoreTest, test_rest_init_auth)
 
 TEST(KeyValueStoreTest, test_rest_put_get_auth)
 { 
-  boost::filesystem::remove("people");
+  boost::filesystem::remove_all("people");
 
   int status = 0;
   

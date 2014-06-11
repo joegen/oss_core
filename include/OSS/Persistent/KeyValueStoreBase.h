@@ -29,6 +29,8 @@
 namespace OSS {
 namespace Persistent {
 
+#define PERSISTENT_STORE_EXPIRES_SUFFIX ".KV_EXPIRES"
+  
 struct KVRecord
 {
   std::string key;
@@ -74,11 +76,37 @@ public:
 
   bool put(const std::string& key, const std::string& value, unsigned int expireInSeconds)
   {
-    return _impl.put(key, value, expireInSeconds);
+    OSS::UInt64 expires = OSS::getTime() + (expireInSeconds*1000);
+    std::string expireString = OSS::string_from_number(expires);
+    std::string expireKey = key + PERSISTENT_STORE_EXPIRES_SUFFIX;
+  
+    if (!_impl.put(expireKey, expireString))
+      return false;
+    
+    return _impl.put(key, value);
   }
 
   bool get(const std::string& key, std::string& value)
   {
+    if (is_expired(key))
+    {
+      purge_expired(key);
+      return false;
+    }
+    
+    return _impl.get(key, value);
+  }
+  
+  bool get(const std::string& key, std::string& value, bool purgeExpired)
+  {
+    if (purgeExpired)
+    {
+      if (is_expired(key))
+      {
+        purge_expired(key);
+        return false;
+      }
+    }
     return _impl.get(key, value);
   }
 
@@ -117,7 +145,33 @@ public:
     return _impl.getPath();
   }
   
+  KV& getDB()
+  {
+    return _impl;
+  }
+  
 protected:
+  bool is_expired(const std::string& key)
+  {
+    std::string expireKey = key + PERSISTENT_STORE_EXPIRES_SUFFIX;
+
+    std::string expires;
+    if (!get(expireKey, expires, false))
+      return false;
+
+    OSS::UInt64 expireTime = OSS::string_to_number<OSS::UInt64>(expires);
+
+    return expireTime <= OSS::getTime();
+  }
+
+  bool purge_expired(const std::string& key)
+  {
+    std::string expireKey = key + PERSISTENT_STORE_EXPIRES_SUFFIX;
+    if (!del(key))
+      return false;
+    return del(expireKey);
+  }
+  
   KV _impl;  
 };
 

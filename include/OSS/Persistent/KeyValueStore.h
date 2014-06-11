@@ -23,11 +23,14 @@
 
 #include "OSS/Persistent/KeyValueStoreBase.h"
 #include "OSS/Persistent/KVUnqlite.h"
+#include "OSS/Persistent/KVLevelDB.h"
+
 
 namespace OSS {
 namespace Persistent {
+  typedef KeyValueStoreBase<OSS::Persistent::KVLevelDB> KeyValueStoreLevelDB;
   typedef KeyValueStoreBase<OSS::Persistent::KVUnqlite> KeyValueStoreUnqlite;
-  typedef KeyValueStoreUnqlite KeyValueStore;
+  typedef KeyValueStoreLevelDB KeyValueStore;
 } }
 
 
