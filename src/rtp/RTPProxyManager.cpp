@@ -223,7 +223,10 @@ void RTPProxyManager::recycleState()
             _sessionListMutex.lock();
             RTPProxySession::Ptr session = RTPProxySession::reconstructFromStateFile(this, currentFile);
             if (session)
-              _sessionList[session->getIdentifier()] = session;
+            {
+              _sessionList.insert(std::pair<std::string, RTPProxySession::Ptr>(session->getIdentifier(), session));
+            }
+            
             _sessionListMutex.unlock();
           }
         }

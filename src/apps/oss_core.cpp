@@ -185,9 +185,9 @@ void  daemonize(int argc, char** argv, bool& isDaemon)
      close(descriptor); /* close all descriptors we have inheritted from parent*/
    }
 
-   int h = open("/dev/null",O_RDWR); h = dup(h); h = dup(h); /* handle standard I/O */
-
    ::close(STDIN_FILENO);
+   ::close(STDOUT_FILENO);
+   ::close(STDERR_FILENO);
   }
 }
 

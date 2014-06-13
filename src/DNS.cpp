@@ -232,13 +232,23 @@ static bool ProcessDNSRecords(
       newRecord->pNext = 0;
       strcpy(newRecord->pName, pName);
 
+      bool hasPlaceHolder = false;
       if (*results == 0)
+      {
         *results = newRecord;
+        hasPlaceHolder = true;
+      }
       else if (lastRecord != 0)
+      {
         lastRecord->pNext = newRecord;
+        hasPlaceHolder = true;
+      }
 
-      lastRecord = newRecord;
-      newRecord = 0;
+      if (hasPlaceHolder)
+      {
+        lastRecord = newRecord;
+        newRecord = 0;
+      }
     }
   }
 

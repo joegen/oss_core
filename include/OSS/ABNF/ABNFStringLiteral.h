@@ -88,7 +88,7 @@ public:
           return t;
         }
       else if ((c == _value[i] - 0x20) || (c == _value[i] + 0x20))
-        if ( _value[i+1] != 0x00 )
+        if ( iterations > i + 1 && _value[i+1] != 0x00 )
         {
           t++;
           continue;

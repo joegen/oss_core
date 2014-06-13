@@ -71,6 +71,7 @@ namespace Net {
 
 const int PCAP_BUFFER_LENGTH = 1500;
 const int PCAP_TIMEOUT = 1000;
+const int SIZEOF_MAC = 6;
 #ifdef PF_PACKET
 # define HWINFO_DOMAIN PF_PACKET
 #else
@@ -147,7 +148,7 @@ bool Carp::getMacAddress(const std::string& ethInterface, unsigned char* hwaddr)
           (void) close(s);
           return false;
       }
-      memcpy(hwaddr, &ifr.ifr_hwaddr.sa_data, sizeof hwaddr);
+      memcpy(hwaddr, &ifr.ifr_hwaddr.sa_data, SIZEOF_MAC);
       (void) close(s);
   }
 #elif defined(HAVE_GETIFADDRS)
@@ -170,7 +171,7 @@ bool Carp::getMacAddress(const std::string& ethInterface, unsigned char* hwaddr)
                   return false;
               }
               ea = (struct ether_addr *) LLADDR(sadl);
-              memcpy(hwaddr, ea, sizeof hwaddr);
+              memcpy(hwaddr, ea, SIZEOF_MAC);
 
               return true;
           }
@@ -220,7 +221,7 @@ for(;;) {
       if (ioctl(s, SIOCGARP, &arpreq) != 0) {
         return false;
       }
-      memcpy(hwaddr, &arpreq.arp_ha.sa_data, sizeof hwaddr);
+      memcpy(hwaddr, &arpreq.arp_ha.sa_data, SIZEOF_MAC);
   }
 #endif
   return true;
@@ -228,7 +229,7 @@ for(;;) {
 
 bool Carp::sendGratuitousArp(const std::string& ethInterface, const std::string& ipAddress)
 {
-  unsigned char hwaddr[6]; /// include null termination byte
+  unsigned char hwaddr[14]; /// size of sa_data
   struct in_addr vaddr;
 
   if (!getMacAddress(ethInterface, hwaddr))
@@ -282,13 +283,13 @@ bool Carp::sendGratuitousArp(const std::string& ethInterface, const std::string&
    * http://wiki.ethereal.com/Gratuitous_ARP
    */
   arp[7] = 0x01;                                 /* request op */
-  memcpy(&arp[8], hwaddr, sizeof hwaddr);        /* Sender MAC */
+  memcpy(&arp[8], hwaddr, SIZEOF_MAC);        /* Sender MAC */
   memcpy(&arp[14], &vaddr.s_addr, (size_t) 4U);  /* Sender IP */
-  memcpy(&arp[18], hwaddr, sizeof hwaddr);       /* Target MAC */
+  memcpy(&arp[18], hwaddr, SIZEOF_MAC);       /* Target MAC */
   memcpy(&arp[24], &vaddr.s_addr, (size_t) 4U);  /* Target IP */
 
   memset(&eh, 0, sizeof eh);
-  memcpy(&eh.ether_shost, hwaddr, sizeof hwaddr);
+  memcpy(&eh.ether_shost, hwaddr, SIZEOF_MAC);
   memset(&eh.ether_dhost, 0xff, ETHER_ADDR_LEN);
   eh.ether_type = htons(ETHERTYPE_ARP);
 
