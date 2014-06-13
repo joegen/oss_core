@@ -122,9 +122,15 @@ bool Carp::getMacAddress(const std::string& ethInterface, unsigned char* hwaddr)
       if (strlen(interface) >= sizeof ifr.ifr_name)
       {
           OSS_LOG_ERROR("Carp::getMacAddress:  Interface name too long");
+          (void) close(s);
           return false;
       }
-      strncpy(ifr.ifr_name, interface, sizeof ifr.ifr_name);
+      
+      //
+      // buffer_size_warning: Calling strncpy with a maximum size argument of 16 bytes on destination array ifr.ifr_ifrn.ifrn_name of size 16 bytes might leave the destination string unterminated.
+      //
+      memcpy(ifr.ifr_name, interface, sizeof ifr.ifr_name);
+      
       if (ioctl(s, SIOCGIFHWADDR, &ifr) != 0)
       {
           OSS_LOG_ERROR("Carp::getMacAddress: Unable to get hardware info about an interface: " << strerror(errno))
@@ -138,9 +144,11 @@ bool Carp::getMacAddress(const std::string& ethInterface, unsigned char* hwaddr)
           break;
       default:
           OSS_LOG_ERROR("Carp::getMacAddress: Unknown hardware type " << (unsigned int) ifr.ifr_hwaddr.sa_family);
+          (void) close(s);
           return false;
       }
       memcpy(hwaddr, &ifr.ifr_hwaddr.sa_data, sizeof hwaddr);
+      (void) close(s);
   }
 #elif defined(HAVE_GETIFADDRS)
   {
@@ -220,7 +228,7 @@ for(;;) {
 
 bool Carp::sendGratuitousArp(const std::string& ethInterface, const std::string& ipAddress)
 {
-  unsigned char hwaddr[6];
+  unsigned char hwaddr[6]; /// include null termination byte
   struct in_addr vaddr;
 
   if (!getMacAddress(ethInterface, hwaddr))

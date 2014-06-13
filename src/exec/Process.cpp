@@ -267,7 +267,7 @@ bool Process::execute()
     if (tokens.size() >= 2)
     {
       OSS_LOG_INFO("Spawning " << _startupCommand);
-      char** argv = (char**)calloc((tokens.size()), sizeof(char **));
+      char** argv = (char**)calloc((tokens.size()+1), sizeof(char **));
       argv[0] = (char *) malloc(tokens[0].size()+1);
       strcpy( argv[0], tokens[0].c_str());
 
@@ -282,6 +282,7 @@ bool Process::execute()
       if (execv(tokens[0].c_str(), argv) == -1)
       {
         OSS_LOG_ERROR("Failed to execute " << _startupCommand << " ERROR: " << strerror(errno));
+        free(argv);
         return false;
       }
       free(argv);

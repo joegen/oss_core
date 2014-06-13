@@ -234,8 +234,7 @@ static bool ProcessDNSRecords(
 
       if (*results == 0)
         *results = newRecord;
-
-      if (lastRecord != 0)
+      else if (lastRecord != 0)
         lastRecord->pNext = newRecord;
 
       lastRecord = newRecord;

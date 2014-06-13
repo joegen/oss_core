@@ -740,9 +740,13 @@ inline void  ServiceOptions::daemonize(int argc, char** argv, bool isDaemon)
      close(descriptor); /* close all descriptors we have inheritted from parent*/
    }
 
-   int h = open("/dev/null",O_RDWR); dup(h); dup(h); /* handle standard I/O */
-
+   //
+   // int h = open("/dev/null",O_RDWR); dup(h); dup(h); /* handle standard I/O */
+   //
+   
    ::close(STDIN_FILENO);
+   ::close(STDOUT_FILENO);
+   ::close(STDERR_FILENO);
   }
 }
 

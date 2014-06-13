@@ -304,7 +304,8 @@ inline void Reader::MatchString(std::string& string, InputStream& inputStream)
             case 't':      string.push_back('\t');    break;
             case 'u':      // TODO: what do we do with this?
             default: {
-               std::string sMessage = "Unrecognized escape sequence found in string: \\" + c;
+               std::string sMessage = "Unrecognized escape sequence found in string: \\";
+               sMessage.push_back(c);
                throw ScanException(sMessage, inputStream.GetLocation());
             }
          }

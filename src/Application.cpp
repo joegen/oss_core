@@ -2302,10 +2302,17 @@ bool app_shell_command(const std::string& command, std::string& result)
   {
     int c = fgetc(fd);
     if (c != EOF)
+    {
       result.push_back((char)c);
+    }
     else
+    {
       pclose(fd);
+      break;
+    }
   }
+  
+  return true;
 #else
   return false;
 #endif
