@@ -249,6 +249,14 @@ static bool ProcessDNSRecords(
         lastRecord = newRecord;
         newRecord = 0;
       }
+      else
+      {
+        //
+        // This can never happen but we need to satisfy coverity scan.
+        //
+        free(newRecord);
+        newRecord = 0;
+      }
     }
   }
 
