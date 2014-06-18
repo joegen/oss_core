@@ -42,11 +42,16 @@ SIPTransportSession::SIPTransportSession() :
 {
 }
 
-SIPTransportSession::~SIPTransportSession()
+SIPTransportSession::SIPTransportSession(const SIPTransportSession&) :
+  _isReliableTransport(true),
+  _pDispatch(0),
+  _bytesTransferred(0),
+  _bytesRead(0),
+  _identifier(0)
 {
 }
 
-SIPTransportSession::SIPTransportSession(const SIPTransportSession&)
+SIPTransportSession::~SIPTransportSession()
 {
 }
 

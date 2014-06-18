@@ -59,6 +59,7 @@ struct Config
 {
   enum TargetType
   {
+    UNKNOWN,
     IP,
     HOST,
     SRV
@@ -69,7 +70,7 @@ struct Config
   std::string target;
   TargetType targetType;
   bool allowRelay;
-  Config() : port(5060){}
+  Config() : port(5060), targetType(UNKNOWN), allowRelay(false){}
 };
 
 

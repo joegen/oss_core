@@ -178,7 +178,7 @@ void ClassType::persist(const boost::filesystem::path& file)
 
 std::string ClassType::createSafeFileName(const char* str)
 {
-  if (!str && *str == '\0')
+  if (!str || *str == '\0')
     throw PersistenceException("null parameter input while calling std::string ClassType::createSafeFileName(const char* str)");
 
   char* buff = const_cast<char*>(str);

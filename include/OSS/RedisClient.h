@@ -781,8 +781,8 @@ public:
           return false;
         }
       }
-      if (client)
-        _pool[key.str()] = client;
+
+      _pool[key.str()] = client;
     }
     return true;
   }

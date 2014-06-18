@@ -228,6 +228,7 @@ public:
     connectTime = copy.connectTime;
     disconnectTime = copy.disconnectTime;
     sessionAge = copy.sessionAge;
+    expires = copy.expires;
   }
 
   void swap(SIPB2BDialogData& copy)
@@ -239,6 +240,7 @@ public:
     std::swap(connectTime, copy.connectTime);
     std::swap(disconnectTime, copy.disconnectTime);
     std::swap(sessionAge, copy.sessionAge);
+    std::swap(expires, copy.expires);
   }
 
   SIPB2BDialogData& operator=(const SIPB2BDialogData& copy)

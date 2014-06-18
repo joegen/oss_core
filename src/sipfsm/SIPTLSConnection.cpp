@@ -38,7 +38,8 @@ SIPTLSConnection::SIPTLSConnection(
     _tlsContext(tlsContext),
     _socket(ioService, _tlsContext),
     _connectionManager(manager),
-    _pRequest(0)
+    _pRequest(0),
+    _pDispatch(0)
 {
   _transportScheme = "tls";
 }

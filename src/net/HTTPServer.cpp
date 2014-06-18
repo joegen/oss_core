@@ -102,22 +102,26 @@ public:
 };
 
 HTTPServer::HTTPServer() :
+  _isSecure(false),
   _socketHandle(0),
   _secureSocketHandle(0),
   _serverHandle(0),
   _serverParamsHandle(0),
   _maxQueuedConnections(HTTP_SERVER_MAX_QUEUED_CONNECTIONS),
-  _maxThreads(HTTP_SERVER_MAX_THREADS)
+  _maxThreads(HTTP_SERVER_MAX_THREADS),
+  _port(0)
 {
 }
 
 HTTPServer::HTTPServer(int maxQueuedConnections, int maxThreads) :
+  _isSecure(false),
   _socketHandle(0),
   _secureSocketHandle(0),
   _serverHandle(0),
   _serverParamsHandle(0),
   _maxQueuedConnections(maxQueuedConnections),
-  _maxThreads(maxThreads)
+  _maxThreads(maxThreads),
+  _port(0)
 {
 }
 

@@ -69,7 +69,8 @@ void SIPWebSocketConnection::ServerReadWriteHandler::on_pong_timeout(websocketpp
 
 
 SIPWebSocketConnection::SIPWebSocketConnection(SIPWebSocketConnectionManager& manager):
-		_connectionManager(manager)
+		_connectionManager(manager),
+    _readExceptionCount(0)
 {
 	_transportScheme = "ws";
 }

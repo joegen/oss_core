@@ -32,7 +32,8 @@ static bool is_char(int c)
 SDPHeaderList::SDPHeaderList() :
   std::list<SDPHeader>(),
     _parserState(STATE_EXPECTING_NAME),
-   _exitName('\0')
+    _isValid(false),
+    _exitName('\0')
 {
 }
 
@@ -40,6 +41,7 @@ SDPHeaderList::SDPHeaderList() :
 SDPHeaderList::SDPHeaderList(const char* rawHeader, char exitName) :
    std::list<SDPHeader>(),
    _parserState(STATE_EXPECTING_NAME),
+   _isValid(false),
    _exitName(exitName)
 {
   parse(rawHeader);

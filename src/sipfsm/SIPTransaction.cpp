@@ -79,7 +79,19 @@ SIPTransaction::~SIPTransaction()
   OSS::log_debug(logMsg.str());
 }
 
-SIPTransaction::SIPTransaction(const SIPTransaction&)
+SIPTransaction::SIPTransaction(const SIPTransaction&) :
+  _type(TYPE_UNKNOWN),
+  _owner(0),
+  _transportService(0),
+  _state(TRN_STATE_IDLE),
+  _localAddress(),
+  _remoteAddress(),
+  _sendAddress(),
+  _dialogTarget(),
+  _isXOREncrypted(false),
+  _pParent(),
+  _isParent(false),
+  _hasTerminated(false)
 {
 }
 

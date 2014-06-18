@@ -210,7 +210,7 @@ pid_t Process::pollPid(const std::string& process, const std::string& pidFile, i
           procd << "/status";
           std::string procName;
 
-          if (getStatusHeader(procd.str().c_str(), "name", procName) && OSS::string_starts_with(process, procName.c_str()));
+          if (getStatusHeader(procd.str().c_str(), "name", procName) && OSS::string_starts_with(process, procName.c_str()))
           {
             return pid;
           }

@@ -51,6 +51,7 @@ ManagedDaemonRunner::ManagedDaemonRunner(
     _path(executablePath),
     _alias(alias),
     _runDirectory(runDirectory),
+    _maxRestart(maxRestart),
     _pProcess(0)
 {
   boost::filesystem::path path(_path.c_str());

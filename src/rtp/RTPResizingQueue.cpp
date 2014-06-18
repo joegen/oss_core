@@ -34,8 +34,8 @@ RTPResizingQueue::RTPResizingQueue() :
   _lastTimeSent(0),
   _packetizationBaseTime(0),
   _packetizationTargetTime(0),
-  _verbose(false)
-
+  _verbose(false),
+  _isResizing(false)
 {
 }
 
@@ -52,6 +52,7 @@ RTPResizingQueue::RTPResizingQueue(
     _lastTimeSent(0),
     _packetizationBaseTime(packetizationBaseTimeMillis),
     _packetizationTargetTime(packetizationTargetTimeMillis),
+    _verbose(false),
     _isResizing(false)
 
 {

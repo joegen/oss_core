@@ -278,7 +278,7 @@ void RTPProxySession::handleSDP(
        _lastSDPInAck = "";
        newState = "INVITE_WAITING_ANSWER_ACK_OR_PRACK";
     }
-    else if (requestType == requestType)
+    else if (requestType == UPDATE)
     {
       _state = UPDATE_WAITING_ANSWER;
       newState = "UPDATE_WAITING_ANSWER";
@@ -2298,7 +2298,11 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromRedis(RTPProxyManager* pMan
       pSession->_state = (State)record.state;
       pSession->_lastOfferIndex  = record.lastOfferIndex;
     }
-
+    else
+    {
+      return RTPProxySession::Ptr();
+    }
+    
     if (pSession->_hasOfferedAudioProxy)
     {
       pSession->_audio.data()._identifier = record.audio.data.identifier;

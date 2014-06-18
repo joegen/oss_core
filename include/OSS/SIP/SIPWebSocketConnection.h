@@ -172,7 +172,6 @@ private:
   mutable OSS::IPAddress _localAddress;
   mutable OSS::IPAddress _lastReadAddress;
 
-  bool _isServerTransport;
   int _readExceptionCount;
 };
 

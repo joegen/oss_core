@@ -46,7 +46,9 @@ SIPTransportService::SIPTransportService(SIPFSMDispatch* pDispatch):
   _wsEnabled(true),
   _tlsEnabled(false),
   _tcpPortBase(10000),
-  _tcpPortMax(20000)
+  _tcpPortMax(20000),
+  _wsPortBase(10000),
+  _wsPortMax(20000)
 {
 }
 

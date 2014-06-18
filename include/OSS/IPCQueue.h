@@ -230,6 +230,7 @@ public:
     _type(type),
     _key(-1),
     _fileName(fileName),
+    _qid(-1),
     _pReader(0),
     _pWriter(0)
   {
@@ -259,6 +260,7 @@ public:
   IPCQueue(key_t key, Type type) :
     _type(type),
     _key(key),
+    _qid(-1),
     _pReader(0),
     _pWriter(0)
   {

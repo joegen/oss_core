@@ -527,7 +527,8 @@ JSBase::JSBase(const std::string& contextName) :
   _processFunc(0),
   _requestTemplate(0),
   _globalTemplate(0),
-  _isInitialized(false)
+  _isInitialized(false),
+  _extensionGlobals(0)
 {
   
 

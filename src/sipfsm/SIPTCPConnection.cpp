@@ -39,6 +39,7 @@ SIPTCPConnection::SIPTCPConnection(
     _socket(ioService),
     _resolver(ioService),
     _connectionManager(manager),
+  _pDispatch(0),
   _readExceptionCount(0)
 {
   _transportScheme = "tcp";

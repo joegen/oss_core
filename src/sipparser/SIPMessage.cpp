@@ -51,7 +51,8 @@ SIPMessage::SIPMessage() :
   _headerOffSet(0),
   _expectedBodyLen(0),
   _isResponse(boost::indeterminate),
-  _isRequest(boost::indeterminate)
+  _isRequest(boost::indeterminate),
+  _userData(0)
 {
   _idleBuffer.reserve(4);
 }
@@ -65,7 +66,8 @@ SIPMessage::SIPMessage(const std::string& packet) :
   _headerOffSet(0),
   _expectedBodyLen(0),
   _isResponse(boost::indeterminate),
-  _isRequest(boost::indeterminate)
+  _isRequest(boost::indeterminate),
+  _userData(0)
 {
   _data = packet;
   parse();
@@ -85,6 +87,8 @@ SIPMessage::SIPMessage(const SIPMessage& packet)
   _expectedBodyLen = packet._expectedBodyLen;
   _isResponse = packet._isResponse;
   _isRequest = packet._isRequest;
+  _userData = packet._userData;
+  _consumeState = IDLE;
 }
 
 void SIPMessage::swap(SIPMessage& packet)
