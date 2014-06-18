@@ -88,16 +88,22 @@ bool KVLevelDB::getKeys(Keys& keys)
 
 bool KVLevelDB::getKeys(const std::string& filter, Keys& keys)
 {
+  if (filter == "*" || filter.empty())
+    return getKeys(keys);
+  
+  std::string startKey = OSS::string_left(filter, filter.size() - 1);
+  
   leveldb::Iterator* it = _pDb->NewIterator(leveldb::ReadOptions());
-  for (it->SeekToFirst(); it->Valid(); it->Next()) 
+  for (it->Seek(startKey); it->Valid(); it->Next()) 
   {
     std::string key = it->key().ToString();
     bool validKey = true;
-    if (!filter.empty() && filter != "*")
-      validKey = OSS::string_wildcard_compare(filter.c_str(), key);
+    validKey = OSS::string_wildcard_compare(filter.c_str(), key);
 
     if (validKey)
       keys.push_back(key);
+    else
+      break;
   }
   
   bool status = it->status().ok();
@@ -123,8 +129,13 @@ bool KVLevelDB::getRecords(Records& records)
 
 bool KVLevelDB::getRecords(const std::string& filter, Records& records)
 {
+  if (filter == "*" || filter.empty())
+    return getRecords(records);
+  
+  std::string key = OSS::string_left(filter, filter.size() - 1);
+  
   leveldb::Iterator* it = _pDb->NewIterator(leveldb::ReadOptions());
-  for (it->SeekToFirst(); it->Valid(); it->Next()) 
+  for (it->Seek(key); it->Valid(); it->Next()) 
   {
     Record record;
     record.key = it->key().ToString();
@@ -136,6 +147,10 @@ bool KVLevelDB::getRecords(const std::string& filter, Records& records)
     {
       record.value = it->value().ToString();
       records.push_back(record);
+    }
+    else
+    {
+      break;
     }
   }
   
