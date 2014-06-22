@@ -9,6 +9,7 @@
     * RTP Proxy
     * CARP High Availability
     * Session Border Controller Implementation
+    * REST Persistence Store
 
 ## Prerequisites (CentOS or Fedora)
 -----------------------------------
