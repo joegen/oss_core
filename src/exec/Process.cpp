@@ -76,9 +76,11 @@ static bool getStatusHeader(const std::string& file, const std::string& name_, s
   std::string headerName = name_;
   boost::to_lower(headerName);
 
-  std::string line;
-  while(std::getline(procif, line))
+  
+  while(!procif.eof() && !procif.bad())
   {
+    std::string line;
+    std::getline(procif, line);
     std::string name;
     std::string value;
     if (headerSplit(line, name, value))
@@ -90,7 +92,6 @@ static bool getStatusHeader(const std::string& file, const std::string& name_, s
         return true;
       }
     }
-    line.clear();
   }
 
   return false;
@@ -106,9 +107,10 @@ static bool getStatusHeader(const std::string& file, const std::string& name_, s
   boost::to_lower(headerName);
 
   values_.clear();
-  std::string line;
-  while(std::getline(procif, line))
+  while(!procif.eof() && !procif.bad())
   {
+    std::string line;
+    std::getline(procif, line);
     std::string name;
     std::string value;
     if (headerSplit(line, name, value))
