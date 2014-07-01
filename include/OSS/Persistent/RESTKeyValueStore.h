@@ -106,7 +106,7 @@ protected:
   
   void sendRestRecordsAsJson(const std::vector<std::string>& pathVector, KVRecords& records, Response& response);
   
-  void createJSONDocument(const std::vector<std::string>& pathVector, std::size_t depth, KVRecords& records, std::ostream& ostr);
+  void createJSONDocument(const std::vector<std::string>& pathVector, std::size_t depth, KVRecords& records, std::ostream& ostr, bool sortNeeded);
   
   void sendRestRecordsAsValuePairs(const std::string& path, const KVRecords& records, Response& response);
   

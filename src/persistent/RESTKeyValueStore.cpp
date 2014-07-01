@@ -343,7 +343,7 @@ int RESTKeyValueStore::restGET(const std::string& path, std::ostream& ostr)
     return HTTPResponse::HTTP_NOT_FOUND;
   }
  
-  createJSONDocument(tokens, tokens.size() - 1, records, ostr);
+  createJSONDocument(tokens, tokens.size() - 1, records, ostr, false);
   
   return HTTPResponse::HTTP_OK;
 }
@@ -438,14 +438,16 @@ void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response
   response.send();
 }
 
-void RESTKeyValueStore::createJSONDocument(const std::vector<std::string>& pathVector, std::size_t depth, KVRecords& unsorted, std::ostream& ostr)
+void RESTKeyValueStore::createJSONDocument(const std::vector<std::string>& pathVector, std::size_t depth, KVRecords& unsorted, std::ostream& ostr, bool sortNeeded)
 {
   //
   // sort the records
   //
   std::list<KVRecord> records;
   std::copy( unsorted.begin(), unsorted.end(), std::back_inserter(records));
-  records.sort(compare_records);
+  
+  if (sortNeeded)
+    records.sort(compare_records);
   
  
   //
@@ -463,7 +465,7 @@ void RESTKeyValueStore::sendRestRecordsAsJson(const std::vector<std::string>& pa
   response.setChunkedTransferEncoding(true);
   response.setContentType("text/json");
   std::ostream& ostr = response.send();
-  createJSONDocument(pathVector, pathVector.size() - 1, records, ostr);
+  createJSONDocument(pathVector, pathVector.size() - 1, records, ostr, false);
 }
 
 
