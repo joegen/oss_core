@@ -25,6 +25,14 @@
 namespace OSS {
 namespace Net {
 
+  
+static std::time_t to_time_t(boost::posix_time::ptime t)
+{
+  boost::posix_time::ptime epoch(boost::gregorian::date(1970,1,1));
+  boost::posix_time::time_duration::sec_type x = (t - epoch).total_seconds();
+  return time_t(x);
+}
+
 
 AccessControl::AccessControl() :
   _enabled(false),
@@ -32,10 +40,24 @@ AccessControl::AccessControl() :
   _thresholdViolationRate(50),
   _currentIterationCount(0),
   _autoBanThresholdViolators(true),
-  _banLifeTime(0)
+  _banLifeTime(0),
+  _pStore(0)
 {
   _lastTime = boost::posix_time::microsec_clock::local_time();
 }
+
+AccessControl::AccessControl(OSS::Persistent::KeyValueStore* pStore) :
+  _enabled(false),
+  _packetsPerSecondThreshold(100),
+  _thresholdViolationRate(50),
+  _currentIterationCount(0),
+  _autoBanThresholdViolators(true),
+  _banLifeTime(0),
+  _pStore(pStore)
+{
+  _lastTime = boost::posix_time::microsec_clock::local_time();
+}
+
 
 AccessControl::~AccessControl()
 {
@@ -43,6 +65,18 @@ AccessControl::~AccessControl()
 
 void AccessControl::logPacket(const boost::asio::ip::address& source, std::size_t bytesRead)
 {
+   /****************************************************************************
+    * The packet rate ratio allows the transport to detect a potential DoS     *
+    * attack.  It works by detecting the packet read rate per second as        *
+    * designated by the upper limit.  If the value of packet rate is 50/100,   *
+    * the maximum packet rate before the SBC raises the alert level if a       *
+    * potential denial of service attack is 100 packets per second.            *
+    * When this happens, the transport layer checks if there is a particular   *
+    * IP that is sending more than its allowable rate of 50 packets per second.*
+    * If the sender is violating the threshold, it will be banned for 1 hour   *
+    * which is the third parameter of 3600 seconds.                            *
+    ****************************************************************************/
+  
   if (!_enabled)
     return;
   _packetCounterMutex.lock();
@@ -63,7 +97,7 @@ void AccessControl::logPacket(const boost::asio::ip::address& source, std::size_
       //
       // We got a ratelimit violation
       //
-      OSS_LOG_WARNING("ALERT: Threshold Violation Detected.  Rate >= " << _packetsPerSecondThreshold);
+      OSS_LOG_WARNING("ALERT: Threshold Violation Detected.  Rate" << _currentIterationCount << " >= " << _packetsPerSecondThreshold);
 
       std::size_t watermark = 0;
       boost::asio::ip::address suspect;
@@ -74,19 +108,32 @@ void AccessControl::logPacket(const boost::asio::ip::address& source, std::size_
         {
           watermark = iter->second;
           suspect = iter->first;
+          
+          if (watermark >= _thresholdViolationRate && _autoBanThresholdViolators )
+          {
+            if (!isWhiteListed(suspect))
+            {
+              OSS_LOG_WARNING("ALERT: Threshold Violator Address = " << suspect.to_string() <<
+                " Packets sent within the last second is " << watermark
+                << ". Violator is now in jail for a maximum of " << _banLifeTime << " seconds.");
+              _blackList[suspect] = now;
+            }
+            else
+            {
+              OSS_LOG_WARNING("ALERT: Threshold Violator Address = " << suspect.to_string() <<
+                " Packets sent within the last second is " << watermark
+                << ". Violator is TRUSTED and will be allowed to bombard.");
+              _blackList[suspect] = now;
+            }
+          }
+          else if (watermark >= _thresholdViolationRate && !_autoBanThresholdViolators )
+          {
+            OSS_LOG_WARNING("ALERT: Threshold Violator Address = " << suspect.to_string() <<
+                " Packets sent within the last second is " << watermark
+                << ". Automatic ban is disabled.  Allowing this IP to bombard.");
+          }
         }
-      }
-
-      if (watermark >= _thresholdViolationRate && _autoBanThresholdViolators)
-      {
-        if (_whiteList.find(source) == _whiteList.end())
-        {
-          OSS_LOG_WARNING("ALERT: Threshold Violator Address = " << source.to_string() <<
-            " Packets sent within the last second is " << watermark
-            << ". Violator is now in jail for a maximum of " << _banLifeTime << " seconds.");
-          _blackList[source] = now;
-        }
-      }
+      }     
     }
     //
     // Reset

@@ -29,6 +29,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include "OSS/Persistent/KeyValueStore.h"
 
 
 namespace OSS {
@@ -39,6 +40,9 @@ class AccessControl
 public:
 
   AccessControl();
+  
+  AccessControl(OSS::Persistent::KeyValueStore* pStore);
+  
   ~AccessControl();
 
   void logPacket(const boost::asio::ip::address& source, std::size_t bytesRead);
@@ -84,6 +88,7 @@ private:
   std::set<std::string> _networkWhiteList;
   std::map<boost::asio::ip::address, boost::posix_time::ptime> _blackList;
   boost::posix_time::ptime _lastTime;
+  OSS::Persistent::KeyValueStore* _pStore;
 };
 
 //
