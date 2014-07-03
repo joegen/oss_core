@@ -71,7 +71,7 @@ public:
 
   bool& enabled();
 
-  void whiteListAddress(const boost::asio::ip::address& address);
+  void whiteListAddress(const boost::asio::ip::address& address, bool removeFromBlackList = true);
   void whiteListNetwork(const std::string& network);
   bool isWhiteListed(const boost::asio::ip::address& address) const;
   bool isWhiteListedNetwork(const boost::asio::ip::address& address) const;

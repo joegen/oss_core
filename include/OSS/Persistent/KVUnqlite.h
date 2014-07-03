@@ -67,6 +67,14 @@ public:
   bool delKeys(const std::string& filter);
   
   const std::string getPath() const;
+  
+  //
+// Inlines
+//
+
+const std::string& getKeyPrefix() const;
+  
+void setKeyPrefix(const std::string& keyPrefix);
 private:
 
   void log_error();
@@ -74,6 +82,7 @@ private:
   OSS_HANDLE _pDbHandle;
 
   std::string _path;
+  std::string _keyPrefix;
 };
 
 
@@ -99,6 +108,20 @@ inline bool KVUnqlite::getKeys(Keys& keys)
 inline bool KVUnqlite::getRecords(Records& records)
 {
   return getRecords("", records);
+}
+
+//
+// Inlines
+//
+
+inline const std::string& KVUnqlite::getKeyPrefix() const
+{
+  return _keyPrefix;
+}
+  
+inline void KVUnqlite::setKeyPrefix(const std::string& keyPrefix)
+{
+  _keyPrefix = keyPrefix;
 }
 
 } } // OSS::Persistent

@@ -150,6 +150,16 @@ public:
     return _impl;
   }
   
+  const std::string& getKeyPrefix() const
+  {
+    return _impl.getKeyPrefix();
+  }
+  
+  void setKeyPrefix(const std::string& keyPrefix)
+  {
+    _impl.setKeyPrefix(keyPrefix);
+  }
+  
 protected:
   bool is_expired(const std::string& key)
   {

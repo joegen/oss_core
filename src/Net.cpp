@@ -161,7 +161,7 @@ boost::asio::ip::tcp::resolver& net_resolver()
 bool socket_address_cidr_verify(const std::string& ip, const std::string& cidr)
 {
   std::vector<std::string> cidr_tokens;
-  cidr_tokens = OSS::string_tokenize(cidr, "/");
+  cidr_tokens = OSS::string_tokenize(cidr, "/-");
 
   unsigned bits = 24;
   std::string start_ip;

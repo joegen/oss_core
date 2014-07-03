@@ -67,9 +67,13 @@ public:
   
   const std::string getPath() const;
   
+  const std::string& getKeyPrefix() const;
+  
+  void setKeyPrefix(const std::string& keyPrefix);
 private:
   leveldb::DB* _pDb;
   std::string _path;
+  std::string _keyPrefix;
 };
 
 
@@ -77,7 +81,15 @@ private:
 // Inlines
 //
 
-
+inline const std::string& KVLevelDB::getKeyPrefix() const
+{
+  return _keyPrefix;
+}
+  
+inline void KVLevelDB::setKeyPrefix(const std::string& keyPrefix)
+{
+  _keyPrefix = keyPrefix;
+}
 
 } } // OSS::Persistent
 
