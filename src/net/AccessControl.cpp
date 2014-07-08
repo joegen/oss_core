@@ -25,10 +25,10 @@
 namespace OSS {
 namespace Net {
 
-static const std::string DOCUMENT_PREFIX = "/root/system-config";
-static const std::string BANNED_PREFIX = "/acc/banned/";
-static const std::string TRUSTED_PREFIX = "/acc/trustedip/";
-static const std::string TRUSTED_NET_PREFIX = "/acc/trustednet/";
+static const std::string DOCUMENT_PREFIX = "/root/access-control";
+static const std::string BANNED_PREFIX = "/banned/";
+static const std::string TRUSTED_PREFIX = "/trustedip/";
+static const std::string TRUSTED_NET_PREFIX = "/trustednet/";
 static const std::string DOCUMENT_PREFIX_BANNED = DOCUMENT_PREFIX + BANNED_PREFIX;
 static const std::string DOCUMENT_PREFIX_TRUSTED = DOCUMENT_PREFIX + TRUSTED_PREFIX;
 static const std::string DOCUMENT_PREFIX_TRUSTED_NET = DOCUMENT_PREFIX + TRUSTED_NET_PREFIX;
@@ -38,7 +38,7 @@ static std::string get_prefix(OSS::Persistent::KeyValueStore* pStore, const std:
 {
   if (pStore && !pStore->getKeyPrefix().empty())
   {
-    if (OSS::string_ends_with(pStore->getKeyPrefix(), "/"))
+    if (!OSS::string_ends_with(pStore->getKeyPrefix(), "/"))
       return pStore->getKeyPrefix() + prefix;
     else
       return OSS::string_left(pStore->getKeyPrefix(), pStore->getKeyPrefix().length() - 1) + prefix;
@@ -66,6 +66,17 @@ static std::time_t to_time_t(const boost::posix_time::ptime& t)
   boost::posix_time::ptime epoch(boost::gregorian::date(1970,1,1));
   boost::posix_time::time_duration::sec_type x = (t - epoch).total_seconds();
   return time_t(x);
+}
+
+static void get_path_vector(const std::string& path, std::vector<std::string>& pathVector)
+{
+  std::vector<std::string> tokens = OSS::string_tokenize(path, "/");
+  
+  for (std::vector<std::string>::const_iterator iter = tokens.begin(); iter != tokens.end(); iter++)
+  {
+    if (!iter->empty())
+      pathVector.push_back(*iter);
+  }
 }
 
 AccessControl::AccessControl() :
@@ -97,7 +108,7 @@ AccessControl::~AccessControl()
 {
 }
 
-void AccessControl::logPacket(const boost::asio::ip::address& source, std::size_t bytesRead)
+void AccessControl::logPacket(const boost::asio::ip::address& source, std::size_t bytesRead, ViolationReport* pReport)
 {
    /****************************************************************************
     * The packet rate ratio allows the transport to detect a potential DoS     *
@@ -133,6 +144,9 @@ void AccessControl::logPacket(const boost::asio::ip::address& source, std::size_
       //
       OSS_LOG_WARNING("ALERT: Threshold Violation Detected.  Rate" << _currentIterationCount << " >= " << _packetsPerSecondThreshold);
 
+      if (pReport)
+        pReport->thresholdViolated = true;
+      
       std::size_t watermark = 0;
       boost::asio::ip::address suspect;
       for (std::map<boost::asio::ip::address, unsigned int>::iterator iter = _packetCounter.begin();
@@ -151,6 +165,9 @@ void AccessControl::logPacket(const boost::asio::ip::address& source, std::size_
                 " Packets sent within the last second is " << watermark
                 << ". Violator is now in jail for a maximum of " << _banLifeTime << " seconds.");
               banAddress(suspect);
+              
+              if (pReport)
+                pReport->violators.push_back(suspect.to_string());
             }
             else
             {
@@ -370,12 +387,20 @@ bool AccessControl::isWhiteListedNetwork(const boost::asio::ip::address& address
   else
   {
     OSS::Persistent::KVRecords records;
-    _pStore->getRecords(get_trusted_net_prefix(_pStore), records);
+    std::string filter = get_trusted_net_prefix(_pStore) + "*";
+    _pStore->getRecords(filter, records);
     
     for (OSS::Persistent::KVRecords::iterator iter = records.begin(); iter != records.end(); iter++)
     {
-      if (OSS::socket_address_cidr_verify(ipAddress, iter->key))
-        return true;
+      std::vector<std::string> keyVector;
+      get_path_vector(iter->key, keyVector);
+      if (!keyVector.empty())
+      {
+        std::string net = keyVector.back();
+
+        if (OSS::socket_address_cidr_verify(ipAddress, net))
+          return true;
+      }
     }
   }
   

@@ -39,17 +39,30 @@ class AccessControl
 {
 public:
 
+  struct ViolationReport
+  {
+    bool thresholdViolated;
+    std::vector<std::string> violators;
+    ViolationReport() : thresholdViolated(false){};
+  };
+  
   AccessControl();
   
   AccessControl(OSS::Persistent::KeyValueStore* pStore);
   
   ~AccessControl();
 
-  void logPacket(const boost::asio::ip::address& source, std::size_t bytesRead);
+  void logPacket(const boost::asio::ip::address& source, std::size_t bytesRead, ViolationReport* pReport = 0);
+  
+  void logPacket(const std::string& source, std::size_t bytesRead, ViolationReport* pReport = 0);
 
   bool isBannedAddress(const boost::asio::ip::address& source);
+  
+  bool isBannedAddress(const std::string& source);
 
   void banAddress(const boost::asio::ip::address& source);
+  
+  void banAddress(const std::string& source);
 
   void clearAddress(const boost::asio::ip::address& source, bool addToWhiteList);
 
@@ -72,9 +85,18 @@ public:
   bool& enabled();
 
   void whiteListAddress(const boost::asio::ip::address& address, bool removeFromBlackList = true);
+  
+  void whiteListAddress(const std::string& address, bool removeFromBlackList = true);
+  
   void whiteListNetwork(const std::string& network);
+  
   bool isWhiteListed(const boost::asio::ip::address& address) const;
+  
+  bool isWhiteListed(const std::string& address) const;
+  
   bool isWhiteListedNetwork(const boost::asio::ip::address& address) const;
+  
+  bool isWhiteListedNetwork(const std::string& address) const;
 private:
   bool _enabled;
   unsigned long _packetsPerSecondThreshold;
@@ -140,7 +162,35 @@ inline int AccessControl::getBanLifeTime() const
   return _banLifeTime;
 }
 
+inline void AccessControl::banAddress(const std::string& source)
+{
+  banAddress(boost::asio::ip::address::from_string(source));
+}
 
+inline bool AccessControl::isBannedAddress(const std::string& source)
+{
+  return isBannedAddress(boost::asio::ip::address::from_string(source));
+}
+
+inline void AccessControl::whiteListAddress(const std::string& address, bool removeFromBlackList)
+{
+  whiteListAddress(boost::asio::ip::address::from_string(address), removeFromBlackList);
+}
+
+inline bool AccessControl::isWhiteListed(const std::string& address) const
+{
+  return isWhiteListed(boost::asio::ip::address::from_string(address));
+}
+
+inline bool AccessControl::isWhiteListedNetwork(const std::string& address) const
+{
+  return isWhiteListedNetwork(boost::asio::ip::address::from_string(address));
+}
+
+inline void AccessControl::logPacket(const std::string& source, std::size_t bytesRead, ViolationReport* pReport)
+{
+  logPacket(boost::asio::ip::address::from_string(source), bytesRead, pReport);
+}
 
 } } // OSS::SIP
 
