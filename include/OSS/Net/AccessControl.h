@@ -97,6 +97,8 @@ public:
   bool isWhiteListedNetwork(const boost::asio::ip::address& address) const;
   
   bool isWhiteListedNetwork(const std::string& address) const;
+  
+  void setPersistentStore(OSS::Persistent::KeyValueStore* pStore);
 private:
   bool _enabled;
   unsigned long _packetsPerSecondThreshold;
@@ -190,6 +192,11 @@ inline bool AccessControl::isWhiteListedNetwork(const std::string& address) cons
 inline void AccessControl::logPacket(const std::string& source, std::size_t bytesRead, ViolationReport* pReport)
 {
   logPacket(boost::asio::ip::address::from_string(source), bytesRead, pReport);
+}
+
+inline void AccessControl::setPersistentStore(OSS::Persistent::KeyValueStore* pStore)
+{
+  _pStore = pStore;
 }
 
 } } // OSS::SIP

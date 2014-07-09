@@ -38,6 +38,7 @@
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 #include "OSS/SIP/B2BUA/SIPB2BHandler.h"
 #include "OSS/SIP/B2BUA/SIPB2BUserAgentHandlerList.h"
+#include "OSS/Persistent/RESTKeyValueStore.h"
 
 
 namespace OSS {
@@ -330,7 +331,7 @@ public:
   void addUserAgentHandler(SIPB2BUserAgentHandler* pHandler);
     /// Register a user agent handler
 
-   bool registerPlugin(const std::string& name, const std::string& path);
+  bool registerPlugin(const std::string& name, const std::string& path);
     /// Register a plugin.
     ///
     /// This function registers a UserAgent handler derrived from
@@ -339,6 +340,13 @@ public:
     /// If a handler "handled" the transaction, the scripting layer
     /// will no longer process the transaction and instead, let the handler
     /// respond to the transaction.
+  
+  void setKeyValueStore(OSS::Persistent::RESTKeyValueStore* pKeyStore);
+    /// Set the key value store to be used for persisting some states
+  
+  OSS::Persistent::RESTKeyValueStore* getKeyValueStore();
+    /// Returns a pointer to the key value store
+   
 protected:
   void handleRequest(
     const OSS::SIP::SIPMessage::Ptr& pMsg, 
@@ -410,6 +418,11 @@ private:
   //
   SIPB2BUserAgentHandlerList _userAgentHandler;
   SIPB2BUserAgentHandlerLoader _pluginLoader;
+  
+  ///
+  /// REST Key Value Store
+  ///
+  OSS::Persistent::RESTKeyValueStore* _pKeyStore;
 };
 
 //
@@ -503,6 +516,10 @@ inline void SIPB2BTransactionManager::registerDefaultHandler(SIPB2BHandler* pDef
   _pDefaultHandler = pDefaultHandler;
 }
 
+inline OSS::Persistent::RESTKeyValueStore* SIPB2BTransactionManager::getKeyValueStore()
+{
+  return _pKeyStore;
+}
 
 
 } } } // OSS::SIP::B2BUA

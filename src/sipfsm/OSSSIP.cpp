@@ -47,7 +47,8 @@ OSSSIP::OSSSIP() :
   _tlsListeners(),
   _tlsCertFile(),
   _tlsDiffieHellmanParamFile(),
-  _tlsPassword()
+  _tlsPassword(),
+  _pKeyStore(0)
 {
 }
 
@@ -468,6 +469,13 @@ void OSSSIP::initTransportFromConfig(const boost::filesystem::path& cfgFile)
         SIPTransportSession::rateLimit().setPacketsPerSecondThreshold(packetsPerSecondThreshold);
         SIPTransportSession::rateLimit().setThresholdViolationRate(thresholdViolationRate);
         SIPTransportSession::rateLimit().setBanLifeTime(banLifeTime);
+        
+        if (_pKeyStore)
+        {
+          OSS::Persistent::KeyValueStore* pAccessControl = _pKeyStore->getStore("/root/access-control", true);
+          SIPTransportSession::rateLimit().setPersistentStore(pAccessControl);
+        }
+        
         OSS_LOG_INFO("Enforcing packet rate limit = " << packetRateRatio);
       }
 

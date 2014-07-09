@@ -46,6 +46,7 @@
 #include "OSS/SIP/SIPTransportSession.h"
 #include "OSS/SIP/SIPTransaction.h"
 #include "OSS/SIP/SIPTransportService.h"
+#include "OSS/Persistent/RESTKeyValueStore.h"
 
 
 namespace OSS {
@@ -255,6 +256,11 @@ public:
   SIPTransportService& transport();
     /// Return a reference to the transport service
   
+  void setKeyValueStore(OSS::Persistent::RESTKeyValueStore* pKeyStore);
+    /// Set the key value store to be used for persisting some states
+  
+  OSS::Persistent::RESTKeyValueStore* getKeyValueStore();
+    /// Returns a pointer to the key value store
 private:
 
   //
@@ -277,6 +283,11 @@ private:
   std::string _tlsCertFile;
   std::string _tlsDiffieHellmanParamFile;
   std::string _tlsPassword;
+  
+  //
+  // REST Key Value Store
+  //
+  OSS::Persistent::RESTKeyValueStore* _pKeyStore;
 };
 
 typedef OSSSIP SIPStack;
@@ -349,6 +360,17 @@ inline SIPTransportService& OSSSIP::transport()
 {
   return _fsmDispatch.transport();
 }
+
+inline void OSSSIP::setKeyValueStore(OSS::Persistent::RESTKeyValueStore* pKeyStore)
+{
+  _pKeyStore = pKeyStore;
+}
+
+inline OSS::Persistent::RESTKeyValueStore* OSSSIP::getKeyValueStore()
+{
+  return _pKeyStore; 
+}
+    /// Returns a pointer to the key value store
 
 } } // OSS::SIP
 #endif // SIP_OSSSIP_INCLUDED
