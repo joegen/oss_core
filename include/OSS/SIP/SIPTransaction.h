@@ -97,7 +97,7 @@ public:
     /// networks with complex routing rules.
     ///
     /// The remote address must be in the form of an IP address.
-    /// OSSSIP supports both IPV4 and IPV6 destinations.
+    /// SIPStack supports both IPV4 and IPV6 destinations.
     /// DNS lookup will not be performed by the transport layer.
     /// Thus, this method expects that the remote address has 
     /// already been resolved using the mechanisms exposed by
@@ -122,7 +122,7 @@ public:
     /// SIP (RESPONSE) messages to the network.  
     ///
     /// For UDP, The remote address must be in the form of an IP address.
-    /// OSSSIP supports both IPV4 and IPV6 destinations.
+    /// SIPStack supports both IPV4 and IPV6 destinations.
     /// DNS lookup will not be performed by the transport layer.
     /// Thus, this method expects that the remote address has 
     /// already been resolved using the mechanisms exposed by

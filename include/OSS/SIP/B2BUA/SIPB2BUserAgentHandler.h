@@ -25,7 +25,7 @@
 #include <boost/function.hpp>
 #include <Poco/ClassLoader.h>
 #include <Poco/ClassLibrary.h>
-#include "OSS/SIP/OSSSIP.h"
+#include "OSS/SIP/SIPStack.h"
 
 
 #define BEGIN_MANIFEST POCO_BEGIN_MANIFEST

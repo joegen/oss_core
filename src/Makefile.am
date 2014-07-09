@@ -8,7 +8,6 @@ if ENABLE_TURN
 endif
 corelibs += liboss_core.la
 
-
 lib_LTLIBRARIES = $(corelibs)
 
 localedir = $(datadir)/locale
@@ -320,7 +319,7 @@ liboss_core_la_SOURCES =  \
     sipfsm/SIPNistPool.cpp \
     sipfsm/SIPFSMDispatch.cpp \
     sipfsm/SIPTLSConnectionManager.cpp \
-    sipfsm/OSSSIP.cpp \
+    sipfsm/SIPStack.cpp \
     sipfsm/SIPListener.cpp \
     sipfsm/SIPTransportSession.cpp \
     sipfsm/SIPFsm.cpp \

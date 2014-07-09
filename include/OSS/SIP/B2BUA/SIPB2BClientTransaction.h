@@ -18,8 +18,8 @@
 //
 
 
-#ifndef SIP_OSSSIPClientTransaction_INCLUDED
-#define SIP_OSSSIPClientTransaction_INCLUDED
+#ifndef SIP_SIPStackClientTransaction_INCLUDED
+#define SIP_SIPStackClientTransaction_INCLUDED
 
 
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
@@ -66,5 +66,5 @@ public:
 
 } } } // OSS::SIP
 
-#endif //SIP_OSSSIPClientTransaction_INCLUDED
+#endif //SIP_SIPStackClientTransaction_INCLUDED
 

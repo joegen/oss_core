@@ -17,8 +17,8 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#ifndef SIP_OSSSIPB2BTransactionManager_INCLUDED
-#define SIP_OSSSIPB2BTransactionManager_INCLUDED
+#ifndef SIP_SIPStackB2BTransactionManager_INCLUDED
+#define SIP_SIPStackB2BTransactionManager_INCLUDED
 
 
 #include <list>
@@ -33,7 +33,7 @@
 #include "OSS/Thread.h"
 #include "OSS/SIP/B2BUA/B2BUA.h"
 #include "OSS/SIP/SIP.h"
-#include "OSS/SIP/OSSSIP.h"
+#include "OSS/SIP/SIPStack.h"
 #include "OSS/SIP/SIPTransaction.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 #include "OSS/SIP/B2BUA/SIPB2BHandler.h"
@@ -239,7 +239,7 @@ public:
     /// events that are not handled by specific message handlers
     ///
 
-  OSSSIP& stack();
+  SIPStack& stack();
     /// Returns a direct reference to the SIP Stack
 
   OSS::thread_pool& threadPool();
@@ -402,7 +402,7 @@ public:
  
 private:
   OSS::thread_pool _threadPool;
-  OSSSIP _stack;
+  SIPStack _stack;
   OSS::mutex_critic_sec _csDialogsMutex;
   bool _useSourceAddressForResponses;
   MessageHandlers _handlers;
@@ -429,7 +429,7 @@ private:
 // Inlines
 //
 
-inline OSSSIP& SIPB2BTransactionManager::stack()
+inline SIPStack& SIPB2BTransactionManager::stack()
 {
   return _stack;
 }
@@ -473,7 +473,7 @@ inline bool SIPB2BTransactionManager::getExternalAddress(
     const OSS::IPAddress& internalIp,
     std::string& externalIp) const
 {
-  return const_cast<SIPTransportService&>(const_cast<OSSSIP&>(_stack).transport()).getExternalAddress(internalIp, externalIp);
+  return const_cast<SIPTransportService&>(const_cast<SIPStack&>(_stack).transport()).getExternalAddress(internalIp, externalIp);
 }
 
 inline bool SIPB2BTransactionManager::getExternalAddress(
@@ -481,14 +481,14 @@ inline bool SIPB2BTransactionManager::getExternalAddress(
   const OSS::IPAddress& internalIp,
   std::string& externalIp) const
 {
-  return const_cast<SIPTransportService&>(const_cast<OSSSIP&>(_stack).transport()).getExternalAddress(proto, internalIp, externalIp);
+  return const_cast<SIPTransportService&>(const_cast<SIPStack&>(_stack).transport()).getExternalAddress(proto, internalIp, externalIp);
 }
 
 inline bool SIPB2BTransactionManager::getInternalAddress(
   const OSS::IPAddress& externalIp,
   OSS::IPAddress& internalIp) const
 {
-  return const_cast<SIPTransportService&>(const_cast<OSSSIP&>(_stack).transport()).getInternalAddress(
+  return const_cast<SIPTransportService&>(const_cast<SIPStack&>(_stack).transport()).getInternalAddress(
    externalIp, internalIp);
 }
 
@@ -497,7 +497,7 @@ inline bool SIPB2BTransactionManager::getInternalAddress(
   const OSS::IPAddress& externalIp,
   OSS::IPAddress& internalIp) const
 {
-  return const_cast<SIPTransportService&>(const_cast<OSSSIP&>(_stack).transport()).getInternalAddress(
+  return const_cast<SIPTransportService&>(const_cast<SIPStack&>(_stack).transport()).getInternalAddress(
     proto, externalIp, internalIp);
 }
 

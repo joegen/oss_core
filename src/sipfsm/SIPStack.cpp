@@ -18,7 +18,7 @@
 //
 
 
-#include "OSS/SIP/OSSSIP.h"
+#include "OSS/SIP/SIPStack.h"
 #include "OSS/OSS.h"
 #include "OSS/SIP/SIPException.h"
 #include "OSS/Persistent/ClassType.h"
@@ -35,7 +35,7 @@ namespace OSS {
 namespace SIP {
 
 
-OSSSIP::OSSSIP() :
+SIPStack::SIPStack() :
   _fsmDispatch(),
   _enableUDP(true),
   _enableTCP(true),
@@ -52,16 +52,16 @@ OSSSIP::OSSSIP() :
 {
 }
 
-OSSSIP::~OSSSIP()
+SIPStack::~SIPStack()
 {
 }
 
-void OSSSIP::run()
+void SIPStack::run()
 {
   _fsmDispatch.transport().run();
 }
 
-void OSSSIP::transportInit()
+void SIPStack::transportInit()
 {
   bool hasUDP = _udpListeners.size() > 0;
   bool hasTCP = _tcpListeners.size() > 0;
@@ -128,7 +128,7 @@ void OSSSIP::transportInit()
   }
 }
 
-void OSSSIP::transportInit(unsigned short udpPortBase, unsigned short udpPortMax,
+void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortMax,
     unsigned short tcpPortBase, unsigned short tcpPortMax,
     unsigned short wsPortBase, unsigned short wsPortMax,
     unsigned short tlsPortBase, unsigned short tlsPortMax)
@@ -266,7 +266,7 @@ void OSSSIP::transportInit(unsigned short udpPortBase, unsigned short udpPortMax
 }
 
 
-void OSSSIP::initTransportFromConfig(const boost::filesystem::path& cfgFile)
+void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 {
   ClassType config;
   config.load(OSS::boost_path(cfgFile));
@@ -512,13 +512,13 @@ void OSSSIP::initTransportFromConfig(const boost::filesystem::path& cfgFile)
   transportInit();
 }
 
-void OSSSIP::stop()
+void SIPStack::stop()
 {
   _fsmDispatch.stop();
   _fsmDispatch.transport().stop();
 }
 
-void OSSSIP::sendRequest(
+void SIPStack::sendRequest(
   const SIPMessage::Ptr& pRequest,
   const OSS::IPAddress& localAddress,
   const OSS::IPAddress& remoteAddress,
@@ -528,7 +528,7 @@ void OSSSIP::sendRequest(
   _fsmDispatch.sendRequest(pRequest, localAddress, remoteAddress, callback, terminateCallback);
 }
 
-void OSSSIP::sendRequestDirect(const SIPMessage::Ptr& pRequest,
+void SIPStack::sendRequestDirect(const SIPMessage::Ptr& pRequest,
   const OSS::IPAddress& localAddress,
   const OSS::IPAddress& remoteAddress)
 {
@@ -545,11 +545,11 @@ void OSSSIP::sendRequestDirect(const SIPMessage::Ptr& pRequest,
     if (client)
       client->writeMessage(pRequest, remoteAddress.toString(), OSS::string_from_number(remoteAddress.getPort()));
     else
-      OSS_LOG_ERROR("OSSSIP::sendRequestDirect failed - Unable to create client transport");
+      OSS_LOG_ERROR("SIPStack::sendRequestDirect failed - Unable to create client transport");
   }
   else
   {
-    OSS_LOG_ERROR("OSSSIP::sendRequestDirect failed - Unable to determine transport protocol.")
+    OSS_LOG_ERROR("SIPStack::sendRequestDirect failed - Unable to determine transport protocol.")
   }
 }
 

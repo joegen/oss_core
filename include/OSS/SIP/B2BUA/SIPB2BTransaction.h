@@ -18,8 +18,8 @@
 //
 
 
-#ifndef SIP_OSSSIPB2BTransaction_INCLUDED
-#define SIP_OSSSIPB2BTransaction_INCLUDED
+#ifndef SIP_SIPStackB2BTransaction_INCLUDED
+#define SIP_SIPStackB2BTransaction_INCLUDED
 
 
 #include <queue>

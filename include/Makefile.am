@@ -141,7 +141,7 @@ nobase_include_HEADERS = \
     OSS/SIP/SIPXOR.h \
     OSS/SIP/SIP.h \
     OSS/SIP/SIPFSMDispatch.h \
-    OSS/SIP/OSSSIP.h \
+    OSS/SIP/SIPStack.h \
     OSS/SIP/SIPListener.h \
     OSS/SIP/SIPFsm.h \
     OSS/SIP/SIPTransportSession.h \

@@ -18,8 +18,8 @@
 //
 
 
-#ifndef SIP_OSSSIP_INCLUDED
-#define SIP_OSSSIP_INCLUDED
+#ifndef SIP_SIPStack_INCLUDED
+#define SIP_SIPStack_INCLUDED
 
 
 #include <string>
@@ -53,44 +53,44 @@ namespace OSS {
 namespace SIP {
 
 
-class OSS_API OSSSIP
+class OSS_API SIPStack
   /// This class is the main entry point for all the SIP Stack functions.
   ///
-  /// There can be multiple instances of OSSSIP objects in a single application
+  /// There can be multiple instances of SIPStack objects in a single application
   /// making it possible to create a multitude of different UA types all residing
   /// inside a homegenous application namespace
 {
 public:
 
-  OSSSIP();
-    /// Creates a new OSSSIP Object
+  SIPStack();
+    /// Creates a new SIPStack Object
 
-  ~OSSSIP();
-    /// Destroys the OSSSIP Object;
+  ~SIPStack();
+    /// Destroys the SIPStack Object;
  
   bool& enableUDP();
     /// Set this to true/false to enable or disable UDP transport.
     ///
-    /// This must be set before calling the OSSSIP::run() method.
+    /// This must be set before calling the SIPStack::run() method.
   
   bool& enableTCP();
     /// Set this to true/false to enable or disable TLS transport.
     ///
-    /// This must be set before calling the OSSSIP::run() method.
+    /// This must be set before calling the SIPStack::run() method.
 
   bool& enableTLS();
     /// Set this to true/false to enable or disable TLS transport.
     ///
-    /// This must be set before calling the OSSSIP::run() method.
+    /// This must be set before calling the SIPStack::run() method.
 
   OSS::socket_address_list& udpListeners();
     /// Returns the UDP Listener vector.
     ///
     /// All interfaces where the UDP listener should bind to
     /// must be push_back()ed into this vector.  The vector accepts 
-    /// a tuple object of type OSSSIP::OSS::IPAddress.
+    /// a tuple object of type SIPStack::OSS::IPAddress.
     ///
-    /// This must be set before calling the OSSSIP::run() method.
+    /// This must be set before calling the SIPStack::run() method.
 
   OSS::socket_address_list& tcpListeners();
     /// Returns the TCP Listener vector.
@@ -99,7 +99,7 @@ public:
     /// must be push_back()ed into this vector.  The vector accepts 
     /// a tuple object of type OSS::OSS::IPAddress.
     ///
-    /// This must be set before calling the OSSSIP::run() method
+    /// This must be set before calling the SIPStack::run() method
 
   OSS::socket_address_list& wsListeners();
     /// Returns the WebSocket Listener vector.
@@ -108,7 +108,7 @@ public:
     /// must be push_back()ed into this vector.  The vector accepts
     /// a tuple object of type OSS::OSS::IPAddress.
     ///
-    /// This must be set before calling the OSSSIP::run() method
+    /// This must be set before calling the SIPStack::run() method
 
   OSS::socket_address_list& tlsListeners();
     /// Returns the TLS Listener vector.
@@ -117,7 +117,7 @@ public:
     /// must be push_back()ed into this vector.  The vector accepts 
     /// a tuple object of type OSS::OSS::IPAddress.
     ///
-    /// This must be set before calling the OSSSIP::run() method
+    /// This must be set before calling the SIPStack::run() method
 
   std::string& tlsCertFile();
     /// Set this to specify the absolute path for the certificate file for TLS.
@@ -169,18 +169,18 @@ public:
 #endif
   
   void run();
-    /// Starts the OSSSIP event subsytem.
+    /// Starts the SIPStack event subsytem.
     ///
     /// This will block until a call to stop() received.
     /// Once the run method has exited, it is 
     /// possible to run() the system again after changing
-    /// the properties of OSSSIP.  One good example
+    /// the properties of SIPStack.  One good example
     /// is when a there is a need to change listener address.
     ///
     /// This will throw an exception if a problem is encountered.
 
   void stop();
-    /// Stops the OSSSIP event subsytem.
+    /// Stops the SIPStack event subsytem.
     ///
     /// This function will block until both the fsm and transport
     /// subsystems have abandoned all pending work safely.
@@ -203,7 +203,7 @@ public:
     /// networks with complex routing rules.
     ///
     /// The remote address must be in the form of an IP address.
-    /// OSSSIP supports both IPV4 and IPV6 destinations.
+    /// SIPStack supports both IPV4 and IPV6 destinations.
     /// DNS lookup will not be performed by the transport layer.
     /// Thus, this method expects that the remote address has 
     /// already been resolved using the mechanisms exposed by
@@ -290,87 +290,87 @@ private:
   OSS::Persistent::RESTKeyValueStore* _pKeyStore;
 };
 
-typedef OSSSIP SIPStack;
+typedef SIPStack SIPStack;
 
 //
 // Inlines
 //
 
-inline bool& OSSSIP::enableUDP()
+inline bool& SIPStack::enableUDP()
 {
   return _enableUDP;
 }
   
-inline bool& OSSSIP::enableTCP()
+inline bool& SIPStack::enableTCP()
 {
   return _enableTCP;
 }
 
-inline bool& OSSSIP::enableTLS()
+inline bool& SIPStack::enableTLS()
 {
   return _enableTLS;
 }
 
-inline OSS::socket_address_list& OSSSIP::udpListeners()
+inline OSS::socket_address_list& SIPStack::udpListeners()
 {
   return _udpListeners;
 }
 
-inline OSS::socket_address_list& OSSSIP::tcpListeners()
+inline OSS::socket_address_list& SIPStack::tcpListeners()
 {
   return _tcpListeners;
 }
 
-inline OSS::socket_address_list& OSSSIP::wsListeners()
+inline OSS::socket_address_list& SIPStack::wsListeners()
 {
   return _wsListeners;
 }
 
-inline OSS::socket_address_list& OSSSIP::tlsListeners()
+inline OSS::socket_address_list& SIPStack::tlsListeners()
 {
   return _tlsListeners;
 }
 
-inline std::string& OSSSIP::tlsCertFile()
+inline std::string& SIPStack::tlsCertFile()
 {
   return _tlsCertFile;
 }
 
-inline std::string& OSSSIP::tlsDiffieHellmanParamFile()
+inline std::string& SIPStack::tlsDiffieHellmanParamFile()
 {
   return _tlsDiffieHellmanParamFile;
 }
 
-inline std::string& OSSSIP::tlsPassword()
+inline std::string& SIPStack::tlsPassword()
 {
   return _tlsPassword;
 }
 
-inline void OSSSIP::setRequestHandler(const SIPTransaction::RequestCallback& handler)
+inline void SIPStack::setRequestHandler(const SIPTransaction::RequestCallback& handler)
 {
   _fsmDispatch.requestHandler() = handler;
 }
 
-inline void OSSSIP::setAckFor2xxTransactionHandler(const SIPFSMDispatch::UnknownTransactionCallback& handler)
+inline void SIPStack::setAckFor2xxTransactionHandler(const SIPFSMDispatch::UnknownTransactionCallback& handler)
 {
   _fsmDispatch.ackFor2xxTransactionHandler() = handler;
 }
 
-inline SIPTransportService& OSSSIP::transport()
+inline SIPTransportService& SIPStack::transport()
 {
   return _fsmDispatch.transport();
 }
 
-inline void OSSSIP::setKeyValueStore(OSS::Persistent::RESTKeyValueStore* pKeyStore)
+inline void SIPStack::setKeyValueStore(OSS::Persistent::RESTKeyValueStore* pKeyStore)
 {
   _pKeyStore = pKeyStore;
 }
 
-inline OSS::Persistent::RESTKeyValueStore* OSSSIP::getKeyValueStore()
+inline OSS::Persistent::RESTKeyValueStore* SIPStack::getKeyValueStore()
 {
   return _pKeyStore; 
 }
     /// Returns a pointer to the key value store
 
 } } // OSS::SIP
-#endif // SIP_OSSSIP_INCLUDED
+#endif // SIP_SIPStack_INCLUDED

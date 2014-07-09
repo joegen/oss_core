@@ -38,15 +38,15 @@
 	#if !defined(OSS_NO_AUTOMATIC_LIBS) && !defined(OSS_SIP_PARSER_EXPORTS)
 		#if defined(OSS_DLL)
 			#if defined(_DEBUG)
-				#pragma comment(lib, "OSSSIPParserd.lib")
+				#pragma comment(lib, "SIPStackParserd.lib")
 			#else
-				#pragma comment(lib, "OSSSIPParser.lib")
+				#pragma comment(lib, "SIPStackParser.lib")
 			#endif
 		#else
 			#if defined(_DEBUG)
-				#pragma comment(lib, "OSSSIPParsermtd.lib")
+				#pragma comment(lib, "SIPStackParsermtd.lib")
 			#else
-				#pragma comment(lib, "OSSSIPParsermt.lib")
+				#pragma comment(lib, "SIPStackParsermt.lib")
 			#endif
 		#endif
 	#endif
