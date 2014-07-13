@@ -1,3 +1,4 @@
+#if 0
 
 #include "gtest/gtest.h"
 #include "OSS/P2P/Overlay.h"
@@ -10,7 +11,7 @@ Overlay node1;
 Overlay node2;
 Overlay node3;
 
-#define HOST_IP "127.0.0.1"
+#define HOST_IP "192.168.1.10"
 #define BOOTSTRAP_PORT 7000
 #define NODE1_PORT 7001
 #define NODE2_PORT 7002
@@ -111,7 +112,7 @@ TEST(OverlayTest, overlay_join)
   ASSERT_TRUE(node2.join(host));
   ASSERT_TRUE(node3.join(host));
 
-  OSS::thread_sleep(500);
+  OSS::thread_sleep(1000);
 
   Overlay::NodeList members;
   bool fb1 = false;
@@ -227,17 +228,23 @@ TEST(OverlayTest, overlay_join)
 
 TEST(OverlayTest, overlay_msg_broad_cast)
 {
+
   Overlay::LeafSet leafset;
   boot1.getRightLeafSet(leafset);
   ASSERT_EQ(leafset.size(), 3);
 
   for (int i = 0; i < 3; i++)
+  {
+    std::cout << leafset[i] << std::endl;
     ASSERT_TRUE(node1.sendMessage(MSG_TYPE, leafset[i], "Hello!"));
+  }
 
-  OSS::thread_sleep(100);
+  OSS::thread_sleep(1000);
 
   ASSERT_TRUE(node1GotIt);
   ASSERT_TRUE(node2GotIt);
   ASSERT_TRUE(node3GotIt);
+
 }
 
+#endif

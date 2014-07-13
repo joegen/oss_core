@@ -24,12 +24,27 @@ using namespace OSS::Net;
 #define data "The Quick Brown fox Jumps Over The Lazy Dog!"
 #define iterations 100
 
-KeyValueStore kv;
-RESTKeyValueStore restkv;
-RESTKeyValueStore::Client restkv_client(restkvhost, restkvport);
+static KeyValueStore kv;
+static RESTKeyValueStore restkv;
+static RESTKeyValueStore::Client restkv_client(restkvhost, restkvport);
 
-RESTKeyValueStore restkv_secure(&restkv);
-RESTKeyValueStore::Client restkv_client_secure(restkvhost, restkv_secure_port, true);
+static RESTKeyValueStore restkv_secure(&restkv);
+static RESTKeyValueStore::Client restkv_client_secure(restkvhost, restkv_secure_port, true);
+static bool input_proc_put_invoked = false;
+static bool input_proc_del_invoked = false;
+
+static KVInputProcessor::Action input_proc_put(const std::string& key, const std::string& value, unsigned int expireInSeconds)
+{
+  input_proc_put_invoked = true;
+  return KVInputProcessor::Allow;
+}
+
+static KVInputProcessor::Action input_proc_del(const std::string& key)
+{
+  input_proc_del_invoked = true;
+  return KVInputProcessor::Allow;
+}
+
 
 TEST(KeyValueStoreTest, test_open_close)
 {
@@ -45,21 +60,33 @@ TEST(KeyValueStoreTest, test_open_close)
   ASSERT_FALSE(boost::filesystem::exists(kvfile));
 
   //
+  //  Set an input processor
+  //
+  KVInputProcessor inputProc("test_input_proc");
+  inputProc.put = boost::bind(input_proc_put, _1, _2, _3);
+  inputProc.del = boost::bind(input_proc_del, _1);
+  kv.addInputProcessor(inputProc);
+  input_proc_put_invoked = false;
+  
+  //
   // Now leave it open for the remaining test
   //
   ASSERT_TRUE(kv.open(kvfile));
   ASSERT_TRUE(kv.isOpen());
   ASSERT_TRUE(kv.put("init", "init"));
+  ASSERT_TRUE(input_proc_put_invoked);
 }
 
 TEST(KeyValueStoreTest, test_put)
 {
+  input_proc_put_invoked = false;
   for (int i = 0; i < iterations; i++)
   {
     std::string key = OSS::string_from_number(i);
     std::string value = key + data;
     ASSERT_TRUE(kv.put(key, value));
   }
+  ASSERT_TRUE(input_proc_put_invoked);
 }
 
 TEST(KeyValueStoreTest, test_get)
@@ -77,6 +104,7 @@ TEST(KeyValueStoreTest, test_get)
 
 TEST(KeyValueStoreTest, test_delete)
 {
+  input_proc_put_invoked = false;
   for (int i = 0; i < iterations; i++)
   {
     std::string key = OSS::string_from_number(i);
@@ -84,6 +112,7 @@ TEST(KeyValueStoreTest, test_delete)
     ASSERT_TRUE(kv.del(key));
     ASSERT_FALSE(kv.get(key, result));
   }
+  ASSERT_TRUE(input_proc_del_invoked);
 }
 
 TEST(KeyValueStoreTest, test_expires)
@@ -256,7 +285,6 @@ TEST(KeyValueStoreTest, test_rest_tls_put_get)
   std::ostringstream result2;
   ASSERT_TRUE(restkv_client.restGET("/root/secure/", result2, status));
 }
-
 
 
 

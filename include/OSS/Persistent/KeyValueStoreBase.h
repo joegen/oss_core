@@ -24,6 +24,9 @@
 
 #include "OSS/OSS.h"
 #include "OSS/Core.h"
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
+#include <vector>
 
 
 namespace OSS {
@@ -40,12 +43,29 @@ struct KVRecord
 typedef std::vector<std::string> KVKeys;
 typedef std::vector<KVRecord> KVRecords;
 
+ struct KVInputProcessor
+{
+  enum Action
+  {
+    Allow,
+    Ignore,
+    ActionMax
+  };
+
+  KVInputProcessor(const std::string name) : _name(name) {};
+
+  boost::function<Action(const std::string& /*key*/, const std::string& /*value*/, unsigned int /*expireInSeconds*/)> put;
+  boost::function<Action(const std::string& /*key*/)> del;
+  boost::function<Action(const std::string& /*filter*/)> delKeys;
+  std::string _name;
+};
+
+typedef std::vector<KVInputProcessor> KVInputProcessors;
+  
 template <typename KV>
 class KeyValueStoreBase : boost::noncopyable
 {
 public:
-  
-  
   KeyValueStoreBase()
   {
   }
@@ -71,11 +91,24 @@ public:
 
   bool put(const std::string& key, const std::string& value)
   {
+    for (KVInputProcessors::iterator iter = _inputProc.begin(); iter != _inputProc.end(); iter++)
+    {
+      if (iter->put)
+        if (iter->put(key, value, -1) == KVInputProcessor::Ignore)
+          return false;
+    }
     return _impl.put(key, value);
   }
 
   bool put(const std::string& key, const std::string& value, unsigned int expireInSeconds)
   {
+    for (KVInputProcessors::iterator iter = _inputProc.begin(); iter != _inputProc.end(); iter++)
+    {
+      if (iter->put)
+        if (iter->put(key, value, expireInSeconds) == KVInputProcessor::Ignore)
+          return false;
+    }
+    
     OSS::UInt64 expires = OSS::getTime() + (expireInSeconds*1000);
     std::string expireString = OSS::string_from_number(expires);
     std::string expireKey = key + PERSISTENT_STORE_EXPIRES_SUFFIX;
@@ -112,7 +145,24 @@ public:
 
   bool del(const std::string& key)
   {
+    for (KVInputProcessors::iterator iter = _inputProc.begin(); iter != _inputProc.end(); iter++)
+    {
+      if (iter->del)
+        if (iter->del(key) == KVInputProcessor::Ignore)
+          return false;
+    }
     return _impl.del(key);
+  }
+  
+  bool delKeys(const std::string& filter)
+  {
+    for (KVInputProcessors::iterator iter = _inputProc.begin(); iter != _inputProc.end(); iter++)
+    {
+      if (iter->delKeys)
+        if (iter->delKeys(filter) == KVInputProcessor::Ignore)
+          return false;
+    }
+    return _impl.delKeys(filter);
   }
   
   bool getKeys(KVKeys& keys)
@@ -135,11 +185,6 @@ public:
     return _impl.getRecords(filter, records);
   }
   
-  bool delKeys(const std::string& filter)
-  {
-    return _impl.delKeys(filter);
-  }
-  
   std::string getPath() const
   {
     return _impl.getPath();
@@ -158,6 +203,11 @@ public:
   void setKeyPrefix(const std::string& keyPrefix)
   {
     _impl.setKeyPrefix(keyPrefix);
+  }
+  
+  void addInputProcessor(const KVInputProcessor& inputProcessor)
+  {
+    _inputProc.push_back(inputProcessor);
   }
   
 protected:
@@ -183,6 +233,7 @@ protected:
   }
   
   KV _impl;  
+  KVInputProcessors _inputProc;
 };
 
 
