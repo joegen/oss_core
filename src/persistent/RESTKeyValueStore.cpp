@@ -255,6 +255,7 @@ bool RESTKeyValueStore::isAuthorized(Request& request, Response& response)
   
   if (!authorized)
   {
+    response.setReason("Provide Credentials");
     response.setStatus(HTTPResponse::HTTP_FORBIDDEN);
     response.send();
   }
@@ -282,6 +283,7 @@ void RESTKeyValueStore::onHandleRequest(Request& request, Response& response)
     return;
   }
   
+  response.setReason("Resource Not Found");
   response.setStatus(HTTPResponse::HTTP_NOT_FOUND);
   response.send();
 }
@@ -294,6 +296,7 @@ int RESTKeyValueStore::restPUT(const std::string& path, const std::string& value
   KeyValueStore* pStore = getStore(resource, true);
   if (!pStore)
   {
+    OSS_LOG_ERROR("RESTKeyValueStore::restPUT - Unable to get persistent store for " << path);
     return HTTPResponse::HTTP_INTERNAL_SERVER_ERROR;
   }
   
@@ -304,6 +307,7 @@ int RESTKeyValueStore::restPUT(const std::string& path, const std::string& value
   {
     if (!pStore->put(resource, data, expires))
     {
+      OSS_LOG_ERROR("RESTKeyValueStore::restPUT - persistent put() operation failed for " << path);
       return HTTPResponse::HTTP_INTERNAL_SERVER_ERROR;
     }
   }
@@ -311,6 +315,7 @@ int RESTKeyValueStore::restPUT(const std::string& path, const std::string& value
   {
     if (!pStore->put(resource, data))
     {
+      OSS_LOG_ERROR("RESTKeyValueStore::restPUT - persistent put() operation failed for " << path);
       return HTTPResponse::HTTP_INTERNAL_SERVER_ERROR;
     }
   }
@@ -396,10 +401,12 @@ void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response
     
     if (status != HTTPResponse::HTTP_OK)
     {
+      response.setStatus("Resource Not Found");
       response.send();
       return;
     }
     
+    response.setReason("GET Operation Completed");
     response.setChunkedTransferEncoding(true);
     response.setContentType("application/json");
     response.send() << result.str();
@@ -407,6 +414,7 @@ void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response
   }
   else if (action == HTTPRequest::HTTP_DELETE)
   {
+    response.setReason("Delete Operation Completed");
     response.setStatus((HTTPResponse::HTTPStatus)restDELETE(request.getURI()));
     response.send();
     return;
@@ -425,6 +433,7 @@ void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response
         expires = OSS::string_to_number<int>(strExpires);
       }
       
+      response.setReason("PUT Operation Completed");
       response.setStatus((HTTPResponse::HTTPStatus)restPUT(request.getURI(), value, expires));
       response.send();
       return;
@@ -434,6 +443,7 @@ void RESTKeyValueStore::onHandleRestRequest(Request& request, Response& response
   //
   // Send a 404 if it ever gets here
   //
+  response.setStatus("Resource Not Found");
   response.setStatus(HTTPResponse::HTTP_NOT_FOUND);
   response.send();
 }
