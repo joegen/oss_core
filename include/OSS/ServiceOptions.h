@@ -61,7 +61,7 @@ public:
   };
   ServiceOptions(int argc, char** argv, const std::string& daemonName, const std::string& version = "1.0", const std::string& copyright = "All Rights Reserved.");
   ServiceOptions(const std::string& configFile);
-  ~ServiceOptions();
+  virtual ~ServiceOptions();
   //
   // Options processing
   //
