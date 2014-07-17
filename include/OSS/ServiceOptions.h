@@ -59,7 +59,15 @@ public:
     DaemonOption,
     ConfigOption
   };
-  ServiceOptions(int argc, char** argv, const std::string& daemonName, const std::string& version = "1.0", const std::string& copyright = "All Rights Reserved.");
+  
+  enum ProcType
+  {
+    Daemon,
+    Utility,
+    MaxProcType
+  };
+  
+  ServiceOptions(int argc, char** argv, const std::string& daemonName, const std::string& version = "1.0", const std::string& copyright = "All Rights Reserved.", ProcType procType = Daemon);
   ServiceOptions(const std::string& configFile);
   virtual ~ServiceOptions();
   //
@@ -131,12 +139,14 @@ protected:
   bool _hasConfig;
   bool _isConfigOnly;
   std::vector<std::string> _required;
+  ProcType _procType;
 };
 
 inline ServiceOptions::ServiceOptions(int argc, char** argv,
   const std::string& daemonName,
   const std::string& version,
-  const std::string& copyright) :
+  const std::string& copyright,
+  ProcType procType) :
   _argc(argc),
   _argv(argv),
   _daemonName(daemonName),
@@ -148,7 +158,8 @@ inline ServiceOptions::ServiceOptions(int argc, char** argv,
   _optionItems(_daemonName  + " Options"),
   _isDaemon(false),
   _hasConfig(false),
-  _isConfigOnly(false)
+  _isConfigOnly(false),
+  _procType(procType)
 {
 }
 
@@ -162,7 +173,8 @@ inline ServiceOptions::ServiceOptions(const std::string& configFile) :
   _isDaemon(false),
   _configFile(configFile),
   _hasConfig(true),
-  _isConfigOnly(true)
+  _isConfigOnly(true),
+  _procType(MaxProcType)
 {
 }
 
@@ -172,8 +184,11 @@ inline ServiceOptions::ServiceOptions(const std::string& configFile) :
 
 inline void ServiceOptions::addDaemonOptions()
 {
-  addOptionFlag('D', "daemonize", ": Run as system daemon.", DaemonOption);
-  addOptionString('P', "pid-file", ": PID file when running as daemon.", DaemonOption);
+  if (_procType == Daemon)
+  {
+    addOptionFlag('D', "daemonize", ": Run as system daemon.", DaemonOption);
+    addOptionString('P', "pid-file", ": PID file when running as daemon.", DaemonOption);
+  }
 }
 
 
@@ -196,27 +211,35 @@ inline bool ServiceOptions::parseOptions(bool verbose)
     return true;
   }
 
-  displayVersion(std::cout);
+  if (_procType == Daemon)
+    displayVersion(std::cout);
 
   try
   {
     addOptionFlag('h', "help", ": Display help information.", GeneralOption);
     addOptionFlag('v', "version", ": Display version information.", GeneralOption);
-    addOptionString('C', "config-file", ": Optional daemon config file.", GeneralOption);
+    
+    if (_procType == Daemon)
+    {
+      addOptionString('C', "config-file", ": Optional daemon config file.", GeneralOption);
 
 
-    addOptionString('L', "log-file", ": Specify the application log file.", GeneralOption);
-    addOptionInt('l', "log-level",
-      ": Specify the application log priority level."
-      "Valid level is between 0-7.  "
-      "0 (EMERG) 1 (ALERT) 2 (CRIT) 3 (ERR) 4 (WARNING) 5 (NOTICE) 6 (INFO) 7 (DEBUG)"
-            , GeneralOption);
-    addOptionFlag("log-no-compress", ": Specify if logs will be compressed after rotation.", GeneralOption);
-    addOptionInt("log-purge-count", ": Specify the number of archive to maintain.", GeneralOption);
-    addOptionString("log-pattern", ": Specify the pattern of the log headers. Default is \"%h-%M-%S.%i: %t\"", GeneralOption);
+      addOptionString('L', "log-file", ": Specify the application log file.", GeneralOption);
+      addOptionInt('l', "log-level",
+        ": Specify the application log priority level."
+        "Valid level is between 0-7.  "
+        "0 (EMERG) 1 (ALERT) 2 (CRIT) 3 (ERR) 4 (WARNING) 5 (NOTICE) 6 (INFO) 7 (DEBUG)"
+              , GeneralOption);
+      addOptionFlag("log-no-compress", ": Specify if logs will be compressed after rotation.", GeneralOption);
+      addOptionInt("log-purge-count", ": Specify the number of archive to maintain.", GeneralOption);
+      addOptionString("log-pattern", ": Specify the pattern of the log headers. Default is \"%h-%M-%S.%i: %t\"", GeneralOption);
+    }
 
     _optionItems.add(_GeneralOptions);
-    _optionItems.add(_daemonOptions);
+    
+    if (_procType == Daemon)
+      _optionItems.add(_daemonOptions);
+    
     _optionItems.add(_configOptions);
 
 
@@ -289,7 +312,8 @@ inline bool ServiceOptions::parseOptions(bool verbose)
       }
     }
 
-    prepareLogger();
+    if (_procType == Daemon)
+      prepareLogger();
   }
   catch(const std::exception& e)
   {
