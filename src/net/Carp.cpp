@@ -60,7 +60,7 @@ extern "C"
   #include "OSS/Net/oss_carp.h"
 }
 
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 #include "OSS/Net/Carp.h"
 #include "OSS/Exec/Command.h"
 

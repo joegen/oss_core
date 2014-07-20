@@ -21,7 +21,7 @@
 #include <xmlrpc-c/server_abyss.hpp>
 
 #include "OSS/RTP/RTPProxyManager.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 
 
 
@@ -284,11 +284,11 @@ void RTPProxyManager::onHouseKeepingTimer(const boost::system::error_code& e)
 void RTPProxyManager::handleSDP(
   const std::string& logId,
   const std::string& sessionId,
-  const OSS::IPAddress& sentBy,
-  const OSS::IPAddress& packetSourceIP,
-  const OSS::IPAddress& packetLocalInterface,
-  const OSS::IPAddress& route,
-  const OSS::IPAddress& routeLocalInterface,
+  const OSS::Net::IPAddress& sentBy,
+  const OSS::Net::IPAddress& packetSourceIP,
+  const OSS::Net::IPAddress& packetLocalInterface,
+  const OSS::Net::IPAddress& route,
+  const OSS::Net::IPAddress& routeLocalInterface,
   RTPProxySession::RequestType requestType,
   std::string& sdp,
   RTPProxy::Attributes& rtpAttribute)
@@ -302,9 +302,9 @@ void RTPProxyManager::handleSDP(
     << " sent-by=" << sentBy.toIpPortString()
     << " remote-src=" << packetSourceIP.toIpPortString()
     << " local-src=" << packetLocalInterface.toIpPortString()
-    << " local-src-ext=(" << const_cast<OSS::IPAddress&>(packetLocalInterface).externalAddress() << ")"
+    << " local-src-ext=(" << const_cast<OSS::Net::IPAddress&>(packetLocalInterface).externalAddress() << ")"
     << " target-local-src=" << routeLocalInterface.toIpPortString()
-    << " target-local-src-ext=" << const_cast<OSS::IPAddress&>(routeLocalInterface).externalAddress()
+    << " target-local-src-ext=" << const_cast<OSS::Net::IPAddress&>(routeLocalInterface).externalAddress()
     << " target-address=" << route.toIpPortString() );
 
   bool verbose = rtpAttribute.verbose;
@@ -414,11 +414,11 @@ void RTPProxyManager::handleSDP(const std::string& /*method*/,
 
     std::string logId_(logId.Value());
     std::string sessionId_(sessionId.Value());
-    OSS::IPAddress sentBy_ = OSS::IPAddress::fromV4IPPort(sentBy.Value().c_str());
-    OSS::IPAddress packetSourceIP_ = OSS::IPAddress::fromV4IPPort(packetSourceIP.Value().c_str());
-    OSS::IPAddress packetLocalInterface_ = OSS::IPAddress::fromV4IPPort(packetLocalInterface.Value().c_str());
-    OSS::IPAddress route_ = OSS::IPAddress::fromV4IPPort(route.Value().c_str());
-    OSS::IPAddress routeLocalInterface_ = OSS::IPAddress::fromV4IPPort(routeLocalInterface.Value().c_str());
+    OSS::Net::IPAddress sentBy_ = OSS::Net::IPAddress::fromV4IPPort(sentBy.Value().c_str());
+    OSS::Net::IPAddress packetSourceIP_ = OSS::Net::IPAddress::fromV4IPPort(packetSourceIP.Value().c_str());
+    OSS::Net::IPAddress packetLocalInterface_ = OSS::Net::IPAddress::fromV4IPPort(packetLocalInterface.Value().c_str());
+    OSS::Net::IPAddress route_ = OSS::Net::IPAddress::fromV4IPPort(route.Value().c_str());
+    OSS::Net::IPAddress routeLocalInterface_ = OSS::Net::IPAddress::fromV4IPPort(routeLocalInterface.Value().c_str());
     RTPProxySession::RequestType requestType_((RTPProxySession::RequestType)requestType.Value());
     std::string sdp_(sdp.Value());
 

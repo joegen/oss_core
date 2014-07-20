@@ -24,7 +24,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "OSS/Thread.h"
+#include "OSS/UTL/Thread.h"
 #include "OSS/SIP/SIP.h"
 #include "OSS/SIP/SIPFsm.h"
 

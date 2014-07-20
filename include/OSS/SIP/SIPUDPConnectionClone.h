@@ -54,16 +54,16 @@ public:
   void writeMessage(SIPMessage::Ptr msg, const std::string& ip, const std::string& port);
     /// Send a SIP message using this session.  This is used by the UDP tranport
 
-  void clientBind(const OSS::IPAddress& listener, unsigned short portBase, unsigned short portMax);
+  void clientBind(const OSS::Net::IPAddress& listener, unsigned short portBase, unsigned short portMax);
     /// Bind the local client.  Take note that this is not implemented at all for UDP.
 
-  void clientConnect(const OSS::IPAddress& target);
+  void clientConnect(const OSS::Net::IPAddress& target);
     /// Connect to a remote host.  Take note taht this is not implemented at all for UDP.
 
-  OSS::IPAddress getLocalAddress() const;
+  OSS::Net::IPAddress getLocalAddress() const;
     /// Returns the local address binding for this transport
 
-  OSS::IPAddress getRemoteAddress() const;
+  OSS::Net::IPAddress getRemoteAddress() const;
     /// Returns the last read source address
 
 private:

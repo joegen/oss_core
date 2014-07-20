@@ -27,7 +27,7 @@
 #include <boost/asio.hpp>
 #include <boost/noncopyable.hpp>
 #include "SIPTCPConnection.h"
-#include "OSS/Thread.h"
+#include "OSS/UTL/Thread.h"
 
 
 namespace OSS {
@@ -83,7 +83,7 @@ public:
   void setPortmax(unsigned short port);
     /// Set the port max.  the default is 12000
 
-  SIPTCPConnection::Ptr findConnectionByAddress(const OSS::IPAddress& target);
+  SIPTCPConnection::Ptr findConnectionByAddress(const OSS::Net::IPAddress& target);
     /// Find a connection to a specific target if it exists
 
   SIPTCPConnection::Ptr findConnectionById(OSS::UInt64 identifier);

@@ -3,13 +3,12 @@
 #define	FramedTcpClient_H
 
 #include <cassert>
-#include <zmq.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/asio.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 #include <boost/lexical_cast.hpp>
 
 

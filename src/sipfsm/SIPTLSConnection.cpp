@@ -119,12 +119,12 @@ void SIPTLSConnection::writeMessage(SIPMessage::Ptr msg, const std::string& ip, 
   // This is only used by UDP connection
 }
 
-void SIPTLSConnection::clientBind(const OSS::IPAddress& listener, unsigned short portBase, unsigned short portMax)
+void SIPTLSConnection::clientBind(const OSS::Net::IPAddress& listener, unsigned short portBase, unsigned short portMax)
 {
   // Implement me!!
 }
 
-void SIPTLSConnection::clientConnect(const OSS::IPAddress& target)
+void SIPTLSConnection::clientConnect(const OSS::Net::IPAddress& target)
 {
   // Implement me!!
 }
@@ -157,16 +157,16 @@ void SIPTLSConnection::handleHandshake(const boost::system::error_code& e)
   }
 }
 
-OSS::IPAddress SIPTLSConnection::getLocalAddress() const
+OSS::Net::IPAddress SIPTLSConnection::getLocalAddress() const
 {
   boost::asio::ip::address ip = _socket.lowest_layer().local_endpoint().address();
-  return OSS::IPAddress(ip.to_string(), _socket.lowest_layer().local_endpoint().port());
+  return OSS::Net::IPAddress(ip.to_string(), _socket.lowest_layer().local_endpoint().port());
 }
 
-OSS::IPAddress SIPTLSConnection::getRemoteAddress() const
+OSS::Net::IPAddress SIPTLSConnection::getRemoteAddress() const
 {
   boost::asio::ip::address ip = _socket.lowest_layer().remote_endpoint().address();
-  return OSS::IPAddress(ip.to_string(), _socket.lowest_layer().local_endpoint().port());
+  return OSS::Net::IPAddress(ip.to_string(), _socket.lowest_layer().local_endpoint().port());
 }
 
 } } // OSS::SIP

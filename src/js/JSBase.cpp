@@ -19,10 +19,10 @@
 
 
 #include "OSS/JS/JSBase.h"
-#include "OSS/Core.h"
-#include "OSS/Application.h"
-#include "OSS/Logger.h"
-#include "OSS/Thread.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/UTL/Application.h"
+#include "OSS/UTL/Logger.h"
+#include "OSS/UTL/Thread.h"
 
 
 

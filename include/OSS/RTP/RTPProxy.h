@@ -27,9 +27,9 @@
 #include <boost/thread.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
-#include "OSS/Exception.h"
-#include "OSS/Net.h"
-#include "OSS/Thread.h"
+#include "OSS/UTL/Exception.h"
+#include "OSS/Net/Net.h"
+#include "OSS/UTL/Thread.h"
 #include "OSS/SIP/SIP.h"
 #include "OSS/RTP/RTPResizer.h"
 #include "OSS/RTP/RTPPacket.h"
@@ -90,8 +90,8 @@ public:
     /// Destroys RTPProxy
 
   bool open(
-    const OSS::IPAddress& leg1Listener,
-    const OSS::IPAddress& leg2Listener);
+    const OSS::Net::IPAddress& leg1Listener,
+    const OSS::Net::IPAddress& leg2Listener);
     /// Opens the UDP Proxy sockets
 
   void start();
@@ -127,12 +127,12 @@ public:
   std::string& identifier();
     /// Returns a reference to the identifier
 
-  OSS::IPAddress getLeg1Address() const;
+  OSS::Net::IPAddress getLeg1Address() const;
     /// Returns the IP Address and port to be used for SDP attributes.
     /// This can be the real IP address that is bound to the local listener
     /// or an external IP address assigned by STUN or DMZ NAT
 
-  OSS::IPAddress getLeg2Address() const;
+  OSS::Net::IPAddress getLeg2Address() const;
     /// Returns the IP Address and port to be used for SDP attributes.
     /// This can be the real IP address that is bound to the local listener
     /// or an external IP address assigned by STUN or DMZ NAT

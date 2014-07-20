@@ -145,16 +145,16 @@ public:
   void handleHandshake(const boost::system::error_code& error);
     /// Handle a secure hand shake from remote endpoint
 
-  OSS::IPAddress getLocalAddress() const;
+  OSS::Net::IPAddress getLocalAddress() const;
     /// Returns the local address binding for this transport
 
-  OSS::IPAddress getRemoteAddress() const;
+  OSS::Net::IPAddress getRemoteAddress() const;
     /// Returns the last read source address
 
-  void clientBind(const OSS::IPAddress& ip, unsigned short portBase, unsigned short portMax);
+  void clientBind(const OSS::Net::IPAddress& ip, unsigned short portBase, unsigned short portMax);
     /// Bind the local client
 
-  void clientConnect(const OSS::IPAddress& target);
+  void clientConnect(const OSS::Net::IPAddress& target);
     /// Connect to a remote host
 
   websocketpp::server::connection_ptr _pServerConnection;
@@ -169,8 +169,8 @@ protected:
 
 private:
 
-  mutable OSS::IPAddress _localAddress;
-  mutable OSS::IPAddress _lastReadAddress;
+  mutable OSS::Net::IPAddress _localAddress;
+  mutable OSS::Net::IPAddress _lastReadAddress;
 
   int _readExceptionCount;
 };

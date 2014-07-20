@@ -112,22 +112,22 @@ public:
     /// a SIPDuplicateTransport exception
 
   SIPTransportSession::Ptr createClientTransport(
-    const OSS::IPAddress& localAddress,
-    const OSS::IPAddress& remoteAddress,
+    const OSS::Net::IPAddress& localAddress,
+    const OSS::Net::IPAddress& remoteAddress,
     const std::string& proto,
     const std::string& transportId = std::string());
     /// Creates a new client transport based 
     /// on local and remote address tuples
 
   SIPTransportSession::Ptr createClientTcpTransport(
-    const OSS::IPAddress& localAddress,
-    const OSS::IPAddress& remoteAddress);
+    const OSS::Net::IPAddress& localAddress,
+    const OSS::Net::IPAddress& remoteAddress);
     /// Creates a new client transport based
     /// on local and remote address tuples
 
   SIPTransportSession::Ptr createClientWsTransport(
-    const OSS::IPAddress& localAddress,
-    const OSS::IPAddress& remoteAddress);
+    const OSS::Net::IPAddress& localAddress,
+    const OSS::Net::IPAddress& remoteAddress);
     /// Creates a new client transport based
     /// on local and remote address tuples
 
@@ -136,18 +136,18 @@ public:
     const std::string& service = "0" );
     /// Resolves hostnames using getaddrinfo emulation
 
-  OSS::IPAddress& defaultListenerAddress();
+  OSS::Net::IPAddress& defaultListenerAddress();
     /// Get the configured default listener
 
-  void sendUDPKeepAlive(const OSS::IPAddress& localInterface,
-    const OSS::IPAddress& target);
+  void sendUDPKeepAlive(const OSS::Net::IPAddress& localInterface,
+    const OSS::Net::IPAddress& target);
     /// send UDP Keep-alive packet
 
   bool isLocalTransport(const std::string& proto, const std::string& ip,
     const std::string& port) const;
     /// Returns true if the transport is a registered listener
 
-  bool isLocalTransport(const OSS::IPAddress& transportAddress) const;
+  bool isLocalTransport(const OSS::Net::IPAddress& transportAddress) const;
     /// Returns true if the transport is a registered listener
     /// Take note that this method only checks UDP listeners.
 
@@ -176,25 +176,25 @@ public:
     /// Flag whether TLS transport is enabled for this service
 
   bool getExternalAddress(
-    const OSS::IPAddress& internalIp,
+    const OSS::Net::IPAddress& internalIp,
     std::string& externalIp) const;
     /// Return the external interface for a given internal listener
 
   bool getExternalAddress(
     const std::string& proto,
-    const OSS::IPAddress& internalIp,
+    const OSS::Net::IPAddress& internalIp,
     std::string& externalIp) const;
     /// Return the external interface for a given internal listener
 
   bool getInternalAddress(
-    const OSS::IPAddress& externalIp,
-    OSS::IPAddress& internalIp) const;
+    const OSS::Net::IPAddress& externalIp,
+    OSS::Net::IPAddress& internalIp) const;
     /// Return the internal IP if the host:port for the external IP is known
 
   bool getInternalAddress(
     const std::string& proto,
-    const OSS::IPAddress& externalIp,
-    OSS::IPAddress& internalIp) const;
+    const OSS::Net::IPAddress& externalIp,
+    OSS::Net::IPAddress& internalIp) const;
     /// Return the internal IP if the host:port for the external IP is known
 
   void setTCPPortRange(unsigned short base, unsigned short max);
@@ -223,7 +223,7 @@ private:
   TCPListeners _tcpListeners;
   WSListeners _wsListeners;
   TLSListeners _tlsListeners;
-  OSS::IPAddress _defaultListenerAddress;
+  OSS::Net::IPAddress _defaultListenerAddress;
   bool _udpEnabled;
   bool _tcpEnabled;
   bool _wsEnabled;
@@ -238,7 +238,7 @@ private:
 //
 // Inlines
 //
-inline OSS::IPAddress& SIPTransportService::defaultListenerAddress()
+inline OSS::Net::IPAddress& SIPTransportService::defaultListenerAddress()
 {
   return _defaultListenerAddress;
 }

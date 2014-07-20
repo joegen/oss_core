@@ -27,8 +27,8 @@
 #define	MANAGEDDAEMON_H_INCLUDED
 
 
-#include "OSS/ServiceDaemon.h"
-#include "OSS/IPCQueue.h"
+#include "OSS/UTL/ServiceDaemon.h"
+#include "OSS/UTL/IPCQueue.h"
 
 
 namespace OSS {

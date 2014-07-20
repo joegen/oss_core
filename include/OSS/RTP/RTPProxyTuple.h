@@ -38,10 +38,10 @@ public:
     /// Destroys RTPProxyTuple
 
   bool open(
-    OSS::IPAddress& leg1DataListener,
-    OSS::IPAddress& leg2DataListener,
-    OSS::IPAddress& leg1ControlListener,
-    OSS::IPAddress& leg2ControlListener);
+    OSS::Net::IPAddress& leg1DataListener,
+    OSS::Net::IPAddress& leg2DataListener,
+    OSS::Net::IPAddress& leg1ControlListener,
+    OSS::Net::IPAddress& leg2ControlListener);
     /// Opens the UDP Proxy sockets
 
   void start();

@@ -22,8 +22,8 @@
 #include "OSS/Persistent/ClassType.h"
 #include <libconfig.h++>
 #include <boost/interprocess/creation_tags.hpp>
-#include "OSS/Logger.h"
-#include "OSS/Core.h"
+#include "OSS/UTL/Logger.h"
+#include "OSS/UTL/CoreUtils.h"
 #include <fstream>
 
 

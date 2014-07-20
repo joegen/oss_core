@@ -25,7 +25,7 @@
 #include <sstream>
 
 #include "OSS/SDP/SDP.h"
-#include "OSS/Core.h"
+#include "OSS/UTL/CoreUtils.h"
 
 
 namespace OSS {

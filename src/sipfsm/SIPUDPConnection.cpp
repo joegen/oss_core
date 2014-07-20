@@ -29,7 +29,7 @@
 #include "OSS/SIP/SIPFSMDispatch.h"
 #include "OSS/SIP/SIPException.h"
 #include "OSS/SIP/SIPXOR.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 
 namespace OSS {
 namespace SIP {
@@ -306,26 +306,26 @@ void SIPUDPConnection::handleHandshake(const boost::system::error_code& error)
   // This is only significant for stream based connections (TCP/TLS)
 }
 
-void SIPUDPConnection::clientBind(const OSS::IPAddress& listener, unsigned short portBase, unsigned short portMax)
+void SIPUDPConnection::clientBind(const OSS::Net::IPAddress& listener, unsigned short portBase, unsigned short portMax)
 {
  // This is only significant for stream based connections (TCP/TLS)
 }
 
-void SIPUDPConnection::clientConnect(const OSS::IPAddress& target)
+void SIPUDPConnection::clientConnect(const OSS::Net::IPAddress& target)
 {
  // This is only significant for stream based connections (TCP/TLS)
 }
 
-OSS::IPAddress SIPUDPConnection::getLocalAddress() const
+OSS::Net::IPAddress SIPUDPConnection::getLocalAddress() const
 {
   boost::asio::ip::address ip = _socket.local_endpoint().address();
-  return OSS::IPAddress(ip.to_string(), _socket.local_endpoint().port());
+  return OSS::Net::IPAddress(ip.to_string(), _socket.local_endpoint().port());
 }
 
-OSS::IPAddress SIPUDPConnection::getRemoteAddress() const
+OSS::Net::IPAddress SIPUDPConnection::getRemoteAddress() const
 {
    boost::asio::ip::address ip = _senderEndPoint.address();
-  return OSS::IPAddress(ip.to_string(), _senderEndPoint.port());
+  return OSS::Net::IPAddress(ip.to_string(), _senderEndPoint.port());
 }
 
 } } // OSS::SIP

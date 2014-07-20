@@ -23,7 +23,7 @@
 
 
 #include "OSS/OSS.h"
-#include "OSS/Core.h"
+#include "OSS/UTL/CoreUtils.h"
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <vector>

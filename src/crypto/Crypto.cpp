@@ -18,8 +18,8 @@
 //
 
 
-#include "OSS/Crypto.h"
-#include "OSS/Exception.h"
+#include "OSS/Crypto/Crypto.h"
+#include "OSS/UTL/Exception.h"
 #include <string.h>
 
 #include "Poco/MD5Engine.h"

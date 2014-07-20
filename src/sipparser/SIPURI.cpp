@@ -18,7 +18,7 @@
 //
 
 
-#include "OSS/Core.h"
+#include "OSS/UTL/CoreUtils.h"
 #include "OSS/SIP/SIPURI.h"
 #include "OSS/ABNF/ABNFSIPURI.h"
 #include "OSS/ABNF/ABNFSIPScheme.h"
@@ -299,7 +299,7 @@ bool SIPURI::setHostPort(const char* hostPort)
   return setHostPort(_data, hostPort);
 }
 
-bool SIPURI::setHostPort(const OSS::IPAddress& hostPort)
+bool SIPURI::setHostPort(const OSS::Net::IPAddress& hostPort)
 {
   std::string host = hostPort.toIpPortString();
   return setHostPort(_data, host.c_str());

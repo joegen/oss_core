@@ -22,7 +22,7 @@
 #define OSS_NET_H_INCLUDED
 
 #include "OSS/OSS.h"
-#include "OSS/IPAddress.h"
+#include "OSS/Net/IPAddress.h"
 
 #include <list>
 #include <vector>
@@ -44,7 +44,7 @@ namespace Private {
 // Type definitions
 //
 
-typedef std::vector<OSS::IPAddress> socket_address_list; /// Represents a list of socket addresses
+typedef std::vector<OSS::Net::IPAddress> socket_address_list; /// Represents a list of socket addresses
 
 struct OSS_API network_interface
 {
@@ -195,10 +195,10 @@ bool OSS_API socket_is_tcp(socket_handle handle);
 bool OSS_API socket_is_udp(socket_handle handle);
   /// Return true if the handle is of type UDP socket
 
-OSS::IPAddress OSS_API socket_get_address(socket_handle handle) ;
+OSS::Net::IPAddress OSS_API socket_get_address(socket_handle handle) ;
 	/// Returns the IP address and port number of the socket.
 	
-OSS::IPAddress OSS_API socket_get_peer_address(socket_handle handle) ;
+OSS::Net::IPAddress OSS_API socket_get_peer_address(socket_handle handle) ;
 	/// Returns the IP address and port number of the peer socket.
 
 bool OSS_API socket_supports_ip4();

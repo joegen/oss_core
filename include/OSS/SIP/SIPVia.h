@@ -22,7 +22,7 @@
 #define SIP_SIPVia_INCLUDED
 
 
-#include "OSS/Core.h"
+#include "OSS/UTL/CoreUtils.h"
 #include "OSS/SIP/Parser.h"
 #include "OSS/SIP/SIPParser.h"
 

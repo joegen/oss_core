@@ -58,7 +58,7 @@ See also: For more string comparison tricks (substring, prefix, suffix, and regu
 */
 
 #include "gtest/gtest.h"
-#include "OSS/Cache.h"
+#include "OSS/UTL/Cache.h"
 
 
 struct MyCacheObj

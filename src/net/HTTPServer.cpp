@@ -18,8 +18,8 @@
 
 
 #include "OSS/Net/HTTPServer.h"
-#include "OSS/Logger.h"
-#include "OSS/IPAddress.h"
+#include "OSS/UTL/Logger.h"
+#include "OSS/Net/IPAddress.h"
 
 #include "Poco/Net/HTTPServer.h"
 #include "Poco/Net/HTTPRequestHandler.h"
@@ -228,7 +228,7 @@ void HTTPServer::stop()
 
 bool HTTPServer::isAuthorizedAddress(const std::string& host)
 {
-  OSS::IPAddress addr(host);
+  OSS::Net::IPAddress addr(host);
   _accessControl.logPacket(addr.address(), -1);
   return !_accessControl.isBannedAddress(addr.address());
 }

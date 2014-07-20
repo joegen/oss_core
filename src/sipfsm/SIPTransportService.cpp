@@ -23,7 +23,7 @@
 #include "OSS/SIP/SIPFSMDispatch.h"
 #include "OSS/SIP/SIPVia.h"
 #include "OSS/SIP/SIPException.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 
 
 namespace OSS {
@@ -149,7 +149,7 @@ void SIPTransportService::handleStop()
   _tlsListeners.clear();
 }
 
-bool SIPTransportService::isLocalTransport(const OSS::IPAddress& transportAddress) const
+bool SIPTransportService::isLocalTransport(const OSS::Net::IPAddress& transportAddress) const
 {
   std::string key = transportAddress.toIpPortString();
   if (_udpListeners.find(key) != _udpListeners.end())
@@ -257,8 +257,8 @@ void SIPTransportService::addTLSTransport(
 }
 
 SIPTransportSession::Ptr SIPTransportService::createClientTransport(
-  const OSS::IPAddress& localAddress,
-  const OSS::IPAddress& remoteAddress,
+  const OSS::Net::IPAddress& localAddress,
+  const OSS::Net::IPAddress& remoteAddress,
   const std::string& proto_,
   const std::string& transportId)
 {
@@ -380,8 +380,8 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
 }
 
 SIPTransportSession::Ptr SIPTransportService::createClientTcpTransport(
-    const OSS::IPAddress& localAddress,
-    const OSS::IPAddress& remoteAddress)
+    const OSS::Net::IPAddress& localAddress,
+    const OSS::Net::IPAddress& remoteAddress)
 {
   SIPTransportSession::Ptr pTCPConnection(new SIPTCPConnection(_ioService, _tcpConMgr));
   pTCPConnection->clientBind(localAddress, _tcpPortBase, _tcpPortMax);
@@ -390,8 +390,8 @@ SIPTransportSession::Ptr SIPTransportService::createClientTcpTransport(
 }
 
 SIPTransportSession::Ptr SIPTransportService::createClientWsTransport(
-    const OSS::IPAddress& localAddress,
-    const OSS::IPAddress& remoteAddress)
+    const OSS::Net::IPAddress& localAddress,
+    const OSS::Net::IPAddress& remoteAddress)
 {
   //
   // We dont have a concept of client connection for websockets
@@ -399,8 +399,8 @@ SIPTransportSession::Ptr SIPTransportService::createClientWsTransport(
   return SIPTransportSession::Ptr();
 }
 
-void SIPTransportService::sendUDPKeepAlive(const OSS::IPAddress& localAddress,
-    const OSS::IPAddress& target)
+void SIPTransportService::sendUDPKeepAlive(const OSS::Net::IPAddress& localAddress,
+    const OSS::Net::IPAddress& target)
 {
   std::string localIp = localAddress.toString();
   std::string localPort = OSS::string_from_number<unsigned short>(localAddress.getPort());
@@ -435,7 +435,7 @@ std::list<std::string> SIPTransportService::resolve(
 }
 
 bool SIPTransportService::getExternalAddress(
-  const OSS::IPAddress& internalIp,
+  const OSS::Net::IPAddress& internalIp,
   std::string& externalIp) const
 {
   //
@@ -451,7 +451,7 @@ bool SIPTransportService::getExternalAddress(
 
 bool SIPTransportService::getExternalAddress(
   const std::string& proto,
-  const OSS::IPAddress& internalIp,
+  const OSS::Net::IPAddress& internalIp,
   std::string& externalIp) const
 {
   std::string key = internalIp.toIpPortString();
@@ -496,8 +496,8 @@ bool SIPTransportService::getExternalAddress(
 }
 
 bool SIPTransportService::getInternalAddress(
-    const OSS::IPAddress& externalIp,
-    OSS::IPAddress& internalIp) const
+    const OSS::Net::IPAddress& externalIp,
+    OSS::Net::IPAddress& internalIp) const
 {
   //
   // UDP and TCP always have the same port map so just use UDP
@@ -506,7 +506,7 @@ bool SIPTransportService::getInternalAddress(
   if (isLocalTransport(externalIp))
   {
     internalIp = externalIp;
-    if (const_cast<OSS::IPAddress&>(externalIp).externalAddress().empty())
+    if (const_cast<OSS::Net::IPAddress&>(externalIp).externalAddress().empty())
     {
       std::string external;
       getExternalAddress(externalIp, external);
@@ -524,13 +524,13 @@ bool SIPTransportService::getInternalAddress(
 
 bool SIPTransportService::getInternalAddress(
   const std::string& proto,
-  const OSS::IPAddress& externalIp,
-  OSS::IPAddress& internalIp) const
+  const OSS::Net::IPAddress& externalIp,
+  OSS::Net::IPAddress& internalIp) const
 {
   if (isLocalTransport(externalIp))
   {
     internalIp = externalIp;
-    if (const_cast<OSS::IPAddress&>(externalIp).externalAddress().empty())
+    if (const_cast<OSS::Net::IPAddress&>(externalIp).externalAddress().empty())
     {
       std::string external;
       getExternalAddress(proto, externalIp, external);
@@ -548,7 +548,7 @@ bool SIPTransportService::getInternalAddress(
       unsigned short port = OSS::string_to_number<unsigned short>(iter->second->getPort().c_str());
       if (iter->second->getExternalAddress() == ip && port == externalIp.getPort())
       {
-        internalIp = OSS::IPAddress(iter->second->getAddress(), port);
+        internalIp = OSS::Net::IPAddress(iter->second->getAddress(), port);
         internalIp.externalAddress() = ip;
         return true;
       }
@@ -562,7 +562,7 @@ bool SIPTransportService::getInternalAddress(
       unsigned short port = OSS::string_to_number<unsigned short>(iter->second->getPort().c_str());
       if (iter->second->getExternalAddress() == ip && port == externalIp.getPort())
       {
-        internalIp = OSS::IPAddress(iter->second->getAddress(), port);
+        internalIp = OSS::Net::IPAddress(iter->second->getAddress(), port);
         internalIp.externalAddress() = ip;
         return true;
       }
@@ -576,7 +576,7 @@ bool SIPTransportService::getInternalAddress(
       unsigned short port = OSS::string_to_number<unsigned short>(iter->second->getPort().c_str());
       if (iter->second->getExternalAddress() == ip && port == externalIp.getPort())
       {
-        internalIp = OSS::IPAddress(iter->second->getAddress(), port);
+        internalIp = OSS::Net::IPAddress(iter->second->getAddress(), port);
         internalIp.externalAddress() = ip;
         return true;
       }
@@ -590,7 +590,7 @@ bool SIPTransportService::getInternalAddress(
       unsigned short port = OSS::string_to_number<unsigned short>(iter->second->getPort().c_str());
       if (iter->second->getExternalAddress() == ip && port == externalIp.getPort())
       {
-        internalIp = OSS::IPAddress(iter->second->getAddress(), port);
+        internalIp = OSS::Net::IPAddress(iter->second->getAddress(), port);
         internalIp.externalAddress() = ip;
         return true;
       }

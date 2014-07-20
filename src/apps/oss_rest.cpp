@@ -2,8 +2,8 @@
 #include <sys/resource.h>
 #include <signal.h>
 #include "OSS/Persistent/RESTKeyValueStore.h"
-#include "OSS/ServiceDaemon.h"
-#include "OSS/ServiceOptions.h"
+#include "OSS/UTL/ServiceDaemon.h"
+#include "OSS/UTL/ServiceOptions.h"
 
 #if HAVE_CONFIG_H
 #include "config.h"

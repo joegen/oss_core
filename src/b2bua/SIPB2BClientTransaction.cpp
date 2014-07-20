@@ -19,7 +19,7 @@
 
 #include "OSS/SIP/B2BUA/SIPB2BClientTransaction.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransactionManager.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 
 
 namespace OSS {
@@ -81,8 +81,8 @@ void SIPB2BClientTransaction::runTask()
     // Route the outbound request.
     // Send a response (probably a 404) if the request is non-routable
     //
-    OSS::IPAddress outboundTarget;
-    OSS::IPAddress localInterface;
+    OSS::Net::IPAddress outboundTarget;
+    OSS::Net::IPAddress localInterface;
     SIPMessage::Ptr pRouteResponse;
 
     if (!_pManager->onRouteClientTransaction(_pClientRequest, shared_from_this(), localInterface, outboundTarget))

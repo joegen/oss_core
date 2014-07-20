@@ -56,7 +56,7 @@
 #include <boost/asio.hpp>
 #include <boost/noncopyable.hpp>
 #include "OSS/SIP/SIPWebSocketConnection.h"
-#include "OSS/Thread.h"
+#include "OSS/UTL/Thread.h"
 
 
 namespace OSS {
@@ -112,7 +112,7 @@ public:
   void setPortmax(unsigned short port);
     /// Set the port max.  the default is 12000
 
-  SIPWebSocketConnection::Ptr findConnectionByAddress(const OSS::IPAddress& target);
+  SIPWebSocketConnection::Ptr findConnectionByAddress(const OSS::Net::IPAddress& target);
     /// Find a connection to a specific target if it exists
 
   SIPWebSocketConnection::Ptr findConnectionById(OSS::UInt64 identifier);

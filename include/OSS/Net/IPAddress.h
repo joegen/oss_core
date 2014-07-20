@@ -27,7 +27,8 @@
 
 
 namespace OSS {
-
+namespace Net {
+  
 class OSS_API IPAddress
   /// This is a helper class on top of the asio address_v4 and address_v6 objects
 {
@@ -317,6 +318,7 @@ inline IPAddress IPAddress::fromV4DWORD(OSS::UInt32 ip4)
   return IPAddress(ip4);
 }
 
-} // OSS
+} } // OSS::Net
+
 #endif // OSS_IPAddress_H_INCLUDED
 

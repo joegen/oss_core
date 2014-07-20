@@ -22,7 +22,7 @@
 #define	P2P_DHTSTORE_H_INCLUDED
 
 #include <boost/noncopyable.hpp>
-#include "OSS/IPAddress.h"
+#include "OSS/Net/IPAddress.h"
 #include "OSS/P2P/Overlay.h"
 #include "OSS/Persistent/KeyValueStore.h"
 
@@ -42,7 +42,7 @@ public:
   };
 
   static DhtStore& instance();
-  bool initialize(const std::string& dbPath, unsigned short localPort, const OSS::IPAddress& boostrapHost);
+  bool initialize(const std::string& dbPath, unsigned short localPort, const OSS::Net::IPAddress& boostrapHost);
 
 protected:
   void handlePut(const std::string& messageKey, int messageType, const std::string& payload);

@@ -24,7 +24,7 @@
 
 #include "OSS/SDP/SDP.h"
 #include "OSS/SDP/SDPMedia.h"
-#include "OSS/Exception.h"
+#include "OSS/UTL/Exception.h"
 
 namespace OSS {
 namespace SDP {

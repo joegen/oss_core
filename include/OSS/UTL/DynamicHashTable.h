@@ -9,9 +9,9 @@
 #include <boost/any.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "OSS/Core.h"
+#include "OSS/UTL/CoreUtils.h"
 #include "OSS/OSS.h"
-#include "OSS/Thread.h"
+#include "OSS/UTL/Thread.h"
 
 
 namespace OSS {

@@ -29,7 +29,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/function.hpp>
 
-#include "OSS/DNS.h"
+#include "OSS/Net/DNS.h"
 #include "OSS/SIP/B2BUA/B2BUA.h"
 #include "OSS/SIP/SIPTransaction.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
@@ -102,13 +102,13 @@ public:
     const OSS::SIP::SIPMessage::Ptr& pRequest, 
     const OSS::SIP::SIPTransportSession::Ptr& pTransport, 
     const OSS::SIP::SIPTransaction::Ptr& pTransaction,
-    OSS::IPAddress& target);
+    OSS::Net::IPAddress& target);
     /// Determines the target address to be used for sending responses to a particular request.
     ///
     /// The result will be cached by the transaction and would be returned as the result
     /// for future calls to this method
 
-  void setResponseTarget(const OSS::IPAddress& target);
+  void setResponseTarget(const OSS::Net::IPAddress& target);
     /// Set the target address for all responses.
 
   SIPMessage::Ptr& serverRequest();
@@ -156,7 +156,7 @@ public:
 
   bool isMidDialog() const;
 
-  bool resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OSS::IPAddress& initialTarget);
+  bool resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OSS::Net::IPAddress& initialTarget);
 
 protected:
   SIPMessage::Ptr _pServerRequest;
@@ -174,7 +174,7 @@ protected:
   OSS::mutex_critic_sec _responseQueueMutex;
   std::queue<SIPMessage::Ptr> _responseQueue;
   OSS::mutex_critic_sec _responseTargetMutex;
-  OSS::IPAddress _responseTarget;
+  OSS::Net::IPAddress _responseTarget;
 
   typedef boost::shared_lock<boost::shared_mutex> ReadLock;
   typedef boost::lock_guard<boost::shared_mutex> WriteLock;
@@ -192,7 +192,7 @@ protected:
   OSS::dns_srv_record_list _tcpSrvTargets;
   OSS::dns_srv_record_list _wsSrvTargets;
   OSS::dns_srv_record_list _tlsSrvTargets;
-  OSS::IPAddress _localInterface;
+  OSS::Net::IPAddress _localInterface;
   friend class SIPB2BTransactionManager;
 };
 
@@ -201,7 +201,7 @@ protected:
 // Inlines
 //
 
-inline void SIPB2BTransaction::setResponseTarget(const OSS::IPAddress& target)
+inline void SIPB2BTransaction::setResponseTarget(const OSS::Net::IPAddress& target)
 {
   OSS::mutex_critic_sec_lock lock(_responseTargetMutex);
   _responseTarget = target;

@@ -26,9 +26,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
-#include "OSS/Core.h"
-#include "OSS/Thread.h"
-#include "OSS/Net.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/UTL/Thread.h"
+#include "OSS/Net/Net.h"
 #include "OSS/SIP/SIPTransportSession.h"
 #include "OSS/SIP/SIPMessage.h"
 #include "OSS/SIP/SIPTransaction.h"
@@ -84,8 +84,8 @@ public:
 
   void sendRequest(
     const SIPMessage::Ptr& pRequest,
-    const OSS::IPAddress& localAddress,
-    const OSS::IPAddress& remoteAddress,
+    const OSS::Net::IPAddress& localAddress,
+    const OSS::Net::IPAddress& remoteAddress,
     SIPTransaction::Callback callback,
     SIPTransaction::TerminateCallback terminateCallback);
     /// Send a new SIP (REQUEST) message to the Network.
@@ -115,7 +115,7 @@ public:
 
     void sendResponse(
       const SIPMessage::Ptr& pRequest,
-      const OSS::IPAddress& sendAddress);
+      const OSS::Net::IPAddress& sendAddress);
     /// Send a new SIP (RESPONSE) message to the Network.
     ///
     /// This is a none-blocking function call for sending
@@ -143,7 +143,7 @@ public:
 
   void sendAckFor2xx(
     const SIPMessage::Ptr& pAck,
-    const OSS::IPAddress& dialogTarget);
+    const OSS::Net::IPAddress& dialogTarget);
     /// Send a new SIP (ACK REQUEST) message to the Network.
     ///
     /// This method is used by ICT to ACK 2xx responses
@@ -192,7 +192,7 @@ protected:
     ///
     /// Do not call this directly.  Instead, use sendRequest() or sendResponse()
 
-  void writeMessage(SIPMessage::Ptr pMsg, const OSS::IPAddress& remoteAddress);
+  void writeMessage(SIPMessage::Ptr pMsg, const OSS::Net::IPAddress& remoteAddress);
     /// Send a message using the transaction transport.
     ///
     /// Do not call this directly.  Instead, use sendRequest() or sendResponse()
@@ -250,19 +250,19 @@ protected:
 	SIPTransportSession::Ptr& transport();
     /// Returns a pointer to the transport
 
-  OSS::IPAddress& localAddress();
+  OSS::Net::IPAddress& localAddress();
     /// Returns the local address used by this transaction
     ///
     /// This is either set during the initial sendRequest or 
     /// when a request is received from the transport
 
-  OSS::IPAddress& remoteAddress();
+  OSS::Net::IPAddress& remoteAddress();
     /// Returns the remote address used by this transaction
     ///
     /// This is either set during the initial sendRequest or 
     /// when a request is received from the transport
 
-  OSS::IPAddress& sendAddress();
+  OSS::Net::IPAddress& sendAddress();
     /// Returns the remote address where messages will be sent.
     ///
     /// The default behavior of transactions is to use the 
@@ -270,7 +270,7 @@ protected:
     /// However, the applicaiton layer is given to override 
     /// this by setting the _sendAddress
 
-  OSS::IPAddress& dialogTarget();
+  OSS::Net::IPAddress& dialogTarget();
     /// Returns a direct reference where ACK requests for 2xx will be sent
 
 
@@ -313,10 +313,10 @@ private:
   SIPTransportSession::Ptr _transport;
   SIPTransportService* _transportService;
   int _state;
-  OSS::IPAddress _localAddress;
-  OSS::IPAddress _remoteAddress;
-  OSS::IPAddress _sendAddress;
-  OSS::IPAddress _dialogTarget; 
+  OSS::Net::IPAddress _localAddress;
+  OSS::Net::IPAddress _remoteAddress;
+  OSS::Net::IPAddress _sendAddress;
+  OSS::Net::IPAddress _dialogTarget; 
   mutable OSS::mutex _mutex;
   mutable OSS::mutex_read_write _stateMutex;
   std::string _logId;
@@ -367,17 +367,17 @@ inline SIPTransportSession::Ptr& SIPTransaction::transport()
   return _transport;
 }
 
-inline OSS::IPAddress& SIPTransaction::localAddress()
+inline OSS::Net::IPAddress& SIPTransaction::localAddress()
 {
   return _localAddress;
 }
 
-inline OSS::IPAddress& SIPTransaction::remoteAddress()
+inline OSS::Net::IPAddress& SIPTransaction::remoteAddress()
 {
   return _remoteAddress;
 }
 
-inline OSS::IPAddress& SIPTransaction::sendAddress()
+inline OSS::Net::IPAddress& SIPTransaction::sendAddress()
 {
   return _sendAddress;
 }
@@ -392,7 +392,7 @@ inline SIPTransaction::Type& SIPTransaction::type()
   return _type;
 }
 
-inline OSS::IPAddress& SIPTransaction::dialogTarget()
+inline OSS::Net::IPAddress& SIPTransaction::dialogTarget()
 {
   return _dialogTarget;
 }

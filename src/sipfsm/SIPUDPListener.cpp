@@ -22,7 +22,7 @@
 #include <boost/bind.hpp>
 #include "OSS/SIP/SIPUDPListener.h"
 #include "OSS/SIP/SIPTransportService.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 
 namespace OSS {
 namespace SIP {
@@ -75,10 +75,10 @@ void SIPUDPListener::handleConnect(const boost::system::error_code& e, boost::as
   // This is only significant for stream based connections (TCP/TLS)
 }
 
-OSS::IPAddress SIPUDPListener::detectNATBinding(const std::string& stunServer)
+OSS::Net::IPAddress SIPUDPListener::detectNATBinding(const std::string& stunServer)
 {
   OSS_VERIFY_NULL(_socket);
-  OSS::IPAddress external = _stunMappedAddress.getMappedAddress(_pStunClient, stunServer, *_socket);
+  OSS::Net::IPAddress external = _stunMappedAddress.getMappedAddress(_pStunClient, stunServer, *_socket);
   OSS_LOG_INFO("Started UDP Listener " 
     << _socket->local_endpoint().address().to_string()
     << ":" << _socket->local_endpoint()

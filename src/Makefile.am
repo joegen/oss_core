@@ -194,23 +194,18 @@ liboss_core_la_CXXFLAGS =
 
 liboss_core_la_SOURCES =  \
     boost_pch.hpp \
-    DNS.cpp \
-    Endian.cpp \
-    Application.cpp \
-    Exception.cpp \
-    Core.cpp \
-    Logger.cpp \
-    Crypto.cpp \
-    ServiceDaemon.cpp \
-    Cache.cpp \
-    Compress.cpp \
+    utl/Endian.cpp \
+    utl/Application.cpp \
+    utl/Exception.cpp \
+    crypto/Crypto.cpp \
+    utl/ServiceDaemon.cpp \
+    utl/Cache.cpp \
+    utl/Compress.cpp \
     OSS.cpp \
-    DynamicHashTable.cpp \
-    DebugMemory.cpp \
-    IPAddress.cpp \
-    Net.cpp \
-    Thread.cpp \
-    StackTrace.cpp \
+    utl/DynamicHashTable.cpp \
+    utl/DebugMemory.cpp \
+    utl/Thread.cpp \
+    utl/StackTrace.cpp \
     exec/Command.cpp \
     exec/Process.cpp \
     exec/ManagedDaemon.cpp \
@@ -357,7 +352,15 @@ liboss_core_la_SOURCES =  \
     net/HTTPServer.cpp \
     net/AccessControl.cpp \
     net/TLSManager.cpp \
+    net/IPAddress.cpp \
+    net/DNS.cpp \
+    net/Net.cpp \
+    net/FramedTcpClient.cpp \
+    net/FramedTcpConnection.cpp \
+    net/FramedTcpListener.cpp \
     utl/AdaptiveDelay.cpp \
+    utl/CoreUtils.cpp \
+    utl/Logger.cpp \
     sipfsm/SIPWebSocketConnection.cpp \
     sipfsm/SIPWebSocketListener.cpp \
     sipfsm/SIPWebSocketConnectionManager.cpp \

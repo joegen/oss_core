@@ -23,8 +23,8 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 
-#include "OSS/Core.h"
-#include "OSS/Net.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/Net/Net.h"
 #include "Poco/Net/HTTPServerRequest.h"
 #include "Poco/Net/HTTPServerResponse.h"
 #include "OSS/Net/AccessControl.h"

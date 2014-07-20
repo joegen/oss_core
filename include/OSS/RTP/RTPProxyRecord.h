@@ -20,7 +20,7 @@
 #ifndef OSS_RTPPROXYRECORD_H_INCLUDED
 #define	OSS_RTPPROXYRECORD_H_INCLUDED
 
-#include "OSS/RedisClient.h"
+#include "OSS/Persistent/RedisClient.h"
 #include <boost/filesystem.hpp>
 
 namespace OSS {

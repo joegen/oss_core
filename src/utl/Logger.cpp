@@ -29,9 +29,9 @@
 #include <iostream>
 #include <sstream>
 
-#include "OSS/Logger.h"
-#include "OSS/Core.h"
-#include "OSS/Thread.h"
+#include "OSS/UTL/Logger.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/UTL/Thread.h"
 
 
 using Poco::AutoPtr;

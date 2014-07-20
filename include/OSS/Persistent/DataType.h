@@ -26,7 +26,7 @@
 #include <boost/any.hpp>
 
 #include "OSS/OSS.h"
-#include "OSS/Exception.h"
+#include "OSS/UTL/Exception.h"
 #include "OSS/Persistent/Reference.h"
 
 

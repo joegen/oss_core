@@ -29,8 +29,8 @@
 
 
 #include "OSS/Exec/Process.h"
-#include "OSS/Core.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/UTL/Logger.h"
 #include <boost/algorithm/string.hpp>
 #include <cstring>
 #include <unistd.h>

@@ -23,7 +23,7 @@
 
 
 #include "OSS/SIP/SIP.h"
-#include "OSS/Exception.h"
+#include "OSS/UTL/Exception.h"
 
 
 namespace OSS {

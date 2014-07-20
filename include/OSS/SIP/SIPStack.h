@@ -35,10 +35,10 @@
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "OSS/Core.h"
-#include "OSS/Net.h"
-#include "OSS/DNS.h"
-#include "OSS/Thread.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/Net/Net.h"
+#include "OSS/Net/DNS.h"
+#include "OSS/UTL/Thread.h"
 #include "OSS/SIP/SIP.h"
 #include "OSS/SIP/SIPException.h"
 #include "OSS/SIP/SIPMessage.h"
@@ -88,7 +88,7 @@ public:
     ///
     /// All interfaces where the UDP listener should bind to
     /// must be push_back()ed into this vector.  The vector accepts 
-    /// a tuple object of type SIPStack::OSS::IPAddress.
+    /// a tuple object of type SIPStack::OSS::Net::IPAddress.
     ///
     /// This must be set before calling the SIPStack::run() method.
 
@@ -97,7 +97,7 @@ public:
     ///
     /// All interfaces where the TCP listener should bind to
     /// must be push_back()ed into this vector.  The vector accepts 
-    /// a tuple object of type OSS::OSS::IPAddress.
+    /// a tuple object of type OSS::OSS::Net::IPAddress.
     ///
     /// This must be set before calling the SIPStack::run() method
 
@@ -106,7 +106,7 @@ public:
     ///
     /// All interfaces where the WebSocket listener should bind to
     /// must be push_back()ed into this vector.  The vector accepts
-    /// a tuple object of type OSS::OSS::IPAddress.
+    /// a tuple object of type OSS::OSS::Net::IPAddress.
     ///
     /// This must be set before calling the SIPStack::run() method
 
@@ -115,7 +115,7 @@ public:
     ///
     /// All interfaces where the TLS listener should bind to
     /// must be push_back()ed into this vector.  The vector accepts 
-    /// a tuple object of type OSS::OSS::IPAddress.
+    /// a tuple object of type OSS::OSS::Net::IPAddress.
     ///
     /// This must be set before calling the SIPStack::run() method
 
@@ -190,8 +190,8 @@ public:
 
   void sendRequest(
     const SIPMessage::Ptr& pRequest,
-    const OSS::IPAddress& localAddress,
-    const OSS::IPAddress& remoteAddress,
+    const OSS::Net::IPAddress& localAddress,
+    const OSS::Net::IPAddress& remoteAddress,
     SIPTransaction::Callback callback,
     SIPTransaction::TerminateCallback terminateCallback);
     /// Send a new SIP (REQUEST) message to the Network.
@@ -228,8 +228,8 @@ public:
 
 
   void sendRequestDirect(const SIPMessage::Ptr& pRequest,
-    const OSS::IPAddress& localAddress,
-    const OSS::IPAddress& remoteAddress);
+    const OSS::Net::IPAddress& localAddress,
+    const OSS::Net::IPAddress& remoteAddress);
     /// This method will send the SIPMessage to the target
     /// without creating a transaction.  No transaction means
     /// the message will not be retransmitted as well as

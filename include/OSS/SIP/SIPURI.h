@@ -24,7 +24,7 @@
 
 #include "OSS/SIP/Parser.h"
 #include "OSS/SIP/SIPParser.h"
-#include "OSS/IPAddress.h"
+#include "OSS/Net/IPAddress.h"
 
 
 namespace OSS{
@@ -111,7 +111,7 @@ public:
     /// Take note that this function may throw SIPABNFSyntaxException
     /// if there are invalid characters or the host is not properly formatted
     
-  bool setHostPort(const OSS::IPAddress& hostPort);
+  bool setHostPort(const OSS::Net::IPAddress& hostPort);
     /// Sets the value of the uri hostport.
     ///
     /// Take note that this function may throw SIPABNFSyntaxException

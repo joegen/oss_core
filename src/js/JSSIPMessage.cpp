@@ -19,9 +19,9 @@
 
 
 #include "OSS/JS/JSSIPMessage.h"
-#include "OSS/Core.h"
-#include "OSS/Net.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/Net/Net.h"
+#include "OSS/UTL/Logger.h"
 #include "v8.h"
 
 #include "OSS/SIP/SIPRequestLine.h"

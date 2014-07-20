@@ -28,6 +28,8 @@ namespace SIP {
 namespace B2BUA {
 
 
+using OSS::Net::IPAddress;  
+  
 bool SIPB2BDialogDataStoreCb::dbPersist(const DialogData& dialogData)
 {
   if (persist)
@@ -965,7 +967,7 @@ void SIPB2BDialogStateManager::encodeRouteSet(  DialogData::LegInfo* pLeg,
                       const SIPFrom& remoteContact,
                       const SIPMessage::Ptr& pMsg,
                       std::string& transportScheme,
-                      OSS::IPAddress& targetAddress  )
+                      OSS::Net::IPAddress& targetAddress  )
 {
   if (pLeg->routeSet.size() > 0)
   {
@@ -1015,8 +1017,8 @@ void SIPB2BDialogStateManager::encodeRouteSet(  DialogData::LegInfo* pLeg,
 SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
   SIPMessage::Ptr& pMsg,
   SIPB2BTransaction::Ptr pTransaction,
-  OSS::IPAddress& localAddress,
-  OSS::IPAddress& targetAddress)
+  OSS::Net::IPAddress& localAddress,
+  OSS::Net::IPAddress& targetAddress)
 {
   SIPRequestLine rline = pMsg->startLine();
   SIPURI requestUri;
@@ -1216,8 +1218,8 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
   OSS::CacheManager& retransmitCache,
   std::string& sessionId,
   std::string& peerXOR,
-  OSS::IPAddress& routeLocalInterface,
-  OSS::IPAddress& targetAddress)
+  OSS::Net::IPAddress& routeLocalInterface,
+  OSS::Net::IPAddress& targetAddress)
 {
   std::string logId = pMsg->createContextId(true);
   if (!pMsg->isRequest("ACK"))
@@ -1386,7 +1388,7 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
           throw B2BUAStateException("Unable to process ACK. Old via appears to have no branch parameter.");
         }
 
-        OSS::IPAddress viaHost = OSS::IPAddress::fromV4IPPort(localContact.getHostPort().c_str());
+        OSS::Net::IPAddress viaHost = OSS::Net::IPAddress::fromV4IPPort(localContact.getHostPort().c_str());
         std::string newVia = SIPB2BContact::constructVia(_pTransactionManager, pMsg, viaHost, transportScheme, branch);
         pMsg->hdrListPrepend("Via", newVia.c_str());
       }
@@ -1430,7 +1432,7 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
       //
       // Now set the B-Leg local interface using the transport info
       //
-      OSS::IPAddress packetLocalInterface = pTransport->getLocalAddress();
+      OSS::Net::IPAddress packetLocalInterface = pTransport->getLocalAddress();
       packetLocalInterface.externalAddress() = pTransport->getExternalAddress();
 
       pMsg->setBody(sdp);

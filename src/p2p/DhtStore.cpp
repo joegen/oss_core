@@ -35,7 +35,7 @@ DhtStore::DhtStore()
 {
 }
 
-bool DhtStore::initialize(const std::string& dbPath, unsigned short localPort, const OSS::IPAddress& boostrapHost)
+bool DhtStore::initialize(const std::string& dbPath, unsigned short localPort, const OSS::Net::IPAddress& boostrapHost)
 {
   std::ostringstream oplogPath;
   oplogPath << dbPath << ".oplog";

@@ -50,7 +50,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/functional/hash.hpp>
-#include "OSS/Core.h"
+#include "OSS/UTL/CoreUtils.h"
 #include "Poco/UUIDGenerator.h"
 #include "Poco/MD5Engine.h"
 #include "Poco/File.h"
@@ -65,7 +65,7 @@
 //
 // Header only implementations so we catch any compile errors
 //
-#include "OSS/RedisClient.h"
+#include "OSS/Persistent/RedisClient.h"
 
 namespace OSS {
 

@@ -28,9 +28,9 @@
 #include <boost/noncopyable.hpp>
 
 #include "OSS/OSS.h"
-#include "OSS/Core.h"
-#include "OSS/Net.h"
-#include "OSS/Thread.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/Net/Net.h"
+#include "OSS/UTL/Thread.h"
 #include "OSS/SIP/B2BUA/B2BUA.h"
 #include "OSS/SIP/SIP.h"
 #include "OSS/SIP/SIPStack.h"
@@ -56,8 +56,8 @@ public:
     SIPMessage::Ptr& pRequest,
     SIPMessage::Ptr& pResponse,
     SIPB2BTransaction::Ptr pTransaction,
-    OSS::IPAddress& localInterface,
-    OSS::IPAddress& target)> PostRouteCallback;
+    OSS::Net::IPAddress& localInterface,
+    OSS::Net::IPAddress& target)> PostRouteCallback;
 
   SIPB2BTransactionManager(int minThreadCount = 2, int maxThreadCount = 1024);
     /// Creates a new SIPB2BTransactionManager object
@@ -102,7 +102,7 @@ public:
     const OSS::SIP::SIPMessage::Ptr& pRequest, 
     const OSS::SIP::SIPTransportSession::Ptr& pTransport, 
     SIPB2BTransaction::Ptr pTransaction,
-    OSS::IPAddress& target);
+    OSS::Net::IPAddress& target);
     /// This method allows the application layer to determine
     /// the target address of the response.  The default behavior
     /// would use the source address of the request if the via
@@ -132,8 +132,8 @@ public:
   SIPMessage::Ptr onRouteTransaction(
     SIPMessage::Ptr& pRequest, 
     SIPB2BTransaction::Ptr pTransaction,
-    OSS::IPAddress& localInterface,
-    OSS::IPAddress& target);
+    OSS::Net::IPAddress& localInterface,
+    OSS::Net::IPAddress& target);
     /// Route the new request.
     ///
     /// This method expects that the application will format the request-uri
@@ -267,8 +267,8 @@ public:
   bool onRouteClientTransaction(
     SIPMessage::Ptr& pRequest,
     SIPB2BTransaction::Ptr pTransaction,
-    OSS::IPAddress& localInterface,
-    OSS::IPAddress& target);
+    OSS::Net::IPAddress& localInterface,
+    OSS::Net::IPAddress& target);
     /// Route the new request.
     ///
     /// This method expects that the application will format the request-uri
@@ -301,25 +301,25 @@ public:
   const PostRouteCallback& getPostRouteCallback() const;
     /// Returns a constat reference to the post route callback
 
-  bool getExternalAddress(const OSS::IPAddress& internalIp, std::string& externalIp) const;
+  bool getExternalAddress(const OSS::Net::IPAddress& internalIp, std::string& externalIp) const;
     /// Return the assigned external address for a particular transport.
     /// This is normally used in relation to messages that has to passthrough
     /// a firewall.
 
-  bool getExternalAddress(const std::string& proto, const OSS::IPAddress& internalIp, std::string& externalIp) const;
+  bool getExternalAddress(const std::string& proto, const OSS::Net::IPAddress& internalIp, std::string& externalIp) const;
     /// Return the assigned external address for a particular transport.
     /// This is normally used in relation to messages that has to passthrough
     /// a firewall.
 
   bool getInternalAddress(
-    const OSS::IPAddress& externalIp,
-    OSS::IPAddress& internalIp) const;
+    const OSS::Net::IPAddress& externalIp,
+    OSS::Net::IPAddress& internalIp) const;
     /// Return the internal IP if the host:port for the external IP is known
 
   bool getInternalAddress(
     const std::string& proto,
-    const OSS::IPAddress& externalIp,
-    OSS::IPAddress& internalIp) const;
+    const OSS::Net::IPAddress& externalIp,
+    OSS::Net::IPAddress& internalIp) const;
     /// Return the internal IP if the host:port for the external IP is known
 
   const std::string& getUserAgentName() const;
@@ -470,7 +470,7 @@ inline const SIPB2BTransactionManager::PostRouteCallback& SIPB2BTransactionManag
 }
 
 inline bool SIPB2BTransactionManager::getExternalAddress(
-    const OSS::IPAddress& internalIp,
+    const OSS::Net::IPAddress& internalIp,
     std::string& externalIp) const
 {
   return const_cast<SIPTransportService&>(const_cast<SIPStack&>(_stack).transport()).getExternalAddress(internalIp, externalIp);
@@ -478,15 +478,15 @@ inline bool SIPB2BTransactionManager::getExternalAddress(
 
 inline bool SIPB2BTransactionManager::getExternalAddress(
   const std::string& proto,
-  const OSS::IPAddress& internalIp,
+  const OSS::Net::IPAddress& internalIp,
   std::string& externalIp) const
 {
   return const_cast<SIPTransportService&>(const_cast<SIPStack&>(_stack).transport()).getExternalAddress(proto, internalIp, externalIp);
 }
 
 inline bool SIPB2BTransactionManager::getInternalAddress(
-  const OSS::IPAddress& externalIp,
-  OSS::IPAddress& internalIp) const
+  const OSS::Net::IPAddress& externalIp,
+  OSS::Net::IPAddress& internalIp) const
 {
   return const_cast<SIPTransportService&>(const_cast<SIPStack&>(_stack).transport()).getInternalAddress(
    externalIp, internalIp);
@@ -494,8 +494,8 @@ inline bool SIPB2BTransactionManager::getInternalAddress(
 
 inline bool SIPB2BTransactionManager::getInternalAddress(
   const std::string& proto,
-  const OSS::IPAddress& externalIp,
-  OSS::IPAddress& internalIp) const
+  const OSS::Net::IPAddress& externalIp,
+  OSS::Net::IPAddress& internalIp) const
 {
   return const_cast<SIPTransportService&>(const_cast<SIPStack&>(_stack).transport()).getInternalAddress(
     proto, externalIp, internalIp);

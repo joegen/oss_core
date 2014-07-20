@@ -4,7 +4,7 @@
 #include <Poco/StreamCopier.h>
 #include "OSS/Persistent/KeyValueStore.h"
 #include "OSS/Persistent/RESTKeyValueStore.h"
-#include "OSS/Core.h"
+#include "OSS/UTL/CoreUtils.h"
 #include "Poco/Util/ServerApplication.h"
 
 #include "OSS/JSON/reader.h"

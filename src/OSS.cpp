@@ -19,8 +19,8 @@
 
 #include <vector>
 #include "OSS/OSS.h"
-#include "OSS/Net.h"
-#include "OSS/Logger.h"
+#include "OSS/Net/Net.h"
+#include "OSS/UTL/Logger.h"
 #include "Poco/Stopwatch.h"
 
 

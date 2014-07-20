@@ -1,6 +1,6 @@
 
 #include "gtest/gtest.h"
-#include "OSS/Semaphore.h"
+#include "OSS/UTL/Semaphore.h"
 
 using namespace OSS;
 

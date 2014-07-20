@@ -27,8 +27,8 @@
 #include <boost/noncopyable.hpp>
 
 #include "OSS/Crypto/OSSCrypto.h"
-#include "OSS/Core.h"
-#include "OSS/Exception.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/UTL/Exception.h"
 
 #include <mcrypt.h>
 

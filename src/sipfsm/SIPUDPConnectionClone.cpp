@@ -93,26 +93,26 @@ void SIPUDPConnectionClone::handleHandshake(const boost::system::error_code& err
   // This is only significant for stream based connections (TCP/TLS)
 }
 
-void SIPUDPConnectionClone::clientBind(const OSS::IPAddress& listener, unsigned short portBase, unsigned short portMax)
+void SIPUDPConnectionClone::clientBind(const OSS::Net::IPAddress& listener, unsigned short portBase, unsigned short portMax)
 {
   // This is only significant for stream based connections (TCP/TLS)
 }
 
-void SIPUDPConnectionClone::clientConnect(const OSS::IPAddress& target)
+void SIPUDPConnectionClone::clientConnect(const OSS::Net::IPAddress& target)
 {
   // This is only significant for stream based connections (TCP/TLS)
 }
 
-OSS::IPAddress SIPUDPConnectionClone::getLocalAddress() const
+OSS::Net::IPAddress SIPUDPConnectionClone::getLocalAddress() const
 {
   boost::asio::ip::address ip = _socket.local_endpoint().address();
-  return OSS::IPAddress(ip.to_string(), _socket.local_endpoint().port());
+  return OSS::Net::IPAddress(ip.to_string(), _socket.local_endpoint().port());
 }
 
-OSS::IPAddress SIPUDPConnectionClone::getRemoteAddress() const
+OSS::Net::IPAddress SIPUDPConnectionClone::getRemoteAddress() const
 {
    boost::asio::ip::address ip = _senderEndPoint.address();
-  return OSS::IPAddress(ip.to_string(), _senderEndPoint.port());
+  return OSS::Net::IPAddress(ip.to_string(), _senderEndPoint.port());
 }
 
 } } // OSS::SIP

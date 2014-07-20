@@ -51,33 +51,33 @@ public:
   static bool transform(SIPB2BTransactionManager* pManager,
     const SIPMessage::Ptr& pRequest,
     const SIPB2BTransaction::Ptr& pTransaction,
-    const OSS::IPAddress& localInterface,
+    const OSS::Net::IPAddress& localInterface,
     const SessionInfo& sessionInfo);
 
   static bool transformAsParams(SIPB2BTransactionManager* pManager,
     const SIPMessage::Ptr& pRequest,
     const SIPB2BTransaction::Ptr& pTransaction,
-    const OSS::IPAddress& localInterface,
+    const OSS::Net::IPAddress& localInterface,
     const std::string& transportScheme,
     const SessionInfo& sessionInfo);
 
   static bool transformAsUserInfo(SIPB2BTransactionManager* pManager,
     const SIPMessage::Ptr& pRequest,
     const SIPB2BTransaction::Ptr& pTransaction,
-    const OSS::IPAddress& localInterface,
+    const OSS::Net::IPAddress& localInterface,
     const std::string& transportScheme,
     const SessionInfo& sessionInfo);
 
   static bool transformAsRecordRouteParams(SIPB2BTransactionManager* pManager,
     const SIPMessage::Ptr& pRequest,
     const SIPB2BTransaction::Ptr& pTransaction,
-    const OSS::IPAddress& localInterface,
+    const OSS::Net::IPAddress& localInterface,
     const std::string& transportScheme,
     const SessionInfo& sessionInfo);
 
   static std::string constructVia(SIPB2BTransactionManager* pManager,
     const SIPMessage::Ptr& pRequest,
-    const OSS::IPAddress& localInterface,
+    const OSS::Net::IPAddress& localInterface,
     const std::string& transportScheme,
     const std::string& branchHash,
     bool canUseExternalAddress = true);
@@ -95,20 +95,20 @@ public:
     SIPB2BTransactionManager* pManager,
     const SIPMessage::Ptr& pRequest,
     const SIPB2BTransaction::Ptr& pTransaction,
-    const OSS::IPAddress& localInterface);
+    const OSS::Net::IPAddress& localInterface);
 
   static bool transformRegisterAsParams(
     SIPB2BTransactionManager* pManager,
     const SIPMessage::Ptr& pRequest,
     const ContactURI& curi,
-    const OSS::IPAddress& localInterface,
+    const OSS::Net::IPAddress& localInterface,
     const std::string& expires);
 
   static bool transformRegisterAsUserInfo(
     SIPB2BTransactionManager* pManager,
     const SIPMessage::Ptr& pRequest,
     const ContactURI& curi,
-    const OSS::IPAddress& localInterface,
+    const OSS::Net::IPAddress& localInterface,
     const std::string& expires);
 
   static bool isRegisterRoute(const SIPMessage::Ptr& pRequest);

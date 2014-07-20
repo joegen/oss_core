@@ -64,7 +64,7 @@ public:
 
   const OSS::STUN::STUNClient::Ptr& getStunClient();
 
-  OSS::IPAddress detectNATBinding(const std::string& stunServer);
+  OSS::Net::IPAddress detectNATBinding(const std::string& stunServer);
 
 private:
   virtual void handleAccept(const boost::system::error_code& e, OSS_HANDLE userData = 0);

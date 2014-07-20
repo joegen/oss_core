@@ -23,14 +23,14 @@
 #define OSS_STUNMAPPEDADDRES_H
 
 
-#include "OSS/IPAddress.h"
+#include "OSS/Net/IPAddress.h"
 #include "OSS/STUN/STUNClient.h"
 
 namespace OSS {
 namespace STUN {
 
 
-class OSS_API STUNMappedAddress : public OSS::IPAddress
+class OSS_API STUNMappedAddress : public OSS::Net::IPAddress
 {
 public:
   STUNMappedAddress();
@@ -67,10 +67,10 @@ public:
   ~STUNMappedAddress();
     /// Destroys the STUNMappedAddress
 
-  const OSS::IPAddress& getMappedAddress() const;
+  const OSS::Net::IPAddress& getMappedAddress() const;
     /// Returns a constant reference to the mapped address
 
-  void setMappedAddress(const OSS::IPAddress& mappedAddress);
+  void setMappedAddress(const OSS::Net::IPAddress& mappedAddress);
     /// Manually set the mapped address
 
   const std::string& getStunServer() const;
@@ -79,7 +79,7 @@ public:
   void setStunServer(const std::string& stunServer);
     /// Manually set the stun server
 
-  OSS::IPAddress getMappedAddress(
+  OSS::Net::IPAddress getMappedAddress(
     const STUNClient::Ptr& stunClient,
     const std::string& stunServer,
     boost::asio::ip::udp::socket& socket);
@@ -95,7 +95,7 @@ public:
   bool operator < (const STUNMappedAddress& other) const;
 
 private:
-  OSS::IPAddress _mappedAddress;
+  OSS::Net::IPAddress _mappedAddress;
   std::string _stunServer;
 };
 
@@ -103,12 +103,12 @@ private:
 // Inlines
 //
 
-inline const OSS::IPAddress& STUNMappedAddress::getMappedAddress() const
+inline const OSS::Net::IPAddress& STUNMappedAddress::getMappedAddress() const
 {
   return _mappedAddress;
 }
 
-inline void STUNMappedAddress::setMappedAddress(const OSS::IPAddress& mappedAddress)
+inline void STUNMappedAddress::setMappedAddress(const OSS::Net::IPAddress& mappedAddress)
 {
   _mappedAddress = mappedAddress;
 }

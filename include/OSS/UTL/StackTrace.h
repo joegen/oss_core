@@ -18,60 +18,26 @@
 //
 
 
-#ifndef OSS_BLOCKINGQUEUE_H_INCLUDED
-#define OSS_BLOCKINGQUEUE_H_INCLUDED
+#ifndef OSS_STACK_TRACE_INCLUDED
+#define	OSS_STACK_TRACE_INCLUDED
 
-#include <queue>
-#include <boost/noncopyable.hpp>
-#include "OSS/Thread.h"
+
+#include "OSS/OSS.h"
+#include "OSS/UTL/Logger.h"
+
 
 namespace OSS {
 
-template <class T>
-class BlockingQueue : boost::noncopyable
+class OSS_API StackTrace
 {
 public:
-  BlockingQueue(): _sem(0, 0xFFFF)
-  {
-  }
-
-  void enqueue(T data)
-  {
-    _cs.lock();
-    _queue.push(data);
-    _cs.unlock();
-    _sem.set();
-  }
-
-  void dequeue(T& data)
-  {
-    _sem.wait();
-    _cs.lock();
-    data = _queue.front();
-    _queue.pop();
-    _cs.unlock();
-  }
-
-  bool try_dequeue(T& data, long milliseconds)
-  {
-    if (!_sem.tryWait(milliseconds))
-      return false;
-
-    _cs.lock();
-    data = _queue.front();
-    _queue.pop();
-    _cs.unlock();
-
-    return true;
-  }
-private:
-  OSS::semaphore _sem;
-  OSS::mutex_critic_sec _cs;
-  std::queue<T> _queue;
+  static void print();
+  static void print(std::ostream& strm);
+  static void log();
 };
 
 } // OSS
 
-#endif //OSS_BLOCKINGQUEUE_H_INCLUDED
 
+#endif	// OSS_STACK_TRACE_INCLUDED
 

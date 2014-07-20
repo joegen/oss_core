@@ -18,7 +18,7 @@
 //
 
 
-#include "OSS/Endian.h"
+#include "OSS/UTL/Endian.h"
 #include "Poco/ByteOrder.h"
 
 namespace OSS {

@@ -25,7 +25,7 @@
 #include <boost/system/error_code.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "OSS/Net.h"
+#include "OSS/Net/Net.h"
 #include "OSS/SIP/SIP.h"
 #include "OSS/SIP/SIPMessage.h"
 #include "OSS/Net/AccessControl.h"
@@ -98,16 +98,16 @@ public:
   virtual void handleHandshake(const boost::system::error_code& error) = 0;
     /// Handle a secure hand shake from remote endpoint
 
-  virtual OSS::IPAddress getLocalAddress() const = 0;
+  virtual OSS::Net::IPAddress getLocalAddress() const = 0;
     /// Returns the local address binding for this transport
 
-  virtual OSS::IPAddress getRemoteAddress() const = 0;
+  virtual OSS::Net::IPAddress getRemoteAddress() const = 0;
     /// Returns the last read source address
 
-  virtual void clientBind(const OSS::IPAddress& ip, unsigned short portBase, unsigned short portMax) = 0;
+  virtual void clientBind(const OSS::Net::IPAddress& ip, unsigned short portBase, unsigned short portMax) = 0;
     /// Bind the local client
 
-  virtual void clientConnect(const OSS::IPAddress& target) = 0;
+  virtual void clientConnect(const OSS::Net::IPAddress& target) = 0;
     /// Connect to a remote host
 
   unsigned long getLastReadCount() const;
@@ -125,8 +125,8 @@ public:
 
   const std::string& getTransportScheme() const;
 
-  const OSS::IPAddress& getConnectAddress() const;
-  void setConnectAddress(const OSS::IPAddress& address);
+  const OSS::Net::IPAddress& getConnectAddress() const;
+  void setConnectAddress(const OSS::Net::IPAddress& address);
 
   const std::string& getExternalAddress() const;
     /// Returns the external address to be used for signaling in case
@@ -143,7 +143,7 @@ protected:
   unsigned long _bytesRead;
   OSS::UInt64 _identifier;
   std::string _transportScheme;
-  OSS::IPAddress _connectAddress;
+  OSS::Net::IPAddress _connectAddress;
   std::string _externalAddress;
 private:
     SIPTransportSession(const SIPTransportSession&);
@@ -195,12 +195,12 @@ inline const std::string& SIPTransportSession::getTransportScheme() const
   return _transportScheme;
 }
 
-inline const OSS::IPAddress& SIPTransportSession::getConnectAddress() const
+inline const OSS::Net::IPAddress& SIPTransportSession::getConnectAddress() const
 {
   return _connectAddress;
 }
 
-inline void SIPTransportSession::setConnectAddress(const OSS::IPAddress& address)
+inline void SIPTransportSession::setConnectAddress(const OSS::Net::IPAddress& address)
 {
   _connectAddress = address;
 }

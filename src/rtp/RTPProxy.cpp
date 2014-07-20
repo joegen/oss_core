@@ -19,8 +19,8 @@
 
 #include <boost/array.hpp>
 
-#include "OSS/Core.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/UTL/Logger.h"
 #include "OSS/RTP/RTPProxy.h"
 #include "OSS/RTP/RTPProxyManager.h"
 #include "OSS/RTP/RTPProxySession.h"
@@ -58,8 +58,8 @@ RTPProxy::~RTPProxy()
 }
 
 bool RTPProxy::open(
-  const OSS::IPAddress& leg1Listener,
-  const OSS::IPAddress& leg2Listener)
+  const OSS::Net::IPAddress& leg1Listener,
+  const OSS::Net::IPAddress& leg2Listener)
 {
   stop();
 
@@ -69,17 +69,17 @@ bool RTPProxy::open(
   _pLeg1Socket->open(boost::asio::ip::udp::v4());
   _pLeg2Socket->open(boost::asio::ip::udp::v4());
 
-  boost::asio::ip::address addr1 = const_cast<OSS::IPAddress&>(leg1Listener).address();
+  boost::asio::ip::address addr1 = const_cast<OSS::Net::IPAddress&>(leg1Listener).address();
   _localEndPointLeg1 = boost::asio::ip::udp::endpoint(addr1, leg1Listener.getPort());
-  _localEndPointLeg1External = const_cast<OSS::IPAddress&>(leg1Listener).externalAddress();
+  _localEndPointLeg1External = const_cast<OSS::Net::IPAddress&>(leg1Listener).externalAddress();
   boost::system::error_code ec;
   
   _pLeg1Socket->bind(_localEndPointLeg1, ec);
   if (!ec)
   {
-    boost::asio::ip::address addr2 = const_cast<OSS::IPAddress&>(leg2Listener).address();
+    boost::asio::ip::address addr2 = const_cast<OSS::Net::IPAddress&>(leg2Listener).address();
     _localEndPointLeg2 = boost::asio::ip::udp::endpoint(addr2, leg2Listener.getPort());
-    _localEndPointLeg2External = const_cast<OSS::IPAddress&>(leg2Listener).externalAddress();
+    _localEndPointLeg2External = const_cast<OSS::Net::IPAddress&>(leg2Listener).externalAddress();
     _pLeg2Socket->bind(_localEndPointLeg2, ec);
     if (!ec)
     {
@@ -730,17 +730,17 @@ void RTPProxy::handleLeg2SocketReadTimeout(const boost::system::error_code& e)
   }
 }
 
-OSS::IPAddress RTPProxy::getLeg1Address() const
+OSS::Net::IPAddress RTPProxy::getLeg1Address() const
 {
-  OSS::IPAddress addr(_localEndPointLeg1.address().to_string().c_str());
+  OSS::Net::IPAddress addr(_localEndPointLeg1.address().to_string().c_str());
   addr.setPort(_localEndPointLeg1.port());
   addr.externalAddress() = _localEndPointLeg1External;
   return addr;
 }
 
-OSS::IPAddress RTPProxy::getLeg2Address() const
+OSS::Net::IPAddress RTPProxy::getLeg2Address() const
 {
-  OSS::IPAddress addr(_localEndPointLeg2.address().to_string().c_str());
+  OSS::Net::IPAddress addr(_localEndPointLeg2.address().to_string().c_str());
   addr.setPort(_localEndPointLeg2.port());
   addr.externalAddress() = _localEndPointLeg2External;
   return addr;

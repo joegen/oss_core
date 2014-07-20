@@ -25,9 +25,9 @@
 #include <boost/function.hpp>
 #include <map>
 #include <vector>
-#include "OSS/Core.h"
-#include "OSS/IPAddress.h"
-#include "OSS/Thread.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/Net/IPAddress.h"
+#include "OSS/UTL/Thread.h"
 
 
 namespace OSS {
@@ -42,7 +42,7 @@ public:
   {
     std::string key;
     std::string name;
-    OSS::IPAddress hostPort;
+    OSS::Net::IPAddress hostPort;
   };
 
   struct UserData
@@ -66,7 +66,7 @@ public:
     // gracePeriod: Number of seconds elapsed before a failed node can be accepted back to the overlay
     // pingInterval: Number of seconds the ping thread will check health of the leafset participants
     //
-  bool join(const OSS::IPAddress& bootstrapHost);
+  bool join(const OSS::Net::IPAddress& bootstrapHost);
     // Join an overlay with bootstrap host
     //
   void onUpdate(const Node& node, bool joined);
@@ -94,7 +94,7 @@ public:
   bool getNode(const std::string& nodeId, Node& node) const;
     // Returns the node element identified by nodeId
     //
-  bool getHost(const OSS::IPAddress& hostPort, Node& node) const;
+  bool getHost(const OSS::Net::IPAddress& hostPort, Node& node) const;
     // Returns the node element identified by host:port
     //
   const std::string& getNodeId() const;

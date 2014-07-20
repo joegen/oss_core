@@ -19,7 +19,7 @@
 
 
 #include "OSS/OSS.h"
-#include "OSS/Thread.h"
+#include "OSS/UTL/Thread.h"
 #include "Poco/ThreadPool.h"
 #include "Poco/Semaphore.h"
 

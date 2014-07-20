@@ -54,9 +54,9 @@
 #define	OSS_TURNSEVER_H_INCLUDED
 
 
-#include "OSS/Core.h"
-#include "OSS/Net.h"
-#include "OSS/Thread.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/Net/Net.h"
+#include "OSS/UTL/Thread.h"
 
 
 namespace OSS {

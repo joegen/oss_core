@@ -30,7 +30,7 @@
 #ifndef OSS_EXEC_PROCESS_H_INCLUDED
 #define	OSS_EXEC_PROCESS_H_INCLUDED
 
-#include "OSS/Thread.h"
+#include "OSS/UTL/Thread.h"
 #include "OSS/Exec/Command.h"
 #include <unistd.h>
 #include <signal.h>

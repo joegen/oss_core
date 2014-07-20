@@ -58,8 +58,8 @@ STUNServer::~STUNServer()
 }
 
 bool STUNServer::initialize(
-  const OSS::IPAddress& primary,
-  const OSS::IPAddress& secondary)
+  const OSS::Net::IPAddress& primary,
+  const OSS::Net::IPAddress& secondary)
 {
   _primaryIp = primary;
   _secondaryIp = secondary;

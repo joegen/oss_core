@@ -30,8 +30,8 @@
 #include <boost/noncopyable.hpp>
 
 #include "OSS/OSS.h"
-#include "OSS/IPAddress.h"
-#include "OSS/Thread.h"
+#include "OSS/Net/IPAddress.h"
+#include "OSS/UTL/Thread.h"
 #include "OSS/STUN/STUN.h"
 #include "OSS/STUN/STUNProto.h"
 
@@ -66,26 +66,26 @@ public:
 
   int getNatType(
     const std::string& stunServer,
-    OSS::IPAddress& localAddress);
+    OSS::Net::IPAddress& localAddress);
     /// Get the NAT Type
 
   bool createSingleSocket(
     const std::string& stunServer,
     boost::asio::ip::udp::socket& socket,
-    const OSS::IPAddress& localAddress,
-    OSS::IPAddress& externalAddress);
+    const OSS::Net::IPAddress& localAddress,
+    OSS::Net::IPAddress& externalAddress);
     /// Create a single socket
 
   bool createRTPSocketTuple(
     const std::string& stunServer,
     boost::asio::ip::udp::socket& dataSocket,
     boost::asio::ip::udp::socket& constrolSocket,
-    const OSS::IPAddress& localDataAddress,
-    const OSS::IPAddress& localControlAddress,
-    OSS::IPAddress& externalDataAddress,
-    OSS::IPAddress& externalDataPort,
-    OSS::IPAddress& externalControlAddress,
-    OSS::IPAddress& externaControlPort);
+    const OSS::Net::IPAddress& localDataAddress,
+    const OSS::Net::IPAddress& localControlAddress,
+    OSS::Net::IPAddress& externalDataAddress,
+    OSS::Net::IPAddress& externalDataPort,
+    OSS::Net::IPAddress& externalControlAddress,
+    OSS::Net::IPAddress& externaControlPort);
     /// Create two sockets with consecutive ports for use by RTP
 
   static std::string getTypeString(int);
@@ -94,14 +94,14 @@ public:
   static bool getNATAddress(
     boost::asio::io_service& ioService,
     const std::string& stunServer,
-    const OSS::IPAddress& localAddress,
-    OSS::IPAddress& externalAddress);
+    const OSS::Net::IPAddress& localAddress,
+    OSS::Net::IPAddress& externalAddress);
     /// Return the external NAT address facing a certain interface
 
 protected:
   void sendTestRequest(
     boost::asio::ip::udp::socket& sock,
-    OSS::IPAddress& dest,
+    OSS::Net::IPAddress& dest,
     int testNum);
     /// Send a test request to the server
 
@@ -122,9 +122,9 @@ private:
   bool _test2Responded;
   bool _test3Responded;
   bool _test10Responded;
-  OSS::IPAddress _test1ChangedAddr;
-  OSS::IPAddress _test1MappedAddr;
-  OSS::IPAddress _test10MappedAddr;
+  OSS::Net::IPAddress _test1ChangedAddr;
+  OSS::Net::IPAddress _test1MappedAddr;
+  OSS::Net::IPAddress _test10MappedAddr;
   int _sendCount;
 };
 

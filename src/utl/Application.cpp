@@ -18,7 +18,7 @@
 //
 
 #include "OSS/OSS.h"
-#include "OSS/Core.h"
+#include "OSS/UTL/CoreUtils.h"
 #include "Poco/Util/Util.h"
 #include "Poco/Util/Application.h"
 #include "Poco/Util/LayeredConfiguration.h"
@@ -1733,9 +1733,9 @@ void OSSServerApplication::handleOption(const std::string& name, const std::stri
 } } // namespace Poco::Util
 
 #include "OSS/OSS.h"
-#include "OSS/Application.h"
-#include "OSS/Core.h"
-#include "OSS/Thread.h"
+#include "OSS/UTL/Application.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/UTL/Thread.h"
 
 #include "Poco/Util/ServerApplication.h"
 #include "Poco/Util/Option.h"

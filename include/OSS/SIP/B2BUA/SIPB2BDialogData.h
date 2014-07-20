@@ -26,8 +26,8 @@
 #include <list>
 
 #include "OSS/OSS.h"
-#include "OSS/Core.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/UTL/Logger.h"
 #include "OSS/JSON/reader.h"
 #include "OSS/JSON/writer.h"
 #include "OSS/JSON/elements.h"

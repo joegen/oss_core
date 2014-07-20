@@ -17,7 +17,7 @@
  */
 
 
-#include <OSS/Core.h>
+#include <OSS/UTL/CoreUtils.h>
 #include "OSS/RTP/RTPProxyRecord.h"
 
 

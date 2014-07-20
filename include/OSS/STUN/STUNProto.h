@@ -29,9 +29,9 @@
 #include <boost/enable_shared_from_this.hpp>
 
 #include "OSS/OSS.h"
-#include "OSS/IPAddress.h"
-#include "OSS/Thread.h"
-#include "OSS/Core.h"
+#include "OSS/Net/IPAddress.h"
+#include "OSS/UTL/Thread.h"
+#include "OSS/UTL/CoreUtils.h"
 #include "OSS/STUN/STUN.h"
 
 

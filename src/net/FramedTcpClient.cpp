@@ -1,6 +1,6 @@
 
-#include "OSS/FramedTcpConnection.h"
-#include "OSS/FramedTcpClient.h"
+#include "OSS/Net/FramedTcpConnection.h"
+#include "OSS/Net/FramedTcpClient.h"
 
 
 namespace OSS {
@@ -109,7 +109,6 @@ short FramedTcpClient::getNextReadSize()
   short key = FTCP_KEY;
   bool hasVersion = false;
   bool hasKey = false;
-  short len = 0;
   short remoteLen = 0;
   while (!hasVersion || !hasKey)
   {

@@ -21,7 +21,7 @@
 #include "OSS/SIP/SIPWebSocketConnection.h"
 #include "OSS/SIP/SIPWebSocketConnectionManager.h"
 #include "OSS/SIP/SIPFSMDispatch.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 
 
 namespace OSS {
@@ -136,7 +136,7 @@ void SIPWebSocketConnection::handleRead(const boost::system::error_code& e, std:
 		if (!ec)
 		{
 			boost::asio::ip::address ip = ep.address();
-			_lastReadAddress = OSS::IPAddress(ip.to_string(), ep.port());
+			_lastReadAddress = OSS::Net::IPAddress(ip.to_string(), ep.port());
 		}
 		else
 		{
@@ -264,7 +264,7 @@ void SIPWebSocketConnection::handleHandshake(const boost::system::error_code& er
 	OSS_ASSERT(false);
 }
 
-OSS::IPAddress SIPWebSocketConnection::getLocalAddress() const
+OSS::Net::IPAddress SIPWebSocketConnection::getLocalAddress() const
     /// Returns the local address binding for this transport
 {
 	  if (_localAddress.isValid())
@@ -277,7 +277,7 @@ OSS::IPAddress SIPWebSocketConnection::getLocalAddress() const
 	    if (!ec)
 	    {
 	      boost::asio::ip::address ip = ep.address();
-	      _localAddress = OSS::IPAddress(ip.to_string(), ep.port());
+	      _localAddress = OSS::Net::IPAddress(ip.to_string(), ep.port());
 	      return _localAddress;
 	    }
 	    else
@@ -286,10 +286,10 @@ OSS::IPAddress SIPWebSocketConnection::getLocalAddress() const
 	    }
 	  }
 
-	  return OSS::IPAddress();
+	  return OSS::Net::IPAddress();
 }
 
-OSS::IPAddress SIPWebSocketConnection::getRemoteAddress() const
+OSS::Net::IPAddress SIPWebSocketConnection::getRemoteAddress() const
     /// Returns the last read source address
 {
      if (_lastReadAddress.isValid())
@@ -302,7 +302,7 @@ OSS::IPAddress SIPWebSocketConnection::getRemoteAddress() const
          if (!ec)
          {
            boost::asio::ip::address ip = ep.address();
-           _lastReadAddress = OSS::IPAddress(ip.to_string(), ep.port());
+           _lastReadAddress = OSS::Net::IPAddress(ip.to_string(), ep.port());
            return _lastReadAddress;
          }
          else
@@ -312,17 +312,17 @@ OSS::IPAddress SIPWebSocketConnection::getRemoteAddress() const
          }
      }
 
-     return OSS::IPAddress();
+     return OSS::Net::IPAddress();
 
 }
 
-void SIPWebSocketConnection::clientBind(const OSS::IPAddress& ip, unsigned short portBase, unsigned short portMax)
+void SIPWebSocketConnection::clientBind(const OSS::Net::IPAddress& ip, unsigned short portBase, unsigned short portMax)
     /// Bind the local client
 {
 	OSS_ASSERT(false);
 }
 
-void SIPWebSocketConnection::clientConnect(const OSS::IPAddress& target)
+void SIPWebSocketConnection::clientConnect(const OSS::Net::IPAddress& target)
     /// Connect to a remote host
 {
 	OSS_ASSERT(false);

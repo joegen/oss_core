@@ -22,7 +22,7 @@
 #include <boost/bind.hpp>
 #include "OSS/SIP/SIPWebSocketConnectionManager.h"
 #include "OSS/SIP/SIPFSMDispatch.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 
 namespace OSS {
 namespace SIP {
@@ -106,7 +106,7 @@ void SIPWebSocketConnectionManager::stopAll()
   _connections.clear();
 }
 
-SIPWebSocketConnection::Ptr SIPWebSocketConnectionManager::findConnectionByAddress(const OSS::IPAddress& target)
+SIPWebSocketConnection::Ptr SIPWebSocketConnectionManager::findConnectionByAddress(const OSS::Net::IPAddress& target)
 {
   OSS::mutex_read_lock rlock(_rwConnectionsMutex);
   for (std::map<OSS::UInt64, SIPWebSocketConnection::Ptr>::iterator iter = _connections.begin();

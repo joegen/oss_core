@@ -38,8 +38,8 @@
  */
 
 
-#include "OSS/Application.h"
-#include "OSS/ServiceOptions.h"
+#include "OSS/UTL/Application.h"
+#include "OSS/UTL/ServiceOptions.h"
 
 #include "OSS/Net/Carp.h"
 #if HAVE_CONFIG_H

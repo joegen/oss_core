@@ -20,7 +20,7 @@
 #include <boost/array.hpp>
 
 #include "OSS/RTP/RTPResizingQueue.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 
 namespace OSS {
 namespace RTP {

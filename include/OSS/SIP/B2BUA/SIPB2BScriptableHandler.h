@@ -21,7 +21,7 @@
 
 #include <map>
 
-#include "OSS/Cache.h"
+#include "OSS/UTL/Cache.h"
 #include "OSS/SIP/SIPMessage.h"
 #include "OSS/SIP/SIPRequestLine.h"
 #include "OSS/SIP/SIPURI.h"
@@ -95,8 +95,8 @@ public:
   virtual SIPMessage::Ptr onRouteTransaction(
     SIPMessage::Ptr& pRequest,
     OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
-    OSS::IPAddress& localInterface,
-    OSS::IPAddress& target);
+    OSS::Net::IPAddress& localInterface,
+    OSS::Net::IPAddress& target);
     /// Route the new request.
     ///
     /// This method expects that the application will format the request-uri
@@ -115,15 +115,15 @@ public:
   SIPMessage::Ptr onRouteOutOfDialogTransaction(
     SIPMessage::Ptr& pRequest,
     OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
-    OSS::IPAddress& localInterface,
-    OSS::IPAddress& target);
+    OSS::Net::IPAddress& localInterface,
+    OSS::Net::IPAddress& target);
 
 
   SIPMessage::Ptr onRouteUpperReg(
     SIPMessage::Ptr& pRequest,
     OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
-    OSS::IPAddress& localInterface,
-    OSS::IPAddress& target);
+    OSS::Net::IPAddress& localInterface,
+    OSS::Net::IPAddress& target);
 
   virtual SIPMessage::Ptr onProcessRequestBody(
     SIPMessage::Ptr& pRequest,
@@ -170,7 +170,7 @@ public:
     const OSS::SIP::SIPMessage::Ptr& pRequest,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport,
     OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
-    OSS::IPAddress& target);
+    OSS::Net::IPAddress& target);
    /// This is normally the place where the application can specify the
    /// target for a reponse.
 
@@ -275,8 +275,8 @@ public:
   virtual bool onRouteClientTransaction(
     SIPMessage::Ptr& pRequest,
     OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
-    OSS::IPAddress& localInterface,
-    OSS::IPAddress& target);
+    OSS::Net::IPAddress& localInterface,
+    OSS::Net::IPAddress& target);
     /// Route the new request.
     ///
     /// This method expects that the application will format the request-uri
@@ -334,7 +334,7 @@ public:
   OSS::RTP::RTPProxyManager& rtpProxy();
 
   bool getExternalAddress(
-    const OSS::IPAddress& internalIp,
+    const OSS::Net::IPAddress& internalIp,
     std::string& externalIp) const;
     /// Return the external interface for a given internal listener
 protected:
@@ -370,7 +370,7 @@ protected:
   OSS::semaphore _optionsResponseThreadExit;
   OSS::SIP::SIPTransaction::Callback _keepAliveResponseCb;
   OSS::mutex_read_write _rwKeepAliveListMutex;
-  typedef std::map<OSS::IPAddress, OSS::IPAddress> KeepAliveList;
+  typedef std::map<OSS::Net::IPAddress, OSS::Net::IPAddress> KeepAliveList;
   KeepAliveList _keepAliveList;
   OSS::thread_pool _threadPool;
   //
@@ -425,7 +425,7 @@ inline OSS::RTP::RTPProxyManager& SIPB2BScriptableHandler::rtpProxy()
 }
 
 inline bool SIPB2BScriptableHandler::getExternalAddress(
-    const OSS::IPAddress& internalIp,
+    const OSS::Net::IPAddress& internalIp,
     std::string& externalIp) const
 {
   return _pTransactionManager->stack().transport().getExternalAddress(internalIp, externalIp);

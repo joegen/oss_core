@@ -30,7 +30,7 @@
 
 
 #include "OSS/Exec/Process.h"
-#include "OSS/IPCQueue.h"
+#include "OSS/UTL/IPCQueue.h"
 #include "OSS/Exec/ManagedDaemon.h"
 
 namespace OSS {

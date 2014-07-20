@@ -22,7 +22,7 @@
 #include "OSS/SIP/SIPTransaction.h"
 #include "OSS/SIP/SIPCSeq.h"
 #include "OSS/SIP/SIPFSMDispatch.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 
 namespace OSS {
 namespace SIP {

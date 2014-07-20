@@ -22,7 +22,7 @@
 #include <boost/bind.hpp>
 #include "OSS/SIP/SIPTCPConnectionManager.h"
 #include "OSS/SIP/SIPFSMDispatch.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 
 namespace OSS {
 namespace SIP {
@@ -96,7 +96,7 @@ void SIPTCPConnectionManager::stopAll()
   _connections.clear();
 }
 
-SIPTCPConnection::Ptr SIPTCPConnectionManager::findConnectionByAddress(const OSS::IPAddress& target)
+SIPTCPConnection::Ptr SIPTCPConnectionManager::findConnectionByAddress(const OSS::Net::IPAddress& target)
 {
   OSS::mutex_read_lock rlock(_rwConnectionsMutex);
   for (std::map<OSS::UInt64, SIPTCPConnection::Ptr>::iterator iter = _connections.begin();

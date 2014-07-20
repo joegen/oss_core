@@ -66,7 +66,7 @@ void overlay_update_upcall(ChimeraState* pState, Key* pKey, ChimeraHost* pHost, 
   unsigned char *ip = (unsigned char *)&(pHost->address);
   std::ostringstream ipaddr;
   ipaddr << (int)ip[0] << "." << (int)ip[1] << "." << (int)ip[2] << "." << (int)ip[3];
-  node.hostPort = OSS::IPAddress(ipaddr.str());
+  node.hostPort = OSS::Net::IPAddress(ipaddr.str());
   node.hostPort.setPort(pHost->port);
 
   Overlay::UserData* userData = (Overlay::UserData*)pState->userData;
@@ -128,7 +128,7 @@ bool Overlay::init(unsigned short port)
 }
   // Create an overlay listening on a the specified port
   //
-bool Overlay::join(const OSS::IPAddress& bootstrapHost)
+bool Overlay::join(const OSS::Net::IPAddress& bootstrapHost)
 {
   ChimeraState* pState = static_cast<ChimeraState*>(_state);
   if (!pState)
@@ -215,7 +215,7 @@ bool Overlay::getNode(const std::string& nodeId, Node& node) const
   return true;
 }
 
-bool Overlay::getHost(const OSS::IPAddress& hostPort, Node& node) const
+bool Overlay::getHost(const OSS::Net::IPAddress& hostPort, Node& node) const
 {
   OSS::mutex_read_lock lock(_hostListMutex);
   NodeList::const_iterator iter = _hostList.find(hostPort.toIpPortString());

@@ -2,7 +2,7 @@
 
 #include "gtest/gtest.h"
 #include "OSS/P2P/Overlay.h"
-#include "OSS/Thread.h"
+#include "OSS/UTL/Thread.h"
 
 using namespace OSS::P2P;
 
@@ -100,7 +100,7 @@ TEST(OverlayTest, overlay_init)
 
 TEST(OverlayTest, overlay_join)
 {
-  OSS::IPAddress host(HOST_IP, BOOTSTRAP_PORT);
+  OSS::Net::IPAddress host(HOST_IP, BOOTSTRAP_PORT);
 
   boot1.setUpdateHandler(boost::bind(update_handler_boot1, _1, 2));
   node1.setUpdateHandler(boost::bind(update_handler_node1, _1, 2));

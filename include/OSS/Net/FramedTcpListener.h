@@ -4,7 +4,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/noncopyable.hpp>
-#include "OSS/FramedTcpConnection.h"
+#include "OSS/Net/FramedTcpConnection.h"
 
 namespace OSS {
 

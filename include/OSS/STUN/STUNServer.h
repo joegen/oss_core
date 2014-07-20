@@ -24,8 +24,8 @@
 
 
 #include "OSS/OSS.h"
-#include "OSS/IPAddress.h"
-#include "OSS/Thread.h"
+#include "OSS/Net/IPAddress.h"
+#include "OSS/UTL/Thread.h"
 
 namespace OSS {
 namespace STUN {
@@ -38,8 +38,8 @@ public:
   ~STUNServer();
 
   bool initialize(
-    const OSS::IPAddress& primary,
-    const OSS::IPAddress& secondary);
+    const OSS::Net::IPAddress& primary,
+    const OSS::Net::IPAddress& secondary);
 
   void run();
 
@@ -48,8 +48,8 @@ private:
 
   void internal_run();
 
-  OSS::IPAddress _primaryIp;
-  OSS::IPAddress _secondaryIp;
+  OSS::Net::IPAddress _primaryIp;
+  OSS::Net::IPAddress _secondaryIp;
   OSS_HANDLE _config;
   OSS::semaphore _exitSync;
 };

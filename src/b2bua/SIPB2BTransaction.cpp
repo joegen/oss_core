@@ -20,7 +20,7 @@
 
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransactionManager.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 #include "OSS/SIP/SIPRequestLine.h"
 #include "OSS/ABNF/ABNFSIPIPV4Address.h"
 #include "OSS/ABNF/ABNFSIPIPV6Address.h"
@@ -57,7 +57,7 @@ bool SIPB2BTransaction::onRouteResponse(
   const OSS::SIP::SIPMessage::Ptr& pRequest,
   const OSS::SIP::SIPTransportSession::Ptr& pTransport,
   const OSS::SIP::SIPTransaction::Ptr& pTransaction,
-  OSS::IPAddress& target)
+  OSS::Net::IPAddress& target)
 {
   bool validTarget = false;
   {//localize
@@ -123,7 +123,7 @@ void SIPB2BTransaction::runTask()
     SIPMessage::Ptr pTrnCreateResponse = _pManager->onTransactionCreated(_pServerRequest, shared_from_this());
     if (pTrnCreateResponse)
     {
-      OSS::IPAddress target;
+      OSS::Net::IPAddress target;
       if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
       {
         if (target.isValid())
@@ -140,7 +140,7 @@ void SIPB2BTransaction::runTask()
     pAuthenticator = _pManager->onAuthenticateTransaction(_pServerRequest, shared_from_this());
     if (pAuthenticator)
     {
-      OSS::IPAddress target;
+      OSS::Net::IPAddress target;
       if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
       {
         if (target.isValid())
@@ -162,7 +162,7 @@ void SIPB2BTransaction::runTask()
     // Route the outbound request.
     // Send a response (probably a 404) if the request is non-routable
     //
-    OSS::IPAddress outboundTarget;
+    OSS::Net::IPAddress outboundTarget;
     SIPMessage::Ptr pRouteResponse;
 
     try
@@ -181,7 +181,7 @@ void SIPB2BTransaction::runTask()
     {
       if (pRouteResponse->isResponse())
       {
-        OSS::IPAddress target;
+        OSS::Net::IPAddress target;
         if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
         {
           if (target.isValid())
@@ -201,7 +201,7 @@ void SIPB2BTransaction::runTask()
       SIPMessage::Ptr localResponse = _pManager->onInvokeLocalHandler(_pServerRequest, _pServerTransport, shared_from_this());
       if (!localResponse)
         localResponse = _pServerRequest->createResponse(500, "No local handler specified");
-      OSS::IPAddress target;
+      OSS::Net::IPAddress target;
       if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
       {
         if (target.isValid())
@@ -215,7 +215,7 @@ void SIPB2BTransaction::runTask()
     {
       OSS::log_critical(_logId + "Invalid Local-Interface returned by onRouteTransaction - " + _localInterface.toIpPortString() );
       SIPMessage::Ptr serverError = _pServerRequest->createResponse(500, "Unable to determine local interface");
-      OSS::IPAddress target;
+      OSS::Net::IPAddress target;
       if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
       {
         if (target.isValid())
@@ -229,7 +229,7 @@ void SIPB2BTransaction::runTask()
     {
       OSS::log_critical(_logId + "Invalid Outbound-Target returned by onRouteTransaction");
       SIPMessage::Ptr serverError = _pServerRequest->createResponse(500);
-      OSS::IPAddress target;
+      OSS::Net::IPAddress target;
       if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
       {
         if (target.isValid())
@@ -276,7 +276,7 @@ void SIPB2BTransaction::runTask()
       SIPMessage::Ptr localResponse = _pManager->onGenerateLocalResponse(_pServerRequest, _pServerTransport, shared_from_this());
       if (localResponse)
       {
-        OSS::IPAddress target;
+        OSS::Net::IPAddress target;
         if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
         {
           if (target.isValid())
@@ -314,7 +314,7 @@ void SIPB2BTransaction::runTask()
       {
         if (pBodyResponse->isResponse())
         {
-          OSS::IPAddress target;
+          OSS::Net::IPAddress target;
           if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
           {
             if (target.isValid())
@@ -363,7 +363,7 @@ void SIPB2BTransaction::runTask()
   {
 
     SIPMessage::Ptr serverError = _pServerRequest->createResponse(500, e.message());
-    OSS::IPAddress target;
+    OSS::Net::IPAddress target;
     if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
     {
       if (target.isValid())
@@ -418,8 +418,8 @@ void SIPB2BTransaction::runResponseTask()
     OSS::mutex_lock reponseLock(_resposeMutex);
     if (_pTransactionError)
     {
-      OSS::IPAddress localInterface;
-      OSS::IPAddress target;
+      OSS::Net::IPAddress localInterface;
+      OSS::Net::IPAddress target;
       //
       // Signal the error and delete this transaction if a failover is not possible
       //
@@ -447,8 +447,8 @@ void SIPB2BTransaction::runResponseTask()
     {
       _pManager->onTransactionError(_pTransactionError, response, shared_from_this());
 
-      OSS::IPAddress localInterface;
-      OSS::IPAddress target;
+      OSS::Net::IPAddress localInterface;
+      OSS::Net::IPAddress target;
       if (!_pServerRequest)
         throw OSS::SIP::SIPException("Server Request is NULL while calling SIPB2BTransaction::runResponseTask()");
 
@@ -462,7 +462,7 @@ void SIPB2BTransaction::runResponseTask()
         response->setProperty("peer-xor", clientRequestPeerXor);
         pErrorResponse->setProperty("peer-xor", serverRequestPeerXor);
 
-        OSS::IPAddress target;
+        OSS::Net::IPAddress target;
         if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
         {
           if (target.isValid())
@@ -483,7 +483,7 @@ void SIPB2BTransaction::runResponseTask()
       SIPMessage::Ptr pProvisionalResponse = _pServerRequest->reformatResponse(response);
       if (pProvisionalResponse)
       {
-        OSS::IPAddress target;
+        OSS::Net::IPAddress target;
         if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
         {
           std::string serverRequestPeerXor = "0";
@@ -514,7 +514,7 @@ void SIPB2BTransaction::runResponseTask()
 
       if (pFinalResponse)
       {
-        OSS::IPAddress target;
+        OSS::Net::IPAddress target;
         if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
         {
           std::string serverRequestPeerXor = "0";
@@ -576,7 +576,7 @@ bool SIPB2BTransaction::hasProperty(const std::string&  property) const
   return  _properties.find(property) != _properties.end();
 }
 
-bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OSS::IPAddress& target)
+bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OSS::Net::IPAddress& target)
 {
   std::string host;
   pClientRequest->getProperty("target-address", host);

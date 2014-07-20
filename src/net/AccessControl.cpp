@@ -19,8 +19,8 @@
 //
 
 #include "OSS/Net/AccessControl.h"
-#include "OSS/Logger.h"
-#include "OSS/Net.h"
+#include "OSS/UTL/Logger.h"
+#include "OSS/Net/Net.h"
 
 namespace OSS {
 namespace Net {

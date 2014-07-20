@@ -21,7 +21,7 @@
 
 #include <boost/noncopyable.hpp>
 #include <boost/array.hpp>
-#include <OSS/Thread.h>
+#include <OSS/UTL/Thread.h>
 #include <OSS/RTP/RTPResizingQueue.h>
 
 

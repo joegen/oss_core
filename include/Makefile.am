@@ -4,33 +4,25 @@
 nobase_includeHEADERS_INSTALL = $(INSTALL) -D -p -c -m 644
 
 nobase_include_HEADERS = \
-    OSS/Semaphore.h \
-    OSS/StackTrace.h \
-    OSS/DynamicHashTable.h \
-    OSS/DNS.h \
-    OSS/Compress.h \
-    OSS/BlockingQueue.h \
-    OSS/Exception.h \
-    OSS/ServiceDaemon.h \
-    OSS/ServiceOptions.h \
-    OSS/FramedTcpListener.h \
-    OSS/FramedTcpClient.h \
-    OSS/Crypto.h \
-    OSS/Thread.h \
-    OSS/DebugMemory.h \
-    OSS/IPAddress.h \
-    OSS/Endian.h \
+    OSS/UTL/Semaphore.h \
+    OSS/UTL/StackTrace.h \
+    OSS/UTL/DynamicHashTable.h \
+    OSS/UTL/Compress.h \
+    OSS/UTL/BlockingQueue.h \
+    OSS/UTL/Exception.h \
+    OSS/UTL/ServiceDaemon.h \
+    OSS/UTL/ServiceOptions.h \
+    OSS/Crypto/Crypto.h \
+    OSS/UTL/Thread.h \
+    OSS/UTL/DebugMemory.h \
+    OSS/UTL/Endian.h \
     OSS/OSS.h \
-    OSS/Logger.h \
-    OSS/Net.h \
-    OSS/FramedTcpConnection.h \
-    OSS/BerkeleyDb.h \
-    OSS/RedisClient.h \
-    OSS/Cache.h \
-    OSS/Core.h \
-    OSS/TimedQueue.h \
-    OSS/Application.h \
-    OSS/IPCQueue.h \
+    OSS/Persistent/BerkeleyDb.h \
+    OSS/Persistent/RedisClient.h \
+    OSS/UTL/Cache.h \
+    OSS/UTL/TimedQueue.h \
+    OSS/UTL/Application.h \
+    OSS/UTL/IPCQueue.h \
     OSS/Exec/Process.h \
     OSS/Exec/Command.h \
     OSS/Exec/ManagedDaemon.h \
@@ -218,8 +210,16 @@ nobase_include_HEADERS = \
     OSS/Net/TurnServer.h \
     OSS/Net/HTTPServer.h \
     OSS/Net/AccessControl.h \
+    OSS/Net/IPAddress.h \
     OSS/Net/TLSManager.h \
+    OSS/Net/DNS.h \
+    OSS/Net/Net.h \
+    OSS/Net/FramedTcpListener.h \
+    OSS/Net/FramedTcpClient.h \
+    OSS/Net/FramedTcpConnection.h \
     OSS/UTL/AdaptiveDelay.h \
+    OSS/UTL/CoreUtils.h \
+    OSS/UTL/Logger.h \
     OSS/UTL/FastRandom.h \
     OSS/websocketpp/common.hpp \
     OSS/websocketpp/connection.hpp \

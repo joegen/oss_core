@@ -19,8 +19,8 @@
 #ifndef TLSMANAGER_H_INCLUDED
 #define	TLSMANAGER_H_INCLUDED
 
-#include "OSS/Core.h"
-#include "OSS/Net.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/Net/Net.h"
 
 
 namespace OSS {

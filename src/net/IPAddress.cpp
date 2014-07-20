@@ -18,12 +18,12 @@
 //
 
 #include "Poco/Net/NetworkInterface.h"
-#include "OSS/IPAddress.h"
-#include "OSS/Core.h"
-#include "OSS/Net.h"
+#include "OSS/Net/IPAddress.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/Net/Net.h"
 
 namespace OSS {
-
+namespace Net {
 
 using boost::asio::ip::address_v4;
 using boost::asio::ip::address_v6;
@@ -174,6 +174,6 @@ bool IPAddress::isLocalAddress() const
   return true;
 }
 
-} // OSS
+} } // OSS::Net
 
 

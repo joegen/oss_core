@@ -103,15 +103,15 @@ public:
   virtual SIPMessage::Ptr onRouteTransaction(
     SIPMessage::Ptr& pRequest,
     SIPB2BTransaction::Ptr pTransaction,
-    OSS::IPAddress& localInterface,
-    OSS::IPAddress& target)
+    OSS::Net::IPAddress& localInterface,
+    OSS::Net::IPAddress& target)
   { return SIPMessage::Ptr(); };
   
   virtual SIPMessage::Ptr onRouteTransaction(
     SIPMessage::Ptr& pRequest,
     SIPB2BTransaction::Ptr pTransaction,
-    OSS::IPAddress& localInterface,
-    OSS::IPAddress& target,
+    OSS::Net::IPAddress& localInterface,
+    OSS::Net::IPAddress& target,
     bool& handled)
   { return SIPMessage::Ptr(); };
     /// Route the new request.
@@ -134,8 +134,8 @@ public:
   virtual bool onRouteClientTransaction(
     SIPMessage::Ptr& pRequest,
     SIPB2BTransaction::Ptr pTransaction,
-    OSS::IPAddress& localInterface,
-    OSS::IPAddress& target)
+    OSS::Net::IPAddress& localInterface,
+    OSS::Net::IPAddress& target)
   { return false; };
     /// Route the new request.
     ///
@@ -205,7 +205,7 @@ public:
     const OSS::SIP::SIPMessage::Ptr& pRequest,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport,
     SIPB2BTransaction::Ptr pTransaction,
-    OSS::IPAddress& target)
+    OSS::Net::IPAddress& target)
   { return false; };
    /// This is normally the place where the application can specify the
    /// target for a reponse.

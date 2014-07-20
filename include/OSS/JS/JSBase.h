@@ -27,8 +27,8 @@
 #include <boost/tuple/tuple.hpp>
 
 #include "OSS/JS/JS.h"
-#include "OSS/Thread.h"
-#include "OSS/BlockingQueue.h"
+#include "OSS/UTL/Thread.h"
+#include "OSS/UTL/BlockingQueue.h"
 
 #include "v8.h"
 

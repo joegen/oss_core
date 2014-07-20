@@ -22,7 +22,7 @@
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 #include "OSS/SIP/SIPTransportSession.h"
 #include "OSS/SIP/SIPTCPConnection.h"
 #include "OSS/SIP/SIPTCPConnectionManager.h"
@@ -80,7 +80,7 @@ void SIPTCPConnection::handleRead(const boost::system::error_code& e, std::size_
       if (!ec)
       {
         boost::asio::ip::address ip = ep.address();
-        _lastReadAddress = OSS::IPAddress(ip.to_string(), ep.port());
+        _lastReadAddress = OSS::Net::IPAddress(ip.to_string(), ep.port());
       }
     }
 
@@ -314,7 +314,7 @@ void SIPTCPConnection::handleHandshake(const boost::system::error_code& error)
   // this is only significant for TLS
 }
 
-OSS::IPAddress SIPTCPConnection::getLocalAddress() const
+OSS::Net::IPAddress SIPTCPConnection::getLocalAddress() const
 {
   if (_localAddress.isValid())
     return _localAddress;
@@ -326,7 +326,7 @@ OSS::IPAddress SIPTCPConnection::getLocalAddress() const
     if (!ec)
     {
       boost::asio::ip::address ip = ep.address();
-      _localAddress = OSS::IPAddress(ip.to_string(), ep.port());
+      _localAddress = OSS::Net::IPAddress(ip.to_string(), ep.port());
       return _localAddress;
     }
     else
@@ -335,10 +335,10 @@ OSS::IPAddress SIPTCPConnection::getLocalAddress() const
     }
   }
 
-  return OSS::IPAddress();
+  return OSS::Net::IPAddress();
 }
 
-OSS::IPAddress SIPTCPConnection::getRemoteAddress() const
+OSS::Net::IPAddress SIPTCPConnection::getRemoteAddress() const
 {
   if (_lastReadAddress.isValid())
     return _lastReadAddress;
@@ -351,7 +351,7 @@ OSS::IPAddress SIPTCPConnection::getRemoteAddress() const
       if (!ec)
       {
         boost::asio::ip::address ip = ep.address();
-        _lastReadAddress = OSS::IPAddress(ip.to_string(), ep.port());
+        _lastReadAddress = OSS::Net::IPAddress(ip.to_string(), ep.port());
         return _lastReadAddress;
       }
       else
@@ -360,19 +360,19 @@ OSS::IPAddress SIPTCPConnection::getRemoteAddress() const
         return _connectAddress;
       }
   }
-  return OSS::IPAddress();
+  return OSS::Net::IPAddress();
 }
 
-void SIPTCPConnection::clientBind(const OSS::IPAddress& listener, unsigned short portBase, unsigned short portMax)
+void SIPTCPConnection::clientBind(const OSS::Net::IPAddress& listener, unsigned short portBase, unsigned short portMax)
 {
   if (!_socket.is_open())
   {
     bool isBound = false;
     unsigned short port = portBase;
-    _socket.open(const_cast<OSS::IPAddress&>(listener).address().is_v4() ? boost::asio::ip::tcp::v4() : boost::asio::ip::tcp::v6());
+    _socket.open(const_cast<OSS::Net::IPAddress&>(listener).address().is_v4() ? boost::asio::ip::tcp::v4() : boost::asio::ip::tcp::v6());
     while(!isBound)
     {    
-      boost::asio::ip::tcp::endpoint ep(const_cast<OSS::IPAddress&>(listener).address(), port);
+      boost::asio::ip::tcp::endpoint ep(const_cast<OSS::Net::IPAddress&>(listener).address(), port);
       boost::system::error_code ec;
       _socket.bind(ep, ec);
       isBound = !ec;
@@ -387,14 +387,14 @@ void SIPTCPConnection::clientBind(const OSS::IPAddress& listener, unsigned short
   }
 }
 
-void SIPTCPConnection::clientConnect(const OSS::IPAddress& target)
+void SIPTCPConnection::clientConnect(const OSS::Net::IPAddress& target)
 {
   if (_socket.is_open())
   {
     _connectAddress = target;
     std::string port = OSS::string_from_number<unsigned short>(target.getPort());
     boost::asio::ip::tcp::resolver::iterator ep;
-    boost::asio::ip::address addr = const_cast<OSS::IPAddress&>(target).address();
+    boost::asio::ip::address addr = const_cast<OSS::Net::IPAddress&>(target).address();
     boost::asio::ip::tcp::resolver::query
     query(addr.is_v4() ? boost::asio::ip::tcp::v4() : boost::asio::ip::tcp::v6(),
       addr.to_string(), port == "0" || port.empty() ? "5060" : port);

@@ -23,7 +23,7 @@
 
 
 #include "OSS/OSS.h"
-#include "OSS/Thread.h"
+#include "OSS/UTL/Thread.h"
 #include "OSS/Persistent/KeyValueStoreBase.h"
 
 

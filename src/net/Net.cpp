@@ -29,11 +29,11 @@
 #include "Poco/Net/DatagramSocket.h"
 #include "Poco/Exception.h"
 
-#include "OSS/Net.h"
-#include "OSS/Core.h"
-#include "OSS/Exception.h"
-#include "OSS/Thread.h"
-#include "OSS/Application.h"
+#include "OSS/Net/Net.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/UTL/Exception.h"
+#include "OSS/UTL/Thread.h"
+#include "OSS/UTL/Application.h"
 
 #if !defined(OSS_OS_FAMILY_WINDOWS)
 #include <ifaddrs.h>
@@ -156,7 +156,7 @@ boost::asio::ip::tcp::resolver& net_resolver()
 }
 
 //
-// OSS::IPAddress helper functions
+// OSS::Net::IPAddress helper functions
 //
 bool socket_address_cidr_verify(const std::string& ip, const std::string& cidr)
 {
@@ -556,7 +556,7 @@ bool socket_is_udp(socket_handle handle)
   return udpCast != 0;
 }
 
-OSS::IPAddress socket_get_address(socket_handle handle)
+OSS::Net::IPAddress socket_get_address(socket_handle handle)
 {
   Poco::Net::Socket* sock = static_cast<Poco::Net::Socket*>(handle);
   
@@ -570,7 +570,7 @@ OSS::IPAddress socket_get_address(socket_handle handle)
   try
   {
      sockAddress = sock->address();
-     OSS::IPAddress addr(sockAddress.host().toString(), sockAddress.port());
+     OSS::Net::IPAddress addr(sockAddress.host().toString(), sockAddress.port());
      return addr;
   }
   catch(const Poco::Exception& e)
@@ -579,7 +579,7 @@ OSS::IPAddress socket_get_address(socket_handle handle)
   }
 }
 	
-OSS::IPAddress socket_get_peer_address(socket_handle handle)
+OSS::Net::IPAddress socket_get_peer_address(socket_handle handle)
 {
   Poco::Net::Socket* sock = static_cast<Poco::Net::Socket*>(handle);
   
@@ -587,7 +587,7 @@ OSS::IPAddress socket_get_peer_address(socket_handle handle)
   try
   {
     sockAddress = sock->peerAddress();
-    OSS::IPAddress addr(sockAddress.host().toString(), sockAddress.port());
+    OSS::Net::IPAddress addr(sockAddress.host().toString(), sockAddress.port());
     return addr;
   }
   catch(const Poco::Exception& e)

@@ -23,7 +23,7 @@
 
 
 #include "OSS/SIP/Parser.h"
-#include "OSS/Core.h"
+#include "OSS/UTL/CoreUtils.h"
 
 
 namespace OSS {

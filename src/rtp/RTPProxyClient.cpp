@@ -18,13 +18,13 @@
 
 
 #include "OSS/RTP/RTPProxyClient.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 
 namespace OSS {
 namespace RTP {
 
 
-RTPProxyClient::RTPProxyClient(const OSS::IPAddress& rpcHost, int poolSize) :
+RTPProxyClient::RTPProxyClient(const OSS::Net::IPAddress& rpcHost, int poolSize) :
   _poolSize(poolSize),
   _rpcHost(rpcHost)
 {
@@ -45,11 +45,11 @@ RTPProxyClient::~RTPProxyClient()
 void RTPProxyClient::handleSDP(
   const std::string& logId,
   const std::string& sessionId,
-  const OSS::IPAddress& sentBy,
-  const OSS::IPAddress& packetSourceIP,
-  const OSS::IPAddress& packetLocalInterface,
-  const OSS::IPAddress& route,
-  const OSS::IPAddress& routeLocalInterface,
+  const OSS::Net::IPAddress& sentBy,
+  const OSS::Net::IPAddress& packetSourceIP,
+  const OSS::Net::IPAddress& packetLocalInterface,
+  const OSS::Net::IPAddress& route,
+  const OSS::Net::IPAddress& routeLocalInterface,
   RTPProxySession::RequestType requestType,
   std::string& sdp,
   RTPProxy::Attributes& rtpAttribute)

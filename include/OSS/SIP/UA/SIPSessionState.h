@@ -24,8 +24,8 @@
 #include <map>
 #include <string>
 
-#include "OSS/Thread.h"
-#include "OSS/IPAddress.h"
+#include "OSS/UTL/Thread.h"
+#include "OSS/Net/IPAddress.h"
 #include "OSS/SIP/SIPURI.h"
 #include "OSS/SIP/SIPMessage.h"
 #include "OSS/SIP/SIPTransaction.h"
@@ -68,8 +68,8 @@ public:
   const OSS::SIP::SIPURI& getLocalContact() const;
   const OSS::SIP::SIPURI& getLocalUri() const;
   const OSS::SIP::SIPURI& getRemoteUri() const;
-  const OSS::IPAddress& getRemoteTargetAddress() const;
-  const OSS::IPAddress& getLocalTargetAddress() const;
+  const OSS::Net::IPAddress& getRemoteTargetAddress() const;
+  const OSS::Net::IPAddress& getLocalTargetAddress() const;
   const std::string& getTransportScheme() const;
   const std::string& getTransportId() const;
   const std::vector<OSS::SIP::SIPURI>& getRouteSet() const;
@@ -88,8 +88,8 @@ public:
   void setLocalContact(const OSS::SIP::SIPURI& localContact);
   void setLocalUri(const OSS::SIP::SIPURI& localUri);
   void setRemoteUri(const OSS::SIP::SIPURI& remoteUri);
-  void setRemoteTargetAddress(const OSS::IPAddress& remoteTargetAddress);
-  void setLocalTargetAddress(const OSS::IPAddress& localTargetAddress);
+  void setRemoteTargetAddress(const OSS::Net::IPAddress& remoteTargetAddress);
+  void setLocalTargetAddress(const OSS::Net::IPAddress& localTargetAddress);
   void setTransportScheme(const std::string& transportScheme);
   void setTransportId(const std::string& transportId);
   void setRouteSet(const std::vector<OSS::SIP::SIPURI>& routeSet);
@@ -108,8 +108,8 @@ protected:
   OSS::SIP::SIPURI _localContact;
   OSS::SIP::SIPURI _localUri;
   OSS::SIP::SIPURI _remoteUri;
-  OSS::IPAddress _remoteTargetAddress;
-  OSS::IPAddress _localTargetAddress;
+  OSS::Net::IPAddress _remoteTargetAddress;
+  OSS::Net::IPAddress _localTargetAddress;
   std::string _transportScheme;
   std::string _transportId;
   std::vector<OSS::SIP::SIPURI> _routeSet;
@@ -178,12 +178,12 @@ inline const OSS::SIP::SIPURI& SIPSessionState::getRemoteUri() const
   return _remoteUri;
 }
 
-inline const OSS::IPAddress& SIPSessionState::getRemoteTargetAddress() const
+inline const OSS::Net::IPAddress& SIPSessionState::getRemoteTargetAddress() const
 {
   return _remoteTargetAddress;
 }
 
-inline const OSS::IPAddress& SIPSessionState::getLocalTargetAddress() const
+inline const OSS::Net::IPAddress& SIPSessionState::getLocalTargetAddress() const
 {
   return _localTargetAddress;
 }
@@ -263,12 +263,12 @@ inline void SIPSessionState::setRemoteUri(const OSS::SIP::SIPURI& remoteUri)
   _remoteUri = remoteUri;
 }
 
-inline void SIPSessionState::setRemoteTargetAddress(const OSS::IPAddress& remoteTargetAddress)
+inline void SIPSessionState::setRemoteTargetAddress(const OSS::Net::IPAddress& remoteTargetAddress)
 {
   _remoteTargetAddress = remoteTargetAddress;
 }
 
-inline void SIPSessionState::setLocalTargetAddress(const OSS::IPAddress& localTargetAddress)
+inline void SIPSessionState::setLocalTargetAddress(const OSS::Net::IPAddress& localTargetAddress)
 {
   _localTargetAddress = localTargetAddress;
 }

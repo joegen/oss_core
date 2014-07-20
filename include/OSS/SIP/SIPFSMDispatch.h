@@ -22,7 +22,7 @@
 #define SIP_SIPFSMDispatch_INCLUDED
 
 
-#include "OSS/Cache.h"
+#include "OSS/UTL/Cache.h"
 #include "OSS/SIP/SIP.h"
 #include "OSS/SIP/SIPIctPool.h"
 #include "OSS/SIP/SIPNictPool.h"
@@ -71,8 +71,8 @@ public:
 
   void sendRequest(
     const SIPMessage::Ptr& pRequest,
-    const OSS::IPAddress& localAddress,
-    const OSS::IPAddress& remoteAddress,
+    const OSS::Net::IPAddress& localAddress,
+    const OSS::Net::IPAddress& remoteAddress,
     SIPTransaction::Callback& callback,
     SIPTransaction::TerminateCallback& terminateCallback);
     /// Send a new SIP (REQUEST) message to the Network.

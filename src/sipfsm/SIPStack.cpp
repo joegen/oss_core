@@ -24,7 +24,7 @@
 #include "OSS/Persistent/ClassType.h"
 #include "OSS/SIP/SIPVia.h"
 #include "OSS/SIP/SIPTransportSession.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 
 
 using OSS::Persistent::ClassType;
@@ -78,7 +78,7 @@ void SIPStack::transportInit()
   {
     for (std::size_t i = 0; i < _udpListeners.size(); i++)
     {
-      OSS::IPAddress& iface = _udpListeners[i];
+      OSS::Net::IPAddress& iface = _udpListeners[i];
       std::string ip = iface.address().to_string();
       std::string port = OSS::string_from_number<unsigned long>(iface.getPort());
       _fsmDispatch.transport().addUDPTransport(ip, port, iface.externalAddress());
@@ -92,7 +92,7 @@ void SIPStack::transportInit()
   {
     for (std::size_t i = 0; i < _tcpListeners.size(); i++)
     {
-      OSS::IPAddress& iface = _tcpListeners[i];
+      OSS::Net::IPAddress& iface = _tcpListeners[i];
       std::string ip = iface.address().to_string();
       std::string port = OSS::string_from_number(iface.getPort());
       _fsmDispatch.transport().addTCPTransport(ip, port, iface.externalAddress());
@@ -106,7 +106,7 @@ void SIPStack::transportInit()
   {
     for (std::size_t i = 0; i < _wsListeners.size(); i++)
     {
-      OSS::IPAddress& iface = _wsListeners[i];
+      OSS::Net::IPAddress& iface = _wsListeners[i];
       std::string ip = iface.address().to_string();
       std::string port = OSS::string_from_number(iface.getPort());
       _fsmDispatch.transport().addWSTransport(ip, port, iface.externalAddress());
@@ -120,7 +120,7 @@ void SIPStack::transportInit()
   {
     for (std::size_t i = 0; i < _tlsListeners.size(); i++)
     {
-      OSS::IPAddress& iface = _tlsListeners[i];
+      OSS::Net::IPAddress& iface = _tlsListeners[i];
       std::string ip = iface.address().to_string();
       std::string port = OSS::string_from_number(iface.getPort());
       _fsmDispatch.transport().addTLSTransport(ip, port, iface.externalAddress(), _tlsCertFile, _tlsDiffieHellmanParamFile, _tlsPassword);
@@ -160,7 +160,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
   {
     for (std::size_t i = 0; i < _udpListeners.size(); i++)
     {
-      OSS::IPAddress& iface = _udpListeners[i];
+      OSS::Net::IPAddress& iface = _udpListeners[i];
       std::string ip = iface.address().to_string();
       for(unsigned short p = udpPortBase; p <= udpPortMax; p++)
       {
@@ -187,7 +187,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
   {
     for (std::size_t i = 0; i < _tcpListeners.size(); i++)
     {
-      OSS::IPAddress& iface = _tcpListeners[i];
+      OSS::Net::IPAddress& iface = _tcpListeners[i];
       std::string ip = iface.address().to_string();
       for(unsigned short p = tcpPortBase; p <= tcpPortMax; p++)
       {
@@ -214,7 +214,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
   {
     for (std::size_t i = 0; i < _wsListeners.size(); i++)
     {
-      OSS::IPAddress& iface = _wsListeners[i];
+      OSS::Net::IPAddress& iface = _wsListeners[i];
       std::string ip = iface.address().to_string();
       for(unsigned short p = wsPortBase; p <= wsPortMax; p++)
       {
@@ -241,7 +241,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
   {
     for (std::size_t i = 0; i < _tlsListeners.size(); i++)
     {
-      OSS::IPAddress& iface = _tlsListeners[i];
+      OSS::Net::IPAddress& iface = _tlsListeners[i];
       std::string ip = iface.address().to_string();
       for(unsigned short p = tlsPortBase; p <= tlsPortMax; p++)
       {
@@ -308,7 +308,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 
         if (hasFoundDefault  && transportEnabled)
         {
-          OSS::IPAddress listener;
+          OSS::Net::IPAddress listener;
           listener = ip;
           listener.externalAddress() = external;
           listener.setPort(sipPort);
@@ -319,7 +319,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 
     if (udpEnabled)
     {
-      OSS::IPAddress listener;
+      OSS::Net::IPAddress listener;
       listener = ip;
       listener.externalAddress() = external;
       listener.setPort(sipPort);
@@ -328,7 +328,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 
     if (tcpEnabled)
     {
-      OSS::IPAddress listener;
+      OSS::Net::IPAddress listener;
       listener = ip;
       listener.externalAddress() = external;
       listener.setPort(sipPort);
@@ -337,7 +337,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 
     if (wsEnabled)
     {
-      OSS::IPAddress listener;
+      OSS::Net::IPAddress listener;
       listener = ip;
       listener.externalAddress() = external;
       listener.setPort(wsPort);
@@ -346,7 +346,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 
     if (tlsEnabled)
     {
-      OSS::IPAddress listener;
+      OSS::Net::IPAddress listener;
       listener = ip;
       listener.externalAddress() = external;
       listener.setPort(tlsPort);
@@ -365,7 +365,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       hasFoundDefault = true;
       DataType defaultIface = listeners["default-interface-address"];
       DataType defaultPort = listeners["default-interface-port"];
-      OSS::IPAddress defaultInterface((const char*)defaultIface);
+      OSS::Net::IPAddress defaultInterface((const char*)defaultIface);
       defaultInterface.setPort((int)defaultPort);
       _fsmDispatch.transport().defaultListenerAddress() = defaultInterface;
     }
@@ -381,7 +381,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
     if (iface.exists("udp-enabled") && (bool)iface["udp-enabled"])
     {
       int port = iface.exists("sip-port") ? (int)iface["sip-port"] : 5060;
-      OSS::IPAddress listener;
+      OSS::Net::IPAddress listener;
       listener = ip;
       listener.setPort(port);
       _fsmDispatch.transport().defaultListenerAddress() = listener;
@@ -389,7 +389,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
     else if (iface.exists("tcp-enabled") && (bool)iface["tcp-enabled"])
     {
       int port = iface.exists("sip-port") ? (int)iface["sip-port"] : 5060;
-      OSS::IPAddress listener;
+      OSS::Net::IPAddress listener;
       listener = ip;
       listener.setPort(port);
       _fsmDispatch.transport().defaultListenerAddress() = listener;
@@ -397,7 +397,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
     else if (iface.exists("ws-enabled") && (bool)iface["ws-enabled"])
     {
       int port = iface.exists("sip-port") ? (int)iface["sip-port"] : 5060;
-      OSS::IPAddress listener;
+      OSS::Net::IPAddress listener;
       listener = ip;
       listener.setPort(port);
       _fsmDispatch.transport().defaultListenerAddress() = listener;
@@ -405,7 +405,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
     else if (iface.exists("tls-enabled") && (bool)iface["tls-enabled"])
     {
       int port = iface.exists("tls-port") ? (int)iface["tsl-port"] : 5061;
-      OSS::IPAddress listener;
+      OSS::Net::IPAddress listener;
       listener = ip;
       listener.setPort(port);
       _fsmDispatch.transport().defaultListenerAddress() = listener;
@@ -520,8 +520,8 @@ void SIPStack::stop()
 
 void SIPStack::sendRequest(
   const SIPMessage::Ptr& pRequest,
-  const OSS::IPAddress& localAddress,
-  const OSS::IPAddress& remoteAddress,
+  const OSS::Net::IPAddress& localAddress,
+  const OSS::Net::IPAddress& remoteAddress,
   SIPTransaction::Callback callback,
   SIPTransaction::TerminateCallback terminateCallback)
 {
@@ -529,8 +529,8 @@ void SIPStack::sendRequest(
 }
 
 void SIPStack::sendRequestDirect(const SIPMessage::Ptr& pRequest,
-  const OSS::IPAddress& localAddress,
-  const OSS::IPAddress& remoteAddress)
+  const OSS::Net::IPAddress& localAddress,
+  const OSS::Net::IPAddress& remoteAddress)
 {
 
   std::string transport;

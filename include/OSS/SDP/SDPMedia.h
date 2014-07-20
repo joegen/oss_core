@@ -25,8 +25,8 @@
 #include <boost/shared_ptr.hpp>
 
 #include "OSS/SDP/SDP.h"
-#include "OSS/IPAddress.h"
-#include "OSS/Thread.h"
+#include "OSS/Net/IPAddress.h"
+#include "OSS/UTL/Thread.h"
 #include "OSS/SDP/SDPHeaderList.h"
 
 

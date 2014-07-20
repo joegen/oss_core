@@ -25,7 +25,7 @@
 #include "OSS/SIP/SIPIstPool.h"
 #include "OSS/SIP/SIPException.h"
 #include "OSS/SIP/SIPVia.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 
 namespace OSS {
 namespace SIP {

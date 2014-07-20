@@ -59,7 +59,7 @@ See also: For more string comparison tricks (substring, prefix, suffix, and regu
 
 #include "gtest/gtest.h"
 #include "OSS/OSS.h"
-#include "OSS/DNS.h"
+#include "OSS/Net/DNS.h"
 
 TEST(APITest, dns_lookup_host)
 {

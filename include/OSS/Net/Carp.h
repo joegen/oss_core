@@ -44,9 +44,9 @@
 
 #include <boost/thread.hpp>
 
-#include "OSS/Core.h"
-#include "OSS/Net.h"
-#include "OSS/ServiceOptions.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/Net/Net.h"
+#include "OSS/UTL/ServiceOptions.h"
 
 
 namespace OSS {

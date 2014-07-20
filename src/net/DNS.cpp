@@ -19,9 +19,9 @@
 
 #include <list>
 #include <sstream>
-#include "OSS/DNS.h"
-#include "OSS/Net.h"
-#include "OSS/Core.h"
+#include "OSS/Net/DNS.h"
+#include "OSS/Net/Net.h"
+#include "OSS/UTL/CoreUtils.h"
 #include "Poco/ExpireCache.h"
 
 #if OSS_OS_FAMILY_WINDOWS
@@ -33,7 +33,7 @@
   #define OSS_HAS_RESOLV_H
 #endif  // OSS_OS_FAMILY_WINDOWS
 
-
+using namespace OSS::Net;
 
 namespace OSS {
 namespace Private {

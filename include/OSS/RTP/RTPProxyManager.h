@@ -24,11 +24,11 @@
 
 #include <map>
 #include <boost/unordered_map.hpp>
-#include "OSS/Thread.h"
+#include "OSS/UTL/Thread.h"
 #include "OSS/RTP/RTPProxySession.h"
 #include "OSS/RTP/RTPProxyRecord.h"
 #include "OSS/RTP/RTPProxy.h"
-#include "OSS/RedisClient.h"
+#include "OSS/Persistent/RedisClient.h"
 
 #include "OSS/JSON/reader.h"
 #include "OSS/JSON/writer.h"
@@ -97,11 +97,11 @@ public:
   void handleSDP(
     const std::string& logId,
     const std::string& sessionId,
-    const OSS::IPAddress& sentBy,
-    const OSS::IPAddress& packetSourceIP,
-    const OSS::IPAddress& packetLocalInterface,
-    const OSS::IPAddress& route,
-    const OSS::IPAddress& routeLocalInterface,
+    const OSS::Net::IPAddress& sentBy,
+    const OSS::Net::IPAddress& packetSourceIP,
+    const OSS::Net::IPAddress& packetLocalInterface,
+    const OSS::Net::IPAddress& route,
+    const OSS::Net::IPAddress& routeLocalInterface,
     RTPProxySession::RequestType requestType,
     std::string& sdp,
     RTPProxy::Attributes& rtpAttribute);

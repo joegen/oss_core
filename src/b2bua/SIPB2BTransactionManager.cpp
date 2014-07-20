@@ -22,8 +22,8 @@
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 #include "OSS/SIP/B2BUA/SIPB2BClientTransaction.h"
 #include "OSS/SIP/SIPVia.h"
-#include "OSS/Logger.h"
-#include "OSS/Core.h"
+#include "OSS/UTL/Logger.h"
+#include "OSS/UTL/CoreUtils.h"
 
 
 namespace OSS {
@@ -309,8 +309,8 @@ SIPMessage::Ptr SIPB2BTransactionManager::onAuthenticateTransaction(
 SIPMessage::Ptr SIPB2BTransactionManager::onRouteTransaction(
   SIPMessage::Ptr& pRequest,
   SIPB2BTransaction::Ptr pTransaction,
-  OSS::IPAddress& localInterface,
-  OSS::IPAddress& target)
+  OSS::Net::IPAddress& localInterface,
+  OSS::Net::IPAddress& target)
 {
   SIPB2BHandler::Ptr pHandler = findDomainRouter(pRequest);
   if (pHandler)
@@ -353,7 +353,7 @@ bool SIPB2BTransactionManager::onRouteResponse(
   const OSS::SIP::SIPMessage::Ptr& pRequest,
   const OSS::SIP::SIPTransportSession::Ptr& pTransport,
   SIPB2BTransaction::Ptr pTransaction,
-  OSS::IPAddress& target)
+  OSS::Net::IPAddress& target)
 {
   /// This method requires the application layer to determine
   /// the target address of the response.
@@ -543,8 +543,8 @@ bool SIPB2BTransactionManager::onClientTransactionCreated(
 bool SIPB2BTransactionManager::onRouteClientTransaction(
   SIPMessage::Ptr& pRequest,
   SIPB2BTransaction::Ptr pTransaction,
-  OSS::IPAddress& localInterface,
-  OSS::IPAddress& target)
+  OSS::Net::IPAddress& localInterface,
+  OSS::Net::IPAddress& target)
 {
   SIPB2BHandler::Ptr pHandler = findHandler(pRequest);
   if (pHandler)

@@ -24,9 +24,9 @@
 #include <queue>
 #include <boost/noncopyable.hpp>
 #include <boost/array.hpp>
-#include "OSS/Thread.h"
+#include "OSS/UTL/Thread.h"
 #include "OSS/RTP/RTPPacket.h"
-#include "OSS/Core.h"
+#include "OSS/UTL/CoreUtils.h"
 
 namespace OSS {
 namespace RTP {

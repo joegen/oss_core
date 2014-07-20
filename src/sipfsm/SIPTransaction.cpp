@@ -18,7 +18,7 @@
 //
 
 
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 #include "OSS/SIP/SIPTransaction.h"
 #include "OSS/SIP/SIPTransactionPool.h"
 #include "OSS/SIP/SIPTransportService.h"
@@ -193,8 +193,8 @@ void SIPTransaction::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
 
 void SIPTransaction::sendRequest(
     const SIPMessage::Ptr& pRequest,
-    const OSS::IPAddress& localAddress,
-    const OSS::IPAddress& remoteAddress,
+    const OSS::Net::IPAddress& localAddress,
+    const OSS::Net::IPAddress& remoteAddress,
     SIPTransaction::Callback callback,
     SIPTransaction::TerminateCallback terminateCallback)
 {
@@ -263,7 +263,7 @@ void SIPTransaction::sendRequest(
 
 void SIPTransaction::sendAckFor2xx(
   const SIPMessage::Ptr& pAck,
-  const OSS::IPAddress& dialogTarget)
+  const OSS::Net::IPAddress& dialogTarget)
 {
   OSS::mutex_lock lock(_mutex);
   if (!_dialogTarget.isValid())
@@ -286,7 +286,7 @@ void SIPTransaction::sendAckFor2xx(
 
 void SIPTransaction::sendResponse(
   const SIPMessage::Ptr& pResponse,
-  const OSS::IPAddress& sendAddress)
+  const OSS::Net::IPAddress& sendAddress)
 {
   if (!pResponse->isResponse())
     throw OSS::SIP::SIPException("Sending a REQUEST using sendResponse() is illegal!");
@@ -392,7 +392,7 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg)
   }
 }
 
-void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg, const OSS::IPAddress& remoteAddress)
+void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg, const OSS::Net::IPAddress& remoteAddress)
 {
   OSS::mutex_lock lock(_mutex);
 

@@ -21,7 +21,7 @@
 #define	OSS_SIPB2BUSERAGENTHANDLERLIST_H_INCLUDED
 
 
-#include "OSS/Thread.h"
+#include "OSS/UTL/Thread.h"
 #include "OSS/SIP/B2BUA/SIPB2BUserAgentHandler.h"
 #include "OSS/DynamicHashTable.h"
 

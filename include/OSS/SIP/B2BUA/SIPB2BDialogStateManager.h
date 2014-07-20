@@ -24,10 +24,10 @@
 
 #include <boost/function.hpp>
 
-#include "OSS/Cache.h"
-#include "OSS/Core.h"
-#include "OSS/Thread.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/Cache.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/UTL/Thread.h"
+#include "OSS/UTL/Logger.h"
 
 #include "OSS/SIP/SIPMessage.h"
 #include "OSS/SIP/SIPURI.h"
@@ -117,7 +117,7 @@ protected:
                       const SIPFrom& remoteContact,
                       const SIPMessage::Ptr& pMsg,
                       std::string& transportScheme,
-                      OSS::IPAddress& targetAddress  );
+                      OSS::Net::IPAddress& targetAddress  );
 
 public:
   SIPMessage::Ptr onMidDialogTransactionCreated(
@@ -165,8 +165,8 @@ public:
   SIPMessage::Ptr onRouteMidDialogTransaction(
     SIPMessage::Ptr& pMsg,
     SIPB2BTransaction::Ptr pTransaction,
-    OSS::IPAddress& localAddress,
-    OSS::IPAddress& targetAddress);
+    OSS::Net::IPAddress& localAddress,
+    OSS::Net::IPAddress& targetAddress);
 
   void onRouteAckRequest(
     const SIPMessage::Ptr& pMsg,
@@ -174,8 +174,8 @@ public:
     OSS::CacheManager& retransmitCache,
     std::string& sessionId,
     std::string& peerXOR,
-    OSS::IPAddress& routeLocalInterface,
-    OSS::IPAddress& targetAddress);
+    OSS::Net::IPAddress& routeLocalInterface,
+    OSS::Net::IPAddress& targetAddress);
 
 protected:
   SIPB2BTransactionManager* _pTransactionManager;

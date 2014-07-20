@@ -22,7 +22,7 @@
 #include "OSS/SIP/SIPFSMDispatch.h"
 #include "OSS/SIP/SIPTransportService.h"
 #include "OSS/SIP/SIPException.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 
 namespace OSS {
 namespace SIP {
@@ -186,8 +186,8 @@ void SIPFSMDispatch::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
 
 void SIPFSMDispatch::sendRequest(
   const SIPMessage::Ptr& pRequest,
-  const OSS::IPAddress& localAddress,
-  const OSS::IPAddress& remoteAddress,
+  const OSS::Net::IPAddress& localAddress,
+  const OSS::Net::IPAddress& remoteAddress,
   SIPTransaction::Callback& callback,
   SIPTransaction::TerminateCallback& terminateCallback)
 {

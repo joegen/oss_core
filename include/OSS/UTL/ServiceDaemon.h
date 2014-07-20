@@ -21,9 +21,9 @@
 #define OSS_SERVICEDAEMON_INCLUDED
 
 #include "OSS/OSS.h"
-#include "OSS/Application.h"
-#include "OSS/ServiceOptions.h"
-#include "OSS/IPCQueue.h"
+#include "OSS/UTL/Application.h"
+#include "OSS/UTL/ServiceOptions.h"
+#include "OSS/UTL/IPCQueue.h"
 
 
 namespace OSS {

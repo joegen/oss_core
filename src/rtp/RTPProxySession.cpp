@@ -19,8 +19,8 @@
 
 #include "OSS/RTP/RTPProxySession.h"
 #include "OSS/SDP/SDPSession.h"
-#include "OSS/IPAddress.h"
-#include "OSS/Logger.h"
+#include "OSS/Net/IPAddress.h"
+#include "OSS/UTL/Logger.h"
 #include "OSS/Persistent/ClassType.h"
 #include "OSS/Persistent/DataType.h"
 #include "OSS/RTP/RTPProxyManager.h"
@@ -33,6 +33,7 @@ namespace RTP {
 
 using namespace OSS::SDP;
 using namespace OSS::Persistent;
+using namespace OSS::Net;
 
 
 RTPProxySession::RTPProxySession(RTPProxyManager* pManager, const std::string& identifier) :
@@ -98,11 +99,11 @@ void RTPProxySession::stop()
  */
 
 void RTPProxySession::handleSDP(
-  const OSS::IPAddress& sentBy,
-  const OSS::IPAddress& packetSourceIP,
-  const OSS::IPAddress& packetLocalInterface,
-  const OSS::IPAddress& route,
-  const OSS::IPAddress& routeLocalInterface,
+  const OSS::Net::IPAddress& sentBy,
+  const OSS::Net::IPAddress& packetSourceIP,
+  const OSS::Net::IPAddress& packetLocalInterface,
+  const OSS::Net::IPAddress& route,
+  const OSS::Net::IPAddress& routeLocalInterface,
   RequestType requestType,
   std::string& sdp,
   RTPProxy::Attributes& rtpAttribute)
@@ -296,11 +297,11 @@ void RTPProxySession::handleSDP(
 }
 
 void RTPProxySession::handleStateIdle(
-  const OSS::IPAddress& sentBy,
-  const OSS::IPAddress& packetSourceIP,
-  const OSS::IPAddress& packetLocalInterface,
-  const OSS::IPAddress& route,
-  const OSS::IPAddress& routeLocalInterface,
+  const OSS::Net::IPAddress& sentBy,
+  const OSS::Net::IPAddress& packetSourceIP,
+  const OSS::Net::IPAddress& packetLocalInterface,
+  const OSS::Net::IPAddress& route,
+  const OSS::Net::IPAddress& routeLocalInterface,
   RequestType requestType,
   std::string& sdp,
   RTPProxy::Attributes& rtpAttribute)
@@ -310,11 +311,11 @@ void RTPProxySession::handleStateIdle(
 }
 
 void RTPProxySession::handleStateOfferWaitingAuthentication(
-    const OSS::IPAddress& sentBy,
-    const OSS::IPAddress& packetSourceIP,
-    const OSS::IPAddress& packetLocalInterface,
-    const OSS::IPAddress& route,
-    const OSS::IPAddress& routeLocalInterface,
+    const OSS::Net::IPAddress& sentBy,
+    const OSS::Net::IPAddress& packetSourceIP,
+    const OSS::Net::IPAddress& packetLocalInterface,
+    const OSS::Net::IPAddress& route,
+    const OSS::Net::IPAddress& routeLocalInterface,
     RequestType requestType,
     std::string& sdp,
     RTPProxy::Attributes& rtpAttribute)
@@ -324,11 +325,11 @@ void RTPProxySession::handleStateOfferWaitingAuthentication(
 }
 
 void RTPProxySession::handleStateAnswerRequiredAuthentication(
-    const OSS::IPAddress& sentBy,
-    const OSS::IPAddress& packetSourceIP,
-    const OSS::IPAddress& packetLocalInterface,
-    const OSS::IPAddress& route,
-    const OSS::IPAddress& routeLocalInterface,
+    const OSS::Net::IPAddress& sentBy,
+    const OSS::Net::IPAddress& packetSourceIP,
+    const OSS::Net::IPAddress& packetLocalInterface,
+    const OSS::Net::IPAddress& route,
+    const OSS::Net::IPAddress& routeLocalInterface,
     RequestType requestType,
     std::string& sdp,
     RTPProxy::Attributes& rtpAttribute)
@@ -345,11 +346,11 @@ void RTPProxySession::handleStateAnswerRequiredAuthentication(
 }
 
 void RTPProxySession::handleStateInviteWaitingAnswerResponse(
-  const OSS::IPAddress& sentBy,
-  const OSS::IPAddress& packetSourceIP,
-  const OSS::IPAddress& packetLocalInterface,
-  const OSS::IPAddress& route,
-  const OSS::IPAddress& routeLocalInterface,
+  const OSS::Net::IPAddress& sentBy,
+  const OSS::Net::IPAddress& packetSourceIP,
+  const OSS::Net::IPAddress& packetLocalInterface,
+  const OSS::Net::IPAddress& route,
+  const OSS::Net::IPAddress& routeLocalInterface,
   RequestType requestType,
   std::string& sdp,
   RTPProxy::Attributes& rtpAttribute)
@@ -366,11 +367,11 @@ void RTPProxySession::handleStateInviteWaitingAnswerResponse(
 }
 
 void RTPProxySession::handleStateInviteWaitingAnswerAckOrPrack(
-  const OSS::IPAddress& sentBy,
-  const OSS::IPAddress& packetSourceIP,
-  const OSS::IPAddress& packetLocalInterface,
-  const OSS::IPAddress& route,
-  const OSS::IPAddress& routeLocalInterface,
+  const OSS::Net::IPAddress& sentBy,
+  const OSS::Net::IPAddress& packetSourceIP,
+  const OSS::Net::IPAddress& packetLocalInterface,
+  const OSS::Net::IPAddress& route,
+  const OSS::Net::IPAddress& routeLocalInterface,
   RequestType requestType,
   std::string& sdp,
   RTPProxy::Attributes& rtpAttribute)
@@ -385,11 +386,11 @@ void RTPProxySession::handleStateInviteWaitingAnswerAckOrPrack(
 }
 
 void RTPProxySession::handleStateUpdateWaitingAnswer(
-  const OSS::IPAddress& sentBy,
-  const OSS::IPAddress& packetSourceIP,
-  const OSS::IPAddress& packetLocalInterface,
-  const OSS::IPAddress& route,
-  const OSS::IPAddress& routeLocalInterface,
+  const OSS::Net::IPAddress& sentBy,
+  const OSS::Net::IPAddress& packetSourceIP,
+  const OSS::Net::IPAddress& packetLocalInterface,
+  const OSS::Net::IPAddress& route,
+  const OSS::Net::IPAddress& routeLocalInterface,
   RequestType requestType,
   std::string& sdp,
   RTPProxy::Attributes& rtpAttribute)
@@ -400,11 +401,11 @@ void RTPProxySession::handleStateUpdateWaitingAnswer(
 }
 
 void RTPProxySession::handleStatePrackWaitingAnswer(
-  const OSS::IPAddress& sentBy,
-  const OSS::IPAddress& packetSourceIP,
-  const OSS::IPAddress& packetLocalInterface,
-  const OSS::IPAddress& route,
-  const OSS::IPAddress& routeLocalInterface,
+  const OSS::Net::IPAddress& sentBy,
+  const OSS::Net::IPAddress& packetSourceIP,
+  const OSS::Net::IPAddress& packetLocalInterface,
+  const OSS::Net::IPAddress& route,
+  const OSS::Net::IPAddress& routeLocalInterface,
   RequestType requestType,
   std::string& sdp,
   RTPProxy::Attributes& rtpAttribute)
@@ -415,11 +416,11 @@ void RTPProxySession::handleStatePrackWaitingAnswer(
 }
 
 void RTPProxySession::handleStateNegotiated(
-  const OSS::IPAddress& sentBy,
-  const OSS::IPAddress& packetSourceIP,
-  const OSS::IPAddress& packetLocalInterface,
-  const OSS::IPAddress& route,
-  const OSS::IPAddress& routeLocalInterface,
+  const OSS::Net::IPAddress& sentBy,
+  const OSS::Net::IPAddress& packetSourceIP,
+  const OSS::Net::IPAddress& packetLocalInterface,
+  const OSS::Net::IPAddress& route,
+  const OSS::Net::IPAddress& routeLocalInterface,
   RequestType requestType,
   std::string& sdp,
   RTPProxy::Attributes& rtpAttribute)
@@ -433,11 +434,11 @@ void RTPProxySession::handleStateNegotiated(
 }
 
 void RTPProxySession::handleInitialSDPOffer(
-  const OSS::IPAddress& sentBy,
-  const OSS::IPAddress& packetSourceIP,
-  const OSS::IPAddress& packetLocalInterface,
-  const OSS::IPAddress& route,
-  const OSS::IPAddress& routeLocalInterface,
+  const OSS::Net::IPAddress& sentBy,
+  const OSS::Net::IPAddress& packetSourceIP,
+  const OSS::Net::IPAddress& packetLocalInterface,
+  const OSS::Net::IPAddress& route,
+  const OSS::Net::IPAddress& routeLocalInterface,
   RequestType requestType,
   std::string& sdp,
   RTPProxy::Attributes& rtpAttribute)
@@ -481,7 +482,7 @@ void RTPProxySession::handleInitialSDPOffer(
   if (audio)
   {
     std::string address = audio->getAddress();
-    OSS::IPAddress mediaAddress;
+    OSS::Net::IPAddress mediaAddress;
     bool hasMediaLevelAddress = !address.empty();
     if (hasMediaLevelAddress)
       mediaAddress = address;
@@ -504,10 +505,10 @@ void RTPProxySession::handleInitialSDPOffer(
       //
       // Initialize the rtp proxy
       //
-      OSS::IPAddress leg1DataListener = packetLocalInterface;
-      OSS::IPAddress leg2DataListener = routeLocalInterface;
-      OSS::IPAddress leg1ControlListener = packetLocalInterface;
-      OSS::IPAddress leg2ControlListener = routeLocalInterface;
+      OSS::Net::IPAddress leg1DataListener = packetLocalInterface;
+      OSS::Net::IPAddress leg2DataListener = routeLocalInterface;
+      OSS::Net::IPAddress leg1ControlListener = packetLocalInterface;
+      OSS::Net::IPAddress leg2ControlListener = routeLocalInterface;
       if (_audio.open(leg1DataListener, leg2DataListener, leg1ControlListener, leg2ControlListener))
       {
         unsigned short dataPort = audio->getDataPort();
@@ -529,8 +530,8 @@ void RTPProxySession::handleInitialSDPOffer(
         //
         // rewrite the SDP to be presented to leg2
         //
-        OSS::IPAddress dataAddress = _audio.data().getLeg2Address();
-        OSS::IPAddress controlAddress = _audio.control().getLeg2Address();
+        OSS::Net::IPAddress dataAddress = _audio.data().getLeg2Address();
+        OSS::Net::IPAddress controlAddress = _audio.control().getLeg2Address();
 
         if (hasSessionAddress)
         {
@@ -576,7 +577,7 @@ void RTPProxySession::handleInitialSDPOffer(
   if (video)
   {
     std::string address = video->getAddress();
-    OSS::IPAddress mediaAddress;
+    OSS::Net::IPAddress mediaAddress;
     bool hasMediaLevelAddress = !address.empty();
     if (hasMediaLevelAddress)
       mediaAddress = address;
@@ -599,10 +600,10 @@ void RTPProxySession::handleInitialSDPOffer(
       //
       // Initialize the rtp proxy
       //
-      OSS::IPAddress leg1DataListener = packetLocalInterface;
-      OSS::IPAddress leg2DataListener = routeLocalInterface;
-      OSS::IPAddress leg1ControlListener = packetLocalInterface;
-      OSS::IPAddress leg2ControlListener = routeLocalInterface;
+      OSS::Net::IPAddress leg1DataListener = packetLocalInterface;
+      OSS::Net::IPAddress leg2DataListener = routeLocalInterface;
+      OSS::Net::IPAddress leg1ControlListener = packetLocalInterface;
+      OSS::Net::IPAddress leg2ControlListener = routeLocalInterface;
       if (_video.open(leg1DataListener, leg2DataListener, leg1ControlListener, leg2ControlListener))
       {
         unsigned short dataPort = video->getDataPort();
@@ -625,8 +626,8 @@ void RTPProxySession::handleInitialSDPOffer(
         //
         // rewrite the SDP to be presented to leg2
         //
-        OSS::IPAddress dataAddress = _video.data().getLeg2Address();
-        OSS::IPAddress controlAddress = _video.control().getLeg2Address();
+        OSS::Net::IPAddress dataAddress = _video.data().getLeg2Address();
+        OSS::Net::IPAddress controlAddress = _video.control().getLeg2Address();
 
         if (hasSessionAddress)
         {
@@ -673,7 +674,7 @@ void RTPProxySession::handleInitialSDPOffer(
   if (fax)
   {
     std::string address = fax->getAddress();
-    OSS::IPAddress mediaAddress;
+    OSS::Net::IPAddress mediaAddress;
     bool hasMediaLevelAddress = !address.empty();
     if (hasMediaLevelAddress)
       mediaAddress = address;
@@ -696,10 +697,10 @@ void RTPProxySession::handleInitialSDPOffer(
       //
       // Initialize the rtp proxy
       //
-      OSS::IPAddress leg1DataListener = packetLocalInterface;
-      OSS::IPAddress leg2DataListener = routeLocalInterface;
-      OSS::IPAddress leg1ControlListener = packetLocalInterface;
-      OSS::IPAddress leg2ControlListener = routeLocalInterface;
+      OSS::Net::IPAddress leg1DataListener = packetLocalInterface;
+      OSS::Net::IPAddress leg2DataListener = routeLocalInterface;
+      OSS::Net::IPAddress leg1ControlListener = packetLocalInterface;
+      OSS::Net::IPAddress leg2ControlListener = routeLocalInterface;
       if (_fax.open(leg1DataListener, leg2DataListener, leg1ControlListener, leg2ControlListener))
       {
         unsigned short dataPort = fax->getDataPort();
@@ -722,8 +723,8 @@ void RTPProxySession::handleInitialSDPOffer(
         //
         // rewrite the SDP to be presented to leg2
         //
-        OSS::IPAddress dataAddress = _fax.data().getLeg2Address();
-        OSS::IPAddress controlAddress = _fax.control().getLeg2Address();
+        OSS::Net::IPAddress dataAddress = _fax.data().getLeg2Address();
+        OSS::Net::IPAddress controlAddress = _fax.control().getLeg2Address();
 
         if (hasSessionAddress)
         {
@@ -773,11 +774,11 @@ void RTPProxySession::handleInitialSDPOffer(
 }
 
 void RTPProxySession::handleInitialSDPAnswer(
-  const OSS::IPAddress& sentBy,
-  const OSS::IPAddress& packetSourceIP,
-  const OSS::IPAddress& packetLocalInterface,
-  const OSS::IPAddress& route,
-  const OSS::IPAddress& routeLocalInterface,
+  const OSS::Net::IPAddress& sentBy,
+  const OSS::Net::IPAddress& packetSourceIP,
+  const OSS::Net::IPAddress& packetLocalInterface,
+  const OSS::Net::IPAddress& route,
+  const OSS::Net::IPAddress& routeLocalInterface,
   RequestType requestType,
   std::string& sdp,
   RTPProxy::Attributes& rtpAttribute)
@@ -820,7 +821,7 @@ void RTPProxySession::handleInitialSDPAnswer(
     }
     else
     {
-      OSS::IPAddress mediaAddress;
+      OSS::Net::IPAddress mediaAddress;
       bool hasMediaLevelAddress = !audio->getAddress().empty();
       if (hasMediaLevelAddress)
         mediaAddress = audio->getAddress();
@@ -840,8 +841,8 @@ void RTPProxySession::handleInitialSDPAnswer(
       //
       // rewrite the SDP to be presented to leg1
       //
-      OSS::IPAddress dataAddress = _audio.data().getLeg1Address();
-      OSS::IPAddress controlAddress = _audio.control().getLeg1Address();
+      OSS::Net::IPAddress dataAddress = _audio.data().getLeg1Address();
+      OSS::Net::IPAddress controlAddress = _audio.control().getLeg1Address();
       if (hasSessionAddress)
       {
         if (!hasChangedSessionAddress && !isBlackhole)
@@ -890,7 +891,7 @@ void RTPProxySession::handleInitialSDPAnswer(
     }
     else
     {
-      OSS::IPAddress mediaAddress;
+      OSS::Net::IPAddress mediaAddress;
       bool hasMediaLevelAddress = !video->getAddress().empty();
       if (hasMediaLevelAddress)
         mediaAddress = video->getAddress();
@@ -910,8 +911,8 @@ void RTPProxySession::handleInitialSDPAnswer(
       //
       // rewrite the SDP to be presented to leg1
       //
-      OSS::IPAddress dataAddress = _video.data().getLeg1Address();
-      OSS::IPAddress controlAddress = _video.control().getLeg1Address();
+      OSS::Net::IPAddress dataAddress = _video.data().getLeg1Address();
+      OSS::Net::IPAddress controlAddress = _video.control().getLeg1Address();
 
       if (hasSessionAddress)
       {
@@ -961,7 +962,7 @@ void RTPProxySession::handleInitialSDPAnswer(
     }
     else
     {
-      OSS::IPAddress mediaAddress;
+      OSS::Net::IPAddress mediaAddress;
       bool hasMediaLevelAddress = !fax->getAddress().empty();
       if (hasMediaLevelAddress)
         mediaAddress = fax->getAddress();
@@ -981,8 +982,8 @@ void RTPProxySession::handleInitialSDPAnswer(
       //
       // rewrite the SDP to be presented to leg1
       //
-      OSS::IPAddress dataAddress = _fax.data().getLeg1Address();
-      OSS::IPAddress controlAddress = _fax.control().getLeg1Address();
+      OSS::Net::IPAddress dataAddress = _fax.data().getLeg1Address();
+      OSS::Net::IPAddress controlAddress = _fax.control().getLeg1Address();
 
       if (hasSessionAddress)
       {
@@ -1032,11 +1033,11 @@ void RTPProxySession::handleInitialSDPAnswer(
 }
 
 void RTPProxySession::handleSDPOffer(
-  const OSS::IPAddress& sentBy,
-  const OSS::IPAddress& packetSourceIP,
-  const OSS::IPAddress& packetLocalInterface,
-  const OSS::IPAddress& route,
-  const OSS::IPAddress& routeLocalInterface,
+  const OSS::Net::IPAddress& sentBy,
+  const OSS::Net::IPAddress& packetSourceIP,
+  const OSS::Net::IPAddress& packetLocalInterface,
+  const OSS::Net::IPAddress& route,
+  const OSS::Net::IPAddress& routeLocalInterface,
   RequestType requestType,
   std::string& sdp,
   RTPProxy::Attributes& rtpAttribute)
@@ -1120,7 +1121,7 @@ void RTPProxySession::handleSDPOffer(
     // We need to reset the audio session states
     //
     std::string address = audio->getAddress();
-    OSS::IPAddress mediaAddress;
+    OSS::Net::IPAddress mediaAddress;
     bool hasMediaLevelAddress = !audio->getAddress().empty();
     if (hasMediaLevelAddress)
       mediaAddress = audio->getAddress();
@@ -1133,8 +1134,8 @@ void RTPProxySession::handleSDPOffer(
     {
       unsigned short dataPort = audio->getDataPort();
       unsigned short controlPort = audio->getControlPort();
-      OSS::IPAddress dataAddress;
-      OSS::IPAddress controlAddress;
+      OSS::Net::IPAddress dataAddress;
+      OSS::Net::IPAddress controlAddress;
       if (legIndex == 1)
       {
         _audio.data().leg1Destination() = boost::asio::ip::udp::endpoint(mediaAddress.address(), dataPort);
@@ -1215,7 +1216,7 @@ void RTPProxySession::handleSDPOffer(
     // We need to reset the video session states
     //
     std::string address = video->getAddress();
-    OSS::IPAddress mediaAddress;
+    OSS::Net::IPAddress mediaAddress;
     bool hasMediaLevelAddress = !video->getAddress().empty();
     if (hasMediaLevelAddress)
       mediaAddress = video->getAddress();
@@ -1228,8 +1229,8 @@ void RTPProxySession::handleSDPOffer(
     {
       unsigned short dataPort = video->getDataPort();
       unsigned short controlPort = video->getControlPort();
-      OSS::IPAddress dataAddress;
-      OSS::IPAddress controlAddress;
+      OSS::Net::IPAddress dataAddress;
+      OSS::Net::IPAddress controlAddress;
       if (legIndex == 1)
       {
         _video.data().leg1Destination() = boost::asio::ip::udp::endpoint(mediaAddress.address(), dataPort);
@@ -1310,7 +1311,7 @@ void RTPProxySession::handleSDPOffer(
     // We need to reset the fax session states
     //
     std::string address = fax->getAddress();
-    OSS::IPAddress mediaAddress;
+    OSS::Net::IPAddress mediaAddress;
     bool hasMediaLevelAddress = !fax->getAddress().empty();
     if (hasMediaLevelAddress)
       mediaAddress = fax->getAddress();
@@ -1323,8 +1324,8 @@ void RTPProxySession::handleSDPOffer(
     {
       unsigned short dataPort = fax->getDataPort();
       unsigned short controlPort = fax->getControlPort();
-      OSS::IPAddress dataAddress;
-      OSS::IPAddress controlAddress;
+      OSS::Net::IPAddress dataAddress;
+      OSS::Net::IPAddress controlAddress;
       if (legIndex == 1)
       {
         _fax.data().leg1Destination() = boost::asio::ip::udp::endpoint(mediaAddress.address(), dataPort);
@@ -1395,11 +1396,11 @@ void RTPProxySession::handleSDPOffer(
 
 
 void RTPProxySession::handleSDPAnswer(
-  const OSS::IPAddress& sentBy,
-  const OSS::IPAddress& packetSourceIP,
-  const OSS::IPAddress& packetLocalInterface,
-  const OSS::IPAddress& route,
-  const OSS::IPAddress& routeLocalInterface,
+  const OSS::Net::IPAddress& sentBy,
+  const OSS::Net::IPAddress& packetSourceIP,
+  const OSS::Net::IPAddress& packetLocalInterface,
+  const OSS::Net::IPAddress& route,
+  const OSS::Net::IPAddress& routeLocalInterface,
   RequestType requestType,
   std::string& sdp,
   RTPProxy::Attributes& rtpAttribute)
@@ -1469,7 +1470,7 @@ void RTPProxySession::handleSDPAnswer(
     }
     else
     {
-      OSS::IPAddress mediaAddress;
+      OSS::Net::IPAddress mediaAddress;
       std::string address = audio->getAddress();
       bool hasMediaLevelAddress = !address.empty();
       if (hasMediaLevelAddress)
@@ -1479,8 +1480,8 @@ void RTPProxySession::handleSDPAnswer(
 
       unsigned short dataPort = audio->getDataPort();
       unsigned short controlPort = audio->getControlPort();
-      OSS::IPAddress dataAddress;
-      OSS::IPAddress controlAddress;
+      OSS::Net::IPAddress dataAddress;
+      OSS::Net::IPAddress controlAddress;
       if (legIndex == 1)
       {
         _audio.data().leg1Destination() = boost::asio::ip::udp::endpoint(mediaAddress.address(), dataPort);
@@ -1551,7 +1552,7 @@ void RTPProxySession::handleSDPAnswer(
     }
     else
     {
-      OSS::IPAddress mediaAddress;
+      OSS::Net::IPAddress mediaAddress;
       std::string address = video->getAddress();
       bool hasMediaLevelAddress = !address.empty();
       if (hasMediaLevelAddress)
@@ -1561,8 +1562,8 @@ void RTPProxySession::handleSDPAnswer(
 
       unsigned short dataPort = video->getDataPort();
       unsigned short controlPort = video->getControlPort();
-      OSS::IPAddress dataAddress;
-      OSS::IPAddress controlAddress;
+      OSS::Net::IPAddress dataAddress;
+      OSS::Net::IPAddress controlAddress;
       if (legIndex == 1)
       {
         _video.data().leg1Destination() = boost::asio::ip::udp::endpoint(mediaAddress.address(), dataPort);
@@ -1633,7 +1634,7 @@ void RTPProxySession::handleSDPAnswer(
     }
     else
     {
-      OSS::IPAddress mediaAddress;
+      OSS::Net::IPAddress mediaAddress;
       std::string address = fax->getAddress();
       bool hasMediaLevelAddress = !address.empty();
       if (hasMediaLevelAddress)
@@ -1643,8 +1644,8 @@ void RTPProxySession::handleSDPAnswer(
 
       unsigned short dataPort = fax->getDataPort();
       unsigned short controlPort = fax->getControlPort();
-      OSS::IPAddress dataAddress;
-      OSS::IPAddress controlAddress;
+      OSS::Net::IPAddress dataAddress;
+      OSS::Net::IPAddress controlAddress;
       if (legIndex == 1)
       {
         _fax.data().leg1Destination() = boost::asio::ip::udp::endpoint(mediaAddress.address(), dataPort);
@@ -2307,12 +2308,12 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromRedis(RTPProxyManager* pMan
     {
       pSession->_audio.data()._identifier = record.audio.data.identifier;
       {
-        OSS::IPAddress localEndPointLeg1 = OSS::IPAddress::fromV4IPPort(record.audio.data.localEndPointLeg1.c_str());
-        OSS::IPAddress localEndPointLeg2 = OSS::IPAddress::fromV4IPPort(record.audio.data.localEndPointLeg2.c_str());
-        OSS::IPAddress senderEndPointLeg1 = OSS::IPAddress::fromV4IPPort(record.audio.data.senderEndPointLeg1.c_str());
-        OSS::IPAddress senderEndPointLeg2 = OSS::IPAddress::fromV4IPPort(record.audio.data.senderEndPointLeg2.c_str());
-        OSS::IPAddress lastSenderEndPointLeg1 = OSS::IPAddress::fromV4IPPort(record.audio.data.lastSenderEndPointLeg1.c_str());
-        OSS::IPAddress lastSenderEndPointLeg2 = OSS::IPAddress::fromV4IPPort(record.audio.data.lastSenderEndPointLeg2.c_str());
+        OSS::Net::IPAddress localEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort(record.audio.data.localEndPointLeg1.c_str());
+        OSS::Net::IPAddress localEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort(record.audio.data.localEndPointLeg2.c_str());
+        OSS::Net::IPAddress senderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort(record.audio.data.senderEndPointLeg1.c_str());
+        OSS::Net::IPAddress senderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort(record.audio.data.senderEndPointLeg2.c_str());
+        OSS::Net::IPAddress lastSenderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort(record.audio.data.lastSenderEndPointLeg1.c_str());
+        OSS::Net::IPAddress lastSenderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort(record.audio.data.lastSenderEndPointLeg2.c_str());
 
         pSession->_audio.data()._senderEndPointLeg1 =
           boost::asio::ip::udp::endpoint(senderEndPointLeg1.address(), senderEndPointLeg1.getPort());
@@ -2341,12 +2342,12 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromRedis(RTPProxyManager* pMan
 
       pSession->_audio.control()._identifier = record.audio.control.identifier;
       {
-        OSS::IPAddress localEndPointLeg1 = OSS::IPAddress::fromV4IPPort(record.audio.control.localEndPointLeg1.c_str());
-        OSS::IPAddress localEndPointLeg2 = OSS::IPAddress::fromV4IPPort(record.audio.control.localEndPointLeg2.c_str());
-        OSS::IPAddress senderEndPointLeg1 = OSS::IPAddress::fromV4IPPort(record.audio.control.senderEndPointLeg1.c_str());
-        OSS::IPAddress senderEndPointLeg2 = OSS::IPAddress::fromV4IPPort(record.audio.control.senderEndPointLeg2.c_str());
-        OSS::IPAddress lastSenderEndPointLeg1 = OSS::IPAddress::fromV4IPPort(record.audio.control.lastSenderEndPointLeg1.c_str());
-        OSS::IPAddress lastSenderEndPointLeg2 = OSS::IPAddress::fromV4IPPort(record.audio.control.lastSenderEndPointLeg2.c_str());
+        OSS::Net::IPAddress localEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort(record.audio.control.localEndPointLeg1.c_str());
+        OSS::Net::IPAddress localEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort(record.audio.control.localEndPointLeg2.c_str());
+        OSS::Net::IPAddress senderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort(record.audio.control.senderEndPointLeg1.c_str());
+        OSS::Net::IPAddress senderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort(record.audio.control.senderEndPointLeg2.c_str());
+        OSS::Net::IPAddress lastSenderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort(record.audio.control.lastSenderEndPointLeg1.c_str());
+        OSS::Net::IPAddress lastSenderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort(record.audio.control.lastSenderEndPointLeg2.c_str());
 
         pSession->_audio.control()._senderEndPointLeg1 =
           boost::asio::ip::udp::endpoint(senderEndPointLeg1.address(), senderEndPointLeg1.getPort());
@@ -2378,12 +2379,12 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromRedis(RTPProxyManager* pMan
     {
       pSession->_video.data()._identifier = record.video.data.identifier;
       {
-        OSS::IPAddress localEndPointLeg1 = OSS::IPAddress::fromV4IPPort(record.video.data.localEndPointLeg1.c_str());
-        OSS::IPAddress localEndPointLeg2 = OSS::IPAddress::fromV4IPPort(record.video.data.localEndPointLeg2.c_str());
-        OSS::IPAddress senderEndPointLeg1 = OSS::IPAddress::fromV4IPPort(record.video.data.senderEndPointLeg1.c_str());
-        OSS::IPAddress senderEndPointLeg2 = OSS::IPAddress::fromV4IPPort(record.video.data.senderEndPointLeg2.c_str());
-        OSS::IPAddress lastSenderEndPointLeg1 = OSS::IPAddress::fromV4IPPort(record.video.data.lastSenderEndPointLeg1.c_str());
-        OSS::IPAddress lastSenderEndPointLeg2 = OSS::IPAddress::fromV4IPPort(record.video.data.lastSenderEndPointLeg2.c_str());
+        OSS::Net::IPAddress localEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort(record.video.data.localEndPointLeg1.c_str());
+        OSS::Net::IPAddress localEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort(record.video.data.localEndPointLeg2.c_str());
+        OSS::Net::IPAddress senderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort(record.video.data.senderEndPointLeg1.c_str());
+        OSS::Net::IPAddress senderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort(record.video.data.senderEndPointLeg2.c_str());
+        OSS::Net::IPAddress lastSenderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort(record.video.data.lastSenderEndPointLeg1.c_str());
+        OSS::Net::IPAddress lastSenderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort(record.video.data.lastSenderEndPointLeg2.c_str());
 
         pSession->_video.data()._senderEndPointLeg1 =
           boost::asio::ip::udp::endpoint(senderEndPointLeg1.address(), senderEndPointLeg1.getPort());
@@ -2412,12 +2413,12 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromRedis(RTPProxyManager* pMan
 
       pSession->_video.control()._identifier = record.video.control.identifier;
       {
-        OSS::IPAddress localEndPointLeg1 = OSS::IPAddress::fromV4IPPort(record.video.control.localEndPointLeg1.c_str());
-        OSS::IPAddress localEndPointLeg2 = OSS::IPAddress::fromV4IPPort(record.video.control.localEndPointLeg2.c_str());
-        OSS::IPAddress senderEndPointLeg1 = OSS::IPAddress::fromV4IPPort(record.video.control.senderEndPointLeg1.c_str());
-        OSS::IPAddress senderEndPointLeg2 = OSS::IPAddress::fromV4IPPort(record.video.control.senderEndPointLeg2.c_str());
-        OSS::IPAddress lastSenderEndPointLeg1 = OSS::IPAddress::fromV4IPPort(record.video.control.lastSenderEndPointLeg1.c_str());
-        OSS::IPAddress lastSenderEndPointLeg2 = OSS::IPAddress::fromV4IPPort(record.video.control.lastSenderEndPointLeg2.c_str());
+        OSS::Net::IPAddress localEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort(record.video.control.localEndPointLeg1.c_str());
+        OSS::Net::IPAddress localEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort(record.video.control.localEndPointLeg2.c_str());
+        OSS::Net::IPAddress senderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort(record.video.control.senderEndPointLeg1.c_str());
+        OSS::Net::IPAddress senderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort(record.video.control.senderEndPointLeg2.c_str());
+        OSS::Net::IPAddress lastSenderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort(record.video.control.lastSenderEndPointLeg1.c_str());
+        OSS::Net::IPAddress lastSenderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort(record.video.control.lastSenderEndPointLeg2.c_str());
 
         pSession->_video.control()._senderEndPointLeg1 =
           boost::asio::ip::udp::endpoint(senderEndPointLeg1.address(), senderEndPointLeg1.getPort());
@@ -2449,12 +2450,12 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromRedis(RTPProxyManager* pMan
     {
       pSession->_fax.data()._identifier = record.fax.data.identifier;
       {
-        OSS::IPAddress localEndPointLeg1 = OSS::IPAddress::fromV4IPPort(record.fax.data.localEndPointLeg1.c_str());
-        OSS::IPAddress localEndPointLeg2 = OSS::IPAddress::fromV4IPPort(record.fax.data.localEndPointLeg2.c_str());
-        OSS::IPAddress senderEndPointLeg1 = OSS::IPAddress::fromV4IPPort(record.fax.data.senderEndPointLeg1.c_str());
-        OSS::IPAddress senderEndPointLeg2 = OSS::IPAddress::fromV4IPPort(record.fax.data.senderEndPointLeg2.c_str());
-        OSS::IPAddress lastSenderEndPointLeg1 = OSS::IPAddress::fromV4IPPort(record.fax.data.lastSenderEndPointLeg1.c_str());
-        OSS::IPAddress lastSenderEndPointLeg2 = OSS::IPAddress::fromV4IPPort(record.fax.data.lastSenderEndPointLeg2.c_str());
+        OSS::Net::IPAddress localEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort(record.fax.data.localEndPointLeg1.c_str());
+        OSS::Net::IPAddress localEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort(record.fax.data.localEndPointLeg2.c_str());
+        OSS::Net::IPAddress senderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort(record.fax.data.senderEndPointLeg1.c_str());
+        OSS::Net::IPAddress senderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort(record.fax.data.senderEndPointLeg2.c_str());
+        OSS::Net::IPAddress lastSenderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort(record.fax.data.lastSenderEndPointLeg1.c_str());
+        OSS::Net::IPAddress lastSenderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort(record.fax.data.lastSenderEndPointLeg2.c_str());
 
         pSession->_fax.data()._senderEndPointLeg1 =
           boost::asio::ip::udp::endpoint(senderEndPointLeg1.address(), senderEndPointLeg1.getPort());
@@ -2483,12 +2484,12 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromRedis(RTPProxyManager* pMan
 
       pSession->_fax.control()._identifier = record.fax.control.identifier;
       {
-        OSS::IPAddress localEndPointLeg1 = OSS::IPAddress::fromV4IPPort(record.fax.control.localEndPointLeg1.c_str());
-        OSS::IPAddress localEndPointLeg2 = OSS::IPAddress::fromV4IPPort(record.fax.control.localEndPointLeg2.c_str());
-        OSS::IPAddress senderEndPointLeg1 = OSS::IPAddress::fromV4IPPort(record.fax.control.senderEndPointLeg1.c_str());
-        OSS::IPAddress senderEndPointLeg2 = OSS::IPAddress::fromV4IPPort(record.fax.control.senderEndPointLeg2.c_str());
-        OSS::IPAddress lastSenderEndPointLeg1 = OSS::IPAddress::fromV4IPPort(record.fax.control.lastSenderEndPointLeg1.c_str());
-        OSS::IPAddress lastSenderEndPointLeg2 = OSS::IPAddress::fromV4IPPort(record.fax.control.lastSenderEndPointLeg2.c_str());
+        OSS::Net::IPAddress localEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort(record.fax.control.localEndPointLeg1.c_str());
+        OSS::Net::IPAddress localEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort(record.fax.control.localEndPointLeg2.c_str());
+        OSS::Net::IPAddress senderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort(record.fax.control.senderEndPointLeg1.c_str());
+        OSS::Net::IPAddress senderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort(record.fax.control.senderEndPointLeg2.c_str());
+        OSS::Net::IPAddress lastSenderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort(record.fax.control.lastSenderEndPointLeg1.c_str());
+        OSS::Net::IPAddress lastSenderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort(record.fax.control.lastSenderEndPointLeg2.c_str());
 
         pSession->_fax.control()._senderEndPointLeg1 =
           boost::asio::ip::udp::endpoint(senderEndPointLeg1.address(), senderEndPointLeg1.getPort());
@@ -2562,12 +2563,12 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromStateFile(
       {
         pSession->_audio.data()._identifier = (const char*)data["identifier"];
 
-        OSS::IPAddress localEndPointLeg1 = OSS::IPAddress::fromV4IPPort((const char*)data["localEndPointLeg1"]);
-        OSS::IPAddress localEndPointLeg2 = OSS::IPAddress::fromV4IPPort((const char*)data["localEndPointLeg2"]);
-        OSS::IPAddress senderEndPointLeg1 = OSS::IPAddress::fromV4IPPort((const char*)data["senderEndPointLeg1"]);
-        OSS::IPAddress senderEndPointLeg2 = OSS::IPAddress::fromV4IPPort((const char*)data["senderEndPointLeg2"]);
-        OSS::IPAddress lastSenderEndPointLeg1 = OSS::IPAddress::fromV4IPPort((const char*)data["lastSenderEndPointLeg1"]);
-        OSS::IPAddress lastSenderEndPointLeg2 = OSS::IPAddress::fromV4IPPort((const char*)data["lastSenderEndPointLeg2"]);
+        OSS::Net::IPAddress localEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort((const char*)data["localEndPointLeg1"]);
+        OSS::Net::IPAddress localEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort((const char*)data["localEndPointLeg2"]);
+        OSS::Net::IPAddress senderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort((const char*)data["senderEndPointLeg1"]);
+        OSS::Net::IPAddress senderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort((const char*)data["senderEndPointLeg2"]);
+        OSS::Net::IPAddress lastSenderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort((const char*)data["lastSenderEndPointLeg1"]);
+        OSS::Net::IPAddress lastSenderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort((const char*)data["lastSenderEndPointLeg2"]);
         
         pSession->_audio.data()._senderEndPointLeg1 =
           boost::asio::ip::udp::endpoint(senderEndPointLeg1.address(), senderEndPointLeg1.getPort());
@@ -2599,12 +2600,12 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromStateFile(
       {
         pSession->_audio.control()._identifier = (const char*)control["identifier"];
 
-        OSS::IPAddress localEndPointLeg1 = OSS::IPAddress::fromV4IPPort((const char*)control["localEndPointLeg1"]);
-        OSS::IPAddress localEndPointLeg2 = OSS::IPAddress::fromV4IPPort((const char*)control["localEndPointLeg2"]);
-        OSS::IPAddress senderEndPointLeg1 = OSS::IPAddress::fromV4IPPort((const char*)control["senderEndPointLeg1"]);
-        OSS::IPAddress senderEndPointLeg2 = OSS::IPAddress::fromV4IPPort((const char*)control["senderEndPointLeg2"]);
-        OSS::IPAddress lastSenderEndPointLeg1 = OSS::IPAddress::fromV4IPPort((const char*)control["lastSenderEndPointLeg1"]);
-        OSS::IPAddress lastSenderEndPointLeg2 = OSS::IPAddress::fromV4IPPort((const char*)control["lastSenderEndPointLeg2"]);
+        OSS::Net::IPAddress localEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort((const char*)control["localEndPointLeg1"]);
+        OSS::Net::IPAddress localEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort((const char*)control["localEndPointLeg2"]);
+        OSS::Net::IPAddress senderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort((const char*)control["senderEndPointLeg1"]);
+        OSS::Net::IPAddress senderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort((const char*)control["senderEndPointLeg2"]);
+        OSS::Net::IPAddress lastSenderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort((const char*)control["lastSenderEndPointLeg1"]);
+        OSS::Net::IPAddress lastSenderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort((const char*)control["lastSenderEndPointLeg2"]);
 
         pSession->_audio.control()._senderEndPointLeg1 =
           boost::asio::ip::udp::endpoint(senderEndPointLeg1.address(), senderEndPointLeg1.getPort());
@@ -2640,12 +2641,12 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromStateFile(
       {
         pSession->_video.data()._identifier = (const char*)data["identifier"];
 
-        OSS::IPAddress localEndPointLeg1 = OSS::IPAddress::fromV4IPPort((const char*)data["localEndPointLeg1"]);
-        OSS::IPAddress localEndPointLeg2 = OSS::IPAddress::fromV4IPPort((const char*)data["localEndPointLeg2"]);
-        OSS::IPAddress senderEndPointLeg1 = OSS::IPAddress::fromV4IPPort((const char*)data["senderEndPointLeg1"]);
-        OSS::IPAddress senderEndPointLeg2 = OSS::IPAddress::fromV4IPPort((const char*)data["senderEndPointLeg2"]);
-        OSS::IPAddress lastSenderEndPointLeg1 = OSS::IPAddress::fromV4IPPort((const char*)data["lastSenderEndPointLeg1"]);
-        OSS::IPAddress lastSenderEndPointLeg2 = OSS::IPAddress::fromV4IPPort((const char*)data["lastSenderEndPointLeg2"]);
+        OSS::Net::IPAddress localEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort((const char*)data["localEndPointLeg1"]);
+        OSS::Net::IPAddress localEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort((const char*)data["localEndPointLeg2"]);
+        OSS::Net::IPAddress senderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort((const char*)data["senderEndPointLeg1"]);
+        OSS::Net::IPAddress senderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort((const char*)data["senderEndPointLeg2"]);
+        OSS::Net::IPAddress lastSenderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort((const char*)data["lastSenderEndPointLeg1"]);
+        OSS::Net::IPAddress lastSenderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort((const char*)data["lastSenderEndPointLeg2"]);
 
         pSession->_video.data()._senderEndPointLeg1 =
           boost::asio::ip::udp::endpoint(senderEndPointLeg1.address(), senderEndPointLeg1.getPort());
@@ -2677,12 +2678,12 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromStateFile(
       {
         pSession->_video.control()._identifier = (const char*)control["identifier"];
 
-        OSS::IPAddress localEndPointLeg1 = OSS::IPAddress::fromV4IPPort((const char*)control["localEndPointLeg1"]);
-        OSS::IPAddress localEndPointLeg2 = OSS::IPAddress::fromV4IPPort((const char*)control["localEndPointLeg2"]);
-        OSS::IPAddress senderEndPointLeg1 = OSS::IPAddress::fromV4IPPort((const char*)control["senderEndPointLeg1"]);
-        OSS::IPAddress senderEndPointLeg2 = OSS::IPAddress::fromV4IPPort((const char*)control["senderEndPointLeg2"]);
-        OSS::IPAddress lastSenderEndPointLeg1 = OSS::IPAddress::fromV4IPPort((const char*)control["lastSenderEndPointLeg1"]);
-        OSS::IPAddress lastSenderEndPointLeg2 = OSS::IPAddress::fromV4IPPort((const char*)control["lastSenderEndPointLeg2"]);
+        OSS::Net::IPAddress localEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort((const char*)control["localEndPointLeg1"]);
+        OSS::Net::IPAddress localEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort((const char*)control["localEndPointLeg2"]);
+        OSS::Net::IPAddress senderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort((const char*)control["senderEndPointLeg1"]);
+        OSS::Net::IPAddress senderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort((const char*)control["senderEndPointLeg2"]);
+        OSS::Net::IPAddress lastSenderEndPointLeg1 = OSS::Net::IPAddress::fromV4IPPort((const char*)control["lastSenderEndPointLeg1"]);
+        OSS::Net::IPAddress lastSenderEndPointLeg2 = OSS::Net::IPAddress::fromV4IPPort((const char*)control["lastSenderEndPointLeg2"]);
 
         pSession->_video.control()._senderEndPointLeg1 =
           boost::asio::ip::udp::endpoint(senderEndPointLeg1.address(), senderEndPointLeg1.getPort());

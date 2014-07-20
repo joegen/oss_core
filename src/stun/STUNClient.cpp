@@ -49,7 +49,7 @@ STUNClient::~STUNClient()
 
 void STUNClient::sendTestRequest(
   boost::asio::ip::udp::socket& sock,
-  OSS::IPAddress& dest,
+  OSS::Net::IPAddress& dest,
   int testNum)
 {
   //std::cout << "Sending TEST " << testNum << " " << sock.local_endpoint().address().to_string()
@@ -108,7 +108,7 @@ void STUNClient::sendTestRequest(
 }
 
 int STUNClient::getNatType(const std::string& stunServer,
-  OSS::IPAddress& localAddress)
+  OSS::Net::IPAddress& localAddress)
 {
   OSS::mutex_critic_sec_lock globalLock(_csGlobal);
 
@@ -116,15 +116,15 @@ int STUNClient::getNatType(const std::string& stunServer,
   _test2Responded = false;
   _test3Responded = false;
   _test10Responded = false;
-  _test1ChangedAddr = OSS::IPAddress();
-  _test1MappedAddr = OSS::IPAddress();
-  _test10MappedAddr = OSS::IPAddress();
+  _test1ChangedAddr = OSS::Net::IPAddress();
+  _test1MappedAddr = OSS::Net::IPAddress();
+  _test10MappedAddr = OSS::Net::IPAddress();
   _sendCount = 0;
 
   int port = localAddress.getPort();
   if (!port)
     port = stunRandomPort();
-  OSS::IPAddress targetAddress = OSS::IPAddress::fromV4IPPort(stunServer.c_str());
+  OSS::Net::IPAddress targetAddress = OSS::Net::IPAddress::fromV4IPPort(stunServer.c_str());
   if (!targetAddress.isValid() || !localAddress.isValid())
     return StunTypeFailure;
 
@@ -221,8 +221,8 @@ int STUNClient::getNatType(const std::string& stunServer,
 bool STUNClient::createSingleSocket(
   const std::string& stunServer,
   boost::asio::ip::udp::socket& socket,
-  const OSS::IPAddress& lAddr,
-  OSS::IPAddress& externalAddress)
+  const OSS::Net::IPAddress& lAddr,
+  OSS::Net::IPAddress& externalAddress)
 {
   OSS::mutex_critic_sec_lock globalLock(_csGlobal);
 
@@ -230,13 +230,13 @@ bool STUNClient::createSingleSocket(
   _test2Responded = false;
   _test3Responded = false;
   _test10Responded = false;
-  _test1ChangedAddr = OSS::IPAddress();
-  _test1MappedAddr = OSS::IPAddress();
-  _test10MappedAddr = OSS::IPAddress();
+  _test1ChangedAddr = OSS::Net::IPAddress();
+  _test1MappedAddr = OSS::Net::IPAddress();
+  _test10MappedAddr = OSS::Net::IPAddress();
   _sendCount = 0;
 
-  OSS::IPAddress localAddress = lAddr;
-  OSS::IPAddress targetAddress = OSS::IPAddress::fromV4IPPort(stunServer.c_str());
+  OSS::Net::IPAddress localAddress = lAddr;
+  OSS::Net::IPAddress targetAddress = OSS::Net::IPAddress::fromV4IPPort(stunServer.c_str());
   if (!targetAddress.isValid() || !localAddress.isValid())
     return false;
 
@@ -277,12 +277,12 @@ bool STUNClient::createRTPSocketTuple(
   const std::string& stunServer,
   boost::asio::ip::udp::socket& dataSocket,
   boost::asio::ip::udp::socket& constrolSocket,
-  const OSS::IPAddress& localDataAddress,
-  const OSS::IPAddress& localControlAddress,
-  OSS::IPAddress& externalDataAddress,
-  OSS::IPAddress& externalDataPort,
-  OSS::IPAddress& externalControlAddress,
-  OSS::IPAddress& externalControlPort)
+  const OSS::Net::IPAddress& localDataAddress,
+  const OSS::Net::IPAddress& localControlAddress,
+  OSS::Net::IPAddress& externalDataAddress,
+  OSS::Net::IPAddress& externalDataPort,
+  OSS::Net::IPAddress& externalControlAddress,
+  OSS::Net::IPAddress& externalControlPort)
 {
   OSS::mutex_critic_sec_lock globalLock(_csGlobal);
   return false;
@@ -302,9 +302,9 @@ void STUNClient::handleReadNatType(const boost::system::error_code& e, std::size
   case 1:
     if (!_test1Responded)
     {
-      _test1ChangedAddr =  OSS::IPAddress(resp.changedAddress.ipv4.addr);
+      _test1ChangedAddr =  OSS::Net::IPAddress(resp.changedAddress.ipv4.addr);
       _test1ChangedAddr.setPort(resp.changedAddress.ipv4.port);
-      _test1MappedAddr =  OSS::IPAddress(resp.mappedAddress.ipv4.addr);
+      _test1MappedAddr =  OSS::Net::IPAddress(resp.mappedAddress.ipv4.addr);
       _test1MappedAddr.setPort(resp.mappedAddress.ipv4.port);
     }
     _sendCount = 0;
@@ -362,8 +362,8 @@ std::string STUNClient::getTypeString(int type)
 bool STUNClient::getNATAddress(
   boost::asio::io_service& ioService,
   const std::string& stunServer,
-  const OSS::IPAddress& localAddress,
-  OSS::IPAddress& externalAddress)
+  const OSS::Net::IPAddress& localAddress,
+  OSS::Net::IPAddress& externalAddress)
 {
   STUNClient stun(ioService);
   boost::asio::ip::udp::socket socket(ioService);

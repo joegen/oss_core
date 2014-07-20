@@ -30,7 +30,7 @@
 #include "OSS/Persistent/Persistent.h"
 #include "OSS/Persistent/DataType.h"
 #include "OSS/Persistent/Reference.h"
-#include "OSS/Thread.h"
+#include "OSS/UTL/Thread.h"
 
 
 namespace OSS {

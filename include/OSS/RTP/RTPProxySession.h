@@ -20,7 +20,7 @@
 #ifndef RTP_RTPProxySession_INCLUDED
 #define RTP_RTPProxySession_INCLUDED
 
-#include "OSS/Thread.h"
+#include "OSS/UTL/Thread.h"
 #include "OSS/RTP/RTPProxyTuple.h"
 
 
@@ -65,11 +65,11 @@ public:
     /// Stop the RTP sessions
 
   void handleSDP(
-    const OSS::IPAddress& sentBy,
-    const OSS::IPAddress& packetSourceIP,
-    const OSS::IPAddress& packetLocalInterface,
-    const OSS::IPAddress& route,
-    const OSS::IPAddress& routeLocalInterface,
+    const OSS::Net::IPAddress& sentBy,
+    const OSS::Net::IPAddress& packetSourceIP,
+    const OSS::Net::IPAddress& packetLocalInterface,
+    const OSS::Net::IPAddress& route,
+    const OSS::Net::IPAddress& routeLocalInterface,
     RequestType requestType,
     std::string& sdp,
     RTPProxy::Attributes& rtpAttribute);
@@ -153,122 +153,122 @@ public:
   const std::string& getMonitoredRoute() const;
 protected:
   void handleStateIdle(
-    const OSS::IPAddress& sentBy,
-    const OSS::IPAddress& packetSourceIP,
-    const OSS::IPAddress& packetLocalInterface,
-    const OSS::IPAddress& route,
-    const OSS::IPAddress& routeLocalInterface,
+    const OSS::Net::IPAddress& sentBy,
+    const OSS::Net::IPAddress& packetSourceIP,
+    const OSS::Net::IPAddress& packetLocalInterface,
+    const OSS::Net::IPAddress& route,
+    const OSS::Net::IPAddress& routeLocalInterface,
     RequestType requestType,
     std::string& sdp,
     RTPProxy::Attributes& rtpAttribute);
 
   void handleStateInviteWaitingAnswerResponse(
-    const OSS::IPAddress& sentBy,
-    const OSS::IPAddress& packetSourceIP,
-    const OSS::IPAddress& packetLocalInterface,
-    const OSS::IPAddress& route,
-    const OSS::IPAddress& routeLocalInterface,
+    const OSS::Net::IPAddress& sentBy,
+    const OSS::Net::IPAddress& packetSourceIP,
+    const OSS::Net::IPAddress& packetLocalInterface,
+    const OSS::Net::IPAddress& route,
+    const OSS::Net::IPAddress& routeLocalInterface,
     RequestType requestType,
     std::string& sdp,
     RTPProxy::Attributes& rtpAttribute);
 
   void handleStateInviteWaitingAnswerAckOrPrack(
-    const OSS::IPAddress& sentBy,
-    const OSS::IPAddress& packetSourceIP,
-    const OSS::IPAddress& packetLocalInterface,
-    const OSS::IPAddress& route,
-    const OSS::IPAddress& routeLocalInterface,
+    const OSS::Net::IPAddress& sentBy,
+    const OSS::Net::IPAddress& packetSourceIP,
+    const OSS::Net::IPAddress& packetLocalInterface,
+    const OSS::Net::IPAddress& route,
+    const OSS::Net::IPAddress& routeLocalInterface,
     RequestType requestType,
     std::string& sdp,
     RTPProxy::Attributes& rtpAttribute);
 
   void handleStateOfferWaitingAuthentication(
-    const OSS::IPAddress& sentBy,
-    const OSS::IPAddress& packetSourceIP,
-    const OSS::IPAddress& packetLocalInterface,
-    const OSS::IPAddress& route,
-    const OSS::IPAddress& routeLocalInterface,
+    const OSS::Net::IPAddress& sentBy,
+    const OSS::Net::IPAddress& packetSourceIP,
+    const OSS::Net::IPAddress& packetLocalInterface,
+    const OSS::Net::IPAddress& route,
+    const OSS::Net::IPAddress& routeLocalInterface,
     RequestType requestType,
     std::string& sdp,
     RTPProxy::Attributes& rtpAttribute);
 
   void handleStateAnswerRequiredAuthentication(
-    const OSS::IPAddress& sentBy,
-    const OSS::IPAddress& packetSourceIP,
-    const OSS::IPAddress& packetLocalInterface,
-    const OSS::IPAddress& route,
-    const OSS::IPAddress& routeLocalInterface,
+    const OSS::Net::IPAddress& sentBy,
+    const OSS::Net::IPAddress& packetSourceIP,
+    const OSS::Net::IPAddress& packetLocalInterface,
+    const OSS::Net::IPAddress& route,
+    const OSS::Net::IPAddress& routeLocalInterface,
     RequestType requestType,
     std::string& sdp,
     RTPProxy::Attributes& rtpAttribute);
 
   void handleStateUpdateWaitingAnswer(
-    const OSS::IPAddress& sentBy,
-    const OSS::IPAddress& packetSourceIP,
-    const OSS::IPAddress& packetLocalInterface,
-    const OSS::IPAddress& route,
-    const OSS::IPAddress& routeLocalInterface,
+    const OSS::Net::IPAddress& sentBy,
+    const OSS::Net::IPAddress& packetSourceIP,
+    const OSS::Net::IPAddress& packetLocalInterface,
+    const OSS::Net::IPAddress& route,
+    const OSS::Net::IPAddress& routeLocalInterface,
     RequestType requestType,
     std::string& sdp,
     RTPProxy::Attributes& rtpAttribute);
 
   void handleStatePrackWaitingAnswer(
-    const OSS::IPAddress& sentBy,
-    const OSS::IPAddress& packetSourceIP,
-    const OSS::IPAddress& packetLocalInterface,
-    const OSS::IPAddress& route,
-    const OSS::IPAddress& routeLocalInterface,
+    const OSS::Net::IPAddress& sentBy,
+    const OSS::Net::IPAddress& packetSourceIP,
+    const OSS::Net::IPAddress& packetLocalInterface,
+    const OSS::Net::IPAddress& route,
+    const OSS::Net::IPAddress& routeLocalInterface,
     RequestType requestType,
     std::string& sdp,
     RTPProxy::Attributes& rtpAttribute);
 
   void handleStateNegotiated(
-    const OSS::IPAddress& sentBy,
-    const OSS::IPAddress& packetSourceIP,
-    const OSS::IPAddress& packetLocalInterface,
-    const OSS::IPAddress& route,
-    const OSS::IPAddress& routeLocalInterface,
+    const OSS::Net::IPAddress& sentBy,
+    const OSS::Net::IPAddress& packetSourceIP,
+    const OSS::Net::IPAddress& packetLocalInterface,
+    const OSS::Net::IPAddress& route,
+    const OSS::Net::IPAddress& routeLocalInterface,
     RequestType requestType,
     std::string& sdp,
     RTPProxy::Attributes& rtpAttribute);
 
 
   void handleInitialSDPOffer(
-    const OSS::IPAddress& sentBy,
-    const OSS::IPAddress& packetSourceIP,
-    const OSS::IPAddress& packetLocalInterface,
-    const OSS::IPAddress& route,
-    const OSS::IPAddress& routeLocalInterface,
+    const OSS::Net::IPAddress& sentBy,
+    const OSS::Net::IPAddress& packetSourceIP,
+    const OSS::Net::IPAddress& packetLocalInterface,
+    const OSS::Net::IPAddress& route,
+    const OSS::Net::IPAddress& routeLocalInterface,
     RequestType requestType,
     std::string& sdp,
     RTPProxy::Attributes& rtpAttribute);
 
   void handleInitialSDPAnswer(
-    const OSS::IPAddress& sentBy,
-    const OSS::IPAddress& packetSourceIP,
-    const OSS::IPAddress& packetLocalInterface,
-    const OSS::IPAddress& route,
-    const OSS::IPAddress& routeLocalInterface,
+    const OSS::Net::IPAddress& sentBy,
+    const OSS::Net::IPAddress& packetSourceIP,
+    const OSS::Net::IPAddress& packetLocalInterface,
+    const OSS::Net::IPAddress& route,
+    const OSS::Net::IPAddress& routeLocalInterface,
     RequestType requestType,
     std::string& sdp,
     RTPProxy::Attributes& rtpAttribute);
 
   void handleSDPOffer(
-    const OSS::IPAddress& sentBy,
-    const OSS::IPAddress& packetSourceIP,
-    const OSS::IPAddress& packetLocalInterface,
-    const OSS::IPAddress& route,
-    const OSS::IPAddress& routeLocalInterface,
+    const OSS::Net::IPAddress& sentBy,
+    const OSS::Net::IPAddress& packetSourceIP,
+    const OSS::Net::IPAddress& packetLocalInterface,
+    const OSS::Net::IPAddress& route,
+    const OSS::Net::IPAddress& routeLocalInterface,
     RequestType requestType,
     std::string& sdp,
     RTPProxy::Attributes& rtpAttribute);
 
   void handleSDPAnswer(
-    const OSS::IPAddress& sentBy,
-    const OSS::IPAddress& packetSourceIP,
-    const OSS::IPAddress& packetLocalInterface,
-    const OSS::IPAddress& route,
-    const OSS::IPAddress& routeLocalInterface,
+    const OSS::Net::IPAddress& sentBy,
+    const OSS::Net::IPAddress& packetSourceIP,
+    const OSS::Net::IPAddress& packetLocalInterface,
+    const OSS::Net::IPAddress& route,
+    const OSS::Net::IPAddress& routeLocalInterface,
     RequestType requestType,
     std::string& sdp,
     RTPProxy::Attributes& rtpAttribute);

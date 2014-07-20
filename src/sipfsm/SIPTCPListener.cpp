@@ -21,7 +21,7 @@
 #include <boost/bind.hpp>
 #include "OSS/SIP/SIPTCPListener.h"
 #include "OSS/SIP/SIPTransportService.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 
 
 namespace OSS {

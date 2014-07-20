@@ -19,8 +19,8 @@
 
 
 #include "OSS/OSS.h"
-#include "OSS/Core.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/UTL/Logger.h"
 #include "OSS/SIP/SIPRoute.h"
 #include "OSS/SIP/B2BUA/SIPB2BContact.h"
 #include "OSS/SIP/SIPRequestLine.h"
@@ -39,7 +39,7 @@ const char* SIPB2BContact::_regPrefix = "sbc-reg";
 bool SIPB2BContact::transform(SIPB2BTransactionManager* pManager,
   const SIPMessage::Ptr& pRequest,
   const SIPB2BTransaction::Ptr& pTransaction,
-  const OSS::IPAddress& localInterface,
+  const OSS::Net::IPAddress& localInterface,
   const SessionInfo& sessionInfo)
 {
   std::string transportScheme = "udp";
@@ -62,7 +62,7 @@ bool SIPB2BContact::transform(SIPB2BTransactionManager* pManager,
       transportScheme = "ws";
   }
 
-  OSS::IPAddress iface = localInterface;
+  OSS::Net::IPAddress iface = localInterface;
   std::string externalIp;
   if (pManager->getExternalAddress(transportScheme, localInterface, externalIp))
     iface.externalAddress() = externalIp;
@@ -102,7 +102,7 @@ bool SIPB2BContact::transform(SIPB2BTransactionManager* pManager,
 bool SIPB2BContact::transformAsParams(SIPB2BTransactionManager* pManager,
   const SIPMessage::Ptr& pRequest,
   const SIPB2BTransaction::Ptr& pTransaction,
-  const OSS::IPAddress& localInterface,
+  const OSS::Net::IPAddress& localInterface,
   const std::string& transportScheme,
   const SessionInfo& sessionInfo)
 {
@@ -117,9 +117,9 @@ bool SIPB2BContact::transformAsParams(SIPB2BTransactionManager* pManager,
   if (!user.empty())
     contact << user << "@";
 
-  OSS::IPAddress hostPort;
-  if (!const_cast<OSS::IPAddress&>(localInterface).externalAddress().empty())
-    hostPort = OSS::IPAddress(const_cast<OSS::IPAddress&>(localInterface).externalAddress(), localInterface.getPort());
+  OSS::Net::IPAddress hostPort;
+  if (!const_cast<OSS::Net::IPAddress&>(localInterface).externalAddress().empty())
+    hostPort = OSS::Net::IPAddress(const_cast<OSS::Net::IPAddress&>(localInterface).externalAddress(), localInterface.getPort());
   else
     hostPort = localInterface;
 
@@ -146,7 +146,7 @@ bool SIPB2BContact::transformAsParams(SIPB2BTransactionManager* pManager,
 bool SIPB2BContact::transformAsRecordRouteParams(SIPB2BTransactionManager* pManager,
   const SIPMessage::Ptr& pRequest,
   const SIPB2BTransaction::Ptr& pTransaction,
-  const OSS::IPAddress& localInterface,
+  const OSS::Net::IPAddress& localInterface,
   const std::string& transportScheme,
   const SessionInfo& sessionInfo)
 {
@@ -165,9 +165,9 @@ bool SIPB2BContact::transformAsRecordRouteParams(SIPB2BTransactionManager* pMana
     contact << user << "@";
 
 
-  OSS::IPAddress hostPort;
-  if (!const_cast<OSS::IPAddress&>(localInterface).externalAddress().empty())
-    hostPort = OSS::IPAddress(const_cast<OSS::IPAddress&>(localInterface).externalAddress(), localInterface.getPort());
+  OSS::Net::IPAddress hostPort;
+  if (!const_cast<OSS::Net::IPAddress&>(localInterface).externalAddress().empty())
+    hostPort = OSS::Net::IPAddress(const_cast<OSS::Net::IPAddress&>(localInterface).externalAddress(), localInterface.getPort());
   else
     hostPort = localInterface;
 
@@ -203,7 +203,7 @@ bool SIPB2BContact::transformAsRecordRouteParams(SIPB2BTransactionManager* pMana
 bool SIPB2BContact::transformAsUserInfo(SIPB2BTransactionManager* pManager,
   const SIPMessage::Ptr& pRequest,
   const SIPB2BTransaction::Ptr& pTransaction,
-  const OSS::IPAddress& localInterface,
+  const OSS::Net::IPAddress& localInterface,
   const std::string& transportScheme,
   const SessionInfo& sessionInfo)
 {
@@ -219,9 +219,9 @@ bool SIPB2BContact::transformAsUserInfo(SIPB2BTransactionManager* pManager,
   else
     contact << "<sip:" << user << "@";
 
-  OSS::IPAddress hostPort;
-  if (!const_cast<OSS::IPAddress&>(localInterface).externalAddress().empty())
-    hostPort = OSS::IPAddress(const_cast<OSS::IPAddress&>(localInterface).externalAddress(), localInterface.getPort());
+  OSS::Net::IPAddress hostPort;
+  if (!const_cast<OSS::Net::IPAddress&>(localInterface).externalAddress().empty())
+    hostPort = OSS::Net::IPAddress(const_cast<OSS::Net::IPAddress&>(localInterface).externalAddress(), localInterface.getPort());
   else
     hostPort = localInterface;
 
@@ -308,7 +308,7 @@ bool SIPB2BContact::transformRegister(
   SIPB2BTransactionManager* pManager,
   const SIPMessage::Ptr& pRequest,
   const SIPB2BTransaction::Ptr& pTransaction,
-  const OSS::IPAddress& localInterface)
+  const OSS::Net::IPAddress& localInterface)
 {
   //
   // Extract the REGISTER expiration
@@ -378,7 +378,7 @@ bool SIPB2BContact::transformRegisterAsUserInfo(
   SIPB2BTransactionManager* pManager,
   const SIPMessage::Ptr& pRequest,
   const ContactURI& curi,
-  const OSS::IPAddress& localInterface,
+  const OSS::Net::IPAddress& localInterface,
   const std::string& expires)
 {
   //
@@ -395,7 +395,7 @@ bool SIPB2BContact::transformRegisterAsUserInfo(
   std::ostringstream contact;
   std::string hostPort = curi.getHostPort();
 
-  if (const_cast<OSS::IPAddress&>(localInterface).externalAddress().empty())
+  if (const_cast<OSS::Net::IPAddress&>(localInterface).externalAddress().empty())
   {
     contact << "<sip:" << _regPrefix << "-" << toUser << "-" << OSS::string_hash(hostPort.c_str()) << "@"
       << localInterface.toIpPortString() << ">";
@@ -403,8 +403,8 @@ bool SIPB2BContact::transformRegisterAsUserInfo(
   else
   {
     contact << "<sip:" << _regPrefix << "-" << toUser << "-" << OSS::string_hash(hostPort.c_str()) << "@"
-      << const_cast<OSS::IPAddress&>(localInterface).externalAddress()
-      << ":" <<  const_cast<OSS::IPAddress&>(localInterface).getPort() << ">";
+      << const_cast<OSS::Net::IPAddress&>(localInterface).externalAddress()
+      << ":" <<  const_cast<OSS::Net::IPAddress&>(localInterface).getPort() << ">";
   }
 
   if (!expires.empty())
@@ -418,7 +418,7 @@ bool SIPB2BContact::transformRegisterAsParams(
   SIPB2BTransactionManager* pManager,
   const SIPMessage::Ptr& pRequest,
   const ContactURI& curi,
-  const OSS::IPAddress& localInterface,
+  const OSS::Net::IPAddress& localInterface,
   const std::string& expires)
 {
   //
@@ -435,15 +435,15 @@ bool SIPB2BContact::transformRegisterAsParams(
   std::ostringstream contact;
   std::string hostPort = curi.getHostPort();
 
-  if (const_cast<OSS::IPAddress&>(localInterface).externalAddress().empty())
+  if (const_cast<OSS::Net::IPAddress&>(localInterface).externalAddress().empty())
   {
     contact << "<sip:" << toUser << "@" << localInterface.toIpPortString() ;
   }
   else
   {
     contact << "<sip:" << toUser << "@"
-      << const_cast<OSS::IPAddress&>(localInterface).externalAddress()
-      << ":" <<  const_cast<OSS::IPAddress&>(localInterface).getPort();
+      << const_cast<OSS::Net::IPAddress&>(localInterface).externalAddress()
+      << ":" <<  const_cast<OSS::Net::IPAddress&>(localInterface).getPort();
   }
   contact << ";" << _regPrefix << "=" << OSS::string_hash(hostPort.c_str())<< ">";
 
@@ -462,7 +462,7 @@ bool SIPB2BContact::isRegisterRoute(const SIPMessage::Ptr& pRequest)
 
 std::string SIPB2BContact::constructVia(SIPB2BTransactionManager* pManager,
   const SIPMessage::Ptr& pRequest,
-  const OSS::IPAddress& localInterface,
+  const OSS::Net::IPAddress& localInterface,
   const std::string& transportScheme,
   const std::string& branchHash,
   bool canUseExternalAddress)

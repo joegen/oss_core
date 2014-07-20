@@ -4,7 +4,7 @@
 #include "gtest/gtest.h"
 #include "OSS/OSS.h"
 #include "OSS/SDP/SDPSession.h"
-#include "OSS/IPAddress.h"
+#include "OSS/Net/IPAddress.h"
 
 
 using OSS::SDP::SDPHeader;
@@ -161,7 +161,7 @@ TEST(ParserTest, test_sdp_parser)
   std::string address = fax->getAddress();
   ASSERT_TRUE(address.empty());
   ASSERT_FALSE(sessionAddress.empty());
-  OSS::IPAddress mediaAddress(sessionAddress);
+  OSS::Net::IPAddress mediaAddress(sessionAddress);
   ASSERT_TRUE(mediaAddress.isPrivate());
   fax->setDataPort(10000);
   faxSession.changeAddress("10.0.0.1", "IP4");

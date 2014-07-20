@@ -39,7 +39,7 @@
 #include <boost/iostreams/filter/zlib.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
-#include "OSS/Compress.h"
+#include "OSS/UTL/Compress.h"
 
 
 

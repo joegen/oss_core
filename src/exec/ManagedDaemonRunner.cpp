@@ -26,8 +26,8 @@
 //
 
 
-#include "OSS/Core.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/UTL/Logger.h"
 #include "OSS/Exec/ManagedDaemonRunner.h"
 
 

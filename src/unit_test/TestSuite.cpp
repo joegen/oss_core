@@ -56,9 +56,9 @@ See also: For more string comparison tricks (substring, prefix, suffix, and regu
 */
 
 
-#include "OSS/Application.h"
+#include "OSS/UTL/Application.h"
 #include "gtest/gtest.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 
 void on_init();
 void on_deinit();

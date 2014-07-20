@@ -25,11 +25,11 @@
 
 #include <Poco/Exception.h>
 
-#include "OSS/Application.h"
-#include "OSS/ServiceDaemon.h"
-#include "OSS/Thread.h"
-#include "OSS/DNS.h"
-#include "OSS/Net.h"
+#include "OSS/UTL/Application.h"
+#include "OSS/UTL/ServiceDaemon.h"
+#include "OSS/UTL/Thread.h"
+#include "OSS/Net/DNS.h"
+#include "OSS/Net/Net.h"
 #include "OSS/Exec/Command.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransactionManager.h"
 #include "OSS/SIP/B2BUA/SIPB2BScriptableHandler.h"
@@ -97,7 +97,7 @@ public:
     //
     // Initialize the transport
     //
-    OSS::IPAddress listener;
+    OSS::Net::IPAddress listener;
     listener = _config.address;
     listener.externalAddress() = _config.externalAddress;
     listener.setPort(config.port);
@@ -105,7 +105,7 @@ public:
     stack().tcpListeners().push_back(listener);
 
 
-    OSS::IPAddress wsListener;
+    OSS::Net::IPAddress wsListener;
     wsListener = _config.address;
     wsListener.externalAddress() = _config.externalAddress;
     wsListener.setPort(config.port + 1000);

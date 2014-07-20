@@ -22,7 +22,7 @@
 #include <vector>
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
-#include "OSS/Core.h"
+#include "OSS/UTL/CoreUtils.h"
 #include "OSS/SIP/SIPMessage.h"
 #include "OSS/ABNF/ABNFParser.h"
 #include "OSS/ABNF/ABNFSIPRules.h"
@@ -33,7 +33,7 @@
 #include "OSS/SIP/SIPVia.h"
 #include "OSS/SIP/SIPCSeq.h"
 #include "OSS/SIP/SIPFrom.h"
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 
 namespace OSS {
 namespace SIP {

@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
-#include "OSS/BlockingQueue.h"
-#include "OSS/Crypto.h"
+#include "OSS/UTL/BlockingQueue.h"
+#include "OSS/Crypto/Crypto.h"
 #include <sstream>
-#include "OSS/Core.h"
+#include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/AdaptiveDelay.h"
 #include "OSS/UTL/FastRandom.h"
 

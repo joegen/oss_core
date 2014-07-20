@@ -19,8 +19,8 @@
 
 
 #include "OSS/Persistent/KeyValueStoreBase.h"
-#include "OSS/Logger.h"
-#include "OSS/Core.h"
+#include "OSS/UTL/Logger.h"
+#include "OSS/UTL/CoreUtils.h"
 
 
 extern "C"

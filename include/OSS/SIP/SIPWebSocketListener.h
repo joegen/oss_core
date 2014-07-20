@@ -57,7 +57,7 @@
 #include "OSS/SIP/SIPWebSocketConnection.h"
 #include "OSS/SIP/SIPWebSocketConnectionManager.h"
 
-#include "OSS/Thread.h"
+#include "OSS/UTL/Thread.h"
 
 
 namespace OSS {

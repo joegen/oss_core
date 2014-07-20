@@ -18,8 +18,8 @@
 //
 
 
-#include "OSS/DNS.h"
-#include "OSS/Logger.h"
+#include "OSS/Net/DNS.h"
+#include "OSS/UTL/Logger.h"
 #include "OSS/SIP/SIPFrom.h"
 #include "OSS/SIP/SIPVia.h"
 #include "OSS/SIP/SIPCSeq.h"
@@ -28,6 +28,9 @@
 #include "OSS/SIP/B2BUA/SIPB2BTransactionManager.h"
 #include "OSS/SIP/B2BUA/SIPB2BDialogStateManager.h"
 #include "OSS/SIP/B2BUA/SIPB2BScriptableHandler.h"
+
+
+using OSS::Net::IPAddress;
 
 
 namespace OSS {
@@ -234,8 +237,8 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onAuthenticateTransaction(
 SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
   SIPMessage::Ptr& pRequest,
   OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
-  OSS::IPAddress& localInterface,
-  OSS::IPAddress& target)
+  OSS::Net::IPAddress& localInterface,
+  OSS::Net::IPAddress& target)
 {
   pRequest->userData() = static_cast<OSS_HANDLE>(pTransaction.get());
 
@@ -459,8 +462,8 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
 SIPMessage::Ptr SIPB2BScriptableHandler::onRouteOutOfDialogTransaction(
   SIPMessage::Ptr& pRequest,
   OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
-  OSS::IPAddress& localInterface,
-  OSS::IPAddress& target)
+  OSS::Net::IPAddress& localInterface,
+  OSS::Net::IPAddress& target)
 {
   if (!_pTransactionManager->postRetargetTransaction(pRequest, pTransaction))
   {
@@ -587,8 +590,8 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteOutOfDialogTransaction(
 SIPMessage::Ptr SIPB2BScriptableHandler::onRouteUpperReg(
   SIPMessage::Ptr& pRequest,
   OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
-  OSS::IPAddress& localInterface,
-  OSS::IPAddress& target)
+  OSS::Net::IPAddress& localInterface,
+  OSS::Net::IPAddress& target)
 {
   SIPRequestLine rline = pRequest->startLine();
   SIPURI ruri;
@@ -668,7 +671,7 @@ bool SIPB2BScriptableHandler::onRouteResponse(
     const OSS::SIP::SIPMessage::Ptr& pRequest,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport,
     OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
-    OSS::IPAddress& target)
+    OSS::Net::IPAddress& target)
    /// This is normally the place where the application can specify the
    /// target for a reponse.
 {
@@ -698,9 +701,9 @@ bool SIPB2BScriptableHandler::onRouteResponse(
   if (!SIPVia::getSentBy(topVia, sentBy))
     return false;
 
-  OSS::IPAddress viaHost(sentBy);
+  OSS::Net::IPAddress viaHost(sentBy);
   if (!viaHost.isValid())
-    viaHost = OSS::IPAddress::fromV4IPPort(sentBy.c_str());
+    viaHost = OSS::Net::IPAddress::fromV4IPPort(sentBy.c_str());
   if (!viaHost.isValid())
   {
     target = pTransport->getRemoteAddress();
@@ -791,14 +794,14 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
 
   pTransaction->setProperty("sdp-answer-route", sentBy);
 
-  OSS::IPAddress addrSentBy = OSS::IPAddress::fromV4IPPort(sentBy.c_str());
-  OSS::IPAddress addrPacketSource = pTransaction->serverTransport()->getRemoteAddress();
+  OSS::Net::IPAddress addrSentBy = OSS::Net::IPAddress::fromV4IPPort(sentBy.c_str());
+  OSS::Net::IPAddress addrPacketSource = pTransaction->serverTransport()->getRemoteAddress();
 
   //
   // Set the local interface to be used to send to A Leg.
   // Also set the external address if one is configured.
   //
-  OSS::IPAddress addrLocalInterface = pTransaction->serverTransport()->getLocalAddress();
+  OSS::Net::IPAddress addrLocalInterface = pTransaction->serverTransport()->getLocalAddress();
   addrLocalInterface.externalAddress() = pTransaction->serverTransport()->getExternalAddress();
 
   std::string targetAddress;
@@ -806,8 +809,8 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
   OSS_VERIFY(pRequest->getProperty("target-address", targetAddress) &&
     pRequest->getProperty("local-address", localAddress));
 
-  OSS::IPAddress addrRoute = OSS::IPAddress::fromV4IPPort(targetAddress.c_str());
-  OSS::IPAddress addrRouteLocalInterface = OSS::IPAddress::fromV4IPPort(localAddress.c_str());
+  OSS::Net::IPAddress addrRoute = OSS::Net::IPAddress::fromV4IPPort(targetAddress.c_str());
+  OSS::Net::IPAddress addrRouteLocalInterface = OSS::Net::IPAddress::fromV4IPPort(localAddress.c_str());
 
   //
   // Assign the exteral address for B-Leg if one is configured
@@ -971,18 +974,18 @@ void SIPB2BScriptableHandler::onProcessResponseBody(
     pTransaction->setProperty("sdp-answer-route", sdpAnswerRoute);
   }
 
-  OSS::IPAddress addrSentBy;
+  OSS::Net::IPAddress addrSentBy;
   if (!sentBy.empty())
-    addrSentBy = OSS::IPAddress::fromV4IPPort(sentBy.c_str());
+    addrSentBy = OSS::Net::IPAddress::fromV4IPPort(sentBy.c_str());
   else
     addrSentBy = pTransaction->clientTransport()->getRemoteAddress();
 
-  OSS::IPAddress addrPacketSource = pTransaction->clientTransport()->getRemoteAddress();
-  OSS::IPAddress addrLocalInterface = pTransaction->clientTransport()->getLocalAddress();
+  OSS::Net::IPAddress addrPacketSource = pTransaction->clientTransport()->getRemoteAddress();
+  OSS::Net::IPAddress addrLocalInterface = pTransaction->clientTransport()->getLocalAddress();
   addrLocalInterface.externalAddress() = pTransaction->clientTransport()->getExternalAddress();
 
-  OSS::IPAddress addrRoute = OSS::IPAddress::fromV4IPPort(sdpAnswerRoute.c_str());
-  OSS::IPAddress addrRouteLocalInterface = pTransaction->serverTransport()->getLocalAddress();
+  OSS::Net::IPAddress addrRoute = OSS::Net::IPAddress::fromV4IPPort(sdpAnswerRoute.c_str());
+  OSS::Net::IPAddress addrRouteLocalInterface = pTransaction->serverTransport()->getLocalAddress();
   addrRouteLocalInterface.externalAddress() = pTransaction->serverTransport()->getExternalAddress();
 
   std::string sdp = pResponse->getBody();
@@ -1047,7 +1050,7 @@ void SIPB2BScriptableHandler::onProcessOutbound(
     // if they ever arrive while we are still fetching the route to the INVITE
     //
     SIPMessage::Ptr trying = pTransaction->serverRequest()->createResponse(SIPMessage::CODE_100_Trying);
-    OSS::IPAddress responseTarget;
+    OSS::Net::IPAddress responseTarget;
     pTransaction->onRouteResponse(pTransaction->serverRequest(),
       pTransaction->serverTransport(), pTransaction->serverTransaction(), responseTarget);
     pTransaction->serverTransaction()->sendResponse(trying, responseTarget);
@@ -1396,8 +1399,8 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
 
       try
       {
-        OSS::IPAddress packetSource = pTransaction->serverTransport()->getRemoteAddress();
-        OSS::IPAddress localInterface = pTransaction->serverTransport()->getLocalAddress();
+        OSS::Net::IPAddress packetSource = pTransaction->serverTransport()->getRemoteAddress();
+        OSS::Net::IPAddress localInterface = pTransaction->serverTransport()->getLocalAddress();
 
         RegData registration;
         //
@@ -1579,8 +1582,8 @@ void SIPB2BScriptableHandler::onProcessAckFor2xxRequest(
   else if (pMsg->isRequest("ACK"))
   {
     OSS_LOG_DEBUG(logId << "Processing ACK request " << pMsg->startLine());
-    OSS::IPAddress localAddress;
-    OSS::IPAddress targetAddress;
+    OSS::Net::IPAddress localAddress;
+    OSS::Net::IPAddress targetAddress;
     std::string sessionId;
     std::string peerXOR = "0";
     try
@@ -1611,7 +1614,7 @@ void SIPB2BScriptableHandler::onTransactionError(
   if (e && !pErrorResponse)
   {
     SIPMessage::Ptr serverError = pTransaction->serverRequest()->createResponse(SIPMessage::CODE_408_RequestTimeout);
-    OSS::IPAddress responseTarget;
+    OSS::Net::IPAddress responseTarget;
     pTransaction->onRouteResponse(pTransaction->serverRequest(),
         pTransaction->serverTransport(), pTransaction->serverTransaction(), responseTarget);
     pTransaction->serverTransaction()->sendResponse(serverError, responseTarget);
@@ -1731,8 +1734,8 @@ bool SIPB2BScriptableHandler::onClientTransactionCreated(const SIPMessage::Ptr& 
 bool SIPB2BScriptableHandler::onRouteClientTransaction(
   SIPMessage::Ptr& pRequest,
   OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
-  OSS::IPAddress& localInterface,
-  OSS::IPAddress& target)
+  OSS::Net::IPAddress& localInterface,
+  OSS::Net::IPAddress& target)
 {
   return false;
 }
@@ -1842,7 +1845,7 @@ void SIPB2BScriptableHandler::runOptionsResponseThread()
         // Remove from the keep-alive list
         //
         OSS::mutex_write_lock writeLock(_rwKeepAliveListMutex);
-        _keepAliveList.erase(OSS::IPAddress::fromV4IPPort(regData.packetSource.c_str()));
+        _keepAliveList.erase(OSS::Net::IPAddress::fromV4IPPort(regData.packetSource.c_str()));
         _pDialogState->removeRegistration(regData.key);
       }
       catch(OSS::Exception e)

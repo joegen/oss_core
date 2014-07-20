@@ -26,64 +26,64 @@ namespace OSS {
 namespace STUN {
 
 STUNMappedAddress::STUNMappedAddress() :
-  OSS::IPAddress()
+  OSS::Net::IPAddress()
 {
 
 }
 
 STUNMappedAddress::STUNMappedAddress(const std::string& address) :
-  OSS::IPAddress(address)
+  OSS::Net::IPAddress(address)
 {
 
 }
 
 STUNMappedAddress::STUNMappedAddress(unsigned long address) :
-  OSS::IPAddress(address)
+  OSS::Net::IPAddress(address)
 {
 
 }
 
 STUNMappedAddress::STUNMappedAddress(const boost::asio::ip::address_v4& address) :
-  OSS::IPAddress(address)
+  OSS::Net::IPAddress(address)
 {
 
 }
 
 STUNMappedAddress::STUNMappedAddress(const boost::asio::ip::address_v6& address) :
-  OSS::IPAddress(address)
+  OSS::Net::IPAddress(address)
 {
 
 }
 
 STUNMappedAddress::STUNMappedAddress(const IPAddress& address) :
-  OSS::IPAddress(address)
+  OSS::Net::IPAddress(address)
 {
 
 }
 
 STUNMappedAddress::STUNMappedAddress(const std::string& address, unsigned short port) :
-  OSS::IPAddress(address, port)
+  OSS::Net::IPAddress(address, port)
 {
 
 }
 
 STUNMappedAddress::STUNMappedAddress(const std::string& address, unsigned short port,
     const std::string& mappedAddress, unsigned short mappedPort) :
-  OSS::IPAddress(address, port),
+  OSS::Net::IPAddress(address, port),
   _mappedAddress(mappedAddress, mappedPort)
 {
 
 }
 
 STUNMappedAddress::STUNMappedAddress(const IPAddress& address, const IPAddress& mappedAddress) :
-  OSS::IPAddress(address),
+  OSS::Net::IPAddress(address),
   _mappedAddress(mappedAddress)
 {
 
 }
 
 STUNMappedAddress::STUNMappedAddress(const STUNMappedAddress& address) :
-  OSS::IPAddress(address),
+  OSS::Net::IPAddress(address),
   _mappedAddress(address._mappedAddress),
   _stunServer(address._stunServer)
 {
@@ -95,19 +95,19 @@ STUNMappedAddress::~STUNMappedAddress()
 
 }
 
-OSS::IPAddress STUNMappedAddress::getMappedAddress(
+OSS::Net::IPAddress STUNMappedAddress::getMappedAddress(
   const STUNClient::Ptr& stunClient,
   const std::string& stunServer,
   boost::asio::ip::udp::socket& socket)
 {
   if (!socket.is_open())
-    return OSS::IPAddress();
+    return OSS::Net::IPAddress();
 
-  *((OSS::IPAddress*)this) = OSS::IPAddress(socket.local_endpoint().address().to_v4());
+  *((OSS::Net::IPAddress*)this) = OSS::Net::IPAddress(socket.local_endpoint().address().to_v4());
   setPort(socket.local_endpoint().port());
 
   _stunServer = stunServer;
-  _mappedAddress = OSS::IPAddress();
+  _mappedAddress = OSS::Net::IPAddress();
 
   stunClient->createSingleSocket(
     stunServer,
@@ -127,14 +127,14 @@ STUNMappedAddress& STUNMappedAddress::operator= (const STUNMappedAddress& clone)
 
 void STUNMappedAddress::swap(STUNMappedAddress& clone)
 {
-  std::swap(dynamic_cast<OSS::IPAddress&>(clone), dynamic_cast<OSS::IPAddress&>(*this));
+  std::swap(dynamic_cast<OSS::Net::IPAddress&>(clone), dynamic_cast<OSS::Net::IPAddress&>(*this));
   std::swap(clone._mappedAddress, _mappedAddress);
   std::swap(clone._stunServer, _stunServer);
 }
 
 bool STUNMappedAddress::operator < (const STUNMappedAddress& other) const
 {
-  return dynamic_cast<const OSS::IPAddress&>(*this) < dynamic_cast<const OSS::IPAddress&>(other);
+  return dynamic_cast<const OSS::Net::IPAddress&>(*this) < dynamic_cast<const OSS::Net::IPAddress&>(other);
 }
 
 

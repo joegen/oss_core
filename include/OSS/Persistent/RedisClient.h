@@ -20,7 +20,7 @@
 #ifndef OSS_REDISCLIENT_H_INCLUDED
 #define	OSS_REDISCLIENT_H_INCLUDED
 
-#include "OSS/Logger.h"
+#include "OSS/UTL/Logger.h"
 #include "hiredis/hiredis.h"
 #include <boost/noncopyable.hpp>
 #include <boost/thread.hpp>
@@ -28,7 +28,7 @@
 #include "OSS/JSON/reader.h"
 #include "OSS/JSON/writer.h"
 #include "OSS/JSON/elements.h"
-#include "OSS/Core.h"
+#include "OSS/UTL/CoreUtils.h"
 #include <map>
 
 
