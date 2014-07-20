@@ -58,6 +58,10 @@
 #include "Poco/Path.h"
 #include "Poco/TemporaryFile.h"
 
+#include "OSS/JSON/elements.h"
+#include "OSS/JSON/reader.h"
+#include "OSS/JSON/writer.h"
+
 //
 // Header only implementations so we catch any compile errors
 //
@@ -324,6 +328,27 @@ void string_trim(std::string& str)
     }
     else
       break;
+  }
+}
+
+bool string_format_json(std::string& str)
+{
+  try
+  {
+    std::stringstream input;
+    input << str;
+
+    json::Object object;
+    json::Reader::Read(object, input);
+
+    std::stringstream output;
+    json::Writer::Write(object, output);
+    str = output.str();
+    return true;
+  }
+  catch(const std::exception& e)
+  {
+    return false;
   }
 }
 

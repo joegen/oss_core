@@ -152,6 +152,11 @@ unsigned int string_to_js_hash(const std::string& str);
 std::string string_to_64_bit_hash(const std::string& id);
   /// Return a hex formatted string representation of the JS-Hash
 
+bool string_format_json(std::string& str);
+  /// Returns a formatted version of the json string.  
+  /// Will return the unformatted string back if an exception is encountered
+  /// and function returning false
+
 //
 // Misc functions
 //
