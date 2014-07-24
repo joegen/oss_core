@@ -23,7 +23,7 @@
 
 #include "OSS/UTL/Thread.h"
 #include "OSS/SIP/B2BUA/SIPB2BUserAgentHandler.h"
-#include "OSS/DynamicHashTable.h"
+#include "OSS/UTL/DynamicHashTable.h"
 
 namespace OSS {
 namespace SIP {
