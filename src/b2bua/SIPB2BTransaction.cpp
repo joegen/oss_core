@@ -617,6 +617,9 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
 
   if (host.empty())
     requestURI.getHostPort(host, port);
+  
+  if (host.empty())
+    return false;
 
   static OSS::ABNF::ABNFEvaluate<OSS::ABNF::ABNFSIPIPV4Address> isIPV4;
   static OSS::ABNF::ABNFEvaluate<OSS::ABNF::ABNFSIPIPV6Address> isIPV6;
@@ -657,7 +660,7 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
       pClientRequest->setProperty("target-transport", "udp");
     }
 
-    if (!_tcpSrvTargets.empty())
+    if (!target.isValid() && !_tcpSrvTargets.empty())
     {
       //
       // sort then get the first transport
@@ -670,7 +673,7 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
       pClientRequest->setProperty("target-transport", "tcp");
     }
 
-    if (!_wsSrvTargets.empty())
+    if (!target.isValid() && !_wsSrvTargets.empty())
     {
       //
       // sort then get the first transport
@@ -683,7 +686,7 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
       pClientRequest->setProperty("target-transport", "ws");
     }
 
-    if (_udpSrvTargets.empty() && _tcpSrvTargets.empty() && _wsSrvTargets.empty())
+    if (!target.isValid())
     {
       OSS::dns_host_record_list hosts = OSS::dns_lookup_host(host);
       if (hosts.empty())

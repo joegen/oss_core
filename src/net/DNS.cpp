@@ -170,10 +170,20 @@ static bool ProcessDNSRecords(
 
     // get other common parts of the record
     unsigned short  type;
+    unsigned short  dnsClass;
+    unsigned long ttl;
     unsigned short  dlen;
 
     GETSHORT(type,     cp);
+    GETSHORT(dnsClass, cp);
+    GETLONG (ttl,      cp);
     GETSHORT(dlen,     cp);
+    
+    //
+    // Avoid unused compiler warning
+    //
+    (void)dnsClass;
+    (void)ttl;
 
     unsigned char * data = cp;
     cp += dlen;
