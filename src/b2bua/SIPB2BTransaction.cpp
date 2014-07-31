@@ -620,6 +620,8 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
   
   if (host.empty())
     return false;
+  
+  
 
   static OSS::ABNF::ABNFEvaluate<OSS::ABNF::ABNFSIPIPV4Address> isIPV4;
   static OSS::ABNF::ABNFEvaluate<OSS::ABNF::ABNFSIPIPV6Address> isIPV6;
@@ -627,9 +629,11 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
   //TODO: Duplicate code below. Can be refactored to use one helper func for all protos
   if (!port && !isIPV4(host.c_str()) && !isIPV6(host.c_str()))
   {
+    OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - Resolving host " << host);
     //
     // Try DNS/SRV
     //
+    OSS::string_to_lower(transport);
     std::string srvHost = "_sip._udp.";
     srvHost += host;
     if ((transport.empty() || transport == "udp") && scheme != "sips")
@@ -657,7 +661,13 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
       target = _udpSrvTargets.begin()->get<1>();
       target.setPort(targetPort);
 
+      OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._udp." << host << " -> " << target.toIpPortString());
+      
       pClientRequest->setProperty("target-transport", "udp");
+    }
+    else
+    {
+      OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._udp." << host << " not found ");
     }
 
     if (!target.isValid() && !_tcpSrvTargets.empty())
@@ -670,7 +680,14 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
         targetPort = 5060;
       target = _tcpSrvTargets.begin()->get<1>();
       target.setPort(targetPort);
+      
+      OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._tcp." << host << " -> " << target.toIpPortString());
+      
       pClientRequest->setProperty("target-transport", "tcp");
+    }
+    else if (!target.isValid())
+    {
+      OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._tcp." << host << " not found ");
     }
 
     if (!target.isValid() && !_wsSrvTargets.empty())
@@ -683,7 +700,14 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
         targetPort = 5060;
       target = _wsSrvTargets.begin()->get<1>();
       target.setPort(targetPort);
+      
+      OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._ws." << host << " -> " << target.toIpPortString());
+      
       pClientRequest->setProperty("target-transport", "ws");
+    }
+    else if (!target.isValid())
+    {
+      OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._ws." << host << " not found ");
     }
 
     if (!target.isValid())
@@ -697,24 +721,34 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
         port = 5060;
       target = *(hosts.begin());
       target.setPort(port);
+      
+      OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - FQDN-1 (" << host << ") -> " << target.toIpPortString());
+      
       pClientRequest->setProperty("target-transport", "udp");
     }
   }
   else
   {
+    OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - Resolving host " << host << ":" << port);
     OSS::dns_host_record_list hosts = OSS::dns_lookup_host(host);
     if (hosts.empty())
     {
       return false;
     }
     if (port == 0)
+    {
       port = 5060;
+    }
+     
     target = *(hosts.begin());
     target.setPort(port);
+    
+    OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - FQDN-2 (" << host << ") -> " << target.toIpPortString());
+    
     pClientRequest->setProperty("target-transport", "udp");
   }
 
-  return true;
+  return target.isValid();
 }
 
 } } } // OSS::SIP::B2BUA

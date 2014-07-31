@@ -402,7 +402,8 @@ bool handle_dns_srv_record(OSS::Private::DNS_RECORD dnsRecord, OSS::Private::DNS
       (dnsRecord->wType == DNS_TYPE_SRV) &&
       (strlen(dnsRecord->Data.SRV.pNameTarget) > 0) &&
       (strcmp(dnsRecord->Data.SRV.pNameTarget, ".") != 0)
-      ) {
+      ) 
+  {
     record.get<0>() = std::string(dnsRecord->Data.SRV.pNameTarget);
     record.get<2>()     = dnsRecord->Data.SRV.wPort;
     record.get<3>() = dnsRecord->Data.SRV.wPriority;
@@ -410,13 +411,15 @@ bool handle_dns_srv_record(OSS::Private::DNS_RECORD dnsRecord, OSS::Private::DNS
 
     // see if any A records match this hostname
     OSS::Private::DNS_RECORD aRecord = results;
+
     while (aRecord != 0) {
       if ((dnsRecord->Flags.S.Section == OSS::Private::DnsSectionAddtional) && (dnsRecord->wType == DNS_TYPE_A)) {
         record.get<1>() = dnsRecord->Data.A.IpAddress;
-        break;
+        return true;
       }
       aRecord = aRecord->pNext;
     }
+    
     // if no A record found, then get address the hard way
     boost::asio::ip::tcp::resolver::query query(record.get<0>(), "0");
     boost::asio::ip::tcp::resolver::iterator endpoint_iterator = OSS::net_resolver().resolve(query);
@@ -425,8 +428,8 @@ bool handle_dns_srv_record(OSS::Private::DNS_RECORD dnsRecord, OSS::Private::DNS
     {
       boost::asio::ip::tcp::endpoint ep = *endpoint_iterator;
       record.get<1>() = ep.address().to_string();
+      return true;
     }
-    return true;
   }
   return false;
 }
