@@ -20,7 +20,8 @@ AM_CPPFLAGS = \
     -I@OSS_CORE_SRCDIR@/src/net/turn/client++ \
     -I@OSS_CORE_SRCDIR@/src/net/turn/server \
     -I@OSS_CORE_SRCDIR@/src/net/turn/apps/common \
-    -I@OSS_CORE_SRCDIR@/src/net/turn/apps/relay
+    -I@OSS_CORE_SRCDIR@/src/net/turn/apps/relay \
+    -I@OSS_CORE_SRCDIR@/src/udns/include
 
 version_Current=@OSS_CORE_VERSION_CURRENT@
 version_Revision=@OSS_CORE_VERSION_REVISION@
@@ -177,6 +178,33 @@ UDT4_SOURCES = \
 	p2p/udt/window.cpp \
 	p2p/udt/window.h
 
+UDNS_SOURCES = \
+	udns/include/udnspp/dnscontext.hpp \
+	udns/include/udnspp/dnsrra4.hpp \
+	udns/include/udnspp/dnsquery.hpp \
+	udns/include/udnspp/dnsresolver.hpp \
+	udns/src/include/udns.h \
+	udns/src/udns_resolver.c \
+	udns/src/udns_XtoX.c \
+	udns/src/udns_jran.c \
+	udns/src/udns_rr_mx.c \
+	udns/src/udns_parse.c \
+	udns/src/udns_codes.c \
+	udns/src/udns_rr_naptr.c \
+	udns/src/udns_dntosp.c \
+	udns/src/udns_rr_a.c \
+	udns/src/udns_dn.c \
+	udns/src/udns_bl.c \
+	udns/src/udns_init.c \
+	udns/src/udns_rr_srv.c \
+	udns/src/udns_rr_txt.c \
+	udns/src/udns_rr_ptr.c \
+	udns/src/udns_misc.c \
+	udns/src/udnspp/dnsquery.cpp \
+	udns/src/udnspp/dnscontext.cpp \
+	udns/src/udnspp/dnsrra4.cpp \
+	udns/src/udnspp/dnsresolver.cpp
+
 
 
 liboss_core_la_LDFLAGS = \
@@ -192,20 +220,15 @@ liboss_core_la_CXXFLAGS =
 	-DOSSAPP_LIB_VERSION=\"@OSS_CORE_VERSION_FULL@\" \
 	-fno-gcse -O0 -fno-implement-inlines -fno-default-inline 
 
+liboss_core_la_CFLAGS = \
+    -DHAVE_INET_PTON_NTOP
+
 liboss_core_la_SOURCES =  \
+    ${UDNS_SOURCES} \
+    ${CHIMERA_SOURCES} \
+    ${UDT4_SOURCES} \
     boost_pch.hpp \
-    utl/Endian.cpp \
-    utl/Application.cpp \
-    utl/Exception.cpp \
-    crypto/Crypto.cpp \
-    utl/ServiceDaemon.cpp \
-    utl/Cache.cpp \
-    utl/Compress.cpp \
     OSS.cpp \
-    utl/DynamicHashTable.cpp \
-    utl/DebugMemory.cpp \
-    utl/Thread.cpp \
-    utl/StackTrace.cpp \
     exec/Command.cpp \
     exec/Process.cpp \
     exec/ManagedDaemon.cpp \
@@ -265,6 +288,7 @@ liboss_core_la_SOURCES =  \
     abnf/ABNFSIPRequestURI.cpp \
     abnf/ABNFSIPGenericParam.cpp \
     abnf/ABNFSIPHierPart.cpp \
+    crypto/Crypto.cpp \
     crypto/BlockCipher.cpp \
     crypto/FileEncryptor.cpp \
     persistent/ClassType.cpp \
@@ -361,6 +385,16 @@ liboss_core_la_SOURCES =  \
     utl/AdaptiveDelay.cpp \
     utl/CoreUtils.cpp \
     utl/Logger.cpp \
+    utl/Endian.cpp \
+    utl/Application.cpp \
+    utl/Exception.cpp \
+    utl/ServiceDaemon.cpp \
+    utl/Cache.cpp \
+    utl/Compress.cpp \
+    utl/DynamicHashTable.cpp \
+    utl/DebugMemory.cpp \
+    utl/Thread.cpp \
+    utl/StackTrace.cpp \
     sipfsm/SIPWebSocketConnection.cpp \
     sipfsm/SIPWebSocketListener.cpp \
     sipfsm/SIPWebSocketConnectionManager.cpp \
@@ -402,8 +436,6 @@ liboss_core_la_SOURCES =  \
     ws/src/sockets/socket_base.hpp \
     ws/src/sockets/tls.hpp \
     ws/src/utf8_validator/utf8_validator.hpp \
-    ${CHIMERA_SOURCES} \
-    ${UDT4_SOURCES} \
     p2p/Overlay.cpp \
     p2p/DhtStore.cpp
 

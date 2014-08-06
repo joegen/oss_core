@@ -5,7 +5,7 @@ m4_include([config/general.m4])
 m4_include([config/oss_lib.m4])
 AM_INIT_AUTOMAKE(foreign tar-ustar)
 SFAC_AUTOMAKE_VERSION([1.6])
-AC_CONFIG_SRCDIR([src/Core.cpp])
+AC_CONFIG_SRCDIR([src/OSS.cpp])
 AM_CONFIG_HEADER([src/config.h])
 AC_PROG_LIBTOOL
 AC_LTDL_SHLIBEXT
