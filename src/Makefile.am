@@ -23,6 +23,9 @@ AM_CPPFLAGS = \
     -I@OSS_CORE_SRCDIR@/src/net/turn/apps/relay \
     -I@OSS_CORE_SRCDIR@/src/udns/include
 
+AM_CFLAGS = \
+    DHAVE_INET_PTON_NTOP
+
 version_Current=@OSS_CORE_VERSION_CURRENT@
 version_Revision=@OSS_CORE_VERSION_REVISION@
 version_Age=@OSS_CORE_VERSION_AGE@
@@ -179,31 +182,41 @@ UDT4_SOURCES = \
 	p2p/udt/window.h
 
 UDNS_SOURCES = \
-	udns/include/udnspp/dnscontext.hpp \
-	udns/include/udnspp/dnsrra4.hpp \
-	udns/include/udnspp/dnsquery.hpp \
-	udns/include/udnspp/dnsresolver.hpp \
-	udns/src/include/udns.h \
-	udns/src/udns_resolver.c \
-	udns/src/udns_XtoX.c \
-	udns/src/udns_jran.c \
-	udns/src/udns_rr_mx.c \
-	udns/src/udns_parse.c \
-	udns/src/udns_codes.c \
-	udns/src/udns_rr_naptr.c \
-	udns/src/udns_dntosp.c \
-	udns/src/udns_rr_a.c \
-	udns/src/udns_dn.c \
+	udns/include/udns.h \
+	udns/include/udnspp/dnsarecord.h  \
+	udns/include/udnspp/dnscache.h  \
+	udns/include/udnspp/dnscontext.h  \
+	udns/include/udnspp/dnsmxrecord.h  \
+	udns/include/udnspp/dnsnaptrrecord.h  \
+	udns/include/udnspp/dnsptrrecord.h  \
+	udns/include/udnspp/dnsresolver.h  \
+	udns/include/udnspp/dnsrrcommon.h  \
+	udns/include/udnspp/dnssrvrecord.h  \
+	udns/include/udnspp/dnstxtrecord.h \
 	udns/src/udns_bl.c \
-	udns/src/udns_init.c \
-	udns/src/udns_rr_srv.c \
+	udns/src/udns_dn.c \
+	udns/src/udns_init.c  \
+	udns/src/udns_misc.c   \
+	udns/src/udns_resolver.c  \
+	udns/src/udns_rr_mx.c     \
+	udns/src/udns_rr_ptr.c  \
 	udns/src/udns_rr_txt.c \
-	udns/src/udns_rr_ptr.c \
-	udns/src/udns_misc.c \
-	udns/src/udnspp/dnsquery.cpp \
-	udns/src/udnspp/dnscontext.cpp \
-	udns/src/udnspp/dnsrra4.cpp \
-	udns/src/udnspp/dnsresolver.cpp
+	udns/src/udns_codes.c  \
+	udns/src/udns_dntosp.c  \
+	udns/src/udns_jran.c  \
+	udns/src/udns_parse.c  \
+	udns/src/udns_rr_a.c      \
+	udns/src/udns_rr_naptr.c  \
+	udns/src/udns_rr_srv.c  \
+	udns/src/udns_XtoX.c \
+	udns/src/udnspp/dnsarecord.cpp  \
+	udns/src/udnspp/dnscontext.cpp  \
+	udns/src/udnspp/dnsmxrecord.cpp  \
+	udns/src/udnspp/dnsnaptrrecord.cpp  \
+	udns/src/udnspp/dnsptrrecord.cpp  \
+	udns/src/udnspp/dnsresolver.cpp  \
+	udns/src/udnspp/dnssrvrecord.cpp  \
+	udns/src/udnspp/dnstxtrecord.cpp
 
 
 
