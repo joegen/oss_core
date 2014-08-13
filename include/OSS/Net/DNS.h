@@ -36,9 +36,6 @@ namespace OSS {
   typedef std::string dns_host_record;
   typedef std::list<dns_host_record> dns_host_record_list;
   
-  dns_host_record_list OSS_API dns_lookup_host(const std::string& query);
-    /// Lookup A record 
-
   //
   // SRV Record Types
   //
@@ -70,6 +67,10 @@ namespace OSS {
 
 
   typedef std::set<dns_srv_record, dns_lookup_srv_ltcompare> dns_srv_record_list;
+  
+  
+  dns_host_record_list OSS_API dns_lookup_host(const std::string& query);
+    /// Lookup A record 
   
   dns_srv_record_list OSS_API dns_lookup_srv(const std::string& query);
     /// Lookup SRV Record

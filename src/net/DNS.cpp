@@ -24,6 +24,8 @@
 #include "OSS/UTL/CoreUtils.h"
 #include "Poco/ExpireCache.h"
 
+#ifndef DNS_USE_UDNSPP
+
 #if OSS_OS_FAMILY_WINDOWS
   #include <windns.h>
 #else
@@ -507,36 +509,55 @@ dns_srv_record_list dns_lookup_srv(const std::string& query)
   return answer;
 }
 
-#if 0
-dns_naptr_record_list dns_lookup_naptr(const std::string& query)
-{
-  dns_naptr_record_list answer;
 
-  return answer;
+} // namespace OSS
+
+#else //DNS_USE_UDNSPP
+
+#include <udnspp/dnsresolver.h>
+
+namespace OSS {
+
+  
+using namespace udnspp;
+
+static DNSResolver gResolver;  
+  
+dns_host_record_list OSS_API dns_lookup_host(const std::string& query)
+{
+  dns_host_record_list rrlist;
+  DNSARecord rr = gResolver.resolveA4(query, 0);
+  
+  for (DNSAddressList::iterator iter = rr.getRecords().begin(); iter != rr.getRecords().end(); iter++)
+  {
+    rrlist.push_back(*iter);
+  }
+  
+  return rrlist;
 }
 
-dns_mx_record_list dns_lookup_mx(const std::string& query)
+  
+dns_srv_record_list OSS_API dns_lookup_srv(const std::string& query)
 {
-  dns_mx_record_list answer;
-
-  return answer;
+  dns_srv_record_list rrlist;
+  
+  DNSSRVRecord rr = gResolver.resolveSRV(query, 0);
+  
+  for (DNSSRVRecordList::iterator iter = rr.getRecords().begin(); iter != rr.getRecords().end(); iter++)
+  {
+    dns_srv_record record;
+    record.get<0>() = query;
+    record.get<1>() = iter->name;
+    record.get<2>() = iter->port;
+    record.get<3>() = iter->priority;
+    record.get<4>() = iter->weight;  
+    rrlist.insert(record);
+  }
+  
+  return rrlist;
 }
+    /// Lookup SRV Record
+} // namespace OSS
 
-
-#endif
-
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-} //OSS
+#endif // DNS_USE_UDNSPP
 

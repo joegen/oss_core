@@ -13,6 +13,7 @@ lib_LTLIBRARIES = $(corelibs)
 localedir = $(datadir)/locale
 
 AM_CPPFLAGS = \
+    -DDNS_USE_UDNSPP \
     -I@OSS_CORE_SRCDIR@/include \
     -I@OSS_CORE_SRCDIR@/src/net/turn/carp \
     -I@OSS_CORE_SRCDIR@/src/net/turn \
