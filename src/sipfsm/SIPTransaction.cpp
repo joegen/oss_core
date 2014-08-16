@@ -238,10 +238,10 @@ void SIPTransaction::sendRequest(
 
 
     std::string transport;
-    if (pRequest->getProperty("target-transport", transport))
+    if (pRequest->getProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, transport))
     {
       std::string transportId;
-      pRequest->getProperty("transport-id", transportId);
+      pRequest->getProperty(OSS::SIP::SIPMessage::PROP_TransportId, transportId);
       _transport = _transportService->createClientTransport(localAddress, remoteAddress, transport, transportId);
     }else if (SIPVia::msgGetTopViaTransport(pRequest.get(), transport))
     {
@@ -465,7 +465,7 @@ void SIPTransaction::onBranchTerminated(const SIPTransaction::Ptr& pBranch)
 
 void SIPTransaction::setState(int state)
 {
-  OSS::mutex_write_lock lock(_stateMutex);
+  OSS::mutex_lock lock(_stateMutex);
 
   if (_state == state)
     return;
@@ -478,28 +478,28 @@ void SIPTransaction::setState(int state)
 
 int SIPTransaction::getState() const
 {
-  OSS::mutex_write_lock lock(_stateMutex);
+  OSS::mutex_lock lock(_stateMutex);
   return _state;
 }
 
 
 void SIPTransaction::handleTimeoutICT()
 {
-  OSS::mutex_write_lock lock(_stateMutex);
+  OSS::mutex_lock lock(_stateMutex);
   if (_responseTU && TRN_STATE_TERMINATED != _state)
     _responseTU(SIPTransaction::Error(new OSS::SIP::SIPException("ICT Timeout")), SIPMessage::Ptr(), SIPTransportSession::Ptr(), shared_from_this());
 }
 
 void SIPTransaction::handleTimeoutNICT()
 {
-  OSS::mutex_write_lock lock(_stateMutex);
+  OSS::mutex_lock lock(_stateMutex);
   if (_responseTU && TRN_STATE_TERMINATED != _state)
     _responseTU(SIPTransaction::Error(new OSS::SIP::SIPException("NICT Timeout")), SIPMessage::Ptr(), SIPTransportSession::Ptr(), shared_from_this());
 }
 
 void SIPTransaction::informTU(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport)
 {
-  OSS::mutex_write_lock lock(_stateMutex);
+  OSS::mutex_lock lock(_stateMutex);
   if (_responseTU && TRN_STATE_TERMINATED != _state)
     _responseTU(SIPTransaction::Error(), pMsg, pTransport, shared_from_this());
 }

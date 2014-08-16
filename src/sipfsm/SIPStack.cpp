@@ -537,7 +537,7 @@ void SIPStack::sendRequestDirect(const SIPMessage::Ptr& pRequest,
   if (SIPVia::msgGetTopViaTransport(pRequest.get(), transport))
   {
     std::string transportId;
-    pRequest->getProperty("transport-id", transportId);
+    pRequest->getProperty(OSS::SIP::SIPMessage::PROP_TransportId, transportId);
     if (transportId.empty())
       transportId="0";
     OSS_LOG_DEBUG("Sending request directly protocol=" << transport << " id=" << transportId);

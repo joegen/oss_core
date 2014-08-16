@@ -515,6 +515,7 @@ dns_srv_record_list dns_lookup_srv(const std::string& query)
 #else //DNS_USE_UDNSPP
 
 #include <udnspp/dnsresolver.h>
+#include "OSS/Net/IPAddress.h"
 
 namespace OSS {
 
@@ -526,6 +527,13 @@ static DNSResolver gResolver;
 dns_host_record_list OSS_API dns_lookup_host(const std::string& query)
 {
   dns_host_record_list rrlist;
+  
+  if (OSS::Net::IPAddress::isIPAddress(query))
+  {
+    rrlist.push_back(query);
+    return rrlist;
+  }
+  
   DNSARecord rr = gResolver.resolveA4(query, 0);
   
   for (DNSAddressList::iterator iter = rr.getRecords().begin(); iter != rr.getRecords().end(); iter++)
@@ -550,7 +558,24 @@ dns_srv_record_list OSS_API dns_lookup_srv(const std::string& query)
     record.get<1>() = iter->name;
     record.get<2>() = iter->port;
     record.get<3>() = iter->priority;
-    record.get<4>() = iter->weight;  
+    record.get<4>() = iter->weight;
+
+    //
+    // Check if name is an IP address
+    //
+    
+    if (!OSS::Net::IPAddress::isIPAddress(iter->name))
+    {
+      //
+      // Resolve it further
+      //
+      DNSARecord arec = gResolver.resolveA4(iter->name, 0);
+      if (!arec.getRecords().empty())
+      {
+        record.get<1>() = arec.getRecords().front();
+      }
+    }
+    
     rrlist.insert(record);
   }
   

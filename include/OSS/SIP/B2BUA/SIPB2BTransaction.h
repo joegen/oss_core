@@ -134,7 +134,13 @@ public:
   SIPB2BTransactionManager* manager() const;
     /// Return a raw pointer to the manager
 
-    void setProperty(const std::string& property, const std::string& value);
+  void setProperty(const std::string& property, const std::string& value);
+    /// Set a custom property for this transaction.
+    /// Custom properties are meant to simply hold
+    /// arbitrary data to aid in how the transactions
+    /// are processed.
+  
+  void setProperty(OSS::SIP::SIPMessage::Property property, const std::string& value);
     /// Set a custom property for this transaction.
     /// Custom properties are meant to simply hold
     /// arbitrary data to aid in how the transactions
@@ -145,8 +151,15 @@ public:
     /// Custom properties are meant to simply hold
     /// arbitrary data to aid in how the transactions
     /// are processed.
+  
+  bool getProperty(OSS::SIP::SIPMessage::Property property,  std::string& value) const;
+    /// Get a custom property of this transaction.
+    /// Custom properties are meant to simply hold
+    /// arbitrary data to aid in how the transactions
+    /// are processed.
 
   bool hasProperty(const std::string& property) const;
+  bool hasProperty(OSS::SIP::SIPMessage::Property property) const;
 
   const std::string& getLogId() const;
     /// Return the log-id used for logging
@@ -257,6 +270,20 @@ inline bool SIPB2BTransaction::isMidDialog() const
     return _isMidDialog;
 }
 
+inline void SIPB2BTransaction::setProperty(OSS::SIP::SIPMessage::Property property, const std::string& value)
+{
+  setProperty(SIPMessage::propertyString(property), value);
+}
+  
+inline bool SIPB2BTransaction::getProperty(OSS::SIP::SIPMessage::Property property,  std::string& value) const
+{
+  return getProperty(SIPMessage::propertyString(property), value);
+}
+
+inline bool SIPB2BTransaction::hasProperty(OSS::SIP::SIPMessage::Property property) const
+{
+  return hasProperty(SIPMessage::propertyString(property));
+}
 } } } // OSS::SIP::B2BUA
 
 #endif

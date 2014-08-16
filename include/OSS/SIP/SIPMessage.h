@@ -114,6 +114,31 @@ public:
     CODE_606_NotAcceptable = 606,
     CODE_MAX_CODE = 699
   };
+  
+  enum Property
+  {
+    PROP_TargetAddress,
+    PROP_TargetPort,
+    PROP_TargetTransport,
+    PROP_TargetHost,
+    PROP_LocalAddress,
+    PROP_TransportId,
+    PROP_SessionId,
+    PROP_XOR,
+    PROP_Max
+  };
+  
+#define PROP_MAP { \
+  "target-address", \
+  "target-port", \
+  "target-transport", \
+  "target-host", \
+  "local-address", \
+  "transport-id", \
+  "session-id", \
+  "xor", \
+  "undefined" \
+  };
 
   SIPMessage();
     /// Creates a blank SIP Message
@@ -508,22 +533,52 @@ public:
     /// Set a custom property for this message.
     /// Custom properties are meant to simply hold
     /// arbitrary data to aid in how the sip message
-    /// is processed.  Custom propertis are never
+    /// is processed.  Custom properties are never
     /// inherited when copying sip messages to another.
-
-  std::string getMethod() const;
-    /// Return the method portion of the CSeq.  This function would behae the same
-    /// for both requests and responses.
+  
+  void setProperty(Property property, const std::string& value);
+    /// Set a custom property for this message.
+    /// Custom properties are meant to simply hold
+    /// arbitrary data to aid in how the sip message
+    /// is processed.  Custom properties are never
+    /// inherited when copying sip messages to another.
 
   bool getProperty(const std::string&  property, std::string& value) const;
     /// Get a custom property of this message.
     /// Custom properties are meant to simply hold
     /// arbitrary data to aid in how the sip message
-    /// is processed.  Custom propertis are never
+    /// is processed.  Custom properties are never
+    /// inherited when copying sip messages to another.
+  
+  bool getProperty(Property  property, std::string& value) const;
+    /// Get a custom property of this message.
+    /// Custom properties are meant to simply hold
+    /// arbitrary data to aid in how the sip message
+    /// is processed.  Custom properties are never
     /// inherited when copying sip messages to another.
 
   void clearProperties();
     /// Remove all custom properties
+  
+  static const char* propertyString(Property prop)
+    /// returns the string representation of a custom property
+  {
+    char* ret = 0;
+    
+    if (prop < PROP_Max)
+    {
+      static const char* prop_map[] = PROP_MAP;
+
+      
+      ret = (char*)prop_map[prop];
+    }
+    
+    return ret;
+  }
+  
+  std::string getMethod() const;
+    /// Return the method portion of the CSeq.  This function would behae the same
+    /// for both requests and responses.
 
   OSS_HANDLE& userData();
     /// Returns a reference to the user data
@@ -569,7 +624,7 @@ public:
 
   std::string getTopViaBranch() const;
     /// Return the top via branhc parameter
-
+  
 protected:
   boost::tribool consumeOne(char input);
   enum ConsumeState
@@ -648,6 +703,15 @@ inline std::string& SIPMessage::idleBuffer()
   return _idleBuffer;
 }
 
+inline bool SIPMessage::getProperty(Property  property, std::string& value) const
+{
+  return getProperty(propertyString(property), value);
+}
+
+inline void SIPMessage::setProperty(Property property, const std::string& value)
+{
+  setProperty(propertyString(property), value);
+}
 
 }} //OSS::SIP
 #endif //SIP_SIPMessage_INCLUDED

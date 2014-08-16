@@ -243,9 +243,9 @@ void SIPB2BTransaction::runTask()
     // Set the target transport of the URI if specified
     //
     std::string targetTransport;
-    if (!_pClientRequest->getProperty("target-transport", targetTransport))
+    if (!_pClientRequest->getProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, targetTransport))
     {
-       _pClientRequest->setProperty("target-transport", "udp");
+       _pClientRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, "udp");
        targetTransport = "udp";
     }
 
@@ -293,8 +293,8 @@ void SIPB2BTransaction::runTask()
     //
     // Save the address properties
     //
-    _pClientRequest->setProperty("target-address", outboundTarget.toIpPortString());
-    _pClientRequest->setProperty("local-address", _localInterface.toIpPortString());
+    _pClientRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetAddress, outboundTarget.toIpPortString());
+    _pClientRequest->setProperty(OSS::SIP::SIPMessage::PROP_LocalAddress, _localInterface.toIpPortString());
 
     //
     // Handle the message body
@@ -554,12 +554,16 @@ void SIPB2BTransaction::runResponseTask()
 
 void SIPB2BTransaction::setProperty(const std::string& property, const std::string& value)
 {
+  if (property.empty())
+    return;
   WriteLock lock(_rwlock);
   _properties[property] = value;
 }
 
 bool SIPB2BTransaction::getProperty(const std::string&  property, std::string& value) const
 {
+  if (property.empty())
+    return false;
   ReadLock lock(_rwlock);
   CustomProperties::const_iterator iter = _properties.find(property);
   if (iter != _properties.end())
@@ -572,6 +576,8 @@ bool SIPB2BTransaction::getProperty(const std::string&  property, std::string& v
 
 bool SIPB2BTransaction::hasProperty(const std::string&  property) const
 {
+  if (property.empty())
+    return false;
   ReadLock lock(_rwlock);
   return  _properties.find(property) != _properties.end();
 }
@@ -579,7 +585,7 @@ bool SIPB2BTransaction::hasProperty(const std::string&  property) const
 bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OSS::Net::IPAddress& target)
 {
   std::string host;
-  pClientRequest->getProperty("target-address", host);
+  pClientRequest->getProperty(OSS::SIP::SIPMessage::PROP_TargetAddress, host);
 
   //
   // outbound-target is not set by the script.  try figuring it out ourselves
@@ -663,7 +669,7 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
 
       OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._udp." << host << " -> " << target.toIpPortString());
       
-      pClientRequest->setProperty("target-transport", "udp");
+      pClientRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, "udp");
     }
     else
     {
@@ -683,7 +689,7 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
       
       OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._tcp." << host << " -> " << target.toIpPortString());
       
-      pClientRequest->setProperty("target-transport", "tcp");
+      pClientRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, "tcp");
     }
     else if (!target.isValid())
     {
@@ -703,7 +709,7 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
       
       OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._ws." << host << " -> " << target.toIpPortString());
       
-      pClientRequest->setProperty("target-transport", "ws");
+      pClientRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, "ws");
     }
     else if (!target.isValid())
     {
@@ -724,7 +730,7 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
       
       OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - FQDN-1 (" << host << ") -> " << target.toIpPortString());
       
-      pClientRequest->setProperty("target-transport", "udp");
+      pClientRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, "udp");
     }
   }
   else
@@ -745,7 +751,7 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
     
     OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - FQDN-2 (" << host << ") -> " << target.toIpPortString());
     
-    pClientRequest->setProperty("target-transport", "udp");
+    pClientRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, "udp");
   }
 
   return target.isValid();

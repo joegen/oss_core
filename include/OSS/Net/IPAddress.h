@@ -140,6 +140,14 @@ public:
   static IPAddress fromV4DWORD(OSS::UInt32 ip4);
     /// Returns an IP Addres from a DWORD
 
+  static bool isV4Address(const std::string& address);
+    /// Returns true if address is a valid IPV4 address
+  
+  static bool isV6Address(const std::string& address);
+    /// Returns true if address is a valid IPV6 address
+  
+  static bool isIPAddress(const std::string& address);
+    /// Returns true if the address is either IPV4 or IPV6 address
 protected:
   boost::asio::ip::address _address;
   std::string _externalAddress;

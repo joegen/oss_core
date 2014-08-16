@@ -318,7 +318,7 @@ private:
   OSS::Net::IPAddress _sendAddress;
   OSS::Net::IPAddress _dialogTarget; 
   mutable OSS::mutex _mutex;
-  mutable OSS::mutex_read_write _stateMutex;
+  mutable OSS::mutex _stateMutex;
   std::string _logId;
   bool _isXOREncrypted;
   WeakPtr _pParent;

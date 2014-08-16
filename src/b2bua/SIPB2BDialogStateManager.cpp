@@ -1067,7 +1067,7 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
       pTransaction->setProperty("leg-index", "2");
       pLeg = &dialogData.leg1;
     }
-    pTransaction->setProperty("session-id", sessionId);
+    pTransaction->setProperty(OSS::SIP::SIPMessage::PROP_SessionId, sessionId);
 
 
     std::string callId = pLeg->callId;
@@ -1134,10 +1134,10 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
 
     transportScheme = pLeg->targetTransport;
     OSS::string_to_upper(transportScheme);
-    pMsg->setProperty("target-transport", transportScheme.c_str());
+    pMsg->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, transportScheme.c_str());
 
 
-    pMsg->setProperty("transport-id", pLeg->transportId);
+    pMsg->setProperty(OSS::SIP::SIPMessage::PROP_TransportId, pLeg->transportId);
     OSS_LOG_DEBUG(logId << "Target transport identifier set by dialog data: transport-id=" << pLeg->transportId);
 
     std::string via = SIPB2BContact::constructVia(_pTransactionManager,
@@ -1206,8 +1206,8 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
   unsigned short targetPort = targetAddress.getPort();
   if (targetPort == 0)
       targetPort = 5060;
-  pMsg->setProperty("target-address", targetAddress.toString());
-  pMsg->setProperty("target-port", OSS::string_from_number<unsigned short>(targetPort));
+  pMsg->setProperty(OSS::SIP::SIPMessage::PROP_TargetAddress, targetAddress.toString());
+  pMsg->setProperty(OSS::SIP::SIPMessage::PROP_TargetPort, OSS::string_from_number<unsigned short>(targetPort));
 
   return SIPMessage::Ptr();
 }
@@ -1303,7 +1303,7 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
 
     std::string transportScheme = pLeg->targetTransport;
     OSS::string_to_upper(transportScheme);
-    pMsg->setProperty("target-transport", transportScheme.c_str());
+    pMsg->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, transportScheme.c_str());
     std::string transportId = pLeg->transportId;
 
     pMsg->hdrRemove("call-id");

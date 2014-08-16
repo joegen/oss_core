@@ -1332,6 +1332,9 @@ void SIPMessage::setStartLine(const std::string& startLine)
 
 void SIPMessage::setProperty(const std::string& property, const std::string& value)
 {
+  if (property.empty())
+    return;
+  
   WriteLock lock(_rwlock);
   _properties[property] = value;
 }
@@ -1344,6 +1347,9 @@ void SIPMessage::clearProperties()
 
 bool SIPMessage::getProperty(const std::string&  property, std::string& value) const
 {
+  if (property.empty())
+    return false;
+  
   ReadLock lock(_rwlock);
   CustomProperties::const_iterator iter = _properties.find(property);
   if (iter != _properties.end())

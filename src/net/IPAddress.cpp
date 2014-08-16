@@ -21,6 +21,9 @@
 #include "OSS/Net/IPAddress.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/Net/Net.h"
+#include "OSS/ABNF/ABNFSIPIPV4Address.h"
+#include "OSS/ABNF/ABNFSIPIPV6Address.h"
+
 
 namespace OSS {
 namespace Net {
@@ -173,6 +176,26 @@ bool IPAddress::isLocalAddress() const
 
   return true;
 }
+
+bool IPAddress::isV4Address(const std::string& address)
+{
+  static OSS::ABNF::ABNFEvaluate<OSS::ABNF::ABNFSIPIPV4Address> isIPV4;
+  return isIPV4(address.c_str());
+}
+
+  
+bool IPAddress::isV6Address(const std::string& address)
+{
+  static OSS::ABNF::ABNFEvaluate<OSS::ABNF::ABNFSIPIPV6Address> isIPV6;
+  return isIPV6(address.c_str());
+}
+
+bool IPAddress::isIPAddress(const std::string& address)
+{
+  return IPAddress::isV4Address(address) || IPAddress::isV6Address(address); 
+}
+
+
 
 } } // OSS::Net
 

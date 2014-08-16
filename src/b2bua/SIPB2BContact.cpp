@@ -261,14 +261,14 @@ bool SIPB2BContact::getSessionInfo(
 
   std::string method = pRequest->getMethod();
   std::string user = requestUri.getUser();
-  if (requestUri.hasParam("sbc-session-id") && requestUri.hasParam("sbc-call-index"))
+  if (SIPB2BContact::_dialogStateInParams && requestUri.hasParam("sbc-session-id") && requestUri.hasParam("sbc-call-index"))
   {
     sessionInfo.sessionId = requestUri.getParam("sbc-session-id");
     sessionInfo.callIndex = OSS::string_to_number<unsigned>(requestUri.getParam("sbc-call-index").c_str());
     OSS_LOG_DEBUG(logId << "Session-ID in Params - " << sessionInfo.sessionId << "-" << sessionInfo.callIndex);
     return true;
   }
-  else
+  else if (SIPB2BContact::_dialogStateInRecordRoute)
   {
     /// check if the session-id is in the route header
     //pRequest->hdrGet("route");
@@ -287,16 +287,16 @@ bool SIPB2BContact::getSessionInfo(
         return true;
       }
     }
-    else if (!requestUri.hasParam("sbc-session-id") || !requestUri.hasParam("sbc-call-index"))
+  }
+  else if (!SIPB2BContact::_dialogStateInParams && !SIPB2BContact::_dialogStateInRecordRoute)
+  {
+    std::vector<std::string> userTokens = OSS::string_tokenize(user, "-");
+    if (userTokens.size() == 2 && userTokens[1].size() == 1)
     {
-      std::vector<std::string> userTokens = OSS::string_tokenize(user, "-");
-      if (userTokens.size() == 2 && userTokens[1].size() == 1)
-      {
-        sessionInfo.sessionId = userTokens[0];
-        sessionInfo.callIndex = OSS::string_to_number<unsigned>(userTokens[1].c_str());
-        OSS_LOG_DEBUG(logId << "Session-ID in User Info - " << sessionInfo.sessionId << "-" << sessionInfo.callIndex);
-        return true;
-      }
+      sessionInfo.sessionId = userTokens[0];
+      sessionInfo.callIndex = OSS::string_to_number<unsigned>(userTokens[1].c_str());
+      OSS_LOG_DEBUG(logId << "Session-ID in User Info - " << sessionInfo.sessionId << "-" << sessionInfo.callIndex);
+      return true;
     }
   }
 
