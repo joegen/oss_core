@@ -196,7 +196,7 @@ void SIPB2BTransaction::runTask()
     // Check if the route handler specified that a response would be handled locally
     //
     std::string invokeLocalHandler = "0";
-    if (getProperty("invoke-local-handler", invokeLocalHandler ) && invokeLocalHandler == "1")
+    if (getProperty(OSS::PropertyMap::PROP_InvokeLocalHandler, invokeLocalHandler ) && invokeLocalHandler == "1")
     {
       SIPMessage::Ptr localResponse = _pManager->onInvokeLocalHandler(_pServerRequest, _pServerTransport, shared_from_this());
       if (!localResponse)
@@ -243,9 +243,9 @@ void SIPB2BTransaction::runTask()
     // Set the target transport of the URI if specified
     //
     std::string targetTransport;
-    if (!_pClientRequest->getProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, targetTransport))
+    if (!_pClientRequest->getProperty(OSS::PropertyMap::PROP_TargetTransport, targetTransport))
     {
-       _pClientRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, "udp");
+       _pClientRequest->setProperty(OSS::PropertyMap::PROP_TargetTransport, "udp");
        targetTransport = "udp";
     }
 
@@ -271,7 +271,7 @@ void SIPB2BTransaction::runTask()
     // Check if the route handler specified that a response would be generated locally
     //
     std::string genLocalResponse = "0";
-    if (getProperty("generate-local-response", genLocalResponse ) && genLocalResponse == "1")
+    if (getProperty(OSS::PropertyMap::PROP_GenerateLocalResponse, genLocalResponse ) && genLocalResponse == "1")
     {
       SIPMessage::Ptr localResponse = _pManager->onGenerateLocalResponse(_pServerRequest, _pServerTransport, shared_from_this());
       if (localResponse)
@@ -293,8 +293,8 @@ void SIPB2BTransaction::runTask()
     //
     // Save the address properties
     //
-    _pClientRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetAddress, outboundTarget.toIpPortString());
-    _pClientRequest->setProperty(OSS::SIP::SIPMessage::PROP_LocalAddress, _localInterface.toIpPortString());
+    _pClientRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, outboundTarget.toIpPortString());
+    _pClientRequest->setProperty(OSS::PropertyMap::PROP_LocalAddress, _localInterface.toIpPortString());
 
     //
     // Handle the message body
@@ -302,11 +302,11 @@ void SIPB2BTransaction::runTask()
     if (!_pClientRequest->body().empty())
     {
       std::string serverRequestXor = "0";
-      _pServerRequest->getProperty("xor", serverRequestXor);
+      _pServerRequest->getProperty(OSS::PropertyMap::PROP_XOR, serverRequestXor);
       std::string clientRequestXor = "0";
-      _pClientRequest->getProperty("xor", clientRequestXor);
-      _pClientRequest->setProperty("peer-xor", serverRequestXor);
-      _pServerRequest->setProperty("peer-xor", clientRequestXor);
+      _pClientRequest->getProperty(OSS::PropertyMap::PROP_XOR, clientRequestXor);
+      _pClientRequest->setProperty(OSS::PropertyMap::PROP_PeerXOR, serverRequestXor);
+      _pServerRequest->setProperty(OSS::PropertyMap::PROP_PeerXOR, clientRequestXor);
 
       SIPMessage::Ptr pBodyResponse;
       pBodyResponse = _pManager->onProcessRequestBody(_pClientRequest, shared_from_this());
@@ -457,10 +457,10 @@ void SIPB2BTransaction::runResponseTask()
       {
         std::string serverRequestPeerXor = "0";
         std::string clientRequestPeerXor = "0";
-        _pClientRequest->getProperty("peer-xor", clientRequestPeerXor);
-        _pServerRequest->getProperty("peer-xor", serverRequestPeerXor);
-        response->setProperty("peer-xor", clientRequestPeerXor);
-        pErrorResponse->setProperty("peer-xor", serverRequestPeerXor);
+        _pClientRequest->getProperty(OSS::PropertyMap::PROP_PeerXOR, clientRequestPeerXor);
+        _pServerRequest->getProperty(OSS::PropertyMap::PROP_PeerXOR, serverRequestPeerXor);
+        response->setProperty(OSS::PropertyMap::PROP_PeerXOR, clientRequestPeerXor);
+        pErrorResponse->setProperty(OSS::PropertyMap::PROP_PeerXOR, serverRequestPeerXor);
 
         OSS::Net::IPAddress target;
         if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
@@ -488,10 +488,10 @@ void SIPB2BTransaction::runResponseTask()
         {
           std::string serverRequestPeerXor = "0";
           std::string clientRequestPeerXor = "0";
-          _pClientRequest->getProperty("peer-xor", clientRequestPeerXor);
-          _pServerRequest->getProperty("peer-xor", serverRequestPeerXor);
-          response->setProperty("peer-xor", clientRequestPeerXor);
-          pProvisionalResponse->setProperty("peer-xor", serverRequestPeerXor);
+          _pClientRequest->getProperty(OSS::PropertyMap::PROP_PeerXOR, clientRequestPeerXor);
+          _pServerRequest->getProperty(OSS::PropertyMap::PROP_PeerXOR, serverRequestPeerXor);
+          response->setProperty(OSS::PropertyMap::PROP_PeerXOR, clientRequestPeerXor);
+          pProvisionalResponse->setProperty(OSS::PropertyMap::PROP_PeerXOR, serverRequestPeerXor);
 
           if (!pProvisionalResponse->body().empty())
             _pManager->onProcessResponseBody(pProvisionalResponse, shared_from_this());
@@ -519,16 +519,16 @@ void SIPB2BTransaction::runResponseTask()
         {
           std::string serverRequestPeerXor = "0";
           std::string clientRequestPeerXor = "0";
-          _pClientRequest->getProperty("peer-xor", clientRequestPeerXor);
-          _pServerRequest->getProperty("peer-xor", serverRequestPeerXor);
-          response->setProperty("peer-xor", clientRequestPeerXor);
-          pFinalResponse->setProperty("peer-xor", serverRequestPeerXor);
+          _pClientRequest->getProperty(OSS::PropertyMap::PROP_PeerXOR, clientRequestPeerXor);
+          _pServerRequest->getProperty(OSS::PropertyMap::PROP_PeerXOR, serverRequestPeerXor);
+          response->setProperty(OSS::PropertyMap::PROP_PeerXOR, clientRequestPeerXor);
+          pFinalResponse->setProperty(OSS::PropertyMap::PROP_PeerXOR, serverRequestPeerXor);
 
           if (!pFinalResponse->body().empty())
             _pManager->onProcessResponseBody(pFinalResponse, shared_from_this());
 
-          pFinalResponse->setProperty("response-target", target.toIpPortString().c_str());
-          pFinalResponse->setProperty("response-interface",
+          pFinalResponse->setProperty(OSS::PropertyMap::PROP_ResponseTarget, target.toIpPortString().c_str());
+          pFinalResponse->setProperty(OSS::PropertyMap::PROP_ResponseInterface,
             _pServerTransport->getLocalAddress().toIpPortString().c_str());
 
           if (target.isValid())
@@ -585,7 +585,7 @@ bool SIPB2BTransaction::hasProperty(const std::string&  property) const
 bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OSS::Net::IPAddress& target)
 {
   std::string host;
-  pClientRequest->getProperty(OSS::SIP::SIPMessage::PROP_TargetAddress, host);
+  pClientRequest->getProperty(OSS::PropertyMap::PROP_TargetAddress, host);
 
   //
   // outbound-target is not set by the script.  try figuring it out ourselves
@@ -605,7 +605,7 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
     // Take note that the via is not set by the upper layer yet so we can't
     // use it as the basis of the transport here
     //
-    if (!pClientRequest->getProperty("target-transport", transport) || transport.empty())
+    if (!pClientRequest->getProperty(OSS::PropertyMap::PROP_TargetTransport, transport) || transport.empty())
     {
       transport = "udp";
     }
@@ -669,7 +669,7 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
 
       OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._udp." << host << " -> " << target.toIpPortString());
       
-      pClientRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, "udp");
+      pClientRequest->setProperty(OSS::PropertyMap::PROP_TargetTransport, "udp");
     }
     else
     {
@@ -689,7 +689,7 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
       
       OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._tcp." << host << " -> " << target.toIpPortString());
       
-      pClientRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, "tcp");
+      pClientRequest->setProperty(OSS::PropertyMap::PROP_TargetTransport, "tcp");
     }
     else if (!target.isValid())
     {
@@ -709,7 +709,7 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
       
       OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._ws." << host << " -> " << target.toIpPortString());
       
-      pClientRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, "ws");
+      pClientRequest->setProperty(OSS::PropertyMap::PROP_TargetTransport, "ws");
     }
     else if (!target.isValid())
     {
@@ -730,7 +730,7 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
       
       OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - FQDN-1 (" << host << ") -> " << target.toIpPortString());
       
-      pClientRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, "udp");
+      pClientRequest->setProperty(OSS::PropertyMap::PROP_TargetTransport, "udp");
     }
   }
   else
@@ -751,7 +751,7 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
     
     OSS_LOG_DEBUG("SIPB2BTransaction::resolveSessionTarget - FQDN-2 (" << host << ") -> " << target.toIpPortString());
     
-    pClientRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, "udp");
+    pClientRequest->setProperty(OSS::PropertyMap::PROP_TargetTransport, "udp");
   }
 
   return target.isValid();

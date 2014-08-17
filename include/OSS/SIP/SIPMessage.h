@@ -32,6 +32,7 @@
 #include "OSS/SIP/SIPParser.h"
 #include "OSS/SIP/SIPHeaderTokens.h"
 #include "OSS/SIP/SIPDigestAuth.h"
+#include "OSS/UTL/PropertyMap.h"
 
 
 namespace OSS {
@@ -113,31 +114,6 @@ public:
     CODE_604_DoesNotExistAnywhere = 604,
     CODE_606_NotAcceptable = 606,
     CODE_MAX_CODE = 699
-  };
-  
-  enum Property
-  {
-    PROP_TargetAddress,
-    PROP_TargetPort,
-    PROP_TargetTransport,
-    PROP_TargetHost,
-    PROP_LocalAddress,
-    PROP_TransportId,
-    PROP_SessionId,
-    PROP_XOR,
-    PROP_Max
-  };
-  
-#define PROP_MAP { \
-  "target-address", \
-  "target-port", \
-  "target-transport", \
-  "target-host", \
-  "local-address", \
-  "transport-id", \
-  "session-id", \
-  "xor", \
-  "undefined" \
   };
 
   SIPMessage();
@@ -536,7 +512,7 @@ public:
     /// is processed.  Custom properties are never
     /// inherited when copying sip messages to another.
   
-  void setProperty(Property property, const std::string& value);
+  void setProperty(PropertyMap::Enum property, const std::string& value);
     /// Set a custom property for this message.
     /// Custom properties are meant to simply hold
     /// arbitrary data to aid in how the sip message
@@ -550,7 +526,7 @@ public:
     /// is processed.  Custom properties are never
     /// inherited when copying sip messages to another.
   
-  bool getProperty(Property  property, std::string& value) const;
+  bool getProperty(PropertyMap::Enum property, std::string& value) const;
     /// Get a custom property of this message.
     /// Custom properties are meant to simply hold
     /// arbitrary data to aid in how the sip message
@@ -560,21 +536,7 @@ public:
   void clearProperties();
     /// Remove all custom properties
   
-  static const char* propertyString(Property prop)
-    /// returns the string representation of a custom property
-  {
-    char* ret = 0;
-    
-    if (prop < PROP_Max)
-    {
-      static const char* prop_map[] = PROP_MAP;
 
-      
-      ret = (char*)prop_map[prop];
-    }
-    
-    return ret;
-  }
   
   std::string getMethod() const;
     /// Return the method portion of the CSeq.  This function would behae the same
@@ -703,14 +665,14 @@ inline std::string& SIPMessage::idleBuffer()
   return _idleBuffer;
 }
 
-inline bool SIPMessage::getProperty(Property  property, std::string& value) const
+inline bool SIPMessage::getProperty(PropertyMap::Enum   property, std::string& value) const
 {
-  return getProperty(propertyString(property), value);
+  return getProperty(PropertyMap::propertyString(property), value);
 }
 
-inline void SIPMessage::setProperty(Property property, const std::string& value)
+inline void SIPMessage::setProperty(PropertyMap::Enum property, const std::string& value)
 {
-  setProperty(propertyString(property), value);
+  setProperty(PropertyMap::propertyString(property), value);
 }
 
 }} //OSS::SIP

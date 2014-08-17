@@ -136,9 +136,9 @@ bool SIPB2BContact::transformAsParams(SIPB2BTransactionManager* pManager,
   pRequest->hdrListPrepend("Contact", contact.str());
 
   if (sessionInfo.callIndex == 1)
-    pTransaction->setProperty("leg1-contact", contact.str());
+    pTransaction->setProperty(OSS::PropertyMap::PROP_Leg1Contact, contact.str());
   else if (sessionInfo.callIndex == 2)
-    pTransaction->setProperty("leg2-contact", contact.str());
+    pTransaction->setProperty(OSS::PropertyMap::PROP_Leg2Contact, contact.str());
 
   return true;
 }
@@ -178,9 +178,9 @@ bool SIPB2BContact::transformAsRecordRouteParams(SIPB2BTransactionManager* pMana
   pRequest->hdrListPrepend("Contact", contact.str());
 
   if (sessionInfo.callIndex == 1)
-    pTransaction->setProperty("leg1-contact", contact.str());
+    pTransaction->setProperty(OSS::PropertyMap::PROP_Leg1Contact, contact.str());
   else if (sessionInfo.callIndex == 2)
-    pTransaction->setProperty("leg2-contact", contact.str());
+    pTransaction->setProperty(OSS::PropertyMap::PROP_Leg2Contact, contact.str());
 
   std::ostringstream recordRoute;
   recordRoute << "<sip:" <<  hostPort.toIpPortString() << ";" << "transport=" << transportScheme;
@@ -192,9 +192,9 @@ bool SIPB2BContact::transformAsRecordRouteParams(SIPB2BTransactionManager* pMana
   recordRoute<< ";lr>";
 
   if (sessionInfo.callIndex == 1)
-    pTransaction->setProperty("leg1-rr", recordRoute.str());
+    pTransaction->setProperty(OSS::PropertyMap::PROP_Leg1RR, recordRoute.str());
   else if (sessionInfo.callIndex == 2)
-    pTransaction->setProperty("leg2-rr", recordRoute.str());
+    pTransaction->setProperty(OSS::PropertyMap::PROP_Leg2RR, recordRoute.str());
 
   pRequest->hdrListPrepend("Record-Route", recordRoute.str().c_str());
   return true;
@@ -232,9 +232,9 @@ bool SIPB2BContact::transformAsUserInfo(SIPB2BTransactionManager* pManager,
   pRequest->hdrListPrepend("Contact", contact.str());
 
   if (sessionInfo.callIndex == 1)
-    pTransaction->setProperty("leg1-contact", contact.str());
+    pTransaction->setProperty(OSS::PropertyMap::PROP_Leg1Contact, contact.str());
   else if (sessionInfo.callIndex == 2)
-    pTransaction->setProperty("leg2-contact", contact.str());
+    pTransaction->setProperty(OSS::PropertyMap::PROP_Leg2Contact, contact.str());
 
   return true;
 }

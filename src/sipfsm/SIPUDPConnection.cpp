@@ -30,6 +30,7 @@
 #include "OSS/SIP/SIPException.h"
 #include "OSS/SIP/SIPXOR.h"
 #include "OSS/UTL/Logger.h"
+#include "OSS/UTL/PropertyMap.h"
 
 namespace OSS {
 namespace SIP {
@@ -162,7 +163,7 @@ void SIPUDPConnection::handleRead(const boost::system::error_code& e, std::size_
           return;
         }
         _pRequest->setData(buffer);
-        _pRequest->setProperty("xor", "1");
+        _pRequest->setProperty(OSS::PropertyMap::PROP_XOR, "1");
       }
 
       //
@@ -225,7 +226,7 @@ void SIPUDPConnection::writeMessage(SIPMessage::Ptr msg, const std::string& ip, 
     }else
     {
       std::string isXOR;
-      if (!msg->getProperty("xor", isXOR) || isXOR != "1")
+      if (!msg->getProperty(OSS::PropertyMap::PROP_XOR, isXOR) || isXOR != "1")
       {
         _socket.async_send_to(boost::asio::buffer(msg->data(), msg->data().size()), *ep,
         boost::bind(&SIPUDPConnection::handleWrite, shared_from_this(),

@@ -111,8 +111,8 @@ void SIPB2BClientTransaction::runTask()
     //
     // Save the address properties
     //
-    _pClientRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetAddress, outboundTarget.toIpPortString());
-    _pClientRequest->setProperty(OSS::SIP::SIPMessage::PROP_LocalAddress, localInterface.toIpPortString());
+    _pClientRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, outboundTarget.toIpPortString());
+    _pClientRequest->setProperty(OSS::PropertyMap::PROP_LocalAddress, localInterface.toIpPortString());
 
     //
     // Last chance for the application to process the outbound request

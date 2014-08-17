@@ -686,11 +686,11 @@ void SIPB2BDialogStateManager::onUpdateInitialUASState(
         //
         if (pTransaction->serverTransaction()->isXOREncrypted())
         {
-          leg1.encryption = "xor";
+          leg1.encryption = OSS::PropertyMap::propertyString(OSS::PropertyMap::PROP_XOR);
         }
 
         std::string noRTPProxy;
-        leg1.noRtpProxy = (pTransaction->getProperty("no-rtp-proxy", noRTPProxy) && noRTPProxy == "1");
+        leg1.noRtpProxy = (pTransaction->getProperty(OSS::PropertyMap::PROP_NoRTPProxy, noRTPProxy) && noRTPProxy == "1");
 
         _dataStore.dbPersist(dialogData);
 
@@ -743,8 +743,8 @@ void SIPB2BDialogStateManager::onUpdateInitialUACState(
       std::string seqNum;
       SIPCSeq::getNumber(pResponse->hdrGet("cseq"), seqNum);
       leg2.localCSeq = OSS::string_to_number<unsigned long>(seqNum.c_str());
-      OSS_VERIFY(pTransaction->getProperty("leg2-contact", leg2.localContact));
-      pTransaction->getProperty("leg2-rr", leg2.localRecordRoute);
+      OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_Leg2Contact, leg2.localContact));
+      pTransaction->getProperty(OSS::PropertyMap::PROP_Leg2RR, leg2.localRecordRoute);
       leg2.remoteIp = pTransaction->clientTransport()->getRemoteAddress().toIpPortString();
       leg2.transportId = OSS::string_from_number<OSS::UInt64>(pTransaction->clientTransport()->getIdentifier());
       leg2.targetTransport = pTransaction->clientTransport()->getTransportScheme();
@@ -764,7 +764,7 @@ void SIPB2BDialogStateManager::onUpdateInitialUACState(
       }
 
       std::string noRTPProxy;
-      leg2.noRtpProxy = (pTransaction->getProperty("no-rtp-proxy", noRTPProxy) && noRTPProxy == "1");
+      leg2.noRtpProxy = (pTransaction->getProperty(OSS::PropertyMap::PROP_NoRTPProxy, noRTPProxy) && noRTPProxy == "1");
 
       if (pResponse->hdrGetSize("record-route") > 0)
       {
@@ -789,7 +789,7 @@ void SIPB2BDialogStateManager::onUpdateInitialUACState(
       //
       if (pTransaction->clientTransaction()->isXOREncrypted())
       {
-        leg2.encryption = "xor";
+        leg2.encryption = OSS::PropertyMap::propertyString(OSS::PropertyMap::PROP_XOR);
       }
 
 
@@ -816,8 +816,8 @@ void SIPB2BDialogStateManager::onUpdateMidCallUASState(
   {
     std::string userId;
     std::string legIndexNumber;
-    OSS_VERIFY(pTransaction->getProperty("leg-identifier", userId));
-    OSS_VERIFY(pTransaction->getProperty("leg-index", legIndexNumber));
+    OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_LegIdentifier, userId));
+    OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_LegIndex, legIndexNumber));
 
     //
     // Prepare the new contact
@@ -898,8 +898,8 @@ void SIPB2BDialogStateManager::onUpdateMidCallUACState(
   //
   std::string userId;
   std::string legIndexNumber;
-  OSS_VERIFY(pTransaction->getProperty("leg-identifier", userId));
-  OSS_VERIFY(pTransaction->getProperty("leg-index", legIndexNumber));
+  OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_LegIdentifier, userId));
+  OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_LegIndex, legIndexNumber));
 
   if (pResponse->is2xx())
   {
@@ -1056,18 +1056,18 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
     // Preserve the contact user to be used by the outbound response later on
     //
     DialogData::LegInfo* pLeg;
-    pTransaction->setProperty("leg-identifier", requestUri.getUser());
+    pTransaction->setProperty(OSS::PropertyMap::PROP_LegIdentifier, requestUri.getUser());
     if (senderLeg == "leg-1")
     {
-      pTransaction->setProperty("leg-index", "1");
+      pTransaction->setProperty(OSS::PropertyMap::PROP_LegIndex, "1");
       pLeg = &dialogData.leg2;
     }
     else
     {
-      pTransaction->setProperty("leg-index", "2");
+      pTransaction->setProperty(OSS::PropertyMap::PROP_LegIndex, "2");
       pLeg = &dialogData.leg1;
     }
-    pTransaction->setProperty(OSS::SIP::SIPMessage::PROP_SessionId, sessionId);
+    pTransaction->setProperty(OSS::PropertyMap::PROP_SessionId, sessionId);
 
 
     std::string callId = pLeg->callId;
@@ -1082,7 +1082,7 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
 
 
     if (pLeg->noRtpProxy)
-       pTransaction->setProperty("no-rtp-proxy", "1");
+       pTransaction->setProperty(OSS::PropertyMap::PROP_NoRTPProxy, "1");
 
     std::string hSeqNum;
     SIPCSeq::getNumber(pMsg->hdrGet("cseq"), hSeqNum);
@@ -1092,8 +1092,8 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
       seqNum = requestSeqNum;
     pLeg->localCSeq = seqNum;
 
-    if (pLeg->encryption == "xor")
-      pMsg->setProperty("xor", "1");
+    if (pLeg->encryption == OSS::PropertyMap::propertyString(OSS::PropertyMap::PROP_XOR))
+      pMsg->setProperty(OSS::PropertyMap::PROP_XOR, "1");
 
     _dataStore.dbPersist(dialogData);
 
@@ -1134,10 +1134,10 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
 
     transportScheme = pLeg->targetTransport;
     OSS::string_to_upper(transportScheme);
-    pMsg->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, transportScheme.c_str());
+    pMsg->setProperty(OSS::PropertyMap::PROP_TargetTransport, transportScheme.c_str());
 
 
-    pMsg->setProperty(OSS::SIP::SIPMessage::PROP_TransportId, pLeg->transportId);
+    pMsg->setProperty(OSS::PropertyMap::PROP_TransportId, pLeg->transportId);
     OSS_LOG_DEBUG(logId << "Target transport identifier set by dialog data: transport-id=" << pLeg->transportId);
 
     std::string via = SIPB2BContact::constructVia(_pTransactionManager,
@@ -1206,8 +1206,8 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
   unsigned short targetPort = targetAddress.getPort();
   if (targetPort == 0)
       targetPort = 5060;
-  pMsg->setProperty(OSS::SIP::SIPMessage::PROP_TargetAddress, targetAddress.toString());
-  pMsg->setProperty(OSS::SIP::SIPMessage::PROP_TargetPort, OSS::string_from_number<unsigned short>(targetPort));
+  pMsg->setProperty(OSS::PropertyMap::PROP_TargetAddress, targetAddress.toString());
+  pMsg->setProperty(OSS::PropertyMap::PROP_TargetPort, OSS::string_from_number<unsigned short>(targetPort));
 
   return SIPMessage::Ptr();
 }
@@ -1293,17 +1293,17 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
     //
     // Check if propritery xor is set
     //
-    pMsg->getProperty("xor", peerXOR);
-    pMsg->setProperty("peer-xor", peerXOR);
-    if (pLeg->encryption == "xor")
+    pMsg->getProperty(OSS::PropertyMap::PROP_XOR, peerXOR);
+    pMsg->setProperty(OSS::PropertyMap::PROP_PeerXOR, peerXOR);
+    if (pLeg->encryption == OSS::PropertyMap::propertyString(OSS::PropertyMap::PROP_XOR))
     {
-      pMsg->setProperty("xor", "1");
+      pMsg->setProperty(OSS::PropertyMap::PROP_XOR, "1");
       isXOREncrypted = true;
     }
 
     std::string transportScheme = pLeg->targetTransport;
     OSS::string_to_upper(transportScheme);
-    pMsg->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, transportScheme.c_str());
+    pMsg->setProperty(OSS::PropertyMap::PROP_TargetTransport, transportScheme.c_str());
     std::string transportId = pLeg->transportId;
 
     pMsg->hdrRemove("call-id");

@@ -141,7 +141,7 @@ TEST(JSTest, test_sip_message_basic_auth)
   {
     ASSERT_TRUE(jsMessage.processRequest(pMsg));
     std::string authAction;
-    ASSERT_TRUE(pMsg->getProperty("auth-action", authAction));
+    ASSERT_TRUE(pMsg->getProperty(OSS::PropertyMap::PROP_AuthAction, authAction));
     ASSERT_STREQ(authAction.c_str(), "accept");
   }
 }

@@ -144,7 +144,7 @@ void SIPTransaction::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
   if (SIPXOR::isEnabled() && !_isXOREncrypted)
   {
     std::string isXOR;
-    _isXOREncrypted = pMsg->getProperty("xor", isXOR) && isXOR == "1";
+    _isXOREncrypted = pMsg->getProperty(OSS::PropertyMap::PROP_XOR, isXOR) && isXOR == "1";
   }
 
   if (isParent())
@@ -214,7 +214,7 @@ void SIPTransaction::sendRequest(
     if (SIPXOR::isEnabled() && !_isXOREncrypted)
     {
       std::string isXOR;
-      _isXOREncrypted = pRequest->getProperty("xor", isXOR) && isXOR == "1";
+      _isXOREncrypted = pRequest->getProperty(OSS::PropertyMap::PROP_XOR, isXOR) && isXOR == "1";
     }
   }
 
@@ -238,10 +238,10 @@ void SIPTransaction::sendRequest(
 
 
     std::string transport;
-    if (pRequest->getProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, transport))
+    if (pRequest->getProperty(OSS::PropertyMap::PROP_TargetTransport, transport))
     {
       std::string transportId;
-      pRequest->getProperty(OSS::SIP::SIPMessage::PROP_TransportId, transportId);
+      pRequest->getProperty(OSS::PropertyMap::PROP_TransportId, transportId);
       _transport = _transportService->createClientTransport(localAddress, remoteAddress, transport, transportId);
     }else if (SIPVia::msgGetTopViaTransport(pRequest.get(), transport))
     {
@@ -271,7 +271,7 @@ void SIPTransaction::sendAckFor2xx(
 
   if (SIPXOR::isEnabled() && _isXOREncrypted)
   {
-    pAck->setProperty("xor", "1");
+    pAck->setProperty(OSS::PropertyMap::PROP_XOR, "1");
   }
 
   if (_transport->isReliableTransport())
@@ -371,7 +371,7 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg)
 
   if (SIPXOR::isEnabled() && _isXOREncrypted)
   {
-    pMsg->setProperty("xor", "1");
+    pMsg->setProperty(OSS::PropertyMap::PROP_XOR, "1");
   }
 
   std::ostringstream logMsg;
@@ -404,7 +404,7 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg, const OSS::Net::IPAddres
 
   if (SIPXOR::isEnabled() && _isXOREncrypted)
   {
-    pMsg->setProperty("xor", "1");
+    pMsg->setProperty(OSS::PropertyMap::PROP_XOR, "1");
   }
 
   if (_fsm->onSendMessage(pMsg))

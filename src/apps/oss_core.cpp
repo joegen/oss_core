@@ -129,8 +129,8 @@ public:
 
   bool onProcessRequest(MessageType type, const SIPMessage::Ptr& pRequest)
   {
-    pRequest->setProperty("route-action", "accept");
-    pRequest->setProperty("auth-action", "accept");
+    pRequest->setProperty(OSS::PropertyMap::PROP_RouteAction, "accept");
+    pRequest->setProperty(OSS::PropertyMap::PROP_AuthAction, "accept");
     return true;
   }
 

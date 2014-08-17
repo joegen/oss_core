@@ -104,7 +104,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onTransactionCreated(
   //
   if (pRequest->isRequest("INVITE"))
   {
-    pTransaction->setProperty("require-rtp-proxy", "1");
+    pTransaction->setProperty(OSS::PropertyMap::PROP_RequireRTPProxy, "1");
   }
   else if (pRequest->isRequest("BYE"))
   {
@@ -163,7 +163,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onAuthenticateTransaction(
   if (_authScript.isInitialized())
   {
     std::string authMethod;
-    pTransaction->getProperty("auth-method", authMethod);
+    pTransaction->getProperty(OSS::PropertyMap::PROP_AuthMethod, authMethod);
 
     if (authMethod != "none")
     {
@@ -175,12 +175,12 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onAuthenticateTransaction(
     }
     else
     {
-      pRequest->setProperty("auth-action", "accept");
+      pRequest->setProperty(OSS::PropertyMap::PROP_AuthAction, "accept");
       return OSS::SIP::SIPMessage::Ptr();
     }
 
     std::string authAction;
-    if (!pRequest->getProperty("auth-action", authAction))
+    if (!pRequest->getProperty(OSS::PropertyMap::PROP_AuthAction, authAction))
     {
       return SIPMessage::Ptr();
     }
@@ -188,7 +188,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onAuthenticateTransaction(
     {
       SIPMessage::Ptr reject = pRequest->createResponse(SIPMessage::CODE_403_Forbidden);
       std::string authResponse;
-      if (pRequest->getProperty("auth-response", authResponse) && !authResponse.empty())
+      if (pRequest->getProperty(OSS::PropertyMap::PROP_AuthResponse, authResponse) && !authResponse.empty())
       {
         reject->setStartLine(authResponse);
         reject->commitData();
@@ -210,7 +210,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onAuthenticateTransaction(
     }
 
     std::string authAction;
-    if (!pRequest->getProperty("auth-action", authAction))
+    if (!pRequest->getProperty(OSS::PropertyMap::PROP_AuthAction, authAction))
     {
       return SIPMessage::Ptr();
     }
@@ -218,7 +218,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onAuthenticateTransaction(
     {
       SIPMessage::Ptr reject = pRequest->createResponse(SIPMessage::CODE_403_Forbidden);
       std::string authResponse;
-      if (pRequest->getProperty("auth-response", authResponse) && !authResponse.empty())
+      if (pRequest->getProperty(OSS::PropertyMap::PROP_AuthResponse, authResponse) && !authResponse.empty())
       {
         reject->setStartLine(authResponse);
         reject->commitData();
@@ -285,20 +285,20 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
     pRequest->hdrRemove("authorization");
 
     std::string isXorValue;
-    if (pInvite->getProperty("xor", isXorValue) && isXorValue == "1")
-      pRequest->setProperty("xor", "1");
+    if (pInvite->getProperty(OSS::PropertyMap::PROP_XOR, isXorValue) && isXorValue == "1")
+      pRequest->setProperty(OSS::PropertyMap::PROP_XOR, "1");
 
     std::string localAddress;
-    OSS_VERIFY(pInvite->getProperty(OSS::SIP::SIPMessage::PROP_LocalAddress, localAddress));
-    pRequest->setProperty(OSS::SIP::SIPMessage::PROP_LocalAddress, localAddress);
+    OSS_VERIFY(pInvite->getProperty(OSS::PropertyMap::PROP_LocalAddress, localAddress));
+    pRequest->setProperty(OSS::PropertyMap::PROP_LocalAddress, localAddress);
 
     std::string targetAddress;
-    OSS_VERIFY(pInvite->getProperty(OSS::SIP::SIPMessage::PROP_TargetAddress, targetAddress));
-    pRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetAddress, targetAddress);
+    OSS_VERIFY(pInvite->getProperty(OSS::PropertyMap::PROP_TargetAddress, targetAddress));
+    pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, targetAddress);
 
     std::string targetTransport;
-    OSS_VERIFY(pInvite->getProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, targetTransport));
-    pRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, targetTransport);
+    OSS_VERIFY(pInvite->getProperty(OSS::PropertyMap::PROP_TargetTransport, targetTransport));
+    pRequest->setProperty(OSS::PropertyMap::PROP_TargetTransport, targetTransport);
 
     localInterface = IPAddress::fromV4IPPort(localAddress.c_str());
     OSS_VERIFY(localInterface.isValid());
@@ -322,7 +322,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
   {
     SIPMessage::Ptr ret = _pDialogState->onRouteMidDialogTransaction(pRequest, pTransaction, localInterface, target);
     if (isInvite)
-      pTransaction->setProperty("reinvite", "1");
+      pTransaction->setProperty(OSS::PropertyMap::PROP_IsReinvite, "1");
 
     //
     // if ret is error and this is a NOTIFY, try to send it unsolicited
@@ -361,7 +361,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
   if (pRequest->isRequest("REGISTER"))
   {
     std::string invokeLocalHandler = "0";
-    if (pTransaction->getProperty("invoke-local-handler", invokeLocalHandler ) && invokeLocalHandler == "1")
+    if (pTransaction->getProperty(OSS::PropertyMap::PROP_InvokeLocalHandler, invokeLocalHandler ) && invokeLocalHandler == "1")
     {
       return SIPMessage::Ptr();
     }
@@ -371,7 +371,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
     pRequest->hdrListRemove("Via");
 
     std::string targetTransport;
-    if (!pRequest->getProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, targetTransport) || targetTransport.empty())
+    if (!pRequest->getProperty(OSS::PropertyMap::PROP_TargetTransport, targetTransport) || targetTransport.empty())
       targetTransport = "udp";
 
     //
@@ -420,16 +420,16 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
     //
     // Preserver the contact as property header.  it will be used for transformation later
     //
-    pRequest->setProperty("inbound-contact", pRequest->hdrGet("contact").c_str());
+    pRequest->setProperty(OSS::PropertyMap::PROP_InboundContact, pRequest->hdrGet("contact").c_str());
     pRequest->hdrListRemove("Contact");
     //
     // Set the target tranport
     //
     std::string targetTransport;
-    if (!pRequest->getProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, targetTransport) || targetTransport.empty())
+    if (!pRequest->getProperty(OSS::PropertyMap::PROP_TargetTransport, targetTransport) || targetTransport.empty())
     {
       targetTransport = "udp";
-      pRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, "udp");
+      pRequest->setProperty(OSS::PropertyMap::PROP_TargetTransport, "udp");
     }
     //
     // Prepare the new via
@@ -444,7 +444,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
     //
     std::ostringstream sessionId;
     sessionId << OSS::string_hash(pRequest->hdrGet("call-id").c_str()) << OSS::getRandom();
-    pTransaction->setProperty(OSS::SIP::SIPMessage::PROP_SessionId, sessionId.str());
+    pTransaction->setProperty(OSS::PropertyMap::PROP_SessionId, sessionId.str());
 
     SIPB2BContact::SessionInfo sessionInfo;
     sessionInfo.sessionId = sessionId.str();
@@ -486,18 +486,18 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteOutOfDialogTransaction(
   // Check if the route-script explicitly tells us to reject the call
   //
   std::string routeAction;
-  if (pRequest->getProperty("route-action", routeAction))
+  if (pRequest->getProperty(OSS::PropertyMap::PROP_RouteAction, routeAction))
   {
     if (routeAction == "reject")
     {
       std::string scode;
       SIPMessage::StatusCodes statusCode = SIPMessage::CODE_404_NotFound;
-      if (pRequest->getProperty("reject-code", scode) && !scode.empty())
+      if (pRequest->getProperty(OSS::PropertyMap::PROP_RejectCode, scode) && !scode.empty())
         statusCode = (SIPMessage::StatusCodes)OSS::string_to_number<int>(scode.c_str());
 
       std::string reason;
       SIPMessage::Ptr serverError;
-      if (pRequest->getProperty("reject-reason", reason) && !reason.empty())
+      if (pRequest->getProperty(OSS::PropertyMap::PROP_RouteAction, reason) && !reason.empty())
         serverError = pRequest->createResponse(statusCode, reason.c_str());
       else
         serverError = pRequest->createResponse(statusCode);
@@ -514,14 +514,14 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteOutOfDialogTransaction(
   static OSS::ABNF::ABNFEvaluate<OSS::ABNF::ABNFSIPIPV6Address> isIPV6;
 
   std::string host;
-  pRequest->getProperty("target-address", host);
+  pRequest->getProperty(OSS::PropertyMap::PROP_TargetAddress, host);
   bool isIPAddress = !host.empty() && (isIPV4(host.c_str()) || isIPV6(host.c_str()));
 
   if (isIPAddress)
   {
     target = host;
     std::string port;
-    if (pRequest->getProperty(OSS::SIP::SIPMessage::PROP_TargetPort, port))
+    if (pRequest->getProperty(OSS::PropertyMap::PROP_TargetPort, port))
     {
       target.setPort(OSS::string_to_number<unsigned short>(port.c_str()));
     }
@@ -532,8 +532,8 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteOutOfDialogTransaction(
     //
     // Reset the properties so that outbound.js will have access to both the host and the target address
     //
-    pRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetHost, host);
-    pRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetAddress, host);
+    pRequest->setProperty(OSS::PropertyMap::PROP_TargetHost, host);
+    pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, host);
   }
   else
   {
@@ -551,9 +551,9 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteOutOfDialogTransaction(
     //
     // Reset the properties so that outbound.js will have access to both the host and the target address
     //
-    pRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetHost, host);
+    pRequest->setProperty(OSS::PropertyMap::PROP_TargetHost, host);
     host = target.toString();
-    pRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetAddress, host);
+    pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, host);
 
   }
 
@@ -567,11 +567,11 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteOutOfDialogTransaction(
   // Check if the script provided a local-interface
   //
   std::string localIface;
-  if (pRequest->getProperty("interface-address", localIface) && !localIface.empty() && localIface != "auto")
+  if (pRequest->getProperty(OSS::PropertyMap::PROP_InterfaceAddress, localIface) && !localIface.empty() && localIface != "auto")
   {
     localInterface = localIface;
     std::string port;
-    if (pRequest->getProperty("interface-port", port))
+    if (pRequest->getProperty(OSS::PropertyMap::PROP_InterfacePort, port))
     {
       localInterface.setPort(OSS::string_to_number<unsigned short>(port.c_str()));
     }
@@ -636,17 +636,17 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteUpperReg(
     OSS::string_to_upper(transportScheme);
 
 
-    pRequest->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, transportScheme.c_str());
+    pRequest->setProperty(OSS::PropertyMap::PROP_TargetTransport, transportScheme.c_str());
 
     std::string transportId = registration.transportId;
     if (!transportId.empty())
-        pRequest->setProperty(OSS::SIP::SIPMessage::PROP_TransportId, transportId.c_str());
+        pRequest->setProperty(OSS::PropertyMap::PROP_TransportId, transportId.c_str());
 
     //
     // Check if this call is to be encrypted
     //
     if (registration.enc)
-      pRequest->setProperty("xor", "1");
+      pRequest->setProperty(OSS::PropertyMap::PROP_XOR, "1");
 
 
     std::ostringstream requestLine;
@@ -656,7 +656,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteUpperReg(
     //
     // Proxy media for upper reg if an rtp proxy is implemented
     //
-    pTransaction->setProperty("require-rtp-proxy", "1");
+    pTransaction->setProperty(OSS::PropertyMap::PROP_RequireRTPProxy, "1");
   }
   catch(OSS::Exception e)
   {
@@ -676,11 +676,11 @@ bool SIPB2BScriptableHandler::onRouteResponse(
    /// target for a reponse.
 {
   std::string strNatCompensation;
-  bool disableNatCompensation = pTransaction->getProperty("disable-nat-compensation", strNatCompensation) && strNatCompensation == "1";
+  bool disableNatCompensation = pTransaction->getProperty(OSS::PropertyMap::PROP_DisableNATCompensation, strNatCompensation) && strNatCompensation == "1";
 
 
   std::string respondtoPacketSource;
-  pTransaction->getProperty("respond-to-packet-source", respondtoPacketSource);
+  pTransaction->getProperty(OSS::PropertyMap::PROP_RespondToPacketSource, respondtoPacketSource);
   if (!disableNatCompensation && respondtoPacketSource != "0")
   {
     target = pTransport->getRemoteAddress();
@@ -764,7 +764,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
     return OSS::SIP::SIPMessage::Ptr();
 
   std::string noRTPProxy;
-  if (pTransaction->getProperty("no-rtp-proxy", noRTPProxy) && noRTPProxy == "1")
+  if (pTransaction->getProperty(OSS::PropertyMap::PROP_NoRTPProxy, noRTPProxy) && noRTPProxy == "1")
     return OSS::SIP::SIPMessage::Ptr();
 
   //
@@ -775,7 +775,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
     return OSS::SIP::SIPMessage::Ptr();
   
   std::string sessionId;
-  OSS_VERIFY(pTransaction->getProperty(OSS::SIP::SIPMessage::PROP_SessionId, sessionId));
+  OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId));
 
   SIPMessage* pServerRequest = pTransaction->serverRequest().get();
   std::string bottomVia;
@@ -792,7 +792,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
     return serverError;
   }
 
-  pTransaction->setProperty("sdp-answer-route", sentBy);
+  pTransaction->setProperty(OSS::PropertyMap::PROP_SDPAnswerRoute, sentBy);
 
   OSS::Net::IPAddress addrSentBy = OSS::Net::IPAddress::fromV4IPPort(sentBy.c_str());
   OSS::Net::IPAddress addrPacketSource = pTransaction->serverTransport()->getRemoteAddress();
@@ -806,8 +806,8 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
 
   std::string targetAddress;
   std::string localAddress;
-  OSS_VERIFY(pRequest->getProperty(OSS::SIP::SIPMessage::PROP_TargetAddress, targetAddress) &&
-    pRequest->getProperty(OSS::SIP::SIPMessage::PROP_LocalAddress, localAddress));
+  OSS_VERIFY(pRequest->getProperty(OSS::PropertyMap::PROP_TargetAddress, targetAddress) &&
+    pRequest->getProperty(OSS::PropertyMap::PROP_LocalAddress, localAddress));
 
   OSS::Net::IPAddress addrRoute = OSS::Net::IPAddress::fromV4IPPort(targetAddress.c_str());
   OSS::Net::IPAddress addrRouteLocalInterface = OSS::Net::IPAddress::fromV4IPPort(localAddress.c_str());
@@ -822,7 +822,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
   }
 
   std::string rtpProxyProp;
-  bool requireRTPProxy = pTransaction->getProperty("require-rtp-proxy", rtpProxyProp) && rtpProxyProp == "1";
+  bool requireRTPProxy = pTransaction->getProperty(OSS::PropertyMap::PROP_RequireRTPProxy, rtpProxyProp) && rtpProxyProp == "1";
   std::string sdp = pRequest->getBody();
   try
   {
@@ -830,15 +830,15 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
 
     rtpAttributes.verbose = false;
     std::string propXOR = "0";
-    rtpAttributes.forcePEAEncryption = pRequest->getProperty("peer-xor", propXOR) && propXOR == "1";
+    rtpAttributes.forcePEAEncryption = pRequest->getProperty(OSS::PropertyMap::PROP_PeerXOR, propXOR) && propXOR == "1";
     rtpAttributes.forceCreate = requireRTPProxy;
     rtpAttributes.callId = pRequest->hdrGet("call-id");
     rtpAttributes.from = pRequest->hdrGet("from");
     rtpAttributes.to = pRequest->hdrGet("to");
 
     std::string sResizerSamples;
-    if (!pServerRequest->getProperty("rtp-resizer-samples", sResizerSamples))
-      pRequest->getProperty("rtp-resizer-samples", sResizerSamples);
+    if (!pServerRequest->getProperty(OSS::PropertyMap::PROP_RTPResizerSamples, sResizerSamples))
+      pRequest->getProperty(OSS::PropertyMap::PROP_RTPResizerSamples, sResizerSamples);
 
     if (!sResizerSamples.empty())
     {
@@ -869,7 +869,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
 
 
     std::string maximumChannel;
-    if (pRequest->getProperty("max-channel", maximumChannel) && !maximumChannel.empty())
+    if (pRequest->getProperty(OSS::PropertyMap::PROP_MaxChannel, maximumChannel) && !maximumChannel.empty())
       rtpAttributes.countSessions = true;
 
 
@@ -921,7 +921,7 @@ void SIPB2BScriptableHandler::onProcessResponseBody(
     return;
 
   std::string noRTPProxy;
-  if (pTransaction->getProperty("no-rtp-proxy", noRTPProxy) && noRTPProxy == "1")
+  if (pTransaction->getProperty(OSS::PropertyMap::PROP_NoRTPProxy, noRTPProxy) && noRTPProxy == "1")
     return;
 
   //
@@ -936,7 +936,7 @@ void SIPB2BScriptableHandler::onProcessResponseBody(
   // multiple SDP responses
   //
   std::string responseSDP;
-  if (pTransaction->getProperty("response-sdp", responseSDP))
+  if (pTransaction->getProperty(OSS::PropertyMap::PROP_ResponseSDP, responseSDP))
   {
     pResponse->setBody(responseSDP);
     std::string clen = OSS::string_from_number<size_t>(responseSDP.size());
@@ -956,10 +956,10 @@ void SIPB2BScriptableHandler::onProcessResponseBody(
   }
 
   std::string sessionId;
-  OSS_VERIFY(pTransaction->getProperty(OSS::SIP::SIPMessage::PROP_SessionId, sessionId));
+  OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId));
 
   std::string sdpAnswerRoute;
-  if (!pTransaction->getProperty("sdp-answer-route", sdpAnswerRoute))
+  if (!pTransaction->getProperty(OSS::PropertyMap::PROP_SDPAnswerRoute, sdpAnswerRoute))
   {
     SIPMessage* pServerRequest = pTransaction->serverRequest().get();
     std::string bottomVia;
@@ -971,7 +971,7 @@ void SIPB2BScriptableHandler::onProcessResponseBody(
     {
       return;
     }
-    pTransaction->setProperty("sdp-answer-route", sdpAnswerRoute);
+    pTransaction->setProperty(OSS::PropertyMap::PROP_SDPAnswerRoute, sdpAnswerRoute);
   }
 
   OSS::Net::IPAddress addrSentBy;
@@ -990,16 +990,16 @@ void SIPB2BScriptableHandler::onProcessResponseBody(
 
   std::string sdp = pResponse->getBody();
   std::string rtpProxyProp;
-  bool requireRTPProxy = pTransaction->getProperty("require-rtp-proxy", rtpProxyProp) && rtpProxyProp == "1";
+  bool requireRTPProxy = pTransaction->getProperty(OSS::PropertyMap::PROP_RequireRTPProxy, rtpProxyProp) && rtpProxyProp == "1";
 
   std::string enableVerboseRTP;
-  bool verboseRTP = pTransaction->getProperty("enable-verbose-rtp", enableVerboseRTP) && enableVerboseRTP == "1";
+  bool verboseRTP = pTransaction->getProperty(OSS::PropertyMap::PROP_EnableVerboseRTP, enableVerboseRTP) && enableVerboseRTP == "1";
   try
   {
     RTPProxy::Attributes rtpAttributes;
     rtpAttributes.verbose = verboseRTP;
     std::string propXOR = "0";
-    rtpAttributes.forcePEAEncryption = pResponse->getProperty("peer-xor", propXOR) && propXOR == "1";
+    rtpAttributes.forcePEAEncryption = pResponse->getProperty(OSS::PropertyMap::PROP_PeerXOR, propXOR) && propXOR == "1";
     rtpAttributes.forceCreate = requireRTPProxy;
     rtpAttributes.callId = pResponse->hdrGet("call-id");
     rtpAttributes.from = pResponse->hdrGet("from");
@@ -1018,7 +1018,7 @@ void SIPB2BScriptableHandler::onProcessResponseBody(
 
   pResponse->setBody(sdp);
   std::string clen = OSS::string_from_number<size_t>(sdp.size());
-  pTransaction->setProperty("response-sdp", sdp.c_str());
+  pTransaction->setProperty(OSS::PropertyMap::PROP_ResponseSDP, sdp.c_str());
   pResponse->hdrSet("Content-Length", clen.c_str());
 }
 
@@ -1058,7 +1058,7 @@ void SIPB2BScriptableHandler::onProcessOutbound(
   else if (pRequest->isRequest("BYE"))
   {
     std::string sessionId;
-    OSS_VERIFY(pTransaction->getProperty(OSS::SIP::SIPMessage::PROP_SessionId, sessionId));
+    OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId));
     //
     // Remove the rtp proxies if they were created
     //
@@ -1138,16 +1138,16 @@ void SIPB2BScriptableHandler::onProcessResponseInbound(
     }
 
     std::string isReinvite;
-    if (pTransaction->getProperty("reinvite", isReinvite))
+    if (pTransaction->getProperty(OSS::PropertyMap::PROP_IsReinvite, isReinvite))
     {
       std::string sessionId;
-      OSS_VERIFY(pTransaction->getProperty(OSS::SIP::SIPMessage::PROP_SessionId, sessionId));
+      OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId));
       _pDialogState->onUpdateMidCallUACState(pResponse, pTransaction, sessionId);
       return;
     }
 
     std::string sessionId;
-    OSS_VERIFY(pTransaction->getProperty(OSS::SIP::SIPMessage::PROP_SessionId, sessionId));
+    OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId));
     _pDialogState->onUpdateInitialUACState(pResponse, pTransaction, sessionId);
   }
   else if (pResponse->isResponseTo("REGISTER"))
@@ -1223,13 +1223,13 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
 
   bool isInvite = pResponse->isResponseTo("INVITE");
   std::string isReinvite;
-  if (isInvite && pTransaction->getProperty("reinvite", isReinvite))
+  if (isInvite && pTransaction->getProperty(OSS::PropertyMap::PROP_IsReinvite, isReinvite))
   {
     //
     // If it is a reinvite let the other handler do the job and bail-out
     //
     std::string sessionId;
-    OSS_VERIFY(pTransaction->getProperty(OSS::SIP::SIPMessage::PROP_SessionId, sessionId));
+    OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId));
     _pDialogState->onUpdateMidCallUASState(pResponse, pTransaction, sessionId);
     if (pResponse->is2xx())
     {
@@ -1239,7 +1239,7 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
       std::ostringstream cacheId;
       cacheId << pResponse->getDialogId(false) << pResponse->hdrGet("cseq");
       boost::any cacheItem = pResponse;
-      pResponse->setProperty(OSS::SIP::SIPMessage::PROP_SessionId, sessionId);
+      pResponse->setProperty(OSS::PropertyMap::PROP_SessionId, sessionId);
       _2xxRetransmitCache.add(cacheId.str(), cacheItem);
       OSS_LOG_DEBUG(pTransaction->getLogId() << " Added 2xx dialog-id: " << cacheId.str() << " to retransmission cache.");
     }
@@ -1248,7 +1248,7 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
   else if (isInvite || pResponse->isResponseTo("SUBSCRIBE") || pResponse->isResponseTo("REFER"))
   {
     std::string sessionId;
-    OSS_VERIFY(pTransaction->getProperty(OSS::SIP::SIPMessage::PROP_SessionId, sessionId));
+    OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId));
     //
     // Update the dialog state for leg1
     //
@@ -1259,16 +1259,16 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
     if (isInvite && pResponse->is2xx())
     {
       std::string transportId = OSS::string_from_number<OSS::UInt64>(pTransaction->serverTransport()->getIdentifier()).c_str();
-      pResponse->setProperty(OSS::SIP::SIPMessage::PROP_TransportId, transportId);
+      pResponse->setProperty(OSS::PropertyMap::PROP_TransportId, transportId);
 
       std::string transportScheme = pTransaction->serverTransport()->getTransportScheme();
       OSS::string_to_upper(transportScheme);
-      pResponse->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, transportScheme);
+      pResponse->setProperty(OSS::PropertyMap::PROP_TargetTransport, transportScheme);
 
       std::ostringstream cacheId;
       cacheId << pResponse->getDialogId(false) << pResponse->hdrGet("cseq");
       boost::any cacheItem = pResponse;
-      pResponse->setProperty(OSS::SIP::SIPMessage::PROP_SessionId, sessionId);
+      pResponse->setProperty(OSS::PropertyMap::PROP_SessionId, sessionId);
       _2xxRetransmitCache.add(cacheId.str(), cacheItem);
       OSS_LOG_DEBUG(pTransaction->getLogId() << " Added 2xx dialog-id: " << cacheId.str() << " to retransmission cache.");
     }
@@ -1276,9 +1276,9 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
   else if (pResponse->isResponseTo("BYE"))
   {
     std::string sessionId;
-    OSS_VERIFY(pTransaction->getProperty(OSS::SIP::SIPMessage::PROP_SessionId, sessionId));
+    OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId));
     std::string legIndex;
-    OSS_VERIFY(pTransaction->getProperty("leg-index", legIndex));
+    OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_LegIndex, legIndex));
     if (!pResponse->is1xx(100))
     {
       SIPB2BContact::SessionInfo sessionInfo;
@@ -1478,7 +1478,7 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
   else if (pResponse->isResponseTo("INVITE") && pResponse->isErrorResponse())
   {
     std::string sessionId;
-    pTransaction->getProperty(OSS::SIP::SIPMessage::PROP_SessionId, sessionId);
+    pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId);
     //
     // Remove the rtp proxies if they were created.
     //
@@ -1495,8 +1495,8 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
     std::string sessionId;
     std::string legIndex;
 
-    pTransaction->getProperty(OSS::SIP::SIPMessage::PROP_SessionId, sessionId);
-    pTransaction->getProperty("leg-index", legIndex);
+    pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId);
+    pTransaction->getProperty(OSS::PropertyMap::PROP_LegIndex, legIndex);
 
     if (!pResponse->is1xx(100))
     {
@@ -1526,7 +1526,7 @@ void SIPB2BScriptableHandler::onProcessAckFor2xxRequest(
   OSS_LOG_DEBUG(logId << "Processing ACK for 2xx request " << pMsg->startLine());
   {
     std::string isXOREncrypted = "0";
-    pMsg->getProperty("xor", isXOREncrypted);
+    pMsg->getProperty(OSS::PropertyMap::PROP_XOR, isXOREncrypted);
 
     std::ostringstream logMsg;
     logMsg << logId << "<<< " << pMsg->startLine()
@@ -1553,11 +1553,11 @@ void SIPB2BScriptableHandler::onProcessAckFor2xxRequest(
       {
         std::string target;
         std::string localInterface;
-        OSS_VERIFY(p2xx->getProperty("response-target", target));
-        OSS_VERIFY(p2xx->getProperty("response-interface", localInterface));
+        OSS_VERIFY(p2xx->getProperty(OSS::PropertyMap::PROP_ResponseTarget, target));
+        OSS_VERIFY(p2xx->getProperty(OSS::PropertyMap::PROP_ResponseInterface, localInterface));
 
         std::string isXOREncrypted = "0";
-        p2xx->getProperty("xor", isXOREncrypted);
+        p2xx->getProperty(OSS::PropertyMap::PROP_XOR, isXOREncrypted);
 
 
         std::ostringstream logMsg;
@@ -1622,7 +1622,7 @@ void SIPB2BScriptableHandler::onTransactionError(
     if (pTransaction->serverRequest()->isRequest("BYE"))
     {
       std::string sessionId;
-      OSS_VERIFY(pTransaction->getProperty(OSS::SIP::SIPMessage::PROP_SessionId, sessionId));
+      OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId));
       std::string callId = pTransaction->serverRequest()->hdrGet("call-id");
       OSS_LOG_DEBUG(pTransaction->getLogId() << "BYE Transaction Exception: " << e->message() );
       OSS_LOG_DEBUG(pTransaction->getLogId()
@@ -1637,14 +1637,14 @@ void SIPB2BScriptableHandler::onTransactionError(
     if (pTransaction->serverRequest()->getTransactionId(id))
     {
       std::string sessionId;
-      OSS_VERIFY(pTransaction->getProperty(OSS::SIP::SIPMessage::PROP_SessionId, sessionId));
+      OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId));
       OSS::mutex_write_lock _rwlock(_rwInvitePoolMutex);
       _invitePool.erase(id);
       _pDialogState->removeDialog(pTransaction->serverRequest()->hdrGet("call-id"), sessionId);
     }
 
     std::string sessionId;
-    OSS_VERIFY(pTransaction->getProperty(OSS::SIP::SIPMessage::PROP_SessionId, sessionId));
+    OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId));
     //
     // Remove the rtp proxies if they were created
     //
@@ -1903,12 +1903,12 @@ void SIPB2BScriptableHandler::sendOptionsKeepAlive(RegData& regData)
 
     SIPMessage::Ptr msg(new SIPMessage(options.str()));
     if (regData.enc)
-      msg->setProperty("xor", "1");
+      msg->setProperty(OSS::PropertyMap::PROP_XOR, "1");
 
-    msg->setProperty(OSS::SIP::SIPMessage::PROP_TargetTransport, transportScheme.c_str());
+    msg->setProperty(OSS::PropertyMap::PROP_TargetTransport, transportScheme.c_str());
 
     if (!regData.transportId.empty())
-      msg->setProperty(OSS::SIP::SIPMessage::PROP_TransportId, regData.transportId.c_str());
+      msg->setProperty(OSS::PropertyMap::PROP_TransportId, regData.transportId.c_str());
 
     _pTransactionManager->stack().sendRequest(msg, src, target, _keepAliveResponseCb, OSS::SIP::SIPTransaction::TerminateCallback());
   }
@@ -1928,7 +1928,7 @@ bool SIPB2BScriptableHandler::onProcessRequest(MessageType type, const OSS::SIP:
   // We return true by default.  This means we will allow relay to happen.  It's up to the applicaiton
   // to override this method and process the request.
   //
-  pRequest->setProperty("route-action", "accept");
+  pRequest->setProperty(OSS::PropertyMap::PROP_RouteAction, "accept");
   return true;
 }
 

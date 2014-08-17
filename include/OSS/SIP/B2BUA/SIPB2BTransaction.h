@@ -33,6 +33,7 @@
 #include "OSS/SIP/B2BUA/B2BUA.h"
 #include "OSS/SIP/SIPTransaction.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
+#include "OSS/UTL/PropertyMap.h"
 
 
 namespace OSS {
@@ -140,7 +141,7 @@ public:
     /// arbitrary data to aid in how the transactions
     /// are processed.
   
-  void setProperty(OSS::SIP::SIPMessage::Property property, const std::string& value);
+  void setProperty(PropertyMap::Enum property, const std::string& value);
     /// Set a custom property for this transaction.
     /// Custom properties are meant to simply hold
     /// arbitrary data to aid in how the transactions
@@ -152,14 +153,14 @@ public:
     /// arbitrary data to aid in how the transactions
     /// are processed.
   
-  bool getProperty(OSS::SIP::SIPMessage::Property property,  std::string& value) const;
+  bool getProperty(PropertyMap::Enum property,  std::string& value) const;
     /// Get a custom property of this transaction.
     /// Custom properties are meant to simply hold
     /// arbitrary data to aid in how the transactions
     /// are processed.
 
   bool hasProperty(const std::string& property) const;
-  bool hasProperty(OSS::SIP::SIPMessage::Property property) const;
+  bool hasProperty(PropertyMap::Enum property) const;
 
   const std::string& getLogId() const;
     /// Return the log-id used for logging
@@ -270,19 +271,19 @@ inline bool SIPB2BTransaction::isMidDialog() const
     return _isMidDialog;
 }
 
-inline void SIPB2BTransaction::setProperty(OSS::SIP::SIPMessage::Property property, const std::string& value)
+inline void SIPB2BTransaction::setProperty(PropertyMap::Enum property, const std::string& value)
 {
-  setProperty(SIPMessage::propertyString(property), value);
+  setProperty(PropertyMap::propertyString(property), value);
 }
   
-inline bool SIPB2BTransaction::getProperty(OSS::SIP::SIPMessage::Property property,  std::string& value) const
+inline bool SIPB2BTransaction::getProperty(PropertyMap::Enum property,  std::string& value) const
 {
-  return getProperty(SIPMessage::propertyString(property), value);
+  return getProperty(PropertyMap::propertyString(property), value);
 }
 
-inline bool SIPB2BTransaction::hasProperty(OSS::SIP::SIPMessage::Property property) const
+inline bool SIPB2BTransaction::hasProperty(PropertyMap::Enum property) const
 {
-  return hasProperty(SIPMessage::propertyString(property));
+  return hasProperty(PropertyMap::propertyString(property));
 }
 } } } // OSS::SIP::B2BUA
 

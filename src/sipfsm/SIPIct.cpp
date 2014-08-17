@@ -58,7 +58,7 @@ bool SIPIct::onSendMessage(SIPMessage::Ptr pMsg)
     pTransaction->setState(TRYING);
 
     std::string sTimeout;
-    if (pMsg->getProperty("transaction-timeout", sTimeout) && !sTimeout.empty())
+    if (pMsg->getProperty(OSS::PropertyMap::PROP_TransactionTimeout, sTimeout) && !sTimeout.empty())
     {
       _timerAValue = OSS::string_to_number<unsigned long>(sTimeout.c_str()) / 64;
     }
