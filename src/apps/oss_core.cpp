@@ -34,6 +34,7 @@
 #include "OSS/SIP/B2BUA/SIPB2BTransactionManager.h"
 #include "OSS/SIP/B2BUA/SIPB2BScriptableHandler.h"
 #include "OSS/SIP/B2BUA/SIPB2BDialogStateManager.h"
+#include "OSS/SIP/SIPRoute.h"
 
 
 #if HAVE_CONFIG_H
@@ -129,8 +130,31 @@ public:
 
   bool onProcessRequest(MessageType type, const SIPMessage::Ptr& pRequest)
   {
-    pRequest->setProperty(OSS::PropertyMap::PROP_RouteAction, "accept");
-    pRequest->setProperty(OSS::PropertyMap::PROP_AuthAction, "accept");
+    if (type == SIPB2BScriptableHandler::TYPE_AUTH)
+    {
+      pRequest->setProperty(OSS::PropertyMap::PROP_AuthAction, "accept");
+    }
+    else if (type == SIPB2BScriptableHandler::TYPE_ROUTE)
+    {
+      pRequest->setProperty(OSS::PropertyMap::PROP_RouteAction, "accept");
+      std::ostringstream route;
+      std::vector<std::string> tokens = OSS::string_tokenize(_config.target, ":");
+      if (tokens.size() == 2)
+      {
+        pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, tokens[0]);
+        pRequest->setProperty(OSS::PropertyMap::PROP_TargetPort, tokens[1]);
+        route << "sip:" << tokens[0] << ":" << tokens[1] << ";lr";
+        SIPRoute::msgAddRoute(pRequest.get(), route.str());
+      }
+      else
+      {
+        pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, _config.target);
+        route << "sip:" << _config.target << ";lr";
+        SIPRoute::msgAddRoute(pRequest.get(), route.str());
+      }
+    }
+
+    
     return true;
   }
 
