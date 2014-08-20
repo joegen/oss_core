@@ -69,6 +69,7 @@ struct Config
   std::string externalAddress;
   int port;
   std::string target;
+  std::string targetTransport;
   TargetType targetType;
   bool allowRelay;
   Config() : port(5060), targetType(UNKNOWN), allowRelay(false){}
@@ -144,14 +145,18 @@ public:
         pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, tokens[0]);
         pRequest->setProperty(OSS::PropertyMap::PROP_TargetPort, tokens[1]);
         route << "sip:" << tokens[0] << ":" << tokens[1] << ";lr";
-        SIPRoute::msgAddRoute(pRequest.get(), route.str());
       }
       else
       {
         pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, _config.target);
         route << "sip:" << _config.target << ";lr";
-        SIPRoute::msgAddRoute(pRequest.get(), route.str());
       }
+
+      if (!_config.targetTransport.empty())
+      {
+        pRequest->setProperty(OSS::PropertyMap::PROP_TargetTransport, _config.targetTransport);
+      }
+      SIPRoute::msgAddRoute(pRequest.get(), route.str());
     }
 
     
@@ -399,6 +404,11 @@ void prepareTargetInfo(Config& config, ServiceOptions& options)
   if (options.getOption("target-address", config.target) && !config.target.empty())
   {
     config.allowRelay = options.hasOption("allow-relay");
+
+    if (!options.getOption("target-transport", config.targetTransport))
+    {
+      OSS_LOG_INFO("target-transport is not set.  Using udp transport by default.");
+    }
   }
   else
   {
@@ -418,6 +428,7 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionFlag('X', "guess-external-address", "If this flag is set, the external IP will be automatically assigned.");
   options.addOptionInt('p', "port", "The port where the B2BUA will listen for connections.");
   options.addOptionString('t', "target-address", "IP Address, Host or DNS/SRV address of your SIP Server.");
+  options.addOptionString('P', "target-transport", "Transport to be used to communicate with your SIP Server.");
   options.addOptionFlag('r', "allow-relay", "Allow relaying of transactions towards SIP Servers other than the one specified in the target-domain.");
   options.addOptionFlag('n', "no-rtp-proxy", "Disable built in media relay.");
 
