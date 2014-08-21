@@ -49,7 +49,7 @@ public:
     ///
     /// Usage:
     ///
-    ///   std::string hdr = msg.hdrGet("via");
+    ///   std::string hdr = msg.hdrGet(OSS::SIP::HDR_VIA);
     ///   SIPVia via(hdr);
 
   SIPVia(const SIPVia& via);

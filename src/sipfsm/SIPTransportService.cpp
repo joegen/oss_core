@@ -257,12 +257,14 @@ void SIPTransportService::addTLSTransport(
 }
 
 SIPTransportSession::Ptr SIPTransportService::createClientTransport(
+  const OSS::SIP::SIPMessage::Ptr& pMsg,
   const OSS::Net::IPAddress& localAddress,
   const OSS::Net::IPAddress& remoteAddress,
   const std::string& proto_,
   const std::string& transportId)
 {
-  OSS_LOG_DEBUG( "SIPTransportService::createClientTransport(" <<
+  std::string logId = pMsg->createContextId(true);
+  OSS_LOG_DEBUG( logId << "SIPTransportService::createClientTransport(" <<
     " SRC: " << localAddress.toIpPortString() <<
     " DST: " << remoteAddress.toIpPortString() <<
     " Proto: " << proto_ <<
@@ -282,21 +284,21 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
     //
     std::string key;
     OSS::string_sprintf_string<256>(key, "%s:%s", localIp.c_str(), localPort.c_str());
-    OSS_LOG_DEBUG("SIPTransportService::createClientTransport - Find UDP transport for " << key);
+    OSS_LOG_DEBUG(logId << "SIPTransportService::createClientTransport - Find UDP transport for " << key);
     if (_udpListeners.find(key) != _udpListeners.end())
     {
-      OSS_LOG_DEBUG("SIPTransportService::createClientTransport - UDP transport for " << key << " FOUND");
+      OSS_LOG_DEBUG(logId << "SIPTransportService::createClientTransport - UDP transport for " << key << " FOUND");
       return _udpListeners[key]->connection();
     }
     else
     {
-      OSS_LOG_DEBUG("SIPTransportService::createClientTransport - UDP transport for " << key << " NOT FOUND. Trying first IP matching " << localIp);
+      OSS_LOG_DEBUG(logId << "SIPTransportService::createClientTransport - UDP transport for " << key << " NOT FOUND. Trying first IP matching " << localIp);
       UDPListeners::iterator iter;
       for (iter = _udpListeners.begin(); iter != _udpListeners.end(); iter++)
       {
         if (iter->second && iter->second->getAddress() == localIp)
         {
-          OSS_LOG_DEBUG("SIPTransportService::createClientTransport - UDP transport for " << localIp << " FOUND");
+          OSS_LOG_DEBUG(logId << "SIPTransportService::createClientTransport - UDP transport for " << localIp << " FOUND");
           return iter->second->connection();
         }
       }
@@ -312,7 +314,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
     bool isAlive = false;
     if (!transportId.empty())
     {
-      OSS_LOG_INFO("SIPTransportService::createClientTransport - Finding persistent connection with ID " <<  transportId);
+      OSS_LOG_INFO(logId << "SIPTransportService::createClientTransport - Finding persistent connection with ID " <<  transportId);
       pTCPConnection = _tcpConMgr.findConnectionById(OSS::string_to_number<OSS::UInt64>(transportId.c_str()));
       if (pTCPConnection)
         isAlive = pTCPConnection->writeKeepAlive();
@@ -320,7 +322,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
 
     if (!pTCPConnection)
     {
-      OSS_LOG_WARNING("SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
+      OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
           << ". Trying remote-address=" << remoteAddress.toIpPortString());
       pTCPConnection = _tcpConMgr.findConnectionByAddress(remoteAddress);
       if (pTCPConnection)
@@ -329,7 +331,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
 
     if (!pTCPConnection || !isAlive)
     {
-      OSS_LOG_WARNING("SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
+      OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
           << " with remote-address=" << remoteAddress.toIpPortString()
           << " creating new connection.");
       pTCPConnection = createClientTcpTransport(localAddress, remoteAddress);
@@ -360,7 +362,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
 
     if (!pWSConnection)
     {
-      OSS_LOG_WARNING("SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId);
+      OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId);
     }
     else if (!isAlive)
     {

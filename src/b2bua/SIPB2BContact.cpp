@@ -49,7 +49,7 @@ bool SIPB2BContact::transform(SIPB2BTransactionManager* pManager,
   }
   else
   {
-    std::string via = pRequest->hdrGet("via");
+    std::string via = pRequest->hdrGet(OSS::SIP::HDR_VIA);
     OSS::string_to_lower(via);
 
     if (via.find("2.0/udp") != std::string::npos)
@@ -106,7 +106,7 @@ bool SIPB2BContact::transformAsParams(SIPB2BTransactionManager* pManager,
   const std::string& transportScheme,
   const SessionInfo& sessionInfo)
 {
-  SIPFrom from = pRequest->hdrGet("from");
+  SIPFrom from = pRequest->hdrGet(OSS::SIP::HDR_FROM);
   std::ostringstream contact;
   std::string user = from.getUser();
 
@@ -132,8 +132,8 @@ bool SIPB2BContact::transformAsParams(SIPB2BTransactionManager* pManager,
     contact << ";" << "sbc-call-index=" << sessionInfo.callIndex;
   contact<< ">";
 
-  pRequest->hdrListRemove("Contact");
-  pRequest->hdrListPrepend("Contact", contact.str());
+  pRequest->hdrListRemove(OSS::SIP::HDR_CONTACT);
+  pRequest->hdrListPrepend(OSS::SIP::HDR_CONTACT, contact.str());
 
   if (sessionInfo.callIndex == 1)
     pTransaction->setProperty(OSS::PropertyMap::PROP_Leg1Contact, contact.str());
@@ -150,7 +150,7 @@ bool SIPB2BContact::transformAsRecordRouteParams(SIPB2BTransactionManager* pMana
   const std::string& transportScheme,
   const SessionInfo& sessionInfo)
 {
-  SIPFrom from = pRequest->hdrGet("from");
+  SIPFrom from = pRequest->hdrGet(OSS::SIP::HDR_FROM);
   std::ostringstream contact;
   std::string user = from.getUser();
 
@@ -174,8 +174,8 @@ bool SIPB2BContact::transformAsRecordRouteParams(SIPB2BTransactionManager* pMana
   contact << hostPort.toIpPortString();
   contact << ";transport=" << transportScheme << ">";
 
-  pRequest->hdrListRemove("Contact");
-  pRequest->hdrListPrepend("Contact", contact.str());
+  pRequest->hdrListRemove(OSS::SIP::HDR_CONTACT);
+  pRequest->hdrListPrepend(OSS::SIP::HDR_CONTACT, contact.str());
 
   if (sessionInfo.callIndex == 1)
     pTransaction->setProperty(OSS::PropertyMap::PROP_Leg1Contact, contact.str());
@@ -196,7 +196,7 @@ bool SIPB2BContact::transformAsRecordRouteParams(SIPB2BTransactionManager* pMana
   else if (sessionInfo.callIndex == 2)
     pTransaction->setProperty(OSS::PropertyMap::PROP_Leg2RR, recordRoute.str());
 
-  pRequest->hdrListPrepend("Record-Route", recordRoute.str().c_str());
+  pRequest->hdrListPrepend(OSS::SIP::HDR_RECORD_ROUTE, recordRoute.str().c_str());
   return true;
 }
 
@@ -207,7 +207,7 @@ bool SIPB2BContact::transformAsUserInfo(SIPB2BTransactionManager* pManager,
   const std::string& transportScheme,
   const SessionInfo& sessionInfo)
 {
-  SIPFrom from = pRequest->hdrGet("from");
+  SIPFrom from = pRequest->hdrGet(OSS::SIP::HDR_FROM);
   std::string user = from.getUser();
   std::ostringstream contact;
 
@@ -228,8 +228,8 @@ bool SIPB2BContact::transformAsUserInfo(SIPB2BTransactionManager* pManager,
   contact << hostPort.toIpPortString();
   contact << ";transport=" << transportScheme << ">";
 
-  pRequest->hdrListRemove("Contact");
-  pRequest->hdrListPrepend("Contact", contact.str());
+  pRequest->hdrListRemove(OSS::SIP::HDR_CONTACT);
+  pRequest->hdrListPrepend(OSS::SIP::HDR_CONTACT, contact.str());
 
   if (sessionInfo.callIndex == 1)
     pTransaction->setProperty(OSS::PropertyMap::PROP_Leg1Contact, contact.str());
@@ -271,8 +271,8 @@ bool SIPB2BContact::getSessionInfo(
   else if (SIPB2BContact::_dialogStateInRecordRoute)
   {
     /// check if the session-id is in the route header
-    //pRequest->hdrGet("route");
-    std::string routeList = pRequest->hdrGet("route");
+    //pRequest->hdrGet(OSS::SIP::HDR_ROUTE);
+    std::string routeList = pRequest->hdrGet(OSS::SIP::HDR_ROUTE);
     RouteURI routeUri;
     if (!routeList.empty())
     {
@@ -280,7 +280,7 @@ bool SIPB2BContact::getSessionInfo(
       SIPURI uri = routeUri.getURI();
       if (uri.hasParam("sbc-session-id") && uri.hasParam("sbc-call-index"))
       {
-        pRequest->hdrListRemove("route");
+        pRequest->hdrListRemove(OSS::SIP::HDR_ROUTE);
         sessionInfo.sessionId = uri.getParam("sbc-session-id");
         sessionInfo.callIndex = OSS::string_to_number<unsigned>(uri.getParam("sbc-call-index").c_str());
         OSS_LOG_DEBUG(logId << "Session-ID in Route Header - " << sessionInfo.sessionId << "-" << sessionInfo.callIndex);
@@ -313,13 +313,13 @@ bool SIPB2BContact::transformRegister(
   //
   // Extract the REGISTER expiration
   //
-  std::string hContactList = pRequest->hdrGet("contact");
-  std::string expires = pRequest->hdrGet("expires");
+  std::string hContactList = pRequest->hdrGet(OSS::SIP::HDR_CONTACT);
+  std::string expires = pRequest->hdrGet(OSS::SIP::HDR_EXPIRES);
   ContactURI curi;
   if (!hContactList.empty())
   {
     SIPContact::getAt(hContactList, curi, 0);
-    pRequest->hdrListRemove("Contact");
+    pRequest->hdrListRemove(OSS::SIP::HDR_CONTACT);
   }
 
   if (expires.empty())
@@ -360,7 +360,7 @@ bool SIPB2BContact::transformRegister(
   }
   else if (hContactList == "*")
   {
-    pRequest->hdrListPrepend("Contact", "*");
+    pRequest->hdrListPrepend(OSS::SIP::HDR_CONTACT, "*");
     return true;
   }
   else
@@ -384,7 +384,7 @@ bool SIPB2BContact::transformRegisterAsUserInfo(
   //
   // Prepare the new contact
   //
-  std::string hdrTo = pRequest->hdrGet("to");
+  std::string hdrTo = pRequest->hdrGet(OSS::SIP::HDR_TO);
   std::string toURI;
   if (!OSS::SIP::SIPTo::getURI(hdrTo, toURI))
   {
@@ -410,7 +410,7 @@ bool SIPB2BContact::transformRegisterAsUserInfo(
   if (!expires.empty())
     contact << ";expires=" << expires;
 
-  pRequest->hdrListPrepend("Contact", contact.str());
+  pRequest->hdrListPrepend(OSS::SIP::HDR_CONTACT, contact.str());
   return true;
 }
 
@@ -424,7 +424,7 @@ bool SIPB2BContact::transformRegisterAsParams(
   //
   // Prepare the new contact
   //
-  std::string hdrTo = pRequest->hdrGet("to");
+  std::string hdrTo = pRequest->hdrGet(OSS::SIP::HDR_TO);
   std::string toURI;
   if (!OSS::SIP::SIPTo::getURI(hdrTo, toURI))
   {
@@ -450,7 +450,7 @@ bool SIPB2BContact::transformRegisterAsParams(
   if (!expires.empty())
     contact << ";expires=" << expires;
 
-  pRequest->hdrListPrepend("Contact", contact.str());
+  pRequest->hdrListPrepend(OSS::SIP::HDR_CONTACT, contact.str());
   return true;
 }
 

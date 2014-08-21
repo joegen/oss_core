@@ -220,17 +220,17 @@ void SIPIct::handleSendAck(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTrans
     _pAck->startLine() = "ACK";
     _pAck->startLine() += _pRequest->startLine().c_str() + methodPos;
 
-    _pAck->hdrSet("To", pMsg->hdrGet("to"));
+    _pAck->hdrSet(OSS::SIP::HDR_TO, pMsg->hdrGet(OSS::SIP::HDR_TO));
 
     SIPCSeq cSeq;
-    cSeq = _pRequest->hdrGet("cseq");
+    cSeq = _pRequest->hdrGet(OSS::SIP::HDR_CSEQ);
     std::string ackCSeq = cSeq.getNumber();
     ackCSeq += " ACK";
-    _pAck->hdrSet("CSeq", ackCSeq);
+    _pAck->hdrSet(OSS::SIP::HDR_CSEQ, ackCSeq);
 
     _pAck->body() = "";
-    _pAck->hdrRemove("Content-Length");
-    _pAck->hdrRemove("Content-Type");
+    _pAck->hdrRemove(OSS::SIP::HDR_CONTENT_LENGTH);
+    _pAck->hdrRemove(OSS::SIP::HDR_CONTENT_TYPE);
 
     _pAck->commitData();
   }

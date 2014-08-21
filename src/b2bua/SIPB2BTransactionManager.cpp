@@ -170,7 +170,7 @@ void SIPB2BTransactionManager::registerDomainRouter(const std::string& domain, S
 
 static SIPB2BHandler::MessageType getMessageType(const SIPMessage::Ptr& pRequest)
 {
-  std::string cseq = pRequest->hdrGet("cseq");
+  std::string cseq = pRequest->hdrGet(OSS::SIP::HDR_CSEQ);
   if (cseq.empty())
     return SIPB2BHandler::TYPE_INVALID;
   OSS::string_to_upper(cseq);
@@ -211,7 +211,7 @@ static SIPB2BHandler::MessageType getMessageType(const SIPMessage::Ptr& pRequest
 
 static SIPB2BHandler::MessageType getBodyType(const SIPMessage::Ptr& pRequest)
 {
-  std::string cseq = pRequest->hdrGet("cseq");
+  std::string cseq = pRequest->hdrGet(OSS::SIP::HDR_CSEQ);
   if (cseq.empty())
     return SIPB2BHandler::TYPE_INVALID;
   OSS::string_to_upper(cseq);
@@ -224,7 +224,7 @@ static SIPB2BHandler::MessageType getBodyType(const SIPMessage::Ptr& pRequest)
     if (pRequest->getBody().empty())
       return SIPB2BHandler::TYPE_INVALID;
 
-    std::string contentType = pRequest->hdrGet("content-type");
+    std::string contentType = pRequest->hdrGet(OSS::SIP::HDR_CONTENT_TYPE);
     OSS::string_to_lower(contentType);
     if (contentType != "application/sdp")
       return SIPB2BHandler::TYPE_INVALID;
@@ -257,7 +257,7 @@ SIPB2BHandler::Ptr SIPB2BTransactionManager::findDomainRouter(const OSS::SIP::SI
     OSS_LOG_DEBUG(pMsg->createContextId(true) << "Found static route handler for domain " << domain);
     return iter->second;
   }
-  OSS_LOG_DEBUG(pMsg->createContextId(true) << "No static handler found for domain " << domain);
+  OSS_LOG_DEBUG(pMsg->createContextId(true) << "Not evaluating static route handlers for domain " << domain);
   return SIPB2BHandler::Ptr();
 }
 
@@ -280,7 +280,7 @@ SIPMessage::Ptr SIPB2BTransactionManager::onTransactionCreated(
 SIPMessage::Ptr SIPB2BTransactionManager::onAuthenticateTransaction(
   const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction)
 {
-  std::string maxForwards = pRequest->hdrGet("max-forwards");
+  std::string maxForwards = pRequest->hdrGet(OSS::SIP::HDR_MAX_FORWARDS);
   if (maxForwards.empty())
   {
     maxForwards = "70";
@@ -291,8 +291,8 @@ SIPMessage::Ptr SIPB2BTransactionManager::onAuthenticateTransaction(
     return pRequest->createResponse(SIPMessage::CODE_483_TooManyHops);
   }
   --maxF;
-  pRequest->hdrRemove("max-forwards");
-  pRequest->hdrSet("Max-Forwards", OSS::string_from_number(maxF).c_str());
+  pRequest->hdrRemove(OSS::SIP::HDR_MAX_FORWARDS);
+  pRequest->hdrSet(OSS::SIP::HDR_MAX_FORWARDS, OSS::string_from_number(maxF).c_str());
 
   SIPB2BHandler::Ptr pHandler = findHandler(pRequest);
   if (pHandler)

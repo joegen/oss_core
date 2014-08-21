@@ -88,6 +88,7 @@ SIPMessage::SIPMessage(const SIPMessage& packet)
   _isResponse = packet._isResponse;
   _isRequest = packet._isRequest;
   _userData = packet._userData;
+  _logContext = packet._logContext;
   _consumeState = IDLE;
 }
 
@@ -105,6 +106,7 @@ void SIPMessage::swap(SIPMessage& packet)
   std::swap(_expectedBodyLen, packet._expectedBodyLen);
   std::swap(_isResponse, packet._isResponse);
   std::swap(_isRequest, packet._isRequest);
+  std::swap(_logContext, packet._logContext);
 }
 
 SIPMessage & SIPMessage::operator=(const SIPMessage & copy)
@@ -226,6 +228,8 @@ void SIPMessage::parse()
   if (_data.empty())
     return;
 
+  _logContext = std::string();
+  
   for (std::string::iterator iter = _data.begin(); iter != _data.end();)
   {
     if (!isChar(*iter) || *iter == '\r' || *iter == '\n')
@@ -633,9 +637,9 @@ bool SIPMessage::getTransactionId(std::string& transactionId, const char* method
 {
   
   ReadLock lock(_rwlock);
-  std::string viaStr = hdrGet("via");
-  std::string callIdStr = hdrGet("call-id");
-  std::string cseqStr = hdrGet("cseq");
+  std::string viaStr = hdrGet(OSS::SIP::HDR_VIA);
+  std::string callIdStr = hdrGet(OSS::SIP::HDR_CALL_ID);
+  std::string cseqStr = hdrGet(OSS::SIP::HDR_CSEQ);
 
   if (viaStr.empty() || callIdStr.empty() || cseqStr.empty())
     return false;
@@ -705,7 +709,7 @@ boost::tribool SIPMessage::isResponseTo(const char* meth) const
 
   if (_isResponse)
   {
-    std::string cseq = hdrGet("cseq");
+    std::string cseq = hdrGet(OSS::SIP::HDR_CSEQ);
     if (cseq.empty())
       return boost::indeterminate;
     OSS::string_to_lower(cseq);
@@ -783,7 +787,7 @@ boost::tribool SIPMessage::isErrorResponse() const
 std::string SIPMessage::getMethod() const
 {
   SIPCSeq cseq;
-  cseq = hdrGet("cseq");
+  cseq = hdrGet(OSS::SIP::HDR_CSEQ);
   return cseq.getMethod();
 }
 
@@ -791,8 +795,8 @@ boost::tribool SIPMessage::isMidDialog() const
 {
   SIPFrom from;
   SIPTo to;
-  from = hdrGet("from");
-  to = hdrGet("to");
+  from = hdrGet(OSS::SIP::HDR_FROM);
+  to = hdrGet(OSS::SIP::HDR_TO);
 
   std::string fromTag;
   std::string toTag;
@@ -811,8 +815,8 @@ std::string SIPMessage::getDialogId(bool asSender) const
 {
   SIPFrom from;
   SIPTo to;
-  from = hdrGet("from");
-  to = hdrGet("to");
+  from = hdrGet(OSS::SIP::HDR_FROM);
+  to = hdrGet(OSS::SIP::HDR_TO);
 
   std::string fromTag;
   std::string toTag;
@@ -1044,7 +1048,7 @@ boost::tribool SIPMessage::consumeOne(char input)
     if (input == '\n')
     {
       parse();
-      std::string clen = this->hdrGet("content-length");
+      std::string clen = this->hdrGet(OSS::SIP::HDR_CONTENT_LENGTH);
       if (!clen.empty())
       {
         _expectedBodyLen = ::atoi(clen.c_str());
@@ -1090,11 +1094,11 @@ SIPMessage::Ptr SIPMessage::reformatResponse(const SIPMessage::Ptr& pResponse)
 
   SIPMessage::Ptr pFormatedResponse = SIPMessage::Ptr(new SIPMessage(*(pResponse.get())));
 
-  std::string to = hdrGet("to");
+  std::string to = hdrGet(OSS::SIP::HDR_TO);
   if (to.empty())
     throw OSS::SIP::SIPParserException("Invalid To header.");
 
-  std::string rTo = pFormatedResponse->hdrGet("to");
+  std::string rTo = pFormatedResponse->hdrGet(OSS::SIP::HDR_TO);
   SIPTo hRTo(rTo);
   std::string toTag = hRTo.getHeaderParam("tag");
 
@@ -1112,33 +1116,33 @@ SIPMessage::Ptr SIPMessage::reformatResponse(const SIPMessage::Ptr& pResponse)
   //
   // From
   //
-  std::string from = hdrGet("from");
+  std::string from = hdrGet(OSS::SIP::HDR_FROM);
   if (from.empty())
     throw OSS::SIP::SIPParserException("Invalid From header");
-  pFormatedResponse->hdrSet("From", from);
+  pFormatedResponse->hdrSet(OSS::SIP::HDR_FROM, from);
 
   //
   // To
   //
   if (!toTag.empty())
     hTo.setHeaderParam("tag", toTag.c_str());
-  pFormatedResponse->hdrSet("To", hTo.data());
+  pFormatedResponse->hdrSet(OSS::SIP::HDR_TO, hTo.data());
 
   //
   // Call-ID
   //
-  std::string callId = hdrGet("call-id");
+  std::string callId = hdrGet(OSS::SIP::HDR_CALL_ID);
   if (callId.empty())
     throw OSS::SIP::SIPParserException("Invalid CALL-ID header");
-  pFormatedResponse->hdrSet("Call-ID", callId);
+  pFormatedResponse->hdrSet(OSS::SIP::HDR_CALL_ID, callId);
 
   //
   // CSeq
   //
-  std::string cseq = hdrGet("cseq");
+  std::string cseq = hdrGet(OSS::SIP::HDR_CSEQ);
   if (cseq.empty())
     throw OSS::SIP::SIPParserException("Invalid CSeq header");
-  pFormatedResponse->hdrSet("CSeq", cseq);
+  pFormatedResponse->hdrSet(OSS::SIP::HDR_CSEQ, cseq);
 
     
   //
@@ -1147,15 +1151,15 @@ SIPMessage::Ptr SIPMessage::reformatResponse(const SIPMessage::Ptr& pResponse)
   pFormatedResponse->_headers.erase("via");
   pFormatedResponse->_headers.erase("Via");
 
-  size_t viaCount = hdrGetSize("via");
+  size_t viaCount = hdrGetSize(OSS::SIP::HDR_VIA);
   if (!viaCount)
     throw OSS::SIP::SIPParserException("Invalid Via header");
   for (size_t i = 0; i < viaCount; i++)
   {
-    std::string via = hdrGet("via", i);
+    std::string via = hdrGet(OSS::SIP::HDR_VIA, i);
     if (via.empty())
       throw OSS::SIP::SIPParserException("Invalid via header");
-    pFormatedResponse->hdrListAppend("Via", via);
+    pFormatedResponse->hdrListAppend(OSS::SIP::HDR_VIA, via);
   }
 
   //
@@ -1164,13 +1168,13 @@ SIPMessage::Ptr SIPMessage::reformatResponse(const SIPMessage::Ptr& pResponse)
   pFormatedResponse->_headers.erase("record-route");
   pFormatedResponse->_headers.erase("Record-Route");
 
-  size_t routeCount = hdrGetSize("record-route");
+  size_t routeCount = hdrGetSize(OSS::SIP::HDR_RECORD_ROUTE);
   for (size_t i = 0; i < routeCount; i++)
   {
-    std::string route = hdrGet("record-route", i);
+    std::string route = hdrGet(OSS::SIP::HDR_RECORD_ROUTE, i);
     if (route.empty())
       throw OSS::SIP::SIPParserException("Invalid Record-Route header");
-    pFormatedResponse->hdrListAppend("Record-Route", route);
+    pFormatedResponse->hdrListAppend(OSS::SIP::HDR_RECORD_ROUTE, route);
   }
 
   pFormatedResponse->commitData();
@@ -1190,7 +1194,7 @@ SIPMessage::Ptr SIPMessage::createResponse(
     throw OSS::SIP::SIPParserException("Calling createResponse() for a response is illegal!!");
 
   SIPMessage::Ptr response = SIPMessage::Ptr(new SIPMessage());
-  std::string to = hdrGet("to");
+  std::string to = hdrGet(OSS::SIP::HDR_TO);
   if (to.empty())
     throw OSS::SIP::SIPParserException("Invalid To header.");
 
@@ -1223,70 +1227,70 @@ SIPMessage::Ptr SIPMessage::createResponse(
   //
   // From
   //
-  std::string from = hdrGet("from");
+  std::string from = hdrGet(OSS::SIP::HDR_FROM);
   if (from.empty())
     throw OSS::SIP::SIPParserException("Invalid From header");
-  response->hdrSet("From", from);
+  response->hdrSet(OSS::SIP::HDR_FROM, from);
 
   //
   // To
   //
   if (!toTag.empty())
     hTo.setHeaderParam("tag", toTag.c_str());
-  response->hdrSet("To", hTo.data());
+  response->hdrSet(OSS::SIP::HDR_TO, hTo.data());
 
   //
   // Call-ID
   //
-  std::string callId = hdrGet("call-id");
+  std::string callId = hdrGet(OSS::SIP::HDR_CALL_ID);
   if (callId.empty())
     throw OSS::SIP::SIPParserException("Invalid CALL-ID header");
-  response->hdrSet("Call-ID", callId);
+  response->hdrSet(OSS::SIP::HDR_CALL_ID, callId);
 
   //
   // CSeq
   //
-  std::string cseq = hdrGet("cseq");
+  std::string cseq = hdrGet(OSS::SIP::HDR_CSEQ);
   if (cseq.empty())
     throw OSS::SIP::SIPParserException("Invalid CSeq header");
-  response->hdrSet("CSeq", cseq);
+  response->hdrSet(OSS::SIP::HDR_CSEQ, cseq);
 
   //
   // Contact
   //
   if (!contact.empty())
-    response->hdrListAppend("Contact", contact);
+    response->hdrListAppend(OSS::SIP::HDR_CONTACT, contact);
     
   //
   // Via
   //
-  size_t viaCount = hdrGetSize("via");
+  size_t viaCount = hdrGetSize(OSS::SIP::HDR_VIA);
   if (!viaCount)
     throw OSS::SIP::SIPParserException("Invalid Via header");
   for (size_t i = 0; i < viaCount; i++)
   {
-    std::string via = hdrGet("via", i);
+    std::string via = hdrGet(OSS::SIP::HDR_VIA, i);
     if (via.empty())
       throw OSS::SIP::SIPParserException("Invalid via header");
-    response->hdrListAppend("Via", via);
+    response->hdrListAppend(OSS::SIP::HDR_VIA, via);
   }
 
   //
   // Record-Route
   //
-  size_t routeCount = hdrGetSize("record-route");
+  size_t routeCount = hdrGetSize(OSS::SIP::HDR_RECORD_ROUTE);
   for (size_t i = 0; i < routeCount; i++)
   {
-    std::string route = hdrGet("record-route", i);
+    std::string route = hdrGet(OSS::SIP::HDR_RECORD_ROUTE, i);
     if (route.empty())
       throw OSS::SIP::SIPParserException("Invalid Record-Route header");
-    response->hdrListAppend("Record-Route", route);
+    response->hdrListAppend(OSS::SIP::HDR_RECORD_ROUTE, route);
   }
 
   //
   // Content-Length
   //
-  response->hdrSet("Content-Length", "0");
+  response->hdrSet(OSS::SIP::HDR_CONTENT_LENGTH, "0");
 
   response->commitData();
 
@@ -1315,7 +1319,7 @@ void SIPMessage::setBody(const std::string& body)
 void SIPMessage::updateLength()
 {
   std::string newLen = OSS::string_from_number<size_t>(_body.length());
-  hdrSet("Content-Length", newLen);
+  hdrSet(OSS::SIP::HDR_CONTENT_LENGTH, newLen);
 }
 
 const std::string& SIPMessage::getStartLine() const
@@ -1418,7 +1422,12 @@ boost::tribool SIPMessage::is6xx(int code) const
 
 std::string SIPMessage::createContextId(SIPMessage* pMsg, bool formatTabAndSpaces)
 {
-  std::string id = pMsg->hdrGet("call-id");
+  std::string id = pMsg->hdrGet(OSS::SIP::HDR_CALL_ID);
+  return createContextId(id, formatTabAndSpaces);
+}
+
+std::string SIPMessage::createContextId(const std::string& id, bool formatTabAndSpaces)
+{
   unsigned int hash = OSS::string_to_js_hash(id);
   std::ostringstream newId;
   if (formatTabAndSpaces)
@@ -1430,6 +1439,26 @@ std::string SIPMessage::createContextId(SIPMessage* pMsg, bool formatTabAndSpace
     newId << " ";
   return newId.str();
 }
+
+std::string SIPMessage::createContextId(bool formatTabAndSpaces) const
+{
+  {
+    ReadLock lock(_rwlock);
+    if (formatTabAndSpaces && !_logContext.empty())
+      return _logContext;
+  }
+  
+  std::string context = createContextId(const_cast<SIPMessage*>(this), formatTabAndSpaces);
+  
+  {
+    WriteLock lock(_rwlock);
+    if (formatTabAndSpaces && _logContext.empty())
+      _logContext = context;
+  }
+  
+  return context;
+}
+
 
 std::string SIPMessage::createLoggerData(SIPMessage* pMsg)
 {
@@ -1475,7 +1504,7 @@ std::string SIPMessage::createLoggerData(SIPMessage* pMsg)
 std::string SIPMessage::getFromTag() const
 {
   std::string tag;
-  std::string from(hdrGet("from"));
+  std::string from(hdrGet(OSS::SIP::HDR_FROM));
   if (!from.empty())
   {
     tag = SIPFrom::getTag(from);
@@ -1485,7 +1514,7 @@ std::string SIPMessage::getFromTag() const
 
 std::string SIPMessage::getFromHost() const
 {
-  std::string from(hdrGet("from"));
+  std::string from(hdrGet(OSS::SIP::HDR_FROM));
   std::string host;
   SIPFrom::getHost(from, host);
   return host;
@@ -1493,7 +1522,7 @@ std::string SIPMessage::getFromHost() const
 
 std::string SIPMessage::getFromHostPort() const
 {
-  std::string from(hdrGet("from"));
+  std::string from(hdrGet(OSS::SIP::HDR_FROM));
   std::string host;
   SIPFrom::getHostPort(from, host);
   return host;
@@ -1501,7 +1530,7 @@ std::string SIPMessage::getFromHostPort() const
 
 std::string SIPMessage::getToHost() const
 {
-  std::string to(hdrGet("to"));
+  std::string to(hdrGet(OSS::SIP::HDR_TO));
   std::string host;
   SIPFrom::getHost(to, host);
   return host;
@@ -1509,7 +1538,7 @@ std::string SIPMessage::getToHost() const
 
 std::string SIPMessage::getToHostPort() const
 {
-  std::string to(hdrGet("to"));
+  std::string to(hdrGet(OSS::SIP::HDR_TO));
   std::string host;
   SIPFrom::getHostPort(to, host);
   return host;
@@ -1518,7 +1547,7 @@ std::string SIPMessage::getToHostPort() const
 std::string SIPMessage::getToTag() const
 {
   std::string tag;
-  std::string to(hdrGet("to"));
+  std::string to(hdrGet(OSS::SIP::HDR_TO));
   if (!to.empty())
   {
     tag = SIPFrom::getTag(to);
@@ -1529,7 +1558,7 @@ std::string SIPMessage::getToTag() const
 std::string SIPMessage::getTopViaBranch() const
 {
   std::string branch;
-  std::string via(hdrGet("via"));
+  std::string via(hdrGet(OSS::SIP::HDR_VIA));
   if (!via.empty())
   {
     SIPVia::getBranch(via, branch);

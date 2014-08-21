@@ -215,10 +215,10 @@ bool SIPContact::popTopURI(std::string& contact, ContactURI& topURI)
 
 int SIPContact::msgGetContacts(SIPMessage* pMsg, std::vector<std::string>& contacts)
 {
-  int headerCount = pMsg->hdrGetSize("contact");
+  int headerCount = pMsg->hdrGetSize(OSS::SIP::HDR_CONTACT);
   for (int i = 0; i < headerCount; i++)
   {
-    std::string contact = pMsg->hdrGet("contact", i);
+    std::string contact = pMsg->hdrGet(OSS::SIP::HDR_CONTACT, i);
     int sz = getSize(contact);
     for (int j = 0; j < sz; j++)
     {

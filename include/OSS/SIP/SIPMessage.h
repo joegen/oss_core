@@ -251,7 +251,7 @@ public:
     /// This function will throw a SIPInvalidStateException
     /// if the SIP Message is not yet parsed (see parse() function).
     ///
-    ///   size_t sz = msg.hdrGet("Via"); 
+    ///   size_t sz = msg.hdrGet(OSS::SIP::HDR_VIA); 
     ///
 
   const std::string& hdrGet(const char* headerName, size_t index = 0) const;
@@ -262,7 +262,7 @@ public:
     /// This function will throw a SIPInvalidStateException
     /// if the SIP Message is not yet parsed (see parse() function).
     ///
-    ///   std::string via = msg.hdrGet("Via"); 
+    ///   std::string via = msg.hdrGet(OSS::SIP::HDR_VIA); 
     ///
  
   bool hdrSet( const char * headerName, const std::string& headerValue);
@@ -272,7 +272,7 @@ public:
     /// This function will throw a SIPInvalidStateException
     /// if the SIP Message is not yet parsed (see parse() function).
     ///
-    ///   msg.hdrSet("From", "\"alice\"<sip:alice@atlanta.com>tag=123"); 
+    ///   msg.hdrSet(OSS::SIP::HDR_FROM, "\"alice\"<sip:alice@atlanta.com>tag=123"); 
     ///
 
   bool hdrSet(const char* headerName, const std::string& headerValue, size_t index);
@@ -282,7 +282,7 @@ public:
     /// if the SIP Message is not yet parsed (see parse() function) or 
     /// a SIPInvalidIndexException if the index specified is beyond the bounds of the array size.
     ///
-    ///   msg.hdrSet("Via", "SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bK776asdhds", 0); 
+    ///   msg.hdrSet(OSS::SIP::HDR_VIA, "SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bK776asdhds", 0); 
     ///
 
   bool hdrRemove(const char* headerName);
@@ -554,6 +554,11 @@ public:
     /// Creates a 32 bit context id.  This is normally used for
     /// tagging transactions belonging to the same call-id.
     /// A bitwise hash will be used against the call-id header.
+  
+  static std::string createContextId(const std::string& callId, bool formatTabAndSpaces = false);
+    /// Creates a 32 bit context id.  This is normally used for
+    /// tagging transactions belonging to the same call-id.
+    /// A bitwise hash will be used against the call-id header.
 
   std::string createLoggerData() const;
     /// Returns a log-ready string representation of the SIP Message
@@ -618,6 +623,7 @@ protected:
   CustomProperties _properties;
   OSS_HANDLE _userData;
   std::string _idleBuffer;
+  mutable std::string _logContext;
 };
 
 //
@@ -648,11 +654,6 @@ inline std::string& SIPMessage::startLine()
 inline OSS_HANDLE& SIPMessage::userData()
 {
   return _userData;
-}
-
-inline std::string SIPMessage::createContextId(bool formatTabAndSpaces) const
-{
-  return createContextId(const_cast<SIPMessage*>(this), formatTabAndSpaces);
 }
 
 inline std::string SIPMessage::createLoggerData() const

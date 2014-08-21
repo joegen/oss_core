@@ -541,7 +541,7 @@ void SIPStack::sendRequestDirect(const SIPMessage::Ptr& pRequest,
     if (transportId.empty())
       transportId="0";
     OSS_LOG_DEBUG("Sending request directly protocol=" << transport << " id=" << transportId);
-    SIPTransportSession::Ptr client = _fsmDispatch.transport().createClientTransport(localAddress, remoteAddress, transport, transportId);
+    SIPTransportSession::Ptr client = _fsmDispatch.transport().createClientTransport(pRequest, localAddress, remoteAddress, transport, transportId);
     if (client)
       client->writeMessage(pRequest, remoteAddress.toString(), OSS::string_from_number(remoteAddress.getPort()));
     else

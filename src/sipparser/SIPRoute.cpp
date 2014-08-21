@@ -131,22 +131,22 @@ bool SIPRoute::msgPopTopRecordRoute(SIPMessage* pMsg, std::string& route)
 
 bool SIPRoute::msgAddRoute(SIPMessage* pMsg, const std::string& route)
 {
-  return pMsg->hdrListPrepend("Route", route);
+  return pMsg->hdrListPrepend(OSS::SIP::HDR_ROUTE, route);
 }
 
 bool SIPRoute::msgAddRecordRoute(SIPMessage* pMsg, const std::string& route)
 {
-  return pMsg->hdrListPrepend("Record-Route", route);
+  return pMsg->hdrListPrepend(OSS::SIP::HDR_RECORD_ROUTE, route);
 }
 
 bool SIPRoute::msgClearRoutes(SIPMessage* pMsg)
 {
-  return pMsg->hdrListRemove("Route");
+  return pMsg->hdrListRemove(OSS::SIP::HDR_ROUTE);
 }
 
 bool SIPRoute::msgClearRecordRoutes(SIPMessage* pMsg)
 {
-  return pMsg->hdrListRemove("Record-Route");
+  return pMsg->hdrListRemove(OSS::SIP::HDR_RECORD_ROUTE);
 }
 
 } } // OSS::SIP

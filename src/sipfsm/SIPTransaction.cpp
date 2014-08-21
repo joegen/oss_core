@@ -155,7 +155,7 @@ void SIPTransaction::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
     << " SRC: " << _remoteAddress.toIpPortString()
     << " DST: " << _localAddress.toIpPortString()
     << " EXT: " << "[" << pTransport->getExternalAddress() << "]"
-    << " FURI: " << pMsg->hdrGet("from")
+    << " FURI: " << pMsg->hdrGet(OSS::SIP::HDR_FROM)
     << " ENC: " << _isXOREncrypted
     << " PROT: " << pTransport->getTransportScheme();
     OSS::log_information(logMsg.str());
@@ -242,10 +242,10 @@ void SIPTransaction::sendRequest(
     {
       std::string transportId;
       pRequest->getProperty(OSS::PropertyMap::PROP_TransportId, transportId);
-      _transport = _transportService->createClientTransport(localAddress, remoteAddress, transport, transportId);
+      _transport = _transportService->createClientTransport(pRequest, localAddress, remoteAddress, transport, transportId);
     }else if (SIPVia::msgGetTopViaTransport(pRequest.get(), transport))
     {
-      _transport = _transportService->createClientTransport(localAddress, remoteAddress, transport);
+      _transport = _transportService->createClientTransport(pRequest, localAddress, remoteAddress, transport);
     }
     if (!_transport)
       throw OSS::SIP::SIPException("Unable to create transport!");
@@ -333,7 +333,7 @@ void SIPTransaction::sendResponse(
           std::string transport;
           if (SIPVia::msgGetTopViaTransport(pResponse.get(), transport))
           {
-            _transport = _transportService->createClientTransport(_localAddress, _sendAddress, transport);
+            _transport = _transportService->createClientTransport(pResponse, _localAddress, _sendAddress, transport);
             writeMessage(pResponse);
           }
         }

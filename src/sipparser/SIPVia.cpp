@@ -302,9 +302,9 @@ bool SIPVia::getTopVia(const std::string& hVia, std::string& via)
 bool SIPVia::msgGetTopVia(SIPMessage* pMsg, std::string& topVia)
 {
   OSS_VERIFY_NULL(pMsg);
-  if (!pMsg->hdrPresent("via"))
+  if (!pMsg->hdrPresent(OSS::SIP::HDR_VIA))
     return false;
-  std::string via = pMsg->hdrGet("via");
+  std::string via = pMsg->hdrGet(OSS::SIP::HDR_VIA);
   return getTopVia(via, topVia);
 }
 
@@ -328,17 +328,17 @@ std::string SIPVia::popTopVia(const std::string& hVia, std::string& via)
 bool SIPVia::msgPopTopVia(SIPMessage* pMsg, std::string& topVia)
 {
   OSS_VERIFY_NULL(pMsg);
-  if (!pMsg->hdrPresent("via"))
+  if (!pMsg->hdrPresent(OSS::SIP::HDR_VIA))
     return false;
-  std::string hVia = pMsg->hdrGet("via", 0);
+  std::string hVia = pMsg->hdrGet(OSS::SIP::HDR_VIA, 0);
   std::string moreVia = popTopVia(hVia, topVia);
   if (!moreVia.empty())
   {
-    pMsg->hdrSet("Via", moreVia, 0);
+    pMsg->hdrSet(OSS::SIP::HDR_VIA, moreVia, 0);
   }
   else
   {
-    pMsg->hdrListPopFront("Via");
+    pMsg->hdrListPopFront(OSS::SIP::HDR_VIA);
   }
   return !topVia.empty();
 }
@@ -346,13 +346,13 @@ bool SIPVia::msgPopTopVia(SIPMessage* pMsg, std::string& topVia)
 bool SIPVia::msgAddVia(SIPMessage* pMsg, const std::string& via)
 {
   OSS_VERIFY_NULL(pMsg);
-  return pMsg->hdrListPrepend("Via", via);
+  return pMsg->hdrListPrepend(OSS::SIP::HDR_VIA, via);
 }
 
 bool SIPVia::msgClearVias(SIPMessage* pMsg)
 {
   OSS_VERIFY_NULL(pMsg);
-  return pMsg->hdrListRemove("via");
+  return pMsg->hdrListRemove(OSS::SIP::HDR_VIA);
 }
 
 bool SIPVia::msgGetTopViaSentBy(SIPMessage* pMsg, std::string& sentBy)
@@ -398,10 +398,10 @@ bool SIPVia::getBottomVia(const std::string& hVia, std::string& bottomVia)
 
 bool SIPVia::msgGetBottomVia(SIPMessage* pMsg, std::string& via)
 {
-  int count = pMsg->hdrGetSize("via");
+  int count = pMsg->hdrGetSize(OSS::SIP::HDR_VIA);
   if (count == 0)
     return false;
-  std::string hVia = pMsg->hdrGet("via", count -1);
+  std::string hVia = pMsg->hdrGet(OSS::SIP::HDR_VIA, count -1);
   if (hVia.empty())
     return false;
   return getBottomVia(hVia, via);

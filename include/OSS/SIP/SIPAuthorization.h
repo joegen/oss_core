@@ -47,7 +47,7 @@ public:
     ///
     /// Usage:
     ///
-    ///   std::string hdr = msg.hdrGet("authorization");
+    ///   std::string hdr = msg.hdrGet(OSS::SIP::HDR_AUTHORIZATION);
     ///   SIPAuthorization authorization(hdr);
 
   SIPAuthorization(const SIPAuthorization& authorization);

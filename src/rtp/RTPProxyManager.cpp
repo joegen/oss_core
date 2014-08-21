@@ -439,15 +439,15 @@ void RTPProxyManager::handleSDP(const std::string& /*method*/,
   }
   catch(json::Exception& e)
   {
-    OSS_LOG_ERROR(lid << " RTP RTPProxy::handleSDP Exception: " << e.what());
+    OSS_LOG_ERROR(lid << "RTP RTPProxy::handleSDP Exception: " << e.what());
   }
   catch(std::exception& e)
   {
-    OSS_LOG_ERROR(lid << " RTP RTPProxy::handleSDP Exception: " << e.what());
+    OSS_LOG_ERROR(lid << "RTP RTPProxy::handleSDP Exception: " << e.what());
   }
   catch(...)
   {
-    OSS_LOG_ERROR(lid << " RTP RTPProxy::handleSDP Unknown Exception");
+    OSS_LOG_ERROR(lid << "RTP RTPProxy::handleSDP Unknown Exception");
   }
 }
 
@@ -463,15 +463,15 @@ void RTPProxyManager::removeSession(const std::string& method,
   }
   catch(json::Exception& e)
   {
-    OSS_LOG_ERROR(" RTP RTPProxy::handleSDP Exception: " << e.what());
+    OSS_LOG_ERROR("RTP RTPProxy::handleSDP Exception: " << e.what());
   }
   catch(std::exception& e)
   {
-    OSS_LOG_ERROR(" RTP RTPProxy::handleSDP Exception: " << e.what());
+    OSS_LOG_ERROR("RTP RTPProxy::handleSDP Exception: " << e.what());
   }
   catch(...)
   {
-    OSS_LOG_ERROR(" RTP RTPProxy::handleSDP Unknown Exception");
+    OSS_LOG_ERROR("RTP RTPProxy::handleSDP Unknown Exception");
   }
 }
 

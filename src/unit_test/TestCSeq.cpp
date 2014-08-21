@@ -37,7 +37,7 @@ TEST(ParserTest, test_cseq_parser)
   OSS::SIP::SIPMessage message( msg.str() );
   message.parse();
 
-  std::string hdrValue = message.hdrGet("cseq");
+  std::string hdrValue = message.hdrGet(OSS::SIP::HDR_CSEQ);
   ASSERT_TRUE(!hdrValue.empty());
 
   OSS::SIP::SIPCSeq cseq_0(hdrValue);

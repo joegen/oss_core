@@ -112,6 +112,7 @@ public:
     /// a SIPDuplicateTransport exception
 
   SIPTransportSession::Ptr createClientTransport(
+    const OSS::SIP::SIPMessage::Ptr& pMsg,
     const OSS::Net::IPAddress& localAddress,
     const OSS::Net::IPAddress& remoteAddress,
     const std::string& proto,

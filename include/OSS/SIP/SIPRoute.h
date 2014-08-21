@@ -49,7 +49,7 @@ public:
     ///
     /// Usage:
     ///
-    ///   std::string hdr = msg.hdrGet("route");
+    ///   std::string hdr = msg.hdrGet(OSS::SIP::HDR_ROUTE);
     ///   SIPRoute route(hdr);
 
   SIPRoute(const SIPRoute& route);

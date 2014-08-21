@@ -39,7 +39,7 @@ TEST(ParserTest, test_via_parser)
   SIP::SIPMessage message( msg.str() );
   message.parse();
 
-  std::string hdrValue = message.hdrGet("via");
+  std::string hdrValue = message.hdrGet(OSS::SIP::HDR_VIA);
   ASSERT_TRUE(!hdrValue.empty());
 
   SIP::SIPVia via_0;
@@ -97,33 +97,33 @@ TEST(ParserTest, test_via_parser)
   //
   // Test popping top vias
   //
-  ASSERT_TRUE(message.hdrGetSize("via") == 3);
+  ASSERT_TRUE(message.hdrGetSize(OSS::SIP::HDR_VIA) == 3);
   std::string msgTopVia;
   ASSERT_TRUE(SIP::SIPVia::msgPopTopVia(&message, msgTopVia));
   ASSERT_TRUE(msgTopVia == "SIP/2.0/UDP 192.168.0.1;branch=001;rport");
   message.commitData();
-  ASSERT_TRUE(message.hdrGetSize("via") == 3);
+  ASSERT_TRUE(message.hdrGetSize(OSS::SIP::HDR_VIA) == 3);
   //std::cout << message.data() << std::endl;
   ASSERT_TRUE(SIP::SIPVia::msgPopTopVia(&message, msgTopVia));
   ASSERT_TRUE(msgTopVia == "SIP/2.0/UDP 192.168.0.2;branch=002");
   message.commitData();
-  ASSERT_TRUE(message.hdrGetSize("via") == 3);
+  ASSERT_TRUE(message.hdrGetSize(OSS::SIP::HDR_VIA) == 3);
   //std::cout << message.data() << std::endl;
   ASSERT_TRUE(SIP::SIPVia::msgPopTopVia(&message, msgTopVia));
   ASSERT_TRUE(msgTopVia == "SIP/2.0/UDP 192.168.0.3;branch=003");
   message.commitData();
   //std::cout << message.data() << std::endl;
-  ASSERT_TRUE(message.hdrGetSize("via") == 2);
+  ASSERT_TRUE(message.hdrGetSize(OSS::SIP::HDR_VIA) == 2);
   ASSERT_TRUE(SIP::SIPVia::msgPopTopVia(&message, msgTopVia));
   ASSERT_TRUE(msgTopVia == "SIP/2.0/UDP 192.168.0.4;branch=004");
   message.commitData();
   //std::cout << message.data() << std::endl;
-  ASSERT_TRUE(message.hdrGetSize("via") == 1);
+  ASSERT_TRUE(message.hdrGetSize(OSS::SIP::HDR_VIA) == 1);
   ASSERT_TRUE(SIP::SIPVia::msgGetTopVia(&message, msgTopVia));
   ASSERT_TRUE(msgTopVia == "SIP/2.0/UDP 192.168.0.5;branch=005;rport=9090;received=54.242.115.5");
 
   SIP::SIPVia::msgAddVia(&message, "SIP/2.0/UDP 192.168.0.4;branch=004");
-  ASSERT_TRUE(message.hdrGetSize("via") == 2);
+  ASSERT_TRUE(message.hdrGetSize(OSS::SIP::HDR_VIA) == 2);
   message.commitData();
   //std::cout << message.data() << std::endl;
 

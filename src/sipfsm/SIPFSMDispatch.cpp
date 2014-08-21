@@ -115,7 +115,7 @@ void SIPFSMDispatch::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
   else if (!pMsg->isRequest())
   {
     std::string cseq;
-    cseq = pMsg->hdrGet("cseq");
+    cseq = pMsg->hdrGet(OSS::SIP::HDR_CSEQ);
     if (OSS::string_caseless_ends_with(cseq, "invite"))
     {
       transactionType = SIPTransaction::TYPE_ICT;

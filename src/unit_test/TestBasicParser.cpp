@@ -91,7 +91,7 @@ TEST(ParserTest, test_message_splitter)
   std::string h4Header = h4.str() + CRCR;
   ASSERT_TRUE(SIPMessage::messageSplit(h4Header, messageHeaders, messageBoby));
   ASSERT_TRUE(messageHeaders == h4.str());
-
+  
   //test CRLFCRLF terminated headers with a body
   std::ostringstream h5;
   h5 << "INVITE sip:alice@atlanta.com" << CRLF;
@@ -170,32 +170,32 @@ TEST(ParserTest, test_message_construction)
   ASSERT_TRUE(message.getTransactionId(tid));
   ASSERT_TRUE(tid == "invite1z9hG4bK-d87543-419889160-1--d87543-");
 
-  ASSERT_TRUE(message.hdrPresent("From") == 1);
-  ASSERT_TRUE(message.hdrPresent("To") == 1);
-  ASSERT_TRUE(message.hdrPresent("via") == 1);
-  ASSERT_TRUE(message.hdrPresent("contact") == 1);
+  ASSERT_TRUE(message.hdrPresent(OSS::SIP::HDR_FROM) == 1);
+  ASSERT_TRUE(message.hdrPresent(OSS::SIP::HDR_TO) == 1);
+  ASSERT_TRUE(message.hdrPresent(OSS::SIP::HDR_VIA) == 1);
+  ASSERT_TRUE(message.hdrPresent(OSS::SIP::HDR_CONTACT) == 1);
   ASSERT_TRUE(message.hdrPresent("CSEQ") == 1);
   ASSERT_TRUE(message.hdrPresent("CoNtenT-LeNgTh") == 1);
-  ASSERT_TRUE(message.hdrPresent("P-Asserted-Identity") == 0);
+  ASSERT_TRUE(message.hdrPresent(OSS::SIP::HDR_P_ASSERTED_IDENTITY) == 0);
 
-  ASSERT_TRUE(message.hdrGet("From") == "9011<sip:9011@192.168.0.103>;tag=6657e067");
-  ASSERT_TRUE(message.hdrGet("to") != "9011<sip:9011@192.168.0.103>;tag=6657e067");
-  ASSERT_TRUE(message.hdrGet("P-Asserted-Identity") == "");
-  message.hdrSet("P-Asserted-Identity", "<sip:9011@192.168.0.103>");
-  message.hdrSet("Server", "SIP Parser Test");
-  ASSERT_TRUE(message.hdrGet("P-Asserted-Identity") == "<sip:9011@192.168.0.103>");
+  ASSERT_TRUE(message.hdrGet(OSS::SIP::HDR_FROM) == "9011<sip:9011@192.168.0.103>;tag=6657e067");
+  ASSERT_TRUE(message.hdrGet(OSS::SIP::HDR_TO) != "9011<sip:9011@192.168.0.103>;tag=6657e067");
+  ASSERT_TRUE(message.hdrGet(OSS::SIP::HDR_P_ASSERTED_IDENTITY) == "");
+  message.hdrSet(OSS::SIP::HDR_P_ASSERTED_IDENTITY, "<sip:9011@192.168.0.103>");
+  message.hdrSet(OSS::SIP::HDR_SERVER, "SIP Parser Test");
+  ASSERT_TRUE(message.hdrGet(OSS::SIP::HDR_P_ASSERTED_IDENTITY) == "<sip:9011@192.168.0.103>");
 
-  ASSERT_TRUE(message.hdrGet("Route", 0) == "<sip:10.0.0.1;lr>");
-  ASSERT_TRUE(message.hdrGet("Route", 1) == "<sip:10.0.0.2;lr>");
-  ASSERT_TRUE(message.hdrGet("Route", 2) == "<sip:10.0.0.3;lr>");
-  message.hdrListAppend("Route", "<sip:10.0.0.4;lr>");
-  ASSERT_TRUE(message.hdrGetSize("Route") == 4);
-  ASSERT_TRUE(message.hdrGet("Route", 3) == "<sip:10.0.0.4;lr>");
+  ASSERT_TRUE(message.hdrGet(OSS::SIP::HDR_ROUTE, 0) == "<sip:10.0.0.1;lr>");
+  ASSERT_TRUE(message.hdrGet(OSS::SIP::HDR_ROUTE, 1) == "<sip:10.0.0.2;lr>");
+  ASSERT_TRUE(message.hdrGet(OSS::SIP::HDR_ROUTE, 2) == "<sip:10.0.0.3;lr>");
+  message.hdrListAppend(OSS::SIP::HDR_ROUTE, "<sip:10.0.0.4;lr>");
+  ASSERT_TRUE(message.hdrGetSize(OSS::SIP::HDR_ROUTE) == 4);
+  ASSERT_TRUE(message.hdrGet(OSS::SIP::HDR_ROUTE, 3) == "<sip:10.0.0.4;lr>");
 
   bool thrown = false;
   try
   {
-    message.hdrGet("Route", 4);
+    message.hdrGet(OSS::SIP::HDR_ROUTE, 4);
   }catch(const std::exception & e)
   {
     thrown = true;
@@ -205,24 +205,24 @@ TEST(ParserTest, test_message_construction)
   /// Test copy operator
   SIPMessage message_2;
   message_2 = message;
-  ASSERT_TRUE(message_2.hdrGet("From") == "9011<sip:9011@192.168.0.103>;tag=6657e067");
-  ASSERT_TRUE(message_2.hdrGet("to") != "9011<sip:9011@192.168.0.103>;tag=6657e067");
-  ASSERT_TRUE(message_2.hdrGet("P-Asserted-Identity") == "<sip:9011@192.168.0.103>");
-  ASSERT_TRUE(message_2.hdrGet("Route", 0) == "<sip:10.0.0.1;lr>");
-  ASSERT_TRUE(message_2.hdrGet("Route", 1) == "<sip:10.0.0.2;lr>");
-  ASSERT_TRUE(message_2.hdrGet("Route", 2) == "<sip:10.0.0.3;lr>");
-  ASSERT_TRUE(message_2.hdrGet("Route", 3) == "<sip:10.0.0.4;lr>");
+  ASSERT_TRUE(message_2.hdrGet(OSS::SIP::HDR_FROM) == "9011<sip:9011@192.168.0.103>;tag=6657e067");
+  ASSERT_TRUE(message_2.hdrGet(OSS::SIP::HDR_TO) != "9011<sip:9011@192.168.0.103>;tag=6657e067");
+  ASSERT_TRUE(message_2.hdrGet(OSS::SIP::HDR_P_ASSERTED_IDENTITY) == "<sip:9011@192.168.0.103>");
+  ASSERT_TRUE(message_2.hdrGet(OSS::SIP::HDR_ROUTE, 0) == "<sip:10.0.0.1;lr>");
+  ASSERT_TRUE(message_2.hdrGet(OSS::SIP::HDR_ROUTE, 1) == "<sip:10.0.0.2;lr>");
+  ASSERT_TRUE(message_2.hdrGet(OSS::SIP::HDR_ROUTE, 2) == "<sip:10.0.0.3;lr>");
+  ASSERT_TRUE(message_2.hdrGet(OSS::SIP::HDR_ROUTE, 3) == "<sip:10.0.0.4;lr>");
 
   /// Test object copying itself
   message_2 = message_2;
-  ASSERT_TRUE(message_2.hdrGet("From") == "9011<sip:9011@192.168.0.103>;tag=6657e067");
-  ASSERT_TRUE(message_2.hdrGet("to") != "9011<sip:9011@192.168.0.103>;tag=6657e067");
-  ASSERT_TRUE(message_2.hdrGet("P-Asserted-Identity") == "<sip:9011@192.168.0.103>");
-  ASSERT_TRUE(message_2.hdrGet("Route", 0) == "<sip:10.0.0.1;lr>");
-  ASSERT_TRUE(message_2.hdrGet("Route", 1) == "<sip:10.0.0.2;lr>");
-  ASSERT_TRUE(message_2.hdrGet("Route", 2) == "<sip:10.0.0.3;lr>");
-  ASSERT_TRUE(message_2.hdrGet("Route", 3) == "<sip:10.0.0.4;lr>");
-  message_2.hdrSet("Subject", "Testing Commit");
+  ASSERT_TRUE(message_2.hdrGet(OSS::SIP::HDR_FROM) == "9011<sip:9011@192.168.0.103>;tag=6657e067");
+  ASSERT_TRUE(message_2.hdrGet(OSS::SIP::HDR_TO) != "9011<sip:9011@192.168.0.103>;tag=6657e067");
+  ASSERT_TRUE(message_2.hdrGet(OSS::SIP::HDR_P_ASSERTED_IDENTITY) == "<sip:9011@192.168.0.103>");
+  ASSERT_TRUE(message_2.hdrGet(OSS::SIP::HDR_ROUTE, 0) == "<sip:10.0.0.1;lr>");
+  ASSERT_TRUE(message_2.hdrGet(OSS::SIP::HDR_ROUTE, 1) == "<sip:10.0.0.2;lr>");
+  ASSERT_TRUE(message_2.hdrGet(OSS::SIP::HDR_ROUTE, 2) == "<sip:10.0.0.3;lr>");
+  ASSERT_TRUE(message_2.hdrGet(OSS::SIP::HDR_ROUTE, 3) == "<sip:10.0.0.4;lr>");
+  message_2.hdrSet(OSS::SIP::HDR_SUBJECT, "Testing Commit");
   message_2.commitData();
 
   SIPMessage::Ptr ack = SIPMessage::Ptr(new SIPMessage);
@@ -235,15 +235,15 @@ TEST(ParserTest, test_message_construction)
   ASSERT_TRUE(st == "ACK sip:9001@192.168.0.152 SIP/2.0");
 
   SIPCSeq cSeq;
-  cSeq = message_2.hdrGet("cseq");
+  cSeq = message_2.hdrGet(OSS::SIP::HDR_CSEQ);
   std::string ackCSeq = cSeq.getNumber();
   ackCSeq += " ACK";
-  ack->hdrSet("CSeq", ackCSeq);
-  ASSERT_TRUE(ack->hdrGet("cseq") == "1 ACK");
+  ack->hdrSet(OSS::SIP::HDR_CSEQ, ackCSeq);
+  ASSERT_TRUE(ack->hdrGet(OSS::SIP::HDR_CSEQ) == "1 ACK");
 
   ack->body() = "";
-  ack->hdrSet("Content-Length", "0");
-  ack->hdrSet("Content-Type", "text/plain");
+  ack->hdrSet(OSS::SIP::HDR_CONTENT_LENGTH, "0");
+  ack->hdrSet(OSS::SIP::HDR_CONTENT_TYPE, "text/plain");
 
   ack->commitData();
 
@@ -476,24 +476,24 @@ TEST(ParserTest, test_buffered_read_message_construction)
   ASSERT_TRUE(message.getTransactionId(tid));
   ASSERT_TRUE(tid == "invite1z9hG4bK-d87543-419889160-1--d87543-");
 
-  ASSERT_TRUE(message.hdrPresent("From") == 1);
-  ASSERT_TRUE(message.hdrPresent("To") == 1);
-  ASSERT_TRUE(message.hdrPresent("via") == 1);
-  ASSERT_TRUE(message.hdrPresent("contact") == 1);
+  ASSERT_TRUE(message.hdrPresent(OSS::SIP::HDR_FROM) == 1);
+  ASSERT_TRUE(message.hdrPresent(OSS::SIP::HDR_TO) == 1);
+  ASSERT_TRUE(message.hdrPresent(OSS::SIP::HDR_VIA) == 1);
+  ASSERT_TRUE(message.hdrPresent(OSS::SIP::HDR_CONTACT) == 1);
   ASSERT_TRUE(message.hdrPresent("CSEQ") == 1);
   ASSERT_TRUE(message.hdrPresent("CoNtenT-LeNgTh") == 1);
-  ASSERT_TRUE(message.hdrPresent("P-Asserted-Identity") == 0);
+  ASSERT_TRUE(message.hdrPresent(OSS::SIP::HDR_P_ASSERTED_IDENTITY) == 0);
 
-  ASSERT_TRUE(message.hdrGet("From") == "9011<sip:9011@192.168.0.103>;tag=6657e067");
-  ASSERT_TRUE(message.hdrGet("to") != "9011<sip:9011@192.168.0.103>;tag=6657e067");
-  ASSERT_TRUE(message.hdrGet("P-Asserted-Identity") == "");
-  message.hdrSet("P-Asserted-Identity", "<sip:9011@192.168.0.103>");
-  message.hdrSet("Server", "SIP Parser Test");
-  ASSERT_TRUE(message.hdrGet("P-Asserted-Identity") == "<sip:9011@192.168.0.103>");
+  ASSERT_TRUE(message.hdrGet(OSS::SIP::HDR_FROM) == "9011<sip:9011@192.168.0.103>;tag=6657e067");
+  ASSERT_TRUE(message.hdrGet(OSS::SIP::HDR_TO) != "9011<sip:9011@192.168.0.103>;tag=6657e067");
+  ASSERT_TRUE(message.hdrGet(OSS::SIP::HDR_P_ASSERTED_IDENTITY) == "");
+  message.hdrSet(OSS::SIP::HDR_P_ASSERTED_IDENTITY, "<sip:9011@192.168.0.103>");
+  message.hdrSet(OSS::SIP::HDR_SERVER, "SIP Parser Test");
+  ASSERT_TRUE(message.hdrGet(OSS::SIP::HDR_P_ASSERTED_IDENTITY) == "<sip:9011@192.168.0.103>");
 
-  ASSERT_TRUE(message.hdrGet("Record-Route", 0) == "<sip:10.0.0.1;lr>");
-  ASSERT_TRUE(message.hdrGet("Record-Route", 1) == "<sip:10.0.0.2;lr>");
-  ASSERT_TRUE(message.hdrGet("Record-Route", 2) == "<sip:10.0.0.3;lr>");
+  ASSERT_TRUE(message.hdrGet(OSS::SIP::HDR_RECORD_ROUTE, 0) == "<sip:10.0.0.1;lr>");
+  ASSERT_TRUE(message.hdrGet(OSS::SIP::HDR_RECORD_ROUTE, 1) == "<sip:10.0.0.2;lr>");
+  ASSERT_TRUE(message.hdrGet(OSS::SIP::HDR_RECORD_ROUTE, 2) == "<sip:10.0.0.3;lr>");
 }
 
 

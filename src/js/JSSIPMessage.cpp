@@ -1368,7 +1368,7 @@ jsval msgGetToUser(const jsargs& args)
   if (!pMsg)
     return jsvoid();
 
-  std::string to = pMsg->hdrGet("to");
+  std::string to = pMsg->hdrGet(OSS::SIP::HDR_TO);
   std::string user;
   if (!SIPFrom::getUser(to, user))
     return jsvoid();
@@ -1387,11 +1387,11 @@ jsval msgSetToUser(const jsargs& args)
 
   try
   {
-    std::string to = pMsg->hdrGet("to");
+    std::string to = pMsg->hdrGet(OSS::SIP::HDR_TO);
     std::string user = jsvalToString(args[1]);
     if (!SIPFrom::setUser(to, user.c_str()))
       return jsbool::New(false);
-    if (!pMsg->hdrSet("To", to.c_str()))
+    if (!pMsg->hdrSet(OSS::SIP::HDR_TO, to.c_str()))
       return jsbool::New(false);
     return jsbool::New(true);
   }
@@ -1411,7 +1411,7 @@ jsval msgGetToHostPort(const jsargs& args)
   if (!pMsg)
     return jsvoid();
 
-  std::string to = pMsg->hdrGet("to");
+  std::string to = pMsg->hdrGet(OSS::SIP::HDR_TO);
   std::string hostPort;
   if (!SIPFrom::getHostPort(to, hostPort))
     return jsvoid();
@@ -1428,7 +1428,7 @@ jsval msgGetToHost(const jsargs& args)
   if (!pMsg)
     return jsvoid();
 
-  std::string to = pMsg->hdrGet("to");
+  std::string to = pMsg->hdrGet(OSS::SIP::HDR_TO);
   std::string host;
   if (!SIPFrom::getHost(to, host))
     return jsvoid();
@@ -1447,11 +1447,11 @@ jsval msgSetToHostPort(const jsargs& args)
 
   try
   {
-    std::string to = pMsg->hdrGet("to");
+    std::string to = pMsg->hdrGet(OSS::SIP::HDR_TO);
     std::string hostPort = jsvalToString(args[1]);
     if (!SIPFrom::setHostPort(to, hostPort.c_str()))
       return jsbool::New(false);
-    if (!pMsg->hdrSet("To", to.c_str()))
+    if (!pMsg->hdrSet(OSS::SIP::HDR_TO, to.c_str()))
       return jsbool::New(false);
     return jsbool::New(true);
   }
@@ -1471,7 +1471,7 @@ jsval msgGetFromUser(const jsargs& args)
   if (!pMsg)
     return jsvoid();
 
-  std::string to = pMsg->hdrGet("From");
+  std::string to = pMsg->hdrGet(OSS::SIP::HDR_FROM);
   std::string user;
   if (!SIPFrom::getUser(to, user))
     return jsvoid();
@@ -1490,11 +1490,11 @@ jsval msgSetFromUser(const jsargs& args)
 
   try
   {
-    std::string from = pMsg->hdrGet("from");
+    std::string from = pMsg->hdrGet(OSS::SIP::HDR_FROM);
     std::string user = jsvalToString(args[1]);
     if (!SIPFrom::setUser(from, user.c_str()))
       return jsbool::New(false);
-    if (!pMsg->hdrSet("From", from.c_str()))
+    if (!pMsg->hdrSet(OSS::SIP::HDR_FROM, from.c_str()))
       return jsbool::New(false);
     return jsbool::New(true);
   }
@@ -1514,7 +1514,7 @@ jsval msgGetFromHostPort(const jsargs& args)
   if (!pMsg)
     return jsvoid();
 
-  std::string to = pMsg->hdrGet("from");
+  std::string to = pMsg->hdrGet(OSS::SIP::HDR_FROM);
   std::string hostPort;
   if (!SIPFrom::getHostPort(to, hostPort))
     return jsvoid();
@@ -1531,7 +1531,7 @@ jsval msgGetFromHost(const jsargs& args)
   if (!pMsg)
     return jsvoid();
 
-  std::string from = pMsg->hdrGet("from");
+  std::string from = pMsg->hdrGet(OSS::SIP::HDR_FROM);
   std::string host;
   if (!SIPFrom::getHost(from, host))
     return jsvoid();
@@ -1550,11 +1550,11 @@ jsval msgSetFromHostPort(const jsargs& args)
 
   try
   {
-    std::string from = pMsg->hdrGet("from");
+    std::string from = pMsg->hdrGet(OSS::SIP::HDR_FROM);
     std::string hostPort = jsvalToString(args[1]);
     if (!SIPFrom::setHostPort(from, hostPort.c_str()))
       return jsbool::New(false);
-    if (!pMsg->hdrSet("From", from.c_str()))
+    if (!pMsg->hdrSet(OSS::SIP::HDR_FROM, from.c_str()))
       return jsbool::New(false);
     return jsbool::New(true);
   }
@@ -1574,7 +1574,7 @@ jsval msgGetContactUri(const jsargs& args)
   if (!pMsg)
     return jsvoid();
 
-  std::string hContactList = pMsg->hdrGet("contact");
+  std::string hContactList = pMsg->hdrGet(OSS::SIP::HDR_CONTACT);
   if (hContactList.empty())
     return jsvoid();
 
@@ -1601,7 +1601,7 @@ jsval msgGetContactParameter(const jsargs& args)
   if (param.empty())
     return jsvoid();
 
-  std::string hContactList = pMsg->hdrGet("contact");
+  std::string hContactList = pMsg->hdrGet(OSS::SIP::HDR_CONTACT);
   if (hContactList.empty())
     return jsvoid();
 
@@ -1629,8 +1629,8 @@ jsval msgGetAuthenticator(const jsargs& args)
   std::string realm = jsvalToString(args[1]);
   OSS::string_to_lower(realm);
 
-  int wwwAuthSize = pMsg->hdrGetSize("authorization");
-  int proxyAuthSize = pMsg->hdrGetSize("proxy-authorization");
+  int wwwAuthSize = pMsg->hdrGetSize(OSS::SIP::HDR_AUTHORIZATION);
+  int proxyAuthSize = pMsg->hdrGetSize(OSS::SIP::HDR_PROXY_AUTHORIZATION);
 
   std::ostringstream realmMatch;
   realmMatch << "realm=" << "\"" << realm << "\"";
@@ -1640,7 +1640,7 @@ jsval msgGetAuthenticator(const jsargs& args)
   {
     for (int i = 0; i < wwwAuthSize; i++)
     {
-      std::string hstr = pMsg->hdrGet("authorization", i);
+      std::string hstr = pMsg->hdrGet(OSS::SIP::HDR_AUTHORIZATION, i);
       if (!hstr.empty())
       {
         if (realm == "*")
@@ -1665,7 +1665,7 @@ jsval msgGetAuthenticator(const jsargs& args)
   {
     for (int i = 0; i < proxyAuthSize; i++)
     {
-      std::string hstr = pMsg->hdrGet("proxy-authorization", i);
+      std::string hstr = pMsg->hdrGet(OSS::SIP::HDR_PROXY_AUTHORIZATION, i);
       if (!hstr.empty())
       {
         if (realm == "*")

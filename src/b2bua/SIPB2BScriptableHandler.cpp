@@ -265,24 +265,24 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
     startLine.setMethod("CANCEL");
     pRequest->setStartLine(startLine.data());
 
-    SIPCSeq cseq = pRequest->hdrGet("cseq");
+    SIPCSeq cseq = pRequest->hdrGet(OSS::SIP::HDR_CSEQ);
     cseq.setMethod("CANCEL");
-    pRequest->hdrRemove("cseq");
-    pRequest->hdrSet("CSeq", cseq.data().c_str());
+    pRequest->hdrRemove(OSS::SIP::HDR_CSEQ);
+    pRequest->hdrSet(OSS::SIP::HDR_CSEQ, cseq.data().c_str());
 
     pRequest->setBody("");
-    pRequest->hdrRemove("content-length");
-    pRequest->hdrSet("Content-Length", "0");
+    pRequest->hdrRemove(OSS::SIP::HDR_CONTENT_LENGTH);
+    pRequest->hdrSet(OSS::SIP::HDR_CONTENT_LENGTH, "0");
     //
     // Remove headers that do not have semantics in CANCEL
     //
-    pRequest->hdrRemove("content-type");
-    pRequest->hdrRemove("min-se");
-    pRequest->hdrRemove("allow");
-    pRequest->hdrRemove("supported");
-    pRequest->hdrRemove("session-expires");
-    pRequest->hdrRemove("proxy-authorization");
-    pRequest->hdrRemove("authorization");
+    pRequest->hdrRemove(OSS::SIP::HDR_CONTENT_TYPE);
+    pRequest->hdrRemove(OSS::SIP::HDR_MIN_SE);
+    pRequest->hdrRemove(OSS::SIP::HDR_ALLOW);
+    pRequest->hdrRemove(OSS::SIP::HDR_SUPPORTED);
+    pRequest->hdrRemove(OSS::SIP::HDR_SESSION_EXPIRES);
+    pRequest->hdrRemove(OSS::SIP::HDR_PROXY_AUTHORIZATION);
+    pRequest->hdrRemove(OSS::SIP::HDR_AUTHORIZATION);
 
     std::string isXorValue;
     if (pInvite->getProperty(OSS::PropertyMap::PROP_XOR, isXorValue) && isXorValue == "1")
@@ -366,9 +366,9 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
       return SIPMessage::Ptr();
     }
 
-    pRequest->hdrListRemove("Route");
-    pRequest->hdrListRemove("Record-Route");
-    pRequest->hdrListRemove("Via");
+    pRequest->hdrListRemove(OSS::SIP::HDR_ROUTE);
+    pRequest->hdrListRemove(OSS::SIP::HDR_RECORD_ROUTE);
+    pRequest->hdrListRemove(OSS::SIP::HDR_VIA);
 
     std::string targetTransport;
     if (!pRequest->getProperty(OSS::PropertyMap::PROP_TargetTransport, targetTransport) || targetTransport.empty())
@@ -381,7 +381,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
     std::string viaBranch = "z9hG4bK";
     viaBranch += OSS::string_create_uuid();
     std::string newVia = SIPB2BContact::constructVia(_pTransactionManager, pRequest, localInterface, targetTransport, viaBranch);
-    pRequest->hdrListPrepend("Via", newVia);
+    pRequest->hdrListPrepend(OSS::SIP::HDR_VIA, newVia);
 
     if (!SIPB2BContact::transformRegister(_pTransactionManager, pRequest, pTransaction, localInterface))
     {
@@ -394,7 +394,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
     //
     // This is a new out o dialog transaction
     //
-    if (_pDialogState->hasDialog(pRequest->hdrGet("call-id")))
+    if (_pDialogState->hasDialog(pRequest->hdrGet(OSS::SIP::HDR_CALL_ID)))
     {
       SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_400_BadRequest, "Dialog already exist!");
       return serverError;
@@ -413,15 +413,15 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
     //
     // Prepare the SIP Message for outbound
     //
-    pRequest->hdrListRemove("Route");
-    pRequest->hdrListRemove("Record-Route");
-    pRequest->hdrListRemove("Via");
+    pRequest->hdrListRemove(OSS::SIP::HDR_ROUTE);
+    pRequest->hdrListRemove(OSS::SIP::HDR_RECORD_ROUTE);
+    pRequest->hdrListRemove(OSS::SIP::HDR_VIA);
 
     //
     // Preserver the contact as property header.  it will be used for transformation later
     //
-    pRequest->setProperty(OSS::PropertyMap::PROP_InboundContact, pRequest->hdrGet("contact").c_str());
-    pRequest->hdrListRemove("Contact");
+    pRequest->setProperty(OSS::PropertyMap::PROP_InboundContact, pRequest->hdrGet(OSS::SIP::HDR_CONTACT).c_str());
+    pRequest->hdrListRemove(OSS::SIP::HDR_CONTACT);
     //
     // Set the target tranport
     //
@@ -438,12 +438,12 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
     std::ostringstream viaBranch;
     viaBranch << "z9hG4bK" << OSS::string_hash(branch.c_str());
     std::string newVia = SIPB2BContact::constructVia(_pTransactionManager, pRequest, localInterface, targetTransport, viaBranch.str());
-    pRequest->hdrListPrepend("Via", newVia);
+    pRequest->hdrListPrepend(OSS::SIP::HDR_VIA, newVia);
     //
     // Prepare the new contact
     //
     std::ostringstream sessionId;
-    sessionId << OSS::string_hash(pRequest->hdrGet("call-id").c_str()) << OSS::getRandom();
+    sessionId << OSS::string_hash(pRequest->hdrGet(OSS::SIP::HDR_CALL_ID).c_str()) << OSS::getRandom();
     pTransaction->setProperty(OSS::PropertyMap::PROP_SessionId, sessionId.str());
 
     SIPB2BContact::SessionInfo sessionInfo;
@@ -611,7 +611,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteUpperReg(
   try
   {
     RegData registration;
-    if (!_pDialogState->findOneRegistration(regId, registration))
+    if (!_pDialogState->findOneRegistration(pRequest, regId, registration))
     {
       OSS_LOG_WARNING("No registration found for " << ruri.data());
       SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_404_NotFound);
@@ -652,7 +652,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteUpperReg(
     std::ostringstream requestLine;
     requestLine << pRequest->getMethod() << " " << contact << " SIP/2.0";
     pRequest->setStartLine(requestLine.str().c_str());
-    pRequest->hdrSet("to", to.getURI().c_str());
+    pRequest->hdrSet(OSS::SIP::HDR_TO, to.getURI().c_str());
     //
     // Proxy media for upper reg if an rtp proxy is implemented
     //
@@ -689,7 +689,7 @@ bool SIPB2BScriptableHandler::onRouteResponse(
   //
   // Check if the via is private
   //
-  std::string hVia = pRequest->hdrGet("via");
+  std::string hVia = pRequest->hdrGet(OSS::SIP::HDR_VIA);
   if (hVia.empty())
     return false;
 
@@ -758,7 +758,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
   ///
   /// If the body is supported, the return value must be a null-Ptr.
 {
-  std::string contentType =  pRequest->hdrGet("content-type");
+  std::string contentType =  pRequest->hdrGet(OSS::SIP::HDR_CONTENT_TYPE);
   OSS::string_to_lower(contentType);
   if (contentType != "application/sdp")
     return OSS::SIP::SIPMessage::Ptr();
@@ -832,9 +832,9 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
     std::string propXOR = "0";
     rtpAttributes.forcePEAEncryption = pRequest->getProperty(OSS::PropertyMap::PROP_PeerXOR, propXOR) && propXOR == "1";
     rtpAttributes.forceCreate = requireRTPProxy;
-    rtpAttributes.callId = pRequest->hdrGet("call-id");
-    rtpAttributes.from = pRequest->hdrGet("from");
-    rtpAttributes.to = pRequest->hdrGet("to");
+    rtpAttributes.callId = pRequest->hdrGet(OSS::SIP::HDR_CALL_ID);
+    rtpAttributes.from = pRequest->hdrGet(OSS::SIP::HDR_FROM);
+    rtpAttributes.to = pRequest->hdrGet(OSS::SIP::HDR_TO);
 
     std::string sResizerSamples;
     if (!pServerRequest->getProperty(OSS::PropertyMap::PROP_RTPResizerSamples, sResizerSamples))
@@ -892,7 +892,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
 
   pRequest->setBody(sdp);
   std::string clen = OSS::string_from_number<size_t>(sdp.size());
-  pRequest->hdrSet("Content-Length", clen.c_str());
+  pRequest->hdrSet(OSS::SIP::HDR_CONTENT_LENGTH, clen.c_str());
   return OSS::SIP::SIPMessage::Ptr();
 }
 
@@ -915,7 +915,7 @@ void SIPB2BScriptableHandler::onProcessResponseBody(
   if (pResponse->isResponseTo("OPTIONS"))
     return;
 
-  std::string contentType = pResponse->hdrGet("content-type");
+  std::string contentType = pResponse->hdrGet(OSS::SIP::HDR_CONTENT_TYPE);
   OSS::string_to_lower(contentType);
   if (contentType != "application/sdp")
     return;
@@ -940,11 +940,11 @@ void SIPB2BScriptableHandler::onProcessResponseBody(
   {
     pResponse->setBody(responseSDP);
     std::string clen = OSS::string_from_number<size_t>(responseSDP.size());
-    pResponse->hdrSet("Content-Length", clen.c_str());
+    pResponse->hdrSet(OSS::SIP::HDR_CONTENT_LENGTH, clen.c_str());
     return;
   }
 
-  std::string hContact = pResponse->hdrGet("contact");
+  std::string hContact = pResponse->hdrGet(OSS::SIP::HDR_CONTACT);
   std::string sentBy;
 
   if (!hContact.empty())
@@ -1001,9 +1001,9 @@ void SIPB2BScriptableHandler::onProcessResponseBody(
     std::string propXOR = "0";
     rtpAttributes.forcePEAEncryption = pResponse->getProperty(OSS::PropertyMap::PROP_PeerXOR, propXOR) && propXOR == "1";
     rtpAttributes.forceCreate = requireRTPProxy;
-    rtpAttributes.callId = pResponse->hdrGet("call-id");
-    rtpAttributes.from = pResponse->hdrGet("from");
-    rtpAttributes.to = pResponse->hdrGet("to");
+    rtpAttributes.callId = pResponse->hdrGet(OSS::SIP::HDR_CALL_ID);
+    rtpAttributes.from = pResponse->hdrGet(OSS::SIP::HDR_FROM);
+    rtpAttributes.to = pResponse->hdrGet(OSS::SIP::HDR_TO);
 
     rtpProxy().handleSDP(pTransaction->getLogId(), sessionId, addrSentBy, addrPacketSource, addrLocalInterface,
         addrRoute, addrRouteLocalInterface, RTPProxySession::INVITE_RESPONSE, sdp, rtpAttributes);
@@ -1019,7 +1019,7 @@ void SIPB2BScriptableHandler::onProcessResponseBody(
   pResponse->setBody(sdp);
   std::string clen = OSS::string_from_number<size_t>(sdp.size());
   pTransaction->setProperty(OSS::PropertyMap::PROP_ResponseSDP, sdp.c_str());
-  pResponse->hdrSet("Content-Length", clen.c_str());
+  pResponse->hdrSet(OSS::SIP::HDR_CONTENT_LENGTH, clen.c_str());
 }
 
 void SIPB2BScriptableHandler::onProcessOutbound(
@@ -1074,7 +1074,7 @@ void SIPB2BScriptableHandler::onProcessOutbound(
     onProcessRequest(TYPE_OUTBOUND_REQUEST, pRequest);
 
    if (!_pTransactionManager->getUserAgentName().empty())
-     pRequest->hdrSet("User-Agent", _pTransactionManager->getUserAgentName().c_str());
+     pRequest->hdrSet(OSS::SIP::HDR_USER_AGENT, _pTransactionManager->getUserAgentName().c_str());
 
 
 }
@@ -1152,10 +1152,10 @@ void SIPB2BScriptableHandler::onProcessResponseInbound(
   }
   else if (pResponse->isResponseTo("REGISTER"))
   {
-    if (!pResponse->is1xx() && pResponse->hdrGetSize("contact") == 0)
+    if (!pResponse->is1xx() && pResponse->hdrGetSize(OSS::SIP::HDR_CONTACT) == 0)
     {
       std::string ct;
-      ct = pTransaction->clientRequest()->hdrGet("contact");
+      ct = pTransaction->clientRequest()->hdrGet(OSS::SIP::HDR_CONTACT);
       if (ct != "*")
       {
         if (pResponse->is2xx())
@@ -1219,7 +1219,7 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
     _outboundResponseScript.processRequest(pResponse);
 
   if (!_pTransactionManager->getUserAgentName().empty())
-     pResponse->hdrSet("Server", _pTransactionManager->getUserAgentName().c_str());
+     pResponse->hdrSet(OSS::SIP::HDR_SERVER, _pTransactionManager->getUserAgentName().c_str());
 
   bool isInvite = pResponse->isResponseTo("INVITE");
   std::string isReinvite;
@@ -1237,11 +1237,11 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
       // If this is a 2xx, add it to the retranmission cache
       //
       std::ostringstream cacheId;
-      cacheId << pResponse->getDialogId(false) << pResponse->hdrGet("cseq");
+      cacheId << pResponse->getDialogId(false) << pResponse->hdrGet(OSS::SIP::HDR_CSEQ);
       boost::any cacheItem = pResponse;
       pResponse->setProperty(OSS::PropertyMap::PROP_SessionId, sessionId);
       _2xxRetransmitCache.add(cacheId.str(), cacheItem);
-      OSS_LOG_DEBUG(pTransaction->getLogId() << " Added 2xx dialog-id: " << cacheId.str() << " to retransmission cache.");
+      OSS_LOG_DEBUG(pTransaction->getLogId() << "Added 2xx dialog-id: " << cacheId.str() << " to retransmission cache.");
     }
     return;
   }
@@ -1266,11 +1266,11 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
       pResponse->setProperty(OSS::PropertyMap::PROP_TargetTransport, transportScheme);
 
       std::ostringstream cacheId;
-      cacheId << pResponse->getDialogId(false) << pResponse->hdrGet("cseq");
+      cacheId << pResponse->getDialogId(false) << pResponse->hdrGet(OSS::SIP::HDR_CSEQ);
       boost::any cacheItem = pResponse;
       pResponse->setProperty(OSS::PropertyMap::PROP_SessionId, sessionId);
       _2xxRetransmitCache.add(cacheId.str(), cacheItem);
-      OSS_LOG_DEBUG(pTransaction->getLogId() << " Added 2xx dialog-id: " << cacheId.str() << " to retransmission cache.");
+      OSS_LOG_DEBUG(pTransaction->getLogId() << "Added 2xx dialog-id: " << cacheId.str() << " to retransmission cache.");
     }
   }
   else if (pResponse->isResponseTo("BYE"))
@@ -1298,7 +1298,7 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
       //
       try
       {
-        _pDialogState->removeDialog(pResponse->hdrGet("call-id"), sessionId);
+        _pDialogState->removeDialog(pResponse->hdrGet(OSS::SIP::HDR_CALL_ID), sessionId);
       }catch(...){}
     }
   }
@@ -1307,8 +1307,8 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
     //
     // Extract the REGISTER expiration
     //
-    std::string expires = pResponse->hdrGet("expires");
-    std::string hContactList = pResponse->hdrGet("contact");
+    std::string expires = pResponse->hdrGet(OSS::SIP::HDR_EXPIRES);
+    std::string hContactList = pResponse->hdrGet(OSS::SIP::HDR_CONTACT);
     ContactURI curi;
     bool hasContact = SIPContact::getAt(hContactList, curi, 0);
 
@@ -1324,7 +1324,7 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
     }
     else
     {
-      pResponse->hdrRemove("expires");
+      pResponse->hdrRemove(OSS::SIP::HDR_EXPIRES);
     }
     //
     // Rewrite the contact uri
@@ -1333,10 +1333,10 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
     bool hasOldContact = false;
     SIPMessage::Ptr pRequest = pTransaction->serverRequest();
     std::string to;
-    to = pRequest->hdrGet("to");
+    to = pRequest->hdrGet(OSS::SIP::HDR_TO);
     if (!hContactList.empty() && hasContact)
     {
-      std::string oldContactList = pRequest->hdrGet("contact");
+      std::string oldContactList = pRequest->hdrGet(OSS::SIP::HDR_CONTACT);
       hasOldContact = SIPContact::getAt(oldContactList, oldCuri, 0);
     }
 
@@ -1351,17 +1351,17 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
       std::vector<std::string> bindings;
       if (SIPContact::msgGetContacts(pResponse.get(), bindings) > 0)
       {
-        pResponse->hdrListRemove("contact");
+        pResponse->hdrListRemove(OSS::SIP::HDR_CONTACT);
         for(std::vector<std::string>::iterator iter = bindings.begin(); iter != bindings.end(); iter++)
         {
           ContactURI curi = *iter;
           std::string regId;
           getRegistrationId(curi, regId);
           RegData regData;
-          if (_pDialogState->findOneRegistration(regId, regData))
+          if (_pDialogState->findOneRegistration(pRequest, regId, regData))
           {
             OSS_LOG_INFO("Listing contacts for a REGISTER query - " << regData.contact);
-            pResponse->hdrListAppend("contact", regData.contact.c_str());
+            pResponse->hdrListAppend(OSS::SIP::HDR_CONTACT, regData.contact.c_str());
           }
         }
       }
@@ -1393,9 +1393,9 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
         return;
       }
 
-      pResponse->hdrListRemove("contact");
+      pResponse->hdrListRemove(OSS::SIP::HDR_CONTACT);
       oldCuri.setHeaderParam("expires", expires.c_str());
-      pResponse->hdrListAppend("Contact", oldCuri.data().c_str());
+      pResponse->hdrListAppend(OSS::SIP::HDR_CONTACT, oldCuri.data().c_str());
 
       try
       {
@@ -1410,7 +1410,7 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
         //
         // Preserve the call-id
         //
-        registration.callId = pResponse->hdrGet("call-id");
+        registration.callId = pResponse->hdrGet(OSS::SIP::HDR_CALL_ID);
         //
         // Preserve the contact
         //
@@ -1470,9 +1470,9 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
       //
       // Simply remove the contact returned by the trunk and insert the old one
       //
-       pResponse->hdrListRemove("contact");
+       pResponse->hdrListRemove(OSS::SIP::HDR_CONTACT);
        oldCuri.setHeaderParam("expires", expires.c_str());
-       pResponse->hdrListAppend("Contact", oldCuri.data().c_str());
+       pResponse->hdrListAppend(OSS::SIP::HDR_CONTACT, oldCuri.data().c_str());
     }
   }
   else if (pResponse->isResponseTo("INVITE") && pResponse->isErrorResponse())
@@ -1544,7 +1544,7 @@ void SIPB2BScriptableHandler::onProcessAckFor2xxRequest(
   if (pMsg->is2xx())
   {
     std::ostringstream cacheId;
-    cacheId << pMsg->getDialogId(false) << pMsg->hdrGet("cseq");
+    cacheId << pMsg->getDialogId(false) << pMsg->hdrGet(OSS::SIP::HDR_CSEQ);
     Cacheable::Ptr cacheItem = _2xxRetransmitCache.get(cacheId.str());
     if (cacheItem)
     {
@@ -1571,7 +1571,7 @@ void SIPB2BScriptableHandler::onProcessAckFor2xxRequest(
           OSS::log_debug(p2xx->createLoggerData());
 
         if (!_pTransactionManager->getUserAgentName().empty())
-          p2xx->hdrSet("Server", _pTransactionManager->getUserAgentName().c_str());
+          p2xx->hdrSet(OSS::SIP::HDR_SERVER, _pTransactionManager->getUserAgentName().c_str());
 
         _pTransactionManager->stack().sendRequestDirect(p2xx,
           IPAddress::fromV4IPPort(localInterface.c_str()),
@@ -1623,7 +1623,7 @@ void SIPB2BScriptableHandler::onTransactionError(
     {
       std::string sessionId;
       OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId));
-      std::string callId = pTransaction->serverRequest()->hdrGet("call-id");
+      std::string callId = pTransaction->serverRequest()->hdrGet(OSS::SIP::HDR_CALL_ID);
       OSS_LOG_DEBUG(pTransaction->getLogId() << "BYE Transaction Exception: " << e->message() );
       OSS_LOG_DEBUG(pTransaction->getLogId()
         << "Destroying dialog " << sessionId << " with Call-ID " << callId);
@@ -1640,7 +1640,7 @@ void SIPB2BScriptableHandler::onTransactionError(
       OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId));
       OSS::mutex_write_lock _rwlock(_rwInvitePoolMutex);
       _invitePool.erase(id);
-      _pDialogState->removeDialog(pTransaction->serverRequest()->hdrGet("call-id"), sessionId);
+      _pDialogState->removeDialog(pTransaction->serverRequest()->hdrGet(OSS::SIP::HDR_CALL_ID), sessionId);
     }
 
     std::string sessionId;
@@ -1769,7 +1769,7 @@ void SIPB2BScriptableHandler::handleOptionsResponse(
   if ((pMsg && pMsg->is4xx(480)) || e)
   {
     SIPMessage::Ptr pRequest = pTransaction->getInitialRequest();
-    SIPFrom from = pRequest->hdrGet("from");
+    SIPFrom from = pRequest->hdrGet(OSS::SIP::HDR_FROM);
     std::string user = from.getUser();
     if (user != "exit")
       _optionsResponseQueue.enqueue(user);
@@ -1835,7 +1835,7 @@ void SIPB2BScriptableHandler::runOptionsResponseThread()
       try
       {
         RegData regData;
-        if (!_pDialogState->findOneRegistration(response, regData))
+        if (!_pDialogState->findOneRegistration(SIPMessage::Ptr(), response, regData))
           continue;
 
         std::ostringstream logMsg;

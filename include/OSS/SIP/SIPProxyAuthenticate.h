@@ -47,7 +47,7 @@ public:
     ///
     /// Usage:
     ///
-    ///   std::string hdr = msg.hdrGet("proxy-authenticate");
+    ///   std::string hdr = msg.hdrGet(HRD_PROXY_AUTHENTICATE);
     ///   SIPProxyAuthenticate authorization(hdr);
 
   SIPProxyAuthenticate(const SIPProxyAuthenticate& authorization);

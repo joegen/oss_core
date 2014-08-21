@@ -38,6 +38,7 @@ RTPProxyTuple::RTPProxyTuple(RTPProxyManager* pManager, RTPProxySession* pSessio
 RTPProxyTuple::~RTPProxyTuple()
 {
   stop();
+  OSS_LOG_INFO(_pSession->logId() << "RTP Session" << _identifier << " DESTROYED");
 }
 
 bool RTPProxyTuple::open(
@@ -67,14 +68,13 @@ bool RTPProxyTuple::open(
 
 void RTPProxyTuple::start()
 {
-  OSS_LOG_INFO(_pSession->logId() << " RTP Session" << _identifier << " STARTED");
+  OSS_LOG_INFO(_pSession->logId() << "RTP Session" << _identifier << " STARTED");
   _data->start();
   _control->start();
 }
 
 void RTPProxyTuple::stop()
 {
-  OSS_LOG_INFO(_pSession->logId() << " RTP Session" << _identifier << " STOPPED");
   _data->close();
   _control->close();
 }

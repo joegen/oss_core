@@ -47,7 +47,7 @@ public:
     ///
     /// Usage:
     ///
-    ///   std::string hdr = msg.hdrGet("cseq");
+    ///   std::string hdr = msg.hdrGet(OSS::SIP::HDR_CSEQ);
     ///   SIPCSeq cseq(hdr);
 
   SIPCSeq(const SIPCSeq& cseq);

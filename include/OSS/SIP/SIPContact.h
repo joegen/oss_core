@@ -52,7 +52,7 @@ public:
     ///
     /// Usage:
     ///
-    ///   std::string hdr = msg.hdrGet("contact");
+    ///   std::string hdr = msg.hdrGet(OSS::SIP::HDR_CONTACT);
     ///   SIPContact contact(hdr);
 
   SIPContact(const SIPContact& contact);

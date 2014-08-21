@@ -48,7 +48,7 @@ public:
     ///
     /// Usage:
     ///
-    ///   std::string hdr = msg.hdrGet("from");
+    ///   std::string hdr = msg.hdrGet(OSS::SIP::HDR_FROM);
     ///   SIPFrom from(hdr);
 
   SIPFrom(const SIPFrom& from);

@@ -124,8 +124,12 @@ bool SIPB2BDialogDataStoreCb::dbPersistReg(const RegData& regData)
   }
 }
 
-bool SIPB2BDialogDataStoreCb::dbGetOneReg(const std::string& regId, RegData& regData)
+bool SIPB2BDialogDataStoreCb::dbGetOneReg(const SIPMessage::Ptr& pRequest, const std::string& regId, RegData& regData)
 {
+  std::string logId;
+  if (pRequest)
+    logId = pRequest->createContextId(true);
+  
   if (getOneReg)
   {
     return getOneReg(regId, regData);
@@ -133,17 +137,17 @@ bool SIPB2BDialogDataStoreCb::dbGetOneReg(const std::string& regId, RegData& reg
   else
   {
     mutex_critic_sec_lock lock(_storageMutex);
-    OSS_LOG_INFO("OSSB2BUA::getOneReg " << regId);
+    OSS_LOG_INFO(logId << "OSSB2BUA::getOneReg " << regId);
     std::string data;
     if (_registry.find(regId) == _registry.end())
     {
-      OSS_LOG_INFO("Unable to find registration for " << regId );
+      OSS_LOG_INFO(logId << "Unable to find registration for " << regId );
       return false;
     }
-    OSS_LOG_INFO("OSSB2BUA::getOneReg " << regId << " FOUND");
+    OSS_LOG_INFO(logId << "OSSB2BUA::getOneReg " << regId << " FOUND");
     data = _registry[regId];
     regData.fromJsonString(data);
-    OSS_LOG_INFO("Found registration for " << regData.key << " AOR: " << regData.aor << " Binding: " << regData.contact);
+    OSS_LOG_INFO(logId << "Found registration for " << regData.key << " AOR: " << regData.aor << " Binding: " << regData.contact);
     return true;
   }
 }
@@ -310,6 +314,9 @@ bool SIPB2BDialogStateManager::hasDialog(const std::string& callId) const
 void SIPB2BDialogStateManager::addDialog(const std::string& callId, const DialogData& dialogData)
 {
   _csDialogsMutex.lock();
+  
+  std::string logId = SIPMessage::createContextId(callId, true);
+  
   Cacheable::Ptr dialogs;
   if (!_dialogs.has(callId))
   {
@@ -323,7 +330,7 @@ void SIPB2BDialogStateManager::addDialog(const std::string& callId, const Dialog
     DialogList& dialogList = boost::any_cast<DialogList&>(dialogs->data());
     dialogList.push_back(dialogData);
   }
-  OSS_LOG_DEBUG("Added new dialog " << "Session-ID: " << dialogData.sessionId << " Call-ID: " << callId);
+  OSS_LOG_DEBUG(logId << "Added new dialog " << "Session-ID: " << dialogData.sessionId << " Call-ID: " << callId);
   _dialogs.add(dialogs);
   _csDialogsMutex.unlock();
 }
@@ -331,8 +338,10 @@ void SIPB2BDialogStateManager::addDialog(const std::string& callId, const Dialog
 void SIPB2BDialogStateManager::updateDialog(const std::string& sessionId, const DialogData::LegInfo& leg, int legIndex)
 {
   OSS::mutex_critic_sec_lock lock(_csDialogsMutex);
+  std::string logId = SIPMessage::createContextId(leg.callId, true);
+  
   if (_dialogs.has(leg.callId))
-  {
+  {  
     Cacheable::Ptr dialogs = _dialogs.get(leg.callId);
     DialogList& dialogList = boost::any_cast<DialogList&>(dialogs->data());
     for (DialogList::iterator iter = dialogList.begin();
@@ -341,20 +350,33 @@ void SIPB2BDialogStateManager::updateDialog(const std::string& sessionId, const 
       if (iter->sessionId == sessionId)
       {
         if (legIndex == 1)
+        {
+          OSS_LOG_DEBUG(logId << "SIPB2BDialogStateManager::updateDialog - updated Leg-1 information for Session-Id: " << iter->sessionId);
           iter->leg1 = leg;
+        }
         else if(legIndex == 2)
+        {
+          OSS_LOG_DEBUG(logId << "SIPB2BDialogStateManager::updateDialog - updated Leg-2 information for Session-Id: " << iter->sessionId);
           iter->leg2 = leg;
+        }
         else
           assert(false);
         break;
       }
     }
   }
+  else
+  {
+    OSS_LOG_WARNING(logId << "SIPB2BDialogStateManager::updateDialog - Unable to match dialog for Call-ID: " << leg.callId);
+  }
 }
 
 void SIPB2BDialogStateManager::updateDialog(const DialogData& dialog)
 {
   OSS::mutex_critic_sec_lock lock(_csDialogsMutex);
+  
+  std::string logId = SIPMessage::createContextId(dialog.leg1.callId, true);
+  
   if (_dialogs.has(dialog.leg1.callId))
   {
     Cacheable::Ptr dialogs = _dialogs.get(dialog.leg1.callId);
@@ -366,15 +388,23 @@ void SIPB2BDialogStateManager::updateDialog(const DialogData& dialog)
       {
         iter->leg1 = dialog.leg1;
         iter->leg2 = dialog.leg2;
+        OSS_LOG_DEBUG(logId << "SIPB2BDialogStateManager::updateDialog - updated dialog information for Session-Id: " << iter->sessionId);
         break;
       }
     }
+  }
+  else
+  {
+    OSS_LOG_WARNING(logId << "SIPB2BDialogStateManager::updateDialog - Unable to match dialog for Call-ID: " << dialog.leg1.callId);
   }
 }
 
 void SIPB2BDialogStateManager::removeDialog(const std::string& callId, const std::string& sessionId)
 {
   OSS::mutex_critic_sec_lock lock(_csDialogsMutex);
+  
+  std::string logId = SIPMessage::createContextId(callId, true);
+  
   if (_dialogs.has(callId))
   {
     Cacheable::Ptr dialogs = _dialogs.get(callId);
@@ -385,11 +415,16 @@ void SIPB2BDialogStateManager::removeDialog(const std::string& callId, const std
       if (iter->sessionId == sessionId)
       {
         dialogList.erase(iter);
+        OSS_LOG_DEBUG(logId << "SIPB2BDialogStateManager::removeDialog - updated dialog information for Session-Id: " << iter->sessionId << " Dialog-Id: " << iter->leg1.dialogId);
         break;
       }
     }
     if (dialogList.empty())
       _dialogs.remove(callId);
+  }
+  else
+  {
+    OSS_LOG_WARNING(logId << "SIPB2BDialogStateManager::removeDialog - Unable to match dialog for Call-ID: " << callId);
   }
   _dataStore.dbRemoveSession(sessionId);
 }
@@ -397,29 +432,31 @@ void SIPB2BDialogStateManager::removeDialog(const std::string& callId, const std
 bool SIPB2BDialogStateManager::findDialog(const SIPB2BTransaction::Ptr& pTransaction, const SIPMessage::Ptr& pMsg, DialogData& dialogData, const std::string& sessionId)
 {
   OSS::mutex_critic_sec_lock lock(_csDialogsMutex);
-  std::string callId = pMsg->hdrGet("call-id");
+  std::string callId = pMsg->hdrGet(OSS::SIP::HDR_CALL_ID);
   if (callId.empty())
   {
     OSS_LOG_ERROR("Unable to determine Call-ID while calling findDialog.");
     return false;
   }
+  
+  std::string logId = pMsg->createContextId(true);
 
-  SIPFrom from = pMsg->hdrGet("from");
-  SIPTo to = pMsg->hdrGet("to");
+  SIPFrom from = pMsg->hdrGet(OSS::SIP::HDR_FROM);
+  SIPTo to = pMsg->hdrGet(OSS::SIP::HDR_TO);
   std::string fromTag = from.getTag();
   std::string toTag = to.getTag();
 
-  OSS_LOG_DEBUG("Finding dialog for Call-ID: " << callId << " SessionId: (" << sessionId << ")");
+  OSS_LOG_DEBUG(logId << "Finding dialog for Call-ID: " << callId << " SessionId: (" << sessionId << ")");
 
   if (_dialogs.has(callId))
   {
-    OSS_LOG_DEBUG("Dialog database has a record for Call-ID: " << callId);
+    OSS_LOG_DEBUG(logId << "Dialog database has a record for Call-ID: " << callId);
     Cacheable::Ptr dialogs = _dialogs.get(callId);
     DialogList& dialogList = boost::any_cast<DialogList&>(dialogs->data());
     if (dialogList.size() == 1)
     {
       dialogData = dialogList.front();
-      OSS_LOG_DEBUG("Dialog database has 1 session for Call-ID: " << callId << " SessionId: (" << dialogData.sessionId << ")");
+      OSS_LOG_DEBUG(logId << "Dialog database has 1 session for Call-ID: " << callId << " SessionId: (" << dialogData.sessionId << ")");
       if (!sessionId.empty())
         return dialogData.sessionId == sessionId;
       else
@@ -427,7 +464,7 @@ bool SIPB2BDialogStateManager::findDialog(const SIPB2BTransaction::Ptr& pTransac
     }
     else if (!sessionId.empty())
     {
-      OSS_LOG_DEBUG("Dialog database has multiple sessions for Call-ID: " << callId << " SessionId: (" << sessionId << ")");
+      OSS_LOG_DEBUG(logId << "Dialog database has multiple sessions for Call-ID: " << callId << " SessionId: (" << sessionId << ")");
       for (DialogList::const_iterator iter = dialogList.begin(); iter != dialogList.end(); iter++)
       {
         if (iter->sessionId == sessionId)
@@ -441,7 +478,7 @@ bool SIPB2BDialogStateManager::findDialog(const SIPB2BTransaction::Ptr& pTransac
           }
         }
       }
-      OSS_LOG_WARNING("Multiple sessions exist for Call-ID: " << callId << " but non of them is Session-ID: " << sessionId);
+      OSS_LOG_WARNING(logId << "Multiple sessions exist for Call-ID: " << callId << " but non of them is Session-ID: " << sessionId);
       return false;
     }
     //
@@ -478,17 +515,17 @@ bool SIPB2BDialogStateManager::findDialog(const SIPB2BTransaction::Ptr& pTransac
     }
     catch(std::exception& e)
     {
-      OSS_LOG_ERROR("Exception caught while calling findDialog - Error: " << e.what());
+      OSS_LOG_ERROR(logId << "Exception caught while calling findDialog - Error: " << e.what());
       return false;
     }
     catch(...)
     {
-      OSS_LOG_ERROR("Exception caught while calling findDialog - Error: Unknown exception.");
+      OSS_LOG_ERROR(logId << "Exception caught while calling findDialog - Error: Unknown exception.");
       return false;
     }
   }
 
-  OSS_LOG_WARNING("No dialog exists for Call-ID " << callId);
+  OSS_LOG_WARNING(logId << "No dialog exists for Call-ID " << callId);
 
   return false;
 }
@@ -529,7 +566,7 @@ bool SIPB2BDialogStateManager::findDialog(
       return false;
     }
 
-    std::string from = pMsg->hdrGet("from");
+    std::string from = pMsg->hdrGet(OSS::SIP::HDR_FROM);
     std::string fromTag = SIPFrom::getTag(from);
     try
     {
@@ -595,7 +632,7 @@ void SIPB2BDialogStateManager::onUpdateInitialUASState(
   const std::string& sessionId)
 {
   if (!pResponse->is3xx())
-    pResponse->hdrListRemove("contact");
+    pResponse->hdrListRemove(OSS::SIP::HDR_CONTACT);
 
   if (!pResponse->is1xx(100))
   {
@@ -630,14 +667,14 @@ void SIPB2BDialogStateManager::onUpdateInitialUASState(
         dialogData.sessionId = sessionId;
         DialogData::LegInfo& leg1 = dialogData.leg1;
 
-        leg1.callId = pResponse->hdrGet("call-id");
-        leg1.from = pResponse->hdrGet("to");
-        leg1.to = pResponse->hdrGet("from");
-        leg1.remoteContact = pTransaction->serverRequest()->hdrGet("contact");
-        leg1.localContact = pResponse->hdrGet("contact");
+        leg1.callId = pResponse->hdrGet(OSS::SIP::HDR_CALL_ID);
+        leg1.from = pResponse->hdrGet(OSS::SIP::HDR_TO);
+        leg1.to = pResponse->hdrGet(OSS::SIP::HDR_FROM);
+        leg1.remoteContact = pTransaction->serverRequest()->hdrGet(OSS::SIP::HDR_CONTACT);
+        leg1.localContact = pResponse->hdrGet(OSS::SIP::HDR_CONTACT);
         std::string localRecordRoute;
-        if (pResponse->hdrPresent("record-route"))
-          localRecordRoute = pResponse->hdrGet("record-route");
+        if (pResponse->hdrPresent(OSS::SIP::HDR_RECORD_ROUTE))
+          localRecordRoute = pResponse->hdrGet(OSS::SIP::HDR_RECORD_ROUTE);
         leg1.remoteIp = pTransaction->serverTransport()->getRemoteAddress().toIpPortString();
 
         //
@@ -648,21 +685,21 @@ void SIPB2BDialogStateManager::onUpdateInitialUASState(
 
         leg1.targetTransport = pTransaction->serverTransport()->getTransportScheme().c_str();
 
-        std::string contentType = pResponse->hdrGet("content-type");
+        std::string contentType = pResponse->hdrGet(OSS::SIP::HDR_CONTENT_TYPE);
         OSS::string_to_lower(contentType);
         if (!pResponse->body().empty() && contentType == "application/sdp")
         {
           leg1.localSdp = pResponse->body();
         }
 
-        contentType = pTransaction->serverRequest()->hdrGet("content-type");
+        contentType = pTransaction->serverRequest()->hdrGet(OSS::SIP::HDR_CONTENT_TYPE);
         OSS::string_to_lower(contentType);
         if (!pTransaction->serverRequest()->body().empty() && contentType == "application/sdp")
         {
           leg1.remoteSdp = pTransaction->serverRequest()->body();
         }
 
-        if (pResponse->hdrGetSize("record-route") > 0)
+        if (pResponse->hdrGetSize(OSS::SIP::HDR_RECORD_ROUTE) > 0)
         {
           //
           // Preserve the record routes
@@ -711,7 +748,7 @@ void SIPB2BDialogStateManager::onUpdateInitialUASState(
       //
       try
       {
-        removeDialog(pResponse->hdrGet("call-id"), sessionId);
+        removeDialog(pResponse->hdrGet(OSS::SIP::HDR_CALL_ID), sessionId);
       }catch(...){}
     }
   }
@@ -736,12 +773,12 @@ void SIPB2BDialogStateManager::onUpdateInitialUACState(
       dialogData.sessionId = sessionId;
 
       DialogData::LegInfo& leg2 = dialogData.leg2;
-      leg2.callId = pResponse->hdrGet("call-id").c_str();
-      leg2.from = pResponse->hdrGet("from").c_str();
-      leg2.to = pResponse->hdrGet("to").c_str();
-      leg2.remoteContact = pResponse->hdrGet("contact").c_str();
+      leg2.callId = pResponse->hdrGet(OSS::SIP::HDR_CALL_ID).c_str();
+      leg2.from = pResponse->hdrGet(OSS::SIP::HDR_FROM).c_str();
+      leg2.to = pResponse->hdrGet(OSS::SIP::HDR_TO).c_str();
+      leg2.remoteContact = pResponse->hdrGet(OSS::SIP::HDR_CONTACT).c_str();
       std::string seqNum;
-      SIPCSeq::getNumber(pResponse->hdrGet("cseq"), seqNum);
+      SIPCSeq::getNumber(pResponse->hdrGet(OSS::SIP::HDR_CSEQ), seqNum);
       leg2.localCSeq = OSS::string_to_number<unsigned long>(seqNum.c_str());
       OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_Leg2Contact, leg2.localContact));
       pTransaction->getProperty(OSS::PropertyMap::PROP_Leg2RR, leg2.localRecordRoute);
@@ -749,14 +786,14 @@ void SIPB2BDialogStateManager::onUpdateInitialUACState(
       leg2.transportId = OSS::string_from_number<OSS::UInt64>(pTransaction->clientTransport()->getIdentifier());
       leg2.targetTransport = pTransaction->clientTransport()->getTransportScheme();
 
-      std::string contentType = pResponse->hdrGet("content-type");
+      std::string contentType = pResponse->hdrGet(OSS::SIP::HDR_CONTENT_TYPE);
       OSS::string_to_lower(contentType);
       if (!pResponse->body().empty() && contentType == "application/sdp")
       {
         leg2.remoteSdp = pResponse->body();
       }
 
-      contentType = pTransaction->clientRequest()->hdrGet("content-type");
+      contentType = pTransaction->clientRequest()->hdrGet(OSS::SIP::HDR_CONTENT_TYPE);
       OSS::string_to_lower(contentType);
       if (!pTransaction->clientRequest()->body().empty() && contentType == "application/sdp")
       {
@@ -766,7 +803,7 @@ void SIPB2BDialogStateManager::onUpdateInitialUACState(
       std::string noRTPProxy;
       leg2.noRtpProxy = (pTransaction->getProperty(OSS::PropertyMap::PROP_NoRTPProxy, noRTPProxy) && noRTPProxy == "1");
 
-      if (pResponse->hdrGetSize("record-route") > 0)
+      if (pResponse->hdrGetSize(OSS::SIP::HDR_RECORD_ROUTE) > 0)
       {
         //
         // Preserve the record routes
@@ -811,7 +848,7 @@ void SIPB2BDialogStateManager::onUpdateMidCallUASState(
   SIPB2BTransaction::Ptr pTransaction,
   const std::string& sessionId)
 {
-  pResponse->hdrListRemove("contact");
+  pResponse->hdrListRemove(OSS::SIP::HDR_CONTACT);
   if (!pResponse->is1xx(100))
   {
     std::string userId;
@@ -855,19 +892,19 @@ void SIPB2BDialogStateManager::onUpdateMidCallUASState(
         //
         // Preserve leg dialog state
         //
-        pLeg->remoteContact = pTransaction->serverRequest()->hdrGet("contact");
+        pLeg->remoteContact = pTransaction->serverRequest()->hdrGet(OSS::SIP::HDR_CONTACT);
         pLeg->remoteIp = pTransaction->serverTransport()->getRemoteAddress().toIpPortString();
         pLeg->transportId = OSS::string_from_number<OSS::UInt64>(pTransaction->serverTransport()->getIdentifier());
 
 
-        std::string contentType = pResponse->hdrGet("content-type");
+        std::string contentType = pResponse->hdrGet(OSS::SIP::HDR_CONTENT_TYPE);
         OSS::string_to_lower(contentType);
         if (!pResponse->body().empty() && contentType == "application/sdp")
         {
           pLeg->localSdp = pResponse->body();
         }
 
-        contentType = pTransaction->serverRequest()->hdrGet("content-type");
+        contentType = pTransaction->serverRequest()->hdrGet(OSS::SIP::HDR_CONTENT_TYPE);
         OSS::string_to_lower(contentType);
         if (!pTransaction->serverRequest()->body().empty() && contentType == "application/sdp")
         {
@@ -908,7 +945,7 @@ void SIPB2BDialogStateManager::onUpdateMidCallUACState(
       return;
 
     std::string seqNum;
-    SIPCSeq::getNumber(pResponse->hdrGet("cseq"), seqNum);
+    SIPCSeq::getNumber(pResponse->hdrGet(OSS::SIP::HDR_CSEQ), seqNum);
 
     DialogData::LegInfo* pLeg;
     if (legIndexNumber == "1")
@@ -931,19 +968,19 @@ void SIPB2BDialogStateManager::onUpdateMidCallUACState(
       //
       // Preserve leg dialog state
       //
-      pLeg->remoteContact = pTransaction->serverRequest()->hdrGet("contact");
+      pLeg->remoteContact = pTransaction->serverRequest()->hdrGet(OSS::SIP::HDR_CONTACT);
       pLeg->remoteIp = pTransaction->serverTransport()->getRemoteAddress().toIpPortString();
       pLeg->transportId = OSS::string_from_number<OSS::UInt64>(pTransaction->serverTransport()->getIdentifier());
 
 
-      std::string contentType = pResponse->hdrGet("content-type");
+      std::string contentType = pResponse->hdrGet(OSS::SIP::HDR_CONTENT_TYPE);
       OSS::string_to_lower(contentType);
       if (!pResponse->body().empty() && contentType == "application/sdp")
       {
         pLeg->remoteSdp = pResponse->body();
       }
 
-      contentType = pTransaction->clientRequest()->hdrGet("content-type");
+      contentType = pTransaction->clientRequest()->hdrGet(OSS::SIP::HDR_CONTENT_TYPE);
       OSS::string_to_lower(contentType);
       if (!pTransaction->clientRequest()->body().empty() && contentType == "application/sdp")
       {
@@ -1085,7 +1122,7 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
        pTransaction->setProperty(OSS::PropertyMap::PROP_NoRTPProxy, "1");
 
     std::string hSeqNum;
-    SIPCSeq::getNumber(pMsg->hdrGet("cseq"), hSeqNum);
+    SIPCSeq::getNumber(pMsg->hdrGet(OSS::SIP::HDR_CSEQ), hSeqNum);
     unsigned long seqNum = 0;
     unsigned long requestSeqNum = OSS::string_to_number<unsigned long>(hSeqNum.c_str());
     if (requestSeqNum > pLeg->localCSeq)
@@ -1097,14 +1134,14 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
 
     _dataStore.dbPersist(dialogData);
 
-    pMsg->hdrRemove("call-id");
-    pMsg->hdrRemove("from");
-    pMsg->hdrRemove("to");
-    pMsg->hdrRemove("cseq");
-    pMsg->hdrListRemove("contact");
-    pMsg->hdrListRemove("via");
-    pMsg->hdrListRemove("route");
-    pMsg->hdrListRemove("record-route");
+    pMsg->hdrRemove(OSS::SIP::HDR_CALL_ID);
+    pMsg->hdrRemove(HDR_FROM);
+    pMsg->hdrRemove(OSS::SIP::HDR_TO);
+    pMsg->hdrRemove(OSS::SIP::HDR_CSEQ);
+    pMsg->hdrListRemove(OSS::SIP::HDR_CONTACT);
+    pMsg->hdrListRemove(OSS::SIP::HDR_VIA);
+    pMsg->hdrListRemove(OSS::SIP::HDR_ROUTE);
+    pMsg->hdrListRemove(OSS::SIP::HDR_RECORD_ROUTE);
 
     std::string method;
     rline.getMethod(method);
@@ -1112,16 +1149,16 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
     newRLine << method << " " << remoteContact.getURI() << " SIP/2.0";
     pMsg->startLine() = newRLine.str();
 
-    pMsg->hdrSet("From", from.data().c_str());
-    pMsg->hdrSet("To", to.data().c_str());
-    pMsg->hdrSet("Contact", localContact.data().c_str());
-    pMsg->hdrSet("Call-ID", pLeg->callId);
+    pMsg->hdrSet(OSS::SIP::HDR_FROM, from.data().c_str());
+    pMsg->hdrSet(OSS::SIP::HDR_TO, to.data().c_str());
+    pMsg->hdrSet(OSS::SIP::HDR_CONTACT, localContact.data().c_str());
+    pMsg->hdrSet(OSS::SIP::HDR_CALL_ID, pLeg->callId);
     if (!pLeg->localRecordRoute.empty())
-      pMsg->hdrSet("Record-Route", pLeg->localRecordRoute.c_str());
+      pMsg->hdrSet(OSS::SIP::HDR_RECORD_ROUTE, pLeg->localRecordRoute.c_str());
 
     std::ostringstream newCSeq;
     newCSeq  << seqNum << " " << method;
-    pMsg->hdrSet("CSeq", newCSeq.str().c_str());
+    pMsg->hdrSet(OSS::SIP::HDR_CSEQ, newCSeq.str().c_str());
 
     localAddress = IPAddress::fromV4IPPort(localContact.getHostPort().c_str());
     //
@@ -1146,7 +1183,7 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
       transportScheme,
       branch);
 
-    pMsg->hdrSet("Via", via.c_str());
+    pMsg->hdrSet(OSS::SIP::HDR_VIA, via.c_str());
     
     encodeRouteSet(pLeg, method, remoteContact, pMsg, transportScheme, targetAddress);
     
@@ -1231,7 +1268,7 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
 
   OSS_LOG_DEBUG(logId << "Attempting to route session " << sessionId  << pMsg->startLine());
 
-  std::string maxForwards = pMsg->hdrGet("max-forwards");
+  std::string maxForwards = pMsg->hdrGet(OSS::SIP::HDR_MAX_FORWARDS);
   if (maxForwards.empty())
   {
     maxForwards = "70";
@@ -1242,8 +1279,8 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
     throw B2BUAStateException("Max-forward reached.");
     return;
   }
-  pMsg->hdrRemove("max-forwards");
-  pMsg->hdrSet("Max-Forwards", OSS::string_from_number(maxF).c_str());
+  pMsg->hdrRemove(OSS::SIP::HDR_MAX_FORWARDS);
+  pMsg->hdrSet(OSS::SIP::HDR_MAX_FORWARDS, OSS::string_from_number(maxF).c_str());
 
   pMsg->clearProperties();
   SIPRequestLine rline = pMsg->startLine();
@@ -1306,29 +1343,29 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
     pMsg->setProperty(OSS::PropertyMap::PROP_TargetTransport, transportScheme.c_str());
     std::string transportId = pLeg->transportId;
 
-    pMsg->hdrRemove("call-id");
-    pMsg->hdrRemove("from");
-    pMsg->hdrRemove("to");
-    pMsg->hdrListRemove("contact");
-    pMsg->hdrListRemove("via");
-    pMsg->hdrListRemove("route");
-    pMsg->hdrListRemove("record-route");
+    pMsg->hdrRemove(OSS::SIP::HDR_CALL_ID);
+    pMsg->hdrRemove(HDR_FROM);
+    pMsg->hdrRemove(OSS::SIP::HDR_TO);
+    pMsg->hdrListRemove(OSS::SIP::HDR_CONTACT);
+    pMsg->hdrListRemove(OSS::SIP::HDR_VIA);
+    pMsg->hdrListRemove(OSS::SIP::HDR_ROUTE);
+    pMsg->hdrListRemove(OSS::SIP::HDR_RECORD_ROUTE);
 
     std::ostringstream newRLine;
     newRLine << "ACK " << remoteContact.getURI() << " SIP/2.0";
     pMsg->startLine() = newRLine.str();
 
-    pMsg->hdrSet("From", from.data().c_str());
-    pMsg->hdrSet("To", to.data().c_str());
-    pMsg->hdrSet("Contact", localContact.data().c_str());
-    pMsg->hdrSet("Call-ID", callId.c_str());
+    pMsg->hdrSet(OSS::SIP::HDR_FROM, from.data().c_str());
+    pMsg->hdrSet(OSS::SIP::HDR_TO, to.data().c_str());
+    pMsg->hdrSet(OSS::SIP::HDR_CONTACT, localContact.data().c_str());
+    pMsg->hdrSet(OSS::SIP::HDR_CALL_ID, callId.c_str());
 
     if (!localRR.empty())
     {
-      pMsg->hdrSet("Record-Route", localRR.c_str());
+      pMsg->hdrSet(OSS::SIP::HDR_RECORD_ROUTE, localRR.c_str());
     }
 
-    SIPCSeq cseq = pMsg->hdrGet("cseq");
+    SIPCSeq cseq = pMsg->hdrGet(OSS::SIP::HDR_CSEQ);
     cseq.setMethod("INVITE");
 
     encodeRouteSet(pLeg, "ACK", remoteContact, pMsg, transportScheme, targetAddress);
@@ -1390,7 +1427,7 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
 
         OSS::Net::IPAddress viaHost = OSS::Net::IPAddress::fromV4IPPort(localContact.getHostPort().c_str());
         std::string newVia = SIPB2BContact::constructVia(_pTransactionManager, pMsg, viaHost, transportScheme, branch);
-        pMsg->hdrListPrepend("Via", newVia.c_str());
+        pMsg->hdrListPrepend(OSS::SIP::HDR_VIA, newVia.c_str());
       }
     }
     else
@@ -1400,9 +1437,9 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
     }
 
     if (!_pTransactionManager->getUserAgentName().empty())
-      pMsg->hdrSet("User-Agent", _pTransactionManager->getUserAgentName().c_str());
+      pMsg->hdrSet(OSS::SIP::HDR_USER_AGENT, _pTransactionManager->getUserAgentName().c_str());
 
-    std::string contentType = pMsg->hdrGet("content-type");
+    std::string contentType = pMsg->hdrGet(OSS::SIP::HDR_CONTENT_TYPE);
     OSS::string_to_lower(contentType);
 
 
@@ -1437,7 +1474,7 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
 
       pMsg->setBody(sdp);
       std::string clen = OSS::string_from_number<size_t>(sdp.size());
-      pMsg->hdrSet("Content-Length", clen.c_str());
+      pMsg->hdrSet(OSS::SIP::HDR_CONTENT_LENGTH, clen.c_str());
       pLeg->localSdp = sdp;
 
       _dataStore.dbPersist(dialogData);
@@ -1480,9 +1517,9 @@ bool SIPB2BDialogStateManager::findRegistration(const std::string& key, RegList&
   return _dataStore.dbGetReg(key, regList);
 }
 
-bool SIPB2BDialogStateManager::findOneRegistration(const std::string& key, RegData& regData)
+bool SIPB2BDialogStateManager::findOneRegistration(const SIPMessage::Ptr& pRequest, const std::string& key, RegData& regData)
 {
-  return _dataStore.dbGetOneReg(key, regData);
+  return _dataStore.dbGetOneReg(pRequest, key, regData);
 }
 
 void SIPB2BDialogStateManager::addRegistration(const RegData& regData)

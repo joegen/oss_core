@@ -67,7 +67,7 @@ struct SIPB2BDialogDataStoreCb
   void dbRemoveSession(const std::string& sessionId);
   void dbRemoveAllDialogs(const std::string& callId);
   bool dbPersistReg(const RegData& regData);
-  bool dbGetOneReg(const std::string& regId, RegData& regData);
+  bool dbGetOneReg(const SIPMessage::Ptr& request, const std::string& regId, RegData& regData);
   bool dbGetReg(const std::string& regIdPrefix, RegList& regData);
   void dbRemoveReg(const std::string& regId);
   void dbRemoveAllReg(const std::string& regIdPrefix);
@@ -90,7 +90,7 @@ public:
 
   bool findRegistration(const std::string& key, RegList& regList);
 
-  bool findOneRegistration(const std::string& key, RegData& regData);
+  bool findOneRegistration(const SIPMessage::Ptr& pRequest, const std::string& key, RegData& regData);
 
   void addRegistration(const RegData& regData);
 
