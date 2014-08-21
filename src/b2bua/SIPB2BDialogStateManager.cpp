@@ -28,6 +28,9 @@ namespace SIP {
 namespace B2BUA {
 
 
+bool SIPB2BDialogStateManager::gLogDialogEntries = true; 
+  
+
 using OSS::Net::IPAddress;  
   
 bool SIPB2BDialogDataStoreCb::dbPersist(const DialogData& dialogData)
@@ -311,6 +314,22 @@ bool SIPB2BDialogStateManager::hasDialog(const std::string& callId) const
   return yes;
 }
 
+static void log_dialog_entries(const std::string& msg, DialogList& dialogList)
+{
+  if (!SIPB2BDialogStateManager::gLogDialogEntries)
+    return;
+  std::ostringstream log;
+  for (DialogList::iterator iter = dialogList.begin();
+      iter != dialogList.end(); iter++)
+  {
+    std::string json;
+    iter->toJsonString(json);
+    log << json << std::endl;
+  }
+  
+  OSS_LOG_DEBUG(msg << ": " << std::endl << log.str());
+}
+
 void SIPB2BDialogStateManager::addDialog(const std::string& callId, const DialogData& dialogData)
 {
   _csDialogsMutex.lock();
@@ -323,14 +342,17 @@ void SIPB2BDialogStateManager::addDialog(const std::string& callId, const Dialog
     DialogList dialogList;
     dialogList.push_back(dialogData);
     dialogs = Cacheable::Ptr(new Cacheable(callId, dialogList));
+    log_dialog_entries("SIPB2BDialogStateManager::addDialog", dialogList);
   }
   else
   {
     dialogs = _dialogs.get(callId);
     DialogList& dialogList = boost::any_cast<DialogList&>(dialogs->data());
     dialogList.push_back(dialogData);
+    log_dialog_entries("SIPB2BDialogStateManager::addDialog", dialogList);
   }
   OSS_LOG_DEBUG(logId << "Added new dialog " << "Session-ID: " << dialogData.sessionId << " Call-ID: " << callId);
+  
   _dialogs.add(dialogs);
   _csDialogsMutex.unlock();
 }
@@ -364,6 +386,7 @@ void SIPB2BDialogStateManager::updateDialog(const std::string& sessionId, const 
         break;
       }
     }
+    log_dialog_entries("SIPB2BDialogStateManager::updateDialog", dialogList);
   }
   else
   {
@@ -392,6 +415,7 @@ void SIPB2BDialogStateManager::updateDialog(const DialogData& dialog)
         break;
       }
     }
+    log_dialog_entries("SIPB2BDialogStateManager::updateDialog", dialogList);
   }
   else
   {
@@ -762,6 +786,14 @@ void SIPB2BDialogStateManager::onUpdateInitialUACState(
   if (pResponse->is1xx(100))
     return;
 
+  if (pTransaction->hasProperty(OSS::PropertyMap::PROP_IsEarlyDialogPersisted))
+  {
+    //
+    // We have already recorded this dialog using the provisional responses
+    //
+    return;
+  }
+  
   if (pResponse->isMidDialog() && (pResponse->is2xx() || pResponse->is1xx()))
   {
     try
@@ -830,6 +862,9 @@ void SIPB2BDialogStateManager::onUpdateInitialUACState(
       }
 
 
+      if (pResponse->is1xx())
+        pTransaction->setProperty(OSS::PropertyMap::PROP_IsEarlyDialogPersisted, "true");
+      
       addDialog(leg2.callId, dialogData);
       _dataStore.dbPersist(dialogData);
     }

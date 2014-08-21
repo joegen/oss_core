@@ -65,6 +65,7 @@ struct PropertyMap
     "reinvite", \
     "generate-local-response", \
     "inbound-contact," \
+    "is-early-dialog-persisted", \
     "property-undefined" \
   };
 
@@ -109,6 +110,7 @@ struct PropertyMap
     PROP_IsReinvite,
     PROP_GenerateLocalResponse,
     PROP_InboundContact,
+    PROP_IsEarlyDialogPersisted,
     PROP_Max
   };
   

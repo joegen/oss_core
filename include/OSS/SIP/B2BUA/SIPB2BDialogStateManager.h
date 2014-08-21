@@ -185,6 +185,9 @@ protected:
   CacheManager _dialogs;
   OSS::semaphore _exitSync;
   boost::thread* _pThread;
+  
+public:
+  static bool gLogDialogEntries;
 };
 
 } } } // OSS::SIP::B2BUA
