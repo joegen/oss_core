@@ -1123,6 +1123,8 @@ void SIPB2BScriptableHandler::onProcessResponseInbound(
     // Out-of-dialog REFER.  This is an implied subscription so treat it as a SUBSCRIBE
     //
     isDialogForming = !pTransaction->serverRequest()->isMidDialog();
+    if (isDialogForming)
+      pTransaction->setProperty(OSS::PropertyMap::PROP_IsOutOfDialogRefer, "true");
   }
 
   if (isDialogForming)
@@ -1222,6 +1224,7 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
      pResponse->hdrSet(OSS::SIP::HDR_SERVER, _pTransactionManager->getUserAgentName().c_str());
 
   bool isInvite = pResponse->isResponseTo("INVITE");
+  bool isOutOfDialogRefer = pTransaction->hasProperty(OSS::PropertyMap::PROP_IsOutOfDialogRefer);
   std::string isReinvite;
   if (isInvite && pTransaction->getProperty(OSS::PropertyMap::PROP_IsReinvite, isReinvite))
   {
@@ -1245,7 +1248,7 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
     }
     return;
   }
-  else if (isInvite || pResponse->isResponseTo("SUBSCRIBE") || pResponse->isResponseTo("REFER"))
+  else if (isInvite || pResponse->isResponseTo("SUBSCRIBE") || isOutOfDialogRefer)
   {
     std::string sessionId;
     OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId));

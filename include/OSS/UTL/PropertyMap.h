@@ -66,6 +66,7 @@ struct PropertyMap
     "generate-local-response", \
     "inbound-contact," \
     "is-early-dialog-persisted", \
+    "is-out-of-dialog-refer", \
     "property-undefined" \
   };
 
@@ -111,6 +112,7 @@ struct PropertyMap
     PROP_GenerateLocalResponse,
     PROP_InboundContact,
     PROP_IsEarlyDialogPersisted,
+    PROP_IsOutOfDialogRefer,
     PROP_Max
   };
   
