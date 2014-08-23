@@ -167,6 +167,12 @@ public:
     SIPB2BTransaction::Ptr pTransaction,
     OSS::Net::IPAddress& localAddress,
     OSS::Net::IPAddress& targetAddress);
+  
+  SIPMessage::Ptr onRouteInviteWithReplaces(
+    SIPMessage::Ptr& pMsg,
+    SIPB2BTransaction::Ptr pTransaction,
+    OSS::Net::IPAddress& localAddress,
+    OSS::Net::IPAddress& targetAddress);
 
   void onRouteAckRequest(
     const SIPMessage::Ptr& pMsg,

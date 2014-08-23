@@ -173,6 +173,8 @@ static const char HDR_REFER_TO[]                  = "Refer-To";
 static const char HDR_REFER_TO_LCASE[]            = "refer-to";
 static const char HDR_REFERRED_BY[]               = "Referred-By";
 static const char HDR_REFERRED_BY_LCASE[]         = "referred-by";
+static const char HDR_REPLACES[]                  = "Replaces";
+static const char HDR_REPLACES_LCASE[]            = "replaces";
 //
 // RFC 3325 Headers
 //

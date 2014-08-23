@@ -465,6 +465,17 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteOutOfDialogTransaction(
   OSS::Net::IPAddress& localInterface,
   OSS::Net::IPAddress& target)
 {
+  if (pRequest->hdrPresent(OSS::SIP::HDR_REPLACES))
+  {
+    //
+    // Invites with replaces uses dialog states of existing calls for routing
+    // so we let the dialog state manager to determine proper targets
+    // 
+    SIPMessage::Ptr replacesError = _pDialogState->onRouteInviteWithReplaces(pRequest, pTransaction, localInterface, target);
+    if (replacesError)
+        return replacesError;
+  }
+  
   if (!_pTransactionManager->postRetargetTransaction(pRequest, pTransaction))
   {
     if (_routeScript.isInitialized())

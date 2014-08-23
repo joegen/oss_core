@@ -1284,6 +1284,38 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
   return SIPMessage::Ptr();
 }
 
+SIPMessage::Ptr SIPB2BDialogStateManager::onRouteInviteWithReplaces(
+    SIPMessage::Ptr& pMsg,
+    SIPB2BTransaction::Ptr pTransaction,
+    OSS::Net::IPAddress& localAddress,
+    OSS::Net::IPAddress& targetAddress)
+{
+  //
+  // Check request-uri if host is pointing to us
+  //
+  OSS::SIP::SIPRequestLine rline = pMsg->getStartLine();
+  OSS::SIP::SIPURI ruri;
+  rline.getURI(ruri);
+  std::string host;
+  unsigned short port = 0;
+  ruri.getHostPort(host, port);
+  if (!port)
+    port = 5060;
+  OSS::Net::IPAddress hostPort(host, port);
+  
+  if (!_pTransactionManager->stack().transport().isLocalTransport(hostPort))
+    return OSS::SIP::SIPMessage::Ptr();
+  
+  //
+  // Parse replaces header and check if there is a session existing for the states
+  //
+  
+  //
+  // Retarget the request-uri
+  //
+  return SIPMessage::Ptr();
+}
+
 void SIPB2BDialogStateManager::onRouteAckRequest(
   const SIPMessage::Ptr& pMsg,
   const OSS::SIP::SIPTransportSession::Ptr& pTransport,
