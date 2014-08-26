@@ -3,4 +3,4 @@
 	url = https://github.com/zaphoyd/websocketpp/
 [submodule "src/udns"]
 	path = src/udns
-	url = ssh://git@github.com/joegen/libudnspp
+	url = https://github.com/joegen/libudnspp
