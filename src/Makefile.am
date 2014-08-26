@@ -330,6 +330,7 @@ liboss_core_la_SOURCES =  \
     sipparser/SIPStatusLine.cpp \
     sipparser/SIPURI.cpp \
     sipparser/SIPVia.cpp \
+    sipparser/SIPReplaces.cpp \
     sipfsm/SIPTCPConnectionManager.cpp \
     sipfsm/SIPTransportService.cpp \
     sipfsm/SIPTLSConnection.cpp \
@@ -488,7 +489,8 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestFirewall.cpp \
 	unit_test/TestKeyValueStore.cpp \
 	unit_test/TestOverlay.cpp \
-	unit_test/TestAccessControl.cpp
+	unit_test/TestAccessControl.cpp \
+	unit_test/TestReplaces.cpp
 #        unit_test/TestWebSocket.cpp
 
 #

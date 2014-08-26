@@ -25,6 +25,9 @@
 #include "OSS/SIP/SIPParser.h"
 
 
+namespace OSS {
+namespace SIP {
+
 class OSS_API SIPReplaces: public SIPParser
   /// CSeq header lazy parser.
 {
@@ -60,41 +63,54 @@ public:
   void swap(SIPReplaces& replaces);
     /// Exchanges the data between two SIPReplaces
   
-  std::string& getCallId() const;
+  std::string getCallId() const;
     /// Returns the call-id parameter of the replaces header
   
   bool setCallId(const std::string& callId);
     /// Set the call-id parameter of a replaces header
   
-  std::string& getFromTag() const;
+  std::string getFromTag() const;
     /// Returns the from-tag parameter of the replaces header
   
   bool setFromTag(const std::string& tag);
     /// Set the from-tag parameter of a replaces header
   
-  std::string& getToTag() const;
+  std::string getToTag() const;
     /// Returns the to-tag parameter of the replaces header
   
   bool setToTag(const std::string& tag);
     /// Set the to-tag parameter of a replaces header
   
-  static std::string& getCallId() const;
+  bool setEarlyFlag(bool isEarly);
+    /// Set the "early-only" parameter
+  
+  bool isEarlyFlagSet();
+    /// Returns true if early-flag is set
+  
+  static std::string getCallId(const std::string& replaces) ;
     /// Returns the call-id parameter of the replaces header
   
   static bool setCallId(std::string& replaces, const std::string& callId);
     /// Set the call-id parameter of a replaces header
   
-  static std::string& getFromTag(std::string& replaces) const;
+  static std::string getFromTag(const std::string& replaces) ;
     /// Returns the from-tag parameter of the replaces header
   
   static bool setFromTag(std::string& replaces, const std::string& tag);
     /// Set the from-tag parameter of a replaces header
   
-  static std::string& getToTag(std::string& replaces) const;
+  static std::string getToTag(const std::string& replaces) ;
     /// Returns the to-tag parameter of the replaces header
   
   static bool setToTag(std::string& replaces, const std::string& tag);
     /// Set the to-tag parameter of a replaces header
+  
+ 
+  static bool setEarlyFlag(std::string& replaces, bool isEarly);
+    /// Set the "early-only" parameter
+  
+  static bool isEarlyFlagSet(const std::string& replaces);
+    /// Returns true if early-flag is set
 
 };
 
