@@ -20,6 +20,10 @@ To list build dependencies
 To list runtime dependencies
 
   grep '^Requires' oss_core/oss_core.spec.in | awk '{print $2}'
+
+To install build dependencies
+  
+  sudo yum install -y `grep '^BuildRequires' oss_core/oss_core.spec.in | awk '{print $2}'`
   
 ## Building From Source (CentOS or Fedora)
 ------------------------------------------
