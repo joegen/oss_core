@@ -37,6 +37,7 @@
 #include "OSS/SIP/SIPRequestLine.h"
 #include "OSS/SIP/SIPCSeq.h"
 #include "OSS/SIP/SIPVia.h"
+#include "OSS/SIP/SIPReplaces.h"
 
 #include "OSS/SIP/B2BUA/SIPB2BContact.h"
 #include "OSS/SIP/B2BUA/SIPB2BDialogData.h"
@@ -142,6 +143,10 @@ public:
     std::string& targetLeg,
     std::string& sessionId,
     DialogData& dialogData);
+  
+  bool findReplacesTarget(
+    const SIPMessage::Ptr& pMsg,
+    SIPB2BDialogData::LegInfo& legInfo);
 
   void onUpdateInitialUASState(
     SIPMessage::Ptr& pResponse,

@@ -129,7 +129,7 @@ public:
     return true;
   }
 
-  bool onProcessRequest(MessageType type, const SIPMessage::Ptr& pRequest)
+  bool onProcessRequest(OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,MessageType type, const SIPMessage::Ptr& pRequest)
   {
     if (type == SIPB2BScriptableHandler::TYPE_AUTH)
     {

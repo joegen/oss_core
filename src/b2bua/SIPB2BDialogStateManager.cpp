@@ -453,6 +453,57 @@ void SIPB2BDialogStateManager::removeDialog(const std::string& callId, const std
   _dataStore.dbRemoveSession(sessionId);
 }
 
+bool SIPB2BDialogStateManager::findReplacesTarget(
+    const SIPMessage::Ptr& pMsg,
+    SIPB2BDialogData::LegInfo& legInfo)
+{
+  OSS::SIP::SIPReplaces replaces(pMsg->hdrGet(OSS::SIP::HDR_REPLACES));
+    
+    
+  std::string logId = pMsg->createContextId(true);
+  std::string callId = replaces.getCallId();
+  if (callId.empty())
+  {
+    OSS_LOG_ERROR(logId << "SIPB2BDialogStateManager::findReplacesTarget- Unable to determine Call-ID while calling findReplacesTarget.");
+    return false;
+  }
+  
+  OSS::mutex_critic_sec_lock lock(_csDialogsMutex);
+  if (_dialogs.has(callId))
+  {
+    OSS_LOG_DEBUG(logId << "SIPB2BDialogStateManager::findReplacesTarget - Dialog database has a record for Call-ID: " << callId);
+    Cacheable::Ptr dialogs = _dialogs.get(callId);
+    DialogList& dialogList = boost::any_cast<DialogList&>(dialogs->data());
+     
+    for (DialogList::const_iterator iter = dialogList.begin(); iter != dialogList.end(); iter++)
+    {
+
+      std::string leg1LocalTag = SIPFrom::getTag(iter->leg1.from);
+      std::string leg1RemoteTag = SIPFrom::getTag(iter->leg1.to);
+          
+      if (leg1LocalTag == replaces.getToTag() && leg1RemoteTag == replaces.getFromTag())
+      {
+        OSS_LOG_INFO(logId << "SIPB2BDialogStateManager::findReplacesTarget - will be replacing leg 1 : " << callId);
+        legInfo = iter->leg1;
+        return true;
+      }
+          
+      std::string leg2LocalTag = SIPFrom::getTag(iter->leg2.from);
+      std::string leg2RemoteTag =  SIPFrom::getTag(iter->leg2.from);
+      if (leg2LocalTag == replaces.getToTag() && leg2RemoteTag == replaces.getFromTag())
+      {
+        OSS_LOG_INFO(logId << "SIPB2BDialogStateManager::findReplacesTarget - will be replacing leg 2 : " << callId);
+        legInfo = iter->leg2;
+        return true;
+      }
+    }
+  }
+  
+  OSS_LOG_INFO(logId << "SIPB2BDialogStateManager::findReplacesTarget - did not find any target for : " << callId);
+  
+  return false;
+}
+
 bool SIPB2BDialogStateManager::findDialog(const SIPB2BTransaction::Ptr& pTransaction, const SIPMessage::Ptr& pMsg, DialogData& dialogData, const std::string& sessionId)
 {
   OSS::mutex_critic_sec_lock lock(_csDialogsMutex);
@@ -1281,6 +1332,11 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
   pMsg->setProperty(OSS::PropertyMap::PROP_TargetAddress, targetAddress.toString());
   pMsg->setProperty(OSS::PropertyMap::PROP_TargetPort, OSS::string_from_number<unsigned short>(targetPort));
 
+  //
+  // Set the dialog data for the transaction
+  //
+  pTransaction->setDialogData(dialogData);
+  
   return SIPMessage::Ptr();
 }
 
@@ -1309,10 +1365,25 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteInviteWithReplaces(
   //
   // Parse replaces header and check if there is a session existing for the states
   //
-  
-  //
-  // Retarget the request-uri
-  //
+  SIPB2BDialogData::LegInfo legInfo;
+  if (findReplacesTarget(pMsg, legInfo));
+  {
+    SIPContact contactList(legInfo.remoteContact);
+    ContactURI contact;
+    if (contactList.getSize() > 0)
+    {
+      //
+      // Retarget the request-uri
+      //
+      contactList.getAt(contact, 0);
+      SIPRequestLine rline(pMsg->getStartLine());
+      rline.setURI(contact.data().c_str());
+      
+      OSS_LOG_INFO(pMsg->createContextId(true) << "SIPB2BDialogStateManager::onRouteInviteWithReplaces - rewriting " << pMsg->getStartLine() << "->" << rline.data());
+      
+      pMsg->setStartLine(rline.data());
+    }
+  }
   return SIPMessage::Ptr();
 }
 

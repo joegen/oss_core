@@ -304,7 +304,10 @@ public:
     ///
     /// The transaction will be destroyed automatically after this function call
 
-  virtual bool onProcessRequest(MessageType type, const OSS::SIP::SIPMessage::Ptr& request);
+  virtual bool onProcessRequest(
+    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
+    MessageType type, 
+    const OSS::SIP::SIPMessage::Ptr& request);
     /// Send the SIPRequest to the application.  This means that the scripting
     /// engine is not initialized for this message type. Otherwise, the javascript engine
     /// will handle the request

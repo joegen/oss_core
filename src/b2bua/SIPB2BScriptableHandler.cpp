@@ -125,7 +125,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onTransactionCreated(
       return serverError;
     }
   }
-  else if (!onProcessRequest(TYPE_INBOUND, pRequest))
+  else if (!onProcessRequest(pTransaction, TYPE_INBOUND, pRequest))
   {
     SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_500_InternalServerError);
     return serverError;
@@ -203,7 +203,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onAuthenticateTransaction(
   }
   else 
   {
-    if (!onProcessRequest(TYPE_AUTH, pRequest))
+    if (!onProcessRequest(pTransaction, TYPE_AUTH, pRequest))
     {
       SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_500_InternalServerError);
       return serverError;
@@ -486,7 +486,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteOutOfDialogTransaction(
         return serverError;
       }
     }
-    else if (!onProcessRequest(TYPE_ROUTE, pRequest))
+    else if (!onProcessRequest(pTransaction, TYPE_ROUTE, pRequest))
     {
       SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_500_InternalServerError);
       return serverError;
@@ -1082,7 +1082,7 @@ void SIPB2BScriptableHandler::onProcessOutbound(
   if (_outboundScript.isInitialized())
     _outboundScript.processRequest(pRequest);
   else
-    onProcessRequest(TYPE_OUTBOUND_REQUEST, pRequest);
+    onProcessRequest(pTransaction, TYPE_OUTBOUND_REQUEST, pRequest);
 
    if (!_pTransactionManager->getUserAgentName().empty())
      pRequest->hdrSet(OSS::SIP::HDR_USER_AGENT, _pTransactionManager->getUserAgentName().c_str());
@@ -1217,7 +1217,7 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
   if (_outboundResponseScript.isInitialized())
     _outboundResponseScript.processRequest(pResponse);
   else
-    onProcessRequest(TYPE_OUTBOUND_RESPONSE, pResponse);
+    onProcessRequest(pTransaction, TYPE_OUTBOUND_RESPONSE, pResponse);
 
   std::string logId = pTransaction->getLogId();
   //
@@ -1936,7 +1936,7 @@ void SIPB2BScriptableHandler::sendOptionsKeepAlive(RegData& regData)
   }
 }
 
-bool SIPB2BScriptableHandler::onProcessRequest(MessageType type, const OSS::SIP::SIPMessage::Ptr& pRequest)
+bool SIPB2BScriptableHandler::onProcessRequest(OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction, MessageType type, const OSS::SIP::SIPMessage::Ptr& pRequest)
 {
   //
   // We return true by default.  This means we will allow relay to happen.  It's up to the applicaiton

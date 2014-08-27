@@ -34,6 +34,7 @@
 #include "OSS/SIP/SIPTransaction.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 #include "OSS/UTL/PropertyMap.h"
+#include "OSS/SIP/B2BUA/SIPB2BDialogData.h"
 
 
 namespace OSS {
@@ -172,6 +173,12 @@ public:
 
   bool resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OSS::Net::IPAddress& initialTarget);
 
+  const SIPB2BDialogData& getDialogData() const;
+    /// Returns the dialog data if set.  If dialog-data is not available, the sessionId structure member will be empty.
+  
+  void setDialogData(SIPB2BDialogData& dialogData);
+    /// Set the dialog data.  This is called from SBCDialogStateManager::onRouteMidDialogTransaction() method.
+  
 protected:
   SIPMessage::Ptr _pServerRequest;
   SIPTransportSession::Ptr _pServerTransport; 
@@ -207,6 +214,7 @@ protected:
   OSS::dns_srv_record_list _wsSrvTargets;
   OSS::dns_srv_record_list _tlsSrvTargets;
   OSS::Net::IPAddress _localInterface;
+  SIPB2BDialogData _dialogData;
   friend class SIPB2BTransactionManager;
 };
 
@@ -285,6 +293,17 @@ inline bool SIPB2BTransaction::hasProperty(PropertyMap::Enum property) const
 {
   return hasProperty(PropertyMap::propertyString(property));
 }
+
+inline const SIPB2BDialogData& SIPB2BTransaction::getDialogData() const
+{
+  return _dialogData;
+}
+  
+inline void SIPB2BTransaction::setDialogData(SIPB2BDialogData& dialogData)
+{
+  _dialogData = dialogData;
+}
+  
 } } } // OSS::SIP::B2BUA
 
 #endif
