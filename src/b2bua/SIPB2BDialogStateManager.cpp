@@ -489,7 +489,7 @@ bool SIPB2BDialogStateManager::findReplacesTarget(
       }
           
       std::string leg2LocalTag = SIPFrom::getTag(iter->leg2.from);
-      std::string leg2RemoteTag =  SIPFrom::getTag(iter->leg2.from);
+      std::string leg2RemoteTag =  SIPFrom::getTag(iter->leg2.to);
       if (leg2LocalTag == replaces.getToTag() && leg2RemoteTag == replaces.getFromTag())
       {
         OSS_LOG_INFO(logId << "SIPB2BDialogStateManager::findReplacesTarget - will be replacing leg 2 : " << callId);
@@ -1377,7 +1377,7 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteInviteWithReplaces(
       //
       contactList.getAt(contact, 0);
       SIPRequestLine rline(pMsg->getStartLine());
-      rline.setURI(contact.data().c_str());
+      rline.setURI(contact.getURI().c_str());
       
       OSS_LOG_INFO(pMsg->createContextId(true) << "SIPB2BDialogStateManager::onRouteInviteWithReplaces - rewriting " << pMsg->getStartLine() << "->" << rline.data());
       
