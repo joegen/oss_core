@@ -69,10 +69,19 @@ struct Config
   std::string externalAddress;
   int port;
   std::string target;
+  std::string targetInterface;
+  std::string targetExternalAddress;
   std::string targetTransport;
   TargetType targetType;
   bool allowRelay;
-  Config() : port(5060), targetType(UNKNOWN), allowRelay(false){}
+  int targetInterfacePort;
+  Config() : 
+    port(5060), 
+    targetType(UNKNOWN), 
+    allowRelay(false),
+    targetInterfacePort(0)
+    {
+    }
 };
 
 
@@ -105,7 +114,16 @@ public:
     listener.setPort(config.port);
     stack().udpListeners().push_back(listener);
     stack().tcpListeners().push_back(listener);
-
+    
+    if (!_config.targetInterface.empty() && _config.targetInterfacePort)
+    {
+      OSS::Net::IPAddress targetListener;
+      targetListener = _config.targetInterface;
+      targetListener.externalAddress() = _config.targetExternalAddress;
+      targetListener.setPort(_config.targetInterfacePort);
+      stack().udpListeners().push_back(targetListener);
+      stack().tcpListeners().push_back(targetListener);
+    }
 
     OSS::Net::IPAddress wsListener;
     wsListener = _config.address;
@@ -156,6 +174,13 @@ public:
       {
         pRequest->setProperty(OSS::PropertyMap::PROP_TargetTransport, _config.targetTransport);
       }
+      
+      if (!_config.targetInterface.empty())
+      {
+        pRequest->setProperty(OSS::PropertyMap::PROP_InterfaceAddress, _config.targetInterface);
+        pRequest->setProperty(OSS::PropertyMap::PROP_InterfacePort, OSS::string_from_number<int>(_config.targetInterfacePort));
+      }
+      
       SIPRoute::msgAddRoute(pRequest.get(), route.str());
     }
 
@@ -397,6 +422,20 @@ void prepareListenerInfo(Config& config, ServiceOptions& options)
   {
     config.externalAddress = getExternalIp(EXTERNAL_IP_HOST_URL, "/");
   }
+  
+  if (options.hasOption("target-interface"))
+  {
+    options.getOption("target-interface", config.targetInterface);
+    options.getOption("target-external-address", config.targetExternalAddress);
+    options.getOption("target-interface-port", config.targetInterfacePort);
+    
+    if (!config.targetInterfacePort)
+    {
+      OSS_LOG_ERROR("target-interface-port not specified.");
+      options.displayUsage(std::cout);
+      _exit(-1);
+    }
+  }
 }
 
 void prepareTargetInfo(Config& config, ServiceOptions& options)
@@ -427,10 +466,15 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionString('x', "external-address", "The Public IP Address if the B2BUA is behind a firewall.");
   options.addOptionFlag('X', "guess-external-address", "If this flag is set, the external IP will be automatically assigned.");
   options.addOptionInt('p', "port", "The port where the B2BUA will listen for connections.");
-  options.addOptionString('t', "target-address", "IP Address, Host or DNS/SRV address of your SIP Server.");
+  options.addOptionString('t', "target-address", "IP-Address[:port], Host[:port] or DNS/SRV address of your SIP Server.");
+  options.addOptionString('T', "target-interface", "IP-Address of the interface facing the target SIP Server");
+  options.addOptionInt('I', "target-interface-port", "The port where the B2BUA will listen for connections.");
+  options.addOptionString('X', "target-external-address", "The Public IP Address if the B2BUA is behind a firewall facing the SIP Server.");
   options.addOptionString('P', "target-transport", "Transport to be used to communicate with your SIP Server.");
   options.addOptionFlag('r', "allow-relay", "Allow relaying of transactions towards SIP Servers other than the one specified in the target-domain.");
   options.addOptionFlag('n', "no-rtp-proxy", "Disable built in media relay.");
+  options.addOptionInt('r', "rtp-port-low", "Lowest port used for RTP");
+  options.addOptionInt('R', "rtp-port-high", "Highest port used for RTP");
 
 #if ENABLE_TURN
   options.addOptionFlag('T', "enable-turn-relay", "Run the built in turn server.");
@@ -470,7 +514,27 @@ int main(int argc, char** argv)
     ua.run();
 
     if (options.hasOption("no-rtp-proxy"))
+    {
       ua.rtpProxy().disable();
+    }
+    else if (options.hasOption("rtp-port-low") && options.hasOption("rtp-port-high"))
+    {
+      int portLow = 0;
+      int portHigh = 0;
+      
+      options.getOption("rtp-port-low", portLow);
+      options.getOption("rtp-port-high", portHigh);
+      
+      if (portLow <= portHigh)
+      {
+        OSS_LOG_ERROR("Invalid RTP port range");
+        options.displayUsage(std::cout);
+        _exit(-1);
+      }
+      
+      ua.rtpProxy().setUdpPortBase(portLow);
+      ua.rtpProxy().setUdpPortMax(portHigh);
+    }
 
 #if ENABLE_TURN
     if (options.hasOption("enable-turn-relay"))
