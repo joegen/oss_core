@@ -438,8 +438,8 @@ void SIPB2BDialogStateManager::removeDialog(const std::string& callId, const std
     {
       if (iter->sessionId == sessionId)
       {
+        OSS_LOG_DEBUG(logId << "SIPB2BDialogStateManager::removeDialog - removed dialog information for Session-Id: " << iter->sessionId << " Dialog-Id: " << iter->leg1.dialogId);
         dialogList.erase(iter);
-        OSS_LOG_DEBUG(logId << "SIPB2BDialogStateManager::removeDialog - updated dialog information for Session-Id: " << iter->sessionId << " Dialog-Id: " << iter->leg1.dialogId);
         break;
       }
     }
