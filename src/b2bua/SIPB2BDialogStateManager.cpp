@@ -478,8 +478,8 @@ bool SIPB2BDialogStateManager::findReplacesTarget(
     for (DialogList::const_iterator iter = dialogList.begin(); iter != dialogList.end(); iter++)
     {
 
-      std::string leg1LocalTag = SIPFrom::getTag(iter->leg1.from);
-      std::string leg1RemoteTag = SIPFrom::getTag(iter->leg1.to);
+      std::string leg1LocalTag = SIPFrom::getTag(iter->leg1.to);
+      std::string leg1RemoteTag = SIPFrom::getTag(iter->leg1.from);
           
       if (leg1LocalTag == replaces.getToTag() && leg1RemoteTag == replaces.getFromTag())
       {
@@ -488,8 +488,8 @@ bool SIPB2BDialogStateManager::findReplacesTarget(
         return true;
       }
           
-      std::string leg2LocalTag = SIPFrom::getTag(iter->leg2.from);
-      std::string leg2RemoteTag =  SIPFrom::getTag(iter->leg2.to);
+      std::string leg2LocalTag = SIPFrom::getTag(iter->leg2.to);
+      std::string leg2RemoteTag =  SIPFrom::getTag(iter->leg2.from);
       if (leg2LocalTag == replaces.getToTag() && leg2RemoteTag == replaces.getFromTag())
       {
         OSS_LOG_INFO(logId << "SIPB2BDialogStateManager::findReplacesTarget - will be replacing leg 2 : " << callId);
