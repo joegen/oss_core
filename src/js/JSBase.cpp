@@ -29,6 +29,9 @@
 namespace OSS {
 namespace JS {
 
+  
+#define ENABLE_INLINE_GLOBALS 1
+  
 #define ENABLE_V8_PREEMPTION 1
 #if ENABLE_V8_PREEMPTION
 #define V8LOCK v8::Locker __v8Locker__
@@ -443,6 +446,43 @@ static v8::Handle<v8::String> read_file(const std::string& name) {
   return result;
 }
 
+static v8::Handle<v8::String> read_global_scripts()
+{
+  static std::string gAccessList(
+    #include "./scripts/JS_AccessList.h"
+  );
+
+  static std::string gAuthProfile(
+    #include "./scripts/JS_AuthProfile.h"
+  );
+
+  static std::string gPropertyObject(
+    #include "./scripts/JS_PropertyObject.h"
+  ); 
+
+  static std::string gRouteProfile(
+    #include "./scripts/JS_RouteProfile.h"
+  ); 
+
+  static std::string gSIPMessage(
+    #include "./scripts/JS_SIPMessage.h"
+  ); 
+
+  static std::string gTransactionProfile(
+    #include "./scripts/JS_TransactionProfile.h"
+  ); 
+  
+  std::ostringstream data;
+  data  << gAccessList 
+        << gAuthProfile
+        << gPropertyObject
+        << gRouteProfile
+        << gSIPMessage
+        << gTransactionProfile;
+  
+  return  v8::String::New(data.str().c_str(), data.str().size());
+}
+
 static v8::Handle<v8::String> read_directory(const boost::filesystem::path& directory)
 {
   std::string data;
@@ -688,7 +728,12 @@ bool JSBase::internalInitialize(
       // Compile it!
       //
       v8::Handle<v8::String> helperScript;
-      helperScript = read_directory(helpers);
+      
+      if (ENABLE_INLINE_GLOBALS)
+        helperScript = read_global_scripts();
+      else
+        helperScript = read_directory(helpers);
+
 
       if (helperScript.IsEmpty())
       {
