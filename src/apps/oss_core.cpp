@@ -473,8 +473,8 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionString('P', "target-transport", "Transport to be used to communicate with your SIP Server.");
   options.addOptionFlag('r', "allow-relay", "Allow relaying of transactions towards SIP Servers other than the one specified in the target-domain.");
   options.addOptionFlag('n', "no-rtp-proxy", "Disable built in media relay.");
-  options.addOptionInt('r', "rtp-port-low", "Lowest port used for RTP");
-  options.addOptionInt('R', "rtp-port-high", "Highest port used for RTP");
+  options.addOptionInt('R', "rtp-port-low", "Lowest port used for RTP");
+  options.addOptionInt('H', "rtp-port-high", "Highest port used for RTP");
 
 #if ENABLE_TURN
   options.addOptionFlag('T', "enable-turn-relay", "Run the built in turn server.");
@@ -525,12 +525,14 @@ int main(int argc, char** argv)
       options.getOption("rtp-port-low", portLow);
       options.getOption("rtp-port-high", portHigh);
       
-      if (portLow <= portHigh)
+      if (portLow >= portHigh)
       {
         OSS_LOG_ERROR("Invalid RTP port range");
         options.displayUsage(std::cout);
         _exit(-1);
       }
+      
+      OSS_LOG_INFO("Setting RTP port range " << portLow << "-" << portHigh);
       
       ua.rtpProxy().setUdpPortBase(portLow);
       ua.rtpProxy().setUdpPortMax(portHigh);
