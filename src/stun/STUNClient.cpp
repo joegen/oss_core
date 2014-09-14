@@ -20,11 +20,15 @@
 
 
 #include "OSS/STUN/STUNClient.h"
+#include "OSS/Net/Net.h"
 
 
 namespace OSS {
 namespace STUN {
 
+  
+#define DEFAULT_STUN_READ_TIMEOUT  5
+#define DEFAULT_STUN_SEND_INTERVAL 100
 
 using namespace OSS::STUN::Proto;
 
@@ -37,7 +41,8 @@ STUNClient::STUNClient(boost::asio::io_service& ioService) :
   _test2Responded(false),
   _test3Responded(false),
   _test10Responded(false),
-  _sendCount(0)
+  _sendCount(0),
+  _readTimeoutInSeconds(DEFAULT_STUN_READ_TIMEOUT)
 {
 
 }
@@ -107,8 +112,10 @@ void STUNClient::sendTestRequest(
   _semReadEvent.tryWait(10);
 }
 
-int STUNClient::getNatType(const std::string& stunServer,
-  OSS::Net::IPAddress& localAddress)
+int STUNClient::getNatType(
+  const std::string& stunServer,
+  const OSS::Net::IPAddress& localAddress,
+  unsigned maxDetectionTimeInSeconds)
 {
   OSS::mutex_critic_sec_lock globalLock(_csGlobal);
 
@@ -152,7 +159,8 @@ int STUNClient::getNatType(const std::string& stunServer,
   if (!isBound)
     return StunTypeFailure;
 
-  while (_sendCount < 15)
+  int maxSendCount = (maxDetectionTimeInSeconds * 1000) / 100;
+  while (_sendCount < maxSendCount)
   {
     _sendCount++;
     if (!_test1Responded)
@@ -166,6 +174,7 @@ int STUNClient::getNatType(const std::string& stunServer,
       if (_test1ChangedAddr.isValid())
         sendTestRequest(sock,  _test1ChangedAddr, 10);
     }
+    OSS::thread_sleep(100);
   }
   if (!_test1Responded)
     return StunTypeBlocked;
@@ -226,6 +235,11 @@ bool STUNClient::createSingleSocket(
 {
   OSS::mutex_critic_sec_lock globalLock(_csGlobal);
 
+  if (!_readTimeoutInSeconds)
+    _readTimeoutInSeconds = DEFAULT_STUN_READ_TIMEOUT;
+  
+  int maxSendCount = (_readTimeoutInSeconds * 1000) / DEFAULT_STUN_SEND_INTERVAL;
+  
   _test1Responded = false;
   _test2Responded = false;
   _test3Responded = false;
@@ -255,13 +269,27 @@ bool STUNClient::createSingleSocket(
       return false;
   }
 
-  while (_sendCount < 15)
+  int currentSleepCount = 0;
+  while (_sendCount < maxSendCount)
   {
-    _sendCount++;
+    
     if (!_test1Responded)
-      sendTestRequest(socket,  targetAddress, 1);
+    { 
+      if (currentSleepCount == 0)
+      {
+        _sendCount++;
+        sendTestRequest(socket,  targetAddress, 1);
+      }
+      _semReadEvent.wait(1);
+      if (++currentSleepCount == DEFAULT_STUN_SEND_INTERVAL)
+      {
+        currentSleepCount = 0;
+      }
+    }
     else
+    {
       break;
+    }
   }
 
   if (_test1Responded)
@@ -270,21 +298,6 @@ bool STUNClient::createSingleSocket(
     return externalAddress.isValid();
   }
 
-  return false;
-}
-
-bool STUNClient::createRTPSocketTuple(
-  const std::string& stunServer,
-  boost::asio::ip::udp::socket& dataSocket,
-  boost::asio::ip::udp::socket& constrolSocket,
-  const OSS::Net::IPAddress& localDataAddress,
-  const OSS::Net::IPAddress& localControlAddress,
-  OSS::Net::IPAddress& externalDataAddress,
-  OSS::Net::IPAddress& externalDataPort,
-  OSS::Net::IPAddress& externalControlAddress,
-  OSS::Net::IPAddress& externalControlPort)
-{
-  OSS::mutex_critic_sec_lock globalLock(_csGlobal);
   return false;
 }
 
@@ -360,14 +373,22 @@ std::string STUNClient::getTypeString(int type)
 }
 
 bool STUNClient::getNATAddress(
-  boost::asio::io_service& ioService,
   const std::string& stunServer,
   const OSS::Net::IPAddress& localAddress,
   OSS::Net::IPAddress& externalAddress)
 {
-  STUNClient stun(ioService);
-  boost::asio::ip::udp::socket socket(ioService);
-  return stun.createSingleSocket(stunServer, socket, localAddress, externalAddress);
+  boost::shared_ptr<STUNClient> stun(new STUNClient(OSS::net_io_service()));
+  boost::asio::ip::udp::socket socket(OSS::net_io_service());
+  return stun->createSingleSocket(stunServer, socket, localAddress, externalAddress);
+}
+
+int STUNClient::detectNATType(
+    const std::string& stunServer,
+    const OSS::Net::IPAddress& localAddress,
+    unsigned maxDetectionTimeInSeconds)
+{
+  boost::shared_ptr<STUNClient> stun(new STUNClient(OSS::net_io_service()));
+  return stun->getNatType(stunServer, localAddress, maxDetectionTimeInSeconds);
 }
 
 

@@ -119,8 +119,16 @@ public:
 
   boost::asio::ip::address& address();
     /// Return a direct reference to the asio address
+  
+  const boost::asio::ip::address& address() const;
+    /// Return a direct reference to the asio address
 
   std::string& externalAddress();
+    /// Return the external address.  This is a custom property used
+    /// by applications that would want to retain a map between an internal
+    /// and external addresses in cases of servers deplyed within NAT
+  
+  const std::string& externalAddress() const;
     /// Return the external address.  This is a custom property used
     /// by applications that would want to retain a map between an internal
     /// and external addresses in cases of servers deplyed within NAT
@@ -172,7 +180,17 @@ inline boost::asio::ip::address& IPAddress::address()
   return _address;
 }
 
+inline const boost::asio::ip::address& IPAddress::address() const
+{
+  return _address;
+}
+
 inline std::string& IPAddress::externalAddress()
+{
+  return _externalAddress;
+}
+
+inline const std::string& IPAddress::externalAddress() const
 {
   return _externalAddress;
 }

@@ -66,7 +66,9 @@ public:
 
   int getNatType(
     const std::string& stunServer,
-    OSS::Net::IPAddress& localAddress);
+    const OSS::Net::IPAddress& localAddress,
+    unsigned maxDetectionTimeInSeconds = 2
+  );
     /// Get the NAT Type
 
   bool createSingleSocket(
@@ -76,28 +78,26 @@ public:
     OSS::Net::IPAddress& externalAddress);
     /// Create a single socket
 
-  bool createRTPSocketTuple(
-    const std::string& stunServer,
-    boost::asio::ip::udp::socket& dataSocket,
-    boost::asio::ip::udp::socket& constrolSocket,
-    const OSS::Net::IPAddress& localDataAddress,
-    const OSS::Net::IPAddress& localControlAddress,
-    OSS::Net::IPAddress& externalDataAddress,
-    OSS::Net::IPAddress& externalDataPort,
-    OSS::Net::IPAddress& externalControlAddress,
-    OSS::Net::IPAddress& externaControlPort);
-    /// Create two sockets with consecutive ports for use by RTP
-
   static std::string getTypeString(int);
     /// Return the type in string format
 
   static bool getNATAddress(
-    boost::asio::io_service& ioService,
     const std::string& stunServer,
     const OSS::Net::IPAddress& localAddress,
     OSS::Net::IPAddress& externalAddress);
     /// Return the external NAT address facing a certain interface
+  
+  static int detectNATType(
+    const std::string& stunServer,
+    const OSS::Net::IPAddress& localAddress,
+    unsigned maxDetectionTimeInSeconds);
 
+  void setReadTimeout(unsigned seconds);
+    /// Set the read timeout in seconds.  The default is 5 seconds
+  
+  unsigned getReadTimeout() const;
+    /// Return the read timeout
+  
 protected:
   void sendTestRequest(
     boost::asio::ip::udp::socket& sock,
@@ -126,7 +126,23 @@ private:
   OSS::Net::IPAddress _test1MappedAddr;
   OSS::Net::IPAddress _test10MappedAddr;
   int _sendCount;
+  unsigned _readTimeoutInSeconds;
 };
+
+//
+// Inlines
+//
+
+inline void STUNClient::setReadTimeout(unsigned seconds)
+{
+  _readTimeoutInSeconds = seconds;
+}
+  
+inline unsigned STUNClient::getReadTimeout() const
+{
+  return _readTimeoutInSeconds;
+}
+
 
 } } // OSS::STUN
 #endif //OSS_STUNCLIENT_H

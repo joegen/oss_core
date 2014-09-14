@@ -243,7 +243,7 @@ void SIPIct::handleSendAck(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTrans
   << " ENC: " << pTransaction->isXOREncrypted()
   << " PROT: " << pTransport->getTransportScheme();
 
-  OSS::log_information(logMsg.str());
+  OSS::log_notice(logMsg.str());
   
   if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
     OSS::log_debug(_pAck->createLoggerData());

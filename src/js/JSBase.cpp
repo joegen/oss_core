@@ -30,8 +30,7 @@ namespace OSS {
 namespace JS {
 
   
-#define ENABLE_INLINE_GLOBALS 1
-  
+ 
 #define ENABLE_V8_PREEMPTION 1
 #if ENABLE_V8_PREEMPTION
 #define V8LOCK v8::Locker __v8Locker__
@@ -686,8 +685,8 @@ bool JSBase::internalInitialize(
   //
   // Initialize extension funcs
   //
-  if (extensionGlobals)
-    extensionGlobals(_globalTemplate);
+  if (_extensionGlobals)
+    _extensionGlobals(_globalTemplate);
 
   // Each processor gets its own context so different processors
   // don't affect each other (ignore the first three lines).
@@ -720,58 +719,53 @@ bool JSBase::internalInitialize(
   else
     helpers = operator/(scriptFile.branch_path(), "global.detail");
 
-  if (boost::filesystem::exists(helpers))
+  
+  try
   {
-    try
+    //
+    // Compile it!
+    //
+    v8::Handle<v8::String> helperScript;
+
+    if (!boost::filesystem::exists(helpers))
+      helperScript = read_global_scripts();
+    else
+      helperScript = read_directory(helpers);
+
+
+    if (helperScript.IsEmpty())
     {
-      //
-      // Compile it!
-      //
-      v8::Handle<v8::String> helperScript;
-      
-      if (ENABLE_INLINE_GLOBALS)
-        helperScript = read_global_scripts();
-      else
-        helperScript = read_directory(helpers);
-
-
-      if (helperScript.IsEmpty())
-      {
-        //OSS_LOG_INFO("Google V8 global.detail for " << _script << " failed to compile.");
-        // The script failed to compile; bail out.
-        return false;
-      }
-
-      //OSS_LOG_INFO("Google V8 is compiling global.detail for " << _script);
-      v8::Handle<v8::Script> compiledHelper = v8::Script::Compile(helperScript);
-      if (compiledHelper.IsEmpty())
-      {
-        reportException(try_catch, true);
-        return false;
-      }
-
-     // OSS_LOG_INFO("Google V8 is running global.detail for " << _script);
-       // Run the script!
-      v8::Handle<v8::Value> result = compiledHelper->Run();
-      if (result.IsEmpty())
-      {
-        // The TryCatch above is still in effect and will have caught the error.
-        reportException(try_catch, true);
-        return false;
-      }
-     // OSS_LOG_INFO("Google V8 global.detail for " << _script << " EXECUTED");
+      OSS_LOG_ERROR("Failed to compile global exports for " << _script);
+      // The script failed to compile; bail out.
+      return false;
     }
-    catch(OSS::Exception e)
+
+    //OSS_LOG_INFO("Google V8 is compiling global.detail for " << _script);
+    v8::Handle<v8::Script> compiledHelper = v8::Script::Compile(helperScript);
+    if (compiledHelper.IsEmpty())
     {
-      std::ostringstream logMsg;
-      logMsg << "Filesystem error while compiling script global helpers - " << e.message();
-      OSS::log_warning(logMsg.str());
+      reportException(try_catch, true);
+      return false;
     }
+
+   // OSS_LOG_INFO("Google V8 is running global.detail for " << _script);
+     // Run the script!
+    v8::Handle<v8::Value> result = compiledHelper->Run();
+    if (result.IsEmpty())
+    {
+      // The TryCatch above is still in effect and will have caught the error.
+      reportException(try_catch, true);
+      return false;
+    }
+   // OSS_LOG_INFO("Google V8 global.detail for " << _script << " EXECUTED");
   }
-  else
+  catch(OSS::Exception e)
   {
-    OSS_LOG_ERROR("Google V8 context for " << _script << " is unable to load global exports from " << helpers.string());
+    std::ostringstream logMsg;
+    logMsg << "Filesystem error while compiling script global helpers - " << e.message();
+    OSS::log_warning(logMsg.str());
   }
+
   //
   // Compile the helpers
   //

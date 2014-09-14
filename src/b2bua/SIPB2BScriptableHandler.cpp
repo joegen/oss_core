@@ -18,6 +18,7 @@
 //
 
 
+#include "OSS/JS/JSBase.h"
 #include "OSS/Net/DNS.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/SIP/SIPFrom.h"
@@ -39,6 +40,179 @@ namespace B2BUA {
 
   
 using namespace OSS::RTP;
+
+
+OSS::SIP::SIPMessage* unwrapRequest(const v8::Arguments& args)
+{
+  if (args.Length() < 1)
+    return 0;
+  v8::Handle<v8::Value> obj = args[0];
+  if (!obj->IsObject())
+    return 0;
+  v8::Handle<v8::External> field = v8::Handle<v8::External>::Cast(obj->ToObject()->GetInternalField(0));
+  void* ptr = field->Value();
+  return static_cast<OSS::SIP::SIPMessage*>(ptr);
+}
+
+std::string jsvalToString(const v8::Handle<v8::Value>& str)
+{
+  if (!str->IsString())
+    return "";
+  v8::String::Utf8Value value(str);
+  return *value;
+}
+
+bool jsvalToBoolean(const v8::Handle<v8::Value>& str)
+{
+  if (!str->IsBoolean())
+    return false;
+  return str->IsTrue();;
+}
+
+int jsvalToInt(const v8::Handle<v8::Value>& str)
+{
+  if (!str->IsNumber())
+    return 0;
+  return str->Int32Value();
+}
+
+static v8::Handle<v8::Value> msgSetTransactionProperty(const v8::Arguments& args)
+{
+  if (args.Length() < 3)
+    return v8::Boolean::New(false);
+
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return v8::Boolean::New(false);
+
+  SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
+  if (!pTrn)
+    return v8::Boolean::New(false);
+
+  std::string name = jsvalToString(args[1]);
+  std::string value = jsvalToString(args[2]);
+
+  if (name.empty() || value.empty())
+    return v8::Boolean::New(false);
+
+  pTrn->setProperty(name, value);
+
+  return v8::Boolean::New(true);
+}
+
+static v8::Handle<v8::Value> msgGetTransactionProperty(const v8::Arguments& args)
+{
+  if (args.Length() < 2)
+    return v8::Undefined();
+
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return v8::Undefined();
+
+  SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
+  if (!pTrn)
+    return v8::Undefined();
+
+  std::string name = jsvalToString(args[1]);
+
+  if (name.empty())
+    return v8::Undefined();
+  std::string value;
+  if (name == "log-id")
+    value = pTrn->getLogId();
+  else
+    pTrn->getProperty(name, value);
+
+  return v8::String::New(value.c_str());
+}
+
+static v8::Handle<v8::Value> msgGetSourceAddress(const v8::Arguments& args)
+{
+  if (args.Length() < 1)
+    return v8::Undefined();
+
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return v8::Undefined();
+
+  SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
+  if (!pTrn || !pTrn->serverTransport())
+    return v8::Undefined();
+
+  OSS::Net::IPAddress addr = pTrn->serverTransport()->getRemoteAddress();
+
+  return v8::String::New(addr.toString().c_str());
+}
+
+static v8::Handle<v8::Value> msgGetSourcePort(const v8::Arguments& args)
+{
+  if (args.Length() < 1)
+    return v8::Undefined();
+
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return v8::Undefined();
+
+  SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
+  if (!pTrn || !pTrn->serverTransport())
+    return v8::Undefined();
+
+  OSS::Net::IPAddress addr = pTrn->serverTransport()->getRemoteAddress();
+
+  return v8::Integer::New(addr.getPort());
+}
+
+static v8::Handle<v8::Value> msgGetInterfaceAddress(const v8::Arguments& args)
+{
+  if (args.Length() < 1)
+    return v8::Undefined();
+
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return v8::Undefined();
+
+  SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
+  if (!pTrn || !pTrn->serverTransport())
+    return v8::Undefined();
+
+  OSS::Net::IPAddress addr = pTrn->serverTransport()->getLocalAddress();
+  return v8::String::New(addr.toString().c_str());
+}
+
+static v8::Handle<v8::Value> msgGetInterfacePort(const v8::Arguments& args)
+{
+  if (args.Length() < 1)
+    return v8::Undefined();
+
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return v8::Undefined();
+
+  SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
+  if (!pTrn || !pTrn->serverTransport())
+    return v8::Undefined();
+
+  OSS::Net::IPAddress addr = pTrn->serverTransport()->getLocalAddress();
+
+  return v8::Integer::New(addr.getPort());
+}
+
+static void msgRegisterGlobals(OSS_HANDLE objectTemplate)
+{
+  v8::Handle<v8::ObjectTemplate>& global = *(static_cast<v8::Handle<v8::ObjectTemplate>*>(objectTemplate));
+  global->Set(v8::String::New("msgSetTransactionProperty"), v8::FunctionTemplate ::New(msgSetTransactionProperty));
+  global->Set(v8::String::New("msgGetTransactionProperty"), v8::FunctionTemplate ::New(msgGetTransactionProperty));
+  global->Set(v8::String::New("msgGetSourceAddress"), v8::FunctionTemplate ::New(msgGetSourceAddress));
+  global->Set(v8::String::New("msgGetSourcePort"), v8::FunctionTemplate ::New(msgGetSourcePort));
+  global->Set(v8::String::New("msgGetInterfaceAddress"), v8::FunctionTemplate ::New(msgGetInterfaceAddress));
+  global->Set(v8::String::New("msgGetInterfacePort"), v8::FunctionTemplate ::New(msgGetInterfacePort));
+}
 
 SIPB2BScriptableHandler::SIPB2BScriptableHandler(
   SIPB2BTransactionManager* pTransactionManager,
@@ -769,6 +943,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
   ///
   /// If the body is supported, the return value must be a null-Ptr.
 {
+  std::string logId = pRequest->createContextId(true);
   std::string contentType =  pRequest->hdrGet(OSS::SIP::HDR_CONTENT_TYPE);
   OSS::string_to_lower(contentType);
   if (contentType != "application/sdp")
@@ -860,13 +1035,13 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
         {
           rtpAttributes.resizerSamplesLeg1 = boost::lexical_cast<int>(tokens[0]);
           rtpAttributes.resizerSamplesLeg2 = boost::lexical_cast<int>(tokens[1]);
-          OSS_LOG_INFO("RTP: Activating RTP repacketization to " << rtpAttributes.resizerSamplesLeg1 << "/" << rtpAttributes.resizerSamplesLeg2 << " resolution.")
+          OSS_LOG_INFO(logId << "RTP: Activating RTP repacketization to " << rtpAttributes.resizerSamplesLeg1 << "/" << rtpAttributes.resizerSamplesLeg2 << " resolution.")
         }
         else
         {
           rtpAttributes.resizerSamplesLeg1 = boost::lexical_cast<int>(sResizerSamples);
           rtpAttributes.resizerSamplesLeg2 = boost::lexical_cast<int>(sResizerSamples);
-          OSS_LOG_INFO("RTP: Activating RTP repacketization to " << rtpAttributes.resizerSamplesLeg1 << "/" << rtpAttributes.resizerSamplesLeg2 << " resolution.")
+          OSS_LOG_INFO(logId << "RTP: Activating RTP repacketization to " << rtpAttributes.resizerSamplesLeg1 << "/" << rtpAttributes.resizerSamplesLeg2 << " resolution.")
         }
       }
       catch(...)
@@ -875,7 +1050,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
     }
     else
     {
-      OSS_LOG_INFO("RTP: RTP repacketization is DISABLED.");
+      OSS_LOG_INFO(logId << "RTP: RTP repacketization is DISABLED.");
     }
 
 
@@ -1527,9 +1702,6 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
         sessionInfo);
     }
   }
-
-
-
 }
 
 void SIPB2BScriptableHandler::onProcessAckFor2xxRequest(
@@ -1580,7 +1752,7 @@ void SIPB2BScriptableHandler::onProcessAckFor2xxRequest(
         << " SRC: " << localInterface
         << " DST: " << target
         << " ENC: " << isXOREncrypted;
-        OSS::log_information(logMsg.str());
+        OSS::log_notice(logMsg.str());
         if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
           OSS::log_debug(p2xx->createLoggerData());
 
@@ -1681,7 +1853,7 @@ bool SIPB2BScriptableHandler::loadScript(OSS::JS::JSSIPMessage& script, const bo
   if (script.isInitialized())
     ok = script.recompile();
   else
-    ok = script.initialize(scriptFile, "handle_request", extensionGlobals);
+    ok = script.initialize(scriptFile, "handle_request", extensionGlobals ? extensionGlobals : msgRegisterGlobals);
   return ok;
 }
     /// Generic script loader

@@ -158,7 +158,7 @@ void SIPTransaction::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
     << " FURI: " << pMsg->hdrGet(OSS::SIP::HDR_FROM)
     << " ENC: " << _isXOREncrypted
     << " PROT: " << pTransport->getTransportScheme();
-    OSS::log_information(logMsg.str());
+    OSS::log_notice(logMsg.str());
 
     if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
       OSS::log_debug(pMsg->createLoggerData());
@@ -381,7 +381,7 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg)
   << " DST: " << _transport->getRemoteAddress().toIpPortString()
   << " ENC: " << _isXOREncrypted
   << " PROT: " << _transport->getTransportScheme();
-  OSS::log_information(logMsg.str());
+  OSS::log_notice(logMsg.str());
 
   if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
     OSS::log_debug(pMsg->createLoggerData());
@@ -416,7 +416,7 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg, const OSS::Net::IPAddres
     << " DST: " << remoteAddress.toIpPortString()
     << " ENC: " << _isXOREncrypted
     << " PROT: " << _transport->getTransportScheme();
-    OSS::log_information(logMsg.str());
+    OSS::log_notice(logMsg.str());
     if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
       OSS::log_debug(pMsg->createLoggerData());
 

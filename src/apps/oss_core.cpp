@@ -35,6 +35,7 @@
 #include "OSS/SIP/B2BUA/SIPB2BScriptableHandler.h"
 #include "OSS/SIP/B2BUA/SIPB2BDialogStateManager.h"
 #include "OSS/SIP/SIPRoute.h"
+#include "OSS/STUN/STUNClient.h"
 
 
 #if HAVE_CONFIG_H
@@ -48,7 +49,7 @@
 #define TCP_PORT_BASE 20000
 #define TCP_PORT_MAX  30000
 #define RTP_PROXY_THREAD_COUNT 10
-#define EXTERNAL_IP_HOST_URL "myip.ossapp.com"
+#define EXTERNAL_IP_HOST_URL "stun.ezuce.com"
 
 using namespace OSS;
 using namespace OSS::SIP;
@@ -75,6 +76,7 @@ struct Config
   TargetType targetType;
   bool allowRelay;
   int targetInterfacePort;
+  std::string routeScript;
   Config() : 
     port(5060), 
     targetType(UNKNOWN), 
@@ -105,6 +107,27 @@ public:
     SIPB2BScriptableHandler(dynamic_cast<SIPB2BTransactionManager*>(this), dynamic_cast<SIPB2BDialogStateManager*>(this)),
     _config(config)
   {
+    //
+    // Initialize route script if specified
+    //
+    if (!_config.routeScript.empty())
+    {
+      boost::filesystem::path script(_config.routeScript);
+      if (boost::filesystem::exists(script))
+      {
+        if (!loadRouteScript(script, 0, "", ""))
+        {
+          OSS_LOG_ERROR("Unable to load route script " << script);
+          _exit(-1);
+        }
+      }
+      else
+      {
+        OSS_LOG_ERROR("File not found - " << script);
+        _exit(-1);
+      }
+    }
+    
     //
     // Initialize the transport
     //
@@ -143,7 +166,7 @@ public:
   {
     stack().run();
     dynamic_cast<SIPB2BDialogStateManager*>(this)->run();
-    dynamic_cast<SIPB2BScriptableHandler*>(this)->rtpProxy().run(RTP_PROXY_THREAD_COUNT);
+    dynamic_cast<SIPB2BScriptableHandler*>(this)->rtpProxy().run(RTP_PROXY_THREAD_COUNT);  
     return true;
   }
 
@@ -152,6 +175,51 @@ public:
     if (type == SIPB2BScriptableHandler::TYPE_AUTH)
     {
       pRequest->setProperty(OSS::PropertyMap::PROP_AuthAction, "accept");
+    }
+    if (type == SIPB2BScriptableHandler::TYPE_INBOUND)
+    {
+      if (!_config.routeScript.empty() && !pRequest->isMidDialog())
+      {
+        //
+        //  Set the variables so that the route script knows about our configuration
+        //
+        pRequest->setProperty("var_listener_ip", _config.address);
+        pRequest->setProperty("var_listener_port", OSS::string_from_number<int>(_config.port));
+        if (!_config.externalAddress.empty())
+          pRequest->setProperty("var_listener_ip_external", _config.externalAddress);
+        
+        if (!_config.target.empty())
+        {
+          std::vector<std::string> tokens = OSS::string_tokenize(_config.target, ":");
+          if (tokens.size() == 2)
+          {
+            pRequest->setProperty("var_default_target_address", tokens[0]);
+            pRequest->setProperty("var_default_target_port", tokens[1]);
+          }
+          else
+          {
+            pRequest->setProperty("var_default_target_address", _config.target);
+          }
+          
+          if (!_config.targetTransport.empty())
+            pRequest->setProperty("var_default_target_transport", _config.targetTransport);
+        }
+        
+        if (!_config.targetInterface.empty())
+        {
+          pRequest->setProperty("var_default_target_interface", _config.targetInterface);
+          pRequest->setProperty("var_default_target_interface_port", OSS::string_from_number<int>(_config.targetInterfacePort));
+        }
+        
+        if (_config.allowRelay)
+        {
+          pRequest->setProperty("var_allow_relay", "true");
+        }
+        else
+        {
+          pRequest->setProperty("var_allow_relay", "false");
+        }
+      }
     }
     else if (type == SIPB2BScriptableHandler::TYPE_ROUTE)
     {
@@ -307,64 +375,18 @@ bool ipRouteGet(const std::string& destination, std::string& source, std::string
 }
 
 
-std::string getExternalIp(const std::string& host, const std::string& path)
+std::string getExternalIp(const std::string& stunServer, const std::string& localAddress)
 {
-  std::string ip;
-  OSS::dns_host_record_list targets = dns_lookup_host(host);
-  if (targets.empty())
-  {
-    OSS_LOG_ERROR("Unable to resolve HTTP server " << host);
-    return ip;
-  }
-
+  OSS::Net::IPAddress localIp(localAddress);
+  OSS::Net::IPAddress externalIp;
+  OSS::STUN::STUNClient::getNATAddress(stunServer, localIp, externalIp);
   
-  OSS::socket_handle sock = OSS::socket_tcp_client_create();
-  if (!sock)
-    return ip;
-
-  try
-  {
-    std::ostringstream strm;
-    strm << "GET " << path << " HTTP/1.0" << "\r\n"
-      << "Host: " << host << "\r\n"
-      << "User-Agent: oss_b2bua" << "\r\n\r\n";
-    OSS::socket_tcp_client_connect(sock, *targets.begin(), 80, 5000);
-    if (!socket_tcp_client_send_bytes(sock, strm.str().c_str(), strm.str().length()))
-    {
-      OSS_LOG_ERROR("Unable to send to HTTP server at " << host);
-    }
-    
-    std::string reply;
-
-    while (true)
-    {
-      char buff[256];
-      int len = socket_tcp_client_receive_bytes(sock, buff, 256);
-      if (!len)
-        break;
-      reply += std::string(buff, len);
-    }
-
-    if (!reply.empty())
-    {
-      OSS::SIP::SIPMessage msg(reply);
-      ip = msg.getBody();
-    }
-
-  }
-  catch(std::exception& e)
-  {
-    OSS_LOG_ERROR("Unable to connect to HTTP server at " << host << " Error: " << e.what());
-  }
-
-  if (sock)
-  {
-    OSS::socket_tcp_client_shutdown(sock);
-    OSS::socket_free(sock);
-  }
-
-  return ip;
+  OSS_LOG_NOTICE("Detecting NAT type using STUN");
+  int ntype = OSS::STUN::STUNClient::detectNATType(stunServer, localIp, 2);
+  OSS_LOG_NOTICE("STUN NAT Type returned " << OSS::STUN::STUNClient::getTypeString(ntype));
+  return externalIp.toString();
 }
+
 
 void prepareListenerInfo(Config& config, ServiceOptions& options)
 {
@@ -420,7 +442,8 @@ void prepareListenerInfo(Config& config, ServiceOptions& options)
 
   if (config.externalAddress.empty() && options.hasOption("guess-external-address"))
   {
-    config.externalAddress = getExternalIp(EXTERNAL_IP_HOST_URL, "/");
+    config.externalAddress = getExternalIp(EXTERNAL_IP_HOST_URL, config.address);
+    OSS_LOG_NOTICE("STUN external address set to " << config.externalAddress);
   }
   
   if (options.hasOption("target-interface"))
@@ -436,6 +459,7 @@ void prepareListenerInfo(Config& config, ServiceOptions& options)
       _exit(-1);
     }
   }
+  
 }
 
 void prepareTargetInfo(Config& config, ServiceOptions& options)
@@ -457,6 +481,8 @@ void prepareTargetInfo(Config& config, ServiceOptions& options)
     OSS_LOG_INFO("target-address is not set.  Allowing relay by default.");
     config.allowRelay = true;
   }
+  
+  options.getOption("route-script", config.routeScript);
 }
 
 bool prepareOptions(ServiceOptions& options)
@@ -475,6 +501,7 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionFlag('n', "no-rtp-proxy", "Disable built in media relay.");
   options.addOptionInt('R', "rtp-port-low", "Lowest port used for RTP");
   options.addOptionInt('H', "rtp-port-high", "Highest port used for RTP");
+  options.addOptionString('J', "route-script", "Path for the route script");
 
 #if ENABLE_TURN
   options.addOptionFlag('T', "enable-turn-relay", "Run the built in turn server.");

@@ -1523,7 +1523,7 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
 
         if (port == 0)
           port = 5060;
-        OSS_LOG_INFO("Setting target from contact Address: " << host << " Port: " << port);
+        OSS_LOG_DEBUG(logId << "Setting target from contact Address: " << host << " Port:" << port);
         targetAddress = *(hosts.begin());
         targetAddress.setPort(port);
         std::string scheme;
@@ -1538,7 +1538,7 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
       //
       // Still unable to resolve request-uri
       //
-      OSS_LOG_INFO("Setting target from source Address: " << remoteIp);
+      OSS_LOG_DEBUG(logId << "Setting target from source Address: " << remoteIp);
       targetAddress = IPAddress::fromV4IPPort(remoteIp.c_str());
     }
 
@@ -1634,7 +1634,7 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
       << " DST: " << targetAddress.toIpPortString()
       << " ENC: " << isXOREncrypted
       << " PROT: " << transportScheme;
-    OSS::log_information(logMsg.str());
+    OSS::log_notice(logMsg.str());
 
     if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
       OSS::log_debug(pMsg->createLoggerData());
