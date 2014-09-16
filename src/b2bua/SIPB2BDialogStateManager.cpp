@@ -411,7 +411,7 @@ void SIPB2BDialogStateManager::updateDialog(const DialogData& dialog)
       {
         iter->leg1 = dialog.leg1;
         iter->leg2 = dialog.leg2;
-        OSS_LOG_DEBUG(logId << "SIPB2BDialogStateManager::updateDialog - updated dialog information for Session-Id: " << iter->sessionId);
+        OSS_LOG_INFO(logId << "SIPB2BDialogStateManager::updateDialog - updated dialog information for Session-Id: " << iter->sessionId);
         break;
       }
     }
@@ -438,7 +438,7 @@ void SIPB2BDialogStateManager::removeDialog(const std::string& callId, const std
     {
       if (iter->sessionId == sessionId)
       {
-        OSS_LOG_DEBUG(logId << "SIPB2BDialogStateManager::removeDialog - removed dialog information for Session-Id: " << iter->sessionId << " Dialog-Id: " << iter->leg1.dialogId);
+        OSS_LOG_INFO(logId << "SIPB2BDialogStateManager::removeDialog - removed dialog information for Session-Id: " << iter->sessionId);
         dialogList.erase(iter);
         break;
       }
