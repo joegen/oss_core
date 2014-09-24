@@ -64,7 +64,7 @@ udp_openPort( unsigned short port, unsigned int interfaceIp, bool verbose )
       }
    }
 	
-   if ( bind( fd,(struct sockaddr*)&addr, sizeof(addr)) != 0 )
+   if ( ::bind( fd,(struct sockaddr*)&addr, sizeof(addr)) != 0 )
    {
       int e = getErrno();
         
