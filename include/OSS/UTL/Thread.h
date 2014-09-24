@@ -161,12 +161,38 @@ private:
   void* _threadPool;
 };
 
+
+class Thread : public boost::noncopyable
+{
+public:
+  typedef boost::function<void()> Task;
+  Thread();
+  Thread(const Task& task);
+  virtual ~Thread();
+  void run();
+  void stop();
+  void setTask(const Task& task);
+  bool isTerminated();
+  
+protected:
+  virtual void runTask();
+  Task _task;
+  boost::thread* _pThread;
+  bool _terminateFlag;
+  mutex_critic_sec _terminateFlagMutex;
+  mutex_critic_sec _threadMutex;
+};
+
+
+
+void OSS_API thread_sleep( unsigned long milliseconds );
+  /// Pause thread execution for certain time expressed in milliseconds
+
+
 //
 // Inlines
 //
 
-void OSS_API thread_sleep( unsigned long milliseconds );
-  /// Pause thread execution for certain time expressed in milliseconds
 
 } // OSS
 

@@ -220,4 +220,86 @@ void thread_sleep( unsigned long milliseconds )
 #endif
 }
 
+Thread::Thread() :
+  _task(),
+  _pThread(0),
+  _terminateFlag(true)
+{
+}
+
+Thread::Thread(const Task& task) :
+  _task(task),
+  _pThread(0),
+  _terminateFlag(true)
+{
+}
+
+Thread::~Thread()
+{
+  stop();
+}
+
+void Thread::run()
+{
+  {
+  mutex_critic_sec_lock lock(_terminateFlagMutex);
+  if (!isTerminated())
+    stop();
+  _terminateFlag = false;
+  }
+  
+  {
+    mutex_critic_sec_lock lock(_threadMutex);
+    assert(!_pThread);
+    _pThread = new boost::thread(boost::bind(&Thread::runTask, this));
+  }
+}
+
+void Thread::stop()
+{
+  {
+    mutex_critic_sec_lock lock(_terminateFlagMutex);
+    if (_terminateFlag)
+    {
+      assert(!_pThread);
+      return; // we are already terminated
+    }
+  }
+    
+  {
+    mutex_critic_sec_lock lock(_terminateFlagMutex);
+    _terminateFlag = true;
+  }
+  
+  {
+    mutex_critic_sec_lock lock(_threadMutex);
+    assert(_pThread);
+    _pThread->join();
+    delete _pThread;
+    _pThread = 0;
+  }
+}
+
+void Thread::setTask(const Task& task)
+{
+  assert(isTerminated());
+  _task = task;
+}
+
+bool Thread::isTerminated()
+{
+  mutex_critic_sec_lock lock(_terminateFlagMutex);
+  return _terminateFlag;
+}
+  
+void Thread::runTask()
+{
+  if (_task)
+  {
+    _task();
+  }
+}
+
+
+
 } // OSS
