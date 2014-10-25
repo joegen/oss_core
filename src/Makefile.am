@@ -333,30 +333,30 @@ liboss_core_la_SOURCES =  \
     sipparser/SIPURI.cpp \
     sipparser/SIPVia.cpp \
     sipparser/SIPReplaces.cpp \
-    sipfsm/SIPTCPConnectionManager.cpp \
-    sipfsm/SIPTransportService.cpp \
-    sipfsm/SIPTLSConnection.cpp \
+    siptransport/SIPTCPConnectionManager.cpp \
+    siptransport/SIPTransportService.cpp \
+    siptransport/SIPTLSConnection.cpp \
+    siptransport/SIPUDPListener.cpp \
+    siptransport/SIPXOR.cpp \
+    siptransport/SIPUDPConnection.cpp \
+    siptransport/SIPTCPListener.cpp \
+    siptransport/SIPTCPConnection.cpp \
+    siptransport/SIPUDPConnectionClone.cpp \
+    siptransport/SIPTLSConnectionManager.cpp \
+    siptransport/SIPListener.cpp \
+    siptransport/SIPTransportSession.cpp \
+    siptransport/SIPTLSListener.cpp \
     sipfsm/SIPNist.cpp \
     sipfsm/SIPTransactionTimers.cpp \
-    sipfsm/SIPUDPListener.cpp \
-    sipfsm/SIPXOR.cpp \
     sipfsm/SIPIst.cpp \
     sipfsm/SIPIstPool.cpp \
-    sipfsm/SIPTLSListener.cpp \
     sipfsm/SIPIctPool.cpp \
     sipfsm/SIPTransactionPool.cpp \
-    sipfsm/SIPUDPConnection.cpp \
-    sipfsm/SIPTCPListener.cpp \
     sipfsm/SIPIct.cpp \
-    sipfsm/SIPTCPConnection.cpp \
-    sipfsm/SIPUDPConnectionClone.cpp \
     sipfsm/SIPNictPool.cpp \
     sipfsm/SIPNistPool.cpp \
     sipfsm/SIPFSMDispatch.cpp \
-    sipfsm/SIPTLSConnectionManager.cpp \
     sipfsm/SIPStack.cpp \
-    sipfsm/SIPListener.cpp \
-    sipfsm/SIPTransportSession.cpp \
     sipfsm/SIPFsm.cpp \
     sipfsm/SIPNict.cpp \
     sipfsm/SIPTransaction.cpp \
