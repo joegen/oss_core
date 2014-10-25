@@ -346,6 +346,9 @@ liboss_core_la_SOURCES =  \
     siptransport/SIPListener.cpp \
     siptransport/SIPTransportSession.cpp \
     siptransport/SIPTLSListener.cpp \
+    siptransport/SIPWebSocketConnection.cpp \
+    siptransport/SIPWebSocketListener.cpp \
+    siptransport/SIPWebSocketConnectionManager.cpp \
     sipfsm/SIPNist.cpp \
     sipfsm/SIPTransactionTimers.cpp \
     sipfsm/SIPIst.cpp \
@@ -411,9 +414,6 @@ liboss_core_la_SOURCES =  \
     utl/DebugMemory.cpp \
     utl/Thread.cpp \
     utl/StackTrace.cpp \
-    sipfsm/SIPWebSocketConnection.cpp \
-    sipfsm/SIPWebSocketListener.cpp \
-    sipfsm/SIPWebSocketConnectionManager.cpp \
     ws/src/base64/base64.cpp \
     ws/src/md5/md5.c \
     ws/src/messages/data.cpp \
