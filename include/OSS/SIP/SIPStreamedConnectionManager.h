@@ -18,15 +18,15 @@
 //
 
 
-#ifndef SIP_SIPTCPConnectionManager_INCLUDED
-#define SIP_SIPTCPConnectionManager_INCLUDED
+#ifndef SIP_SIPStreamedConnectionManager_INCLUDED
+#define SIP_SIPStreamedConnectionManager_INCLUDED
 
 
 #include <set>
 #include <map>
 #include <boost/asio.hpp>
 #include <boost/noncopyable.hpp>
-#include "SIPTCPConnection.h"
+#include "SIPStreamedConnection.h"
 #include "OSS/UTL/Thread.h"
 
 
@@ -36,15 +36,15 @@ namespace SIP {
 
 class SIPFSMDispatch;
 
-class OSS_API SIPTCPConnectionManager: private boost::noncopyable
+class OSS_API SIPStreamedConnectionManager: private boost::noncopyable
   /// Manages open connections so that they may be cleanly stopped when the server
   /// needs to shut down.
 {
 public:
-  SIPTCPConnectionManager(SIPFSMDispatch* pDispatch);
+  SIPStreamedConnectionManager(SIPFSMDispatch* pDispatch);
     /// Creates a new connection manager object.
 
-  ~SIPTCPConnectionManager();
+  ~SIPStreamedConnectionManager();
     /// Destroys the connection manager.
 
   void initialize(const boost::filesystem::path& cfgDirectory);
@@ -59,13 +59,13 @@ public:
     /// is about the exit.  This is the place where the manager performs final
     /// trash management.
 
-  void add(SIPTCPConnection::Ptr conn);
+  void add(SIPStreamedConnection::Ptr conn);
    /// Add the specified connection to the manager
 
-  void start(SIPTCPConnection::Ptr conn);
+  void start(SIPStreamedConnection::Ptr conn);
     /// Add the specified connection to the manager and start it.
 
-  void stop(SIPTCPConnection::Ptr conn);
+  void stop(SIPStreamedConnection::Ptr conn);
     /// Stop the specified connection.
 
   void stopAll();
@@ -83,14 +83,14 @@ public:
   void setPortmax(unsigned short port);
     /// Set the port max.  the default is 12000
 
-  SIPTCPConnection::Ptr findConnectionByAddress(const OSS::Net::IPAddress& target);
+  SIPStreamedConnection::Ptr findConnectionByAddress(const OSS::Net::IPAddress& target);
     /// Find a connection to a specific target if it exists
 
-  SIPTCPConnection::Ptr findConnectionById(OSS::UInt64 identifier);
+  SIPStreamedConnection::Ptr findConnectionById(OSS::UInt64 identifier);
 private:
   OSS::mutex_read_write _rwConnectionsMutex;
   OSS::UInt64 _currentIdentifier;
-  std::map<OSS::UInt64, SIPTCPConnection::Ptr> _connections;
+  std::map<OSS::UInt64, SIPStreamedConnection::Ptr> _connections;
   SIPFSMDispatch* _pDispatch;
   unsigned short _portBase;
   unsigned short _portMax;
@@ -101,27 +101,27 @@ private:
 // Inlines
 //
 
-inline unsigned short SIPTCPConnectionManager::getPortBase() const
+inline unsigned short SIPStreamedConnectionManager::getPortBase() const
 {
   return _portBase;
 }
   
-inline void SIPTCPConnectionManager::setPortBase(unsigned short port)
+inline void SIPStreamedConnectionManager::setPortBase(unsigned short port)
 {
   _portBase = port;
 }
   
-inline unsigned short SIPTCPConnectionManager::getPortMax() const
+inline unsigned short SIPStreamedConnectionManager::getPortMax() const
 {
   return _portMax;
 }
   
-inline void SIPTCPConnectionManager::setPortmax(unsigned short port)
+inline void SIPStreamedConnectionManager::setPortmax(unsigned short port)
 {
   _portMax = port;
 }
 
 
 } } // OSS::SIP
-#endif // SIP_SIPTCPConnectionManager_INCLUDED
+#endif // SIP_SIPStreamedConnectionManager_INCLUDED
 

@@ -130,7 +130,6 @@ nobase_include_HEADERS = \
     OSS/SIP/SIPStatusLine.h \
     OSS/SIP/SIPURI.h \
     OSS/SIP/SIPVia.h \
-    OSS/SIP/SIPTLSConnection.h \
     OSS/SIP/SIPXOR.h \
     OSS/SIP/SIP.h \
     OSS/SIP/SIPFSMDispatch.h \
@@ -141,7 +140,6 @@ nobase_include_HEADERS = \
     OSS/SIP/SIPTCPListener.h \
     OSS/SIP/SIPTransactionPool.h \
     OSS/SIP/SIPTransaction.h \
-    OSS/SIP/SIPTLSConnectionManager.h \
     OSS/SIP/SIPNict.h \
     OSS/SIP/SIPIst.h \
     OSS/SIP/SIPIct.h \
@@ -149,7 +147,6 @@ nobase_include_HEADERS = \
     OSS/SIP/SIPUDPListener.h \
     OSS/SIP/SIPIstPool.h \
     OSS/SIP/SIPTransportService.h \
-    OSS/SIP/SIPTCPConnection.h \
     OSS/SIP/SIPUDPConnectionClone.h \
     OSS/SIP/SIPNictPool.h \
     OSS/SIP/SIPIctPool.h \
@@ -157,9 +154,10 @@ nobase_include_HEADERS = \
     OSS/SIP/SIPTransactionTimers.h \
     OSS/SIP/SIPException.h \
     OSS/SIP/SIPUDPConnection.h \
-    OSS/SIP/SIPTCPConnectionManager.h \
     OSS/SIP/SIPNistPool.h \
     OSS/SIP/SIPReplaces.h \
+    OSS/SIP/SIPStreamedConnection.h \
+    OSS/SIP/SIPStreamedConnectionManager.h \
     OSS/SIP/UA/SIPSessionState.h \
     OSS/SIP/UA/SIPSession.h \
     OSS/SIP/UA/SIPSessionManager.h \

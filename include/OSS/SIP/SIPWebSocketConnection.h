@@ -102,7 +102,7 @@ public:
 
   SIPWebSocketConnection(const websocketpp::server::connection_ptr& pConnection, SIPWebSocketConnectionManager& manager);
 
-  ~SIPWebSocketConnection();
+  virtual ~SIPWebSocketConnection();
 
   void start(SIPFSMDispatch* pDispatch);
     /// Start the first asynchronous operation for the connection.

@@ -50,6 +50,8 @@ public:
       boost::asio::ip::udp::socket& socket);
     /// Creates a UDP connection using the given I/O service
 
+  virtual ~SIPUDPConnection();
+  
   boost::asio::ip::udp::socket& socket();
     /// Get the socket associated with the connection.
 

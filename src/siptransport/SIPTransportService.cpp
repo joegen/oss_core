@@ -385,7 +385,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientTcpTransport(
     const OSS::Net::IPAddress& localAddress,
     const OSS::Net::IPAddress& remoteAddress)
 {
-  SIPTransportSession::Ptr pTCPConnection(new SIPTCPConnection(_ioService, _tcpConMgr));
+  SIPTransportSession::Ptr pTCPConnection(new SIPStreamedConnection(_ioService, _tcpConMgr));
   pTCPConnection->clientBind(localAddress, _tcpPortBase, _tcpPortMax);
   pTCPConnection->clientConnect(remoteAddress);
   return pTCPConnection;

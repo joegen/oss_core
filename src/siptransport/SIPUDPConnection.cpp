@@ -47,6 +47,10 @@ SIPUDPConnection::SIPUDPConnection(
   _transportScheme = "udp";
 }
 
+SIPUDPConnection::~SIPUDPConnection()
+{  
+}
+
 void SIPUDPConnection::start(SIPFSMDispatch* pDispatch)
 {
   _pDispatch = pDispatch;

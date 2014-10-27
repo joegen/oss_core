@@ -46,6 +46,10 @@ SIPUDPConnectionClone::SIPUDPConnectionClone(SIPUDPConnection::Ptr clonable):
   _externalAddress = clonable->getExternalAddress();
 }
 
+SIPUDPConnectionClone::~SIPUDPConnectionClone()
+{
+}
+
 void SIPUDPConnectionClone::start(SIPFSMDispatch* pDispatch)
 {
   _orginalConnection->start(pDispatch);

@@ -31,8 +31,8 @@
 #include <boost/noncopyable.hpp>
 
 #include "OSS/SIP/SIP.h"
-#include "OSS/SIP/SIPTCPConnectionManager.h"
-#include "OSS/SIP/SIPTLSConnectionManager.h"
+#include "OSS/SIP/SIPStreamedConnectionManager.h"
+#include "OSS/SIP/SIPStreamedConnectionManager.h"
 #include "OSS/SIP/SIPUDPListener.h"
 #include "OSS/SIP/SIPTCPListener.h"
 #include "OSS/SIP/SIPWebSocketListener.h"
@@ -217,9 +217,9 @@ private:
   boost::thread* _pIoServiceThread;
   boost::asio::ip::tcp::resolver _resolver;
   SIPFSMDispatch* _pDispatch;
-  SIPTCPConnectionManager _tcpConMgr;
+  SIPStreamedConnectionManager _tcpConMgr;
   SIPWebSocketConnectionManager _wsConMgr;
-  SIPTLSConnectionManager _tlsConMgr;
+  SIPStreamedConnectionManager _tlsConMgr;
   UDPListeners _udpListeners;
   TCPListeners _tcpListeners;
   WSListeners _wsListeners;

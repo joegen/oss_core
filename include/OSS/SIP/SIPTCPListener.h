@@ -25,8 +25,8 @@
 #include <boost/asio.hpp>
 #include <boost/noncopyable.hpp>
 #include "OSS/SIP/SIPListener.h"
-#include "OSS/SIP/SIPTCPConnection.h"
-#include "OSS/SIP/SIPTCPConnectionManager.h"
+#include "OSS/SIP/SIPStreamedConnection.h"
+#include "OSS/SIP/SIPStreamedConnectionManager.h"
 
 
 namespace OSS {
@@ -46,7 +46,7 @@ public:
     SIPFSMDispatch* dispatch,
     const std::string& address, 
     const std::string& port,
-    SIPTCPConnectionManager& connectionManager);
+    SIPStreamedConnectionManager& connectionManager);
     /// Construct the server to listen on the specified TCP address and port.
 
   virtual ~SIPTCPListener();
@@ -74,10 +74,10 @@ private:
   boost::asio::ip::tcp::resolver _resolver;
     /// The resolver service;
 
-  SIPTCPConnectionManager& _connectionManager;
+  SIPStreamedConnectionManager& _connectionManager;
     /// The connection manager which owns all live connections.
 
-  SIPTCPConnection::Ptr _pNewConnection;
+  SIPStreamedConnection::Ptr _pNewConnection;
     /// The next connection to be accepted.
 
   SIPFSMDispatch* _dispatch;

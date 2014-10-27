@@ -25,8 +25,8 @@
 #include <boost/asio.hpp>
 #include <boost/noncopyable.hpp>
 #include "OSS/SIP/SIPListener.h"
-#include "OSS/SIP/SIPTLSConnection.h"
-#include "OSS/SIP/SIPTLSConnectionManager.h"
+#include "OSS/SIP/SIPStreamedConnection.h"
+#include "OSS/SIP/SIPStreamedConnectionManager.h"
 
 
 namespace OSS {
@@ -82,10 +82,10 @@ private:
   boost::asio::ip::tcp::resolver _resolver;
     /// The resolver service;
 
-  SIPTLSConnectionManager _connectionManager;
+  SIPStreamedConnectionManager _connectionManager;
     /// The connection manager which owns all live connections.
 
-  SIPTLSConnection::Ptr _pNewConnection;
+  SIPStreamedConnection::Ptr _pNewConnection;
     /// The next connection to be accepted.
 
   SIPFSMDispatch* _dispatch;

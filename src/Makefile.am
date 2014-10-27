@@ -333,16 +333,14 @@ liboss_core_la_SOURCES =  \
     sipparser/SIPURI.cpp \
     sipparser/SIPVia.cpp \
     sipparser/SIPReplaces.cpp \
-    siptransport/SIPTCPConnectionManager.cpp \
+    siptransport/SIPStreamedConnection.cpp \
+    siptransport/SIPStreamedConnectionManager.cpp \
     siptransport/SIPTransportService.cpp \
-    siptransport/SIPTLSConnection.cpp \
     siptransport/SIPUDPListener.cpp \
     siptransport/SIPXOR.cpp \
     siptransport/SIPUDPConnection.cpp \
     siptransport/SIPTCPListener.cpp \
-    siptransport/SIPTCPConnection.cpp \
     siptransport/SIPUDPConnectionClone.cpp \
-    siptransport/SIPTLSConnectionManager.cpp \
     siptransport/SIPListener.cpp \
     siptransport/SIPTransportSession.cpp \
     siptransport/SIPTLSListener.cpp \

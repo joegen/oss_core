@@ -42,6 +42,8 @@ public:
   SIPUDPConnectionClone(SIPUDPConnection::Ptr clonable);
     /// Creates a UDP connection using the given I/O service
 
+  virtual ~SIPUDPConnectionClone();
+  
   boost::asio::ip::udp::socket& socket();
     /// Get the socket associated with the connection.
 

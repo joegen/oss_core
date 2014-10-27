@@ -33,12 +33,12 @@ SIPTCPListener::SIPTCPListener(
   SIPFSMDispatch* dispatch,
   const std::string& address, 
   const std::string& port,
-  SIPTCPConnectionManager& connectionManager):
+  SIPStreamedConnectionManager& connectionManager):
   SIPListener(pTransportService, address, port),
   _acceptor(pTransportService->ioService()),
   _resolver(pTransportService->ioService()),
   _connectionManager(connectionManager),
-  _pNewConnection(new SIPTCPConnection(pTransportService->ioService(), _connectionManager)),
+  _pNewConnection(new SIPStreamedConnection(pTransportService->ioService(), _connectionManager)),
   _dispatch(dispatch)
 {
 }
@@ -56,7 +56,7 @@ void SIPTCPListener::run()
   _acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
   _acceptor.bind(endpoint);
   _acceptor.listen();
-  _acceptor.async_accept(dynamic_cast<SIPTCPConnection*>(_pNewConnection.get())->socket(),
+  _acceptor.async_accept(dynamic_cast<SIPStreamedConnection*>(_pNewConnection.get())->socket(),
       boost::bind(&SIPTCPListener::handleAccept, this,
         boost::asio::placeholders::error, (void*)0));
 }
@@ -72,8 +72,8 @@ void SIPTCPListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE
     if (_acceptor.is_open())
     {
       OSS_LOG_DEBUG("SIPTCPListener::handleAccept RESTARTING async accept loop");
-      _pNewConnection.reset(new SIPTCPConnection(*_pIoService, _connectionManager));
-      _acceptor.async_accept(dynamic_cast<SIPTCPConnection*>(_pNewConnection.get())->socket(),
+      _pNewConnection.reset(new SIPStreamedConnection(*_pIoService, _connectionManager));
+      _acceptor.async_accept(dynamic_cast<SIPStreamedConnection*>(_pNewConnection.get())->socket(),
         boost::bind(&SIPTCPListener::handleAccept, this,
           boost::asio::placeholders::error, userData));
     }
@@ -101,7 +101,7 @@ void SIPTCPListener::handleConnect(const boost::system::error_code& e, boost::as
 {
   if (!e)
   {
-    SIPTCPConnection::Ptr conn(new SIPTCPConnection(*_pIoService, _connectionManager));
+    SIPStreamedConnection::Ptr conn(new SIPStreamedConnection(*_pIoService, _connectionManager));
     _connectionManager.add(conn);
     conn->handleResolve(endPointIter);
   }

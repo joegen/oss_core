@@ -18,11 +18,12 @@
 //
 
 
-#ifndef SIP_SIPTCPConnection_INCLUDED
-#define SIP_SIPTCPConnection_INCLUDED
+#ifndef SIP_SIPStreamedConnection_INCLUDED
+#define SIP_SIPStreamedConnection_INCLUDED
 
 
 #include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 #include <boost/array.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -35,24 +36,33 @@ namespace OSS {
 namespace SIP {
 
 
-class SIPTCPConnectionManager;
-class SIPTCPConnection;
+class SIPStreamedConnectionManager;
+class SIPStreamedConnection;
 class SIPFSMDispatch;
 
-class OSS_API SIPTCPConnection: 
+class OSS_API SIPStreamedConnection: 
   public SIPTransportSession,
-  public boost::enable_shared_from_this<SIPTCPConnection>,
+  public boost::enable_shared_from_this<SIPStreamedConnection>,
   private boost::noncopyable
 {
 public:
 
   typedef boost::asio::ip::tcp::socket::endpoint_type EndPoint;
-  explicit SIPTCPConnection(
+  typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
+  typedef boost::asio::ip::tcp::socket tcp_socket;
+  
+  explicit SIPStreamedConnection(
       boost::asio::io_service& ioService,
-      SIPTCPConnectionManager& manager);
+      SIPStreamedConnectionManager& manager);
     /// Creates a TCP connection using the given I/O service
-
-  ~SIPTCPConnection();
+  
+  explicit SIPStreamedConnection(
+      boost::asio::io_service& ioService,
+      boost::asio::ssl::context* pTlsContext,
+      SIPStreamedConnectionManager& manager);
+    /// Creates a TLS connection using the given I/O service and TLS context
+  
+  virtual ~SIPStreamedConnection();
     /// Destroys the TCP connection
 
   boost::asio::ip::tcp::socket& socket();
@@ -64,6 +74,12 @@ public:
   void stop();
     /// Stop all asynchronous operations associated with the connection.
 
+  void writeMessage(const std::string& buf);
+    /// Write the content of the buffer
+  
+  void writeMessage(const std::string& buf, boost::system::error_code& ec);
+    /// Write the content of the buffer
+  
   void writeMessage(SIPMessage::Ptr msg);
     /// Send a SIP message using this transport.
 
@@ -99,15 +115,25 @@ private:
   void clientConnect(const OSS::Net::IPAddress& target);
     /// Connect to a remote host
 
+  void readSome();
+    /// read some bytes into the buffer
+  
+  
 protected:
 
-  boost::asio::ip::tcp::socket _socket;
+  tcp_socket* _pTcpSocket;
     /// Socket for the connection.
+  
+  boost::asio::ssl::context* _pTlsContext;
+    /// The TLS context
+
+  ssl_socket* _pTlsStream;
+    /// SSL Socket for the connection.
 
   boost::asio::ip::tcp::resolver _resolver;
     /// the TCP query resolver
 
-  SIPTCPConnectionManager& _connectionManager;
+  SIPStreamedConnectionManager& _connectionManager;
     /// The manager for this connection.
 
   boost::array<char, 8192> _buffer;
@@ -129,10 +155,6 @@ protected:
 // Inlines
 //
 
-inline boost::asio::ip::tcp::socket& SIPTCPConnection::socket()
-{
-  return _socket;
-}
 
 } } // OSS::SIP
-#endif // SIP_SIPTCPConnection_INCLUDED
+#endif // SIP_SIPStreamedConnection_INCLUDED

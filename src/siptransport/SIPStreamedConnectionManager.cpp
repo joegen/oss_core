@@ -20,7 +20,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
-#include "OSS/SIP/SIPTCPConnectionManager.h"
+#include "OSS/SIP/SIPStreamedConnectionManager.h"
 #include "OSS/SIP/SIPFSMDispatch.h"
 #include "OSS/UTL/Logger.h"
 
@@ -28,7 +28,7 @@ namespace OSS {
 namespace SIP {
 
 
-SIPTCPConnectionManager::SIPTCPConnectionManager(SIPFSMDispatch* pDispatch): 
+SIPStreamedConnectionManager::SIPStreamedConnectionManager(SIPFSMDispatch* pDispatch): 
   _pDispatch(pDispatch),
   _portBase(10000),
   _portMax(12000)
@@ -36,48 +36,46 @@ SIPTCPConnectionManager::SIPTCPConnectionManager(SIPFSMDispatch* pDispatch):
   _currentIdentifier = OSS::getTicks();
 }
 
-SIPTCPConnectionManager::~SIPTCPConnectionManager()
+SIPStreamedConnectionManager::~SIPStreamedConnectionManager()
 {
 }
 
-void SIPTCPConnectionManager::initialize(const boost::filesystem::path& cfgDirectory)
+void SIPStreamedConnectionManager::initialize(const boost::filesystem::path& cfgDirectory)
 {
-
 }
 
-void SIPTCPConnectionManager::deinitialize()
+void SIPStreamedConnectionManager::deinitialize()
 {
-
 }
 
-void SIPTCPConnectionManager::add(SIPTCPConnection::Ptr conn)
+void SIPStreamedConnectionManager::add(SIPStreamedConnection::Ptr conn)
 {
   OSS::mutex_write_lock wlock(_rwConnectionsMutex);
   if (!conn->getIdentifier())
     conn->setIdentifier(++_currentIdentifier);
   _connections[conn->getIdentifier()] = conn;
-  OSS_LOG_INFO("SIPTCPConnection Added transport (" << conn->getIdentifier() << ") "
+  OSS_LOG_INFO("SIPStreamedConnectionManager Added transport (" << conn->getIdentifier() << ") "
     << conn->getLocalAddress().toIpPortString() <<
     "->" << conn->getRemoteAddress().toIpPortString() );
 }
 
-void SIPTCPConnectionManager::start(SIPTCPConnection::Ptr conn)
+void SIPStreamedConnectionManager::start(SIPStreamedConnection::Ptr conn)
 {
   OSS::mutex_write_lock wlock(_rwConnectionsMutex);
   if (!conn->getIdentifier())
     conn->setIdentifier(++_currentIdentifier);
   _connections[conn->getIdentifier()] = conn;
   conn->start(_pDispatch);
-  OSS_LOG_INFO("SIPTCPConnection started reading from transport (" << conn->getIdentifier() << ") "
+  OSS_LOG_INFO("SIPStreamedConnectionManager started reading from transport (" << conn->getIdentifier() << ") "
     << conn->getLocalAddress().toIpPortString() <<
     "->" << conn->getRemoteAddress().toIpPortString() );
 }
 
-void SIPTCPConnectionManager::stop(SIPTCPConnection::Ptr conn)
+void SIPStreamedConnectionManager::stop(SIPStreamedConnection::Ptr conn)
 {
   OSS::mutex_write_lock wlock(_rwConnectionsMutex);
 
-  OSS_LOG_INFO("Deleting SIPTCPConnection transport (" << conn->getIdentifier() << ") "
+  OSS_LOG_INFO("Deleting SIPStreamedConnection transport (" << conn->getIdentifier() << ") "
     << conn->getLocalAddress().toIpPortString() <<
     "->" << conn->getRemoteAddress().toIpPortString() );
 
@@ -85,10 +83,10 @@ void SIPTCPConnectionManager::stop(SIPTCPConnection::Ptr conn)
   conn->stop();
 }
 
-void SIPTCPConnectionManager::stopAll()
+void SIPStreamedConnectionManager::stopAll()
 {
   OSS::mutex_write_lock wlock(_rwConnectionsMutex);
-  for (std::map<OSS::UInt64, SIPTCPConnection::Ptr>::iterator iter = _connections.begin();
+  for (std::map<OSS::UInt64, SIPStreamedConnection::Ptr>::iterator iter = _connections.begin();
     iter != _connections.end(); iter++)
   {
     iter->second->stop();
@@ -96,33 +94,33 @@ void SIPTCPConnectionManager::stopAll()
   _connections.clear();
 }
 
-SIPTCPConnection::Ptr SIPTCPConnectionManager::findConnectionByAddress(const OSS::Net::IPAddress& target)
+SIPStreamedConnection::Ptr SIPStreamedConnectionManager::findConnectionByAddress(const OSS::Net::IPAddress& target)
 {
   OSS::mutex_read_lock rlock(_rwConnectionsMutex);
-  for (std::map<OSS::UInt64, SIPTCPConnection::Ptr>::iterator iter = _connections.begin();
+  for (std::map<OSS::UInt64, SIPStreamedConnection::Ptr>::iterator iter = _connections.begin();
     iter != _connections.end(); iter++)
   {
     if (iter->second->getRemoteAddress().compare(target, true))
       return iter->second;
   }
-  return SIPTCPConnection::Ptr();
+  return SIPStreamedConnection::Ptr();
 }
 
-SIPTCPConnection::Ptr SIPTCPConnectionManager::findConnectionById(OSS::UInt64 identifier)
+SIPStreamedConnection::Ptr SIPStreamedConnectionManager::findConnectionById(OSS::UInt64 identifier)
 {
   OSS::mutex_read_lock rlock(_rwConnectionsMutex);
   if (_connections.find(identifier) != _connections.end())
   {
-    SIPTCPConnection::Ptr conn = _connections[identifier];
+    SIPStreamedConnection::Ptr conn = _connections[identifier];
     if (conn)
     {
-      OSS_LOG_INFO("SIPTCPConnectionManager::findConnectionById got transport (" << conn->getIdentifier() << ") "
+      OSS_LOG_INFO("SIPStreamedConnectionManager::findConnectionById got transport (" << conn->getIdentifier() << ") "
       << conn->getLocalAddress().toIpPortString() <<
       "->" << conn->getRemoteAddress().toIpPortString() );
     }
     return conn;
   }
-  return SIPTCPConnection::Ptr();
+  return SIPStreamedConnection::Ptr();
 }
 
 } } // OSS::SIP
