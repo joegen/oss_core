@@ -30,7 +30,7 @@ namespace SIP {
 
 SIPUDPListener::SIPUDPListener(
   SIPTransportService* pTransportService,
-  SIPFSMDispatch* dispatch,
+  const SIPTransportSession::Dispatch& dispatch,
   const std::string& address, 
   const std::string& port):
   SIPListener(pTransportService, address, port),

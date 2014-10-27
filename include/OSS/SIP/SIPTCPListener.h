@@ -43,7 +43,7 @@ public:
   
   SIPTCPListener(
     SIPTransportService* pTransportService,
-    SIPFSMDispatch* dispatch,
+    const SIPTransportSession::Dispatch& dispatch,
     const std::string& address, 
     const std::string& port,
     SIPStreamedConnectionManager& connectionManager);
@@ -80,7 +80,7 @@ private:
   SIPStreamedConnection::Ptr _pNewConnection;
     /// The next connection to be accepted.
 
-  SIPFSMDispatch* _dispatch;
+  SIPTransportSession::Dispatch _dispatch;
     /// The handler for all incoming requests.
 };
 

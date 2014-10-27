@@ -28,8 +28,8 @@ namespace OSS {
 namespace SIP {
 
 
-SIPWebSocketConnectionManager::SIPWebSocketConnectionManager(SIPFSMDispatch* pDispatch):
-  _pDispatch(pDispatch),
+SIPWebSocketConnectionManager::SIPWebSocketConnectionManager(const SIPTransportSession::Dispatch& dispatch):
+  _dispatch(dispatch),
   _portBase(10000),
   _portMax(12000)
 {
@@ -77,7 +77,7 @@ void SIPWebSocketConnectionManager::start(SIPWebSocketConnection::Ptr conn)
 
   _connections[conn->getIdentifier()] = conn;
 
-  pConnection->start(_pDispatch);
+  pConnection->start(_dispatch);
   OSS_LOG_INFO("SIPWebSocketConnection started reading from transport (" << pConnection->getIdentifier() << ") "
     << pConnection->getLocalAddress().toIpPortString() <<
     "->" << pConnection->getRemoteAddress().toIpPortString() );

@@ -30,14 +30,14 @@ namespace OSS {
 namespace SIP {
 
  
-SIPTransportService::SIPTransportService(SIPFSMDispatch* pDispatch):
+SIPTransportService::SIPTransportService(const SIPTransportSession::Dispatch& dispatch):
   _ioService(),
   _pIoServiceThread(0),
   _resolver(_ioService),
-  _pDispatch(pDispatch),
-  _tcpConMgr(_pDispatch),
-  _wsConMgr(_pDispatch),
-  _tlsConMgr(_pDispatch),
+  _dispatch(dispatch),
+  _tcpConMgr(_dispatch),
+  _wsConMgr(_dispatch),
+  _tlsConMgr(_dispatch),
   _udpListeners(),
   _tcpListeners(),
   _tlsListeners(),
@@ -187,7 +187,7 @@ void SIPTransportService::addUDPTransport(std::string& ip, std::string& port, co
   OSS::string_sprintf_string<256>(key, "%s:%s", ip.c_str(), port.c_str());
   if (_udpListeners.find(key) != _udpListeners.end())
     throw OSS::SIP::SIPException("Duplicate UDP Transport detected while calling addUDPTransport()");
-  SIPUDPListener::Ptr udpListener(new SIPUDPListener(this, _pDispatch, ip, port));
+  SIPUDPListener::Ptr udpListener(new SIPUDPListener(this, _dispatch, ip, port));
   udpListener->setExternalAddress(externalIp);
   _udpListeners[key] = udpListener;
 
@@ -206,7 +206,7 @@ void SIPTransportService::addTCPTransport(std::string& ip, std::string& port, co
   OSS::string_sprintf_string<256>(key, "%s:%s", ip.c_str(), port.c_str());
   if (_tcpListeners.find(key) != _tcpListeners.end())
     throw OSS::SIP::SIPException("Duplicate TCP transport while calling addTCPTransport()");
-  SIPTCPListener::Ptr pTcpListener = SIPTCPListener::Ptr(new SIPTCPListener(this, _pDispatch, ip, port, _tcpConMgr));
+  SIPTCPListener::Ptr pTcpListener = SIPTCPListener::Ptr(new SIPTCPListener(this, _dispatch, ip, port, _tcpConMgr));
   pTcpListener->setExternalAddress(externalIp);
   _tcpListeners[key] = pTcpListener;
   boost::system::error_code ec;
@@ -246,7 +246,7 @@ void SIPTransportService::addTLSTransport(
   OSS::string_sprintf_string<256>(key, "%s:%s", ip.c_str(), port.c_str());
   if (_tlsListeners.find(key) != _tlsListeners.end())
     throw OSS::SIP::SIPException("Duplicate TSL transport while calling addTLSTransport()");
-  SIPTLSListener::Ptr pTlsListener = SIPTLSListener::Ptr(new SIPTLSListener(this, _pDispatch, ip, port, tlsCertFile, diffieHellmanParamFile, tlsPassword));
+  SIPTLSListener::Ptr pTlsListener = SIPTLSListener::Ptr(new SIPTLSListener(this, _dispatch, ip, port, tlsCertFile, diffieHellmanParamFile, tlsPassword));
   pTlsListener->setExternalAddress(externalIp);
   _tlsListeners[key] = pTlsListener;
   boost::system::error_code ec;

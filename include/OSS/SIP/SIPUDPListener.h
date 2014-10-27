@@ -43,7 +43,7 @@ public:
   
   SIPUDPListener(
     SIPTransportService* pTransportService,
-    SIPFSMDispatch* dispatch,
+    const SIPTransportSession::Dispatch& dispatch,
     const std::string& address, 
     const std::string& port);
     /// Construct the server to listen on the specified TCP address and port.
@@ -79,7 +79,7 @@ private:
   SIPUDPConnection::Ptr _pNewConnection;
     /// The next connection to be accepted.
 
-  SIPFSMDispatch* _dispatch;
+  SIPTransportSession::Dispatch _dispatch;
     /// The handler for all incoming requests.
 
   friend class SIPUDPConnection;

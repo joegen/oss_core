@@ -51,9 +51,10 @@ SIPUDPConnection::~SIPUDPConnection()
 {  
 }
 
-void SIPUDPConnection::start(SIPFSMDispatch* pDispatch)
+void SIPUDPConnection::start(const SIPTransportSession::Dispatch& dispatch)
 {
-  _pDispatch = pDispatch;
+  setMessageDispatch(dispatch);
+  
   boost::asio::socket_base::receive_buffer_size recBuffSize(25165824);
   boost::asio::socket_base::send_buffer_size sendBuffSize(25165824);
   _socket.set_option(recBuffSize);
@@ -176,7 +177,7 @@ void SIPUDPConnection::handleRead(const boost::system::error_code& e, std::size_
       //
       SIPUDPConnectionClone* clone = new SIPUDPConnectionClone(shared_from_this());
       SIPTransportSession::Ptr pClone(clone);
-      _pDispatch->onReceivedMessage(_pRequest, pClone);
+      dispatchMessage(_pRequest, pClone);
     }
     else if (_bytesRead == 4 &&
         (char)_buffer[0] == '\r' &&

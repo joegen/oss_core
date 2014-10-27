@@ -29,7 +29,7 @@ namespace SIP {
 
 SIPTLSListener::SIPTLSListener(
   SIPTransportService* pTransportService,
-  SIPFSMDispatch* dispatch,
+  const SIPTransportSession::Dispatch& dispatch,
   const std::string& address, 
   const std::string& port,
   const std::string& tlsCertFile,

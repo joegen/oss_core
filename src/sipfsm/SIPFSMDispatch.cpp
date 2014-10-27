@@ -29,7 +29,7 @@ namespace SIP {
 
 
 SIPFSMDispatch::SIPFSMDispatch() :
-  _transport(this),
+  _transport(boost::bind(&SIPFSMDispatch::onReceivedMessage, this, _1, _2)),
   _ict(this),
   _nict(this),
   _ist(this),

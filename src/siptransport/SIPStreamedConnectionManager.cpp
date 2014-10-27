@@ -28,8 +28,8 @@ namespace OSS {
 namespace SIP {
 
 
-SIPStreamedConnectionManager::SIPStreamedConnectionManager(SIPFSMDispatch* pDispatch): 
-  _pDispatch(pDispatch),
+SIPStreamedConnectionManager::SIPStreamedConnectionManager(const SIPTransportSession::Dispatch& dispatch): 
+  _dispatch(dispatch),
   _portBase(10000),
   _portMax(12000)
 {
@@ -65,7 +65,7 @@ void SIPStreamedConnectionManager::start(SIPStreamedConnection::Ptr conn)
   if (!conn->getIdentifier())
     conn->setIdentifier(++_currentIdentifier);
   _connections[conn->getIdentifier()] = conn;
-  conn->start(_pDispatch);
+  conn->start(_dispatch);
   OSS_LOG_INFO("SIPStreamedConnectionManager started reading from transport (" << conn->getIdentifier() << ") "
     << conn->getLocalAddress().toIpPortString() <<
     "->" << conn->getRemoteAddress().toIpPortString() );

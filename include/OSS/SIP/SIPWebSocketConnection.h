@@ -104,7 +104,7 @@ public:
 
   virtual ~SIPWebSocketConnection();
 
-  void start(SIPFSMDispatch* pDispatch);
+  void start(const SIPTransportSession::Dispatch& dispatch);
     /// Start the first asynchronous operation for the connection.
 
   void stop();

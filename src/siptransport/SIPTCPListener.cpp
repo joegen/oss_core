@@ -30,7 +30,7 @@ namespace SIP {
 
 SIPTCPListener::SIPTCPListener(
   SIPTransportService* pTransportService,
-  SIPFSMDispatch* dispatch,
+  const SIPTransportSession::Dispatch& dispatch,
   const std::string& address, 
   const std::string& port,
   SIPStreamedConnectionManager& connectionManager):

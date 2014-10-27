@@ -54,7 +54,7 @@ public:
   typedef std::map<std::string, SIPWebSocketListener::Ptr> WSListeners;
   typedef std::map<std::string, SIPTLSListener::Ptr> TLSListeners;
 
-  SIPTransportService(SIPFSMDispatch* pDispatch);
+  SIPTransportService(const SIPTransportSession::Dispatch& dispatch);
 
   ~SIPTransportService();
     /// Destroys the server.
@@ -216,7 +216,7 @@ private:
   boost::asio::io_service _ioService;
   boost::thread* _pIoServiceThread;
   boost::asio::ip::tcp::resolver _resolver;
-  SIPFSMDispatch* _pDispatch;
+  SIPTransportSession::Dispatch _dispatch;
   SIPStreamedConnectionManager _tcpConMgr;
   SIPWebSocketConnectionManager _wsConMgr;
   SIPStreamedConnectionManager _tlsConMgr;

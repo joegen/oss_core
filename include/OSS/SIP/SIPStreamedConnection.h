@@ -68,7 +68,7 @@ public:
   boost::asio::ip::tcp::socket& socket();
     /// Get the socket associated with the connection.
 
-  void start(SIPFSMDispatch* kpDispatch);
+  void start(const SIPTransportSession::Dispatch& dispatch);
     /// Start the first asynchronous operation for the connection.
 
   void stop();

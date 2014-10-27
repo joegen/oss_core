@@ -55,7 +55,7 @@ public:
   boost::asio::ip::udp::socket& socket();
     /// Get the socket associated with the connection.
 
-  void start(SIPFSMDispatch* pDispatch);
+  void start(const SIPTransportSession::Dispatch& dispatch);
     /// Start the first asynchronous operation for the connection.
 
   void stop();

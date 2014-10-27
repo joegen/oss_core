@@ -50,9 +50,9 @@ SIPUDPConnectionClone::~SIPUDPConnectionClone()
 {
 }
 
-void SIPUDPConnectionClone::start(SIPFSMDispatch* pDispatch)
+void SIPUDPConnectionClone::start(const SIPTransportSession::Dispatch& dispatch)
 {
-  _orginalConnection->start(pDispatch);
+  _orginalConnection->start(dispatch);
 }
 
 

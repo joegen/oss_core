@@ -44,7 +44,7 @@ public:
   
   SIPTLSListener(
     SIPTransportService* pTransportService,
-    SIPFSMDispatch* dispatch,
+    const SIPTransportSession::Dispatch& dispatch,
     const std::string& address, 
     const std::string& port,
     const std::string& tlsCertFile,
@@ -88,7 +88,7 @@ private:
   SIPStreamedConnection::Ptr _pNewConnection;
     /// The next connection to be accepted.
 
-  SIPFSMDispatch* _dispatch;
+  SIPTransportSession::Dispatch _dispatch;
     /// The handler for all incoming requests.
 
   std::string _tlsCertFile;

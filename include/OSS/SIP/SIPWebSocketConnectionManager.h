@@ -70,7 +70,7 @@ class SIPWebSocketConnectionManager: private boost::noncopyable
   /// needs to shut down.
 {
 public:
-  SIPWebSocketConnectionManager(SIPFSMDispatch* pDispatch);
+  SIPWebSocketConnectionManager(const SIPTransportSession::Dispatch& dispatch);
     /// Creates a new connection manager object.
 
   ~SIPWebSocketConnectionManager();
@@ -121,7 +121,7 @@ public:
 private:
   OSS::mutex_read_write _rwConnectionsMutex;
   std::map<OSS::UInt64, SIPWebSocketConnection::Ptr> _connections;
-  SIPFSMDispatch* _pDispatch;
+  SIPTransportSession::Dispatch _dispatch;
   unsigned short _portBase;
   unsigned short _portMax;
 };

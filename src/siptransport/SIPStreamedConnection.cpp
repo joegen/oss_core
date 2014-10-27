@@ -95,9 +95,9 @@ boost::asio::ip::tcp::socket& SIPStreamedConnection::socket()
 }
     /// Destroys the TCP connection
 
-void SIPStreamedConnection::start(SIPFSMDispatch* pDispatch)
+void SIPStreamedConnection::start(const SIPTransportSession::Dispatch& dispatch)
 {
-  _pDispatch = pDispatch;
+  setMessageDispatch(dispatch);
   
   if (_pTlsStream)
   {
@@ -237,7 +237,8 @@ void SIPStreamedConnection::handleRead(const boost::system::error_code& e, std::
       //
       // Message has been read in full
       //
-      _pDispatch->onReceivedMessage(_pRequest->shared_from_this(), shared_from_this());
+      dispatchMessage(_pRequest->shared_from_this(), shared_from_this());
+      
       if (tail >= end)
       {
         //
@@ -271,7 +272,7 @@ void SIPStreamedConnection::handleRead(const boost::system::error_code& e, std::
           if (result)
           {
             OSS_LOG_DEBUG("SIPStreamedConnection::handleRead() parsed " << tailIteration << " more SIP Request.");
-            _pDispatch->onReceivedMessage(_pRequest->shared_from_this(), shared_from_this());
+            dispatchMessage(_pRequest->shared_from_this(), shared_from_this());
             continue;
           }
           else if (!boost::indeterminate(result))

@@ -91,10 +91,10 @@ SIPWebSocketConnection::~SIPWebSocketConnection()
 	stop();
 }
 
-void SIPWebSocketConnection::start(SIPFSMDispatch* pDispatch)
+void SIPWebSocketConnection::start(const SIPTransportSession::Dispatch& dispatch)
     /// Start the first asynchronous operation for the connection.
 {
-	  _pDispatch = pDispatch;
+  setMessageDispatch(dispatch);
 }
 
 void SIPWebSocketConnection::stop()
@@ -168,7 +168,7 @@ void SIPWebSocketConnection::handleRead(const boost::system::error_code& e, std:
 		//
 		// Message has been read in full
 		//
-		_pDispatch->onReceivedMessage(_pRequest->shared_from_this(), shared_from_this());
+		dispatchMessage(_pRequest->shared_from_this(), shared_from_this());
 		if (tail >= end)
 		{
 			//

@@ -41,7 +41,7 @@ class OSS_API SIPStreamedConnectionManager: private boost::noncopyable
   /// needs to shut down.
 {
 public:
-  SIPStreamedConnectionManager(SIPFSMDispatch* pDispatch);
+  SIPStreamedConnectionManager(const SIPTransportSession::Dispatch& dispatch);
     /// Creates a new connection manager object.
 
   ~SIPStreamedConnectionManager();
@@ -91,7 +91,7 @@ private:
   OSS::mutex_read_write _rwConnectionsMutex;
   OSS::UInt64 _currentIdentifier;
   std::map<OSS::UInt64, SIPStreamedConnection::Ptr> _connections;
-  SIPFSMDispatch* _pDispatch;
+  SIPTransportSession::Dispatch _dispatch;
   unsigned short _portBase;
   unsigned short _portMax;
 };

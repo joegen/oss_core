@@ -50,6 +50,7 @@ class OSS_API SIPTransportSession
 public:
   typedef boost::shared_ptr<SIPTransportSession> Ptr;
   typedef OSS::Net::AccessControl SIPTransportRateLimitStrategy;
+  typedef boost::function<void(SIPMessage::Ptr, SIPTransportSession::Ptr)> Dispatch;
 
   SIPTransportSession();
     /// Creates a new SIPTransportSession
@@ -77,7 +78,7 @@ public:
     /// reliability of the transport for stream based connections.
     /// The default packet is CRLF/CRLF
 
-  virtual void start(SIPFSMDispatch* pDispatch) = 0;
+  virtual void start(const SIPTransportSession::Dispatch& dispatch) = 0;
     /// Start the first asynchronous operation for the connection.
 
   virtual void stop() = 0;
@@ -134,6 +135,10 @@ public:
 
   void setExternalAddress(const std::string& externalAddress);
     /// Set set the external address
+  
+  void setMessageDispatch(const Dispatch& dispatch);
+  
+  void dispatchMessage(const SIPMessage::Ptr& pMsg, const SIPTransportSession::Ptr& pTransport);
 protected:
   static SIPTransportRateLimitStrategy _rateLimit;
 
@@ -145,6 +150,7 @@ protected:
   std::string _transportScheme;
   OSS::Net::IPAddress _connectAddress;
   std::string _externalAddress;
+  Dispatch _messageDispatch;
 private:
     SIPTransportSession(const SIPTransportSession&);
     SIPTransportSession& operator = (const SIPTransportSession&);
@@ -213,6 +219,19 @@ inline const std::string& SIPTransportSession::getExternalAddress() const
 inline void SIPTransportSession::setExternalAddress(const std::string& externalAddress)
 {
   _externalAddress = externalAddress;
+}
+
+inline void SIPTransportSession::setMessageDispatch(const Dispatch& dispatch)
+{
+  _messageDispatch = dispatch;
+}
+  
+inline void SIPTransportSession::dispatchMessage(const SIPMessage::Ptr& pMsg, const SIPTransportSession::Ptr& pTransport)
+{
+  if (_messageDispatch)
+  {
+    _messageDispatch(pMsg, pTransport);
+  }
 }
 
 } } // OSS::SIP
