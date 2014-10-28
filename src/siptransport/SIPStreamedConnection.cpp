@@ -98,20 +98,18 @@ boost::asio::ip::tcp::socket& SIPStreamedConnection::socket()
 void SIPStreamedConnection::start(const SIPTransportSession::Dispatch& dispatch)
 {
   setMessageDispatch(dispatch);
-  
-  if (_pTlsStream)
+  if (!_pTlsStream)
   {
-    _pTlsStream->async_read_some(boost::asio::buffer(_buffer),
-      boost::bind(&SIPStreamedConnection::handleRead, shared_from_this(),
-        boost::asio::placeholders::error,
-        boost::asio::placeholders::bytes_transferred, (void*)0));
+    readSome();
   }
   else
   {
-    _pTcpSocket->async_read_some(boost::asio::buffer(_buffer),
-        boost::bind(&SIPStreamedConnection::handleRead, shared_from_this(),
-          boost::asio::placeholders::error,
-          boost::asio::placeholders::bytes_transferred, (void*)0));
+    if (!_isClient)
+    {
+      _pTlsStream->async_handshake(boost::asio::ssl::stream_base::server,
+          boost::bind(&SIPStreamedConnection::handleServerHandshake, this,
+            boost::asio::placeholders::error));
+    }
   }
 }
 
@@ -337,7 +335,6 @@ void SIPStreamedConnection::handleRead(const boost::system::error_code& e, std::
   }
   else
   {
-
     OSS_LOG_WARNING("SIPStreamedConnection::handleRead() Exception " << e.message());
     if (++_readExceptionCount < 5)
     {
@@ -377,13 +374,6 @@ void SIPStreamedConnection::writeMessage(SIPMessage::Ptr msg, const std::string&
   writeMessage(msg);
 }
 
-void SIPStreamedConnection::handleResolve(boost::asio::ip::tcp::resolver::iterator endPointIter)
-{
-  _pTcpSocket->async_connect(endPointIter->endpoint(),
-                        boost::bind(&SIPStreamedConnection::handleConnect, shared_from_this(),
-                        boost::asio::placeholders::error, endPointIter));
-}
-
 void SIPStreamedConnection::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter)
 {
   if (!e)
@@ -395,7 +385,7 @@ void SIPStreamedConnection::handleConnect(const boost::system::error_code& e, bo
     else
     {
       _pTlsStream->async_handshake(boost::asio::ssl::stream_base::client,
-          boost::bind(&SIPStreamedConnection::handleHandshake, shared_from_this(),
+          boost::bind(&SIPStreamedConnection::handleClientHandshake, shared_from_this(),
             boost::asio::placeholders::error));
     }
   }
@@ -405,7 +395,22 @@ void SIPStreamedConnection::handleConnect(const boost::system::error_code& e, bo
   }
 }
 
-void SIPStreamedConnection::handleHandshake(const boost::system::error_code& e)
+void SIPStreamedConnection::handleServerHandshake(const boost::system::error_code& e)
+{
+  if (!e)
+  {
+    //
+    // start reading from the connection
+    //
+    readSome();
+  }
+  else
+  {
+    OSS_LOG_WARNING("SIPStreamedConnection::handleServerHandshake() Exception " << e.message());
+  }
+}
+
+void SIPStreamedConnection::handleClientHandshake(const boost::system::error_code& e)
 {
   // this is only significant for TLS
   if (!e)
@@ -415,7 +420,7 @@ void SIPStreamedConnection::handleHandshake(const boost::system::error_code& e)
   }
   else
   {
-    OSS_LOG_WARNING("SIPStreamedConnection::handleHandshake() Exception " << e.message());
+    OSS_LOG_WARNING("SIPStreamedConnection::handleClientHandshake() Exception " << e.message());
   }
 }
 
@@ -494,6 +499,8 @@ void SIPStreamedConnection::clientBind(const OSS::Net::IPAddress& listener, unsi
 
 void SIPStreamedConnection::clientConnect(const OSS::Net::IPAddress& target)
 {
+  _isClient = true;
+  
   if (_pTcpSocket->is_open())
   {
     _connectAddress = target;

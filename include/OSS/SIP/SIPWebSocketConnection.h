@@ -136,15 +136,14 @@ public:
   void handleWrite(const boost::system::error_code& e);
     /// Handle completion of a write operation.
 
-  void handleResolve(boost::asio::ip::tcp::resolver::iterator endPointIter);
-    /// Handle completion of connect resolve query
-
   void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter);
     /// Handle completion of async connect
 
-  void handleHandshake(const boost::system::error_code& error);
+  void handleClientHandshake(const boost::system::error_code& error);
     /// Handle a secure hand shake from remote endpoint
 
+  void handleServerHandshake(const boost::system::error_code& error);
+  
   OSS::Net::IPAddress getLocalAddress() const;
     /// Returns the local address binding for this transport
 

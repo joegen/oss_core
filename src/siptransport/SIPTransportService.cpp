@@ -181,7 +181,7 @@ bool SIPTransportService::isLocalTransport(const std::string& proto,
   return false;
 }
 
-void SIPTransportService::addUDPTransport(std::string& ip, std::string& port, const std::string& externalIp)
+void SIPTransportService::addUDPTransport(const std::string& ip, const std::string& port, const std::string& externalIp)
 {
   OSS_LOG_INFO("Adding UDP SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
@@ -200,7 +200,7 @@ void SIPTransportService::addUDPTransport(std::string& ip, std::string& port, co
   OSS_LOG_INFO("UDP SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
 }
 
-void SIPTransportService::addTCPTransport(std::string& ip, std::string& port, const std::string& externalIp)
+void SIPTransportService::addTCPTransport(const std::string& ip, const std::string& port, const std::string& externalIp)
 {
   OSS_LOG_INFO("Adding TCP SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
@@ -217,7 +217,7 @@ void SIPTransportService::addTCPTransport(std::string& ip, std::string& port, co
   OSS_LOG_INFO("TCP SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
 }
 
-void SIPTransportService::addWSTransport(std::string& ip, std::string& port, const std::string& externalIp)
+void SIPTransportService::addWSTransport(const std::string& ip, const std::string& port, const std::string& externalIp)
 {
   OSS_LOG_INFO("Adding WebSocket SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
@@ -234,7 +234,7 @@ void SIPTransportService::addWSTransport(std::string& ip, std::string& port, con
   OSS_LOG_INFO("WebSocket SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
 }
 
-void SIPTransportService::addTLSTransport(std::string& ip, std::string& port, const std::string& externalIp)
+void SIPTransportService::addTLSTransport(const std::string& ip, const std::string& port, const std::string& externalIp)
 {
   OSS_LOG_INFO("Adding TLS SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
@@ -409,6 +409,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientTcpTransport(
     const OSS::Net::IPAddress& remoteAddress)
 {
   SIPTransportSession::Ptr pTCPConnection(new SIPStreamedConnection(_ioService, _tcpConMgr));
+  pTCPConnection->isClient() = true;
   pTCPConnection->clientBind(localAddress, _tcpPortBase, _tcpPortMax);
   pTCPConnection->clientConnect(remoteAddress);
   return pTCPConnection;
@@ -419,6 +420,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientTlsTransport(
     const OSS::Net::IPAddress& remoteAddress)
 {
   SIPTransportSession::Ptr pTlsConnection(new SIPStreamedConnection(_ioService, &_tlsContext, _tlsConMgr));
+  pTlsConnection->isClient() = true;
   pTlsConnection->clientBind(localAddress, _tcpPortBase, _tcpPortMax);
   pTlsConnection->clientConnect(remoteAddress);
   return pTlsConnection;

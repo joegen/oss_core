@@ -61,12 +61,6 @@ public:
   virtual void handleStop();
     /// Handle a request to stop the server.
 
-  virtual void connect(const std::string& address, const std::string& port);
-    /// Connect to the specified address and port
-
-  virtual void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter);
-    /// Handle completion of the connect operation.
-
 private:
   boost::asio::ip::tcp::acceptor _acceptor;
     /// Acceptor used to listen for incoming connections.

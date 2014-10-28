@@ -38,7 +38,8 @@ SIPTransportSession::SIPTransportSession() :
   _pDispatch(0),
   _bytesTransferred(0),
   _bytesRead(0),
-  _identifier(0)
+  _identifier(0),
+  _isClient(false)
 {
 }
 
@@ -47,7 +48,8 @@ SIPTransportSession::SIPTransportSession(const SIPTransportSession&) :
   _pDispatch(0),
   _bytesTransferred(0),
   _bytesRead(0),
-  _identifier(0)
+  _identifier(0),
+  _isClient(false)
 {
 }
 

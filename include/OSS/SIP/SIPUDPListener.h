@@ -70,12 +70,6 @@ private:
   virtual void handleAccept(const boost::system::error_code& e, OSS_HANDLE userData = 0);
     /// Handle completion of an asynchronous accept operation.
 
-  virtual void connect(const std::string& address, const std::string& port);
-    /// Connect to the specified address and port
-
-  virtual void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter);
-    /// Handle completion of the connect operation.
-
   SIPUDPConnection::Ptr _pNewConnection;
     /// The next connection to be accepted.
 

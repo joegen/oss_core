@@ -157,17 +157,6 @@ void SIPWebSocketListener::handleStop()
 	_connectionManager.stopAll();
 }
 
-void SIPWebSocketListener::connect(const std::string& address, const std::string& port)
-{
-	//TODO: Not yet implemented for websocket
-	OSS_ASSERT(false);
-}
-
-void SIPWebSocketListener::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter)
-{
-	//TODO: Not yet implemented for websocket
-	OSS_ASSERT(false);
-}
 
 } } // OSS::SIP
 

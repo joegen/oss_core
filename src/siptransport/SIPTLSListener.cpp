@@ -21,6 +21,7 @@
 #include <boost/bind.hpp>
 #include "OSS/SIP/SIPTLSListener.h"
 #include "OSS/SIP/SIPTransportService.h"
+#include "OSS/UTL/Logger.h"
 
 
 namespace OSS {
@@ -35,10 +36,10 @@ SIPTLSListener::SIPTLSListener(
   SIPListener(pTransportService, address, port),
   _acceptor(pTransportService->ioService()),
   _resolver(pTransportService->ioService()),
+  _tlsContext(pTransportService->tlsContext()),
   _connectionManager(dispatch),
   _pNewConnection(new SIPStreamedConnection(pTransportService->ioService(), &_tlsContext, _connectionManager)),
-  _dispatch(dispatch),
-  _tlsContext(pTransportService->tlsContext())
+  _dispatch(dispatch)
 {
 }
 
@@ -47,17 +48,7 @@ SIPTLSListener::~SIPTLSListener()
 }
 
 void SIPTLSListener::run()
-{/*
-  // Prepare the TLS context
-  _tlsContext.set_options(
-        boost::asio::ssl::context::default_workarounds
-        | boost::asio::ssl::context::no_sslv2
-        | boost::asio::ssl::context::single_dh_use);
-  _tlsContext.use_certificate_chain_file(_tlsCertFile.c_str());
-  _tlsContext.use_private_key_file(_tlsCertFile.c_str(), boost::asio::ssl::context::pem);
-  _tlsContext.use_tmp_dh_file(_diffieHellmanParamFile.c_str());
-  _tlsContext.set_password_callback(boost::bind(&SIPTLSListener::getTLSPassword, this));
-*/
+{
   // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
   boost::asio::ip::tcp::resolver::query query(getAddress(), getPort());
   boost::asio::ip::tcp::endpoint endpoint = *_resolver.resolve(query);
@@ -74,31 +65,26 @@ void SIPTLSListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE
 {
   if (!e)
   {
+    OSS_LOG_DEBUG("SIPTLSListener::handleAccept STARTING new connection");
     _pNewConnection->setExternalAddress(_externalAddress);
     _connectionManager.start(_pNewConnection);
-    _pNewConnection.reset(new SIPStreamedConnection(*_pIoService, &_tlsContext, _connectionManager));
-    _acceptor.async_accept(dynamic_cast<SIPStreamedConnection*>(_pNewConnection.get())->socket().lowest_layer(),
-      boost::bind(&SIPTLSListener::handleAccept, this,
-        boost::asio::placeholders::error, userData));
+
+    if (_acceptor.is_open())
+    {
+      OSS_LOG_DEBUG("SIPTLSListener::handleAccept RESTARTING async accept loop");
+      _pNewConnection.reset(new SIPStreamedConnection(*_pIoService, _connectionManager));
+      _acceptor.async_accept(dynamic_cast<SIPStreamedConnection*>(_pNewConnection.get())->socket(),
+        boost::bind(&SIPTLSListener::handleAccept, this,
+          boost::asio::placeholders::error, userData));
+    }
+    else
+    {
+      OSS_LOG_DEBUG("SIPTLSListener::handleAccept ABORTING async accept loop");
+    }
   }
-}
-
-void SIPTLSListener::connect(const std::string& address, const std::string& port)
-{
-  boost::asio::ip::tcp::resolver::query query(address, port);   
-   _resolver.async_resolve(query,
-        boost::bind(&SIPTLSListener::handleConnect, this,
-                    boost::asio::placeholders::error,
-                    boost::asio::placeholders::iterator));
-}
-
-void SIPTLSListener::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter)
-{
-  if (!e)
+  else
   {
-    SIPStreamedConnection::Ptr conn(new SIPStreamedConnection(*_pIoService, &_tlsContext, _connectionManager));
-    _connectionManager.add(conn);
-    conn->handleResolve(endPointIter);
+    OSS_LOG_DEBUG("SIPTLSListener::handleAccept INVOKED with exception " << e.message());
   }
 }
 

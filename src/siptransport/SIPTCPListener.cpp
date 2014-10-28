@@ -88,25 +88,6 @@ void SIPTCPListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE
   }
 }
 
-void SIPTCPListener::connect(const std::string& address, const std::string& port)
-{
-  boost::asio::ip::tcp::resolver::query query(address, port);   
-   _resolver.async_resolve(query,
-        boost::bind(&SIPTCPListener::handleConnect, this,
-                    boost::asio::placeholders::error,
-                    boost::asio::placeholders::iterator));
-}
-
-void SIPTCPListener::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter)
-{
-  if (!e)
-  {
-    SIPStreamedConnection::Ptr conn(new SIPStreamedConnection(*_pIoService, _connectionManager));
-    _connectionManager.add(conn);
-    conn->handleResolve(endPointIter);
-  }
-}
-
 void SIPTCPListener::handleStop()
 {
   // The server is stopped by cancelling all outstanding asynchronous

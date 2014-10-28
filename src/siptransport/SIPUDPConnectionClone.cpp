@@ -82,19 +82,22 @@ void SIPUDPConnectionClone::writeMessage(SIPMessage::Ptr msg)
   throw OSS::SIP::SIPException("Invalid UDP Transport Operation");
 }
 
-void SIPUDPConnectionClone::handleResolve(boost::asio::ip::tcp::resolver::iterator endPointIter)
-{
-  // This is only significant for stream based connections (TCP/TLS)
-}
 
 void SIPUDPConnectionClone::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter)
 {
   // This is only significant for stream based connections (TCP/TLS)
 }
 
-void SIPUDPConnectionClone::handleHandshake(const boost::system::error_code& error)
+void SIPUDPConnectionClone::handleClientHandshake(const boost::system::error_code& error)
 {
-  // This is only significant for stream based connections (TCP/TLS)
+  // this is only significant for TLS
+	OSS_ASSERT(false);
+}
+
+void SIPUDPConnectionClone::handleServerHandshake(const boost::system::error_code& error)
+{
+  // this is only significant for TLS
+	OSS_ASSERT(false);
 }
 
 void SIPUDPConnectionClone::clientBind(const OSS::Net::IPAddress& listener, unsigned short portBase, unsigned short portMax)

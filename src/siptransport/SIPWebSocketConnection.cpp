@@ -246,21 +246,21 @@ void SIPWebSocketConnection::writeMessage(SIPMessage::Ptr msg, const std::string
 	  writeMessage(msg);
 }
 
-void SIPWebSocketConnection::handleResolve(boost::asio::ip::tcp::resolver::iterator endPointIter)
-{
-	// Client side not implemented yet
-	OSS_ASSERT(false);
-}
-
 void SIPWebSocketConnection::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter)
 {
 	// Client side not implemented yet
 	OSS_ASSERT(false);
 }
 
-void SIPWebSocketConnection::handleHandshake(const boost::system::error_code& error)
+void SIPWebSocketConnection::handleClientHandshake(const boost::system::error_code& error)
 {
 	  // this is only significant for TLS
+	OSS_ASSERT(false);
+}
+
+void SIPWebSocketConnection::handleServerHandshake(const boost::system::error_code& error)
+{
+  // this is only significant for TLS
 	OSS_ASSERT(false);
 }
 

@@ -90,15 +90,15 @@ public:
   virtual void handleWrite(const boost::system::error_code& e) = 0;
     /// Handle completion of a write operation.
 
-  virtual void handleResolve(boost::asio::ip::tcp::resolver::iterator endPointIter) = 0;
-    /// Handle completion of connect resolve query
 
   virtual void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter) = 0;
     /// Handle completion of async connect
 
-  virtual void handleHandshake(const boost::system::error_code& error) = 0;
+  virtual void handleClientHandshake(const boost::system::error_code& error) = 0;
     /// Handle a secure hand shake from remote endpoint
 
+  virtual void handleServerHandshake(const boost::system::error_code& error) = 0;
+    /// Handle a secure handshake from remote endpoint
   virtual OSS::Net::IPAddress getLocalAddress() const = 0;
     /// Returns the local address binding for this transport
 
@@ -139,6 +139,9 @@ public:
   void setMessageDispatch(const Dispatch& dispatch);
   
   void dispatchMessage(const SIPMessage::Ptr& pMsg, const SIPTransportSession::Ptr& pTransport);
+  
+  bool& isClient();
+  const bool& isClient() const;
 protected:
   static SIPTransportRateLimitStrategy _rateLimit;
 
@@ -151,6 +154,7 @@ protected:
   OSS::Net::IPAddress _connectAddress;
   std::string _externalAddress;
   Dispatch _messageDispatch;
+  bool _isClient;
 private:
     SIPTransportSession(const SIPTransportSession&);
     SIPTransportSession& operator = (const SIPTransportSession&);
@@ -232,6 +236,16 @@ inline void SIPTransportSession::dispatchMessage(const SIPMessage::Ptr& pMsg, co
   {
     _messageDispatch(pMsg, pTransport);
   }
+}
+
+inline bool& SIPTransportSession::isClient()
+{
+  return _isClient;
+}
+
+inline const bool& SIPTransportSession::isClient() const
+{
+  return _isClient;
 }
 
 } } // OSS::SIP

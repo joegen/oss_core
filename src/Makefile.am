@@ -490,8 +490,8 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestKeyValueStore.cpp \
 	unit_test/TestOverlay.cpp \
 	unit_test/TestAccessControl.cpp \
-	unit_test/TestReplaces.cpp
-#        unit_test/TestWebSocket.cpp
+	unit_test/TestReplaces.cpp \
+	unit_test/TestTransport.cpp
 
 #
 # oss_core - A simple back-to-back user agent

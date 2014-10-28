@@ -87,6 +87,8 @@ void on_deinit()
 
 int on_test_run(const std::vector<std::string>& args)
 {
+  OSS::log_enable_logging(true);
+  OSS::log_enable_console();
   OSS::log_reset_level(OSS::PRIO_TRACE);
   return RUN_ALL_TESTS();
 }

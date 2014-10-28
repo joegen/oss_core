@@ -81,28 +81,25 @@ public:
   void handleStop();
     /// Handle a request to stop the transport service.
 
-  void addUDPTransport(std::string& ip, std::string& port, const std::string& externalIp);
+  void addUDPTransport(const std::string& ip, const std::string& port, const std::string& externalIp);
     /// Add a new UDP transport bound to the ip address and port.
     ///
     /// If the transport already exists, this function will throw
     /// a SIPDuplicateTransport exception
 
-  void addTCPTransport(std::string& ip, std::string& port, const std::string& externalIp);
+  void addTCPTransport(const std::string& ip, const std::string& port, const std::string& externalIp);
     /// Add a new TCP transport bound to the ip address and port.
     ///
     /// If the transport already exists, this function will throw
     /// a SIPDuplicateTransport exception
 
-  void addWSTransport(std::string& ip, std::string& port, const std::string& externalIp);
+  void addWSTransport(const std::string& ip, const std::string& port, const std::string& externalIp);
     /// Add a new WebSocket transport bound to the ip address and port.
     ///
     /// If the transport already exists, this function will throw
     /// a SIPDuplicateTransport exception
 
-  void addTLSTransport(
-    std::string& ip, 
-    std::string& port,
-    const std::string& externalIp);
+  void addTLSTransport(const std::string& ip, const std::string& port, const std::string& externalIp);
     /// Add a new TLS transport bound to the ip address and port.
     ///
     /// If the transport already exists, this function will throw

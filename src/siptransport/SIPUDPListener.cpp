@@ -65,16 +65,6 @@ void SIPUDPListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE
   // This is only significant for stream based connections (TCP/TLS)
 }
 
-void SIPUDPListener::connect(const std::string& address, const std::string& port)
-{
-  // This is only significant for stream based connections (TCP/TLS)
-}
-
-void SIPUDPListener::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter)
-{
-  // This is only significant for stream based connections (TCP/TLS)
-}
-
 OSS::Net::IPAddress SIPUDPListener::detectNATBinding(const std::string& stunServer)
 {
   OSS_VERIFY_NULL(_socket);

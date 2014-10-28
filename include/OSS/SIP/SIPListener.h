@@ -50,12 +50,6 @@ public:
   virtual void handleStop() = 0;
     /// Handle a request to stop the server.
 
-  virtual void connect(const std::string& address, const std::string& port) = 0;
-    /// Connect to the specified address and port
-
-  virtual void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter) = 0;
-    /// Handle completion of the connect operation.
-
   const std::string& getAddress() const;
     /// Returns the address where the listener is bound
 
