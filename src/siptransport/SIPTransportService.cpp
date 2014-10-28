@@ -34,6 +34,7 @@ SIPTransportService::SIPTransportService(const SIPTransportSession::Dispatch& di
   _ioService(),
   _pIoServiceThread(0),
   _resolver(_ioService),
+  _tlsContext(_ioService, boost::asio::ssl::context::tlsv1),
   _dispatch(dispatch),
   _tcpConMgr(_dispatch),
   _wsConMgr(_dispatch),
@@ -233,20 +234,14 @@ void SIPTransportService::addWSTransport(std::string& ip, std::string& port, con
   OSS_LOG_INFO("WebSocket SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
 }
 
-void SIPTransportService::addTLSTransport(
-  std::string& ip, 
-  std::string& port,
-  const std::string& externalIp,
-  const std::string& tlsCertFile,
-  const std::string& diffieHellmanParamFile,
-  const std::string& tlsPassword)
+void SIPTransportService::addTLSTransport(std::string& ip, std::string& port, const std::string& externalIp)
 {
   OSS_LOG_INFO("Adding TLS SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
   OSS::string_sprintf_string<256>(key, "%s:%s", ip.c_str(), port.c_str());
   if (_tlsListeners.find(key) != _tlsListeners.end())
     throw OSS::SIP::SIPException("Duplicate TSL transport while calling addTLSTransport()");
-  SIPTLSListener::Ptr pTlsListener = SIPTLSListener::Ptr(new SIPTLSListener(this, _dispatch, ip, port, tlsCertFile, diffieHellmanParamFile, tlsPassword));
+  SIPTLSListener::Ptr pTlsListener = SIPTLSListener::Ptr(new SIPTLSListener(this, _dispatch, ip, port));
   pTlsListener->setExternalAddress(externalIp);
   _tlsListeners[key] = pTlsListener;
   boost::system::error_code ec;
@@ -373,9 +368,37 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
   }
   else if (proto == "TLS" || proto == "tls")
   {
+    SIPTransportSession::Ptr pTLSConnection;
+
     //
-    // Make sure we implement this ASAP!
+    // Recycle old connection if it's still there
     //
+    bool isAlive = false;
+    if (!transportId.empty())
+    {
+      OSS_LOG_INFO(logId << "SIPTransportService::createClientTransport - Finding persistent connection with ID " <<  transportId);
+      pTLSConnection = _tlsConMgr.findConnectionById(OSS::string_to_number<OSS::UInt64>(transportId.c_str()));
+      if (pTLSConnection)
+        isAlive = pTLSConnection->writeKeepAlive();
+    }
+
+    if (!pTLSConnection)
+    {
+      OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
+          << ". Trying remote-address=" << remoteAddress.toIpPortString());
+      pTLSConnection = _tlsConMgr.findConnectionByAddress(remoteAddress);
+      if (pTLSConnection)
+        isAlive = pTLSConnection->writeKeepAlive();
+    }
+
+    if (!pTLSConnection || !isAlive)
+    {
+      OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
+          << " with remote-address=" << remoteAddress.toIpPortString()
+          << " creating new connection.");
+      pTLSConnection = createClientTlsTransport(localAddress, remoteAddress);
+    }
+    return pTLSConnection;
   }
 
   return SIPTransportSession::Ptr();
@@ -389,6 +412,16 @@ SIPTransportSession::Ptr SIPTransportService::createClientTcpTransport(
   pTCPConnection->clientBind(localAddress, _tcpPortBase, _tcpPortMax);
   pTCPConnection->clientConnect(remoteAddress);
   return pTCPConnection;
+}
+
+SIPTransportSession::Ptr SIPTransportService::createClientTlsTransport(
+    const OSS::Net::IPAddress& localAddress,
+    const OSS::Net::IPAddress& remoteAddress)
+{
+  SIPTransportSession::Ptr pTlsConnection(new SIPStreamedConnection(_ioService, &_tlsContext, _tlsConMgr));
+  pTlsConnection->clientBind(localAddress, _tcpPortBase, _tcpPortMax);
+  pTlsConnection->clientConnect(remoteAddress);
+  return pTlsConnection;
 }
 
 SIPTransportSession::Ptr SIPTransportService::createClientWsTransport(

@@ -123,7 +123,7 @@ void SIPStack::transportInit()
       OSS::Net::IPAddress& iface = _tlsListeners[i];
       std::string ip = iface.address().to_string();
       std::string port = OSS::string_from_number(iface.getPort());
-      _fsmDispatch.transport().addTLSTransport(ip, port, iface.externalAddress(), _tlsCertFile, _tlsDiffieHellmanParamFile, _tlsPassword);
+      _fsmDispatch.transport().addTLSTransport(ip, port, iface.externalAddress());
     }
   }
 }
@@ -248,7 +248,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
         try
         {
           std::string port = OSS::string_from_number<unsigned short>(p);
-          _fsmDispatch.transport().addTLSTransport(ip, port, iface.externalAddress(), _tlsCertFile, _tlsDiffieHellmanParamFile, _tlsPassword);
+          _fsmDispatch.transport().addTLSTransport(ip, port, iface.externalAddress());
           iface.setPort(p);
           hasTLS = true;
           break;

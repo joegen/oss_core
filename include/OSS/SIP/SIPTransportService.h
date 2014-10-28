@@ -102,10 +102,7 @@ public:
   void addTLSTransport(
     std::string& ip, 
     std::string& port,
-    const std::string& externalIp,
-    const std::string& tlsCertFile,
-    const std::string& diffieHellmanParamFile,
-    const std::string& tlsPassword);
+    const std::string& externalIp);
     /// Add a new TLS transport bound to the ip address and port.
     ///
     /// If the transport already exists, this function will throw
@@ -121,6 +118,12 @@ public:
     /// on local and remote address tuples
 
   SIPTransportSession::Ptr createClientTcpTransport(
+    const OSS::Net::IPAddress& localAddress,
+    const OSS::Net::IPAddress& remoteAddress);
+    /// Creates a new client transport based
+    /// on local and remote address tuples
+  
+  SIPTransportSession::Ptr createClientTlsTransport(
     const OSS::Net::IPAddress& localAddress,
     const OSS::Net::IPAddress& remoteAddress);
     /// Creates a new client transport based
@@ -211,11 +214,14 @@ public:
     /// Return the maximum port for TCP clients
 
   boost::asio::io_service& ioService();
+  
+  boost::asio::ssl::context& tlsContext();
 
 private:
   boost::asio::io_service _ioService;
   boost::thread* _pIoServiceThread;
   boost::asio::ip::tcp::resolver _resolver;
+  boost::asio::ssl::context _tlsContext;
   SIPTransportSession::Dispatch _dispatch;
   SIPStreamedConnectionManager _tcpConMgr;
   SIPWebSocketConnectionManager _wsConMgr;
@@ -312,6 +318,11 @@ inline unsigned short SIPTransportService::getTCPPortMax() const
 inline boost::asio::io_service& SIPTransportService::ioService()
 {
   return _ioService;
+}
+
+inline boost::asio::ssl::context& SIPTransportService::tlsContext()
+{
+  return _tlsContext;
 }
 
 } } // OSS::SIP

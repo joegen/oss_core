@@ -46,10 +46,8 @@ public:
     SIPTransportService* pTransportService,
     const SIPTransportSession::Dispatch& dispatch,
     const std::string& address, 
-    const std::string& port,
-    const std::string& tlsCertFile,
-    const std::string& diffieHellmanParamFile,
-    const std::string& tlsPassword);
+    const std::string& port
+  );
     /// Construct the server to listen on the specified TCP address and port.
 
   virtual ~SIPTLSListener();
@@ -70,12 +68,7 @@ public:
   virtual void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter);
     /// Handle completion of the connect operation.
 
-  const std::string& getTLSPassword() const;
-
 private:
-  boost::asio::ssl::context _tlsContext;
-    /// OpenSSL context
-
   boost::asio::ip::tcp::acceptor _acceptor;
     /// Acceptor used to listen for incoming connections.
 
@@ -91,23 +84,15 @@ private:
   SIPTransportSession::Dispatch _dispatch;
     /// The handler for all incoming requests.
 
-  std::string _tlsCertFile;
-    /// The TLS Server Certificate
-
-  std::string _diffieHellmanParamFile;
-    /// Temporary Diffie-Hellman parameters file
-
-  std::string _tlsPassword;
+  boost::asio::ssl::context& _tlsContext;
+    /// The TLS Context we inherited from the transport service
 };
 
 //
 // Inlines
 //
 
-inline const std::string& SIPTLSListener::getTLSPassword() const
-{
-  return _tlsPassword;
-}
+
 
 } } // OSS::SIP
 #endif // SIP_SIPTLSListener_INCLUDED

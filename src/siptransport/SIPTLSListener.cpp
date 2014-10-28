@@ -31,20 +31,14 @@ SIPTLSListener::SIPTLSListener(
   SIPTransportService* pTransportService,
   const SIPTransportSession::Dispatch& dispatch,
   const std::string& address, 
-  const std::string& port,
-  const std::string& tlsCertFile,
-  const std::string& diffieHellmanParamFile,
-  const std::string& tlsPassword):
+  const std::string& port) :
   SIPListener(pTransportService, address, port),
-  _tlsContext(pTransportService->ioService(), boost::asio::ssl::context::tlsv1),
   _acceptor(pTransportService->ioService()),
   _resolver(pTransportService->ioService()),
   _connectionManager(dispatch),
   _pNewConnection(new SIPStreamedConnection(pTransportService->ioService(), &_tlsContext, _connectionManager)),
   _dispatch(dispatch),
-  _tlsCertFile(tlsCertFile),
-  _diffieHellmanParamFile(diffieHellmanParamFile),
-  _tlsPassword(tlsPassword)
+  _tlsContext(pTransportService->tlsContext())
 {
 }
 
@@ -53,7 +47,7 @@ SIPTLSListener::~SIPTLSListener()
 }
 
 void SIPTLSListener::run()
-{
+{/*
   // Prepare the TLS context
   _tlsContext.set_options(
         boost::asio::ssl::context::default_workarounds
@@ -63,7 +57,7 @@ void SIPTLSListener::run()
   _tlsContext.use_private_key_file(_tlsCertFile.c_str(), boost::asio::ssl::context::pem);
   _tlsContext.use_tmp_dh_file(_diffieHellmanParamFile.c_str());
   _tlsContext.set_password_callback(boost::bind(&SIPTLSListener::getTLSPassword, this));
-
+*/
   // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
   boost::asio::ip::tcp::resolver::query query(getAddress(), getPort());
   boost::asio::ip::tcp::endpoint endpoint = *_resolver.resolve(query);
