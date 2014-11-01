@@ -212,13 +212,14 @@ public:
 
   boost::asio::io_service& ioService();
   
-  boost::asio::ssl::context& tlsContext();
-
+  boost::asio::ssl::context& tlsServerContext();
+  boost::asio::ssl::context& tlsClientContext();
 private:
   boost::asio::io_service _ioService;
   boost::thread* _pIoServiceThread;
   boost::asio::ip::tcp::resolver _resolver;
-  boost::asio::ssl::context _tlsContext;
+  boost::asio::ssl::context _tlsServerContext;
+  boost::asio::ssl::context _tlsClientContext;
   SIPTransportSession::Dispatch _dispatch;
   SIPStreamedConnectionManager _tcpConMgr;
   SIPWebSocketConnectionManager _wsConMgr;
@@ -317,9 +318,14 @@ inline boost::asio::io_service& SIPTransportService::ioService()
   return _ioService;
 }
 
-inline boost::asio::ssl::context& SIPTransportService::tlsContext()
+inline boost::asio::ssl::context& SIPTransportService::tlsServerContext()
 {
-  return _tlsContext;
+  return _tlsServerContext;
+}
+
+inline boost::asio::ssl::context& SIPTransportService::tlsClientContext()
+{
+  return _tlsClientContext;
 }
 
 } } // OSS::SIP

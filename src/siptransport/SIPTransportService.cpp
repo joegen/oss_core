@@ -34,7 +34,8 @@ SIPTransportService::SIPTransportService(const SIPTransportSession::Dispatch& di
   _ioService(),
   _pIoServiceThread(0),
   _resolver(_ioService),
-  _tlsContext(_ioService, boost::asio::ssl::context::tlsv1),
+  _tlsServerContext(_ioService, boost::asio::ssl::context::tlsv1_server),
+  _tlsClientContext(_ioService, boost::asio::ssl::context::tlsv1_client),
   _dispatch(dispatch),
   _tcpConMgr(_dispatch),
   _wsConMgr(_dispatch),
@@ -55,12 +56,7 @@ SIPTransportService::SIPTransportService(const SIPTransportSession::Dispatch& di
 
 SIPTransportService::~SIPTransportService()
 {
-  if (_pIoServiceThread)
-  {
-    _pIoServiceThread->join();
-    delete _pIoServiceThread;
-    _pIoServiceThread = 0;
-  }
+  stop();
 }
 
 void SIPTransportService::initialize(const boost::filesystem::path& cfgDirectory)
@@ -250,7 +246,6 @@ void SIPTransportService::addTLSTransport(const std::string& ip, const std::stri
     SIPTransportSession::rateLimit().clearAddress(whiteList, true);
   OSS_LOG_INFO("TLS SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
 }
-
 SIPTransportSession::Ptr SIPTransportService::createClientTransport(
   const OSS::SIP::SIPMessage::Ptr& pMsg,
   const OSS::Net::IPAddress& localAddress,
@@ -419,7 +414,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientTlsTransport(
     const OSS::Net::IPAddress& localAddress,
     const OSS::Net::IPAddress& remoteAddress)
 {
-  SIPTransportSession::Ptr pTlsConnection(new SIPStreamedConnection(_ioService, &_tlsContext, _tlsConMgr));
+  SIPTransportSession::Ptr pTlsConnection(new SIPStreamedConnection(_ioService, &_tlsClientContext, _tlsConMgr));
   pTlsConnection->isClient() = true;
   pTlsConnection->clientBind(localAddress, _tcpPortBase, _tcpPortMax);
   pTlsConnection->clientConnect(remoteAddress);

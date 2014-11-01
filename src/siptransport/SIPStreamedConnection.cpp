@@ -17,6 +17,36 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+//////////////////////////////////////////////////////////////////////////////// 
+//
+// CLIENT FLOW
+//
+// conn::clientConnect()
+// |
+// ---> conn::handleConnect()
+//    |
+//    ---> conn::handleClientHandshake() # this is skipped for TCP
+//       |
+//       ---> manager::start()
+//          |
+//          ---> conn::start()
+//             |
+//             ---> conn::readSome()
+//
+// SERVER FLOW
+// 
+// listener::handleAccept()
+// |
+// ---> manager::start()
+//    |
+//    ---> conn::start()
+//       |
+//       ---> conn::handleServerHandshake()
+//          |
+//          ---> conn::readSome()
+////////////////////////////////////////////////////////////////////////////////
+ 
+
 
 #include <vector>
 #include <boost/asio.hpp>
@@ -98,17 +128,32 @@ boost::asio::ip::tcp::socket& SIPStreamedConnection::socket()
 void SIPStreamedConnection::start(const SIPTransportSession::Dispatch& dispatch)
 {
   setMessageDispatch(dispatch);
-  if (!_pTlsStream)
+  
+  if (_isClient)
   {
+    //
+    // Start is called after a successful client handshake with the server.
+    // we can start reading from the secure stream at this point 
+    //  
     readSome();
   }
   else
   {
-    if (!_isClient)
+    if (_pTlsStream)
     {
+      //
+      // Server initiates the handshake here
+      //
       _pTlsStream->async_handshake(boost::asio::ssl::stream_base::server,
           boost::bind(&SIPStreamedConnection::handleServerHandshake, this,
             boost::asio::placeholders::error));
+    }
+    else
+    {
+      //
+      // This is not a secure connection.  Start reading
+      //
+      readSome();
     }
   }
 }
@@ -376,7 +421,7 @@ void SIPStreamedConnection::writeMessage(SIPMessage::Ptr msg, const std::string&
 
 void SIPStreamedConnection::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter)
 {
-  if (!e)
+  if (!e && _isClient)
   {
     if (!_pTlsStream)
     {
@@ -392,6 +437,7 @@ void SIPStreamedConnection::handleConnect(const boost::system::error_code& e, bo
   else
   {
     OSS_LOG_WARNING("SIPStreamedConnection::handleConnect() Exception " << e.message());
+    socket().close();
   }
 }
 
@@ -406,14 +452,32 @@ void SIPStreamedConnection::handleServerHandshake(const boost::system::error_cod
   }
   else
   {
-    OSS_LOG_WARNING("SIPStreamedConnection::handleServerHandshake() Exception " << e.message());
+    OSS_LOG_WARNING("SIPStreamedConnection::handleServerHandshake() Exception " << e.message() << " - " << ERR_GET_REASON(e.value()));
+    
+    std::string err = e.message();
+    if (e.category() == boost::asio::error::get_ssl_category()) 
+    {
+        err = std::string(" (")
+                +boost::lexical_cast<std::string>(ERR_GET_LIB(e.value()))+","
+                +boost::lexical_cast<std::string>(ERR_GET_FUNC(e.value()))+","
+                +boost::lexical_cast<std::string>(ERR_GET_REASON(e.value()))+") "
+        ;
+        //ERR_PACK /* crypto/err/err.h */
+        char buf[128];
+        ::ERR_error_string_n(e.value(), buf, sizeof(buf));
+        err += buf;
+        
+        OSS_LOG_ERROR("SIPStreamedConnection::handleServerHandshake() Exception " << err);
+    }
+    
+    socket().close();
   }
 }
 
 void SIPStreamedConnection::handleClientHandshake(const boost::system::error_code& e)
 {
   // this is only significant for TLS
-  if (!e)
+  if (!e && _isClient)
   {
     assert(_pTlsStream);
     _connectionManager.start(shared_from_this());
@@ -421,6 +485,7 @@ void SIPStreamedConnection::handleClientHandshake(const boost::system::error_cod
   else
   {
     OSS_LOG_WARNING("SIPStreamedConnection::handleClientHandshake() Exception " << e.message());
+    socket().close();
   }
 }
 
