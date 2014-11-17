@@ -24,6 +24,8 @@
 #include "OSS/UTL/CoreUtils.h"
 #include "Poco/ExpireCache.h"
 
+#define DNS_USE_UDNSPP 1
+
 #ifndef DNS_USE_UDNSPP
 
 #if OSS_OS_FAMILY_WINDOWS
