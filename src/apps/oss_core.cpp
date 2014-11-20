@@ -50,6 +50,9 @@
 #define TCP_PORT_MAX  30000
 #define RTP_PROXY_THREAD_COUNT 10
 #define EXTERNAL_IP_HOST_URL "stun.ezuce.com"
+#define DEFAULT_SIP_PORT 5060
+#define DEFAULT_SIP_TLS_PORT 5061
+#define DEFAULT_SIP_WS_PORT 5062
 
 using namespace OSS;
 using namespace OSS::SIP;
@@ -69,6 +72,8 @@ struct Config
   std::string address;
   std::string externalAddress;
   int port;
+  int tlsPort;
+  int wsPort;
   std::string target;
   std::string targetInterface;
   std::string targetExternalAddress;
@@ -77,8 +82,15 @@ struct Config
   bool allowRelay;
   int targetInterfacePort;
   std::string routeScript;
+  std::string tlsKeyFile;
+  std::string tlsCertFile;
+  std::string tlsChainFile;
+  std::string tlsCertPassword;
+  
   Config() : 
     port(5060), 
+    tlsPort(5061),
+    wsPort(5062),
     targetType(UNKNOWN), 
     allowRelay(false),
     targetInterfacePort(0)
@@ -151,8 +163,57 @@ public:
     OSS::Net::IPAddress wsListener;
     wsListener = _config.address;
     wsListener.externalAddress() = _config.externalAddress;
-    wsListener.setPort(config.port + 1000);
+    wsListener.setPort(config.wsPort);
     stack().wsListeners().push_back(wsListener);
+    
+    //
+    // Check if TLS certificate files are configured
+    //
+    bool enableTls = !_config.tlsKeyFile.empty() && !_config.tlsCertFile.empty() &&
+      boost::filesystem::exists(_config.tlsKeyFile) && boost::filesystem::exists(_config.tlsCertFile);
+    
+    
+    if (enableTls)
+    {
+      try
+      {
+        boost::asio::ssl::context& tlsServerContext = stack().transport().tlsServerContext();
+        boost::asio::ssl::context& tlsClientContext = stack().transport().tlsServerContext();
+
+        tlsClientContext.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::verify_none);
+        tlsServerContext.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::verify_none);
+
+        //
+        // Set the callback method for getting the TLS certificate password
+        //
+        tlsServerContext.set_password_callback(boost::bind(&OSSB2BUA::tlsPasswordCallback, this, _1, _2));
+
+        tlsServerContext.use_private_key_file(_config.tlsKeyFile.c_str(), boost::asio::ssl::context::pem);
+        tlsServerContext.use_certificate_file(_config.tlsCertFile.c_str(), boost::asio::ssl::context::pem);
+
+        //
+        // Check if a separate certificate chain is configured
+        //
+        if (!_config.tlsChainFile.empty() && boost::filesystem::exists(_config.tlsChainFile))
+        {
+          tlsServerContext.use_certificate_chain_file(_config.tlsChainFile.c_str());
+        }
+        else
+        {
+          tlsServerContext.use_certificate_chain_file(_config.tlsCertFile.c_str());
+        }
+        
+        OSS::Net::IPAddress tlsListener;
+        tlsListener = _config.address;
+        tlsListener.externalAddress() = _config.externalAddress;
+        tlsListener.setPort(config.tlsPort);
+        stack().tlsListeners().push_back(tlsListener);
+      }
+      catch(...)
+      {
+      }
+    }
+    
 
     stack().transport().defaultListenerAddress() = listener;
     stack().transport().setTCPPortRange(TCP_PORT_BASE, TCP_PORT_MAX);
@@ -168,6 +229,13 @@ public:
     dynamic_cast<SIPB2BDialogStateManager*>(this)->run();
     dynamic_cast<SIPB2BScriptableHandler*>(this)->rtpProxy().run(RTP_PROXY_THREAD_COUNT);  
     return true;
+  }
+  
+  std::string tlsPasswordCallback(
+    std::size_t max_length,  // the maximum length for a password
+    boost::asio::ssl::context::password_purpose purpose )
+  {
+    return _config.tlsCertPassword;
   }
 
   bool onProcessRequest(OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,MessageType type, const SIPMessage::Ptr& pRequest)
@@ -434,8 +502,20 @@ void prepareListenerInfo(Config& config, ServiceOptions& options)
   
   if (!options.getOption("port", config.port))
   {
-    OSS_LOG_INFO("Using default port 5060.");
-    config.port = 5060;
+    OSS_LOG_INFO("Using default port " << DEFAULT_SIP_PORT);
+    config.port = DEFAULT_SIP_PORT;
+  }
+  
+  if (!options.getOption("tls-port", config.tlsPort))
+  {
+    OSS_LOG_INFO("Using default WebSocket port " <<  DEFAULT_SIP_TLS_PORT);
+    config.tlsPort = DEFAULT_SIP_TLS_PORT;
+  }
+  
+  if (!options.getOption("ws-port", config.wsPort))
+  {
+    OSS_LOG_INFO("Using default WebSocket port " << DEFAULT_SIP_WS_PORT);
+    config.wsPort = DEFAULT_SIP_WS_PORT;
   }
   
   options.getOption("external-address", config.externalAddress);
@@ -459,6 +539,14 @@ void prepareListenerInfo(Config& config, ServiceOptions& options)
       _exit(-1);
     }
   }
+  
+  //
+  // TLS cert paths
+  //
+  options.getOption("tls-key", config.tlsKeyFile);
+  options.getOption("tls-cert", config.tlsCertFile);
+  options.getOption("tls-chain", config.tlsChainFile);
+  options.getOption("tls-password", config.tlsCertPassword);
   
 }
 
@@ -491,7 +579,9 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionString('i', "interface-address", "The IP Address where the B2BUA will listen for connections.");
   options.addOptionString('x', "external-address", "The Public IP Address if the B2BUA is behind a firewall.");
   options.addOptionFlag('X', "guess-external-address", "If this flag is set, the external IP will be automatically assigned.");
-  options.addOptionInt('p', "port", "The port where the B2BUA will listen for connections.");
+  options.addOptionInt('p', "port", "The port where the B2BUA will listen for UDP and TCP connections.");
+  options.addOptionInt('w', "ws-port", "The port where the B2BUA will listen for Web Socket connections.");
+  options.addOptionInt('l', "tls-port", "The port where the B2BUA will listen for TLS connections.");
   options.addOptionString('t', "target-address", "IP-Address[:port], Host[:port] or DNS/SRV address of your SIP Server.");
   options.addOptionString('T', "target-interface", "IP-Address of the interface facing the target SIP Server");
   options.addOptionInt('I', "target-interface-port", "The port where the B2BUA will listen for connections.");
@@ -502,6 +592,11 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionInt('R', "rtp-port-low", "Lowest port used for RTP");
   options.addOptionInt('H', "rtp-port-high", "Highest port used for RTP");
   options.addOptionString('J', "route-script", "Path for the route script");
+  options.addOptionString("tls-key", "TLS Certificate Key File");
+  options.addOptionString("tls-cert", "TLS Certificate File");
+  options.addOptionString("tls-chain", "TLS Certificate Chain File");
+  options.addOptionString("tls-password", "TLS Certificate Key Password");
+  
 
 #if ENABLE_TURN
   options.addOptionFlag('T', "enable-turn-relay", "Run the built in turn server.");
