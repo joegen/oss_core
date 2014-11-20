@@ -646,11 +646,13 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
 
     srvHost = "_sip._tcp.";
     srvHost += host;
+
     if (transport == "tcp" && scheme != "sips")
       _tcpSrvTargets = OSS::dns_lookup_srv(srvHost);
 
     srvHost = "_sip._ws.";
     srvHost += host;
+
     if (transport == "ws" && scheme != "sips")
       _wsSrvTargets = OSS::dns_lookup_srv(srvHost);
     
