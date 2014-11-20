@@ -586,7 +586,7 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
 {
   std::string host;
   pClientRequest->getProperty(OSS::PropertyMap::PROP_TargetAddress, host);
-
+  
   //
   // outbound-target is not set by the script.  try figuring it out ourselves
   // via the request-uri
@@ -603,8 +603,14 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
     return false;
 
   std::string scheme = requestURI.getScheme();
-  std::string transport = requestURI.getParam("transport");
+  std::string transport;
+  pClientRequest->getProperty(OSS::PropertyMap::PROP_TargetTransport, transport);
+  
+  if (transport.empty())
+    transport = requestURI.getParam("transport");
 
+  OSS::string_to_lower(transport);
+  
   if (transport.empty())
   {
     //
@@ -678,7 +684,10 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
     }
     else
     {
-      OSS_LOG_DEBUG(logId << "SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._udp." << host << " not found ");
+      if (transport == "udp")
+      {
+        OSS_LOG_DEBUG(logId << "SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._udp." << host << " not found ");
+      }
     }
 
     if (!target.isValid() && !_tcpSrvTargets.empty())
@@ -698,7 +707,10 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
     }
     else if (!target.isValid())
     {
-      OSS_LOG_DEBUG(logId << "SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._tcp." << host << " not found ");
+      if (transport == "tcp")
+      {
+        OSS_LOG_DEBUG(logId << "SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._tcp." << host << " not found ");
+      }
     }
     
     if (!target.isValid() && !_tlsSrvTargets.empty())
@@ -718,7 +730,10 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
     }
     else if (!target.isValid())
     {
-      OSS_LOG_DEBUG(logId << "SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._tls." << host << " not found ");
+      if (transport == "tls")
+      {
+        OSS_LOG_DEBUG(logId << "SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._tls." << host << " not found ");
+      }
     }
 
     if (!target.isValid() && !_wsSrvTargets.empty())
@@ -738,7 +753,10 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
     }
     else if (!target.isValid())
     {
-      OSS_LOG_DEBUG(logId << "SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._ws." << host << " not found ");
+      if (transport == "ws")
+      {
+        OSS_LOG_DEBUG(logId << "SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._ws." << host << " not found ");
+      }
     }
 
     if (!target.isValid())

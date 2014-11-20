@@ -26,7 +26,7 @@
 
 #define DNS_USE_UDNSPP 1
 
-#ifndef DNS_USE_UDNSPP
+#if DNS_USE_UDNSPP
 
 #if OSS_OS_FAMILY_WINDOWS
   #include <windns.h>

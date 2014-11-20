@@ -175,6 +175,7 @@ public:
     
     if (enableTls)
     {
+      OSS_LOG_INFO("TLS Enabled by config");
       try
       {
         boost::asio::ssl::context& tlsServerContext = stack().transport().tlsServerContext();
@@ -208,9 +209,12 @@ public:
         tlsListener.externalAddress() = _config.externalAddress;
         tlsListener.setPort(config.tlsPort);
         stack().tlsListeners().push_back(tlsListener);
+        
+        OSS_LOG_INFO("TLS Transport initialized");
       }
-      catch(...)
+      catch(const std::exception& e)
       {
+        OSS_LOG_ERROR("TLS initialization error - " << e.what());
       }
     }
     
@@ -581,7 +585,7 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionFlag('X', "guess-external-address", "If this flag is set, the external IP will be automatically assigned.");
   options.addOptionInt('p', "port", "The port where the B2BUA will listen for UDP and TCP connections.");
   options.addOptionInt('w', "ws-port", "The port where the B2BUA will listen for Web Socket connections.");
-  options.addOptionInt('l', "tls-port", "The port where the B2BUA will listen for TLS connections.");
+  options.addOptionInt('s', "tls-port", "The port where the B2BUA will listen for TLS connections.");
   options.addOptionString('t', "target-address", "IP-Address[:port], Host[:port] or DNS/SRV address of your SIP Server.");
   options.addOptionString('T', "target-interface", "IP-Address of the interface facing the target SIP Server");
   options.addOptionInt('I', "target-interface-port", "The port where the B2BUA will listen for connections.");

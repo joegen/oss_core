@@ -1479,7 +1479,11 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
     std::string transportScheme = pLeg->targetTransport;
     OSS::string_to_upper(transportScheme);
     pMsg->setProperty(OSS::PropertyMap::PROP_TargetTransport, transportScheme.c_str());
-    std::string transportId = pLeg->transportId;
+    
+    //
+    // Set the transport-id so that we use the same transport for TCP/TLS 
+    //
+    pMsg->setProperty(OSS::PropertyMap::PROP_TransportId, pLeg->transportId);
 
     pMsg->hdrRemove(OSS::SIP::HDR_CALL_ID);
     pMsg->hdrRemove(HDR_FROM);

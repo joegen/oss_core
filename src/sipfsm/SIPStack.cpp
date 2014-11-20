@@ -40,7 +40,7 @@ SIPStack::SIPStack() :
   _enableUDP(true),
   _enableTCP(true),
   _enableWS(true),
-  _enableTLS(false),
+  _enableTLS(true),
   _udpListeners(),
   _tcpListeners(),
   _wsListeners(),
@@ -66,7 +66,7 @@ void SIPStack::transportInit()
   bool hasUDP = _udpListeners.size() > 0;
   bool hasTCP = _tcpListeners.size() > 0;
   bool hasWS  = _wsListeners.size() > 0;
-  bool hasTLS = _tcpListeners.size() > 0;
+  bool hasTLS = _tlsListeners.size() > 0;
   
   if (!hasUDP && !hasTCP && !hasWS && !hasTLS)
     throw OSS::SIP::SIPException("No Listener Address Configured");
