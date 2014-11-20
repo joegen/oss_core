@@ -591,8 +591,14 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
   // outbound-target is not set by the script.  try figuring it out ourselves
   // via the request-uri
   //
-  SIPRequestLine requestLine = pClientRequest->getStartLine();
+  
+  //
+  // NOTE:  We should check if there is a route header in the message.
+  // Although we do not insert Route headers, it might be handy in the future
+  //
   SIPURI requestURI;
+  
+  SIPRequestLine requestLine = pClientRequest->getStartLine();
   if (!requestLine.getURI(requestURI))
     return false;
 
@@ -609,14 +615,6 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
     {
       transport = "udp";
     }
-  }
-
-  if (scheme == "sips")
-  {
-    //
-    // We do not support TLS yet
-    //
-    return false;
   }
 
   unsigned short port = 0;
@@ -648,14 +646,18 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
 
     srvHost = "_sip._tcp.";
     srvHost += host;
-    if ((transport.empty() || transport == "tcp") && scheme != "sips")
+    if (transport == "tcp" && scheme != "sips")
       _tcpSrvTargets = OSS::dns_lookup_srv(srvHost);
 
     srvHost = "_sip._ws.";
     srvHost += host;
-    if ((transport.empty() || transport == "ws") && scheme != "sips")
+    if (transport == "ws" && scheme != "sips")
       _wsSrvTargets = OSS::dns_lookup_srv(srvHost);
-
+    
+    srvHost = "_sip._tls.";
+    srvHost += host;
+    if (transport == "tls" || scheme == "sips")
+      _tlsSrvTargets  = OSS::dns_lookup_srv(srvHost);
 
     if (!_udpSrvTargets.empty())
     {
@@ -695,6 +697,26 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
     else if (!target.isValid())
     {
       OSS_LOG_DEBUG(logId << "SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._tcp." << host << " not found ");
+    }
+    
+    if (!target.isValid() && !_tlsSrvTargets.empty())
+    {
+      //
+      // sort then get the first transport
+      //
+      unsigned short targetPort = _tlsSrvTargets.begin()->get<2>();
+      if (targetPort == 0)
+        targetPort = 5061;
+      target = _tlsSrvTargets.begin()->get<1>();
+      target.setPort(targetPort);
+      
+      OSS_LOG_DEBUG(logId << "SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._tls." << host << " -> " << target.toIpPortString());
+      
+      pClientRequest->setProperty(OSS::PropertyMap::PROP_TargetTransport, "tls");
+    }
+    else if (!target.isValid())
+    {
+      OSS_LOG_DEBUG(logId << "SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._tls." << host << " not found ");
     }
 
     if (!target.isValid() && !_wsSrvTargets.empty())
