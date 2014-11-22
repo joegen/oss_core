@@ -772,8 +772,6 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
       target.setPort(port);
       
       OSS_LOG_DEBUG(logId << "SIPB2BTransaction::resolveSessionTarget - FQDN-1 (" << host << ") -> " << target.toIpPortString());
-      
-      pClientRequest->setProperty(OSS::PropertyMap::PROP_TargetTransport, "udp");
     }
   }
   else
@@ -793,8 +791,6 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
     target.setPort(port);
     
     OSS_LOG_DEBUG(logId << "SIPB2BTransaction::resolveSessionTarget - FQDN-2 (" << host << ") -> " << target.toIpPortString());
-    
-    pClientRequest->setProperty(OSS::PropertyMap::PROP_TargetTransport, "udp");
   }
 
   return target.isValid();

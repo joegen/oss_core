@@ -257,7 +257,6 @@ SIPB2BHandler::Ptr SIPB2BTransactionManager::findDomainRouter(const OSS::SIP::SI
     OSS_LOG_DEBUG(pMsg->createContextId(true) << "Found static route handler for domain " << domain);
     return iter->second;
   }
-  OSS_LOG_DEBUG(pMsg->createContextId(true) << "Not evaluating static route handlers for domain " << domain);
   return SIPB2BHandler::Ptr();
 }
 

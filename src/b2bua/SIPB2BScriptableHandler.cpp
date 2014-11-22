@@ -546,7 +546,14 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
 
     std::string targetTransport;
     if (!pRequest->getProperty(OSS::PropertyMap::PROP_TargetTransport, targetTransport) || targetTransport.empty())
+    {
+      OSS_LOG_INFO("SIPB2BScriptableHandler::onRouteTransaction - OSS::PropertyMap::PROP_TargetTransport is not defined.  Forcing UDP.");
       targetTransport = "udp";
+    }
+    else
+    {
+      OSS_LOG_INFO("SIPB2BScriptableHandler::onRouteTransaction - OSS::PropertyMap::PROP_TargetTransport set transport to " << targetTransport);
+    }
 
     //
     // Prepare the new via
@@ -1952,13 +1959,27 @@ void SIPB2BScriptableHandler::handleOptionsResponse(
   //
   // Only report errors to the queue
   //
-  if ((pMsg && pMsg->is4xx(480)) || e)
+  bool handleError = false;
+  if (pMsg)
+  {
+    handleError = pMsg->is4xx(480);
+  }
+  else if (e)
+  {
+    handleError = true;
+  }
+  
+  if (handleError)
   {
     SIPMessage::Ptr pRequest = pTransaction->getInitialRequest();
-    SIPFrom from = pRequest->hdrGet(OSS::SIP::HDR_FROM);
-    std::string user = from.getUser();
-    if (user != "exit")
-      _optionsResponseQueue.enqueue(user);
+    
+    if (pRequest)
+    {
+      SIPFrom from = pRequest->hdrGet(OSS::SIP::HDR_FROM);
+      std::string user = from.getUser();
+      if (user != "exit")
+        _optionsResponseQueue.enqueue(user);
+    }
   }
 }
 
@@ -2094,7 +2115,14 @@ void SIPB2BScriptableHandler::sendOptionsKeepAlive(RegData& regData)
     msg->setProperty(OSS::PropertyMap::PROP_TargetTransport, transportScheme.c_str());
 
     if (!regData.transportId.empty())
+    {
       msg->setProperty(OSS::PropertyMap::PROP_TransportId, regData.transportId.c_str());
+      OSS_LOG_INFO("SIPB2BScriptableHandler::sendOptionsKeepAlive - Using transport " << regData.transportId.c_str() << " for remote " << transportScheme << " target");
+    }
+    else
+    {
+      OSS_LOG_WARNING("SIPB2BScriptableHandler::sendOptionsKeepAlive - Transport ID is not set for remote " << transportScheme << " target");
+    }
 
     _pTransactionManager->stack().sendRequest(msg, src, target, _keepAliveResponseCb, OSS::SIP::SIPTransaction::TerminateCallback());
   }

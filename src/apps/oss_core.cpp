@@ -82,9 +82,9 @@ struct Config
   bool allowRelay;
   int targetInterfacePort;
   std::string routeScript;
-  std::string tlsKeyFile;
   std::string tlsCertFile;
-  std::string tlsChainFile;
+  std::string tlsPeerCa;
+  std::string tlsPeerCaDirectory;
   std::string tlsCertPassword;
   
   Config() : 
@@ -169,52 +169,20 @@ public:
     //
     // Check if TLS certificate files are configured
     //
-    bool enableTls = !_config.tlsKeyFile.empty() && !_config.tlsCertFile.empty() &&
-      boost::filesystem::exists(_config.tlsKeyFile) && boost::filesystem::exists(_config.tlsCertFile);
-    
+    bool enableTls = !_config.tlsCertFile.empty() && boost::filesystem::exists(_config.tlsCertFile);
     
     if (enableTls)
     {
-      OSS_LOG_INFO("TLS Enabled by config");
-      try
+      bool verifyPeer = !_config.tlsPeerCa.empty() || !_config.tlsPeerCaDirectory.empty();
+      
+      if (stack().initializeTlsContext(_config.tlsCertFile, _config.tlsCertPassword, _config.tlsPeerCa, _config.tlsPeerCaDirectory, verifyPeer))
       {
-        boost::asio::ssl::context& tlsServerContext = stack().transport().tlsServerContext();
-        boost::asio::ssl::context& tlsClientContext = stack().transport().tlsServerContext();
-
-        tlsClientContext.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::verify_none);
-        tlsServerContext.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::verify_none);
-
-        //
-        // Set the callback method for getting the TLS certificate password
-        //
-        tlsServerContext.set_password_callback(boost::bind(&OSSB2BUA::tlsPasswordCallback, this, _1, _2));
-
-        tlsServerContext.use_private_key_file(_config.tlsKeyFile.c_str(), boost::asio::ssl::context::pem);
-        tlsServerContext.use_certificate_file(_config.tlsCertFile.c_str(), boost::asio::ssl::context::pem);
-
-        //
-        // Check if a separate certificate chain is configured
-        //
-        if (!_config.tlsChainFile.empty() && boost::filesystem::exists(_config.tlsChainFile))
-        {
-          tlsServerContext.use_certificate_chain_file(_config.tlsChainFile.c_str());
-        }
-        else
-        {
-          tlsServerContext.use_certificate_chain_file(_config.tlsCertFile.c_str());
-        }
-        
         OSS::Net::IPAddress tlsListener;
         tlsListener = _config.address;
         tlsListener.externalAddress() = _config.externalAddress;
         tlsListener.setPort(config.tlsPort);
-        stack().tlsListeners().push_back(tlsListener);
-        
+        stack().tlsListeners().push_back(tlsListener);    
         OSS_LOG_INFO("TLS Transport initialized");
-      }
-      catch(const std::exception& e)
-      {
-        OSS_LOG_ERROR("TLS initialization error - " << e.what());
       }
     }
     
@@ -235,13 +203,6 @@ public:
     return true;
   }
   
-  std::string tlsPasswordCallback(
-    std::size_t max_length,  // the maximum length for a password
-    boost::asio::ssl::context::password_purpose purpose )
-  {
-    return _config.tlsCertPassword;
-  }
-
   bool onProcessRequest(OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,MessageType type, const SIPMessage::Ptr& pRequest)
   {
     if (type == SIPB2BScriptableHandler::TYPE_AUTH)
@@ -547,9 +508,9 @@ void prepareListenerInfo(Config& config, ServiceOptions& options)
   //
   // TLS cert paths
   //
-  options.getOption("tls-key", config.tlsKeyFile);
   options.getOption("tls-cert", config.tlsCertFile);
-  options.getOption("tls-chain", config.tlsChainFile);
+  options.getOption("tls-peer-ca", config.tlsPeerCa);
+  options.getOption("tls-peer-ca-directory", config.tlsPeerCaDirectory);
   options.getOption("tls-password", config.tlsCertPassword);
   
 }
@@ -596,9 +557,9 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionInt('R', "rtp-port-low", "Lowest port used for RTP");
   options.addOptionInt('H', "rtp-port-high", "Highest port used for RTP");
   options.addOptionString('J', "route-script", "Path for the route script");
-  options.addOptionString("tls-key", "TLS Certificate Key File");
-  options.addOptionString("tls-cert", "TLS Certificate File");
-  options.addOptionString("tls-chain", "TLS Certificate Chain File");
+  options.addOptionString("tls-cert", "Server TLS Certificate File. Includes key and certificate to be used by this server.  File should be in PEM format.");
+  options.addOptionString("tls-peer-ca", "Peer CA File. If the remote peer this server is connecting to uses a self signed certificate, this file is used to verify authenticity of the peer identity.");
+  options.addOptionString("tls-peer-ca-directory", "Additional CA file directory. The files must be named with the CA subject name hash value.");
   options.addOptionString("tls-password", "TLS Certificate Key Password");
   
 

@@ -27,17 +27,18 @@
 namespace OSS {
 namespace SIP {
 
-
+  
 SIPTLSListener::SIPTLSListener(
   SIPTransportService* pTransportService,
   const SIPTransportSession::Dispatch& dispatch,
   const std::string& address, 
-  const std::string& port) :
+  const std::string& port,
+  SIPStreamedConnectionManager& connectionManager) :
   SIPListener(pTransportService, address, port),
   _acceptor(pTransportService->ioService()),
   _resolver(pTransportService->ioService()),
   _tlsContext(pTransportService->tlsServerContext()),
-  _connectionManager(dispatch),
+  _connectionManager(connectionManager),
   _pNewConnection(new SIPStreamedConnection(pTransportService->ioService(), &_tlsContext, _connectionManager)),
   _dispatch(dispatch)
 {

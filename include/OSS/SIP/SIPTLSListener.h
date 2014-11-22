@@ -41,12 +41,13 @@ class OSS_API SIPTLSListener:
 {
 public:
   typedef boost::shared_ptr<SIPTLSListener> Ptr;
-  
+   
   SIPTLSListener(
     SIPTransportService* pTransportService,
     const SIPTransportSession::Dispatch& dispatch,
     const std::string& address, 
-    const std::string& port
+    const std::string& port,
+    SIPStreamedConnectionManager& connectionManager
   );
     /// Construct the server to listen on the specified TCP address and port.
 
@@ -72,7 +73,7 @@ private:
   boost::asio::ssl::context& _tlsContext;
     /// The TLS Context we inherited from the transport service
 
-  SIPStreamedConnectionManager _connectionManager;
+  SIPStreamedConnectionManager& _connectionManager;
     /// The connection manager which owns all live connections.
 
   SIPStreamedConnection::Ptr _pNewConnection;

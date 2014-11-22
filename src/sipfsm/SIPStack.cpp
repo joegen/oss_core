@@ -26,6 +26,10 @@
 #include "OSS/SIP/SIPTransportSession.h"
 #include "OSS/UTL/Logger.h"
 
+#include <boost/bind.hpp>
+#include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
+
 
 using OSS::Persistent::ClassType;
 using OSS::Persistent::DataType;
@@ -45,9 +49,7 @@ SIPStack::SIPStack() :
   _tcpListeners(),
   _wsListeners(),
   _tlsListeners(),
-  _tlsCertFile(),
-  _tlsDiffieHellmanParamFile(),
-  _tlsPassword(),
+  _tlsCertPassword(),
   _pKeyStore(0)
 {
 }
@@ -510,6 +512,80 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
   }
 
   transportInit();
+}
+
+bool SIPStack::initializeTlsContext(
+    const std::string& tlsCertFile, // Includes key and certificate to be used by this server.  File should be in PEM format
+    const std::string& tlsCertFilePassword, // Set this value if tlsCertFile is password protected
+    const std::string& peerCaFile, // If the remote peer this server is connecting to uses a self signed certificate, this file is used to verify authenticity of the peer identity
+    const std::string& peerCaPath, // A directory full of CA certificates. The files must be named with the CA subject name hash value. (see man SSL_CTX_load_verify_locations for more info)
+    bool verifyPeer // If acting as a client, verify the peer certificates.  If the peer CA file is not set, set this value to false
+)
+{
+  boost::asio::ssl::context& tlsClientContext = transport().tlsServerContext();
+  //
+  // configure the client context
+  //
+  if (verifyPeer)
+  {
+    tlsClientContext.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::verify_peer | boost::asio::ssl::context::verify_fail_if_no_peer_cert);
+    OSS_LOG_INFO("SIPStack::initializeTlsContext - Peer Certificate Verification Enforcing");
+  }
+  else
+  {
+    tlsClientContext.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::verify_none);
+    OSS_LOG_INFO("SIPStack::initializeTlsContext - Peer Certificate Verification Disabled");
+  }
+  
+  if (!peerCaFile.empty())
+  {
+    try
+    {
+      tlsClientContext.load_verify_file(peerCaFile);
+    }
+    catch(...)
+    {
+      OSS_LOG_ERROR("SIPStack::initializeTlsContext - Unable to load peerCaFile " << peerCaFile);
+      return false;
+    }
+    OSS_LOG_INFO("SIPStack::initializeTlsContext - Loaded peerCaFile " << peerCaFile);
+  }
+
+  if (!peerCaPath.empty())
+  {
+    try
+    {
+      tlsClientContext.add_verify_path(peerCaPath);
+    }
+    catch(...)
+    {
+      OSS_LOG_ERROR("SIPStack::initializeTlsContext - Unable to add peerCaPath " << peerCaPath);
+      return false;
+    }
+    OSS_LOG_INFO("SIPStack::initializeTlsContext - Loaded peerCaPath " << peerCaPath);
+  }
+  
+  //
+  // Configure the server context
+  //
+  boost::asio::ssl::context& tlsServerContext = transport().tlsServerContext();
+  _tlsCertPassword = tlsCertFilePassword;
+  
+  try
+  {
+    tlsServerContext.set_password_callback(boost::bind(&SIPStack::getTlsCertPassword, this));
+    tlsServerContext.use_certificate_chain_file(tlsCertFile);
+    tlsServerContext.use_private_key_file(tlsCertFile, boost::asio::ssl::context::pem);
+  }
+  catch(...)
+  {
+    OSS_LOG_ERROR("SIPStack::initializeTlsContext - Unable to add tlsCertFile " << tlsCertFile);
+    return false;
+  }
+  
+  OSS_LOG_INFO("SIPStack::initializeTlsContext - Server certificate " << tlsCertFile << " loaded");
+  
+  return true;
 }
 
 void SIPStack::stop()

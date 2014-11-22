@@ -237,7 +237,7 @@ void SIPTransportService::addTLSTransport(const std::string& ip, const std::stri
   OSS::string_sprintf_string<256>(key, "%s:%s", ip.c_str(), port.c_str());
   if (_tlsListeners.find(key) != _tlsListeners.end())
     throw OSS::SIP::SIPException("Duplicate TSL transport while calling addTLSTransport()");
-  SIPTLSListener::Ptr pTlsListener = SIPTLSListener::Ptr(new SIPTLSListener(this, _dispatch, ip, port));
+  SIPTLSListener::Ptr pTlsListener = SIPTLSListener::Ptr(new SIPTLSListener(this, _dispatch, ip, port, _tlsConMgr));
   pTlsListener->setExternalAddress(externalIp);
   _tlsListeners[key] = pTlsListener;
   boost::system::error_code ec;
@@ -254,11 +254,22 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
   const std::string& transportId)
 {
   std::string logId = pMsg->createContextId(true);
-  OSS_LOG_DEBUG( logId << "SIPTransportService::createClientTransport(" <<
-    " SRC: " << localAddress.toIpPortString() <<
-    " DST: " << remoteAddress.toIpPortString() <<
-    " Proto: " << proto_ <<
-    " TransportId: " << transportId << ")");
+  
+  if (!transportId.empty())
+  {
+    OSS_LOG_DEBUG( logId << "SIPTransportService::createClientTransport(" <<
+      " SRC: " << localAddress.toIpPortString() <<
+      " DST: " << remoteAddress.toIpPortString() <<
+      " Proto: " << proto_ <<
+      " TransportId: " << transportId << ")");
+  }
+  else
+  {
+    OSS_LOG_DEBUG( logId << "SIPTransportService::createClientTransport(" <<
+      " SRC: " << localAddress.toIpPortString() <<
+      " DST: " << remoteAddress.toIpPortString() <<
+      " Proto: " << proto_);
+  }
 
 
   std::string localIp = localAddress.toString();
@@ -304,7 +315,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
     bool isAlive = false;
     if (!transportId.empty())
     {
-      OSS_LOG_INFO(logId << "SIPTransportService::createClientTransport - Finding persistent connection with ID " <<  transportId);
+      OSS_LOG_INFO(logId << "SIPTransportService::createClientTransport - Finding persistent TCP connection with ID " <<  transportId);
       pTCPConnection = _tcpConMgr.findConnectionById(OSS::string_to_number<OSS::UInt64>(transportId.c_str()));
       if (pTCPConnection)
         isAlive = pTCPConnection->writeKeepAlive();
@@ -312,18 +323,31 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
 
     if (!pTCPConnection)
     {
-      OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
+      if (!transportId.empty())
+      {
+        OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
           << ". Trying remote-address=" << remoteAddress.toIpPortString());
+      }
+      
       pTCPConnection = _tcpConMgr.findConnectionByAddress(remoteAddress);
       if (pTCPConnection)
+      {
         isAlive = pTCPConnection->writeKeepAlive();
+        if (!isAlive)
+        {
+          OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Persistent TCP connection " << transportId << " exists but is not writable");
+        }
+      }
     }
 
     if (!pTCPConnection || !isAlive)
     {
-      OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
+      if (!transportId.empty())
+      {
+        OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
           << " with remote-address=" << remoteAddress.toIpPortString()
           << " creating new connection.");
+      }
       pTCPConnection = createClientTcpTransport(localAddress, remoteAddress);
     }
     return pTCPConnection;
@@ -352,7 +376,10 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
 
     if (!pWSConnection)
     {
-      OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId);
+      if (!transportId.empty())
+      {
+        OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId);
+      }
     }
     else if (!isAlive)
     {
@@ -371,16 +398,26 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
     bool isAlive = false;
     if (!transportId.empty())
     {
-      OSS_LOG_INFO(logId << "SIPTransportService::createClientTransport - Finding persistent connection with ID " <<  transportId);
+      OSS_LOG_INFO(logId << "SIPTransportService::createClientTransport - Finding persistent TLS connection with ID " <<  transportId);
       pTLSConnection = _tlsConMgr.findConnectionById(OSS::string_to_number<OSS::UInt64>(transportId.c_str()));
       if (pTLSConnection)
+      {
         isAlive = pTLSConnection->writeKeepAlive();
+        if (!isAlive)
+        {
+          OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Persitent TLS connection " << transportId << " exists but is not writable");
+        }
+      }
     }
 
     if (!pTLSConnection)
     {
-      OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
+      if (!transportId.empty())
+      {
+        OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
           << ". Trying remote-address=" << remoteAddress.toIpPortString());
+      }
+      
       pTLSConnection = _tlsConMgr.findConnectionByAddress(remoteAddress);
       if (pTLSConnection)
         isAlive = pTLSConnection->writeKeepAlive();

@@ -119,15 +119,6 @@ public:
     ///
     /// This must be set before calling the SIPStack::run() method
 
-  std::string& tlsCertFile();
-    /// Set this to specify the absolute path for the certificate file for TLS.
-
-  std::string& tlsDiffieHellmanParamFile();
-    /// Set this to specify the absolute path for the Diffie-Hellman parameter file for TLS.
-
-  std::string& tlsPassword();
-    /// Set the certificate password for TLS
-
   void transportInit();
     /// Initialize the SIP Transport.
     ///
@@ -167,6 +158,18 @@ public:
     /// within the given port ranges.   The transport vectors are
     /// updated accordingly as a successful binding is obtained.
 #endif
+  
+  bool initializeTlsContext(
+    const std::string& tlsCertFile, // Includes key and certificate to be used by this server.  File should be in PEM format
+    const std::string& tlsCertFilePassword, // Set this value if tlsCertFile is password protected
+    const std::string& peerCaFile, // If the remote peer this server is connecting to uses a self signed certificate, this file is used to verify authenticity of the peer identity
+    const std::string& peerCaPath, // A directory full of CA certificates. The files must be named with the CA subject name hash value. (see man SSL_CTX_load_verify_locations for more info)
+    bool verifyPeer // If acting as a client, verify the peer certificates.  If the peer CA file is not set, set this value to false
+  );
+    /// This method intializes the TLS context if secure transport is enabled
+  
+  std::string getTlsCertPassword() const;
+    /// Returns the tlsCertPassword.  This is used internally by initializeTlsContext
   
   void run();
     /// Starts the SIPStack event subsytem.
@@ -280,10 +283,8 @@ private:
   OSS::socket_address_list _tcpListeners;
   OSS::socket_address_list _wsListeners;
   OSS::socket_address_list _tlsListeners;
-  std::string _tlsCertFile;
-  std::string _tlsDiffieHellmanParamFile;
-  std::string _tlsPassword;
   
+  std::string _tlsCertPassword;
   //
   // REST Key Value Store
   //
@@ -331,20 +332,6 @@ inline OSS::socket_address_list& SIPStack::tlsListeners()
   return _tlsListeners;
 }
 
-inline std::string& SIPStack::tlsCertFile()
-{
-  return _tlsCertFile;
-}
-
-inline std::string& SIPStack::tlsDiffieHellmanParamFile()
-{
-  return _tlsDiffieHellmanParamFile;
-}
-
-inline std::string& SIPStack::tlsPassword()
-{
-  return _tlsPassword;
-}
 
 inline void SIPStack::setRequestHandler(const SIPTransaction::RequestCallback& handler)
 {
@@ -359,6 +346,11 @@ inline void SIPStack::setAckFor2xxTransactionHandler(const SIPFSMDispatch::Unkno
 inline SIPTransportService& SIPStack::transport()
 {
   return _fsmDispatch.transport();
+}
+
+inline std::string SIPStack::getTlsCertPassword() const
+{
+  return _tlsCertPassword;
 }
 
 inline void SIPStack::setKeyValueStore(OSS::Persistent::RESTKeyValueStore* pKeyStore)
