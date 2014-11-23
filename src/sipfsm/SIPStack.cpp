@@ -348,11 +348,45 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 
     if (tlsEnabled)
     {
-      OSS::Net::IPAddress listener;
-      listener = ip;
-      listener.externalAddress() = external;
-      listener.setPort(tlsPort);
-      _tlsListeners.push_back(listener);
+      std::string tlsCertFile;
+      std::string tlsPeerCa;
+      std::string tlsPeerCaDirectory;
+      std::string tlsCertPassword;
+      bool tlsVerifyPeer = true;
+      
+      if (iface.exists("tls-cert-file"))
+      {
+        tlsCertFile = (const char*)iface["tls-cert-file"];
+      }
+      
+      if (iface.exists("tls-peer-ca"))
+      {
+        tlsPeerCa = (const char*)iface["tls-peer-ca"];
+      }
+      
+      if (iface.exists("tls-peer-ca-dir"))
+      {
+        tlsPeerCaDirectory = (const char*)iface["tls-peer-ca-dir"];
+      }
+      
+      if (iface.exists("tls-cert-password"))
+      {
+        tlsCertPassword = (const char*)iface["tls-cert-password"];
+      }
+      
+      if (iface.exists("tls-verify-peer"))
+      {
+        tlsVerifyPeer = (bool)iface["tls-verify-peer"];
+      }
+      
+      if (initializeTlsContext(tlsCertFile, tlsCertPassword, tlsPeerCa, tlsPeerCaDirectory, tlsVerifyPeer))
+      {
+        OSS::Net::IPAddress listener;
+        listener = ip;
+        listener.externalAddress() = external;
+        listener.setPort(tlsPort);
+        _tlsListeners.push_back(listener);
+      }
     }
   }
 
