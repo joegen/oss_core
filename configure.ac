@@ -3,6 +3,7 @@ AC_INIT(oss_core, 2.0.0, info@ossapp.com)
 AC_CONFIG_AUX_DIR(config)
 m4_include([config/general.m4])
 m4_include([config/oss_lib.m4])
+m4_include([config/libre.m4])
 AM_INIT_AUTOMAKE(foreign tar-ustar)
 SFAC_AUTOMAKE_VERSION([1.6])
 AC_CONFIG_SRCDIR([src/OSS.cpp])
@@ -17,6 +18,8 @@ CHECK_XARGS_REPLACE
 CHECK_MSG_NOSIGNAL
 CHECK_LIBRT
 AC_SEARCH_LIBS([dlopen], [dl])
+SFAC_LIBRE_CONFIGURE
+SFAC_LIBREM_CONFIGURE
 SFAC_LIB_CORE_FLAGS
 AC_CHECK_FUNCS(setenv)
 
@@ -30,6 +33,7 @@ AC_CONFIG_FILES([
   Makefile
   include/Makefile
   src/Makefile
+  src/ua/core/Makefile
 ])
 
 AC_OUTPUT

@@ -54,6 +54,9 @@ public:
     ///
     ///   std::string hdr = msg.hdrGet(OSS::SIP::HDR_CONTACT);
     ///   SIPContact contact(hdr);
+  
+  SIPContact(const std::vector<std::string>& contacts);
+    /// Create a new SIPcontact from a vector of contacts
 
   SIPContact(const SIPContact& contact);
     /// Create a new SIPContact from another SIPContact object
@@ -63,6 +66,9 @@ public:
 
   SIPContact& operator = (const std::string& contact);
     /// Copy the content from another a contact string.
+  
+  SIPContact& operator = (const std::vector<std::string>& contacts);
+    /// Copy the content from another a contact vector.
 
   SIPContact& operator = (const SIPContact& contact);
     /// Copy the content from another SIPContact

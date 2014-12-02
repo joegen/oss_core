@@ -73,6 +73,36 @@ SIPMessage::SIPMessage(const std::string& packet) :
   parse();
 }
 
+SIPMessage::SIPMessage(const unsigned char* packet, std::size_t len)  :
+  _finalized(false),
+  _headerOffSet(0),
+  _expectedBodyLen(0),
+  _isResponse(boost::indeterminate),
+  _isRequest(boost::indeterminate),
+  _userData(0)
+{
+  if (len)
+  {
+    _data = std::string((const char*)packet, len);
+    parse();
+  }
+}
+
+SIPMessage::SIPMessage(const char* packet, std::size_t len)  :
+  _finalized(false),
+  _headerOffSet(0),
+  _expectedBodyLen(0),
+  _isResponse(boost::indeterminate),
+  _isRequest(boost::indeterminate),
+  _userData(0)
+{
+  if (len)
+  {
+    _data = std::string(packet, len);
+    parse();
+  }
+}
+
 SIPMessage::SIPMessage(const SIPMessage& packet)
 {
   ReadLock lock(packet._rwlock); 

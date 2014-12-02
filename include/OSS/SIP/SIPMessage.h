@@ -134,6 +134,36 @@ public:
     /// to save the parser data somewhere so that it could be reused and obtained
     /// without requiring parse the sip header once again.
 
+  explicit SIPMessage(const unsigned char* packet, std::size_t len);
+    /// Creates a SIP Message from a byte array represented by an unsigned char*.
+    ///
+    /// Take note tha std::string may accept both none printable characters
+    /// and multiple occurence of nil.  This will be handled properly by the
+    /// parser specially for cases where the body of a multipart SIP Message
+    /// contains binary data.  The SIP Message class delays parsing of the
+    /// packet until parse() function is called.  
+    ///
+    /// Various helper classes are available to process individual SIP headers.
+    /// These helper classes are lazy parsers.  It means that they parse the
+    /// header every time you use them.  With this in mind, it is practical
+    /// to save the parser data somewhere so that it could be reused and obtained
+    /// without requiring parse the sip header once again.
+  
+  explicit SIPMessage(const char* packet, std::size_t len);
+    /// Creates a SIP Message from a byte array represented by an unsigned char*.
+    ///
+    /// Take note tha std::string may accept both none printable characters
+    /// and multiple occurence of nil.  This will be handled properly by the
+    /// parser specially for cases where the body of a multipart SIP Message
+    /// contains binary data.  The SIP Message class delays parsing of the
+    /// packet until parse() function is called.  
+    ///
+    /// Various helper classes are available to process individual SIP headers.
+    /// These helper classes are lazy parsers.  It means that they parse the
+    /// header every time you use them.  With this in mind, it is practical
+    /// to save the parser data somewhere so that it could be reused and obtained
+    /// without requiring parse the sip header once again.
+  
   explicit SIPMessage(const SIPMessage& packet);
     /// Creates a SIP Message from another SIP Message Object.
 

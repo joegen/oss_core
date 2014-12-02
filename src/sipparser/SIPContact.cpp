@@ -45,6 +45,21 @@ SIPContact::SIPContact(const SIPContact& contact)
   _data = contact._data;
 }
 
+SIPContact::SIPContact(const std::vector<std::string>& contacts)
+{
+  std::ostringstream strm;
+  
+  for (std::size_t i = 0; i < contacts.size(); i++)
+  {
+    strm << contacts[i];
+    if (i < contacts.size() - 1)
+      strm << ", ";
+  }
+  
+  _data = strm.str();;
+}
+
+
 SIPContact::~SIPContact()
 {
 }
@@ -59,6 +74,22 @@ SIPContact& SIPContact::operator = (const SIPContact& contact)
 {
   SIPContact clonable(contact);
   swap(clonable);
+  return *this;
+}
+
+SIPContact& SIPContact::operator = (const std::vector<std::string>& contacts)
+{
+  std::ostringstream strm;
+  
+  for (std::size_t i = 0; i < contacts.size(); i++)
+  {
+    strm << contacts[i];
+    if (i < contacts.size() - 1)
+      strm << ", ";
+  }
+  
+  _data = strm.str();
+  
   return *this;
 }
 

@@ -158,9 +158,9 @@ nobase_include_HEADERS = \
     OSS/SIP/SIPReplaces.h \
     OSS/SIP/SIPStreamedConnection.h \
     OSS/SIP/SIPStreamedConnectionManager.h \
-    OSS/SIP/UA/SIPSessionState.h \
-    OSS/SIP/UA/SIPSession.h \
-    OSS/SIP/UA/SIPSessionManager.h \
+    OSS/SIP/UA/SIPUserAgent.h \
+    OSS/SIP/UA/SIPEventLoop.h \
+    OSS/SIP/UA/SIPRegistration.h \
     OSS/SIP/B2BUA/B2BUA.h \
     OSS/SIP/B2BUA/SIPB2BClientTransaction.h \
     OSS/SIP/B2BUA/SIPB2BHandler.h \
@@ -172,6 +172,7 @@ nobase_include_HEADERS = \
     OSS/SIP/B2BUA/SIPB2BDialogStateManager.h \
     OSS/SIP/B2BUA/SIPB2BUserAgentHandler.h \
     OSS/SIP/B2BUA/SIPB2BUserAgentHandlerList.h \
+    OSS/SIP/B2BUA/SIPB2BRegisterAgent.h \
     OSS/STUN/VovidaSTUN.inl \
     OSS/STUN/VovidaUDP.h \
     OSS/STUN/STUNMappedAddress.h \
