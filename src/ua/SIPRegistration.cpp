@@ -52,19 +52,24 @@ static void register_response_handler(int err, const struct sip_msg *msg, void *
         {
           SIPContact contact(clist);
           pRegistration->setContactList(contact);
-          std::cout << pRegistration->getContactList().data() << std::endl;
         }
       }
     }
     
     std::string errorMessage(strerror(err));
    
+    SIPRegistration::Ptr pReg(pRegistration);
     const SIPRegistration::ResponseHandlerList& handlers = pRegistration->getResponseHandlers();
     for (SIPRegistration::ResponseHandlerList::const_iterator iter = handlers.begin();
       iter != handlers.end(); iter++)
     {
-      (*iter)(pRegistration, pMsg, errorMessage);
+      (*iter)(pReg, pMsg, errorMessage);
     }
+  }
+  else
+  {
+    delete pRegistration;
+    pRegistration = 0;
   }
 } 
 
@@ -175,6 +180,21 @@ bool SIPRegistration::run()
   _registration_handle = (OSS_HANDLE)pRegistration;
   
   return true;
+}
+
+bool SIPRegistration::isRegisteredBinding(const OSS::SIP::SIPURI& binding) const
+{
+  OSS::mutex_critic_sec_lock lock(_contactListMutex);
+  std::size_t count = _contactList.getSize();
+  for (std::size_t i = 0; i < count; i++)
+  {
+    ContactURI curi;
+    _contactList.getAt(curi, i);
+    
+    if (curi.getHostPort() == binding.getHostPort())
+      return true;
+  }
+  return false;
 }
   
   

@@ -22,10 +22,12 @@
 #define	OSS_SIPREGISTRATION_H_INCLUDED
 
 #include <boost/shared_ptr.hpp>
+#include "OSS/UTL/Thread.h"
 #include "OSS/SIP/UA/SIPUserAgent.h"
 #include "OSS/SIP/SIPMessage.h"
 #include "OSS/SIP/SIPURI.h"
 #include "OSS/SIP/SIPContact.h"
+
 
 namespace OSS {
 namespace SIP {
@@ -36,7 +38,7 @@ class SIPRegistration
 {
 public:
   typedef boost::shared_ptr<SIPRegistration> Ptr;
-  typedef boost::function<void(SIPRegistration*, const SIPMessage::Ptr&, const std::string& )> ResponseHandler;
+  typedef boost::function<void(SIPRegistration::Ptr, const SIPMessage::Ptr&, const std::string& )> ResponseHandler;
   typedef std::vector<ResponseHandler> ResponseHandlerList;
   
   SIPRegistration(SIPUserAgent& ua);
@@ -107,7 +109,9 @@ public:
   
   void setContactList(const OSS::SIP::SIPContact& contactList);
   
-  const OSS::SIP::SIPContact& getContactList() const;
+  void getContactList(OSS::SIP::SIPContact& contactList) const;
+  
+  bool isRegisteredBinding(const OSS::SIP::SIPURI& binding) const;
 private:
   SIPUserAgent& _ua;
   OSS_HANDLE _registration_handle;
@@ -124,6 +128,7 @@ private:
   std::string _extraHeaders;
   bool _isRegistered;
   OSS::UInt32 _regId;
+  mutable OSS::mutex_critic_sec _contactListMutex;
   OSS::SIP::SIPContact _contactList;
   ResponseHandlerList _responseHandlers;
 };
@@ -280,12 +285,14 @@ inline OSS::UInt32 SIPRegistration::getRegId() const
 
 inline void SIPRegistration::setContactList(const OSS::SIP::SIPContact& contactList)
 {
+  OSS::mutex_critic_sec_lock lock(_contactListMutex);
   _contactList = contactList;
 }
   
-inline const OSS::SIP::SIPContact& SIPRegistration::getContactList() const
+inline void  SIPRegistration::getContactList(OSS::SIP::SIPContact& contactList) const
 {
-  return _contactList;
+  OSS::mutex_critic_sec_lock lock(_contactListMutex);
+  contactList = _contactList;
 }
   
 } } } // OSS::SIP::UA

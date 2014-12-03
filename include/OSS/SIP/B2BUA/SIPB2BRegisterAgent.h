@@ -34,6 +34,9 @@ namespace B2BUA {
 class SIPB2BRegisterAgent
 {
 public:
+  
+  typedef std::vector<OSS::SIP::UA::SIPRegistration::Ptr> Sessions;
+  
   SIPB2BRegisterAgent();
   
   ~SIPB2BRegisterAgent();
@@ -64,7 +67,7 @@ public:
   
   
   void onRegisterResponse(
-    OSS::SIP::UA::SIPRegistration* pReg, 
+    OSS::SIP::UA::SIPRegistration::Ptr pReg, 
     const SIPMessage::Ptr& pMsg, 
     const std::string& error);
     /// Callback handler for the client registration
@@ -89,8 +92,8 @@ protected:
     const std::string& nextHop);
 private:
   OSS::SIP::UA::SIPUserAgent* _pRegisterUa;
-  std::vector<OSS::SIP::UA::SIPRegistration::Ptr> _clientReg;
-  OSS::mutex_critic_sec _clientRegMutex;
+  Sessions _sessions;
+  mutable OSS::mutex_critic_sec _sessionsMutex;
 };
 
 //

@@ -637,6 +637,88 @@ void SIPB2BTransactionManager::setKeyValueStore(OSS::Persistent::RESTKeyValueSto
   _stack.setKeyValueStore(_pKeyStore);
 }
 
+bool SIPB2BTransactionManager::startLocalRegistrationAgent(
+  const std::string& agentName,
+  const std::string& route,
+  const OSS::SIP::UA::SIPUserAgent::ExitHandler& exitHandler)
+{
+  _registerAgentRoute = route;
+  if (!_registerAgent.initialize(agentName))
+    return false;
+  return _registerAgent.run(exitHandler);
+}
+
+void SIPB2BTransactionManager::stopLocalRegistrationAgent()
+{
+  _registerAgent.stop();
+}
+
+bool SIPB2BTransactionManager::sendLocalRegister(
+  const std::string& user,
+  const std::string& authUser,
+  const std::string& authPass,
+  const std::string& domain,
+  OSS::UInt32 expires
+)
+{
+  if (_registerAgentRoute.empty())
+  {
+    OSS_LOG_ERROR("SIPB2BTransactionManager::sendLocalRegister - _registerAgentRoute is not set!");
+    return false;
+  }
+  
+  return _registerAgent.sendRegister(
+    domain, 
+    user, 
+    authUser, 
+    authPass,
+    ";x-local-reg=true",
+    "",
+    _registerAgentRoute,
+    boost::bind(&SIPB2BTransactionManager::onLocalRegisterResponse, this, _1, _2, _3));
+}
+
+void SIPB2BTransactionManager::onLocalRegisterResponse(
+  OSS::SIP::UA::SIPRegistration::Ptr pReg, 
+  const SIPMessage::Ptr& pMsg, 
+  const std::string& error)
+{
+  if (pMsg)
+  {
+    if (pMsg->isResponseFamily(200))
+    {
+      OSS_LOG_INFO("SIPB2BTransactionManager::onLocalRegisterResponse - " <<
+        pReg->getContactUser() << "@" << pReg->getDomain() << " is now registered.");
+    }
+    else
+    {
+      OSS_LOG_ERROR("SIPB2BTransactionManager::onLocalRegisterResponse - " <<
+        pReg->getContactUser() << "@" << pReg->getDomain() << " is not authorized");
+    }
+  }
+  else if (!error.empty())
+  {
+    OSS_LOG_ERROR("SIPB2BTransactionManager::onLocalRegisterResponse - " <<
+        pReg->getContactUser() << "@" << pReg->getDomain() << " error encountered - " << error);
+  }
+  else
+  {
+    OSS_LOG_ERROR("SIPB2BTransactionManager::onLocalRegisterResponse - " <<
+        pReg->getContactUser() << "@" << pReg->getDomain() << " unknown error encountered");
+  }
+}
+
+bool SIPB2BTransactionManager::isForLocalRegistration(const std::string& contact)
+{
+  if (_registerAgent.isLocalRegistration(contact))
+  {
+    OSS_LOG_INFO("SIPB2BTransactionManager::isForLocalRegistration - " << 
+      contact << " is locally registered.");
+    return true;
+  }
+  
+  return false;
+}
 
 } } } // OSS::SIP::B2BUA
 

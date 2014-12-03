@@ -849,6 +849,18 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteUpperReg(
     // Proxy media for upper reg if an rtp proxy is implemented
     //
     pTransaction->setProperty(OSS::PropertyMap::PROP_RequireRTPProxy, "1");
+    
+    //
+    // Now let's check if this message is intended for a locally registered account
+    //
+    if (_pTransactionManager->isForLocalRegistration(contact))
+    {
+      return onRouteOutOfDialogTransaction(
+        pRequest,
+        pTransaction,
+        localInterface,
+        target);
+    }
   }
   catch(OSS::Exception e)
   {

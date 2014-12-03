@@ -36,6 +36,7 @@
 #include "OSS/SIP/B2BUA/SIPB2BDialogStateManager.h"
 #include "OSS/SIP/SIPRoute.h"
 #include "OSS/STUN/STUNClient.h"
+#include "OSS/SIP/UA/SIPEventLoop.h"
 
 
 #if HAVE_CONFIG_H
@@ -86,6 +87,9 @@ struct Config
   std::string tlsPeerCa;
   std::string tlsPeerCaDirectory;
   std::string tlsCertPassword;
+  std::string regUri;
+  std::string regUser;
+  std::string regPassword;
   
   Config() : 
     port(5060), 
@@ -97,6 +101,13 @@ struct Config
     {
     }
 };
+
+static OSS::SIP::UA::SIPEventLoop* gpEventLoop = 0;
+
+void local_reg_exit_handler()
+{
+  gpEventLoop->stop(false, false, false);
+}
 
 
 class OSSB2BUA :
@@ -150,6 +161,13 @@ public:
     stack().udpListeners().push_back(listener);
     stack().tcpListeners().push_back(listener);
     
+    //
+    // Initialize the local registration agent
+    //
+    std::ostringstream regRoute;
+    regRoute << "sip:" << _config.address << ":" << _config.port;
+    startLocalRegistrationAgent("oss-core", regRoute.str(), local_reg_exit_handler);
+    
     if (!_config.targetInterface.empty() && _config.targetInterfacePort)
     {
       OSS::Net::IPAddress targetListener;
@@ -199,7 +217,24 @@ public:
   {
     stack().run();
     dynamic_cast<SIPB2BDialogStateManager*>(this)->run();
-    dynamic_cast<SIPB2BScriptableHandler*>(this)->rtpProxy().run(RTP_PROXY_THREAD_COUNT);  
+    dynamic_cast<SIPB2BScriptableHandler*>(this)->rtpProxy().run(RTP_PROXY_THREAD_COUNT); 
+    
+    if (!_config.regUri.empty())
+    {
+      //
+      // sleep to make sure all the the threads have started running
+      //
+      OSS::thread_sleep(1000);
+      OSS::SIP::SIPURI regTarget(_config.regUri);
+      sendLocalRegister(
+        regTarget.getUser(),
+        _config.regUser,
+        _config.regPassword,
+        regTarget.getHost(),
+        3600
+      );
+    }
+    
     return true;
   }
   
@@ -536,6 +571,10 @@ void prepareTargetInfo(Config& config, ServiceOptions& options)
   }
   
   options.getOption("route-script", config.routeScript);
+  
+  options.getOption("reg-uri", config.regUri);
+  options.getOption("reg-user", config.regUser);
+  options.getOption("reg-pass", config.regPassword);
 }
 
 bool prepareOptions(ServiceOptions& options)
@@ -561,6 +600,9 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionString("tls-peer-ca", "Peer CA File. If the remote peer this server is connecting to uses a self signed certificate, this file is used to verify authenticity of the peer identity.");
   options.addOptionString("tls-peer-ca-directory", "Additional CA file directory. The files must be named with the CA subject name hash value.");
   options.addOptionString("tls-password", "TLS Certificate Key Password");
+  options.addOptionString("reg-uri", "SIP URI representing an ITSP account.  Example:  sip:1234@mydomain.com");
+  options.addOptionString("reg-user", "User credential to be used for registration");
+  options.addOptionString("reg-pass", "Password credential to be used for registration");
   
 
 #if ENABLE_TURN
@@ -597,6 +639,13 @@ int main(int argc, char** argv)
 
   try
   {
+    //
+    // Run the UA event loop
+    //
+    OSS::SIP::UA::SIPEventLoop eventLoop;
+    gpEventLoop = &eventLoop;
+    eventLoop.run(true);
+    
     OSSB2BUA ua(config);
     ua.run();
 
@@ -636,7 +685,21 @@ int main(int argc, char** argv)
 #endif
 
     OSS::app_wait_for_termination_request();
+    
+    //
+    // Stop the SBC
+    //
     ua.stop();
+    
+    //
+    // Stop the registration agent
+    //
+    ua.stopLocalRegistrationAgent();
+   
+    
+    //
+    // Force exit.  We have freed whatever we need to free at this point
+    //
     _exit(0);
   }
   catch(std::exception& e)

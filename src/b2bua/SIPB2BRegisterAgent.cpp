@@ -137,7 +137,7 @@ bool SIPB2BRegisterAgent::sendRegister(
 }
 
 void SIPB2BRegisterAgent::onRegisterResponse(
-  OSS::SIP::UA::SIPRegistration* pReg, 
+  OSS::SIP::UA::SIPRegistration::Ptr pReg, 
   const SIPMessage::Ptr& pMsg, 
   const std::string& error)
 {
@@ -145,8 +145,8 @@ void SIPB2BRegisterAgent::onRegisterResponse(
   {
     if (pMsg->isResponseFamily(200))
     {
-      OSS::mutex_critic_sec_lock lock(_clientRegMutex);
-      _clientReg.push_back(OSS::SIP::UA::SIPRegistration::Ptr(pReg));
+      OSS::mutex_critic_sec_lock lock(_sessionsMutex);
+      _sessions.push_back(pReg);
       OSS_LOG_INFO("SIPB2BRegisterAgent::onClientRegisterResponse - " 
         << pReg->getContactUser() << "@" << pReg->getDomain() << " registered.");
     }
@@ -154,16 +154,12 @@ void SIPB2BRegisterAgent::onRegisterResponse(
     {
       OSS_LOG_ERROR("SIPB2BRegisterAgent::onClientRegisterResponse - " 
         << pReg->getContactUser() << "@" << pReg->getDomain() << " registration failure.  " << pMsg->startLine());
-      delete pReg;
-      pReg = 0;
     }
   }
   else
   {
     OSS_LOG_ERROR("SIPB2BRegisterAgent::onClientRegisterResponse - " 
         << pReg->getContactUser() << "@" << pReg->getDomain() << " registration failure.  " << error);
-      delete pReg;
-      pReg = 0;
   }
 }
 
@@ -184,20 +180,30 @@ void SIPB2BRegisterAgent::stop()
 {
   if (_pRegisterUa)
   {
-    OSS::mutex_critic_sec_lock lock(_clientRegMutex);
+    OSS::mutex_critic_sec_lock lock(_sessionsMutex);
     //
     // Deregister all clients
     //
-    for (std::vector<OSS::SIP::UA::SIPRegistration::Ptr>::iterator iter = _clientReg.begin(); iter != _clientReg.end(); iter++)
+    for (std::vector<OSS::SIP::UA::SIPRegistration::Ptr>::iterator iter = _sessions.begin(); iter != _sessions.end(); iter++)
     {
       (*iter)->stop();
     }
+    _sessions.clear();
     _pRegisterUa->stop(false);
   }
 }
 
 bool SIPB2BRegisterAgent::isLocalRegistration(const std::string& uri) const
 {
+  OSS::mutex_critic_sec_lock lock(_sessionsMutex);
+  OSS::SIP::SIPURI binding(uri);
+  for (Sessions::const_iterator iter = _sessions.begin(); iter != _sessions.end(); iter++)
+  {
+    if ((*iter)->isRegisteredBinding(binding))
+    {
+      return true;
+    }
+  }
   return false;
 }
 

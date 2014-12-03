@@ -16,7 +16,7 @@ static bool gResponseHandled = false;
 static bool gExitHandled = false;
 static bool gIsOkResponse = false;
 
-void reg_response_handler(SIPRegistration* pReg, const SIPMessage::Ptr& pMsg, const std::string& error)
+void reg_response_handler(SIPRegistration::Ptr pReg, const SIPMessage::Ptr& pMsg, const std::string& error)
 {
   //
   // Stop the user-agent
@@ -31,7 +31,7 @@ void reg_response_handler(SIPRegistration* pReg, const SIPMessage::Ptr& pMsg, co
 void exit_handler()
 {
   gExitHandled = true;
-  gpEventLoop->stop(false, false, false);
+  gpEventLoop->stop(false, true, true);
 }
 
 TEST(UATest, test_ua_register)
