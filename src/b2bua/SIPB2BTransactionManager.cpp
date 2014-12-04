@@ -672,7 +672,7 @@ bool SIPB2BTransactionManager::sendLocalRegister(
     user, 
     authUser, 
     authPass,
-    ";x-local-reg=true",
+    "x-local-reg=1",
     "",
     _registerAgentRoute,
     boost::bind(&SIPB2BTransactionManager::onLocalRegisterResponse, this, _1, _2, _3));

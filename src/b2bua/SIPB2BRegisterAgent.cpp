@@ -71,6 +71,7 @@ OSS::SIP::UA::SIPRegistration* SIPB2BRegisterAgent::prepareRegister(
   pReg->setDomain(domain);
   pReg->setContactUser(user);
   pReg->setCredentials(authUser, authPass);
+  pReg->setContactParams(contactParams);
   
   if (!nextHop.empty())
     pReg->setRouteHeader(nextHop);

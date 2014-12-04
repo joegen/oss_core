@@ -2083,6 +2083,14 @@ void SIPB2BScriptableHandler::runOptionsResponseThread()
 void SIPB2BScriptableHandler::sendOptionsKeepAlive(RegData& regData)
 {
 
+  if (_pTransactionManager->isForLocalRegistration(regData.contact))
+  {
+    //
+    // Do not send options for locally initiated registrations
+    //
+    return;
+  }
+  
   try
   {
     static int cseqNo = 1;
