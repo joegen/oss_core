@@ -7,6 +7,6 @@ all:
 	make -C rem
 	
 install: all
-	make -C re PREFIX=$(DESTDIR)@OSS_LIBRE_PREFIX@ install
-	make -C rem PREFIX=$(DESTDIR)@OSS_LIBREM_PREFIX@ install
+	make -C re PREFIX=@OSS_LIBRE_PREFIX@ install
+	make -C rem PREFIX=@OSS_LIBREM_PREFIX@ install
 
