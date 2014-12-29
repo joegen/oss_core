@@ -371,6 +371,16 @@ public:
   );
     /// Register with a remote domain
   
+  bool sendLocalRegister(
+    const std::string& user,
+    const std::string& authUser,
+    const std::string& authPassword,
+    const std::string& domain,
+    OSS::UInt32 expires,
+    const std::string& route
+  );
+    /// Register with a remote domain
+  
   bool isForLocalRegistration(const std::string& contact);
     /// Returns true if the SIPMessage request-uri is for a locally
     /// registered account

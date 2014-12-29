@@ -57,7 +57,8 @@ OSS::SIP::UA::SIPRegistration* SIPB2BRegisterAgent::prepareRegister(
     const std::string& authPass,
     const std::string& contactParams,
     const std::string& extraHeaders,
-    const std::string& nextHop
+    const std::string& nextHop,
+    OSS::UInt32 expires
   )
 {
   if (!_pRegisterUa)
@@ -72,6 +73,9 @@ OSS::SIP::UA::SIPRegistration* SIPB2BRegisterAgent::prepareRegister(
   pReg->setContactUser(user);
   pReg->setCredentials(authUser, authPass);
   pReg->setContactParams(contactParams);
+  
+  if (expires)
+    pReg->setExpires(expires);
   
   if (!nextHop.empty())
     pReg->setRouteHeader(nextHop);
@@ -91,7 +95,8 @@ bool SIPB2BRegisterAgent::sendRegister(
   const std::string& authPass,
   const std::string& contactParams,
   const std::string& extraHeaders,
-  const std::string& nextHop)
+  const std::string& nextHop,
+  OSS::UInt32 expires)
 {
   OSS::SIP::UA::SIPRegistration* pReg  = prepareRegister(
     domain,
@@ -100,7 +105,8 @@ bool SIPB2BRegisterAgent::sendRegister(
     authPass,
     contactParams,
     extraHeaders,
-    nextHop);
+    nextHop,
+    expires);
   
   if (!pReg)
     return false;
@@ -118,6 +124,7 @@ bool SIPB2BRegisterAgent::sendRegister(
   const std::string& contactParams,
   const std::string& extraHeaders,
   const std::string& nextHop,
+  OSS::UInt32 expires,
   const OSS::SIP::UA::SIPRegistration::ResponseHandler& responseHandler)
 {
   OSS::SIP::UA::SIPRegistration* pReg  = prepareRegister(
@@ -127,7 +134,8 @@ bool SIPB2BRegisterAgent::sendRegister(
     authPass,
     contactParams,
     extraHeaders,
-    nextHop);
+    nextHop,
+    expires);
   
   if (!pReg)
     return false;

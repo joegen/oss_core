@@ -46,7 +46,7 @@ TEST(UATest, test_ua_register)
   
   ASSERT_TRUE(gpUA->initialize("oss_core"));
   ASSERT_TRUE(gpUA->run(exit_handler));
-  ASSERT_TRUE(gpUA->sendRegister("creytiv.com", "demo", "demo", "secret", "", "", "sip:bridge.ossapp.com", reg_response_handler));
+  ASSERT_TRUE(gpUA->sendRegister("creytiv.com", "demo", "demo", "secret", "", "", "sip:bridge.ossapp.com", 3600, reg_response_handler));
   
   //
   // Wait until event loop terminates

@@ -660,13 +660,7 @@ bool SIPB2BTransactionManager::sendLocalRegister(
   const std::string& domain,
   OSS::UInt32 expires
 )
-{
-  if (_registerAgentRoute.empty())
-  {
-    OSS_LOG_ERROR("SIPB2BTransactionManager::sendLocalRegister - _registerAgentRoute is not set!");
-    return false;
-  }
-  
+{ 
   return _registerAgent.sendRegister(
     domain, 
     user, 
@@ -675,6 +669,28 @@ bool SIPB2BTransactionManager::sendLocalRegister(
     "x-local-reg=1",
     "",
     _registerAgentRoute,
+    expires,
+    boost::bind(&SIPB2BTransactionManager::onLocalRegisterResponse, this, _1, _2, _3));
+}
+
+bool SIPB2BTransactionManager::sendLocalRegister(
+  const std::string& user,
+  const std::string& authUser,
+  const std::string& authPass,
+  const std::string& domain,
+  OSS::UInt32 expires,
+  const std::string& route
+)
+{
+  return _registerAgent.sendRegister(
+    domain, 
+    user, 
+    authUser, 
+    authPass,
+    "x-local-reg=1",
+    "",
+    route,
+    expires,
     boost::bind(&SIPB2BTransactionManager::onLocalRegisterResponse, this, _1, _2, _3));
 }
 

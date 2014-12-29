@@ -51,7 +51,8 @@ public:
     const std::string& authPass,
     const std::string& contactParams,
     const std::string& extraHeaders,
-    const std::string& nextHop);
+    const std::string& nextHop,
+    OSS::UInt32 expires = 3600);
     /// Register an account with a remote registrar
   
   bool sendRegister(
@@ -62,7 +63,9 @@ public:
     const std::string& contactParams,
     const std::string& extraHeaders,
     const std::string& nextHop,
-    const OSS::SIP::UA::SIPRegistration::ResponseHandler& responseHandler);
+    OSS::UInt32 expires,
+    const OSS::SIP::UA::SIPRegistration::ResponseHandler& responseHandler
+    );
   /// Register an account with a remote registrar with a response handler set
   
   
@@ -89,7 +92,8 @@ protected:
     const std::string& authPass,
     const std::string& contactParams,
     const std::string& extraHeaders,
-    const std::string& nextHop);
+    const std::string& nextHop,
+    OSS::UInt32 expires);
 private:
   OSS::SIP::UA::SIPUserAgent* _pRegisterUa;
   Sessions _sessions;
