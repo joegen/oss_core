@@ -6,6 +6,7 @@
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/AdaptiveDelay.h"
 #include "OSS/UTL/FastRandom.h"
+#include "OSS/Net/Net.h"
 
 
 TEST(TestFoundation, blocking_queue)
@@ -109,6 +110,18 @@ TEST(TestFoundation, adaptive_timer)
     ASSERT_TRUE( actual - expected <= resolution);
   else if (expected > actual)
     ASSERT_TRUE( expected - actual  <= resolution);
+}
+
+TEST(TestFoundation, socket_address_range_verify)
+{
+  ASSERT_TRUE(OSS::socket_address_range_verify("192.168.1.30", "192.168.1.50", "192.168.1.35"));
+  ASSERT_TRUE(OSS::socket_address_range_verify("192.168.1.30", "192.168.1.50", "192.168.1.30"));
+  ASSERT_TRUE(OSS::socket_address_range_verify("192.168.1.30", "192.168.1.50", "192.168.1.50"));
+  ASSERT_FALSE(OSS::socket_address_range_verify("192.168.1.30", "192.168.1.50", "192.168.1.1"));
+  ASSERT_FALSE(OSS::socket_address_range_verify("192.168.1.30", "192.168.1.50", "192.168.1.150"));
+  ASSERT_FALSE(OSS::socket_address_range_verify("192.168.1.30", "192.168.1.50", "garbage"));
+  ASSERT_FALSE(OSS::socket_address_range_verify("192.168.1.30", "garbage", "192.168.1.150"));
+  ASSERT_FALSE(OSS::socket_address_range_verify("garbage", "192.168.1.50", "192.168.1.150"));
 }
 
 TEST(TestFoundation, random_number_generator)

@@ -66,6 +66,10 @@ bool OSS_API socket_address_cidr_verify(const std::string& ip, const std::string
   /// This function only works with IPV4 address
 
 
+bool OSS_API socket_address_range_verify(const std::string& low, const std::string& high, const std::string& ip);
+  /// Determine if an IP address exists in the IP range represented by high and low parameters.  
+  ///
+
 //
 // Common Socket Functions
 //

@@ -195,6 +195,27 @@ bool socket_address_cidr_verify(const std::string& ip, const std::string& cidr)
 }
 
 
+bool socket_address_range_verify(const std::string& low, const std::string& high, const std::string& strIp)
+{
+  bool lowCheck = false;
+  bool highCheck = false;
+  
+  OSS::Net::IPAddress ipLow(low);
+  OSS::Net::IPAddress ipHigh(high);
+  OSS::Net::IPAddress ip(strIp);
+  
+  if (!ipLow.isValid() || !ipHigh.isValid() || !ip.isValid())
+    return false;
+
+  if (ipLow == ip || ipHigh == ip)
+    return true;
+  
+  lowCheck = !(ip.address() < ipLow.address());
+  highCheck = ip.address() < ipHigh.address();
+  
+  return lowCheck && highCheck; 
+}
+
 
 //
 // Common Socket Functions

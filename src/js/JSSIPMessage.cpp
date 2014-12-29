@@ -1207,6 +1207,22 @@ static jsval wildCardCompare(const jsargs& args)
   return jsbool::New(OSS::string_wildcard_compare(wild.c_str(), input));
 }
 
+static jsval isIpInRange(const jsargs& args)
+{
+  if (args.Length() < 3)
+    return jsvoid();
+  std::string low = jsvalToString(args[0]);
+  std::string high = jsvalToString(args[1]);
+  std::string strIp = jsvalToString(args[2]);
+
+  if (low.empty() || high.empty() || strIp.empty())
+    return jsvoid();
+  
+  bool verified = OSS::socket_address_range_verify(low, high, strIp);
+  
+  return jsbool::New(verified);
+}
+
 static jsval md5Hash(const jsargs& args)
 {
   if (args.Length() < 1)
@@ -1815,6 +1831,7 @@ void JSSIPMessage::initGlobalFuncs(OSS_HANDLE objectTemplate)
   // Misc functions
   //
   global->Set(jsstring::New("cidrVerify"), jsfunc::New(cidrVerify));
+  global->Set(jsstring::New("isIpInRange"), jsfunc::New(isIpInRange));
   global->Set(jsstring::New("wildCardCompare"), jsfunc::New(wildCardCompare));
   global->Set(jsstring::New("md5Hash"), jsfunc::New(md5Hash));
 }
