@@ -556,18 +556,21 @@ bool SIPStack::initializeTlsContext(
     bool verifyPeer // If acting as a client, verify the peer certificates.  If the peer CA file is not set, set this value to false
 )
 {
-  boost::asio::ssl::context& tlsClientContext = transport().tlsServerContext();
+  boost::asio::ssl::context& tlsClientContext = transport().tlsClientContext();
+  boost::asio::ssl::context& tlsServerContext = transport().tlsServerContext();
   //
   // configure the client context
   //
   if (verifyPeer)
   {
-    tlsClientContext.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::verify_peer | boost::asio::ssl::context::verify_fail_if_no_peer_cert);
+    tlsClientContext.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::verify_peer);
+    tlsServerContext.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::verify_peer | boost::asio::ssl::context::verify_fail_if_no_peer_cert);
     OSS_LOG_INFO("SIPStack::initializeTlsContext - Peer Certificate Verification Enforcing");
   }
   else
   {
     tlsClientContext.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::verify_none);
+    tlsServerContext.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::verify_none);
     OSS_LOG_INFO("SIPStack::initializeTlsContext - Peer Certificate Verification Disabled");
   }
   
@@ -576,6 +579,7 @@ bool SIPStack::initializeTlsContext(
     try
     {
       tlsClientContext.load_verify_file(peerCaFile);
+      tlsServerContext.load_verify_file(peerCaFile);
     }
     catch(...)
     {
@@ -590,6 +594,7 @@ bool SIPStack::initializeTlsContext(
     try
     {
       tlsClientContext.add_verify_path(peerCaPath);
+      tlsServerContext.add_verify_path(peerCaPath);
     }
     catch(...)
     {
@@ -602,11 +607,15 @@ bool SIPStack::initializeTlsContext(
   //
   // Configure the server context
   //
-  boost::asio::ssl::context& tlsServerContext = transport().tlsServerContext();
+  
   _tlsCertPassword = tlsCertFilePassword;
   
   try
   {
+    tlsClientContext.set_password_callback(boost::bind(&SIPStack::getTlsCertPassword, this));
+    tlsClientContext.use_certificate_chain_file(tlsCertFile);
+    tlsClientContext.use_private_key_file(tlsCertFile, boost::asio::ssl::context::pem);
+    
     tlsServerContext.set_password_callback(boost::bind(&SIPStack::getTlsCertPassword, this));
     tlsServerContext.use_certificate_chain_file(tlsCertFile);
     tlsServerContext.use_private_key_file(tlsCertFile, boost::asio::ssl::context::pem);
