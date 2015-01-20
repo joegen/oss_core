@@ -35,6 +35,8 @@ class OSS_API SIPListener
 {
 public:
   
+  typedef std::vector<std::string> SubNets;
+  
   SIPListener(SIPTransportService* pTransportService, const std::string& address, const std::string& port);
     /// Construct the server to listen on the specified TCP address and port.
 
@@ -64,6 +66,15 @@ public:
     /// Set set the external address
 
   SIPTransportService* getTransportService() const;
+  
+  const SubNets& subNets() const;
+    /// Return the subnets reachable using this listener
+  
+  SubNets& subNets();
+    /// Return the subnets reachable using this listener
+  
+  bool isAcceptableDestination(const std::string& address) const;
+  
 protected:
   SIPListener(const SIPListener&);
   SIPListener& operator = (const SIPListener&);
@@ -71,6 +82,7 @@ protected:
   SIPTransportService* _pTransportService;
     /// The io_service used to perform asynchronous operations.
   std::string _externalAddress;
+  SubNets _subNets;
 private:
   std::string _address;
   std::string _port;
@@ -103,6 +115,16 @@ inline void SIPListener::setExternalAddress(const std::string& externalAddress)
 inline SIPTransportService* SIPListener::getTransportService() const
 {
   return _pTransportService;
+}
+
+inline const SIPListener::SubNets& SIPListener::subNets() const
+{
+  return _subNets;
+}
+  
+inline SIPListener::SubNets& SIPListener::subNets()
+{
+  return _subNets;
 }
 
 } } // OSS::SIP

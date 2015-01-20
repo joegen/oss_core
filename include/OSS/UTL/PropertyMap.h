@@ -67,6 +67,7 @@ struct PropertyMap
     "inbound-contact," \
     "is-early-dialog-persisted", \
     "is-out-of-dialog-refer", \
+    "subnets", \
     "property-undefined" \
   };
 
@@ -113,6 +114,7 @@ struct PropertyMap
     PROP_InboundContact,
     PROP_IsEarlyDialogPersisted,
     PROP_IsOutOfDialogRefer,
+    PROP_Subnets,
     PROP_Max
   };
   

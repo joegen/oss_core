@@ -81,25 +81,25 @@ public:
   void handleStop();
     /// Handle a request to stop the transport service.
 
-  void addUDPTransport(const std::string& ip, const std::string& port, const std::string& externalIp);
+  void addUDPTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets);
     /// Add a new UDP transport bound to the ip address and port.
     ///
     /// If the transport already exists, this function will throw
     /// a SIPDuplicateTransport exception
 
-  void addTCPTransport(const std::string& ip, const std::string& port, const std::string& externalIp);
+  void addTCPTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets);
     /// Add a new TCP transport bound to the ip address and port.
     ///
     /// If the transport already exists, this function will throw
     /// a SIPDuplicateTransport exception
 
-  void addWSTransport(const std::string& ip, const std::string& port, const std::string& externalIp);
+  void addWSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets);
     /// Add a new WebSocket transport bound to the ip address and port.
     ///
     /// If the transport already exists, this function will throw
     /// a SIPDuplicateTransport exception
 
-  void addTLSTransport(const std::string& ip, const std::string& port, const std::string& externalIp);
+  void addTLSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets);
     /// Add a new TLS transport bound to the ip address and port.
     ///
     /// If the transport already exists, this function will throw
@@ -139,6 +139,8 @@ public:
 
   OSS::Net::IPAddress& defaultListenerAddress();
     /// Get the configured default listener
+  
+  const SIPListener* getTransportForDestination(const std::string& proto, const std::string& address) const;
 
   void sendUDPKeepAlive(const OSS::Net::IPAddress& localInterface,
     const OSS::Net::IPAddress& target);

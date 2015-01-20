@@ -61,6 +61,8 @@ class OSS_API SIPStack
   /// inside a homegenous application namespace
 {
 public:
+  
+  typedef std::map< std::string, SIPListener::SubNets > SubNets;
 
   SIPStack();
     /// Creates a new SIPStack Object
@@ -279,10 +281,16 @@ private:
   bool _enableTCP;
   bool _enableWS;
   bool _enableTLS;
+  
   OSS::socket_address_list _udpListeners;
   OSS::socket_address_list _tcpListeners;
   OSS::socket_address_list _wsListeners;
   OSS::socket_address_list _tlsListeners;
+  
+  SubNets _udpSubnets;
+  SubNets _tcpSubnets;
+  SubNets _wsSubnets;
+  SubNets _tlsSubnets;
   
   std::string _tlsCertPassword;
   //

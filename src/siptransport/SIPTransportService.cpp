@@ -177,7 +177,54 @@ bool SIPTransportService::isLocalTransport(const std::string& proto,
   return false;
 }
 
-void SIPTransportService::addUDPTransport(const std::string& ip, const std::string& port, const std::string& externalIp)
+const SIPListener* SIPTransportService::getTransportForDestination(const std::string& proto, const std::string& address) const
+{
+  if (proto == "udp" || proto == "UDP")
+  {
+    for (UDPListeners::const_iterator iter = _udpListeners.begin(); iter != _udpListeners.end(); iter++)
+    {
+      if (iter->second->isAcceptableDestination(address))
+      {
+        return iter->second.get();
+      }
+    }
+  }
+  else if (proto == "tcp" || proto == "TCP")
+  {
+    for (TCPListeners::const_iterator iter = _tcpListeners.begin(); iter != _tcpListeners.end(); iter++)
+    {
+      if (iter->second->isAcceptableDestination(address))
+      {
+        return iter->second.get();
+      }
+    }
+  }
+  else if (proto == "tls" || proto == "TLS")
+  {
+    for (TLSListeners::const_iterator iter = _tlsListeners.begin(); iter != _tlsListeners.end(); iter++)
+    {
+      if (iter->second->isAcceptableDestination(address))
+      {
+        return iter->second.get();
+      }
+    }
+  }
+  else if (proto == "ws" || proto == "WS")
+  {
+    for (WSListeners::const_iterator iter = _wsListeners.begin(); iter != _wsListeners.end(); iter++)
+    {
+      if (iter->second->isAcceptableDestination(address))
+      {
+        return iter->second.get();
+      }
+    }
+  }
+  
+  return 0;
+}
+
+
+void SIPTransportService::addUDPTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets)
 {
   OSS_LOG_INFO("Adding UDP SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
@@ -186,6 +233,7 @@ void SIPTransportService::addUDPTransport(const std::string& ip, const std::stri
     throw OSS::SIP::SIPException("Duplicate UDP Transport detected while calling addUDPTransport()");
   SIPUDPListener::Ptr udpListener(new SIPUDPListener(this, _dispatch, ip, port));
   udpListener->setExternalAddress(externalIp);
+  udpListener->subNets() = subnets;
   _udpListeners[key] = udpListener;
 
   boost::system::error_code ec;
@@ -196,7 +244,7 @@ void SIPTransportService::addUDPTransport(const std::string& ip, const std::stri
   OSS_LOG_INFO("UDP SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
 }
 
-void SIPTransportService::addTCPTransport(const std::string& ip, const std::string& port, const std::string& externalIp)
+void SIPTransportService::addTCPTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets)
 {
   OSS_LOG_INFO("Adding TCP SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
@@ -205,6 +253,7 @@ void SIPTransportService::addTCPTransport(const std::string& ip, const std::stri
     throw OSS::SIP::SIPException("Duplicate TCP transport while calling addTCPTransport()");
   SIPTCPListener::Ptr pTcpListener = SIPTCPListener::Ptr(new SIPTCPListener(this, _dispatch, ip, port, _tcpConMgr));
   pTcpListener->setExternalAddress(externalIp);
+  pTcpListener->subNets() = subnets;
   _tcpListeners[key] = pTcpListener;
   boost::system::error_code ec;
   boost::asio::ip::address whiteList = boost::asio::ip::address::from_string(ip, ec);
@@ -213,7 +262,7 @@ void SIPTransportService::addTCPTransport(const std::string& ip, const std::stri
   OSS_LOG_INFO("TCP SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
 }
 
-void SIPTransportService::addWSTransport(const std::string& ip, const std::string& port, const std::string& externalIp)
+void SIPTransportService::addWSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets)
 {
   OSS_LOG_INFO("Adding WebSocket SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
@@ -222,6 +271,7 @@ void SIPTransportService::addWSTransport(const std::string& ip, const std::strin
     throw OSS::SIP::SIPException("Duplicate WebSocket transport while calling addWSTransport()");
   SIPWebSocketListener::Ptr pWsListener = SIPWebSocketListener::Ptr(new SIPWebSocketListener(this, ip, port, _wsConMgr));
   pWsListener->setExternalAddress(externalIp);
+  pWsListener->subNets() = subnets;
   _wsListeners[key] = pWsListener;
   boost::system::error_code ec;
   boost::asio::ip::address whiteList = boost::asio::ip::address::from_string(ip, ec);
@@ -230,7 +280,7 @@ void SIPTransportService::addWSTransport(const std::string& ip, const std::strin
   OSS_LOG_INFO("WebSocket SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
 }
 
-void SIPTransportService::addTLSTransport(const std::string& ip, const std::string& port, const std::string& externalIp)
+void SIPTransportService::addTLSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets)
 {
   OSS_LOG_INFO("Adding TLS SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
@@ -239,6 +289,7 @@ void SIPTransportService::addTLSTransport(const std::string& ip, const std::stri
     throw OSS::SIP::SIPException("Duplicate TSL transport while calling addTLSTransport()");
   SIPTLSListener::Ptr pTlsListener = SIPTLSListener::Ptr(new SIPTLSListener(this, _dispatch, ip, port, _tlsConMgr));
   pTlsListener->setExternalAddress(externalIp);
+  pTlsListener->subNets() = subnets;
   _tlsListeners[key] = pTlsListener;
   boost::system::error_code ec;
   boost::asio::ip::address whiteList = boost::asio::ip::address::from_string(ip, ec);
@@ -246,6 +297,7 @@ void SIPTransportService::addTLSTransport(const std::string& ip, const std::stri
     SIPTransportSession::rateLimit().clearAddress(whiteList, true);
   OSS_LOG_INFO("TLS SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
 }
+
 SIPTransportSession::Ptr SIPTransportService::createClientTransport(
   const OSS::SIP::SIPMessage::Ptr& pMsg,
   const OSS::Net::IPAddress& localAddress,

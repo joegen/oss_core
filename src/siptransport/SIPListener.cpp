@@ -56,6 +56,18 @@ SIPListener& SIPListener::operator = (const SIPListener&)
   return *this;
 }
 
+bool SIPListener::isAcceptableDestination(const std::string& address) const
+{
+  for (SubNets::const_iterator iter = _subNets.begin(); iter != _subNets.end(); iter++)
+  {
+    if (OSS::socket_address_cidr_verify(address, *iter))
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
 
 } } // OSS::SIP
 

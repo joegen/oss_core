@@ -53,7 +53,9 @@ TEST(TransportTest, test_tls_transport)
   remoteAddress.setPort(35061);
   
 
-  tlsServer.addTLSTransport("127.0.0.1", "35061", "127.0.0.1");
+  SIPListener::SubNets subnets;
+  subnets.push_back("0.0.0.0/0");
+  tlsServer.addTLSTransport("127.0.0.1", "35061", "127.0.0.1", subnets);
   
   tlsServer.run();
 
