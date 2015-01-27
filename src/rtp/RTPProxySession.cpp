@@ -448,6 +448,8 @@ void RTPProxySession::handleInitialSDPOffer(
   _hasOfferedFaxProxy = false;
   _leg1Identifier = "";
   _leg2Identifier = "";
+  _leg1OriginAddress = "";
+  _leg2OriginAddress = "";
   _lastOfferIndex = 0;
 
   bool forceCreateProxy = rtpAttribute.forceCreate || rtpAttribute.forcePEAEncryption;
@@ -475,6 +477,7 @@ void RTPProxySession::handleInitialSDPOffer(
   }
 
   _leg1Identifier = oLineTokens[1];
+  _leg1OriginAddress = oLineTokens[5];
   //
   // Process audio session
   //
@@ -808,6 +811,7 @@ void RTPProxySession::handleInitialSDPAnswer(
   }
 
   _leg2Identifier = oLineTokens[1];
+  _leg2OriginAddress = oLineTokens[5];
   //
   // Process audio session
   //
@@ -1064,11 +1068,41 @@ void RTPProxySession::handleSDPOffer(
   }
 
   int legIndex = 0;
-  if (_leg1Identifier == oLineTokens[1])
+  
+  if (!_leg1Identifier.empty() && _leg1Identifier == _leg2Identifier)
+  {
+    if (_leg1OriginAddress == _leg2OriginAddress)
+    {
+      throw SDPException("Unable to determine session from origin");
+    }
+    //
+    // Handling special case where both legs assigned the same session id.
+    // In this case we will be using the origin address
+    //
+    if (_leg1OriginAddress == oLineTokens[5])
+    {
+      _lastOfferIndex = legIndex = 1;
+    }
+    else if (_leg2OriginAddress == oLineTokens[5])
+    {
+      _lastOfferIndex = legIndex = 2;
+    }
+    else
+    {
+      //
+      // This is a new session. Close the current stream and treat as a preliminary offer
+      //
+      stop();
+      handleInitialSDPOffer(sentBy, packetSourceIP, packetLocalInterface, route,
+        routeLocalInterface, requestType, sdp, rtpAttribute);
+      return;
+    }
+  }
+  else if (!_leg1Identifier.empty() && _leg1Identifier == oLineTokens[1])
   {
     _lastOfferIndex = legIndex = 1;
   }
-  else if (_leg2Identifier == oLineTokens[1])
+  else if (!_leg2Identifier.empty() && _leg2Identifier == oLineTokens[1])
   {
     _lastOfferIndex = legIndex = 2;
   }
@@ -1427,7 +1461,26 @@ void RTPProxySession::handleSDPAnswer(
   }
 
   int legIndex = 0;
-  if (_leg1Identifier == oLineTokens[1])
+  if (_leg1Identifier == _leg2Identifier)
+  {
+    if (_leg1OriginAddress == _leg2OriginAddress)
+    {
+      throw SDPException("Unable to determine session from origin");
+    }
+    //
+    // Handling special case where both legs assigned the same session id.
+    // In this case we will be using the origin address
+    //
+    if (_leg1OriginAddress == oLineTokens[5])
+    {
+      legIndex = 1;
+    }
+    else if (_leg2OriginAddress == oLineTokens[5])
+    {
+      legIndex = 2;
+    }
+  }
+  else if (_leg1Identifier == oLineTokens[1])
   {
     legIndex = 1;
   }
@@ -1435,7 +1488,8 @@ void RTPProxySession::handleSDPAnswer(
   {
     legIndex = 2;
   }
-  else
+  
+  if (!legIndex)
   {
     if (_lastOfferIndex == 0)
     {
@@ -1445,11 +1499,13 @@ void RTPProxySession::handleSDPAnswer(
     {
       legIndex = 2;
       _leg2Identifier = oLineTokens[1];
+      _leg2OriginAddress = oLineTokens[5];
     }
     else 
     {
       legIndex = 1;
       _leg1Identifier = oLineTokens[1];
+      _leg1OriginAddress = oLineTokens[5];
     }
   }
 
@@ -1718,6 +1774,8 @@ void RTPProxySession::dumpStateToRedis()
   record.logId = _logId.c_str();
   record.leg1Identifier = _leg1Identifier.c_str();
   record.leg2Identifier = _leg2Identifier.c_str();
+  record.leg1OriginAddress = _leg1OriginAddress.c_str();
+  record.leg2OriginAddress = _leg2OriginAddress.c_str();
   record.lastSDPInAck = _lastSDPInAck.c_str();
   record.isExpectingInitialAnswer = _isExpectingInitialAnswer;
   record.hasOfferedAudioProxy = _hasOfferedAudioProxy;
@@ -1992,6 +2050,12 @@ void RTPProxySession::dumpStateFile()
 
   DataType leg2Identifier = root.addGroupElement("leg2Identifier", DataType::TypeString);
   leg2Identifier = _leg2Identifier.c_str();
+  
+  DataType leg1OriginAddress = root.addGroupElement("leg1OriginAddress", DataType::TypeString);
+  leg1OriginAddress = _leg1OriginAddress.c_str();
+
+  DataType leg2OriginAddress = root.addGroupElement("leg2OriginAddress", DataType::TypeString);
+  leg2OriginAddress = _leg2OriginAddress.c_str();
 
   DataType lastSDPInAck = root.addGroupElement("lastSDPInAck", DataType::TypeString);
   lastSDPInAck = _lastSDPInAck.c_str();
@@ -2287,6 +2351,8 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromRedis(RTPProxyManager* pMan
       pSession->_logId = record.logId;
       pSession->_leg1Identifier = record.leg1Identifier;
       pSession->_leg2Identifier = record.leg2Identifier;
+      pSession->_leg1OriginAddress = record.leg1OriginAddress;
+      pSession->_leg2OriginAddress = record.leg2OriginAddress;
       pSession->_lastSDPInAck = record.lastSDPInAck;
       pSession->_isExpectingInitialAnswer = record.isExpectingInitialAnswer;
       pSession->_hasOfferedAudioProxy = record.hasOfferedAudioProxy;
@@ -2544,6 +2610,8 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromStateFile(
     pSession->_logId = (const char*)root["logId"];
     pSession->_leg1Identifier = (const char*)root["leg1Identifier"];
     pSession->_leg2Identifier = (const char*)root["leg2Identifier"];
+    pSession->_leg1OriginAddress = (const char*)root["leg1OriginAddress"];
+    pSession->_leg2OriginAddress = (const char*)root["leg2OriginAddress"];
     pSession->_lastSDPInAck = (const char*)root["lastSDPInAck"];
     pSession->_isExpectingInitialAnswer = (bool)root["isExpectingInitialAnswer"];
     pSession->_hasOfferedAudioProxy = (bool)root["hasOfferedAudioProxy"];

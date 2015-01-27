@@ -99,6 +99,8 @@ bool RTPProxyRecord::writeToRedis(RedisBroadcastClient& client, const std::strin
   params["logId"] = json::String(logId);
   params["leg1Identifier"] = json::String(leg1Identifier);
   params["leg2Identifier"] = json::String(leg2Identifier);
+  params["leg1OriginAddress"] = json::String(leg1OriginAddress);
+  params["leg2OriginAddress"] = json::String(leg2OriginAddress);
   params["lastSDPInAck"] = json::String(lastSDPInAck);
   
   // bools
@@ -251,6 +253,8 @@ bool RTPProxyRecord::readFromRedis(RedisBroadcastClient& client, const std::stri
   json::String logId_ = params["logId"]; logId = logId_.Value();
   json::String leg1Identifier_ = params["leg1Identifier"]; leg1Identifier = leg1Identifier_.Value();
   json::String leg2Identifier_ = params["leg2Identifier"]; leg2Identifier = leg2Identifier_.Value();
+  json::String leg1OriginAddress_ = params["leg1OriginAddress"]; leg1OriginAddress = leg1OriginAddress_.Value();
+  json::String leg2OriginAddress_ = params["leg2OriginAddress"]; leg2OriginAddress = leg2OriginAddress_.Value();
   json::String lastSDPInAck_ = params["lastSDPInAck"]; lastSDPInAck = lastSDPInAck_.Value();
 
   // bools

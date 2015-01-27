@@ -293,6 +293,9 @@ private:
 
   std::string _leg1Identifier;
   std::string _leg2Identifier;
+  
+  std::string _leg1OriginAddress;
+  std::string _leg2OriginAddress;
 
   bool _isExpectingInitialAnswer;
   bool _hasOfferedAudioProxy;

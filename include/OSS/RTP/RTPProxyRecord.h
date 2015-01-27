@@ -62,6 +62,8 @@ struct RTPProxyRecord
   std::string logId;
   std::string leg1Identifier;
   std::string leg2Identifier;
+  std::string leg1OriginAddress;
+  std::string leg2OriginAddress;
   std::string lastSDPInAck;
   bool isExpectingInitialAnswer;
   bool hasOfferedAudioProxy;
