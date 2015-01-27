@@ -6,9 +6,17 @@ using namespace OSS::SIP;
 
 static bool  tlsDispatched = false;
 
+#define KEYS_DIR "../../../src/unit_test/test-data/tls/keys"
+static const char * TLS_CA_FILE = KEYS_DIR "/ca.crt";
+static const char * SERVER_CERT_FILE = KEYS_DIR "/karoo.crt";
+static const char * SERVER_KEY_FILE = KEYS_DIR "/karoo.key";
+
+
 static void tlsDispatch(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport)
 {
   ASSERT_TRUE(pMsg->isRequest("OPTIONS"));
+  
+  std::cout << pMsg->data() << std::endl;
   tlsDispatched = true;
 }
 
@@ -19,7 +27,7 @@ std::string password_callback(
     std::size_t max_length,  // the maximum length for a password
     boost::asio::ssl::context::password_purpose purpose ) // for_reading or for_writing
 {
-  return "pass";
+  return "admin";
 }
 
 TEST(TransportTest, test_tls_transport)
@@ -27,26 +35,26 @@ TEST(TransportTest, test_tls_transport)
   boost::asio::ssl::context& tlsServerContext = tlsServer.tlsServerContext();
   boost::asio::ssl::context& tlsClientContext = tlsServer.tlsClientContext();
 
-  tlsClientContext.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::verify_none);
-  tlsServerContext.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::verify_none);
+
+  tlsClientContext.set_verify_mode( boost::asio::ssl::context::verify_peer);
+  tlsServerContext.set_verify_mode(boost::asio::ssl::context::verify_peer | boost::asio::ssl::context::verify_fail_if_no_peer_cert);
   
-  const char* KEY_FILE = "/home/joegen/certs/key.pem";
-  const char* CERT_FILE = "/home/joegen/certs/cert.pem";
+ 
+  ASSERT_TRUE(boost::filesystem::exists(SERVER_KEY_FILE));
+  ASSERT_TRUE(boost::filesystem::exists(SERVER_CERT_FILE));
+  ASSERT_TRUE(boost::filesystem::exists(TLS_CA_FILE));
   
-  ASSERT_TRUE(boost::filesystem::exists(KEY_FILE));
-  ASSERT_TRUE(boost::filesystem::exists(CERT_FILE));
-  
-  //
-  // Run the following commands in the same directory as the unit-test prior to running test-case
-  // openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=sip.mydomain.local" -keyout sip.mydomain.local.key  -out sip.mydomain.local.cert
-  // this will generate sip.mydomain.local.cert  sip.mydomain.local.key
-  //
-  
+ 
   tlsServerContext.set_password_callback(password_callback);
-  tlsServerContext.use_private_key_file(KEY_FILE, boost::asio::ssl::context::pem);
-  tlsServerContext.use_certificate_file(CERT_FILE, boost::asio::ssl::context::pem);
-  tlsServerContext.use_certificate_chain_file(CERT_FILE);
+  tlsServerContext.use_certificate_file(SERVER_CERT_FILE, boost::asio::ssl::context::pem);
+  tlsServerContext.use_private_key_file(SERVER_KEY_FILE, boost::asio::ssl::context::pem);
+  tlsServerContext.load_verify_file(TLS_CA_FILE);
   
+  tlsClientContext.set_password_callback(password_callback);
+  tlsClientContext.use_certificate_file(SERVER_CERT_FILE, boost::asio::ssl::context::pem);
+  tlsClientContext.use_private_key_file(SERVER_KEY_FILE, boost::asio::ssl::context::pem);
+  tlsClientContext.load_verify_file(TLS_CA_FILE);
+
   
   OSS::Net::IPAddress localAddress("127.0.0.1");
   OSS::Net::IPAddress remoteAddress("127.0.0.1");
@@ -78,13 +86,13 @@ TEST(TransportTest, test_tls_transport)
   
   SIPMessage::Ptr pMsg(new SIPMessage(msg.str()));
   
-  ASSERT_TRUE(pClient->writeKeepAlive());
+  pClient->writeKeepAlive();
   pClient->writeMessage(pMsg);
+
   
   OSS::thread_sleep(100);
+  tlsServer.stop();
   
   ASSERT_TRUE(tlsDispatched);
-  
-  tlsServer.stop();
 }
 

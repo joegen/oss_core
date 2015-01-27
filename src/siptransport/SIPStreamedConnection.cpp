@@ -452,7 +452,7 @@ void SIPStreamedConnection::handleServerHandshake(const boost::system::error_cod
   }
   else
   {
-    OSS_LOG_WARNING("SIPStreamedConnection::handleServerHandshake() Exception " << e.message() << " - " << ERR_GET_REASON(e.value()));
+    OSS_LOG_ERROR("SIPStreamedConnection::handleServerHandshake() Exception " << e.message() << " - " << ERR_GET_REASON(e.value()));
     
     std::string err = e.message();
     if (e.category() == boost::asio::error::get_ssl_category()) 
@@ -484,7 +484,7 @@ void SIPStreamedConnection::handleClientHandshake(const boost::system::error_cod
   }
   else
   {
-    OSS_LOG_WARNING("SIPStreamedConnection::handleClientHandshake() Exception " << e.message());
+    OSS_LOG_ERROR("SIPStreamedConnection::handleClientHandshake() Exception " << e.message() << " - " << ERR_GET_REASON(e.value()));
     socket().close();
   }
 }

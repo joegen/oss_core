@@ -162,13 +162,17 @@ public:
 #endif
   
   bool initializeTlsContext(
-    const std::string& tlsCertFile, // Includes key and certificate to be used by this server.  File should be in PEM format
+    const std::string& tlsCertFile, // Certificate to be used by this server.  File should be in PEM format
+    const std::string& privateKey, // Private key to be used by this server.  File should be in PEM format
     const std::string& tlsCertFilePassword, // Set this value if tlsCertFile is password protected
     const std::string& peerCaFile, // If the remote peer this server is connecting to uses a self signed certificate, this file is used to verify authenticity of the peer identity
     const std::string& peerCaPath, // A directory full of CA certificates. The files must be named with the CA subject name hash value. (see man SSL_CTX_load_verify_locations for more info)
-    bool verifyPeer // If acting as a client, verify the peer certificates.  If the peer CA file is not set, set this value to false
+    bool verifyPeer // Verify the peer certificates.  If the peer CA file is not set, set this value to false
   );
     /// This method intializes the TLS context if secure transport is enabled
+  
+  bool initTlsContextFromConfig(const boost::filesystem::path& cfgFile);
+    /// Initialize TLS using a configuration file
   
   std::string getTlsCertPassword() const;
     /// Returns the tlsCertPassword.  This is used internally by initializeTlsContext

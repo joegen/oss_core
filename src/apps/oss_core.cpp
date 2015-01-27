@@ -84,6 +84,7 @@ struct Config
   int targetInterfacePort;
   std::string routeScript;
   std::string tlsCertFile;
+  std::string tlsPrivateKey;
   std::string tlsPeerCa;
   std::string tlsPeerCaDirectory;
   std::string tlsCertPassword;
@@ -193,7 +194,7 @@ public:
     {
       bool verifyPeer = !_config.tlsPeerCa.empty() || !_config.tlsPeerCaDirectory.empty();
       
-      if (stack().initializeTlsContext(_config.tlsCertFile, _config.tlsCertPassword, _config.tlsPeerCa, _config.tlsPeerCaDirectory, verifyPeer))
+      if (stack().initializeTlsContext(_config.tlsCertFile, _config.tlsPrivateKey, _config.tlsCertPassword, _config.tlsPeerCa, _config.tlsPeerCaDirectory, verifyPeer))
       {
         OSS::Net::IPAddress tlsListener;
         tlsListener = _config.address;
@@ -544,6 +545,7 @@ void prepareListenerInfo(Config& config, ServiceOptions& options)
   // TLS cert paths
   //
   options.getOption("tls-cert", config.tlsCertFile);
+  options.getOption("tls-private-key", config.tlsPrivateKey);
   options.getOption("tls-peer-ca", config.tlsPeerCa);
   options.getOption("tls-peer-ca-directory", config.tlsPeerCaDirectory);
   options.getOption("tls-password", config.tlsCertPassword);
@@ -596,7 +598,8 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionInt('R', "rtp-port-low", "Lowest port used for RTP");
   options.addOptionInt('H', "rtp-port-high", "Highest port used for RTP");
   options.addOptionString('J', "route-script", "Path for the route script");
-  options.addOptionString("tls-cert", "Server TLS Certificate File. Includes key and certificate to be used by this server.  File should be in PEM format.");
+  options.addOptionString("tls-cert", "Certificate to be used by this server.  File should be in PEM format.");
+  options.addOptionString("tls-private-key", "Private Key to be used by this server.  File should be in PEM format.");
   options.addOptionString("tls-peer-ca", "Peer CA File. If the remote peer this server is connecting to uses a self signed certificate, this file is used to verify authenticity of the peer identity.");
   options.addOptionString("tls-peer-ca-directory", "Additional CA file directory. The files must be named with the CA subject name hash value.");
   options.addOptionString("tls-password", "TLS Certificate Key Password");

@@ -316,6 +316,71 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
     throw OSS::SIP::SIPException("No Listener Address Configured");
 }
 
+bool SIPStack::initTlsContextFromConfig(const boost::filesystem::path& cfgFile)
+{
+  ClassType config;
+  config.load(OSS::boost_path(cfgFile));
+  DataType root = config.self();
+  DataType listeners = root["listeners"];
+  
+ /****************************************************************************
+  * The TLS Certificate Authority                                            *
+  ****************************************************************************/
+  std::string tls_ca_file;
+  if (listeners.exists("tls-ca-file"))
+  {
+    tls_ca_file = (const char*)listeners["tls-ca-file"];
+  }
+
+ /****************************************************************************
+  * The Additional TLS Certificate Authority Directory.                      *
+  * The files must be named with the CA subject name hash value.             *
+  * (see man SSL_CTX_load_verify_locations for more info)                    *
+  ****************************************************************************/
+  std::string tls_ca_path;
+  if (listeners.exists("tls-ca-path"))
+  {
+    tls_ca_path = (const char*)listeners["tls-ca-path"];
+  }
+
+ /****************************************************************************
+  * The TLS Server Certificate                                               *
+  ****************************************************************************/
+  std::string tls_certificate_file;
+  if (listeners.exists("tls-certificate-file"))
+  {
+    tls_certificate_file = (const char*)listeners["tls-certificate-file"];
+  }
+
+ /****************************************************************************
+  * The TLS Server Private Key                                               *
+  ****************************************************************************/
+  std::string tls_private_key_file;
+  if (listeners.exists("tls-private-key-file"))
+  {
+    tls_private_key_file = (const char*)listeners["tls-private-key-file"];
+  }
+
+ /****************************************************************************
+  * The TLS Certificate Password                                             *
+  ****************************************************************************/
+  std::string tls_cert_password;
+  if (listeners.exists("tls-cert-password"))
+  {
+    tls_cert_password = (const char*)listeners["tls-cert-password"];
+  }
+
+ /****************************************************************************
+  * The TLS Verification Mode.  True if server will verify client certs      *
+  ****************************************************************************/
+  bool tls_verify_peer = false;
+  if (listeners.exists("tls-verify-peer"))
+  {
+    tls_verify_peer = (bool)listeners["tls-verify-peer"];
+  }
+  
+  return initializeTlsContext(tls_certificate_file, tls_private_key_file, tls_cert_password, tls_ca_file, tls_ca_path, tls_verify_peer);
+}
 
 void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 {
@@ -324,6 +389,10 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
   DataType root = config.self();
   DataType listeners = root["listeners"];
   
+  //
+  // Initialize TLS context
+  //
+  bool hasInitializedTls = initTlsContextFromConfig(cfgFile);
 
   DataType interfaces = listeners["interfaces"];
   int ifaceCount = interfaces.getElementCount();
@@ -405,48 +474,14 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       _wsSubnets[listener.toIpPortString()] = subnets;
     }
 
-    if (tlsEnabled)
-    {
-      std::string tlsCertFile;
-      std::string tlsPeerCa;
-      std::string tlsPeerCaDirectory;
-      std::string tlsCertPassword;
-      bool tlsVerifyPeer = true;
-      
-      if (iface.exists("tls-cert-file"))
-      {
-        tlsCertFile = (const char*)iface["tls-cert-file"];
-      }
-      
-      if (iface.exists("tls-peer-ca"))
-      {
-        tlsPeerCa = (const char*)iface["tls-peer-ca"];
-      }
-      
-      if (iface.exists("tls-peer-ca-dir"))
-      {
-        tlsPeerCaDirectory = (const char*)iface["tls-peer-ca-dir"];
-      }
-      
-      if (iface.exists("tls-cert-password"))
-      {
-        tlsCertPassword = (const char*)iface["tls-cert-password"];
-      }
-      
-      if (iface.exists("tls-verify-peer"))
-      {
-        tlsVerifyPeer = (bool)iface["tls-verify-peer"];
-      }
-      
-      if (initializeTlsContext(tlsCertFile, tlsCertPassword, tlsPeerCa, tlsPeerCaDirectory, tlsVerifyPeer))
-      {
-        OSS::Net::IPAddress listener;
-        listener = ip;
-        listener.externalAddress() = external;
-        listener.setPort(tlsPort);
-        _tlsListeners.push_back(listener);
-        _tlsSubnets[listener.toIpPortString()] = subnets;
-      }
+    if (tlsEnabled && hasInitializedTls)
+    {      
+      OSS::Net::IPAddress listener;
+      listener = ip;
+      listener.externalAddress() = external;
+      listener.setPort(tlsPort);
+      _tlsListeners.push_back(listener);
+      _tlsSubnets[listener.toIpPortString()] = subnets;
     }
   }
 
@@ -609,11 +644,12 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 }
 
 bool SIPStack::initializeTlsContext(
-    const std::string& tlsCertFile, // Includes key and certificate to be used by this server.  File should be in PEM format
+    const std::string& tlsCertFile, // Certificate to be used by this server.  File should be in PEM format
+    const std::string& privateKey, // Private key to be used by this server.  File should be in PEM format
     const std::string& tlsCertFilePassword, // Set this value if tlsCertFile is password protected
     const std::string& peerCaFile, // If the remote peer this server is connecting to uses a self signed certificate, this file is used to verify authenticity of the peer identity
     const std::string& peerCaPath, // A directory full of CA certificates. The files must be named with the CA subject name hash value. (see man SSL_CTX_load_verify_locations for more info)
-    bool verifyPeer // If acting as a client, verify the peer certificates.  If the peer CA file is not set, set this value to false
+    bool verifyPeer // Verify the peer certificates.  If the peer CA file is not set, set this value to false
 )
 {
   boost::asio::ssl::context& tlsClientContext = transport().tlsClientContext();
@@ -623,14 +659,14 @@ bool SIPStack::initializeTlsContext(
   //
   if (verifyPeer)
   {
-    tlsClientContext.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::verify_peer);
-    tlsServerContext.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::verify_peer | boost::asio::ssl::context::verify_fail_if_no_peer_cert);
+    tlsClientContext.set_verify_mode(boost::asio::ssl::context::verify_none);
+    tlsServerContext.set_verify_mode(boost::asio::ssl::context::verify_peer | boost::asio::ssl::context::verify_fail_if_no_peer_cert);
     OSS_LOG_INFO("SIPStack::initializeTlsContext - Peer Certificate Verification Enforcing");
   }
   else
   {
-    tlsClientContext.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::verify_none);
-    tlsServerContext.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::verify_none);
+    tlsClientContext.set_verify_mode(boost::asio::ssl::context::verify_none);
+    tlsServerContext.set_verify_mode(boost::asio::ssl::context::verify_none);
     OSS_LOG_INFO("SIPStack::initializeTlsContext - Peer Certificate Verification Disabled");
   }
   
@@ -673,12 +709,12 @@ bool SIPStack::initializeTlsContext(
   try
   {
     tlsClientContext.set_password_callback(boost::bind(&SIPStack::getTlsCertPassword, this));
-    tlsClientContext.use_certificate_chain_file(tlsCertFile);
-    tlsClientContext.use_private_key_file(tlsCertFile, boost::asio::ssl::context::pem);
+    tlsClientContext.use_certificate_file(tlsCertFile, boost::asio::ssl::context::pem);
+    tlsClientContext.use_private_key_file(privateKey, boost::asio::ssl::context::pem);
     
     tlsServerContext.set_password_callback(boost::bind(&SIPStack::getTlsCertPassword, this));
-    tlsServerContext.use_certificate_chain_file(tlsCertFile);
-    tlsServerContext.use_private_key_file(tlsCertFile, boost::asio::ssl::context::pem);
+    tlsServerContext.use_certificate_file(tlsCertFile, boost::asio::ssl::context::pem);
+    tlsServerContext.use_private_key_file(privateKey, boost::asio::ssl::context::pem);
   }
   catch(...)
   {
