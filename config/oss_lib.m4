@@ -160,6 +160,7 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     AC_CHECK_LIB(pthread, main, [], [SF_MISSING_DEP("libpthread not found")])
     AC_CHECK_LIB(dl, main, [], [SF_MISSING_DEP("libdl not found")])
     AC_CHECK_LIB(rt, main, [], [SF_MISSING_DEP("librt not found")])
+    AC_CHECK_LIB(z, main, [], [SF_MISSING_DEP("libz not found")])
     AC_CHECK_LIB(crypt, main, [], [SF_MISSING_DEP("libcrypt not found")])
     AC_CHECK_LIB(resolv, main, [], [SF_MISSING_DEP("libresolv not found")])
     AC_CHECK_LIB(pcap, main, [], [SF_MISSING_DEP("libpcap not found")])
@@ -182,6 +183,7 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     OSS_CORE_DEP_LIBS+=" -lpthread  "
     OSS_CORE_DEP_LIBS+=" -ldl  "
     OSS_CORE_DEP_LIBS+=" -lrt  "
+    OSS_CORE_DEP_LIBS+=" -lz  "
     OSS_CORE_DEP_LIBS+=" -lcrypt  "
     OSS_CORE_DEP_LIBS+=" -lresolv  "
     OSS_CORE_DEP_LIBS+=" -lpcap  "
