@@ -194,7 +194,9 @@ void log_fatal(const std::string& log)
     _consoleMutex.unlock();
     return;
   }
-  _pLogger->fatal(log);
+  
+  if (_pLogger)
+    _pLogger->fatal(log);
 }
 
 void log_critical(const std::string& log)
@@ -210,9 +212,8 @@ void log_critical(const std::string& log)
     return;
   }
 
-  if(!_pLogger)
-    return;
-  _pLogger->critical(log);
+  if (_pLogger)
+    _pLogger->critical(log);
 }
 
 void log_error(const std::string& log)
@@ -227,7 +228,9 @@ void log_error(const std::string& log)
     _consoleMutex.unlock();
     return;
   }
-  _pLogger->error(log);
+  
+  if (_pLogger)
+    _pLogger->error(log);
 }
 
 void log_warning(const std::string& log)
@@ -242,7 +245,9 @@ void log_warning(const std::string& log)
     _consoleMutex.unlock();
     return;
   }
-  _pLogger->warning(log);
+  
+  if (_pLogger)
+    _pLogger->warning(log);
 }
 
 void log_notice(const std::string& log)
@@ -258,7 +263,8 @@ void log_notice(const std::string& log)
     return;
   }
 
-  _pLogger->notice(log);
+  if (_pLogger)
+    _pLogger->notice(log);
 }
 
 void log_information(const std::string& log)
@@ -273,6 +279,7 @@ void log_information(const std::string& log)
     _consoleMutex.unlock();
     return;
   }
+  
   if (_pLogger)
     _pLogger->information(log);
 }
@@ -289,6 +296,7 @@ void log_debug(const std::string& log)
     _consoleMutex.unlock();
     return;
   }
+  
   if (_pLogger)
     _pLogger->debug(log);
 }
@@ -305,6 +313,7 @@ void log_trace(const std::string& log)
     _consoleMutex.unlock();
     return;
   }
+  
   if (_pLogger)
     _pLogger->trace(log);
 }
