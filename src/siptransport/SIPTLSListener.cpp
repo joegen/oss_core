@@ -50,16 +50,55 @@ SIPTLSListener::~SIPTLSListener()
 
 void SIPTLSListener::run()
 {
-  // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
-  boost::asio::ip::tcp::resolver::query query(getAddress(), getPort());
-  boost::asio::ip::tcp::endpoint endpoint = *_resolver.resolve(query);
-  _acceptor.open(endpoint.protocol());
-  _acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
-  _acceptor.bind(endpoint);
-  _acceptor.listen();
-  _acceptor.async_accept(dynamic_cast<SIPStreamedConnection*>(_pNewConnection.get())->socket().lowest_layer(),
-      boost::bind(&SIPTLSListener::handleAccept, this,
-        boost::asio::placeholders::error, (void*)0));
+  if (!_hasStarted)
+  {
+    // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
+    boost::asio::ip::tcp::resolver::query query(getAddress(), getPort());
+    boost::asio::ip::tcp::endpoint endpoint = *_resolver.resolve(query);
+    _acceptor.open(endpoint.protocol());
+    _acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+    _acceptor.bind(endpoint);
+    _acceptor.listen();
+    _acceptor.async_accept(dynamic_cast<SIPStreamedConnection*>(_pNewConnection.get())->socket().lowest_layer(),
+        boost::bind(&SIPTLSListener::handleAccept, this,
+          boost::asio::placeholders::error, (void*)0));
+    _hasStarted = true;
+  }
+}
+
+void SIPTLSListener::restart(boost::system::error_code& e)
+{
+  if (!canBeRestarted())
+  {
+    OSS_LOG_ERROR("SIPTLSListener::restart() - Exception: canBeRestarted returned FALSE!");
+    return;
+  }
+  
+  try
+  {
+    _hasStarted = false;
+    run();
+    OSS_LOG_NOTICE("SIPTLSListener::restart() address: " << _address << ":" << _port << " Ok");
+  }
+  catch(const boost::system::error_code& err)
+  {
+    e = err;
+  }
+  catch(...)
+  {
+    OSS_LOG_ERROR("SIPTLSListener::restart() UNKNOWN EXCEPTION");
+  }
+}
+  
+void SIPTLSListener::closeTemporarily(boost::system::error_code& e)
+{
+  _acceptor.close(e);
+  OSS_LOG_NOTICE("SIPTLSListener::closeTemporarily INVOKED");
+}
+  
+bool SIPTLSListener::canBeRestarted() const
+{
+  return _hasStarted && !_acceptor.is_open();
 }
 
 void SIPTLSListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE userData)

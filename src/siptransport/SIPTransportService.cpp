@@ -72,40 +72,208 @@ void SIPTransportService::deinitialize()
 void SIPTransportService::run()
 {
 
-#if 0
-  for (UDPListeners::iterator iter = _udpListeners.begin(); iter != _udpListeners.end(); iter++)
-  {
-    OSS::thread_pool::static_schedule(boost::bind(&SIPUDPListener::detectNATBinding, iter->second, "stun01.sipphone.com"));
-  }
-  OSS::thread_sleep(10);
-#else
-  for (UDPListeners::iterator iter = _udpListeners.begin(); iter != _udpListeners.end(); iter++)
-  {
-    iter->second->run();
-    OSS_LOG_INFO("Started UDP Listener " << iter->first);
-  }
-#endif
+  assert(!_pIoServiceThread);
+  
 
+  for (UDPListeners::iterator iter = _udpListeners.begin(); iter != _udpListeners.end(); iter++)
+  {
+    if (!iter->second->isVirtual())
+    {
+      iter->second->run();
+      OSS_LOG_INFO("Started UDP Listener " << iter->first);
+    }
+  }
 
   for (TCPListeners::iterator iter = _tcpListeners.begin(); iter != _tcpListeners.end(); iter++)
   {
-    iter->second->run();
-    OSS_LOG_INFO("Started TCP Listener " << iter->first);
+    if (!iter->second->isVirtual())
+    {
+      iter->second->run();
+      OSS_LOG_INFO("Started TCP Listener " << iter->first);
+    }
   }
 
   for (WSListeners::iterator iter = _wsListeners.begin(); iter != _wsListeners.end(); iter++)
   {
-    iter->second->run();
-    OSS_LOG_INFO("Started WebSocket Listener " << iter->first);
+    if (!iter->second->isVirtual())
+    {
+      iter->second->run();
+      OSS_LOG_INFO("Started WebSocket Listener " << iter->first);
+    }
   }
 
   for (TLSListeners::iterator iter = _tlsListeners.begin(); iter != _tlsListeners.end(); iter++)
   {
-    iter->second->run();
-    OSS_LOG_INFO("Started TLS Listener " << iter->first);
+    if (!iter->second->isVirtual())
+    {
+      iter->second->run();
+      OSS_LOG_INFO("Started TLS Listener " << iter->first);
+    }
   }
 
   _pIoServiceThread = new boost::thread(boost::bind(&boost::asio::io_service::run, &_ioService));
+}
+
+void SIPTransportService::runVirtualTransports()
+{
+  for (UDPListeners::iterator iter = _udpListeners.begin(); iter != _udpListeners.end(); iter++)
+  {
+    if (iter->second->isVirtual())
+    {
+      if (!iter->second->hasStarted())
+      {
+        iter->second->run();
+        OSS_LOG_INFO("Started Virtual UDP Listener " << iter->first);
+      }
+      else
+      {
+        boost::system::error_code e;
+        iter->second->restart(e);
+        
+        if (e)
+        {
+          OSS_LOG_ERROR("SIPTransportService::runVirtualTransports(UDP) Exception: " << e.message());
+        }
+      }
+    }
+  }
+
+  for (TCPListeners::iterator iter = _tcpListeners.begin(); iter != _tcpListeners.end(); iter++)
+  {
+    if (iter->second->isVirtual())
+    {
+      if (!iter->second->hasStarted())
+      {
+        iter->second->run();
+        OSS_LOG_INFO("Started Virtual TCP Listener " << iter->first);
+      }
+      else
+      {
+        boost::system::error_code e;
+        iter->second->restart(e);
+        
+        if (e)
+        {
+          OSS_LOG_ERROR("SIPTransportService::runVirtualTransports(TCP) Exception: " << e.message());
+        }
+      }
+    }
+  }
+
+  for (WSListeners::iterator iter = _wsListeners.begin(); iter != _wsListeners.end(); iter++)
+  {
+    if (iter->second->isVirtual())
+    {
+      if (!iter->second->hasStarted())
+      {
+        iter->second->run();
+        OSS_LOG_INFO("Started Virtual WS Listener " << iter->first);
+      }
+      else
+      {
+        boost::system::error_code e;
+        iter->second->restart(e);
+        
+        if (e)
+        {
+          OSS_LOG_ERROR("SIPTransportService::runVirtualTransports(WS) Exception: " << e.message());
+        }
+      }
+    }
+  }
+
+  for (TLSListeners::iterator iter = _tlsListeners.begin(); iter != _tlsListeners.end(); iter++)
+  {
+    if (iter->second->isVirtual())
+    {
+      if (!iter->second->hasStarted())
+      {
+        iter->second->run();
+        OSS_LOG_INFO("Started Virtual TLS Listener " << iter->first);
+      }
+      else
+      {
+        boost::system::error_code e;
+        iter->second->restart(e);
+        
+        if (e)
+        {
+          OSS_LOG_ERROR("SIPTransportService::runVirtualTransports(TLS) Exception: " << e.message());
+        }
+      }
+    }
+  }
+}
+  
+void SIPTransportService::stopVirtualTransports()
+{
+  for (UDPListeners::iterator iter = _udpListeners.begin(); iter != _udpListeners.end(); iter++)
+  {
+    if (iter->second->isVirtual())
+    {
+      if (iter->second->hasStarted())
+      {
+        boost::system::error_code e;
+        iter->second->closeTemporarily(e);
+        OSS_LOG_INFO("Closing Virtual UDP Listener " << iter->first);
+        if (e)
+        {
+          OSS_LOG_ERROR("SIPTransportService::stopVirtualTransports(UDP) Exception: " << e.message());
+        }
+      }
+    }
+  }
+
+  for (TCPListeners::iterator iter = _tcpListeners.begin(); iter != _tcpListeners.end(); iter++)
+  {
+    if (iter->second->isVirtual())
+    {
+      if (iter->second->hasStarted())
+      {
+        boost::system::error_code e;
+        iter->second->closeTemporarily(e);
+        OSS_LOG_INFO("Closing Virtual TCP Listener " << iter->first);
+        if (e)
+        {
+          OSS_LOG_ERROR("SIPTransportService::stopVirtualTransports(TCP) Exception: " << e.message());
+        }
+      }
+    }
+  }
+
+  for (WSListeners::iterator iter = _wsListeners.begin(); iter != _wsListeners.end(); iter++)
+  {
+    if (iter->second->isVirtual())
+    {
+      if (iter->second->hasStarted())
+      {
+        boost::system::error_code e;
+        iter->second->closeTemporarily(e);
+        OSS_LOG_INFO("Closing Virtual WS Listener " << iter->first);
+        if (e)
+        {
+          OSS_LOG_ERROR("SIPTransportService::stopVirtualTransports(WS) Exception: " << e.message());
+        }
+      }
+    }
+  }
+
+  for (TLSListeners::iterator iter = _tlsListeners.begin(); iter != _tlsListeners.end(); iter++)
+  {
+    if (iter->second->isVirtual())
+    {
+      if (iter->second->hasStarted())
+      {
+        boost::system::error_code e;
+        iter->second->closeTemporarily(e);
+        OSS_LOG_INFO("Closing Virtual TLS Listener " << iter->first);
+        if (e)
+        {
+          OSS_LOG_ERROR("SIPTransportService::stopVirtualTransports(TLS) Exception: " << e.message());
+        }
+      }
+    }
+  }
 }
 
 void SIPTransportService::stop()
@@ -224,7 +392,7 @@ const SIPListener* SIPTransportService::getTransportForDestination(const std::st
 }
 
 
-void SIPTransportService::addUDPTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets)
+void SIPTransportService::addUDPTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp)
 {
   OSS_LOG_INFO("Adding UDP SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
@@ -232,6 +400,8 @@ void SIPTransportService::addUDPTransport(const std::string& ip, const std::stri
   if (_udpListeners.find(key) != _udpListeners.end())
     throw OSS::SIP::SIPException("Duplicate UDP Transport detected while calling addUDPTransport()");
   SIPUDPListener::Ptr udpListener(new SIPUDPListener(this, _dispatch, ip, port));
+  
+  udpListener->setVirtual(isVirtualIp);
   udpListener->setExternalAddress(externalIp);
   udpListener->subNets() = subnets;
   _udpListeners[key] = udpListener;
@@ -244,7 +414,7 @@ void SIPTransportService::addUDPTransport(const std::string& ip, const std::stri
   OSS_LOG_INFO("UDP SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
 }
 
-void SIPTransportService::addTCPTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets)
+void SIPTransportService::addTCPTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp)
 {
   OSS_LOG_INFO("Adding TCP SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
@@ -252,6 +422,8 @@ void SIPTransportService::addTCPTransport(const std::string& ip, const std::stri
   if (_tcpListeners.find(key) != _tcpListeners.end())
     throw OSS::SIP::SIPException("Duplicate TCP transport while calling addTCPTransport()");
   SIPTCPListener::Ptr pTcpListener = SIPTCPListener::Ptr(new SIPTCPListener(this, _dispatch, ip, port, _tcpConMgr));
+  
+  pTcpListener->setVirtual(isVirtualIp);
   pTcpListener->setExternalAddress(externalIp);
   pTcpListener->subNets() = subnets;
   _tcpListeners[key] = pTcpListener;
@@ -262,7 +434,7 @@ void SIPTransportService::addTCPTransport(const std::string& ip, const std::stri
   OSS_LOG_INFO("TCP SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
 }
 
-void SIPTransportService::addWSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets)
+void SIPTransportService::addWSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp)
 {
   OSS_LOG_INFO("Adding WebSocket SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
@@ -270,6 +442,8 @@ void SIPTransportService::addWSTransport(const std::string& ip, const std::strin
   if (_wsListeners.find(key) != _wsListeners.end())
     throw OSS::SIP::SIPException("Duplicate WebSocket transport while calling addWSTransport()");
   SIPWebSocketListener::Ptr pWsListener = SIPWebSocketListener::Ptr(new SIPWebSocketListener(this, ip, port, _wsConMgr));
+  
+  pWsListener->setVirtual(isVirtualIp);
   pWsListener->setExternalAddress(externalIp);
   pWsListener->subNets() = subnets;
   _wsListeners[key] = pWsListener;
@@ -280,7 +454,7 @@ void SIPTransportService::addWSTransport(const std::string& ip, const std::strin
   OSS_LOG_INFO("WebSocket SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
 }
 
-void SIPTransportService::addTLSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets)
+void SIPTransportService::addTLSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp)
 {
   OSS_LOG_INFO("Adding TLS SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
@@ -288,6 +462,8 @@ void SIPTransportService::addTLSTransport(const std::string& ip, const std::stri
   if (_tlsListeners.find(key) != _tlsListeners.end())
     throw OSS::SIP::SIPException("Duplicate TSL transport while calling addTLSTransport()");
   SIPTLSListener::Ptr pTlsListener = SIPTLSListener::Ptr(new SIPTLSListener(this, _dispatch, ip, port, _tlsConMgr));
+  
+  pTlsListener->setVirtual(isVirtualIp);
   pTlsListener->setExternalAddress(externalIp);
   pTlsListener->subNets() = subnets;
   _tlsListeners[key] = pTlsListener;

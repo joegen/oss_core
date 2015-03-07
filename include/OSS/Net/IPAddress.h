@@ -135,6 +135,12 @@ public:
 
   bool isPrivate();
     /// Returns true if the IP address is of private type.  eg 192.168.x.x
+  
+  bool isVirtual() const;
+    /// Returns true if the IP address is a virtual address.  This is used for CARP address identification
+  
+  void setVirtual(bool isVirtual = true);
+    /// Flag this IP address as virtual
 
   bool isLocalAddress() const;
     /// Returns true if this IP Address is bound to a local interface
@@ -161,6 +167,7 @@ protected:
   std::string _externalAddress;
   unsigned short _port;
   unsigned short _cidr;
+  bool _isVirtual;
 };
 
 //
@@ -343,6 +350,17 @@ inline IPAddress IPAddress::fromV4DWORD(OSS::UInt32 ip4)
 {
   return IPAddress(ip4);
 }
+
+inline bool IPAddress::isVirtual() const
+{
+  return _isVirtual;
+}
+  
+inline void IPAddress::setVirtual(bool isVirtual)
+{
+  _isVirtual = isVirtual;
+}
+    /// Flag this IP address as virtual
 
 } } // OSS::Net
 

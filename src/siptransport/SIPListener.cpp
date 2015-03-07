@@ -33,7 +33,9 @@ SIPListener::SIPListener(
     _pIoService(0),
     _pTransportService(pTransportService),
     _address(address),
-    _port(port)
+    _port(port),
+    _isVirtual(false),
+    _hasStarted(false)
 {
   if (_pTransportService)
     _pIoService = (&(_pTransportService->ioService()));
@@ -65,6 +67,27 @@ bool SIPListener::isAcceptableDestination(const std::string& address) const
       return true;
     }
   }
+  return false;
+}
+
+void SIPListener::restart(boost::system::error_code& e)
+{
+  //
+  // Unimplemented
+  //
+  assert(true);
+}
+  
+void SIPListener::closeTemporarily(boost::system::error_code& e)
+{
+  //
+  // Unimplemented
+  //
+  assert(true);
+}
+
+bool SIPListener::canBeRestarted() const
+{
   return false;
 }
 

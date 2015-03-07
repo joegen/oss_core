@@ -90,7 +90,7 @@ void SIPStack::transportInit()
       if (subnetIter != _udpSubnets.end())
         subnets = subnetIter->second;
       
-      _fsmDispatch.transport().addUDPTransport(ip, port, iface.externalAddress(), subnets);
+      _fsmDispatch.transport().addUDPTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual());
     }
   }
 
@@ -110,7 +110,7 @@ void SIPStack::transportInit()
       if (subnetIter != _tcpSubnets.end())
         subnets = subnetIter->second;
       
-      _fsmDispatch.transport().addTCPTransport(ip, port, iface.externalAddress(), subnets);
+      _fsmDispatch.transport().addTCPTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual());
     }
   }
 
@@ -130,7 +130,7 @@ void SIPStack::transportInit()
       if (subnetIter != _wsSubnets.end())
         subnets = subnetIter->second;
       
-      _fsmDispatch.transport().addWSTransport(ip, port, iface.externalAddress(), subnets);
+      _fsmDispatch.transport().addWSTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual());
     }
   }
 
@@ -150,7 +150,7 @@ void SIPStack::transportInit()
       if (subnetIter != _tlsSubnets.end())
         subnets = subnetIter->second;
       
-      _fsmDispatch.transport().addTLSTransport(ip, port, iface.externalAddress(), subnets);
+      _fsmDispatch.transport().addTLSTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual());
     }
   }
 }
@@ -200,7 +200,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
         try
         {
           std::string port = OSS::string_from_number<unsigned short>(p);
-          _fsmDispatch.transport().addUDPTransport(ip, port, iface.externalAddress(), subnets);
+          _fsmDispatch.transport().addUDPTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual());
           iface.setPort(p);
           hasUDP = true;
           break;
@@ -233,7 +233,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
         try
         {
           std::string port = OSS::string_from_number<unsigned short>(p);
-          _fsmDispatch.transport().addTCPTransport(ip, port,iface.externalAddress(), subnets);
+          _fsmDispatch.transport().addTCPTransport(ip, port,iface.externalAddress(), subnets, iface.isVirtual());
           iface.setPort(p);
           hasTCP = true;
           break;
@@ -266,7 +266,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
         try
         {
           std::string port = OSS::string_from_number<unsigned short>(p);
-          _fsmDispatch.transport().addWSTransport(ip, port,iface.externalAddress(), subnets);
+          _fsmDispatch.transport().addWSTransport(ip, port,iface.externalAddress(), subnets, iface.isVirtual());
           iface.setPort(p);
           hasWS = true;
           break;
@@ -299,7 +299,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
         try
         {
           std::string port = OSS::string_from_number<unsigned short>(p);
-          _fsmDispatch.transport().addTLSTransport(ip, port, iface.externalAddress(), subnets);
+          _fsmDispatch.transport().addTLSTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual());
           iface.setPort(p);
           hasTLS = true;
           break;

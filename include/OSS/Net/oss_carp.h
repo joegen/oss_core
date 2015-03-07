@@ -56,6 +56,7 @@ typedef void (*on_log_cb_t)(int level, const char* line);
 void carp_set_log_callback(on_log_cb_t cb);
 typedef void (*on_received_signal_cb_t)(int sig);
 void carp_set_signal_handler(on_received_signal_cb_t cb);
+void carp_signal_exit();
 
 #ifdef	__cplusplus
 }

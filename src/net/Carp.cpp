@@ -84,6 +84,8 @@ const int SIZEOF_MAC = 6;
 #endif
 
 Carp* Carp::_pInstance = 0;
+Carp::StateChangeCallback Carp::_stateChangeHandler;
+Carp::GratuitousArpCallback Carp::_gratuitousArpHandler;
 
 Carp::Carp() :
   _pRunThread(0)
@@ -349,7 +351,7 @@ bool Carp::parseOptions(ServiceOptions& options)
   //--neutral (-n): don't run downscript at start if backup
   options.addOptionFlag('n', "neutral", "don't run downscript at start if backup");
   //--addr=<ip> (-a <ip>): virtual shared IP address
-  options.addRequiredString('a', "addr", "virtual shared IP address");
+  options.addRequiredString('a', "addr", "virtual shared IP address and subnet.  Example: 192.168.1.10/24");
   //--advbase=<seconds> (-b <seconds>): advertisement frequency
   options.addOptionInt('b', "advbase", "advertisement frequency");
   //--advskew=<skew> (-k <skew>): advertisement skew (0-255)
@@ -378,6 +380,22 @@ bool Carp::parseOptions(ServiceOptions& options)
   // Initialize the config
   //
 
+  
+  
+  std::string virtualIp;
+  std::string subnet("24");
+  options.getOption("addr", virtualIp );
+  std::vector<std::string> virtualIpTokens = OSS::string_tokenize(virtualIp, "/");
+  if (virtualIpTokens.size() == 2)
+  {
+    virtualIp = virtualIpTokens[0];
+    subnet = virtualIpTokens[1];
+  }
+  
+  //--addr=<ip> (-a <ip>): virtual shared IP address
+  _config.addr = virtualIp;
+  //--xparam=<value> (-x): extra parameter to send to up/down scripts
+  _config.subnet = subnet;
 
   //--interface=<if> (-i <if>): bind interface <if>
   options.getOption("interface", _config.interface);
@@ -393,8 +411,7 @@ bool Carp::parseOptions(ServiceOptions& options)
   _config.preempt = options.hasOption("preempt");
   //--neutral (-n): don't run downscript at start if backup
   _config.neutral = options.hasOption("neutral");
-  //--addr=<ip> (-a <ip>): virtual shared IP address
-  options.getOption("addr", _config.addr);
+  
   //--advbase=<seconds> (-b <seconds>): advertisement frequency
   options.getOption("advbase", _config.advbase);
   //--advskew=<skew> (-k <skew>): advertisement skew (0-255)
@@ -413,9 +430,6 @@ bool Carp::parseOptions(ServiceOptions& options)
   _config.ignoreifstate = options.hasOption("ignoreifstate");
   //--nomcast (-M): use broadcast (instead of multicast) advertisements
   _config.nomcast = options.hasOption("nomcast");
-  //--xparam=<value> (-x): extra parameter to send to up/down scripts
-  options.getOption("xparam", _config.xparam);
-
 
   return true;
 }
@@ -482,9 +496,11 @@ void Carp::run()
   if (_config.nomcast)
     args << " --nomcast";
 
-  if (!_config.xparam.empty())
-    args << " --xparam " << _config.xparam;
+  if (!_config.subnet.empty())
+    args << " --xparam " << _config.subnet;
 
+  OSS_LOG_INFO("Running CARP with args: " << args.str());
+  
   char** argv;
   std::vector<std::string> tokens = OSS::string_tokenize(args.str(), " ");
   OSS::vectorToCArray(tokens, &argv);
@@ -499,11 +515,23 @@ void Carp::run()
   freeCArray(tokens.size(), &argv);
 }
 
+void Carp::setStateChangeHandler(const StateChangeCallback& handler)
+{
+  Carp::_stateChangeHandler = handler;
+}
+
+void Carp::setGratuitousArpHandler(const GratuitousArpCallback& handler)
+{
+  Carp::_gratuitousArpHandler = handler;
+}
 void Carp::on_state_change(int state)
 {
   //
   // Add your custom code here
   //
+  
+  if (Carp::_stateChangeHandler)
+    Carp::_stateChangeHandler(state);
 }
 
 void Carp::on_gratuitous_arp()
@@ -513,28 +541,24 @@ void Carp::on_gratuitous_arp()
     OSS::Exec::Command cmd(carp_get_garp_script());
     cmd.execute();
   }
+  
+  if (Carp::_gratuitousArpHandler)
+    Carp::_gratuitousArpHandler();
 }
 
 void Carp::on_log_event(int level, const char* log)
 {
-  if (!level)
-    level = 1;
-
-  OSS::log(log, (OSS::LogPriority)level);
+  (void)level;
+  OSS_LOG_NOTICE("[CARP] " << log);
 }
 
 void Carp::on_received_signal(int sig)
 {
-  switch (sig)
-  {
-    case SIGINT:
-    case SIGQUIT:
-    case SIGTERM:
-      _exit(0);
-    case SIGUSR1:
-    case SIGUSR2:
-      break;
-  }
+}
+
+void Carp::signal_exit()
+{
+  carp_signal_exit();
 }
 
 

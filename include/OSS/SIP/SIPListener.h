@@ -51,6 +51,15 @@ public:
 
   virtual void handleStop() = 0;
     /// Handle a request to stop the server.
+  
+  virtual void restart(boost::system::error_code& e);
+    /// Restart a temporarily closed listener.  
+  
+  virtual void closeTemporarily(boost::system::error_code& e);
+    /// Temporarily close the transport with a intention to restart it later on
+  
+  virtual bool canBeRestarted() const;
+    /// returns true if the listener can safely be restarted
 
   const std::string& getAddress() const;
     /// Returns the address where the listener is bound
@@ -75,6 +84,15 @@ public:
   
   bool isAcceptableDestination(const std::string& address) const;
   
+  bool isVirtual() const;
+    /// Returns true if the IP address is a virtual address.  This is used for CARP address identification
+  
+  void setVirtual(bool isVirtual = true);
+    /// Flag this listener as virtual
+  
+  bool hasStarted() const;
+    /// Returns true if the listener has started accepting connections
+  
 protected:
   SIPListener(const SIPListener&);
   SIPListener& operator = (const SIPListener&);
@@ -83,9 +101,11 @@ protected:
     /// The io_service used to perform asynchronous operations.
   std::string _externalAddress;
   SubNets _subNets;
-private:
+
   std::string _address;
   std::string _port;
+  bool _isVirtual;
+  bool _hasStarted;
 };
 
 //
@@ -125,6 +145,21 @@ inline const SIPListener::SubNets& SIPListener::subNets() const
 inline SIPListener::SubNets& SIPListener::subNets()
 {
   return _subNets;
+}
+
+inline bool SIPListener::isVirtual() const
+{
+  return _isVirtual;
+}
+  
+inline void SIPListener::setVirtual(bool isVirtual)
+{
+  _isVirtual = isVirtual;
+}
+
+inline bool SIPListener::hasStarted() const
+{
+  return _hasStarted;
 }
 
 } } // OSS::SIP

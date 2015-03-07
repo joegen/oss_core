@@ -38,9 +38,6 @@ SIPUDPListener::SIPUDPListener(
   _dispatch(dispatch)
 {
   _pStunClient = OSS::STUN::STUNClient::Ptr(new OSS::STUN::STUNClient(pTransportService->ioService()));
-  boost::asio::ip::address addr = boost::asio::ip::address::from_string(getAddress());
-  _socket = new boost::asio::ip::udp::socket(pTransportService->ioService(), boost::asio::ip::udp::endpoint(addr, atoi(port.c_str())));
-  _pNewConnection.reset(new SIPUDPConnection(pTransportService->ioService(), *_socket));
 }
 
 SIPUDPListener::~SIPUDPListener()
@@ -50,14 +47,54 @@ SIPUDPListener::~SIPUDPListener()
 
 void SIPUDPListener::run()
 {
-  _pNewConnection->setExternalAddress(_externalAddress);
-  _pNewConnection->start(_dispatch);
+  if (!_hasStarted)
+  {
+    assert(!_socket);
+    boost::asio::ip::address addr = boost::asio::ip::address::from_string(getAddress());
+    _socket = new boost::asio::ip::udp::socket(_pTransportService->ioService(), boost::asio::ip::udp::endpoint(addr, atoi(_port.c_str())));
+    _pNewConnection.reset(new SIPUDPConnection(_pTransportService->ioService(), *_socket));
+    _pNewConnection->setExternalAddress(_externalAddress);
+    _pNewConnection->start(_dispatch);
+    _hasStarted = true;
+  }
 }
 
 void SIPUDPListener::handleStop()
 {
   _pNewConnection->stop();
   _socket->close();
+}
+
+void SIPUDPListener::restart(boost::system::error_code& e)
+{
+  if (canBeRestarted())
+  {
+    boost::asio::ip::address addr = boost::asio::ip::address::from_string(getAddress());
+    _socket->open(boost::asio::ip::udp::v4());
+    _socket->bind(boost::asio::ip::udp::endpoint(addr, atoi(_port.c_str())), e);
+    
+    if (!e)
+    {
+      _pNewConnection->setExternalAddress(_externalAddress);
+      _pNewConnection->start(_dispatch);
+      OSS_LOG_NOTICE("SIPUDPListener::restart() address: " << _address << ":" << _port << " Ok");
+    }
+    else
+    {
+      OSS_LOG_ERROR("SIPUDPListener::restart() address: " << _address << ":" << _port << " Exception: " << e.message());
+    }
+  }
+}
+  
+void SIPUDPListener::closeTemporarily(boost::system::error_code& e)
+{
+  _socket->close(e);
+  OSS_LOG_NOTICE("SIPTLSListener::closeTemporarily INVOKED");
+}
+  
+bool SIPUDPListener::canBeRestarted() const
+{
+  return _hasStarted && _socket && !_socket->is_open();
 }
 
 void SIPUDPListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE userData)

@@ -30,6 +30,7 @@
 #include "OSS/UTL/Thread.h"
 #include "OSS/Net/DNS.h"
 #include "OSS/Net/Net.h"
+#include "OSS/Net/Carp.h"
 #include "OSS/Exec/Command.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransactionManager.h"
 #include "OSS/SIP/B2BUA/SIPB2BScriptableHandler.h"
@@ -41,6 +42,7 @@
 
 #if HAVE_CONFIG_H
 #include "config.h"
+#include "net/carp/globals.h"
 #endif
 
 #if ENABLE_TURN
@@ -91,6 +93,10 @@ struct Config
   std::string regUri;
   std::string regUser;
   std::string regPassword;
+  std::string carpVirtualIp;
+  std::string carpInterface;
+  std::string carpUpScript;
+  std::string carpDownScript;
   
   Config() : 
     port(5060), 
@@ -123,13 +129,14 @@ public:
   Storage _dialogs;
   Storage _registry;
   mutex_critic_sec _storageMutex;
-
+  bool _carpEnabled;
 
   OSSB2BUA(Config& config) :
     SIPB2BTransactionManager(2, 1024),
     SIPB2BDialogStateManager(dynamic_cast<SIPB2BTransactionManager*>(this)),
     SIPB2BScriptableHandler(dynamic_cast<SIPB2BTransactionManager*>(this), dynamic_cast<SIPB2BDialogStateManager*>(this)),
-    _config(config)
+    _config(config),
+    _carpEnabled(false)
   {
     //
     // Initialize route script if specified
@@ -149,6 +156,54 @@ public:
       {
         OSS_LOG_ERROR("File not found - " << script);
         _exit(-1);
+      }
+    }
+    
+    //
+    // Check if CARP is enabled
+    //
+    
+    if (!_config.carpVirtualIp.empty() && 
+      !_config.carpUpScript.empty() && 
+      !_config.carpDownScript.empty() &&
+      !_config.carpInterface.empty())
+    {
+      OSS::Net::Carp::Config& carpConfig = OSS::Net::Carp::instance()->config();
+      
+      std::string virtualIp(_config.carpVirtualIp);
+      std::string subnet("24");
+      std::vector<std::string> virtualIpTokens = OSS::string_tokenize(virtualIp, "/");
+      if (virtualIpTokens.size() == 2)
+      {
+        virtualIp = virtualIpTokens[0];
+        subnet = virtualIpTokens[1];
+      }
+      
+      carpConfig.interface = _config.carpInterface;
+      carpConfig.addr = virtualIp;
+      carpConfig.subnet = subnet;
+      carpConfig.srcip = _config.address;
+      carpConfig.upscript = _config.carpUpScript;
+      carpConfig.downscript = _config.carpDownScript;
+      carpConfig.vhid = 222;
+      carpConfig.pass = "oss_core";
+      _carpEnabled = true;
+  
+      
+      
+      //
+      // Initialize the Virtual Transport
+      //
+      std::vector<std::string> addrTokens = OSS::string_tokenize(_config.carpVirtualIp, "/");
+      if (!addrTokens.empty())
+      {
+        OSS::Net::IPAddress listener;
+        listener = addrTokens[0];
+        listener.externalAddress() = _config.externalAddress;
+        listener.setPort(config.port);
+        listener.setVirtual(true);
+        stack().udpListeners().push_back(listener);
+        stack().tcpListeners().push_back(listener);
       }
     }
     
@@ -220,6 +275,15 @@ public:
     dynamic_cast<SIPB2BDialogStateManager*>(this)->run();
     dynamic_cast<SIPB2BScriptableHandler*>(this)->rtpProxy().run(RTP_PROXY_THREAD_COUNT); 
     
+    if (_carpEnabled)
+    {
+      //
+      // Run the CARP subsystem
+      //
+      OSS::Net::Carp::setStateChangeHandler(boost::bind(&OSSB2BUA::handleCarpState, this, _1));
+      OSS::Net::Carp::instance()->run();
+    }
+    
     if (!_config.regUri.empty())
     {
       //
@@ -237,6 +301,14 @@ public:
     }
     
     return true;
+  }
+  
+  void deinit()
+  {
+    if (_carpEnabled)
+    {
+      OSS::Net::Carp::signal_exit();
+    }
   }
   
   bool onProcessRequest(OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,MessageType type, const SIPMessage::Ptr& pRequest)
@@ -324,6 +396,18 @@ public:
     
     return true;
   }
+  
+  void handleCarpState(int state)
+  {
+    if (state == OSS::Net::Carp::MASTER)
+    {
+      stack().transport().runVirtualTransports();
+    }
+    else
+    {
+      stack().transport().stopVirtualTransports();
+    }
+  }
 
 }; // class OSSB2BUA
 
@@ -349,7 +433,7 @@ void setSystemParameters()
 	}
 }
 
-void  daemonize(int argc, char** argv, bool& isDaemon)
+void  fork_me(int argc, char** argv, bool& isDaemon)
 {
   for (int i = 0; i < argc; i++)
   {
@@ -550,6 +634,14 @@ void prepareListenerInfo(Config& config, ServiceOptions& options)
   options.getOption("tls-peer-ca-directory", config.tlsPeerCaDirectory);
   options.getOption("tls-password", config.tlsCertPassword);
   
+  //
+  // CARP HA
+  //
+  options.getOption("carp-virtual-ip", config.carpVirtualIp);
+  options.getOption("carp-interface", config.carpInterface);
+  options.getOption("carp-up-script", config.carpUpScript);
+  options.getOption("carp-down-script", config.carpDownScript);
+  
 }
 
 void prepareTargetInfo(Config& config, ServiceOptions& options)
@@ -606,6 +698,10 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionString("reg-uri", "SIP URI representing an ITSP account.  Example:  sip:1234@mydomain.com");
   options.addOptionString("reg-user", "User credential to be used for registration");
   options.addOptionString("reg-pass", "Password credential to be used for registration");
+  options.addOptionString("carp-virtual-ip", "Virtual IP assigned for CARP. Take note that this requires root permissions to work.");
+  options.addOptionString("carp-interface", "Interface where the virtual IP will be registered.  Example: eth0");
+  options.addOptionString("carp-up-script", "Script called tto bring up the virtual interface");
+  options.addOptionString("carp-down-script", "Script called to bring up the virtual interface");
   
 
 #if ENABLE_TURN
@@ -622,7 +718,7 @@ int main(int argc, char** argv)
   setSystemParameters();
 
   bool isDaemon = false;
-  daemonize(argc, argv, isDaemon);
+  fork_me(argc, argv, isDaemon);
 
   std::set_terminate(&ServiceOptions::catch_global);
 
@@ -688,6 +784,11 @@ int main(int argc, char** argv)
 #endif
 
     OSS::app_wait_for_termination_request();
+    
+    //
+    // Deinit
+    //
+    ua.deinit();
     
     //
     // Stop the SBC

@@ -49,16 +49,55 @@ SIPTCPListener::~SIPTCPListener()
 
 void SIPTCPListener::run()
 {
-  // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
-  boost::asio::ip::tcp::resolver::query query(getAddress(), getPort());
-  boost::asio::ip::tcp::endpoint endpoint = *_resolver.resolve(query);
-  _acceptor.open(endpoint.protocol());
-  _acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
-  _acceptor.bind(endpoint);
-  _acceptor.listen();
-  _acceptor.async_accept(dynamic_cast<SIPStreamedConnection*>(_pNewConnection.get())->socket(),
-      boost::bind(&SIPTCPListener::handleAccept, this,
-        boost::asio::placeholders::error, (void*)0));
+  if (!_hasStarted)
+  {
+    // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
+    boost::asio::ip::tcp::resolver::query query(getAddress(), getPort());
+    boost::asio::ip::tcp::endpoint endpoint = *_resolver.resolve(query);
+    _acceptor.open(endpoint.protocol());
+    _acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+    _acceptor.bind(endpoint);
+    _acceptor.listen();
+    _acceptor.async_accept(dynamic_cast<SIPStreamedConnection*>(_pNewConnection.get())->socket(),
+        boost::bind(&SIPTCPListener::handleAccept, this,
+          boost::asio::placeholders::error, (void*)0));
+    _hasStarted = true;
+  }
+}
+
+void SIPTCPListener::restart(boost::system::error_code& e)
+{
+  if (!canBeRestarted())
+  {
+    OSS_LOG_ERROR("SIPTCPListener::restart() - Exception: canBeRestarted returned FALSE!");
+    return;
+  }
+  
+  try
+  {
+    _hasStarted = false;
+    run();
+    OSS_LOG_NOTICE("SIPTCPListener::restart() address: " << _address << ":" << _port << " Ok");
+  }
+  catch(const boost::system::error_code& err)
+  {
+    e = err;
+  }
+  catch(...)
+  {
+    OSS_LOG_ERROR("SIPTCPListener::restart() UNKNOWN EXCEPTION");
+  }
+}
+  
+void SIPTCPListener::closeTemporarily(boost::system::error_code& e)
+{
+  _acceptor.close(e);
+  OSS_LOG_NOTICE("SIPTLSListener::closeTemporarily INVOKED");
+}
+  
+bool SIPTCPListener::canBeRestarted() const
+{
+  return _hasStarted && !_acceptor.is_open();
 }
 
 void SIPTCPListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE userData)

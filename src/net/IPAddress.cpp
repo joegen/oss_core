@@ -35,13 +35,15 @@ using boost::system::error_code;
 IPAddress::IPAddress() :
   _address(),
   _port(0),
-  _cidr(0)
+  _cidr(0),
+  _isVirtual(false)
 {
 }
 
 IPAddress::IPAddress(const std::string& address) :
   _port(0),
-  _cidr(0)
+  _cidr(0),
+  _isVirtual(false)
 {
   try
   {
@@ -56,21 +58,24 @@ IPAddress::IPAddress(const std::string& address) :
 IPAddress::IPAddress(unsigned long address) :
   _address(address_v4(address)),
   _port(0),
-  _cidr(0)
+  _cidr(0),
+  _isVirtual(false)
 {
 }
 
 IPAddress::IPAddress(const boost::asio::ip::address_v4& address) :
   _address(address),
   _port(0),
-  _cidr(0)
+  _cidr(0),
+  _isVirtual(false)
 {
 }
 
 IPAddress::IPAddress(const boost::asio::ip::address_v6& address) :
   _address(address),
   _port(0),
-  _cidr(0)
+  _cidr(0),
+  _isVirtual(false)
 {
 }
 
@@ -80,6 +85,7 @@ IPAddress::IPAddress(const IPAddress& address)
   _externalAddress = address._externalAddress;
   _port = address._port;
   _cidr = address._cidr;
+  _isVirtual = address._isVirtual;
 
 }
 
@@ -105,6 +111,7 @@ void IPAddress::swap(IPAddress& address)
   std::swap(_externalAddress, address._externalAddress);
   std::swap(_port, address._port);
   std::swap(_cidr, address._cidr);
+  std::swap(_isVirtual, address._isVirtual);
 }
 
 bool IPAddress::isPrivate()

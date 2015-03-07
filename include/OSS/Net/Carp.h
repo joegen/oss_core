@@ -55,11 +55,15 @@ namespace Net {
 
 class Carp
 {
-protected:
   //
   // This class implements Common Address Redundancy Protocol using
   // ucarp - http://www.pureftpd.org/project/ucarp
   //
+public:
+  typedef boost::function<void(int)> StateChangeCallback;
+  typedef boost::function<void()> GratuitousArpCallback;
+  
+protected:
   Carp();
 
 public:
@@ -86,7 +90,7 @@ public:
     bool shutdown; // shutdown script at exit
     bool ignoreifstate; // ignore interface state (down, no carrier)
     bool nomcast; // use broadcast (instead of multicast) advertisements
-    std::string xparam; // extra paramter to be sent to upscript
+    std::string subnet; // subnet to be used for the virtual IP
   };
   
   static Carp* instance();
@@ -94,9 +98,16 @@ public:
   static bool sendGratuitousArp(const std::string& ethInterface, const std::string& ipAddress);
 
   Config& config();
+  
   bool parseOptions(ServiceOptions& options);
 
   void run();
+  
+  static void setStateChangeHandler(const StateChangeCallback& handler);
+  
+  static void setGratuitousArpHandler(const GratuitousArpCallback& handler);
+  
+  static void signal_exit();
 private:
   static void on_state_change(int state);
   static void on_gratuitous_arp();
@@ -106,10 +117,9 @@ private:
   static Carp* _pInstance;
   Config _config;
   boost::thread* _pRunThread;
-
-
-  typedef boost::function<void(int)> StateChangeCallback;
-  typedef boost::function<void()> GratuitousArpCallback;
+  
+  static StateChangeCallback _stateChangeHandler;
+  static GratuitousArpCallback _gratuitousArpHandler;
 };
 
 //
@@ -120,6 +130,8 @@ inline Carp::Config& Carp::config()
 {
   return _config;
 }
+
+
 
 
 } } // OSS::Net

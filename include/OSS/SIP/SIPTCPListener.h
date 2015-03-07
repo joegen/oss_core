@@ -60,6 +60,15 @@ public:
 
   virtual void handleStop();
     /// Handle a request to stop the server.
+  
+  virtual void restart(boost::system::error_code& e);
+    /// Restart a temporarily closed listener.  
+  
+  virtual void closeTemporarily(boost::system::error_code& e);
+    /// Temporarily close the transport with a intention to restart it later on
+  
+  virtual bool canBeRestarted() const;
+    /// returns true if the listener can safely be restarted
 
 private:
   boost::asio::ip::tcp::acceptor _acceptor;

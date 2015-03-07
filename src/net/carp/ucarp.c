@@ -310,4 +310,9 @@ int oss_carp_run(int argc, char *argv[])
     return 0;
 }
 
+void carp_signal_exit()
+{
+  sighandler_exit(SIGQUIT);
+}
+
 
