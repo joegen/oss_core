@@ -85,7 +85,7 @@ void SIPTCPListener::restart(boost::system::error_code& e)
   }
   catch(...)
   {
-    OSS_LOG_ERROR("SIPTCPListener::restart() UNKNOWN EXCEPTION");
+    OSS_LOG_ERROR("SIPTCPListener::restart() " << _address << ":" << _port << " UNKNOWN EXCEPTION");
   }
 }
   

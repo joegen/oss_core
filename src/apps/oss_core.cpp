@@ -204,6 +204,8 @@ public:
         listener.setVirtual(true);
         stack().udpListeners().push_back(listener);
         stack().tcpListeners().push_back(listener);
+        listener.setPort(config.wsPort);
+        stack().wsListeners().push_back(listener);
       }
     }
     

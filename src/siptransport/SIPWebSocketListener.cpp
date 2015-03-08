@@ -84,44 +84,48 @@ SIPWebSocketListener::SIPWebSocketListener(
 {
 	_pServerThread = 0;
 	_pClientThread = 0;
-
-	_pServerAcceptHandler = websocketpp::server::handler::ptr(new ServerAcceptHandler(*this));
-	_pServerEndPoint = new websocketpp::server(_pServerAcceptHandler);
-
-  if (PRIO_DEBUG == log_get_level())
-	{
-		_pServerEndPoint->alog().set_level(websocketpp::log::alevel::ALL);
-		_pServerEndPoint->elog().set_level(websocketpp::log::elevel::ALL);
-	}
-
 }
 
 SIPWebSocketListener::~SIPWebSocketListener()
 {
-  _pServerEndPoint->stop_listen(true);
-
-  if (_pServerThread)
-  {
-	  _pServerThread->join();
-	  delete _pServerThread;
-	  _pServerThread = 0;
-  }
-
-  delete _pServerEndPoint;
-  _pServerEndPoint = 0;
+  handleStop();
 }
 
 void SIPWebSocketListener::run()
 {
+  assert(!_pServerThread);
   _pServerThread = new boost::thread(boost::bind(&SIPWebSocketListener::run_server, this));
 }
 
 void SIPWebSocketListener::run_server()
 {
-  boost::asio::ip::tcp::resolver::query query(getAddress(), getPort());
-  boost::asio::ip::tcp::endpoint endpoint = *_resolver.resolve(query);
+  assert(!_pServerEndPoint);
+  try
+  {
+    _pServerAcceptHandler = websocketpp::server::handler::ptr(new ServerAcceptHandler(*this));
+    _pServerEndPoint = new websocketpp::server(_pServerAcceptHandler);
 
-  _pServerEndPoint->listen(endpoint);
+    if (PRIO_DEBUG == log_get_level())
+    {
+      _pServerEndPoint->alog().set_level(websocketpp::log::alevel::ALL);
+      _pServerEndPoint->elog().set_level(websocketpp::log::elevel::ALL);
+    }
+  
+    boost::asio::ip::tcp::resolver::query query(getAddress(), getPort());
+    boost::asio::ip::tcp::endpoint endpoint = *_resolver.resolve(query);
+    _hasStarted = true;
+    _pServerEndPoint->listen(endpoint);
+  }
+  catch(const std::exception& e)
+  {
+    OSS_LOG_ERROR("SIPWebSocketListener::run_server " << _address << ":" << _port << " Exception: " << e.what());
+    handleStop();
+  }
+  catch(...)
+  {
+    OSS_LOG_ERROR("SIPWebSocketListener::run_server " << _address << ":" << _port << " UNKNOWN EXCEPTION");
+    handleStop();
+  }
 }
 
 void SIPWebSocketListener::run_client()
@@ -153,9 +157,47 @@ void SIPWebSocketListener::handleAccept(const boost::system::error_code& e, OSS_
 
 void SIPWebSocketListener::handleStop()
 {
-	_pServerEndPoint->stop_listen(true);
-	_connectionManager.stopAll();
+  _connectionManager.stopAll();
+  
+  if (_pServerEndPoint)
+  {
+    _pServerEndPoint->stop_listen(true);
+  }
+
+  if (_pServerThread)
+  {
+	  _pServerThread->join();
+	  delete _pServerThread;
+	  _pServerThread = 0;
+  }
+
+  if (_pServerEndPoint)
+  {
+     delete _pServerEndPoint;
+    _pServerEndPoint = 0;
+  }
 }
+
+void SIPWebSocketListener::restart(boost::system::error_code& e)
+{
+  if (canBeRestarted())
+  {
+    run();
+    OSS_LOG_NOTICE("SIPWebSocketListener::restart() address: " << _address << ":" << _port << " Ok");
+  }
+}
+  
+void SIPWebSocketListener::closeTemporarily(boost::system::error_code& e)
+{
+  handleStop();
+  OSS_LOG_NOTICE("SIPWebSocketListener::closeTemporarily INVOKED");
+}
+  
+bool SIPWebSocketListener::canBeRestarted() const
+{
+  return !_pServerThread && !_pServerEndPoint;
+}
+
 
 
 } } // OSS::SIP

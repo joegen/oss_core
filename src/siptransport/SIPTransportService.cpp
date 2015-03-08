@@ -214,8 +214,8 @@ void SIPTransportService::stopVirtualTransports()
       if (iter->second->hasStarted())
       {
         boost::system::error_code e;
-        iter->second->closeTemporarily(e);
         OSS_LOG_INFO("Closing Virtual UDP Listener " << iter->first);
+        iter->second->closeTemporarily(e);
         if (e)
         {
           OSS_LOG_ERROR("SIPTransportService::stopVirtualTransports(UDP) Exception: " << e.message());
@@ -231,8 +231,8 @@ void SIPTransportService::stopVirtualTransports()
       if (iter->second->hasStarted())
       {
         boost::system::error_code e;
-        iter->second->closeTemporarily(e);
         OSS_LOG_INFO("Closing Virtual TCP Listener " << iter->first);
+        iter->second->closeTemporarily(e);
         if (e)
         {
           OSS_LOG_ERROR("SIPTransportService::stopVirtualTransports(TCP) Exception: " << e.message());
@@ -248,8 +248,8 @@ void SIPTransportService::stopVirtualTransports()
       if (iter->second->hasStarted())
       {
         boost::system::error_code e;
-        iter->second->closeTemporarily(e);
         OSS_LOG_INFO("Closing Virtual WS Listener " << iter->first);
+        iter->second->closeTemporarily(e);
         if (e)
         {
           OSS_LOG_ERROR("SIPTransportService::stopVirtualTransports(WS) Exception: " << e.message());
@@ -265,8 +265,8 @@ void SIPTransportService::stopVirtualTransports()
       if (iter->second->hasStarted())
       {
         boost::system::error_code e;
-        iter->second->closeTemporarily(e);
         OSS_LOG_INFO("Closing Virtual TLS Listener " << iter->first);
+        iter->second->closeTemporarily(e);
         if (e)
         {
           OSS_LOG_ERROR("SIPTransportService::stopVirtualTransports(TLS) Exception: " << e.message());
