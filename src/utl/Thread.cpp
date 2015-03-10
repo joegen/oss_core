@@ -274,6 +274,9 @@ void Thread::stop()
   {
     mutex_critic_sec_lock lock(_threadMutex);
     assert(_pThread);
+    
+    onTerminate();
+    
     _pThread->join();
     delete _pThread;
     _pThread = 0;
@@ -300,6 +303,9 @@ void Thread::runTask()
   }
 }
 
+void Thread::onTerminate()
+{
+}
 
 
 } // OSS

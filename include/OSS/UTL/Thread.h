@@ -176,6 +176,7 @@ public:
   
 protected:
   virtual void runTask();
+  virtual void onTerminate();
   Task _task;
   boost::thread* _pThread;
   bool _terminateFlag;
