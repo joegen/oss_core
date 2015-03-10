@@ -316,6 +316,167 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
     throw OSS::SIP::SIPException("No Listener Address Configured");
 }
 
+bool SIPStack::initVirtualTransportFromConfig(const boost::filesystem::path& cfgFile)
+{
+  ClassType configFile;
+  
+  if (!configFile.load(OSS::boost_path(cfgFile)))
+  {
+    OSS_LOG_ERROR("SIPStack::initVirtualTransportFromConfig() - Unable to open config file " << cfgFile);
+    return false;
+  }
+  
+  DataType root = configFile.self();
+  
+  if (!root.exists("listeners"))
+  {
+    OSS_LOG_ERROR("SIPStack::initVirtualTransportFromConfig() - Section [listeners] does not exist");
+    return false;
+  }
+  DataType listeners = root["listeners"];
+  
+  if (!root.exists("carp-ha-interface"))
+  {
+    OSS_LOG_ERROR("SIPStack::initVirtualTransportFromConfig() - Section [carp-ha-interface] does not exist");
+    return false;
+  }
+  
+  DataType carpConfig = listeners["carp-ha-interface"];
+  
+  //
+  // Check if CARP is enabled
+  //
+  bool isEnabled = carpConfig.exists("enabled") && (bool)carpConfig["enabled"];
+  if (!isEnabled)
+  {
+    OSS_LOG_ERROR("SIPStack::initVirtualTransportFromConfig() - Carp is not enabled");
+    return false;
+  }
+  
+  /*
+   
+   *  virtual-ip-address = "0.0.0.0/0"; // Virtual IP address and subnet to be used by CARP
+      external-address = "0.0.0.0";  // External IP address if the virtual IP is behind a port mapped firewall
+      up-script = "/etc/karoo.conf.d/ucarp-vip-up.sh";  // Script executed to register the virtual IP
+      down-script = "/etc/karoo.conf.d/ucarp-vip-down.sh"; // Script executed to remove the virtual IP
+      carp-password = "DesertForbiddenFruit"; // Secret key used by CARP subsystem
+      preferred-master = false; // Set this to true if you want to make this instance as the preferred master
+      tcp-enabled = true;  // Enable TCP transport
+      udp-enabled = true; // Enable UDP Transport
+      ws-enabled = true; // Enable WebSocket Transport
+      tls-enabled = true; // Enable TLS Transport
+      sip-port = 5060; // Port for TCP and UDP
+      tls-port = 5061; // Port for TLS
+      ws-port = 5062; // Port for WebSocket
+      subnets = "0.0.0.0/0"; // (Optional) Comma delimited subnets reachable by this transport
+   */
+  
+  //
+  // Determine Virtual IP and subnet
+  //
+  if (!carpConfig.exists("virtual-ip-address"))
+  {
+    OSS_LOG_ERROR("SIPStack::initVirtualTransportFromConfig() - Property [virtual-ip-address] is not set.  Carp will be disabled.");
+    return false;
+  }
+  
+  std::string virtualIp((const char*)carpConfig["virtual-ip-address"]);
+  
+  //
+  // Check if the virtual IP specified a subnet
+  //
+  std::vector<std::string> vipTokens = OSS::string_tokenize(virtualIp, "/");
+  if (vipTokens.size() == 2)
+  {
+    virtualIp = vipTokens[0];
+  }
+  
+  //
+  // Determine subnets
+  //
+  std::vector<std::string> subnets;
+  if (carpConfig.exists("subnets"))
+  {
+    std::string strSubnet((const char*)carpConfig["subnets"]);
+    subnets = OSS::string_tokenize(strSubnet, ",");
+  }
+  
+  //
+  // Determine External IP Address
+  //
+  std::string externalAddress = virtualIp;
+  if (carpConfig.exists("external-address"))
+  {
+    std::string extAddr = (const char*)carpConfig["external-address"];
+    if (extAddr != "0.0.0.0")
+      externalAddress = extAddr;
+  }
+  
+  bool tcpEnabled = carpConfig.exists("tcp-enabled") && (bool)carpConfig["tcp-enabled"];
+  bool udpEnabled = carpConfig.exists("udp-enabled") && (bool)carpConfig["udp-enabled"];
+  bool tlsEnabled = carpConfig.exists("tls-enabled") && (bool)carpConfig["tls-enabled"];
+  bool wsEnabled = carpConfig.exists("ws-enabled") && (bool)carpConfig["ws-enabled"];
+  
+  if (!tcpEnabled && !udpEnabled && !tlsEnabled && !wsEnabled)
+  {
+    //
+    // Let us default to UDP and TCP
+    //
+    tcpEnabled = true;
+    udpEnabled = true;
+  }
+  
+  OSS::Net::IPAddress listenerAddress(virtualIp);
+  listenerAddress.externalAddress() = externalAddress;
+  listenerAddress.setVirtual(true);
+  
+  if (udpEnabled)
+  {
+    int port = carpConfig.exists("sip-port") && (int)carpConfig["sip-port"];
+    if (!port)
+      port = 5060;
+    listenerAddress.setPort(port);
+    
+    _udpListeners.push_back(listenerAddress);
+    _udpSubnets[listenerAddress.toIpPortString()] = subnets;
+  }
+  
+  if (tcpEnabled)
+  {
+    int port = carpConfig.exists("sip-port") && (int)carpConfig["sip-port"];
+    if (!port)
+      port = 5060;
+    listenerAddress.setPort(port);
+    
+    _tcpListeners.push_back(listenerAddress);
+    _tcpSubnets[listenerAddress.toIpPortString()] = subnets;
+  }
+  
+  if (tlsEnabled)
+  {
+    int port = carpConfig.exists("tls-port") && (int)carpConfig["tls-port"];
+    if (!port)
+      port = 5061;
+    listenerAddress.setPort(port);
+    
+    _tlsListeners.push_back(listenerAddress);
+    _tlsSubnets[listenerAddress.toIpPortString()] = subnets;
+  }
+  
+  if (wsEnabled)
+  {
+    int port = carpConfig.exists("ws-port") && (int)carpConfig["ws-port"];
+    if (!port)
+      port = 5062;
+    listenerAddress.setPort(port);
+    
+    _wsListeners.push_back(listenerAddress);
+    _wsSubnets[listenerAddress.toIpPortString()] = subnets;
+  }
+  
+  return true;
+}
+
 bool SIPStack::initTlsContextFromConfig(const boost::filesystem::path& cfgFile)
 {
   ClassType config;
@@ -394,6 +555,16 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
   //
   bool hasInitializedTls = initTlsContextFromConfig(cfgFile);
 
+  //
+  // Initialize CARP virtual interfaces
+  //
+  bool hasVirtualInterfaces = initVirtualTransportFromConfig(cfgFile);
+  
+  if (hasVirtualInterfaces)
+  {
+    OSS_LOG_INFO("SIPStack::initTransportFromConfig() - Virtual Interface Added");
+  }
+  
   DataType interfaces = listeners["interfaces"];
   int ifaceCount = interfaces.getElementCount();
   bool hasFoundDefault = false;

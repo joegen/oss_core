@@ -177,6 +177,9 @@ public:
   std::string getTlsCertPassword() const;
     /// Returns the tlsCertPassword.  This is used internally by initializeTlsContext
   
+  bool initVirtualTransportFromConfig(const boost::filesystem::path& cfgFile);
+    /// Initialize CARP virtual interface(s)
+  
   void run();
     /// Starts the SIPStack event subsytem.
     ///
