@@ -322,7 +322,7 @@ bool Carp::sendGratuitousArp(const std::string& ethInterface, const std::string&
 
 Carp::Config::Config()
 {
-  vhid = 0; // virtual IP identifier (1-255)
+  vhid = 255; // virtual IP identifier (1-255)
   preempt = false; // becomes a master as soon as possible
   neutral = false; // don't run downscript at start if backup
   advbase = 0; // (-b <seconds>): advertisement frequency

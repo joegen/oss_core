@@ -241,18 +241,13 @@ Thread::~Thread()
 
 void Thread::run()
 {
-  {
-  mutex_critic_sec_lock lock(_terminateFlagMutex);
   if (!isTerminated())
     stop();
-  _terminateFlag = false;
-  }
   
-  {
-    mutex_critic_sec_lock lock(_threadMutex);
-    assert(!_pThread);
-    _pThread = new boost::thread(boost::bind(&Thread::runTask, this));
-  }
+  mutex_critic_sec_lock lock(_threadMutex);
+  assert(!_pThread);
+  _terminateFlag = false;
+  _pThread = new boost::thread(boost::bind(&Thread::runTask, this));
 }
 
 void Thread::stop()
@@ -272,11 +267,10 @@ void Thread::stop()
   }
   
   {
-    mutex_critic_sec_lock lock(_threadMutex);
-    assert(_pThread);
-    
     onTerminate();
     
+    mutex_critic_sec_lock lock(_threadMutex);
+    assert(_pThread);
     _pThread->join();
     delete _pThread;
     _pThread = 0;

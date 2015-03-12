@@ -50,6 +50,7 @@ SIPStack::SIPStack() :
   _wsListeners(),
   _tlsListeners(),
   _tlsCertPassword(),
+  _hasInitializedTLS(false),
   _pKeyStore(0)
 {
 }
@@ -335,21 +336,26 @@ bool SIPStack::initVirtualTransportFromConfig(const boost::filesystem::path& cfg
   }
   DataType listeners = root["listeners"];
   
-  if (!root.exists("carp-ha-interface"))
+  if (!listeners.exists("carp-ha-interface"))
   {
-    OSS_LOG_ERROR("SIPStack::initVirtualTransportFromConfig() - Section [carp-ha-interface] does not exist");
+    OSS_LOG_NOTICE("SIPStack::initVirtualTransportFromConfig() - Section [carp-ha-interface] does not exist");
     return false;
   }
   
   DataType carpConfig = listeners["carp-ha-interface"];
   
+  if (!carpConfig.getElementCount())
+  {
+    OSS_LOG_ERROR("SIPStack::initVirtualTransportFromConfig() - Section [carp-ha-interface] has empty elements");
+    return false;
+  }
   //
   // Check if CARP is enabled
   //
-  bool isEnabled = carpConfig.exists("enabled") && (bool)carpConfig["enabled"];
+  bool isEnabled = carpConfig[0].exists("enabled") && (bool)carpConfig[0]["enabled"];
   if (!isEnabled)
   {
-    OSS_LOG_ERROR("SIPStack::initVirtualTransportFromConfig() - Carp is not enabled");
+    OSS_LOG_NOTICE("SIPStack::initVirtualTransportFromConfig() - Carp is not enabled");
     return false;
   }
   
@@ -374,13 +380,13 @@ bool SIPStack::initVirtualTransportFromConfig(const boost::filesystem::path& cfg
   //
   // Determine Virtual IP and subnet
   //
-  if (!carpConfig.exists("virtual-ip-address"))
+  if (!carpConfig[0].exists("virtual-ip-address"))
   {
     OSS_LOG_ERROR("SIPStack::initVirtualTransportFromConfig() - Property [virtual-ip-address] is not set.  Carp will be disabled.");
     return false;
   }
   
-  std::string virtualIp((const char*)carpConfig["virtual-ip-address"]);
+  std::string virtualIp((const char*)carpConfig[0]["virtual-ip-address"]);
   
   //
   // Check if the virtual IP specified a subnet
@@ -395,9 +401,9 @@ bool SIPStack::initVirtualTransportFromConfig(const boost::filesystem::path& cfg
   // Determine subnets
   //
   std::vector<std::string> subnets;
-  if (carpConfig.exists("subnets"))
+  if (carpConfig[0].exists("subnets"))
   {
-    std::string strSubnet((const char*)carpConfig["subnets"]);
+    std::string strSubnet((const char*)carpConfig[0]["subnets"]);
     subnets = OSS::string_tokenize(strSubnet, ",");
   }
   
@@ -405,17 +411,17 @@ bool SIPStack::initVirtualTransportFromConfig(const boost::filesystem::path& cfg
   // Determine External IP Address
   //
   std::string externalAddress = virtualIp;
-  if (carpConfig.exists("external-address"))
+  if (carpConfig[0].exists("external-address"))
   {
-    std::string extAddr = (const char*)carpConfig["external-address"];
+    std::string extAddr = (const char*)carpConfig[0]["external-address"];
     if (extAddr != "0.0.0.0")
       externalAddress = extAddr;
   }
   
-  bool tcpEnabled = carpConfig.exists("tcp-enabled") && (bool)carpConfig["tcp-enabled"];
-  bool udpEnabled = carpConfig.exists("udp-enabled") && (bool)carpConfig["udp-enabled"];
-  bool tlsEnabled = carpConfig.exists("tls-enabled") && (bool)carpConfig["tls-enabled"];
-  bool wsEnabled = carpConfig.exists("ws-enabled") && (bool)carpConfig["ws-enabled"];
+  bool tcpEnabled = carpConfig[0].exists("tcp-enabled") && (bool)carpConfig[0]["tcp-enabled"];
+  bool udpEnabled = carpConfig[0].exists("udp-enabled") && (bool)carpConfig[0]["udp-enabled"];
+  bool tlsEnabled = carpConfig[0].exists("tls-enabled") && (bool)carpConfig[0]["tls-enabled"];
+  bool wsEnabled = carpConfig[0].exists("ws-enabled") && (bool)carpConfig[0]["ws-enabled"];
   
   if (!tcpEnabled && !udpEnabled && !tlsEnabled && !wsEnabled)
   {
@@ -432,9 +438,11 @@ bool SIPStack::initVirtualTransportFromConfig(const boost::filesystem::path& cfg
   
   if (udpEnabled)
   {
-    int port = carpConfig.exists("sip-port") && (int)carpConfig["sip-port"];
-    if (!port)
-      port = 5060;
+    int port = 5060;
+    if (carpConfig[0].exists("sip-port"))
+    {
+      port = (int)carpConfig[0]["sip-port"];
+    }
     listenerAddress.setPort(port);
     
     _udpListeners.push_back(listenerAddress);
@@ -443,20 +451,24 @@ bool SIPStack::initVirtualTransportFromConfig(const boost::filesystem::path& cfg
   
   if (tcpEnabled)
   {
-    int port = carpConfig.exists("sip-port") && (int)carpConfig["sip-port"];
-    if (!port)
-      port = 5060;
+    int port = 5060;
+    if (carpConfig[0].exists("sip-port"))
+    {
+      port = (int)carpConfig[0]["sip-port"];
+    }
     listenerAddress.setPort(port);
     
     _tcpListeners.push_back(listenerAddress);
     _tcpSubnets[listenerAddress.toIpPortString()] = subnets;
   }
   
-  if (tlsEnabled)
-  {
-    int port = carpConfig.exists("tls-port") && (int)carpConfig["tls-port"];
-    if (!port)
-      port = 5061;
+  if (_hasInitializedTLS && tlsEnabled)
+  {   
+    int port = 5061;
+    if (carpConfig[0].exists("tls-port"))
+    {
+      port = (int)carpConfig[0]["tls-port"];
+    }
     listenerAddress.setPort(port);
     
     _tlsListeners.push_back(listenerAddress);
@@ -464,10 +476,12 @@ bool SIPStack::initVirtualTransportFromConfig(const boost::filesystem::path& cfg
   }
   
   if (wsEnabled)
-  {
-    int port = carpConfig.exists("ws-port") && (int)carpConfig["ws-port"];
-    if (!port)
-      port = 5062;
+  {   
+    int port = 5062;
+    if (carpConfig[0].exists("ws-port"))
+    {
+      port = (int)carpConfig[0]["ws-port"];
+    }
     listenerAddress.setPort(port);
     
     _wsListeners.push_back(listenerAddress);
@@ -553,7 +567,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
   //
   // Initialize TLS context
   //
-  bool hasInitializedTls = initTlsContextFromConfig(cfgFile);
+  _hasInitializedTLS = initTlsContextFromConfig(cfgFile);
 
   //
   // Initialize CARP virtual interfaces
@@ -645,7 +659,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       _wsSubnets[listener.toIpPortString()] = subnets;
     }
 
-    if (tlsEnabled && hasInitializedTls)
+    if (tlsEnabled && _hasInitializedTLS)
     {      
       OSS::Net::IPAddress listener;
       listener = ip;
@@ -850,7 +864,7 @@ bool SIPStack::initializeTlsContext(
     }
     catch(...)
     {
-      OSS_LOG_ERROR("SIPStack::initializeTlsContext - Unable to load peerCaFile " << peerCaFile);
+      OSS_LOG_WARNING("SIPStack::initializeTlsContext - Unable to load peerCaFile " << peerCaFile << " TLS will be disabled.");
       return false;
     }
     OSS_LOG_INFO("SIPStack::initializeTlsContext - Loaded peerCaFile " << peerCaFile);
