@@ -50,7 +50,6 @@ SIPStack::SIPStack() :
   _wsListeners(),
   _tlsListeners(),
   _tlsCertPassword(),
-  _hasInitializedTLS(false),
   _pKeyStore(0)
 {
 }
@@ -462,7 +461,7 @@ bool SIPStack::initVirtualTransportFromConfig(const boost::filesystem::path& cfg
     _tcpSubnets[listenerAddress.toIpPortString()] = subnets;
   }
   
-  if (_hasInitializedTLS && tlsEnabled)
+  if (tlsEnabled)
   {   
     int port = 5061;
     if (carpConfig[0].exists("tls-port"))
@@ -567,7 +566,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
   //
   // Initialize TLS context
   //
-  _hasInitializedTLS = initTlsContextFromConfig(cfgFile);
+  bool hasInitializedTLS = initTlsContextFromConfig(cfgFile);
 
   //
   // Initialize CARP virtual interfaces
@@ -659,7 +658,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       _wsSubnets[listener.toIpPortString()] = subnets;
     }
 
-    if (tlsEnabled && _hasInitializedTLS)
+    if (tlsEnabled && hasInitializedTLS)
     {      
       OSS::Net::IPAddress listener;
       listener = ip;

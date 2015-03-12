@@ -300,7 +300,6 @@ private:
   SubNets _tlsSubnets;
   
   std::string _tlsCertPassword;
-  bool _hasInitializedTLS;
   
   //
   // REST Key Value Store
