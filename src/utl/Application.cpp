@@ -1763,6 +1763,32 @@ using Poco::Util::OptionCallback;
 
 namespace OSS {
 
+  
+static pid_t write_pid_file(const char* pidFile, bool exclusive)
+{
+  int handle = open(pidFile, O_RDWR|O_CREAT, 0600);
+  if (handle == -1)
+  {
+    return 0;
+  }
+  
+  if (exclusive && lockf(handle,F_TLOCK,0) == -1)
+  {
+    return 0;
+  }
+  
+  pid_t pid = getpid();
+  
+  char pidStr[10];
+  sprintf(pidStr,"%d\n", pid);
+  if (write(handle, pidStr, strlen(pidStr)) == -1)
+  {
+    pid = 0;
+  }
+  
+  return pid;
+}
+  
 class OSSApp : public Poco::Util::OSSServerApplication
 {
 public:
@@ -1793,6 +1819,7 @@ public:
   static std::string _logFile;
   static std::string _configFile;
   static std::string _pidFile;
+  static bool _pidFileExclusive;
   static Poco::Logger* _pLogger;
   static Poco::Util::LayeredConfiguration* _pConfig;
   static app_exit_code _exitCode;
@@ -1816,6 +1843,7 @@ char** OSSApp::_argv = 0;
 std::string OSSApp::_logFile;
 std::string OSSApp::_configFile;
 std::string OSSApp::_pidFile;
+bool OSSApp::_pidFileExclusive = true;
 app_init_func OSSApp::_initHandler;
 app_deinit_func OSSApp::_deinitHandler;
 app_main_func OSSApp::_mainHandler; 
@@ -1832,6 +1860,7 @@ OSSApp::OSSApp()
 OSSApp::~OSSApp()
 {
 }
+
 
 void OSSApp::initialize(OSSApplication& self)
 {
@@ -1882,11 +1911,25 @@ void OSSApp::initialize(OSSApplication& self)
     {
       pidFile = OSSApp::_pidFile;
     }
-
-    //std::cout << "Saving PID File to " << pidFile << std::endl;
-    std::ofstream ostr(pidFile.c_str());
-		if (ostr.good())
-			ostr << Poco::Process::id() << std::endl;
+    
+    if (!OSSApp::_pidFile.empty())
+    {
+      if (!write_pid_file(OSSApp::_pidFile.c_str(), OSSApp::_pidFileExclusive))
+      {
+        //
+        // Unable to create a PID file.
+        //
+        if (OSSApp::_pidFileExclusive)
+        {
+          std::cerr << "Unable to grab exclusive lock for " << OSSApp::_pidFile << std::endl;
+        }
+        else
+        {
+          std::cerr << "Unable to create PID file " << OSSApp::_pidFile << std::endl;
+        }
+        _exit(-1);
+      }
+    }
   }
 
 
@@ -2053,9 +2096,10 @@ void app_set_config_file(const std::string& path)
   OSSApp::_configFile = path;
 }
 
-void app_set_pid_file(const std::string& path)
+void app_set_pid_file(const std::string& path, bool exclusive)
 {
   OSSApp::_pidFile = path;
+  OSSApp::_pidFileExclusive = exclusive;
 }
 
 unsigned long app_get_pid()

@@ -439,14 +439,17 @@ void RTPProxyManager::handleSDP(const std::string& /*method*/,
   }
   catch(json::Exception& e)
   {
+    response["error"] = json::String(e.what());
     OSS_LOG_ERROR(lid << "RTP RTPProxy::handleSDP Exception: " << e.what());
   }
   catch(std::exception& e)
   {
+    response["error"] = json::String(e.what());
     OSS_LOG_ERROR(lid << "RTP RTPProxy::handleSDP Exception: " << e.what());
   }
   catch(...)
   {
+    response["error"] = json::String("unknown");
     OSS_LOG_ERROR(lid << "RTP RTPProxy::handleSDP Unknown Exception");
   }
 }

@@ -117,6 +117,8 @@ public:
   virtual bool onParseUnknownOptions(int argc, char** argv) {return false;};
   void waitForTerminationRequest();
 
+  pid_t  writePidFile(const char* pidFile, bool exclusive);
+  
 protected:
   int _argc;
   char** _argv;
@@ -261,8 +263,12 @@ inline bool ServiceOptions::parseOptions(bool verbose)
     if (hasOption("pid-file", false))
     {
       getOption("pid-file", _pidFile);
-      std::ofstream pidFile(_pidFile.c_str());
-      pidFile << getpid() << std::endl;
+      if (!writePidFile(_pidFile.c_str(),  true))
+      {
+        std::cerr << std::endl << "ERROR: Unable to lock PID file " << _pidFile << std::endl;
+        std::cerr.flush();
+        _exit(-1);
+      }
     }
 
     if (hasOption("daemonize", false))
@@ -733,6 +739,31 @@ inline void ServiceOptions::addRequiredIntVector(const std::string& optionName, 
 
 inline ServiceOptions::~ServiceOptions()
 {
+}
+
+inline pid_t  ServiceOptions::writePidFile(const char* pidFile, bool exclusive)
+{
+  int handle = open(pidFile, O_RDWR|O_CREAT, 0600);
+  if (handle == -1)
+  {
+    return 0;
+  }
+  
+  if (exclusive && lockf(handle,F_TLOCK,0) == -1)
+  {
+    return 0;
+  }
+  
+  pid_t pid = getpid();
+  
+  char pidStr[10];
+  sprintf(pidStr,"%d\n", pid);
+  if (write(handle, pidStr, strlen(pidStr)) == -1)
+  {
+    pid = 0;
+  }
+  
+  return pid;
 }
 
 inline void  ServiceOptions::daemonize(int argc, char** argv, bool isDaemon)

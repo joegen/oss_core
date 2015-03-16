@@ -93,5 +93,5 @@ inline void KVLevelDB::setKeyPrefix(const std::string& keyPrefix)
 
 } } // OSS::Persistent
 
-#endif	// KVUNQLITE_H_INLCUDED
+#endif	// KVLEVELDB_H_INLCUDED
 

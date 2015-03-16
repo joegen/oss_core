@@ -22,6 +22,7 @@ localedir = $(datadir)/locale
 
 AM_CPPFLAGS = \
     -I@OSS_CORE_SRCDIR@/include \
+    -I@OSS_CORE_SRCDIR@/src/utl/linux/pidfile \
     -I@OSS_CORE_SRCDIR@/src/net/turn/carp \
     -I@OSS_CORE_SRCDIR@/src/net/turn \
     -I@OSS_CORE_SRCDIR@/src/net/turn/client \
@@ -34,7 +35,8 @@ AM_CPPFLAGS = \
     -I@OSS_CORE_SRCDIR@/src/ua/core/rem/include
 
 AM_CFLAGS = \
-    DHAVE_INET_PTON_NTOP
+    DHAVE_INET_PTON_NTOP \
+    -I@OSS_CORE_SRCDIR@/src/utl/linux/pidfile
 
 version_Current=@OSS_CORE_VERSION_CURRENT@
 version_Revision=@OSS_CORE_VERSION_REVISION@
@@ -255,9 +257,6 @@ liboss_core_la_SOURCES =  \
     persistent/ClassType.cpp \
     persistent/DataType.cpp \
     persistent/Reference.cpp \
-    persistent/unqlite/unqlite.h \
-    persistent/unqlite/unqlite.c \
-    persistent/KVUnqlite.cpp \
     persistent/KVLevelDB.cpp \
     persistent/RESTKeyValueStore.cpp \
     sdp/SDPHeader.cpp \

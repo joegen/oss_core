@@ -83,8 +83,12 @@ void OSS_API app_set_logger_file(const std::string& path);
 void OSS_API app_set_config_file(const std::string& path);
   /// Set the path for the application config file
 
-void OSS_API app_set_pid_file(const std::string& path);
+void OSS_API app_set_pid_file(const std::string& path, bool exclusive);
   /// Set the path for the application pidfile file will be stored
+  /// Exclusive Param - Creates a PID file with an exclusive lock on the file.
+  /// This is used by applications who who wish to ensure only
+  /// a single instance can run in the same box.  
+
 
 unsigned long OSS_API app_get_pid();
   /// Return the current Process ID
