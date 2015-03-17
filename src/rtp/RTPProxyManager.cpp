@@ -16,107 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
-#include <xmlrpc-c/base.hpp>
-#include <xmlrpc-c/registry.hpp>
-#include <xmlrpc-c/server_abyss.hpp>
 
 #include "OSS/RTP/RTPProxyManager.h"
 #include "OSS/UTL/Logger.h"
 
 
-
 namespace OSS {
 namespace RTP {
-
-class HandleSDP : public xmlrpc_c::method
-{
-public:
-  RTPProxyManager& _rpc;
-  HandleSDP(RTPProxyManager& rpc) :
-    _rpc(rpc)
-  {
-  }
-
-  void execute(xmlrpc_c::paramList const& paramList,
-          xmlrpc_c::value *   const  retvalP)
-  {
-    json::Object params;
-    json::Object response;
-    try
-    {
-      std::stringstream strm;
-      strm << paramList.getString(0);
-      paramList.verifyEnd(1);
-      json::Reader::Read(params, strm);
-      _rpc.handleSDP(method(), params, response);
-      std::ostringstream responseStrm;
-      json::Writer::Write(response, responseStrm);
-      *retvalP = xmlrpc_c::value_string(responseStrm.str());
-    }
-    catch(json::Exception& e)
-    {
-      OSS_LOG_ERROR("[RPC] HanleSDP::execute Exception: " << e.what());
-    }
-    catch(std::exception& e)
-    {
-      OSS_LOG_ERROR("[RPC] HanleSDP::execute Exception: " << e.what());
-    }
-    catch(...)
-    {
-      OSS_LOG_ERROR("[RPC] HanleSDP::execute: Unknown exception");
-    }
-  }
-
-  static std::string method()
-  {
-    return "rtp.handleSDP";
-  }
-};
-
-class RemoveSession : public xmlrpc_c::method
-{
-public:
-  RTPProxyManager& _rpc;
-  RemoveSession(RTPProxyManager& rpc) :
-    _rpc(rpc)
-  {
-  }
-
-  void execute(xmlrpc_c::paramList const& paramList,
-          xmlrpc_c::value *   const  retvalP)
-  {
-    json::Object params;
-    json::Object response;
-    try
-    {
-      std::stringstream strm;
-      strm << paramList.getString(0);
-      paramList.verifyEnd(1);
-      json::Reader::Read(params, strm);
-      _rpc.removeSession(method(), params, response);
-      std::ostringstream responseStrm;
-      json::Writer::Write(response, responseStrm);
-      *retvalP = xmlrpc_c::value_string(responseStrm.str());
-    }
-    catch(json::Exception& e)
-    {
-      OSS_LOG_ERROR("[RPC] HanleSDP::execute Exception: " << e.what());
-    }
-    catch(std::exception& e)
-    {
-      OSS_LOG_ERROR("[RPC] HanleSDP::execute Exception: " << e.what());
-    }
-    catch(...)
-    {
-      OSS_LOG_ERROR("[RPC] HanleSDP::execute: Unknown exception.");
-    }
-  }
-
-  static std::string method()
-  {
-    return "rtp.removeSession";
-  }
-};
 
 
 RTPProxyManager::RTPProxyManager(int houseKeepingInterval) :
@@ -131,9 +37,6 @@ RTPProxyManager::RTPProxyManager(int houseKeepingInterval) :
   _rtpSessionMax(1000), //TODO: magic value
   _canRecycleState(true),
   _hasRtpDb(false),
-  _pRpcServerThread(0),
-  _pRpcServer(0),
-  _rpcServerPort(0),
   _persistStateFiles(false),
   _enabled(true),
   _alwaysProxyMedia(false)
@@ -142,7 +45,6 @@ RTPProxyManager::RTPProxyManager(int houseKeepingInterval) :
 
 RTPProxyManager::~RTPProxyManager()
 {
-  stopRpc();
   stop();
 }
 
@@ -462,18 +364,21 @@ void RTPProxyManager::removeSession(const std::string& method,
   {
     json::String sessionId = args["sessionId"];
     removeSession(sessionId.Value());
-    response["errorString"] = json::String("ok");
+    response["result"] = json::String("ok");
   }
   catch(json::Exception& e)
   {
+    response["error"] = json::String(e.what());
     OSS_LOG_ERROR("RTP RTPProxy::handleSDP Exception: " << e.what());
   }
   catch(std::exception& e)
   {
+    response["error"] = json::String(e.what());
     OSS_LOG_ERROR("RTP RTPProxy::handleSDP Exception: " << e.what());
   }
   catch(...)
   {
+    response["error"] = json::String("unknown");
     OSS_LOG_ERROR("RTP RTPProxy::handleSDP Unknown Exception");
   }
 }
@@ -582,55 +487,6 @@ std::size_t RTPProxyManager::getSessionCount(const std::string& address) const
   return iter->second;
 }
 
-void RTPProxyManager::runRpc(unsigned short port)
-{
-  if (!_pRpcServer)
-  {
-    _pRpcServerThread = new boost::thread(boost::bind(&RTPProxyManager::runRpc, this, port));
-    return;
-  }
-
-  _rpcServerPort = port;
-
-  try
-  {
-    xmlrpc_c::registry registry;
-
-    xmlrpc_c::methodPtr const handleSdp(new HandleSDP(*this));
-    xmlrpc_c::methodPtr const removeSession(new RemoveSession(*this));
-    
-    registry.addMethod(HandleSDP::method().c_str(), handleSdp);
-    registry.addMethod(RemoveSession::method().c_str(), removeSession);
-
-    _pRpcServer = new xmlrpc_c::serverAbyss(
-      registry,
-      _rpcServerPort
-    );
-    _pRpcServer->run();
-  } catch (std::exception const e)
-  {
-    OSS_LOG_ERROR("[RPC] KarooRtpProxyRPCServer::internal_run Exception: " << e.what());
-  }
-}
-
-void RTPProxyManager::stopRpc()
-{
-  if (_pRpcServer)
-    _pRpcServer->terminate();
-
-  if (_pRpcServerThread)
-  {
-    _pRpcServerThread->join();
-    delete _pRpcServerThread;
-    _pRpcServerThread = 0;
-  }
-
-  if (_pRpcServer)
-  {
-    delete _pRpcServer;
-    _pRpcServer = 0;
-  }
-}
 
 } } //OSS::RTP
 
