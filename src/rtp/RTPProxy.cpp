@@ -191,6 +191,16 @@ void RTPProxy::handleLeg1FrameRead(
   const boost::system::error_code& e,
   std::size_t bytes_transferred)
 {
+  if (e)
+  {
+    //
+    // see RTPProxyManager::collectInactiveSessions()
+    //
+    OSS_LOG_ERROR(_pSession->logId() << "RTP Leg 1 (" << _identifier << ") Read Error! Marking as inactive.");
+    _isInactive = true;
+    return;
+  }
+  
   if (!e && bytes_transferred >= 2)
   {
     _leg1ReadTimer.cancel();
@@ -405,6 +415,17 @@ void RTPProxy::handleLeg2FrameRead(
   const boost::system::error_code& e,
   std::size_t bytes_transferred)
 {
+  
+  if (e)
+  {
+    //
+    // see RTPProxyManager::collectInactiveSessions()
+    //
+    OSS_LOG_ERROR(_pSession->logId() << "RTP Leg 2 (" << _identifier << ") Read Error! Marking as inactive.");
+    _isInactive = true;
+    return;
+  }
+  
   if (!e && bytes_transferred >= 2)
   {
     _leg2ReadTimer.cancel();
@@ -715,6 +736,7 @@ void RTPProxy::handleLeg1SocketReadTimeout(const boost::system::error_code& e)
     //
     // see RTPProxyManager::collectInactiveSessions()
     //
+    OSS_LOG_ERROR(_pSession->logId() << "RTP Leg 1 (" << _identifier << ") Read Timeout! Marking as inactive.");
     _isInactive = true;
   }
 }
@@ -726,6 +748,7 @@ void RTPProxy::handleLeg2SocketReadTimeout(const boost::system::error_code& e)
     //
     // see RTPProxyManager::collectInactiveSessions()
     //
+    OSS_LOG_ERROR(_pSession->logId() << "RTP Leg 2 (" << _identifier << ") Read Timeout! Marking as inactive.");
     _isInactive = true;
   }
 }
