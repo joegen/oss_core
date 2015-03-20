@@ -192,6 +192,8 @@ protected:
     /// Process resizer buffers for leg1 and leg2 simultaneously
 
   void onResizerDequeue(RTPResizer& resizer, OSS::RTP::RTPPacket& packet);
+  
+  const std::string& logId() const;
 private:
   std::string _identifier;
   RTPProxyManager* _pManager;
@@ -225,6 +227,8 @@ private:
   RTPProxySession* _pSession;
   Type _type;
   bool _isPooled;
+  std::string _logId;
+  bool _verbose;
   friend class RTPProxySession;
   friend class RTPResizer;
 };
@@ -315,6 +319,11 @@ inline void RTPProxy::close()
 {
   shutdown();
   stop();
+}
+
+inline const std::string& RTPProxy::logId() const
+{
+  return _logId;
 }
 
 } } // OSS::RTP

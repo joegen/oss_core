@@ -48,8 +48,15 @@ RTPProxy::RTPProxy(Type type, RTPProxyManager* pManager, RTPProxySession* pSessi
   _isXORDisabled(isXORDisabled),
   _pSession(pSession),
   _type(type),
-  _isPooled(false)
+  _isPooled(false),
+  _verbose(false)
 {
+  //
+  // Note:  _pSession is not a safe reference.  DO NOT reference it after construction because it can be deleted anytime!
+  //
+  assert(_pSession);
+  _logId = _pSession->logId();
+  _verbose = _verbose;
 }
 
 RTPProxy::~RTPProxy()
@@ -85,7 +92,7 @@ bool RTPProxy::open(
     {
       {
       std::ostringstream logMsg;
-      logMsg <<  _pSession->logId() << "RTP " << _identifier << " opened sockets " <<  leg1Listener.toIpPortString() << "/"
+      logMsg <<  _logId << "RTP " << _identifier << " opened sockets " <<  leg1Listener.toIpPortString() << "/"
         << leg2Listener.toIpPortString();
       OSS::log_debug(logMsg.str());
       }
@@ -196,7 +203,7 @@ void RTPProxy::handleLeg1FrameRead(
     //
     // see RTPProxyManager::collectInactiveSessions()
     //
-    OSS_LOG_ERROR(_pSession->logId() << "RTP Leg 1 (" << _identifier << ") Read Error! Marking as inactive.");
+    OSS_LOG_ERROR(_logId << "RTP Leg 1 (" << _identifier << ") Read Error! Marking as inactive.");
     _isInactive = true;
     return;
   }
@@ -339,12 +346,12 @@ void RTPProxy::handleLeg1FrameRead(
           }
         }
 
-        if (_pSession->verbose() && !isResizing)
+        if (_verbose && !isResizing)
         {
           try
           {
             std::ostringstream logMsg;
-            logMsg  << _pSession->logId() << "RTP (" << _identifier << ") BYTES=" << bytes_transferred
+            logMsg  << _logId << "RTP (" << _identifier << ") BYTES=" << bytes_transferred
                     << " SRC (Leg1): " << _senderEndPointLeg1.address().to_string() << ":"
                     << _senderEndPointLeg1.port() << "/"
                     << _pLeg1Socket->local_endpoint().address().to_string() << ":"
@@ -364,14 +371,14 @@ void RTPProxy::handleLeg1FrameRead(
       }
       else
       {
-        OSS_LOG_ERROR(_pSession->logId() << "RTP (" << _identifier << ") BYTES=" << bytes_transferred
+        OSS_LOG_ERROR(_logId << "RTP (" << _identifier << ") BYTES=" << bytes_transferred
           << " SRC (Leg1): " << _senderEndPointLeg1.address().to_string() << ":"
           << _senderEndPointLeg1.port() << " cannot be relayed.  Connection information to remote peer is not yet known.");
       }
     }
     else
     {
-      OSS_LOG_ERROR(_pSession->logId() << "RTP (" << _identifier << ") BYTES=" << bytes_transferred
+      OSS_LOG_ERROR(_logId << "RTP (" << _identifier << ") BYTES=" << bytes_transferred
         << " SRC (Leg1): " << _senderEndPointLeg1.address().to_string() << ":"
         << _senderEndPointLeg1.port() << " cannot be relayed.  Local relay transport is not open.");
     }
@@ -421,7 +428,7 @@ void RTPProxy::handleLeg2FrameRead(
     //
     // see RTPProxyManager::collectInactiveSessions()
     //
-    OSS_LOG_ERROR(_pSession->logId() << "RTP Leg 2 (" << _identifier << ") Read Error! Marking as inactive.");
+    OSS_LOG_ERROR(_logId << "RTP Leg 2 (" << _identifier << ") Read Error! Marking as inactive.");
     _isInactive = true;
     return;
   }
@@ -572,12 +579,12 @@ void RTPProxy::handleLeg2FrameRead(
           }
         }
 
-        if (_pSession->verbose() && !isResizing)
+        if (_verbose && !isResizing)
         {
           try
           {
             std::ostringstream logMsg;
-            logMsg  << _pSession->logId() << "RTP (" << _identifier << ") BYTES=" << bytes_transferred
+            logMsg  << _logId << "RTP (" << _identifier << ") BYTES=" << bytes_transferred
                     << " SRC (Leg2): " << _senderEndPointLeg2.address().to_string() << ":"
                     << _senderEndPointLeg2.port() << "/"
                     << _pLeg2Socket->local_endpoint().address().to_string() << ":"
@@ -597,14 +604,14 @@ void RTPProxy::handleLeg2FrameRead(
       }
       else
       {
-        OSS_LOG_ERROR(_pSession->logId() << "RTP (" << _identifier << ") BYTES=" << bytes_transferred
+        OSS_LOG_ERROR(_logId << "RTP (" << _identifier << ") BYTES=" << bytes_transferred
           << " SRC (Leg1): " << _senderEndPointLeg2.address().to_string() << ":"
           << _senderEndPointLeg2.port() << " cannot be relayed.  Connection information to remote peer is not yet known.");
       }
     }
     else
     {
-      OSS_LOG_ERROR(_pSession->logId() << "RTP (" << _identifier << ") BYTES=" << bytes_transferred
+      OSS_LOG_ERROR(_logId << "RTP (" << _identifier << ") BYTES=" << bytes_transferred
         << " SRC (Leg1): " << _senderEndPointLeg2.address().to_string() << ":"
         << _senderEndPointLeg2.port() << " cannot be relayed.  Local relay transport is not open.");
     }
@@ -646,7 +653,7 @@ void RTPProxy::processResizerQueue()
   if (_type != Data)
     return;
 
-  _leg1Resizer.queue().verbose() = _leg2Resizer.queue().verbose() = _pSession->verbose();
+  _leg1Resizer.queue().verbose() = _leg2Resizer.queue().verbose() = _verbose;
 
   boost::array<char, RTP_PACKET_BUFFER_SIZE> buff;
   std::size_t size = 0;
@@ -736,7 +743,7 @@ void RTPProxy::handleLeg1SocketReadTimeout(const boost::system::error_code& e)
     //
     // see RTPProxyManager::collectInactiveSessions()
     //
-    OSS_LOG_ERROR(_pSession->logId() << "RTP Leg 1 (" << _identifier << ") Read Timeout! Marking as inactive.");
+    OSS_LOG_ERROR(_logId << "RTP Leg 1 (" << _identifier << ") Read Timeout! Marking as inactive.");
     _isInactive = true;
   }
 }
@@ -748,7 +755,7 @@ void RTPProxy::handleLeg2SocketReadTimeout(const boost::system::error_code& e)
     //
     // see RTPProxyManager::collectInactiveSessions()
     //
-    OSS_LOG_ERROR(_pSession->logId() << "RTP Leg 2 (" << _identifier << ") Read Timeout! Marking as inactive.");
+    OSS_LOG_ERROR(_logId << "RTP Leg 2 (" << _identifier << ") Read Timeout! Marking as inactive.");
     _isInactive = true;
   }
 }
