@@ -70,6 +70,7 @@ class OSS_API SIPB2BTransaction : private boost::noncopyable, public boost::enab
 {
 public:
   typedef boost::shared_ptr<SIPB2BTransaction> Ptr;
+  typedef std::map<std::string, std::string> CustomProperties;
 
   explicit SIPB2BTransaction(SIPB2BTransactionManager* pManager);
     /// Creates a new SIPB2BTransaction object
@@ -162,6 +163,9 @@ public:
 
   bool hasProperty(const std::string& property) const;
   bool hasProperty(PropertyMap::Enum property) const;
+  
+  CustomProperties& properties();
+  const CustomProperties& properties() const;
 
   const std::string& getLogId() const;
     /// Return the log-id used for logging
@@ -201,7 +205,7 @@ protected:
   typedef boost::lock_guard<boost::shared_mutex> WriteLock;
   mutable boost::shared_mutex _rwlock;
   OSS::mutex _resposeMutex;
-  typedef std::map<std::string, std::string> CustomProperties;
+  
   CustomProperties _properties;
   std::string _logId;
   bool _hasSentLocalResponse;
@@ -302,6 +306,16 @@ inline const SIPB2BDialogData& SIPB2BTransaction::getDialogData() const
 inline void SIPB2BTransaction::setDialogData(SIPB2BDialogData& dialogData)
 {
   _dialogData = dialogData;
+}
+
+inline SIPB2BTransaction::CustomProperties& SIPB2BTransaction::properties()
+{
+  return _properties;
+}
+  
+inline const SIPB2BTransaction::CustomProperties& SIPB2BTransaction::properties() const
+{
+  return _properties;
 }
   
 } } } // OSS::SIP::B2BUA
