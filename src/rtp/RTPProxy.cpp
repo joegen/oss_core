@@ -652,6 +652,9 @@ void RTPProxy::processResizerQueue()
 {
   if (_type != Data)
     return;
+  
+  if (!_leg1Resizer.isEnabled() && !_leg2Resizer.isEnabled())
+    return;
 
   _leg1Resizer.queue().verbose() = _leg2Resizer.queue().verbose() = _verbose;
 
@@ -699,6 +702,9 @@ void RTPProxy::processResizerQueue()
 void RTPProxy::onResizerDequeue(RTPResizer& resizer, OSS::RTP::RTPPacket& packet)
 {
   if (_type != Data)
+    return;
+  
+  if (!_leg1Resizer.isEnabled() && !_leg2Resizer.isEnabled())
     return;
 
   boost::array<char, RTP_PACKET_BUFFER_SIZE> buff;

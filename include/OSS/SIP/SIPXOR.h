@@ -25,6 +25,7 @@
 #include "boost/array.hpp"
 #include "OSS/OSS.h"
 #include "OSS/SIP/SIP.h"
+#include "OSS/RTP/RTPPacket.h"
 #include "boost/function.hpp"
 
 namespace OSS {
@@ -55,10 +56,10 @@ public:
   static void sipDecrypt(boost::array<char, OSS_SIP_MAX_PACKET_SIZE>& packet, size_t& len);
     /// Decrypt a byte array
 
-  static void rtpEncrypt(boost::array<char, 8192>& packet, size_t& len);
+  static void rtpEncrypt(boost::array<char, RTP_PACKET_BUFFER_SIZE>& packet, size_t& len);
     /// Encrypt a byte array
 
-  static void rtpDecrypt(boost::array<char, 8192>& packet, size_t& len);
+  static void rtpDecrypt(boost::array<char, RTP_PACKET_BUFFER_SIZE>& packet, size_t& len);
     /// Decrypt a byte array
 
   static EncryptFunc rtpEncryptExternal;

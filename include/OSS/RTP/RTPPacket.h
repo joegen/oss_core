@@ -32,7 +32,7 @@
 namespace OSS {
 namespace RTP {
 
-#define RTP_PACKET_BUFFER_SIZE 8192
+#define RTP_PACKET_BUFFER_SIZE 4098
 
 class RTPPacket
 {

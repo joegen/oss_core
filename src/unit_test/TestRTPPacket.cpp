@@ -69,8 +69,8 @@ TEST(RTPPacketTest, test_basic_packet_parser)
   ASSERT_EQ(packet1.getSequenceNumber(), packet2.getSequenceNumber());
 
   unsigned int len;
-  u_char payload1[8192];
-  u_char payload2[8192];
+  u_char payload1[RTP_PACKET_BUFFER_SIZE];
+  u_char payload2[RTP_PACKET_BUFFER_SIZE];
   packet1.getPayload(payload1, len);
   packet2.getPayload(payload2, len);
 
@@ -89,7 +89,7 @@ TEST(RTPPacketTest, test_basic_packet_parser)
   ASSERT_EQ(packet3.getVersion(), packet2.getVersion());
   ASSERT_EQ(packet3.getSequenceNumber(), packet2.getSequenceNumber());
 
-  u_char payload3[8192];
+  u_char payload3[RTP_PACKET_BUFFER_SIZE];
   packet3.getPayload(payload3, len);
   packet2.getPayload(payload2, len);
 
@@ -111,7 +111,7 @@ TEST(RTPPacketTest, test_basic_packet_parser)
   plpacket.setPayload(pl, 20);
 
   ASSERT_EQ(plpacket.getPayloadSize(), 20);
-  u_char pl1[8192] ;
+  u_char pl1[RTP_PACKET_BUFFER_SIZE] ;
   plpacket.getPayload(pl1, len);
 
   for (int i = 0; i < 20; i++)
@@ -188,8 +188,8 @@ TEST(RTPPacketTest, test_rtp_resizer_pcap_samesize)
       ASSERT_TRUE(q.dequeue(packet));
 
        unsigned int len = 0;
-       u_char payload1[8192];
-       u_char payload2[8192];
+       u_char payload1[RTP_PACKET_BUFFER_SIZE];
+       u_char payload2[RTP_PACKET_BUFFER_SIZE];
        packet.getPayload(payload1, len);
        packet2.getPayload(payload2, len);
 

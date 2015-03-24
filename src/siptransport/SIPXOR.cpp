@@ -117,7 +117,7 @@ void SIPXOR::sipDecrypt(boost::array<char, OSS_SIP_MAX_PACKET_SIZE>& packet, siz
   return sipEncrypt(packet, len);
 }
 
-void SIPXOR::rtpEncrypt(boost::array<char, 8192>& packet, size_t& len)
+void SIPXOR::rtpEncrypt(boost::array<char, RTP_PACKET_BUFFER_SIZE>& packet, size_t& len)
 {
   int size = len;
   int i = 0;
@@ -154,7 +154,7 @@ void SIPXOR::rtpEncrypt(boost::array<char, 8192>& packet, size_t& len)
 
 }
 
-void SIPXOR::rtpDecrypt(boost::array<char, 8192>& packet, size_t& len)
+void SIPXOR::rtpDecrypt(boost::array<char, RTP_PACKET_BUFFER_SIZE>& packet, size_t& len)
 {
   if (!_xor_config.enabled)
     return;
@@ -182,10 +182,10 @@ void SIPXOR::rtpDecrypt(boost::array<char, 8192>& packet, size_t& len)
   }
 
 
-  boost::array<char, 8192> oldPacket = packet;
+  boost::array<char, RTP_PACKET_BUFFER_SIZE> oldPacket = packet;
 
   int boundary = 0;
-  for (boundary = 0; ((int)packet[boundary]) == 0 && boundary < 8192; boundary++);
+  for (boundary = 0; ((int)packet[boundary]) == 0 && boundary < RTP_PACKET_BUFFER_SIZE; boundary++);
 
   if (len - boundary <= 0)
     return;
