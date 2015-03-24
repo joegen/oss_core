@@ -44,6 +44,8 @@ public:
 
   bool processRequest(const OSS::SIP::SIPMessage::Ptr& request);
     /// Send the SIPRequest to the java script engine for processing
+  
+  bool processRequest(OSS::OSS_HANDLE request);
 
 protected:
   virtual void initGlobalFuncs(OSS_HANDLE objectTemplate);
@@ -64,6 +66,11 @@ inline JSSIPMessage::~JSSIPMessage()
 inline bool JSSIPMessage::processRequest(const OSS::SIP::SIPMessage::Ptr& request)
 {
   return JSBase::processRequest((OSS_HANDLE)request.get());
+}
+
+inline bool JSSIPMessage::processRequest(OSS::OSS_HANDLE request)
+{
+  return JSBase::processRequest(request);
 }
 
 } } //const JSSIPMessage& msg OSS::JS
