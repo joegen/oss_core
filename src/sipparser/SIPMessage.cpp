@@ -247,6 +247,21 @@ static std::string hdrGetExpandedForm(const std::string & header)
   return header;
 }
 
+void SIPMessage::reset(const std::string& msg)
+{
+  if (msg.empty())
+    return;
+  
+  {
+    WriteLock lock(_rwlock);
+    _badHeaders.clear();
+    _headers.clear();
+    _data = msg;
+  }
+    
+  parse();
+}
+
 void SIPMessage::parse()
 {
   WriteLock lock(_rwlock);
