@@ -34,8 +34,6 @@ RTPProxy::RTPProxy(Type type, RTPProxyManager* pManager, RTPProxySession* pSessi
   _pManager(pManager),
   _pLeg1Socket(0),
   _pLeg2Socket(0),
-  _leg1ReadTimer(_pManager->_ioService, boost::posix_time::milliseconds(_pManager->_readTimeout)),
-  _leg2ReadTimer(_pManager->_ioService, boost::posix_time::milliseconds(_pManager->_readTimeout)),
   _adjustSenderFromPacketSource(true),
   _leg1Resizer(this, 1),
   _leg2Resizer(this, 2),
@@ -57,6 +55,7 @@ RTPProxy::RTPProxy(Type type, RTPProxyManager* pManager, RTPProxySession* pSessi
   assert(_pSession);
   _logId = _pSession->logId();
   _verbose = _verbose;
+  _timeStamp = OSS::getTime();
 }
 
 RTPProxy::~RTPProxy()
@@ -125,14 +124,10 @@ void RTPProxy::start()
       boost::asio::placeholders::error,
         boost::asio::placeholders::bytes_transferred));
 
-  _leg1ReadTimer.async_wait(boost::bind(&RTPProxy::handleLeg1SocketReadTimeout, this, boost::asio::placeholders::error));
-
   _pLeg2Socket->async_receive_from(boost::asio::buffer(_leg2Buffer), _senderEndPointLeg2,
     boost::bind(&RTPProxy::handleLeg2FrameRead, shared_from_this(),
       boost::asio::placeholders::error,
         boost::asio::placeholders::bytes_transferred));
-
-  _leg2ReadTimer.async_wait(boost::bind(&RTPProxy::handleLeg2SocketReadTimeout, this, boost::asio::placeholders::error));
 
   _isStarted = true;
 }
@@ -208,9 +203,10 @@ void RTPProxy::handleLeg1FrameRead(
     return;
   }
   
+  _timeStamp = OSS::getTime();
+    
   if (!e && bytes_transferred >= 2)
   {
-    _leg1ReadTimer.cancel();
     _isInactive = false;
 
     // _isLeg1XOREncrypted = ((_leg1Buffer[0]>>6)&3) != 2;
@@ -405,9 +401,6 @@ void RTPProxy::handleLeg1FrameRead(
             boost::asio::placeholders::bytes_transferred));
 
       }
-
-      _leg1ReadTimer.expires_from_now(boost::posix_time::milliseconds(_pManager->_readTimeout));
-      _leg1ReadTimer.async_wait(boost::bind(&RTPProxy::handleLeg1SocketReadTimeout, this, boost::asio::placeholders::error));
     }
     _csLeg1Mutex.unlock();
 
@@ -416,6 +409,13 @@ void RTPProxy::handleLeg1FrameRead(
     //
     processResizerQueue();
   }
+}
+
+bool RTPProxy::isInactive() const
+{
+  if (_isInactive)
+    return true;
+  return OSS::getTime() - _timeStamp > _pManager->_readTimeout;
 }
 
 void RTPProxy::handleLeg2FrameRead(
@@ -433,9 +433,10 @@ void RTPProxy::handleLeg2FrameRead(
     return;
   }
   
+  _timeStamp = OSS::getTime();
+  
   if (!e && bytes_transferred >= 2)
   {
-    _leg2ReadTimer.cancel();
     _isInactive = false;
 
     //_isLeg2XOREncrypted = ((_leg2Buffer[0]>>6)&3) != 2;
@@ -635,9 +636,6 @@ void RTPProxy::handleLeg2FrameRead(
           boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred));
       }
-
-      _leg2ReadTimer.expires_from_now(boost::posix_time::milliseconds(_pManager->_readTimeout));
-      _leg2ReadTimer.async_wait(boost::bind(&RTPProxy::handleLeg1SocketReadTimeout, this, boost::asio::placeholders::error));
     }
     _csLeg2Mutex.unlock();
 
@@ -739,30 +737,6 @@ void RTPProxy::onResizerDequeue(RTPResizer& resizer, OSS::RTP::RTPPacket& packet
                           boost::asio::placeholders::error));
     }
     _csLeg2Mutex.unlock();
-  }
-}
-
-void RTPProxy::handleLeg1SocketReadTimeout(const boost::system::error_code& e)
-{
-  if (!e)
-  {
-    //
-    // see RTPProxyManager::collectInactiveSessions()
-    //
-    OSS_LOG_ERROR(_logId << "RTP Leg 1 (" << _identifier << ") Read Timeout! Marking as inactive.");
-    _isInactive = true;
-  }
-}
-
-void RTPProxy::handleLeg2SocketReadTimeout(const boost::system::error_code& e)
-{
-  if (!e)
-  {
-    //
-    // see RTPProxyManager::collectInactiveSessions()
-    //
-    OSS_LOG_ERROR(_logId << "RTP Leg 2 (" << _identifier << ") Read Timeout! Marking as inactive.");
-    _isInactive = true;
   }
 }
 

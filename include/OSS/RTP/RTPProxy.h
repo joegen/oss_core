@@ -182,12 +182,6 @@ protected:
   void handleLeg2FrameWrite(const boost::system::error_code& e);
     /// Called by the transport layer after write operation on leg2 socket
 
-  void handleLeg1SocketReadTimeout(const boost::system::error_code& e);
-    /// signals a timeout on leg-1 read operation
-
-  void handleLeg2SocketReadTimeout(const boost::system::error_code& e);
-    /// signals a timeout on leg-2 read operation
-
   void processResizerQueue();
     /// Process resizer buffers for leg1 and leg2 simultaneously
 
@@ -199,8 +193,6 @@ private:
   RTPProxyManager* _pManager;
   boost::asio::ip::udp::socket* _pLeg1Socket;
   boost::asio::ip::udp::socket* _pLeg2Socket;
-  boost::asio::deadline_timer _leg1ReadTimer;
-  boost::asio::deadline_timer _leg2ReadTimer;
   bool _adjustSenderFromPacketSource;
   boost::asio::ip::udp::endpoint _localEndPointLeg1;
   boost::asio::ip::udp::endpoint _localEndPointLeg2;
@@ -229,6 +221,7 @@ private:
   bool _isPooled;
   std::string _logId;
   bool _verbose;
+  OSS::UInt64 _timeStamp;
   friend class RTPProxySession;
   friend class RTPResizer;
 };
@@ -270,11 +263,6 @@ inline boost::asio::ip::udp::endpoint& RTPProxy::leg1Destination()
 inline boost::asio::ip::udp::endpoint& RTPProxy::leg2Destination()
 {
   return _senderEndPointLeg2;
-}
-
-inline bool RTPProxy::isInactive() const
-{
-  return _isInactive;
 }
 
 inline void RTPProxy::setInactive()
