@@ -53,7 +53,14 @@ void RTPProxyManager::run(int threadCount, int readTimeout)
   if (_rtpProxyThreadCount > 0)
     return;
 
+  
+  
+#if RTP_THREADED  
   _rtpProxyThreadCount = threadCount;
+#else
+  (void)threadCount;
+  _rtpProxyThreadCount = 1;
+#endif
   _readTimeout = readTimeout;
   //
   // start the houseKeepingTimer to keep the io_service busy

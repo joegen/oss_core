@@ -206,9 +206,12 @@ private:
   boost::array<char, RTP_PACKET_BUFFER_SIZE> _leg2Buffer;
   RTPResizer _leg1Resizer;
   RTPResizer _leg2Resizer;
+#if RTP_THREADED  
   OSS::mutex_critic_sec _csLeg1Mutex;
   OSS::mutex_critic_sec _csLeg2Mutex;
+#endif
   OSS::mutex_critic_sec _csSessionMutex;
+
   bool _leg1Reset;
   bool _leg2Reset;
   bool _isStarted;

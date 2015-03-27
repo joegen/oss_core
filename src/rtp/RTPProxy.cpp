@@ -69,7 +69,9 @@ bool RTPProxy::open(
 {
   stop();
 
+
   _csSessionMutex.lock();
+
   _pLeg1Socket = new boost::asio::ip::udp::socket(_pManager->_ioService);
   _pLeg2Socket = new boost::asio::ip::udp::socket(_pManager->_ioService);
   _pLeg1Socket->open(boost::asio::ip::udp::v4());
@@ -95,11 +97,11 @@ bool RTPProxy::open(
         << leg2Listener.toIpPortString();
       OSS::log_debug(logMsg.str());
       }
-
       _csSessionMutex.unlock();
       return true;
     }
   }
+  
   _csSessionMutex.unlock();
 
   stop();
@@ -135,40 +137,53 @@ void RTPProxy::start()
 void RTPProxy::stop()
 {
   _csSessionMutex.lock();
-
   _leg1Resizer.stop();
   _leg2Resizer.stop();
 
+#if RTP_THREADED    
   _csLeg1Mutex.lock();
+#endif
   if (_pLeg1Socket)
     _pLeg1Socket->close();
   delete _pLeg1Socket;_pLeg1Socket=0;
+#if RTP_THREADED  
   _csLeg1Mutex.unlock();
 
   _csLeg2Mutex.lock();
+#endif
   if (_pLeg2Socket)
     _pLeg2Socket->close();
   delete _pLeg2Socket;_pLeg2Socket=0;
+ 
+#if RTP_THREADED  
   _csLeg2Mutex.unlock();
-
+#endif
+  
   _isStarted = false;
+
   _csSessionMutex.unlock();
 }
 
 void RTPProxy::shutdown()
 {
   boost::system::error_code e;
+#if RTP_THREADED  
   _csLeg1Mutex.lock();
+#endif
   if (_pLeg1Socket)
     _pLeg1Socket->shutdown(boost::asio::ip::udp::socket::shutdown_both, e);
   delete _pLeg1Socket;_pLeg1Socket=0;
+#if RTP_THREADED  
   _csLeg1Mutex.unlock();
 
   _csLeg2Mutex.lock();
+#endif
   if (_pLeg2Socket)
     _pLeg2Socket->shutdown(boost::asio::ip::udp::socket::shutdown_both, e);
   delete _pLeg2Socket;_pLeg2Socket=0;
+#if RTP_THREADED  
   _csLeg2Mutex.unlock();
+#endif
 
 }
     /// Shutdown read and write operations and close the sockets
@@ -176,16 +191,24 @@ void RTPProxy::shutdown()
 
 void RTPProxy::resetLeg1()
 {
+#if RTP_THREADED  
   _csLeg1Mutex.lock();
+#endif
   _leg1Reset = true;
+#if RTP_THREADED  
   _csLeg1Mutex.unlock();
+#endif
 }
 
 void RTPProxy::resetLeg2()
 {
+#if RTP_THREADED  
   _csLeg2Mutex.lock();
+#endif
   _leg2Reset = true;
+#if RTP_THREADED  
   _csLeg2Mutex.unlock();
+#endif
 }
 
 
@@ -211,8 +234,9 @@ void RTPProxy::handleLeg1FrameRead(
 
     // _isLeg1XOREncrypted = ((_leg1Buffer[0]>>6)&3) != 2;
     _isLeg1XOREncrypted = OSS::SIP::SIPXOR::isEnabled() ? !validateBuffer(_leg1Buffer, bytes_transferred) : false;
+#if RTP_THREADED      
     _csLeg2Mutex.lock();
-
+#endif
     bool isResizing = _leg2Resizer.isEnabled() && _type == Data;
 
     if (_pLeg2Socket && _pLeg2Socket->is_open())
@@ -378,9 +402,11 @@ void RTPProxy::handleLeg1FrameRead(
         << " SRC (Leg1): " << _senderEndPointLeg1.address().to_string() << ":"
         << _senderEndPointLeg1.port() << " cannot be relayed.  Local relay transport is not open.");
     }
+#if RTP_THREADED  
     _csLeg2Mutex.unlock();
 
     _csLeg1Mutex.lock();
+#endif 
     if (_pLeg1Socket && _pLeg1Socket->is_open())
     {
       if (_leg1Reset)
@@ -402,8 +428,9 @@ void RTPProxy::handleLeg1FrameRead(
 
       }
     }
+#if RTP_THREADED  
     _csLeg1Mutex.unlock();
-
+#endif
     //
     // Process the resize buffer if we are resizing
     //
@@ -443,8 +470,9 @@ void RTPProxy::handleLeg2FrameRead(
     _isLeg2XOREncrypted = OSS::SIP::SIPXOR::isEnabled() ? !validateBuffer(_leg2Buffer, bytes_transferred) : false;
 
     bool isResizing = _leg1Resizer.isEnabled() && _type == Data;
-
+#if RTP_THREADED  
     _csLeg1Mutex.lock();
+#endif
     if (_pLeg1Socket && _pLeg1Socket->is_open())
     {
       if (_senderEndPointLeg1.port() != 0)
@@ -616,9 +644,11 @@ void RTPProxy::handleLeg2FrameRead(
         << " SRC (Leg1): " << _senderEndPointLeg2.address().to_string() << ":"
         << _senderEndPointLeg2.port() << " cannot be relayed.  Local relay transport is not open.");
     }
+#if RTP_THREADED  
     _csLeg1Mutex.unlock();
 
     _csLeg2Mutex.lock();
+#endif
     if (_pLeg2Socket && _pLeg2Socket->is_open())
     {
       if (_leg2Reset)
@@ -637,8 +667,9 @@ void RTPProxy::handleLeg2FrameRead(
             boost::asio::placeholders::bytes_transferred));
       }
     }
+#if RTP_THREADED  
     _csLeg2Mutex.unlock();
-
+#endif
     //
     // Process the resize buffer if we are resizing
     //
@@ -661,7 +692,9 @@ void RTPProxy::processResizerQueue()
 
   if (_leg2Resizer.isEnabled())
   {
+#if RTP_THREADED  
     _csLeg2Mutex.lock();
+#endif
     while (_leg2Resizer.dequeue(buff, size))
     {
       if (_pLeg2Socket && size)
@@ -674,13 +707,17 @@ void RTPProxy::processResizerQueue()
                             boost::asio::placeholders::error));
       }
     }
+#if RTP_THREADED  
     _csLeg2Mutex.unlock();
+#endif
   }
 
 
   if (_leg1Resizer.isEnabled())
   {
+#if RTP_THREADED  
     _csLeg1Mutex.lock();
+#endif
     while (_leg1Resizer.dequeue(buff, size))
     {
         if (_pLeg1Socket && size)
@@ -693,7 +730,9 @@ void RTPProxy::processResizerQueue()
                               boost::asio::placeholders::error));
         }
     }
+#if RTP_THREADED  
     _csLeg1Mutex.unlock();
+#endif
   }
 }
 
@@ -712,7 +751,9 @@ void RTPProxy::onResizerDequeue(RTPResizer& resizer, OSS::RTP::RTPPacket& packet
 
   if (resizer.legIndex() == 1 && _leg1Resizer.isEnabled())
   {
+#if RTP_THREADED  
     _csLeg1Mutex.lock();
+#endif
     if (_pLeg1Socket && size)
     {
       if (_isLeg1XOREncrypted && !_isXORDisabled)
@@ -722,11 +763,15 @@ void RTPProxy::onResizerDequeue(RTPResizer& resizer, OSS::RTP::RTPPacket& packet
                   boost::bind(&RTPProxy::handleLeg1FrameWrite, shared_from_this(),
                           boost::asio::placeholders::error));
     }
+#if RTP_THREADED  
     _csLeg1Mutex.unlock();
+#endif
   }
   else if (resizer.legIndex() == 2 && _leg2Resizer.isEnabled())
   {
+#if RTP_THREADED  
     _csLeg2Mutex.lock();
+#endif
     if (_pLeg2Socket && size)
     {
       if (_isLeg2XOREncrypted && !_isXORDisabled)
@@ -736,7 +781,9 @@ void RTPProxy::onResizerDequeue(RTPResizer& resizer, OSS::RTP::RTPPacket& packet
                   boost::bind(&RTPProxy::handleLeg2FrameWrite, shared_from_this(),
                           boost::asio::placeholders::error));
     }
+#if RTP_THREADED  
     _csLeg2Mutex.unlock();
+#endif
   }
 }
 
