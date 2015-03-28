@@ -142,6 +142,14 @@ public:
   
   bool& isClient();
   const bool& isClient() const;
+  
+  void setReconnectAddress(const OSS::Net::IPAddress& reconnectAddress);
+    /// Set the reconnect address if a server connection is lost.
+    ///
+  
+  const OSS::Net::IPAddress& getReconnectAddress() const;
+    /// Return the reconnect address
+    /// 
 protected:
   static SIPTransportRateLimitStrategy _rateLimit;
 
@@ -155,6 +163,7 @@ protected:
   std::string _externalAddress;
   Dispatch _messageDispatch;
   bool _isClient;
+  OSS::Net::IPAddress _reconnectAddress;
 private:
     SIPTransportSession(const SIPTransportSession&);
     SIPTransportSession& operator = (const SIPTransportSession&);
@@ -246,6 +255,16 @@ inline bool& SIPTransportSession::isClient()
 inline const bool& SIPTransportSession::isClient() const
 {
   return _isClient;
+}
+
+inline void SIPTransportSession::setReconnectAddress(const OSS::Net::IPAddress& reconnectAddress)
+{
+  _reconnectAddress = reconnectAddress;
+}
+  
+inline const OSS::Net::IPAddress& SIPTransportSession::getReconnectAddress() const
+{
+  return _reconnectAddress;
 }
 
 } } // OSS::SIP

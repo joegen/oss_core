@@ -253,6 +253,8 @@ void SIPTransaction::sendRequest(
 
   if (_transport->isReliableTransport())
   {
+    std::string newId = OSS::string_from_number<OSS::UInt64>(_transport->getIdentifier());
+    pRequest->setProperty(OSS::PropertyMap::PROP_TransportId, newId);
     writeMessage(pRequest);
   }
   else

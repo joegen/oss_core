@@ -40,6 +40,8 @@ class SIPStreamedConnectionManager;
 class SIPStreamedConnection;
 class SIPFSMDispatch;
 
+#define STREAMED_CONNECTION_BUFFER_SIZE 8192
+
 class OSS_API SIPStreamedConnection: 
   public SIPTransportSession,
   public boost::enable_shared_from_this<SIPStreamedConnection>,
@@ -85,6 +87,7 @@ public:
 
   bool writeKeepAlive();
     /// Sends a keep-alive packet to remote to check if transport is still alive
+  
 private:
   void writeMessage(SIPMessage::Ptr msg, const std::string& ip, const std::string& port);
     /// Send a SIP message using this session.  This is used by the UDP tranport
@@ -135,7 +138,7 @@ protected:
   SIPStreamedConnectionManager& _connectionManager;
     /// The manager for this connection.
 
-  boost::array<char, 8192> _buffer;
+  boost::array<char, STREAMED_CONNECTION_BUFFER_SIZE> _buffer;
     /// Buffer for incoming data.
 
   SIPMessage::Ptr _pRequest;
@@ -145,7 +148,7 @@ protected:
 
   mutable OSS::Net::IPAddress _localAddress;
   mutable OSS::Net::IPAddress _lastReadAddress;
-
+  
   int _readExceptionCount;
 };
 
