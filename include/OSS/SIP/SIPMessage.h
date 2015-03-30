@@ -186,9 +186,6 @@ public:
     /// If the developer decides to be an RFC police, he can send an outright 400 Bad Request
     /// or one may choose to ignore bad headers if the state of the message allows
     /// the SIP transaction to proceed.
-  
-  void reset(const std::string& msg);
-    /// Reset a previously initialized SIPMessage with new data.  Properties will be maintained.
 
   bool read(std::istream& strm, std::size_t& totalRead);
     /// Parse a SIP Message from a stream
