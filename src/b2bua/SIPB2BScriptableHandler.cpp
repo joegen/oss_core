@@ -495,13 +495,16 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
     //
     // Remove headers that do not have semantics in CANCEL
     //
-    pRequest->hdrRemove(OSS::SIP::HDR_CONTENT_TYPE);
-    pRequest->hdrRemove(OSS::SIP::HDR_MIN_SE);
-    pRequest->hdrRemove(OSS::SIP::HDR_ALLOW);
-    pRequest->hdrRemove(OSS::SIP::HDR_SUPPORTED);
-    pRequest->hdrRemove(OSS::SIP::HDR_SESSION_EXPIRES);
-    pRequest->hdrRemove(OSS::SIP::HDR_PROXY_AUTHORIZATION);
-    pRequest->hdrRemove(OSS::SIP::HDR_AUTHORIZATION);
+    //
+    // Note we use hdrListRemove to also cover buggy UAs that insert multiple headers
+    //
+    pRequest->hdrListRemove(OSS::SIP::HDR_CONTENT_TYPE);
+    pRequest->hdrListRemove(OSS::SIP::HDR_MIN_SE);
+    pRequest->hdrListRemove(OSS::SIP::HDR_SESSION_EXPIRES);
+    pRequest->hdrListRemove(OSS::SIP::HDR_PROXY_AUTHORIZATION);
+    pRequest->hdrListRemove(OSS::SIP::HDR_AUTHORIZATION);
+    pRequest->hdrListRemove(OSS::SIP::HDR_ALLOW);
+    pRequest->hdrListRemove(OSS::SIP::HDR_SUPPORTED);
 
     std::string isXorValue;
     if (pInvite->getProperty(OSS::PropertyMap::PROP_XOR, isXorValue) && isXorValue == "1")
