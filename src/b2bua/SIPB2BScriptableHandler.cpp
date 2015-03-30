@@ -76,6 +76,49 @@ int jsvalToInt(const v8::Handle<v8::Value>& str)
   return str->Int32Value();
 }
 
+static v8::Handle<v8::Value> msgSetProperty(const v8::Arguments& args)
+{
+  if (args.Length() < 3)
+    return v8::Boolean::New(false);
+
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return v8::Boolean::New(false);
+
+
+  std::string name = jsvalToString(args[1]);
+  std::string value = jsvalToString(args[2]);
+
+  if (name.empty() || value.empty())
+    return v8::Boolean::New(false);
+
+  pMsg->setProperty(name, value);
+
+  return v8::Boolean::New(true);
+}
+
+static v8::Handle<v8::Value> msgGetProperty(const v8::Arguments& args)
+{
+  if (args.Length() < 2)
+    return v8::Undefined();
+
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return v8::Undefined();
+
+  std::string name = jsvalToString(args[1]);
+
+  if (name.empty())
+    return v8::Undefined();
+
+  std::string value;
+  pMsg->getProperty(name, value);
+
+  return v8::String::New(value.c_str());
+}
+
 static v8::Handle<v8::Value> msgSetTransactionProperty(const v8::Arguments& args)
 {
   if (args.Length() < 3)
@@ -206,6 +249,8 @@ static v8::Handle<v8::Value> msgGetInterfacePort(const v8::Arguments& args)
 static void msgRegisterGlobals(OSS_HANDLE objectTemplate)
 {
   v8::Handle<v8::ObjectTemplate>& global = *(static_cast<v8::Handle<v8::ObjectTemplate>*>(objectTemplate));
+  global->Set(v8::String::New("msgSetProperty"), v8::FunctionTemplate ::New(msgSetProperty));
+  global->Set(v8::String::New("msgGetProperty"), v8::FunctionTemplate ::New(msgGetProperty));
   global->Set(v8::String::New("msgSetTransactionProperty"), v8::FunctionTemplate ::New(msgSetTransactionProperty));
   global->Set(v8::String::New("msgGetTransactionProperty"), v8::FunctionTemplate ::New(msgGetTransactionProperty));
   global->Set(v8::String::New("msgGetSourceAddress"), v8::FunctionTemplate ::New(msgGetSourceAddress));

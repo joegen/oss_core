@@ -677,48 +677,6 @@ static jsval msgCommitData(const jsargs& args)
   return jsstring::New(pMsg->data().c_str());
 }
 
-static /*std::string&*/ jsval msgGetProperty(const jsargs& args)
-{
-  if (args.Length() < 2)
-    return jsvoid();
-
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
-  if (!pMsg)
-    return jsvoid();
-
-  std::string property = jsvalToString(args[1]);
-  if (property.empty())
-    return jsvoid();
-
-  std::string value;
-  if (pMsg->getProperty(property, value))
-    return jsstring::New(value.c_str());
-
-  return jsvoid();
-}
-
-static /*std::string&*/ jsval msgSetProperty(const jsargs& args/*const std::string& sline*/)
-{
-  if (args.Length() < 3)
-    return jsvoid();
-
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
-  if (!pMsg)
-    return jsvoid();
-
-  std::string property = jsvalToString(args[1]);
-  std::string value = jsvalToString(args[2]);
-
-  if (property.empty() || value.empty())
-    return jsvoid();
-
-  pMsg->setProperty(property, value);
-
-  return jsvoid();
-}
-
 //
 // Request-Line Processing
 //
@@ -1733,8 +1691,6 @@ void JSSIPMessage::initGlobalFuncs(OSS_HANDLE objectTemplate)
   global->Set(jsstring::New("msgSetBody"), jsfunc::New(msgSetBody));
   global->Set(jsstring::New("msgGetStartLine"), jsfunc::New(msgGetStartLine));
   global->Set(jsstring::New("msgSetStartLine"), jsfunc::New(msgSetStartLine));
-  global->Set(jsstring::New("msgGetProperty"), jsfunc::New(msgGetProperty));
-  global->Set(jsstring::New("msgSetProperty"), jsfunc::New(msgSetProperty));
   global->Set(jsstring::New("msgGetData"), jsfunc::New(msgGetData));
   global->Set(jsstring::New("msgCommitData"), jsfunc::New(msgCommitData));
   global->Set(jsstring::New("msgGetRequestUri"), jsfunc::New(msgGetRequestUri));
