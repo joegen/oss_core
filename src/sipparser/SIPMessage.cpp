@@ -523,7 +523,10 @@ bool SIPMessage::hdrRemove(const char* headerName)
   if (_headers.find(key)==_headers.end())
     return false;
   if (_headers[key].size() > 1)
-    throw OSS::SIP::SIPParserException("hdrRemove - Attempt to remove a header with more than one element!");
+  {
+    OSS_LOG_WARNING("SIPMessage::hdrRemove - Attempt to remove a header with more than one element! HeaderName: " << headerName);
+    return false;
+  }
   _headers.erase(key);
   return true;
 }
