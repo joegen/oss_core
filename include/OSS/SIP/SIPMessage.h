@@ -569,7 +569,9 @@ public:
   void clearProperties();
     /// Remove all custom properties
   
-
+  CustomProperties& properties();
+  
+  const CustomProperties& properties() const;
   
   std::string getMethod() const;
     /// Return the method portion of the CSeq.  This function would behae the same
@@ -707,6 +709,16 @@ inline bool SIPMessage::getProperty(PropertyMap::Enum   property, std::string& v
 inline void SIPMessage::setProperty(PropertyMap::Enum property, const std::string& value)
 {
   setProperty(PropertyMap::propertyString(property), value);
+}
+
+inline SIPMessage::CustomProperties& SIPMessage::properties()
+{
+  return _properties;
+}
+  
+inline const SIPMessage::CustomProperties& SIPMessage::properties() const
+{
+  return _properties;
 }
 
 }} //OSS::SIP
