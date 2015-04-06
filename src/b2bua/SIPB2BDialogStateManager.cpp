@@ -1366,7 +1366,7 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteInviteWithReplaces(
   // Parse replaces header and check if there is a session existing for the states
   //
   SIPB2BDialogData::LegInfo legInfo;
-  if (findReplacesTarget(pMsg, legInfo));
+  if (findReplacesTarget(pMsg, legInfo))
   {
     SIPContact contactList(legInfo.remoteContact);
     ContactURI contact;
