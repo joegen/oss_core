@@ -11,7 +11,7 @@ Version: @VERSION@
 Release: @PACKAGE_REVISION@
 
 Summary: OS Abstraction and OS Utilities library for OSS modules
-License: OSS Commercial License
+License: LGPL
 Group: Development/Libraries
 Vendor: OSS Software Solutions
 Url: http://www.ossapp.com
