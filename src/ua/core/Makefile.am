@@ -1,6 +1,6 @@
 EXTRA_DIST = \
-  re \
-  rem
+  $(srcdir)/re \
+  $(srcdir)/rem
 
 all:
 	make -C re
