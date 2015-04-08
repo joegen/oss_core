@@ -1,7 +1,5 @@
 SUBDIRS = .
 
-EXTRA_DIST = js/scripts
-
 corelibs = liboss_carp.la
 corelibldadd = \
     @OSS_CORE_DEP_LIBS@ \

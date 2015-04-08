@@ -1,7 +1,3 @@
-EXTRA_DIST = \
-  $(srcdir)/re \
-  $(srcdir)/rem
-
 all:
 	make -C re
 	make -C rem
