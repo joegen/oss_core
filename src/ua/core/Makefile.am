@@ -1,7 +1,3 @@
-EXTRA_DIST = \
-  re \
-  rem
-
 all:
 	make -C re
 	make -C rem
