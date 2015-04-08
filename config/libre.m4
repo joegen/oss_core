@@ -25,9 +25,11 @@ AC_DEFUN([SFAC_LIBRE_CONFIGURE],
 	fi
 
 	if [[ "x${checksum_value_new}" != "x${checksum_value_old}" ]]; then
-	    rm -rf ${PROJECT_BUILDDIR}
-	    mkdir -p ${PROJECT_BUILDDIR}
-	    cp -rpP ${PROJECT_SRCDIR}/* ${PROJECT_BUILDDIR}
+		if [[ "x${PROJECT_SRCDIR}" != "x${PROJECT_BUILDDIR}" ]]; then
+			rm -rf ${PROJECT_BUILDDIR}
+			mkdir -p ${PROJECT_BUILDDIR}
+			cp -rpP ${PROJECT_SRCDIR}/* ${PROJECT_BUILDDIR}
+		fi
 	fi
 
 	cd ${CURRENT_DIR}
@@ -63,9 +65,11 @@ AC_DEFUN([SFAC_LIBREM_CONFIGURE],
 	fi
 
 	if [[ "x${checksum_value_new}" != "x${checksum_value_old}" ]]; then
-	    rm -rf ${PROJECT_BUILDDIR}
-	    mkdir -p ${PROJECT_BUILDDIR}
-	    cp -rpP ${PROJECT_SRCDIR}/* ${PROJECT_BUILDDIR}
+		if [[ "x${PROJECT_SRCDIR}" != "x${PROJECT_BUILDDIR}" ]]; then
+			rm -rf ${PROJECT_BUILDDIR}
+			mkdir -p ${PROJECT_BUILDDIR}
+			cp -rpP ${PROJECT_SRCDIR}/* ${PROJECT_BUILDDIR}
+		fi
 	fi
 
 	cd ${CURRENT_DIR}
