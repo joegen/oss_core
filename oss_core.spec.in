@@ -165,6 +165,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/liboss_core.a
 %{_libdir}/liboss_carp.la
 %{_libdir}/liboss_carp.a
+%{_prefix}/opt/ossapp/libre/lib/libre.a
+%{_prefix}/opt/ossapp/libre/lib/libre.so
+%{_prefix}/opt/ossapp/librem/lib/librem.a
+%{_prefix}/opt/ossapp/librem/lib/librem.so
 
 %if %{build_turn}
 %attr(755,root,root) %{_libdir}/liboss_turn.la
@@ -174,6 +178,14 @@ rm -rf $RPM_BUILD_ROOT
 %dir %attr(755,root,root) %{_includedir}/OSS
 %{_includedir}/OSS/*
 
+%dir %attr(755,root,root) %{_prefix}/opt/ossapp/libre/include
+%{_prefix}/opt/ossapp/libre/include/*
+
+%dir %attr(755,root,root) %{_prefix}/opt/ossapp/libre/share
+%{_prefix}/opt/ossapp/libre/share/*
+
+%dir %attr(755,root,root) %{_prefix}/opt/ossapp/librem/include
+%{_prefix}/opt/ossapp/librem/include/*
 
 %post
 
