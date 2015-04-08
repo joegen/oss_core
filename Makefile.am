@@ -5,11 +5,11 @@ include config/project.am
 	README \
 	oss_core.spec.in \
 	src/js/scripts \
-	src/ua/core/re \
-	src/ua/core/rem
+	src/ua/core
+
 
 SUBDIRS = \
 	. \
-	src/ua/core \
+	src/ua \
 	src \
         include
