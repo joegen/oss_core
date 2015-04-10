@@ -331,6 +331,7 @@ liboss_core_la_SOURCES =  \
     rtp/RTPProxyTuple.cpp \
     rtp/RTPResizer.cpp \
     rtp/RTPResizingQueue.cpp \
+    rtp/RTPDTLSContext.cpp \
     net/FirewallRule.cpp \
     net/Firewall.cpp \
     net/Carp.cpp \

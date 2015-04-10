@@ -203,6 +203,7 @@ nobase_include_HEADERS = \
     OSS/RTP/RTPProxyTuple.h \
     OSS/RTP/RTPResizer.h \
     OSS/RTP/RTPResizingQueue.h \
+    OSS/RTP/RTPDTLSContext.h \
     OSS/Net/FirewallRule.h \
     OSS/Net/Firewall.h \
     OSS/Net/oss_carp.h \
