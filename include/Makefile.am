@@ -203,7 +203,6 @@ nobase_include_HEADERS = \
     OSS/RTP/RTPProxyTuple.h \
     OSS/RTP/RTPResizer.h \
     OSS/RTP/RTPResizingQueue.h \
-    OSS/RTP/RTPDTLSContext.h \
     OSS/Net/FirewallRule.h \
     OSS/Net/Firewall.h \
     OSS/Net/oss_carp.h \
@@ -218,6 +217,7 @@ nobase_include_HEADERS = \
     OSS/Net/FramedTcpListener.h \
     OSS/Net/FramedTcpClient.h \
     OSS/Net/FramedTcpConnection.h \
+    OSS/Net/DTLSContext.h \
     OSS/UTL/AdaptiveDelay.h \
     OSS/UTL/CoreUtils.h \
     OSS/UTL/Logger.h \

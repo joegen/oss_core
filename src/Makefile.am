@@ -331,7 +331,6 @@ liboss_core_la_SOURCES =  \
     rtp/RTPProxyTuple.cpp \
     rtp/RTPResizer.cpp \
     rtp/RTPResizingQueue.cpp \
-    rtp/RTPDTLSContext.cpp \
     net/FirewallRule.cpp \
     net/Firewall.cpp \
     net/Carp.cpp \
@@ -344,6 +343,7 @@ liboss_core_la_SOURCES =  \
     net/FramedTcpClient.cpp \
     net/FramedTcpConnection.cpp \
     net/FramedTcpListener.cpp \
+    net/DTLSContext.cpp \
     utl/AdaptiveDelay.cpp \
     utl/CoreUtils.cpp \
     utl/Logger.cpp \

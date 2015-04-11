@@ -26,23 +26,23 @@
 #include <openssl/x509v3.h>
 #include <openssl/bn.h>
 
-#include "OSS/RTP/RTPDTLSContext.h"
+#include "OSS/Net/DTLSContext.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/Logger.h"
 
 
 namespace OSS {
-namespace RTP {
+namespace Net {
 
   
 //
 // Static members
 //  
-RTPDTLSContext* RTPDTLSContext::_pInstance = 0;
-X509* RTPDTLSContext::_pX509 = 0;
-EVP_PKEY* RTPDTLSContext::_pPrivateKey = 0;
-SSL_CTX* RTPDTLSContext::_pSSLContext = 0;
-bool RTPDTLSContext::_verfifyCerts = false;
+DTLSContext* DTLSContext::_pInstance = 0;
+X509* DTLSContext::_pX509 = 0;
+EVP_PKEY* DTLSContext::_pPrivateKey = 0;
+SSL_CTX* DTLSContext::_pSSLContext = 0;
+bool DTLSContext::_verfifyCerts = false;
 
 //
 // Constants
@@ -214,25 +214,25 @@ static int ssl_verification_cb(int preverify_ok, X509_STORE_CTX* ctx)
   if (err == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT)
   {
     //
-    // Just issue a warning.  Let RTPDTLSContext::willVerifyCerts() decide
+    // Just issue a warning.  Let DTLSContext::willVerifyCerts() decide
     //
     X509_NAME_oneline(X509_get_issuer_name(ctx->current_cert), buf, 256);
-    OSS_LOG_WARNING("RTPDLSContext: Cert " << buf << "Error: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT");
+    OSS_LOG_WARNING("DTLSContext: Cert " << buf << "Error: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT");
   }
   else if (err == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT || err == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN)
   {
     //
     // We allow self signed certs for RTP because it is a peer to peer connection regardless
-    // of the status of RTPDTLSContext::willVerifyCerts()
+    // of the status of DTLSContext::willVerifyCerts()
     //
     ret = 1;
   }
   
-  if (!preverify_ok && !RTPDTLSContext::willVerifyCerts())
+  if (!preverify_ok && !DTLSContext::willVerifyCerts())
   {
     ret = 1;
   }
-  else if (!ret && !RTPDTLSContext::willVerifyCerts())
+  else if (!ret && !DTLSContext::willVerifyCerts())
   {
     ret = 1;
   }
@@ -318,13 +318,13 @@ static SSL_CTX* generate_context(const std::string& x509File, const std::string&
   return prepare_context(pSSLContext);
 }
 
-bool RTPDTLSContext::initialize(const std::string& x509File, const std::string& privateKeyfile, const char* password, bool verifyCerts)
+bool DTLSContext::initialize(const std::string& x509File, const std::string& privateKeyfile, const char* password, bool verifyCerts)
 {
   assert(!_pPrivateKey);
   assert(!_pX509);
   assert(!_pSSLContext);
   
-  RTPDTLSContext::_verfifyCerts = verifyCerts;
+  DTLSContext::_verfifyCerts = verifyCerts;
   
   //
   // Note that SSL init functions are not reentrant
@@ -340,13 +340,13 @@ bool RTPDTLSContext::initialize(const std::string& x509File, const std::string& 
   return _pSSLContext != 0;
 }
  
-bool RTPDTLSContext::initialize(const std::string& identity, bool verifyCerts)
+bool DTLSContext::initialize(const std::string& identity, bool verifyCerts)
 {
   assert(!_pPrivateKey);
   assert(!_pX509);
   assert(!_pSSLContext);
   
-  RTPDTLSContext::_verfifyCerts = verifyCerts;
+  DTLSContext::_verfifyCerts = verifyCerts;
   
   //
   // Note that SSL init functions are not reentrant
@@ -379,31 +379,31 @@ bool RTPDTLSContext::initialize(const std::string& identity, bool verifyCerts)
   return true;
 }
 
-RTPDTLSContext* RTPDTLSContext::instance()
+DTLSContext* DTLSContext::instance()
 {
-  return RTPDTLSContext::_pInstance;
+  return DTLSContext::_pInstance;
 }
  
-void RTPDTLSContext::releaseInstance()
+void DTLSContext::releaseInstance()
 {
-  delete RTPDTLSContext::_pInstance;
-  RTPDTLSContext::_pInstance = 0;
-  SSL_CTX_free(RTPDTLSContext::_pSSLContext);
-  RTPDTLSContext::_pSSLContext = 0;
-  RTPDTLSContext::_pX509 = 0;
-  RTPDTLSContext::_pPrivateKey = 0;
+  delete DTLSContext::_pInstance;
+  DTLSContext::_pInstance = 0;
+  SSL_CTX_free(DTLSContext::_pSSLContext);
+  DTLSContext::_pSSLContext = 0;
+  DTLSContext::_pX509 = 0;
+  DTLSContext::_pPrivateKey = 0;
 }
 
 
-RTPDTLSContext::RTPDTLSContext()
+DTLSContext::DTLSContext()
 {
 }
 
-RTPDTLSContext::~RTPDTLSContext()
+DTLSContext::~DTLSContext()
 {
 }
   
-X509& RTPDTLSContext::x509Cert()
+X509& DTLSContext::x509Cert()
 {
   if (!_pX509)
   {
@@ -412,7 +412,7 @@ X509& RTPDTLSContext::x509Cert()
   return *_pX509;
 }
   
-const X509& RTPDTLSContext::x509Cert() const
+const X509& DTLSContext::x509Cert() const
 {
   if (!_pX509)
   {
@@ -421,7 +421,7 @@ const X509& RTPDTLSContext::x509Cert() const
   return *_pX509;
 }
 
-EVP_PKEY& RTPDTLSContext::privateKey()
+EVP_PKEY& DTLSContext::privateKey()
 {
   if (!_pPrivateKey)
   {
@@ -430,7 +430,7 @@ EVP_PKEY& RTPDTLSContext::privateKey()
   return *_pPrivateKey;
 }
 
-const EVP_PKEY& RTPDTLSContext::privateKey() const
+const EVP_PKEY& DTLSContext::privateKey() const
 {
   if (!_pPrivateKey)
   {
@@ -439,7 +439,7 @@ const EVP_PKEY& RTPDTLSContext::privateKey() const
   return *_pPrivateKey;
 }
   
-SSL_CTX& RTPDTLSContext::sslContext()
+SSL_CTX& DTLSContext::sslContext()
 {
   if (!_pSSLContext)
   {
@@ -448,7 +448,7 @@ SSL_CTX& RTPDTLSContext::sslContext()
   return *_pSSLContext;
 }
 
-const SSL_CTX& RTPDTLSContext::sslContext() const
+const SSL_CTX& DTLSContext::sslContext() const
 {
   if (!_pSSLContext)
   {

@@ -16,18 +16,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
-#ifndef OSS_RTPDTLSCONTEXT_H_INCLUDED
-#define	OSS_RTPDTLSCONTEXT_H_INCLUDED
+#ifndef OSS_DTLSCONTEXT_H_INCLUDED
+#define	OSS_DTLSCONTEXT_H_INCLUDED
 
 
 #include <openssl/evp.h>
 #include "OSS/UTL/Exception.h"
 
 namespace OSS {
-namespace RTP {
+namespace Net {
 
   
-class RTPDTLSContext
+class DTLSContext
   //
   // singleton DTLS context instance with support for the SRTP extension
   //
@@ -45,7 +45,7 @@ public:
   /// The second option enable or disable certificate verification
   ///
   
-  static RTPDTLSContext* instance();
+  static DTLSContext* instance();
   /// Returns the singleton instance of this context.
   /// This will return NULL if context is not initialized
   /// 
@@ -76,11 +76,11 @@ public:
   /// Returns true if certificate verification is enabled
   ///
 protected:
-  RTPDTLSContext();
-  ~RTPDTLSContext();
+  DTLSContext();
+  ~DTLSContext();
   
 private:
-  static RTPDTLSContext* _pInstance;
+  static DTLSContext* _pInstance;
   static X509* _pX509;
   static EVP_PKEY* _pPrivateKey;
   static SSL_CTX* _pSSLContext;
@@ -91,12 +91,12 @@ private:
 // Inlines
 //
 
-inline bool RTPDTLSContext::willVerifyCerts()
+inline bool DTLSContext::willVerifyCerts()
 {
-  return RTPDTLSContext::_verfifyCerts;
+  return DTLSContext::_verfifyCerts;
 }
 
-} } // OSS::RTP
+} } // OSS::Net
 
-#endif	// OSS_RTPDTLSCONTEXT_H_INCLUDED
+#endif	// OSS_DTLSCONTEXT_H_INCLUDED
 
