@@ -218,6 +218,7 @@ nobase_include_HEADERS = \
     OSS/Net/FramedTcpClient.h \
     OSS/Net/FramedTcpConnection.h \
     OSS/Net/DTLSContext.h \
+    OSS/Net/DTLSSession.h \
     OSS/UTL/AdaptiveDelay.h \
     OSS/UTL/CoreUtils.h \
     OSS/UTL/Logger.h \

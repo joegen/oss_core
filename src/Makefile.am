@@ -344,6 +344,7 @@ liboss_core_la_SOURCES =  \
     net/FramedTcpConnection.cpp \
     net/FramedTcpListener.cpp \
     net/DTLSContext.cpp \
+    net/DTLSSession.cpp \
     utl/AdaptiveDelay.cpp \
     utl/CoreUtils.cpp \
     utl/Logger.cpp \

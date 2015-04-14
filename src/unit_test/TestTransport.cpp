@@ -1,6 +1,10 @@
 #include "gtest/gtest.h"
+
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/SIP/SIPTransportService.h" 
+
+#include "OSS/Net/DTLSContext.h"
+#include "OSS/Net/DTLSSession.h"
 
 using namespace OSS::SIP;
 
@@ -94,5 +98,103 @@ TEST(TransportTest, test_tls_transport)
   tlsServer.stop();
   
   ASSERT_TRUE(tlsDispatched);
+}
+
+void handle_dtls_server(OSS::Net::DTLSSession* pServer)
+{
+  //int fd = pServer->getFd();
+ 
+  //
+  // Poll for new connections
+  //
+  
+  OSS::Net::IPAddress remotePeer;
+  pServer->accept(remotePeer);
+  
+  char buf[1024];
+  while (true)
+  {
+    int len = pServer->read(buf, sizeof(buf));
+    std::string msg(buf, len);
+    if (msg == "exit")
+    {
+      break;
+    }
+    pServer->write(buf, len);
+  }
+}
+
+TEST(TransportTest, test_dtls_transport)
+{
+  ASSERT_TRUE(OSS::Net::DTLSContext::initialize("ossapp.com", true));
+  ASSERT_TRUE(OSS::Net::DTLSContext::instance());
+  ASSERT_TRUE(OSS::Net::DTLSContext::willVerifyCerts());
+  
+  //
+  // Create the client and server sockets
+  //
+  int client, server;
+	union {
+		struct sockaddr_storage ss;
+		struct sockaddr_in s4;
+		struct sockaddr_in6 s6;
+	} server_addr, client_addr;
+  
+  memset((void *) &server_addr, 0, sizeof(struct sockaddr_storage));
+	memset((void *) &client_addr, 0, sizeof(struct sockaddr_storage));
+  
+  inet_pton(AF_INET, "127.0.0.1", &client_addr.s4.sin_addr);
+  client_addr.s4.sin_family = AF_INET;
+	client_addr.s4.sin_port = htons(30000);
+  
+  inet_pton(AF_INET, "127.0.0.1", &server_addr.s4.sin_addr);
+  server_addr.s4.sin_family = AF_INET;
+	server_addr.s4.sin_port = htons(30002);
+  
+  client = socket(server_addr.ss.ss_family, SOCK_DGRAM, 0);
+  server = socket(server_addr.ss.ss_family, SOCK_DGRAM, 0);
+  
+  bind(client, (const struct sockaddr *) &client_addr, sizeof(struct sockaddr_in));
+  bind(server, (const struct sockaddr *) &server_addr, sizeof(struct sockaddr_in));
+  
+  OSS::Net::DTLSSession* clientSession = new OSS::Net::DTLSSession(OSS::Net::DTLSSession::CLIENT);
+  OSS::Net::DTLSSession* serverSession = new OSS::Net::DTLSSession(OSS::Net::DTLSSession::SERVER);
+  
+  clientSession->attachSocket(client);
+  serverSession->attachSocket(server);
+  
+  boost::thread t(boost::bind(handle_dtls_server, serverSession));
+  
+  OSS::thread_sleep(500);
+ 
+
+  OSS::Net::IPAddress connectAddress("127.0.0.1");
+  connectAddress.setPort(30002);
+  
+  ASSERT_TRUE(clientSession->connect(connectAddress, false));
+
+
+  std::string hello("hello");
+  ASSERT_TRUE(clientSession->write(hello.c_str(), hello.size()) == hello.size());
+  
+  char buf[1024];
+  int len = clientSession->read(buf, sizeof(buf));
+  ASSERT_TRUE(len == hello.size());
+  
+  std::string response(buf, len);
+  ASSERT_STREQ(response.c_str(), hello.c_str());
+  
+  std::string exit("exit");
+  ASSERT_TRUE(clientSession->write(exit.c_str(), exit.size()) == exit.size());
+
+  t.join();
+  
+  delete clientSession;
+  delete serverSession;
+  
+  ::close(client);
+  ::close(server);
+  
+  OSS::Net::DTLSContext::releaseInstance();
 }
 

@@ -255,6 +255,10 @@ static SSL_CTX* prepare_context(SSL_CTX* pSSLContext)
   // Add all known Ciphers
   //
   SSL_CTX_set_cipher_list(pSSLContext, DEFAULT_CIPHER_LIST);
+  //
+  // Set read-ahead to true
+  //
+  SSL_CTX_set_read_ahead(pSSLContext, 1);
   
   return pSSLContext;
 }
@@ -381,6 +385,10 @@ bool DTLSContext::initialize(const std::string& identity, bool verifyCerts)
 
 DTLSContext* DTLSContext::instance()
 {
+  if (!_pInstance)
+  {
+    _pInstance = new DTLSContext();
+  }
   return DTLSContext::_pInstance;
 }
  
