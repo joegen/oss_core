@@ -30,6 +30,7 @@
 #include "OSS/Net/DTLSContext.h"
 #include "OSS/UTL/Exception.h"
 #include "OSS/Net/IPAddress.h"
+#include "OSS/RTP/RTPPacket.h"
 
 
 namespace OSS {
@@ -45,6 +46,14 @@ public:
   {
     CLIENT,
     SERVER
+  };
+  
+  enum PacketType
+  {
+    STUN,
+    RTP,
+    DTLS,
+    UNKNOWN
   };
   
   DTLSSession(Type type);
@@ -74,7 +83,7 @@ public:
   /// Returns true if successful and set the _connected flag
   ///
   
-  bool accept(const OSS::Net::IPAddress& peerAddress);
+  bool accept(OSS::Net::IPAddress& peerAddress);
   /// Wait for new client connection.
   /// The address of the remote peer is stored in peedAddress.
   /// This function should be used with a previously bound (bind()) socket
@@ -93,6 +102,23 @@ public:
   
   int write(const char* buf, int bufLen);
   /// Write some data
+  /// Returns number of bytes written
+  
+  PacketType peek();
+  /// Check the packet type of the datagram that is currently in the read
+  /// buffer.  
+  ///
+  
+  int readRaw(char* buf, int bufLen);
+  /// Read some data directly using the socket.
+  /// This would bypass the DTLS layer.
+  /// This is normally used after peek returns RTP or STUN
+  /// Returns number of bytes read
+  
+  int writeRaw(const char* buf, int bufLen);
+  /// Write some data directly using the socket.
+  /// This would bypass the DTLS layer.
+  /// This is normally used for writing RTP or STUN packets
   /// Returns number of bytes written
   
   void setReceiveTimeout(unsigned int seconds);

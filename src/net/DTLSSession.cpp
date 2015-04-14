@@ -39,26 +39,7 @@ static int (*bio_read_handler)(BIO *, char *, int); // holds the old bio handler
   
 static int read_dtls_packet(BIO* pBIO, char* buff, int buffLen)
 {
-  int ret = (*bio_read_handler)(pBIO, buff, buffLen);
-  //
-  // Excerp from RFC 5764
-  //
-  // The process for demultiplexing a packet is as follows.  The receiver
-  // looks at the first byte of the packet.  If the value of this byte is
-  // 0 or 1, then the packet is STUN.  If the value is in between 128 and
-  // 191 (inclusive), then the packet is RTP (or RTCP, if both RTCP and
-  // RTP are being multiplexed over the same destination port).  If the
-  // value is between 20 and 63 (inclusive), the packet is DTLS.  This
-  // process is summarized in Figure 3.
-  //
-  //                   +----------------+
-  //                 | 127 < B < 192 -+--> forward to RTP
-  //                 |                |
-  //     packet -->  |  19 < B < 64  -+--> forward to DTLS
-  //                 |                |
-  //                 |       B < 2   -+--> forward to STUN
-  //
-  
+  int ret = (*bio_read_handler)(pBIO, buff, buffLen); 
   return ret;
 }
 
@@ -215,6 +196,7 @@ bool DTLSSession::connect(const OSS::Net::IPAddress& address, bool socketAlready
 
   if (address.address().is_v4())
   {
+    inet_pton(AF_INET, address.toString().c_str(), &remote_addr.s4.sin_addr);
     remote_addr.s4.sin_family = AF_INET;
 #ifdef HAVE_SIN_LEN
     remote_addr.s4.sin_len = sizeof(struct sockaddr_in);
@@ -223,6 +205,7 @@ bool DTLSSession::connect(const OSS::Net::IPAddress& address, bool socketAlready
   }
   else if (address.address().is_v6())
   {
+    inet_pton(AF_INET6, address.toString().c_str(), &remote_addr.s6.sin6_addr);
     remote_addr.s6.sin6_family = AF_INET6;
 #ifdef HAVE_SIN6_LEN
     remote_addr.s6.sin6_len = sizeof(struct sockaddr_in6);
@@ -266,7 +249,7 @@ bool DTLSSession::connect(const OSS::Net::IPAddress& address, bool socketAlready
   return _connected;
 }
 
-bool DTLSSession::accept(const OSS::Net::IPAddress& peerAddress)
+bool DTLSSession::accept(OSS::Net::IPAddress& peerAddress)
 {
   if (_fd <= 0 || !_pBIO)
   {
@@ -297,12 +280,18 @@ bool DTLSSession::accept(const OSS::Net::IPAddress& peerAddress)
   //
   // Connect the socket
   //
+  char ipbuf[256];
+  unsigned short port;
   switch (client_addr.ss.ss_family)
   {
 		case AF_INET:
+      inet_ntop(AF_INET, &client_addr.s4.sin_addr, ipbuf, sizeof(struct sockaddr_in));
+      port = ntohs(client_addr.s4.sin_port);
 			::connect(_fd, (struct sockaddr *) &client_addr, sizeof(struct sockaddr_in));
 			break;
 		case AF_INET6:
+      inet_ntop(AF_INET6, &client_addr.s6.sin6_addr, ipbuf, sizeof(struct sockaddr_in6));
+      port = ntohs(client_addr.s6.sin6_port);
 			::connect(_fd, (struct sockaddr *) &client_addr, sizeof(struct sockaddr_in6));
 			break;
 		default:
@@ -311,6 +300,10 @@ bool DTLSSession::accept(const OSS::Net::IPAddress& peerAddress)
 			break;
 	}
    
+  _peerAddress = OSS::Net::IPAddress(ipbuf);
+  _peerAddress.setPort(port);
+  peerAddress = _peerAddress;
+  
 	if (ret < 0) 
   {
 		char buf[512];
@@ -411,7 +404,78 @@ int DTLSSession::write(const char* buf, int bufLen)
   
   return ret;
 }
+
+DTLSSession::PacketType DTLSSession::peek()
+{
+  //
+  // Excerpt from RFC 5764
+  //
+  // The process for demultiplexing a packet is as follows.  The receiver
+  // looks at the first byte of the packet.  If the value of this byte is
+  // 0 or 1, then the packet is STUN.  If the value is in between 128 and
+  // 191 (inclusive), then the packet is RTP (or RTCP, if both RTCP and
+  // RTP are being multiplexed over the same destination port).  If the
+  // value is between 20 and 63 (inclusive), the packet is DTLS.  This
+  // process is summarized in Figure 3.
+  //
+  //                   +----------------+
+  //                 | 127 < B < 192 -+--> forward to RTP
+  //                 |                |
+  //     packet -->  |  19 < B < 64  -+--> forward to DTLS
+  //                 |                |
+  //                 |       B < 2   -+--> forward to STUN
+  //
   
+  if (_fd <= 0 || !_pBIO || !_pSSL || !_connected)
+  {
+    OSS_LOG_ERROR("DTLSSession::peek Exception: FD/BIO not set or socket not connected.");
+    throw OSS::IllegalStateException();
+  }
+  
+  char buf[2];
+  if (recv(_fd, buf, sizeof(buf), MSG_PEEK) > 0)
+  {
+    unsigned char flag = buf[0];
+    
+    if (flag > 127  && flag < 192)
+    {
+      return RTP;
+    }
+    else if (flag > 19  && flag < 64)
+    {
+      return DTLS;
+    }
+    else if (flag < 2)
+    {
+      return STUN;
+    }
+  }
+  
+  return DTLSSession::UNKNOWN;
+}
+  
+int DTLSSession::readRaw(char* buf, int bufLen)
+{
+  if (_fd <= 0 || !_pBIO || !_pSSL || !_connected)
+  {
+    OSS_LOG_ERROR("DTLSSession::readRaw Exception: FD/BIO not set or socket not connected.");
+    throw OSS::IllegalStateException();
+  }
+  
+  return recv(_fd, buf, bufLen, 0);
+}
+
+int DTLSSession::writeRaw(const char* buf, int bufLen)
+{
+  if (_fd <= 0 || !_pBIO || !_pSSL || !_connected)
+  {
+    OSS_LOG_ERROR("DTLSSession::writeRaw Exception: FD/BIO not set or socket not connected.");
+    throw OSS::IllegalStateException();
+  }
+  
+  return send(_fd, buf, bufLen, 0);
+}
+
   
 } } // OSS::Net
 

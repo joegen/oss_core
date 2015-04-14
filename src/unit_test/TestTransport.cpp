@@ -109,18 +109,32 @@ void handle_dtls_server(OSS::Net::DTLSSession* pServer)
   //
   
   OSS::Net::IPAddress remotePeer;
-  pServer->accept(remotePeer);
+  ASSERT_TRUE(pServer->accept(remotePeer));
+  
+  std::string remoteAddress = remotePeer.toIpPortString();
+  ASSERT_STREQ(remoteAddress.c_str(), "127.0.0.1:30000");
   
   char buf[1024];
+  int len = 0;
   while (true)
   {
-    int len = pServer->read(buf, sizeof(buf));
-    std::string msg(buf, len);
-    if (msg == "exit")
+    OSS::Net::DTLSSession::PacketType packetType = pServer->peek();
+    if (packetType == OSS::Net::DTLSSession::DTLS)
     {
-      break;
+      len = pServer->read(buf, sizeof(buf));
+      std::string msg(buf, len);
+      if (msg == "exit")
+      {
+        break;
+      }
+      pServer->write(buf, len);
     }
-    pServer->write(buf, len);
+    else if (packetType == OSS::Net::DTLSSession::RTP)
+    {
+      len = pServer->readRaw(buf, sizeof(buf));
+      std::string rtpResponse("TypeRTP");
+      ASSERT_EQ(pServer->write(rtpResponse.c_str(), rtpResponse.size()), rtpResponse.size());
+    }
   }
 }
 
@@ -184,9 +198,27 @@ TEST(TransportTest, test_dtls_transport)
   std::string response(buf, len);
   ASSERT_STREQ(response.c_str(), hello.c_str());
   
+  //
+  // Test sending RTP
+  //
+  unsigned char rtp_pkt[] =
+  {
+    0x80, 0x12, 0x00, 0xb5, 0x00, 0x2c, 0xcb, 0x6c,
+    0x00, 0x00, 0x3a, 0x87, 0x22, 0xb3, 0x40, 0x77,
+    0x02, 0x6d, 0x21, 0x37, 0xc3, 0x82, 0x26, 0xda,
+    0x7f, 0xe4, 0xe8, 0x58, 0xd6, 0xa2, 0x3c, 0x5a
+  };
+  
+  ASSERT_TRUE(clientSession->writeRaw((const char*)rtp_pkt, sizeof(rtp_pkt)) == sizeof(rtp_pkt));
+  len = clientSession->read(buf, sizeof(buf));
+  std::string rtpResponse(buf, len);
+  ASSERT_STREQ(rtpResponse.c_str(), "TypeRTP");
+  
   std::string exit("exit");
   ASSERT_TRUE(clientSession->write(exit.c_str(), exit.size()) == exit.size());
-
+  
+  
+  
   t.join();
   
   delete clientSession;
