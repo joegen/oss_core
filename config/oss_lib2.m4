@@ -1,5 +1,5 @@
 # common directories and variables used in oss
-AC_PREFIX_DEFAULT([/usr/local/sipxecs])
+AC_PREFIX_DEFAULT([/usr/local/sipx])
 
 # This is a "common fix" to a "known issue" with using ${prefix} variable
 test "x$prefix" = xNONE && prefix=$ac_default_prefix
