@@ -152,6 +152,7 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     AC_CHECK_LIB(leveldb, main, [], [SF_MISSING_DEP("LevelDB library not found")])
     AC_CHECK_LIB(config++, main, [], [SF_MISSING_DEP("libconfig C++ library not found")])
     AC_CHECK_LIB(v8, main, [], [SF_MISSING_DEP("Google V8 Javascript engine not found")])
+    AC_CHECK_LIB(srtp, main, [], [SF_MISSING_DEP("libSRTP library not found")])
     AC_CHECK_LIB(gtest, main, [], [SF_MISSING_DEP("Google Test Framework not found")])
     AC_CHECK_LIB(ltdl, main, [], [SF_MISSING_DEP("libltdl not found")])
     AC_CHECK_LIB(mcrypt, main, [], [SF_MISSING_DEP("Mcrypt Encryption Library not found")])
@@ -174,6 +175,7 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     OSS_CORE_DEP_LIBS+=" -lgtest "
     OSS_CORE_DEP_LIBS+=" -lhiredis "
     OSS_CORE_DEP_LIBS+=" -lleveldb "
+    OSS_CORE_DEP_LIBS+=" -lsrtp "
     OSS_CORE_DEP_LIBS+=" -lconfig++  "
     OSS_CORE_DEP_LIBS+=" -lv8  "
     OSS_CORE_DEP_LIBS+=" -lltdl  "

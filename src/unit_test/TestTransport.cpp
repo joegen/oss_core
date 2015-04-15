@@ -5,6 +5,7 @@
 
 #include "OSS/Net/DTLSContext.h"
 #include "OSS/Net/DTLSSession.h"
+#include "OSS/RTP/SRTPProfile.h"
 
 using namespace OSS::SIP;
 
@@ -185,15 +186,28 @@ TEST(TransportTest, test_dtls_transport)
   OSS::Net::IPAddress connectAddress("127.0.0.1");
   connectAddress.setPort(30002);
   
+  ASSERT_TRUE(!clientSession->isConnected());
   ASSERT_TRUE(clientSession->connect(connectAddress, false));
-
-
+  ASSERT_TRUE(clientSession->isConnected());
+  
+  OSS::RTP::SRTPProfile srtpProfile;
+  ASSERT_TRUE(srtpProfile.create(*clientSession));
+  ASSERT_TRUE(srtpProfile.isValid());
+  ASSERT_TRUE(!srtpProfile.getLocalFingerPrint().empty());
+  ASSERT_TRUE(!srtpProfile.getRemoteFingerPrint().empty());
+  ASSERT_TRUE(!srtpProfile.getClientMasterKey().empty());
+  ASSERT_TRUE(!srtpProfile.getServerMasterKey().empty());
+  ASSERT_TRUE(!srtpProfile.getClientMasterSalt().empty());
+  ASSERT_TRUE(!srtpProfile.getServerMasterSalt().empty());
+  
+  std::cout << "SHA-256 (local)  :  " << srtpProfile.getLocalFingerPrint() << std::endl;
+  std::cout << "SHA-256 (remote) :  " << srtpProfile.getRemoteFingerPrint() << std::endl;
   std::string hello("hello");
-  ASSERT_TRUE(clientSession->write(hello.c_str(), hello.size()) == hello.size());
+  ASSERT_TRUE((std::size_t)clientSession->write(hello.c_str(), hello.size()) == hello.size());
   
   char buf[1024];
   int len = clientSession->read(buf, sizeof(buf));
-  ASSERT_TRUE(len == hello.size());
+  ASSERT_TRUE((std::size_t)len == hello.size());
   
   std::string response(buf, len);
   ASSERT_STREQ(response.c_str(), hello.c_str());
@@ -215,9 +229,7 @@ TEST(TransportTest, test_dtls_transport)
   ASSERT_STREQ(rtpResponse.c_str(), "TypeRTP");
   
   std::string exit("exit");
-  ASSERT_TRUE(clientSession->write(exit.c_str(), exit.size()) == exit.size());
-  
-  
+  ASSERT_TRUE((std::size_t)clientSession->write(exit.c_str(), exit.size()) == exit.size());
   
   t.join();
   

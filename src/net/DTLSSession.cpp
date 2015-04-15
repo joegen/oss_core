@@ -405,7 +405,7 @@ int DTLSSession::write(const char* buf, int bufLen)
   return ret;
 }
 
-DTLSSession::PacketType DTLSSession::peek()
+DTLSSession::PacketType DTLSSession::peek(const char* buf)
 {
   //
   // Excerpt from RFC 5764
@@ -426,6 +426,28 @@ DTLSSession::PacketType DTLSSession::peek()
   //                 |       B < 2   -+--> forward to STUN
   //
   
+  unsigned char flag = buf[0];
+    
+  if (flag > 127  && flag < 192)
+  {
+    return DTLSSession::RTP;
+  }
+  else if (flag > 19  && flag < 64)
+  {
+    return DTLSSession::DTLS;
+  }
+  else if (flag < 2)
+  {
+    return DTLSSession::STUN;
+  }
+  
+  return DTLSSession::UNKNOWN;
+}
+
+DTLSSession::PacketType DTLSSession::peek()
+{
+  
+  
   if (_fd <= 0 || !_pBIO || !_pSSL || !_connected)
   {
     OSS_LOG_ERROR("DTLSSession::peek Exception: FD/BIO not set or socket not connected.");
@@ -435,20 +457,7 @@ DTLSSession::PacketType DTLSSession::peek()
   char buf[2];
   if (recv(_fd, buf, sizeof(buf), MSG_PEEK) > 0)
   {
-    unsigned char flag = buf[0];
-    
-    if (flag > 127  && flag < 192)
-    {
-      return RTP;
-    }
-    else if (flag > 19  && flag < 64)
-    {
-      return DTLS;
-    }
-    else if (flag < 2)
-    {
-      return STUN;
-    }
+    return DTLSSession::peek(buf);
   }
   
   return DTLSSession::UNKNOWN;

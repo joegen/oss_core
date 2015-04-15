@@ -105,9 +105,12 @@ public:
   /// Returns number of bytes written
   
   PacketType peek();
+  static PacketType peek(const char* buf);
   /// Check the packet type of the datagram that is currently in the read
   /// buffer.  
   ///
+  
+  
   
   int readRaw(char* buf, int bufLen);
   /// Read some data directly using the socket.
@@ -125,8 +128,13 @@ public:
   /// Set the RECV timeout
   ///
   unsigned int getReceiveTimeout() const;
-  /// Seet the RECV timeourt
+  /// Set the RECV timeourt
   ///
+  
+  SSL* ssl();
+  /// Return the SSL handle
+  ///
+  
 private:
   Type _type;
   SSL* _pSSL;
@@ -161,6 +169,11 @@ inline bool DTLSSession::isConnected() const
    return _receiveTimeout;
  }
 
+ inline SSL* DTLSSession::ssl()
+ {
+   return _pSSL;
+ }
+ 
 } } // OSS::Net
 
 #endif	// OSS_DTLSSESSION_H_INCLUDED
