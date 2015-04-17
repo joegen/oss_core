@@ -86,7 +86,22 @@ public:
   void setWriteHandler(const WriteHandler& writeHandler);
   /// Set the external write handler
   ///
+  
+  int connect();
+  /// call the client handshake
+  /// 1.  Call SSL_do_handshake to start the handshake procedure
+  /// 2.  Read the ClientHello data from the output BIO and send to external output
+  /// 3.  Read the ServerHelloDone from external input and write it to the input BIO
+  /// 4.  Call SSL_do_handshake again to process ServerHelloDone
+  /// 5.  Repeat 2-4 to complete Certificate exchange
+  ///
+  
+  int accept();
+  /// call the server handshake
+
 protected:
+  
+  
   BIO* _pInBIO;                                                                        /* we use memory read bios */
   BIO* _pOutBIO; 
   SSL* _pSSL;

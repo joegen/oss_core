@@ -184,6 +184,97 @@ int DTLSBio::writeDirect(const char* buf, int bufLen)
   }
   return _writeHandler(buf, bufLen);
 }
+
+int DTLSBio::connect()
+{
+  /// call the client handshake
+  /// 1.  Call SSL_do_handshake to start the handshake procedure
+  /// 2.  Read the ClientHello data from the output BIO and send to external output
+  /// 3.  Read the ServerHelloDone from external input and write it to the input BIO
+  /// 4.  Call SSL_do_handshake again to process ServerHelloDone
+  /// 5.  Repeat 2-4 to complete Certificate exchange
+  ///
+  if (SSL_is_init_finished(_pSSL))
+  {
+    OSS_LOG_ERROR("DTLSBio::connect - SSL Handshake is already yet completed.");
+    return 0;
+  }
+  
+  //
+  // Start the handshake
+  //
+  SSL_do_handshake(_pSSL);
+  
+  int ret = 0;
+  char readBuf[DTLS_BIO_BUFFER_LEN];
+  
+  while (!SSL_is_init_finished(_pSSL))
+  {
+    ret = BIO_read(_pOutBIO, readBuf, DTLS_BIO_BUFFER_LEN);
+
+    if (ret > 0)
+    {
+      //
+      // We have read the encrypted data, write it to our external output
+      //
+      ret = writeDirect(readBuf, ret);
+      
+      if (ret <= 0)
+      {
+        OSS_LOG_ERROR("DTLSBio::connect - writeDirect returned " << ret);
+        break;
+      }
+    }
+    else
+    {
+      OSS_LOG_ERROR("DTLSBio::connect - BIO_read returned " << ret);
+      break;
+    }
+
+    //
+    // Read the response from the server
+    //
+    ret = readDirect(readBuf, DTLS_BIO_BUFFER_LEN);
+
+    if (ret > 0)
+    {
+      //
+      // We have read the response from the server
+      // Write it to the input BIO
+      //
+      ret = BIO_write(_pInBIO, readBuf, ret);
+      if (ret > 0)
+      {
+        //
+        // Packets are written to the IN BIO.  call the handshake again to process 
+        // the response
+        //
+        SSL_do_handshake(_pSSL); 
+      }
+      else
+      {
+        OSS_LOG_ERROR("DTLSBio::connect - BIO_write returned " << ret);
+        break;
+      }
+    }
+    else
+    {
+      OSS_LOG_ERROR("DTLSBio::connect - readDirect returned " << ret);
+      break;
+    }
+  }
+  
+  if (SSL_is_init_finished(_pSSL))
+    return 1;
+  else
+    return 0;
+}
+
+int DTLSBio::accept()
+{
+  return 0;
+}
+  
   
 } } // OSS::Net
 
