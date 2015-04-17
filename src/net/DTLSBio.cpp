@@ -272,7 +272,72 @@ int DTLSBio::connect()
 
 int DTLSBio::accept()
 {
-  return 0;
+  //
+  // Read from the external source
+  //
+  int ret = 0;
+  char readBuf[DTLS_BIO_BUFFER_LEN];
+  
+  while (!SSL_is_init_finished(_pSSL))
+  {
+    ret = readDirect(readBuf, DTLS_BIO_BUFFER_LEN);
+    if (ret > 0)
+    {
+      //
+      // We have read request from the client
+      // Write it to the input BIO
+      //
+      ret = BIO_write(_pInBIO, readBuf, ret);
+      if (ret > 0)
+      {
+        //
+        // Packets are written to the IN BIO.  call the handshake to process 
+        // the request
+        //
+        SSL_do_handshake(_pSSL); 
+
+        //
+        // Read the response from the out BIO
+        //
+
+        ret = BIO_read(_pOutBIO, readBuf, DTLS_BIO_BUFFER_LEN);
+
+        if (ret > 0)
+        {
+          //
+          // We have read the encrypted data, write it to our external output
+          //
+          ret = writeDirect(readBuf, ret);
+
+          if (ret <= 0)
+          {
+            OSS_LOG_ERROR("DTLSBio::accept - writeDirect returned " << ret);
+            break;
+          }
+        }
+        else
+        {
+          OSS_LOG_ERROR("DTLSBio::connect - BIO_read returned " << ret);
+          break;
+        }
+      }
+      else
+      {
+        OSS_LOG_ERROR("DTLSBio::accept - BIO_write returned " << ret);
+        break;
+      }
+    }
+    else
+    {
+      OSS_LOG_ERROR("DTLSBio::accept - readDirect returned " << ret);
+      break;
+    }
+  }
+  
+  if (SSL_is_init_finished(_pSSL))
+    return 1;
+  else
+    return 0;
 }
   
   
