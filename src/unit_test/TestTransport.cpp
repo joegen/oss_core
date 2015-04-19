@@ -110,7 +110,7 @@ void handle_dtls_server(OSS::Net::DTLSSession* pServer)
   //
   
   OSS::Net::IPAddress remotePeer;
-  ASSERT_TRUE(pServer->accept(remotePeer));
+  ASSERT_TRUE(pServer->socketAccept(remotePeer));
   
   std::string remoteAddress = remotePeer.toIpPortString();
   ASSERT_STREQ(remoteAddress.c_str(), "127.0.0.1:30000");
@@ -119,7 +119,7 @@ void handle_dtls_server(OSS::Net::DTLSSession* pServer)
   int len = 0;
   while (true)
   {
-    OSS::Net::DTLSSession::PacketType packetType = pServer->peek();
+    OSS::Net::DTLSSession::PacketType packetType = pServer->socketPeek();
     if (packetType == OSS::Net::DTLSSession::DTLS)
     {
       len = pServer->read(buf, sizeof(buf));
@@ -187,7 +187,7 @@ TEST(TransportTest, test_dtls_transport)
   connectAddress.setPort(30002);
   
   ASSERT_TRUE(!clientSession->isConnected());
-  ASSERT_TRUE(clientSession->connect(connectAddress, false));
+  ASSERT_TRUE(clientSession->socketConnect(connectAddress, false));
   ASSERT_TRUE(clientSession->isConnected());
   
   OSS::RTP::SRTPProfile srtpProfile;

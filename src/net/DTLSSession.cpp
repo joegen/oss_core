@@ -92,6 +92,7 @@ DTLSSession::DTLSSession(Type type) :
   _type(type),
   _pSSL(0),
   _pBIO(0),
+  _pExternalBIO(0),
   _fd(-1),
   _connected(false),
   _receiveTimeout(DEFAULT_DTLS_RECEIVE_TIMEOUT)
@@ -118,9 +119,25 @@ DTLSSession::~DTLSSession()
   SSL_free(_pSSL);
 }
 
+void DTLSSession::attachBIO(DTLSBio* pExternalBIO)
+  /// Attach a DTLSBio to this session.
+  /// If a previous socket or DTLSBio has already been attached, this will throw and 
+  /// OSS::IllegalStateException
+  /// Note: DLSBio is not owned by this session.  Multiple session can share the same DTLSBio.
+  /// The attached DTLSBio will not be deleted when DTLSSession is destroyed.
+{
+  if (_pExternalBIO || _fd != -1 || _pBIO || !_pSSL)
+  {
+    throw OSS::IllegalStateException();
+  }
+  
+  _pExternalBIO = pExternalBIO;
+  _pExternalBIO->attachSSL(_pSSL);
+}
+
 void DTLSSession::attachSocket(int fd)
 {
-  if (_fd != -1 || _pBIO || fd <= 0)
+  if (_pExternalBIO || _fd != -1 || _pBIO || fd <= 0)
   {
     throw OSS::IllegalStateException();
   }
@@ -146,14 +163,14 @@ void DTLSSession::attachSocket(int fd)
   //
   // Set the receive timeout
   //
-  setReceiveTimeout(_receiveTimeout);
+  setSocketReceiveTimeout(_receiveTimeout);
   
   _fd = fd;
   
   SSL_set_bio(_pSSL, _pBIO, _pBIO);
 }
 
-void DTLSSession::setReceiveTimeout(unsigned int seconds)
+void DTLSSession::setSocketReceiveTimeout(unsigned int seconds)
 {
   _receiveTimeout = seconds;
   
@@ -166,7 +183,26 @@ void DTLSSession::setReceiveTimeout(unsigned int seconds)
   }
 }
 
-bool DTLSSession::connect(const OSS::Net::IPAddress& address, bool socketAlreadyConnected)
+bool DTLSSession::bioConnect()
+{
+  if (!_pExternalBIO)
+  {
+    OSS_LOG_ERROR("DTLSSession::bioConnect Exception: External BIO not set.");
+    throw OSS::IllegalStateException();
+  }
+  
+  if (_type == DTLSSession::SERVER)
+  {
+    OSS_LOG_ERROR("DTLSSession::bioConnect Exception: Illegal call to connect() using a SERVER session.");
+    throw OSS::InvalidAccessException();
+  }
+  
+  _connected = _pExternalBIO->connect() != 0;
+  
+  return _connected;
+}
+
+bool DTLSSession::socketConnect(const OSS::Net::IPAddress& address, bool socketAlreadyConnected)
 {
   if (_fd <= 0 || !_pBIO)
   {
@@ -236,6 +272,9 @@ bool DTLSSession::connect(const OSS::Net::IPAddress& address, bool socketAlready
     }
   }
   
+  //
+  // Set the remote address of the remote peer
+  //
   BIO_ctrl(_pBIO, BIO_CTRL_DGRAM_SET_CONNECTED, 0, &remote_addr.ss);
     
   if (SSL_connect(_pSSL) < 0) 
@@ -249,7 +288,26 @@ bool DTLSSession::connect(const OSS::Net::IPAddress& address, bool socketAlready
   return _connected;
 }
 
-bool DTLSSession::accept(OSS::Net::IPAddress& peerAddress)
+bool DTLSSession::bioAccept()
+{
+  if (!_pExternalBIO)
+  {
+    OSS_LOG_ERROR("DTLSSession::bioAccept Exception: External BIO not set.");
+    throw OSS::IllegalStateException();
+  }
+  
+  if (_type == DTLSSession::CLIENT)
+  {
+    OSS_LOG_ERROR("DTLSSession::accept Exception: Illegal call to bioAccept() using a CLIENT session.");
+    throw OSS::InvalidAccessException();
+  }
+  
+  _connected = _pExternalBIO->accept() != 0;
+  
+  return _connected;
+}
+
+bool DTLSSession::socketAccept(OSS::Net::IPAddress& peerAddress)
 {
   if (_fd <= 0 || !_pBIO)
   {
@@ -259,7 +317,7 @@ bool DTLSSession::accept(OSS::Net::IPAddress& peerAddress)
   
   if (_type == DTLSSession::CLIENT)
   {
-    OSS_LOG_ERROR("DTLSSession::accept Exception: Illegal call to connect() using a CLIENT session.");
+    OSS_LOG_ERROR("DTLSSession::accept Exception: Illegal call to accept() using a CLIENT session.");
     throw OSS::InvalidAccessException();
   }
   
@@ -321,7 +379,15 @@ bool DTLSSession::accept(OSS::Net::IPAddress& peerAddress)
 
 int DTLSSession::read(char* buf, int bufLen)
 {
-  if (_fd <= 0 || !_pBIO || !_pSSL || !_connected)
+  if (!_pExternalBIO)
+  {
+    if (_fd <= 0 || !_pBIO || !_pSSL || !_connected)
+    {
+      OSS_LOG_ERROR("DTLSSession::read Exception: FD/BIO not set or socket not connected.");
+      throw OSS::IllegalStateException();
+    }
+  }
+  else if (_connected)
   {
     OSS_LOG_ERROR("DTLSSession::read Exception: FD/BIO not set or socket not connected.");
     throw OSS::IllegalStateException();
@@ -329,8 +395,15 @@ int DTLSSession::read(char* buf, int bufLen)
   
   char errBuf[512];
   int ret = 0;
-  ret = SSL_read(_pSSL, buf, bufLen);
   
+  if (!_pExternalBIO)
+  {
+    ret = SSL_read(_pSSL, buf, bufLen);
+  }
+  else
+  {
+    ret = _pExternalBIO->sslRead(buf, bufLen);
+  }
   
   switch (SSL_get_error(_pSSL, ret)) 
   {
@@ -338,7 +411,7 @@ int DTLSSession::read(char* buf, int bufLen)
       break;
     case SSL_ERROR_WANT_READ:
       /* Handle socket timeouts */
-      if (BIO_ctrl(SSL_get_rbio(_pSSL), BIO_CTRL_DGRAM_GET_RECV_TIMER_EXP, 0, NULL)) 
+      if (!_pExternalBIO && BIO_ctrl(SSL_get_rbio(_pSSL), BIO_CTRL_DGRAM_GET_RECV_TIMER_EXP, 0, NULL)) 
       {
         OSS_LOG_ERROR("DTLSSession::read Error: Read Timeout!");
       }
@@ -444,7 +517,7 @@ DTLSSession::PacketType DTLSSession::peek(const char* buf)
   return DTLSSession::UNKNOWN;
 }
 
-DTLSSession::PacketType DTLSSession::peek()
+DTLSSession::PacketType DTLSSession::socketPeek()
 {
   
   
@@ -465,13 +538,28 @@ DTLSSession::PacketType DTLSSession::peek()
   
 int DTLSSession::readRaw(char* buf, int bufLen)
 {
-  if (_fd <= 0 || !_pBIO || !_pSSL || !_connected)
+  if (!_pExternalBIO)
+  {
+    if (_fd <= 0 || !_pBIO || !_pSSL || !_connected)
+    {
+      OSS_LOG_ERROR("DTLSSession::readRaw Exception: FD/BIO not set or socket not connected.");
+      throw OSS::IllegalStateException();
+    }
+  }
+  else if (!_connected)
   {
     OSS_LOG_ERROR("DTLSSession::readRaw Exception: FD/BIO not set or socket not connected.");
     throw OSS::IllegalStateException();
   }
   
-  return recv(_fd, buf, bufLen, 0);
+  if (!_pExternalBIO)
+  {
+    return recv(_fd, buf, bufLen, 0);
+  }
+  else
+  {
+    return _pExternalBIO->readDirect(buf, bufLen);
+  }
 }
 
 int DTLSSession::writeRaw(const char* buf, int bufLen)

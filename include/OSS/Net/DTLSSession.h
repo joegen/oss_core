@@ -28,6 +28,7 @@
 
 
 #include "OSS/Net/DTLSContext.h"
+#include "OSS/Net/DTLSBio.h"
 #include "OSS/UTL/Exception.h"
 #include "OSS/Net/IPAddress.h"
 #include "OSS/RTP/RTPPacket.h"
@@ -64,16 +65,23 @@ public:
   //
   
   void attachSocket(int fd);
-  /// Attach a UDDP socket to this session.
+  /// Attach a UDP socket to this session.
   /// This creates a new BIO structure.
   /// If a previous socket has already been attached, this will throw and 
   /// OSS::IllegalStateException
   ///
   
+  void attachBIO(DTLSBio* pExternalBIO);
+  /// Attach a DTLSBio to this session.
+  /// If a previous socket or DTLSBio has already been attached, this will throw and 
+  /// OSS::IllegalStateException
+  /// Note: DLSBio is not owned by this session.  Multiple session can share the same DTLSBio.
+  /// The attached DTLSBio will not be deleted when DTLSSession is destroyed.
+  
   int getFd() const;
   /// Returns the descriptor of the UDP socket
  
-  bool connect(const OSS::Net::IPAddress& address, bool socketAlreadyConnected);
+  bool socketConnect(const OSS::Net::IPAddress& address, bool socketAlreadyConnected);
   /// Connects the socket to the remote address and perform the DTLS handshake.
   /// If socketAlreadyConnected is true, only the SSL handshake will be performed.
   /// This function should be used with a previously bound (bind()) socket
@@ -83,10 +91,25 @@ public:
   /// Returns true if successful and set the _connected flag
   ///
   
-  bool accept(OSS::Net::IPAddress& peerAddress);
+  bool bioConnect();
+  /// Calls the external BIO connect method.
+  /// Throws OSS::InvalidAccessException if used on a SERVER session
+  /// Throws OSS::IllegalStateException if the socket is not open
+  /// Throws OSS::InvalidArgumentException if address is not valid
+  /// Returns true if successful and set the _connected flag
+  ///
+  
+  bool socketAccept(OSS::Net::IPAddress& peerAddress);
   /// Wait for new client connection.
   /// The address of the remote peer is stored in peedAddress.
   /// This function should be used with a previously bound (bind()) socket
+  /// Throws OSS::InvalidAccessException if used on a CLIENT session
+  /// Throws OSS::IllegalStateException if the socket is not open
+  /// Returns true if successful and set the _connected flag
+  ///
+  
+  bool bioAccept();
+  /// Wait for new client connection using the external BIO.
   /// Throws OSS::InvalidAccessException if used on a CLIENT session
   /// Throws OSS::IllegalStateException if the socket is not open
   /// Returns true if successful and set the _connected flag
@@ -104,7 +127,7 @@ public:
   /// Write some data
   /// Returns number of bytes written
   
-  PacketType peek();
+  PacketType socketPeek();
   static PacketType peek(const char* buf);
   /// Check the packet type of the datagram that is currently in the read
   /// buffer.  
@@ -124,10 +147,10 @@ public:
   /// This is normally used for writing RTP or STUN packets
   /// Returns number of bytes written
   
-  void setReceiveTimeout(unsigned int seconds);
+  void setSocketReceiveTimeout(unsigned int seconds);
   /// Set the RECV timeout
   ///
-  unsigned int getReceiveTimeout() const;
+  unsigned int getSocketReceiveTimeout() const;
   /// Set the RECV timeourt
   ///
   
@@ -139,6 +162,7 @@ private:
   Type _type;
   SSL* _pSSL;
   BIO* _pBIO;
+  DTLSBio* _pExternalBIO;
   int _fd;
   bool _connected;
   OSS::Net::IPAddress _peerAddress;
@@ -164,7 +188,7 @@ inline bool DTLSSession::isConnected() const
   return _connected;
 }
 
- inline unsigned int DTLSSession::getReceiveTimeout() const
+ inline unsigned int DTLSSession::getSocketReceiveTimeout() const
  {
    return _receiveTimeout;
  }
