@@ -71,12 +71,12 @@ public:
   /// OSS::IllegalStateException
   ///
   
-  void attachBIO(DTLSBio* pExternalBIO);
+  void attachBIO(const DTLSBio::Ptr& pExternalBIO);
   /// Attach a DTLSBio to this session.
   /// If a previous socket or DTLSBio has already been attached, this will throw and 
   /// OSS::IllegalStateException
   /// Note: DLSBio is not owned by this session.  Multiple session can share the same DTLSBio.
-  /// The attached DTLSBio will not be deleted when DTLSSession is destroyed.
+
   
   int getFd() const;
   /// Returns the descriptor of the UDP socket
@@ -162,7 +162,7 @@ private:
   Type _type;
   SSL* _pSSL;
   BIO* _pBIO;
-  DTLSBio* _pExternalBIO;
+  DTLSBio::Ptr _pExternalBIO;
   int _fd;
   bool _connected;
   OSS::Net::IPAddress _peerAddress;

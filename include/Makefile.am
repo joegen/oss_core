@@ -221,6 +221,7 @@ nobase_include_HEADERS = \
     OSS/Net/DTLSContext.h \
     OSS/Net/DTLSSession.h \
     OSS/Net/DTLSBio.h \
+    OSS/Net/DTLSSocket.h \
     OSS/UTL/AdaptiveDelay.h \
     OSS/UTL/CoreUtils.h \
     OSS/UTL/Logger.h \

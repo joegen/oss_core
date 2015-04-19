@@ -202,6 +202,64 @@ bool IPAddress::isIPAddress(const std::string& address)
   return IPAddress::isV4Address(address) || IPAddress::isV6Address(address); 
 }
 
+bool IPAddress::toSockAddr(SockAddr& socketaddr_) const
+{
+  memset((void *) &socketaddr_, 0, sizeof(struct sockaddr_storage));
+  
+  if (address().is_v4())
+  {
+    boost::system::error_code e;
+    std::string addr = address().to_v4().to_string(e);
+    if (e)
+    {
+      return false;
+    }
+    inet_pton(AF_INET, addr.c_str(), &socketaddr_.s4.sin_addr);
+    socketaddr_.s4.sin_family = AF_INET;
+    socketaddr_.s4.sin_port = htons(getPort());
+    return true;
+  }
+  else if (address().is_v6())
+  {
+    boost::system::error_code e;
+    std::string addr = address().to_v6().to_string(e);
+    if (e)
+    {
+      return false;
+    }
+    inet_pton(AF_INET6, addr.c_str(), &socketaddr_.s6.sin6_addr);
+    socketaddr_.s6.sin6_family = AF_INET6;
+    socketaddr_.s6.sin6_port = htons(getPort());
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+IPAddress IPAddress::fromSockAddr4(sockaddr_in& in)
+{
+  IPAddress ip;
+  char ipbuf[256];
+  unsigned short port;
+  inet_ntop(AF_INET, &in.sin_addr, ipbuf, sizeof(struct sockaddr_in));
+  port = ntohs(in.sin_port);
+  ip = OSS::Net::IPAddress(ipbuf);
+  ip.setPort(port);
+  return ip;
+}
+IPAddress IPAddress::fromSockAddr6(sockaddr_in6& in6)
+{
+  IPAddress ip;
+  char ipbuf[256];
+  unsigned short port;
+  inet_ntop(AF_INET, &in6.sin6_addr, ipbuf, sizeof(struct sockaddr_in6));
+  port = ntohs(in6.sin6_port);
+  ip = OSS::Net::IPAddress(ipbuf);
+  ip.setPort(port);
+  return ip;
+}
 
 
 } } // OSS::Net

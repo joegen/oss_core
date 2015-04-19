@@ -28,6 +28,7 @@
 
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "OSS/OSS.h"
 
@@ -47,6 +48,7 @@ public:
   
   typedef boost::function<int(char*, int)> ReadHandler;
   typedef boost::function<int(const char*,int)> WriteHandler;
+  typedef boost::shared_ptr<DTLSBio> Ptr;
   
   DTLSBio();
   ~DTLSBio();

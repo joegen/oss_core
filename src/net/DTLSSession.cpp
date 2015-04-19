@@ -91,8 +91,6 @@ static std::string get_socket_error() {
 DTLSSession::DTLSSession(Type type) :
   _type(type),
   _pSSL(0),
-  _pBIO(0),
-  _pExternalBIO(0),
   _fd(-1),
   _connected(false),
   _receiveTimeout(DEFAULT_DTLS_RECEIVE_TIMEOUT)
@@ -119,12 +117,7 @@ DTLSSession::~DTLSSession()
   SSL_free(_pSSL);
 }
 
-void DTLSSession::attachBIO(DTLSBio* pExternalBIO)
-  /// Attach a DTLSBio to this session.
-  /// If a previous socket or DTLSBio has already been attached, this will throw and 
-  /// OSS::IllegalStateException
-  /// Note: DLSBio is not owned by this session.  Multiple session can share the same DTLSBio.
-  /// The attached DTLSBio will not be deleted when DTLSSession is destroyed.
+void DTLSSession::attachBIO(const DTLSBio::Ptr& pExternalBIO)
 {
   if (_pExternalBIO || _fd != -1 || _pBIO || !_pSSL)
   {
@@ -438,7 +431,15 @@ int DTLSSession::read(char* buf, int bufLen)
 
 int DTLSSession::write(const char* buf, int bufLen)
 {
-  if (_fd <= 0 || !_pBIO || !_pSSL || !_connected)
+  if (!_pExternalBIO)
+  {
+    if (_fd <= 0 || !_pBIO || !_pSSL || !_connected)
+    {
+      OSS_LOG_ERROR("DTLSSession::write Exception: FD/BIO not set or socket not connected.");
+      throw OSS::IllegalStateException();
+    }
+  }
+  else
   {
     OSS_LOG_ERROR("DTLSSession::write Exception: FD/BIO not set or socket not connected.");
     throw OSS::IllegalStateException();
@@ -446,7 +447,15 @@ int DTLSSession::write(const char* buf, int bufLen)
   
   char errBuf[512];
   int ret = 0;
-  ret = SSL_write(_pSSL, buf, bufLen);
+  
+  if (!_pExternalBIO)
+  {
+    ret = SSL_write(_pSSL, buf, bufLen);
+  }
+  else
+  {
+    ret = _pExternalBIO->sslWrite(buf, bufLen);
+  }
   
   
   switch (SSL_get_error(_pSSL, ret)) 
@@ -564,13 +573,28 @@ int DTLSSession::readRaw(char* buf, int bufLen)
 
 int DTLSSession::writeRaw(const char* buf, int bufLen)
 {
-  if (_fd <= 0 || !_pBIO || !_pSSL || !_connected)
+  if (!_pExternalBIO)
+  {
+    if (_fd <= 0 || !_pBIO || !_pSSL || !_connected)
+    {
+      OSS_LOG_ERROR("DTLSSession::writeRaw Exception: FD/BIO not set or socket not connected.");
+      throw OSS::IllegalStateException();
+    }
+  }
+  else if (!_connected)
   {
     OSS_LOG_ERROR("DTLSSession::writeRaw Exception: FD/BIO not set or socket not connected.");
     throw OSS::IllegalStateException();
   }
   
-  return send(_fd, buf, bufLen, 0);
+  if (!_pExternalBIO)
+  {
+    return send(_fd, buf, bufLen, 0);
+  }
+  else
+  {
+    return _pExternalBIO->writeDirect(buf, bufLen);
+  }
 }
 
   

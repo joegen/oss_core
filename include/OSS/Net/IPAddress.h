@@ -33,6 +33,13 @@ class OSS_API IPAddress
   /// This is a helper class on top of the asio address_v4 and address_v6 objects
 {
 public:
+  union SockAddr 
+  {
+    struct sockaddr_storage ss;
+    struct sockaddr_in s4;
+    struct sockaddr_in6 s6;
+  };
+  
   IPAddress();
     /// Default constructor
 
@@ -113,6 +120,9 @@ public:
 
   std::string toIpPortString() const;
     /// Get the address in ip:port format
+  
+  bool toSockAddr(SockAddr& socketaddr_) const;
+    /// Convert to a sockaddr union
 
   bool isValid() const;
     /// Return true if the address is valid
@@ -150,9 +160,16 @@ public:
 
   static IPAddress fromV4IPPort(const char* ipPortTuple);
     /// Returns an IP Address from IP:PORT tupple
+  
+  static IPAddress fromSockAddr(const char* ipPortTuple);
+    /// Returns an IP Address from IP:PORT tupple
 
   static IPAddress fromV4DWORD(OSS::UInt32 ip4);
-    /// Returns an IP Addres from a DWORD
+    /// Returns an IP Address from a DWORD
+  
+  static IPAddress fromSockAddr4(sockaddr_in& in);
+  static IPAddress fromSockAddr6(sockaddr_in6& in6);
+    /// Returns IP Address from sockaddr
 
   static bool isV4Address(const std::string& address);
     /// Returns true if address is a valid IPV4 address

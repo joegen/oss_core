@@ -242,3 +242,33 @@ TEST(TransportTest, test_dtls_transport)
   OSS::Net::DTLSContext::releaseInstance();
 }
 
+TEST(TransportTest, test_dtls_transport_external_bio_client)
+{
+  ASSERT_TRUE(OSS::Net::DTLSContext::initialize("ossapp.com", true));
+  ASSERT_TRUE(OSS::Net::DTLSContext::instance());
+  ASSERT_TRUE(OSS::Net::DTLSContext::willVerifyCerts());
+  
+  //
+  // Create the server socket
+  //
+  int server;
+  union {
+    struct sockaddr_storage ss;
+    struct sockaddr_in s4;
+    struct sockaddr_in6 s6;
+  } server_addr;
+  
+  memset((void *) &server_addr, 0, sizeof(struct sockaddr_storage));
+  inet_pton(AF_INET, "127.0.0.1", &server_addr.s4.sin_addr);
+  server_addr.s4.sin_family = AF_INET;
+  server_addr.s4.sin_port = htons(30002);
+  server = socket(server_addr.ss.ss_family, SOCK_DGRAM, 0);
+  bind(server, (const struct sockaddr *) &server_addr, sizeof(struct sockaddr_in));
+  OSS::Net::DTLSSession* serverSession = new OSS::Net::DTLSSession(OSS::Net::DTLSSession::SERVER);
+  serverSession->attachSocket(server);
+  boost::thread t(boost::bind(handle_dtls_server, serverSession));
+  OSS::thread_sleep(500);
+  
+  OSS::Net::DTLSSession* clientSession = new OSS::Net::DTLSSession(OSS::Net::DTLSSession::CLIENT);
+}
+
