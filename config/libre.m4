@@ -1,4 +1,5 @@
-
+test "x$prefix" = xNONE && prefix=$ac_default_prefix
+test "x$exec_prefix" = xNONE && exec_prefix='${prefix}'
 
 AC_DEFUN([SFAC_LIBRE_CONFIGURE],
 [
