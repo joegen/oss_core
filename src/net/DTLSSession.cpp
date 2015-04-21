@@ -91,6 +91,7 @@ static std::string get_socket_error() {
 DTLSSession::DTLSSession(Type type) :
   _type(type),
   _pSSL(0),
+  _pBIO(0),
   _fd(-1),
   _connected(false),
   _receiveTimeout(DEFAULT_DTLS_RECEIVE_TIMEOUT)
@@ -118,7 +119,7 @@ DTLSSession::~DTLSSession()
 }
 
 void DTLSSession::attachBIO(const DTLSBio::Ptr& pExternalBIO)
-{
+{  
   if (_pExternalBIO || _fd != -1 || _pBIO || !_pSSL)
   {
     throw OSS::IllegalStateException();
@@ -380,7 +381,7 @@ int DTLSSession::read(char* buf, int bufLen)
       throw OSS::IllegalStateException();
     }
   }
-  else if (_connected)
+  else if (!_connected)
   {
     OSS_LOG_ERROR("DTLSSession::read Exception: FD/BIO not set or socket not connected.");
     throw OSS::IllegalStateException();
@@ -439,7 +440,7 @@ int DTLSSession::write(const char* buf, int bufLen)
       throw OSS::IllegalStateException();
     }
   }
-  else
+  else if (!_connected)
   {
     OSS_LOG_ERROR("DTLSSession::write Exception: FD/BIO not set or socket not connected.");
     throw OSS::IllegalStateException();
@@ -455,6 +456,7 @@ int DTLSSession::write(const char* buf, int bufLen)
   else
   {
     ret = _pExternalBIO->sslWrite(buf, bufLen);
+    
   }
   
   

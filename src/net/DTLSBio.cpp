@@ -19,6 +19,7 @@
 
 #include "OSS/Net/DTLSBio.h"
 #include "OSS/Net/DTLSSession.h"
+#include "OSS/Net/DTLSSocketInterface.h"
 #include "OSS/UTL/Logger.h"
 
 
@@ -37,7 +38,8 @@ static const int DTLS_BIO_BUFFER_LEN = 4096;
 DTLSBio::DTLSBio() :
   _pInBIO(0),                                                                        /* we use memory read bios */
   _pOutBIO(0), 
-  _pSSL(0)
+  _pSSL(0),
+  _pSocket(0)
 {
   //
   // Create the bios
@@ -85,12 +87,6 @@ int DTLSBio::sslRead(char* buf, int bufLen)
     return 0;
   }
   
-  if (!_readHandler)
-  {
-    OSS_LOG_ERROR("DTLSBio::sslRead - _readHandler is not set.");
-    return 0;
-  }
-  
   int ret = 0;
   char readBuf[DTLS_BIO_BUFFER_LEN];
   
@@ -125,7 +121,7 @@ int DTLSBio::sslRead(char* buf, int bufLen)
       //
       // Packets are written to the IN BIO.  Read it back unencrypted.
       //
-      ret = SSL_read(_pSSL, readBuf, bufLen); 
+      ret = SSL_read(_pSSL, buf, bufLen); 
     }
   }
   return ret;
@@ -158,31 +154,64 @@ int DTLSBio::sslWrite(const char* buf, int bufLen)
       ret = writeDirect(readBuf, ret);
     }
   }
-  return ret;
+  
+  //
+  // Assume we have written everything or nothing
+  //
+  if (ret > 0)
+    return bufLen;
+  
+  return 0;
 }
   
 int DTLSBio::readDirect(char* buf, int bufLen)
 {
   /// Read unencrypted data directly from the external source (probably libnice)
   ///
-  if (!_readHandler)
+  if (!_pSocket && !_readHandler)
   {
     OSS_LOG_ERROR("DTLSBio::readDirect - _readHandler is not set.");
     return 0;
   }
-  return _readHandler(buf, bufLen);
+  
+  int ret = 0;
+  
+  if (!_pSocket && _readHandler)
+  {
+    ret = _readHandler(buf, bufLen);
+  }
+  else if (_pSocket)
+  {
+    ret = _pSocket->read(buf, bufLen);
+  }
+  
+  return ret;
 }
   
 int DTLSBio::writeDirect(const char* buf, int bufLen)
 {
   ///  Write unencrypted data directly to external output (probably libnice)
   ///
-  if (!_writeHandler)
+  if (!_pSocket && !_writeHandler)
   {
     OSS_LOG_ERROR("DTLSBio::writeDirect - _writeHandler is not set.");
     return 0;
   }
-  return _writeHandler(buf, bufLen);
+  
+  int ret = 0;
+  if (!_pSocket && _writeHandler)
+  {
+    
+    ret = _writeHandler(buf, bufLen);
+  }
+  else if (_pSocket)
+  {
+    
+    ret = _pSocket->write(buf, bufLen);
+  }
+  
+  
+  return ret;
 }
 
 int DTLSBio::connect()
@@ -196,7 +225,7 @@ int DTLSBio::connect()
   ///
   if (SSL_is_init_finished(_pSSL))
   {
-    OSS_LOG_ERROR("DTLSBio::connect - SSL Handshake is already yet completed.");
+    OSS_LOG_ERROR("DTLSBio::connect - SSL Handshake is already completed.");
     return 0;
   }
   
@@ -204,7 +233,6 @@ int DTLSBio::connect()
   // Start the handshake
   //
   SSL_do_handshake(_pSSL);
-  
   int ret = 0;
   char readBuf[DTLS_BIO_BUFFER_LEN];
   
@@ -311,24 +339,28 @@ int DTLSBio::accept()
 
           if (ret <= 0)
           {
+            std::cout << "DTLSBio::accept - writeDirect returned " << ret << std::endl;
             OSS_LOG_ERROR("DTLSBio::accept - writeDirect returned " << ret);
             break;
           }
         }
         else
         {
+          std::cout << "DTLSBio::connect - BIO_read returned " << ret << std::endl;
           OSS_LOG_ERROR("DTLSBio::connect - BIO_read returned " << ret);
           break;
         }
       }
       else
       {
+        std::cout << "DTLSBio::accept - BIO_write returned " << ret << std::endl;
         OSS_LOG_ERROR("DTLSBio::accept - BIO_write returned " << ret);
         break;
       }
     }
     else
     {
+      std::cout << "DTLSBio::accept - readDirect returned " << ret << std::endl;
       OSS_LOG_ERROR("DTLSBio::accept - readDirect returned " << ret);
       break;
     }

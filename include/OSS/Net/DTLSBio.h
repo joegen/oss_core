@@ -33,9 +33,12 @@
 #include "OSS/OSS.h"
 
 
+
 namespace OSS {
 namespace Net {
 
+class DTLSSocketInterface;  
+  
 class DTLSBio
 {
   // 
@@ -100,7 +103,10 @@ public:
   
   int accept();
   /// call the server handshake
-
+  
+  void attachSocket(DTLSSocketInterface* pSocket);
+  /// Attach a socket implementation for this BIO.
+  /// This overrides WriteHandler and ReadHandler functions.
 protected:
   
   
@@ -109,6 +115,7 @@ protected:
   SSL* _pSSL;
   WriteHandler _writeHandler;
   ReadHandler _readHandler;
+  DTLSSocketInterface* _pSocket;
   friend class DTLSSession;
 };
 
@@ -128,6 +135,10 @@ inline void DTLSBio::setWriteHandler(const WriteHandler& writeHandler)
   _writeHandler = writeHandler;
 }
 
+inline void DTLSBio::attachSocket(DTLSSocketInterface* pSocket)
+{
+  _pSocket = pSocket;
+}
 
 } } // OSS::Net
 

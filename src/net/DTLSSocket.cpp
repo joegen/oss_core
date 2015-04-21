@@ -19,14 +19,17 @@
 
 #include "OSS/Net/DTLSSocket.h"
 #include "OSS/UTL/Logger.h"
+#include "OSS/UTL/CoreUtils.h"
 
 
 namespace OSS {
 namespace Net {
 
   
-DTLSSocket::DTLSSocket() :
-  _fd(-1)
+DTLSSocket::DTLSSocket(DTLSSession::Type type) :
+  DTLSSocketInterface(type),
+  _fd(-1),
+  _connected(false)
 {
 }
 
@@ -47,7 +50,14 @@ int DTLSSocket::bind(const OSS::Net::IPAddress& localAddress)
   
   if (_fd == -1)
   {
-    socket(bindAddr.ss.ss_family, SOCK_DGRAM, 0);
+    if (localAddress.address().is_v4())
+    {
+      _fd = socket(AF_INET, SOCK_DGRAM, 0);
+    }
+    else
+    {
+      _fd = socket(AF_INET6, SOCK_DGRAM, 0);
+    }
   }
   
   if (localAddress.address().is_v4())
@@ -84,18 +94,65 @@ int DTLSSocket::connect(const OSS::Net::IPAddress& remoteAddress)
   }
   else
   {
-    OSS_LOG_ERROR("DTLSSocket::bind - Exception:  Invalid connect address");
-    return 0;
+    OSS_LOG_ERROR("DTLSSocket::connect - Exception:  Invalid connect address");
+    return -1;
   }
   
   _remoteAddress = remoteAddress;
+  
+  _connected = (ret==0);
   
   return ret;
 }
 
 int DTLSSocket::read(char* buf, int bufLen)
 {
-  return recv(_fd, buf, bufLen, 0);
+  int ret = 0;
+  if (!_remoteAddress.isValid())
+  {
+    //
+    // Use readFrom so we can set the initial value of _remoteAddress
+    //
+    ret = readFrom(buf, bufLen, _remoteAddress);
+    
+    if (_remoteAddress.isValid())
+    {
+      connect(_remoteAddress);
+    }
+  }
+  else
+  {
+    ret = recv(_fd, buf, bufLen, 0);
+  }
+  
+  return ret;
+}
+
+int DTLSSocket::readFrom(char* buf, int bufLen, OSS::Net::IPAddress& remoteAddress)
+{
+  struct sockaddr_storage peer_addr;
+  socklen_t peer_addr_len;
+  int ret;
+  
+  peer_addr_len = sizeof(struct sockaddr_storage);
+  ret = recvfrom(_fd, buf, bufLen, 0, (struct sockaddr *) &peer_addr, &peer_addr_len);
+  
+  if (ret > 0)
+  {
+    
+    if (peer_addr.ss_family == AF_INET)
+    {
+      struct sockaddr_in& addr = (struct sockaddr_in&) peer_addr;
+      remoteAddress = OSS::Net::IPAddress::fromSockAddr4(addr);
+    }
+    else if (peer_addr.ss_family == AF_INET6)
+    {
+      struct sockaddr_in6& addr = (struct sockaddr_in6&) peer_addr;
+      remoteAddress = OSS::Net::IPAddress::fromSockAddr6(addr);
+    }
+  }
+  
+  return ret;
 }
 
 int DTLSSocket::write(const char* buf, int bufLen)
@@ -107,6 +164,13 @@ int DTLSSocket::close()
 {
   return ::close(_fd);
 }
+
+
+int DTLSSocket::peek(char* buf, int bufLen)
+{
+  return recv(_fd, buf, bufLen, MSG_PEEK);
+}
+
   
 
 } } // OSS::Net

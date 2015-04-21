@@ -21,31 +21,33 @@
 
 
 #include <sys/socket.h>
-#include "OSS/Net/IPAddress.h"
+#include "OSS/Net/DTLSSocketInterface.h"
 
 
 namespace OSS {
 namespace Net {
 
   
-class DTLSSocket
+class DTLSSocket : public DTLSSocketInterface
 {
 public:
-  DTLSSocket();
-  ~DTLSSocket();
+  DTLSSocket(DTLSSession::Type type);
+  virtual ~DTLSSocket();
   
-  int bind(const OSS::Net::IPAddress& localAddress);
-  int connect(const OSS::Net::IPAddress& remoteAddress);
-  int read(char* buf, int bufLen);
-  int write(const char* buf, int bufLen);
-  int close();
-  int fd() const;
-  const OSS::Net::IPAddress& getLocalAddress() const;
-  const OSS::Net::IPAddress& getRemoteAddress() const;
+  virtual int bind(const OSS::Net::IPAddress& localAddress);
+  virtual int connect(const OSS::Net::IPAddress& remoteAddress);
+  virtual int read(char* buf, int bufLen);
+  virtual int write(const char* buf, int bufLen);
+  virtual int close();
+  virtual int fd() const;
+  
+  virtual int readFrom(char* buf, int bufLen, OSS::Net::IPAddress& remoteAddress);
+  virtual bool hasReadFrom() const;
+  virtual int peek(char* buf, int bufLen);
+  virtual bool hasPeek() const;
 protected:
   int _fd;
-  OSS::Net::IPAddress _localAddress;
-  OSS::Net::IPAddress _remoteAddress;
+  bool _connected;
 };
 
 //
@@ -57,14 +59,14 @@ inline int DTLSSocket::fd() const
   return _fd;
 }
 
-inline const OSS::Net::IPAddress& DTLSSocket::getLocalAddress() const
+inline bool DTLSSocket::hasReadFrom() const
 {
-  return _localAddress;
+  return true;
 }
 
-const OSS::Net::IPAddress& DTLSSocket::getRemoteAddress() const
+inline bool DTLSSocket::hasPeek() const
 {
-  return _remoteAddress;
+  return true;
 }
   
 } } // OSS::Net

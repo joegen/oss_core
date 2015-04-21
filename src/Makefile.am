@@ -347,6 +347,7 @@ liboss_core_la_SOURCES =  \
     net/DTLSContext.cpp \
     net/DTLSSession.cpp \
     net/DTLSBio.cpp \
+    net/DTLSSocketInterface.cpp \
     net/DTLSSocket.cpp \
     utl/AdaptiveDelay.cpp \
     utl/CoreUtils.cpp \
