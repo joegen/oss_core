@@ -25,11 +25,14 @@
 namespace OSS {
 namespace Net {
 
+static const int DTLS_DEFAULT_READ_TIMEOUT = 500;  
+  
   
 DTLSSocket::DTLSSocket(DTLSSession::Type type) :
   DTLSSocketInterface(type),
   _fd(-1),
-  _connected(false)
+  _connected(false),
+  _readTimeout(DTLS_DEFAULT_READ_TIMEOUT)
 {
 }
 
@@ -107,22 +110,31 @@ int DTLSSocket::connect(const OSS::Net::IPAddress& remoteAddress)
 
 int DTLSSocket::read(char* buf, int bufLen)
 {
+  struct pollfd fd;
   int ret = 0;
-  if (!_remoteAddress.isValid())
+
+  fd.fd = _fd;
+  fd.events = POLLIN;
+  ret = poll(&fd, 1, _readTimeout);
+
+  if (ret > 0)
   {
-    //
-    // Use readFrom so we can set the initial value of _remoteAddress
-    //
-    ret = readFrom(buf, bufLen, _remoteAddress);
-    
-    if (_remoteAddress.isValid())
+    if (!_remoteAddress.isValid())
     {
-      connect(_remoteAddress);
+      //
+      // Use readFrom so we can set the initial value of _remoteAddress
+      //
+      ret = readFrom(buf, bufLen, _remoteAddress);
+
+      if (_remoteAddress.isValid())
+      {
+        connect(_remoteAddress);
+      }
     }
-  }
-  else
-  {
-    ret = recv(_fd, buf, bufLen, 0);
+    else
+    {
+      ret = recv(_fd, buf, bufLen, 0);
+    }
   }
   
   return ret;
@@ -133,8 +145,18 @@ int DTLSSocket::readFrom(char* buf, int bufLen, OSS::Net::IPAddress& remoteAddre
   struct sockaddr_storage peer_addr;
   socklen_t peer_addr_len;
   int ret;
-  
   peer_addr_len = sizeof(struct sockaddr_storage);
+  
+  struct pollfd fd;
+  fd.fd = _fd;
+  fd.events = POLLIN;
+  ret = poll(&fd, 1, _readTimeout);
+  
+  if (ret <= 0)
+  {
+    return ret;
+  }
+  
   ret = recvfrom(_fd, buf, bufLen, 0, (struct sockaddr *) &peer_addr, &peer_addr_len);
   
   if (ret > 0)

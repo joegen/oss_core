@@ -45,9 +45,13 @@ public:
   virtual bool hasReadFrom() const;
   virtual int peek(char* buf, int bufLen);
   virtual bool hasPeek() const;
+  
+  void setReadTimeout(int timeout);
+  int getReadTimeout() const;
 protected:
   int _fd;
   bool _connected;
+  int _readTimeout;
 };
 
 //
@@ -67,6 +71,16 @@ inline bool DTLSSocket::hasReadFrom() const
 inline bool DTLSSocket::hasPeek() const
 {
   return true;
+}
+
+inline void DTLSSocket::setReadTimeout(int timeout)
+{
+  _readTimeout = timeout;
+}
+
+inline int DTLSSocket::getReadTimeout() const
+{
+  return _readTimeout;
 }
   
 } } // OSS::Net

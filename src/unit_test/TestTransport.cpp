@@ -371,7 +371,14 @@ TEST(TransportTest, test_dtls_external_c_nosrv)
   
   ASSERT_TRUE(clientSession.bind(client_addr) == 0);
 
+  //
+  // Bind a server but do not read from it
+  //
   OSS::Net::IPAddress client_target("127.0.0.1");
+  OSS::Net::DTLSSocket serverSession(OSS::Net::DTLSSession::SERVER);
+  ASSERT_TRUE(serverSession.bind(client_target) == 0);
+  
+  
   client_target.setPort(30002);
   ASSERT_TRUE(clientSession.connect(client_target) == 0);
   

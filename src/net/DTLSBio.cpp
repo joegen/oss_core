@@ -21,12 +21,14 @@
 #include "OSS/Net/DTLSSession.h"
 #include "OSS/Net/DTLSSocketInterface.h"
 #include "OSS/UTL/Logger.h"
+#include "OSS/UTL/Thread.h"
 
 
 namespace OSS {
 namespace Net {
 
 static const int DTLS_BIO_BUFFER_LEN = 4096;
+static const int MAX_RETRY_COUNT = 2;
   
 // 
 // SSL_read() read unencrypted data which is stored in the input BIO.
@@ -46,6 +48,9 @@ DTLSBio::DTLSBio() :
   //
   _pInBIO = BIO_new(BIO_s_mem());
   _pOutBIO = BIO_new(BIO_s_mem());
+  
+  BIO_set_mem_eof_return(_pInBIO, -1);
+  BIO_set_mem_eof_return(_pOutBIO, -1);
 }
 
 DTLSBio::~DTLSBio()
@@ -235,33 +240,39 @@ int DTLSBio::connect()
   SSL_do_handshake(_pSSL);
   int ret = 0;
   char readBuf[DTLS_BIO_BUFFER_LEN];
-  
+  int resendCount = 0;
   while (!SSL_is_init_finished(_pSSL))
   {
-    ret = BIO_read(_pOutBIO, readBuf, DTLS_BIO_BUFFER_LEN);
-
-    if (ret > 0)
+    int pending = BIO_ctrl_pending(_pOutBIO);
+    
+    if (pending > 0)
     {
-      //
-      // We have read the encrypted data, write it to our external output
-      //
-      ret = writeDirect(readBuf, ret);
-      
-      if (ret <= 0)
+      ret = BIO_read(_pOutBIO, readBuf, DTLS_BIO_BUFFER_LEN);
+
+      if (ret > 0)
       {
-        OSS_LOG_ERROR("DTLSBio::connect - writeDirect returned " << ret);
+        //
+        // We have read the encrypted data, write it to our external output
+        //
+        ret = writeDirect(readBuf, ret);
+
+        if (ret <= 0)
+        {
+          OSS_LOG_ERROR("DTLSBio::connect - writeDirect returned " << ret);
+          break;
+        }
+      }
+      else
+      {
+        OSS_LOG_ERROR("DTLSBio::connect - BIO_read returned " << ret);
         break;
       }
-    }
-    else
-    {
-      OSS_LOG_ERROR("DTLSBio::connect - BIO_read returned " << ret);
-      break;
     }
 
     //
     // Read the response from the server
     //
+    
     ret = readDirect(readBuf, DTLS_BIO_BUFFER_LEN);
 
     if (ret > 0)
@@ -288,8 +299,47 @@ int DTLSBio::connect()
     else
     {
       OSS_LOG_ERROR("DTLSBio::connect - readDirect returned " << ret);
-      break;
+      
+      if (ret < 0)
+      {
+        //
+        // This is an error.  Abort immediately
+        //
+        break;
+      }
+      
+      //
+      // We are not able to read any response.  We will try to retransmit
+      //
+      struct timeval timeout;
+      if (DTLSv1_get_timeout(_pSSL, &timeout))
+      {       
+        OSS::UInt64 timeout_value = timeout.tv_sec*1000 + timeout.tv_usec/1000;
+        if (timeout_value > 0)
+        {
+          if (resendCount > MAX_RETRY_COUNT)
+          {
+            break;
+          }
+          else
+          {
+            continue;
+          }
+        }
+        else
+        {
+          ++resendCount;
+          DTLSv1_handle_timeout(_pSSL);
+          continue;
+        }
+      }
+      else
+      {
+        break;
+      }
     }
+    
+    resendCount = 0;
   }
   
   if (SSL_is_init_finished(_pSSL))
@@ -339,30 +389,37 @@ int DTLSBio::accept()
 
           if (ret <= 0)
           {
-            std::cout << "DTLSBio::accept - writeDirect returned " << ret << std::endl;
             OSS_LOG_ERROR("DTLSBio::accept - writeDirect returned " << ret);
             break;
           }
         }
         else
         {
-          std::cout << "DTLSBio::connect - BIO_read returned " << ret << std::endl;
           OSS_LOG_ERROR("DTLSBio::connect - BIO_read returned " << ret);
           break;
         }
       }
       else
       {
-        std::cout << "DTLSBio::accept - BIO_write returned " << ret << std::endl;
         OSS_LOG_ERROR("DTLSBio::accept - BIO_write returned " << ret);
         break;
       }
     }
     else
     {
-      std::cout << "DTLSBio::accept - readDirect returned " << ret << std::endl;
       OSS_LOG_ERROR("DTLSBio::accept - readDirect returned " << ret);
-      break;
+      
+      if (ret == 0)
+      {
+        //
+        // No data returned by socket but is not an error.  Retry
+        //
+        continue;
+      }
+      else
+      {
+        break;
+      }
     }
   }
   
