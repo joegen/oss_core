@@ -321,11 +321,11 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onTransactionCreated(
   //
   // Force RTP proxy by default
   //
-  if (pRequest->isRequest("INVITE"))
+  if (pRequest->isInvite())
   {
     pTransaction->setProperty(OSS::PropertyMap::PROP_RequireRTPProxy, "1");
   }
-  else if (pRequest->isRequest("BYE"))
+  else if (pRequest->isBye())
   {
     if (!pRequest->isMidDialog())
     {
@@ -350,7 +350,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onTransactionCreated(
     return serverError;
   }
 
-  if (pRequest->isMidDialog() && !pRequest->isRequest("SUBSCRIBE"))
+  if (pRequest->isMidDialog() && !pRequest->isSubscribe())
     return _pTransactionManager->postMidDialogTransactionCreated(pRequest, pTransaction);
 
   return OSS::SIP::SIPMessage::Ptr();
@@ -461,7 +461,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
 {
   pRequest->userData() = static_cast<OSS_HANDLE>(pTransaction.get());
 
-  if (pRequest->isRequest("CANCEL"))
+  if (pRequest->isCancel())
   {
     std::string inviteId;
     SIPMessage::Ptr pInvite;
@@ -530,7 +530,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
 
     return OSS::SIP::SIPMessage::Ptr();
   }
-  else if (pRequest->isRequest("OPTIONS"))
+  else if (pRequest->isOptions())
   {
     //
     // We handle options locally
@@ -539,8 +539,8 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
     return ok;
   }
 
-  bool isInvite = pRequest->isRequest("INVITE");
-  if (pRequest->isMidDialog() && !pRequest->isRequest("SUBSCRIBE"))
+  bool isInvite = pRequest->isInvite();
+  if (pRequest->isMidDialog() && !pRequest->isSubscribe())
   {
     SIPMessage::Ptr ret = _pDialogState->onRouteMidDialogTransaction(pRequest, pTransaction, localInterface, target);
     if (isInvite)
@@ -550,7 +550,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
     // if ret is error and this is a NOTIFY, try to send it unsolicited
     //
     SIPMessage::Ptr notifyRet;
-    if (ret && pRequest->isRequest("NOTIFY") && SIPB2BContact::isRegisterRoute(pRequest))
+    if (ret && pRequest->isNotify() && SIPB2BContact::isRegisterRoute(pRequest))
     {
       notifyRet = onRouteUpperReg(pRequest, pTransaction, localInterface, target);
       if (notifyRet)
@@ -580,7 +580,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
   }
 
 
-  if (pRequest->isRequest("REGISTER"))
+  if (pRequest->isRegister())
   {
     std::string invokeLocalHandler = "0";
     if (pTransaction->getProperty(OSS::PropertyMap::PROP_InvokeLocalHandler, invokeLocalHandler ) && invokeLocalHandler == "1")
@@ -1288,7 +1288,7 @@ void SIPB2BScriptableHandler::onProcessOutbound(
 {
   pRequest->userData() = static_cast<OSS_HANDLE>(pTransaction.get());
 
-  if (pRequest->isRequest("INVITE"))
+  if (pRequest->isInvite())
   {
     std::string id;
     if (pTransaction->serverRequest()->getTransactionId(id))
@@ -1308,7 +1308,7 @@ void SIPB2BScriptableHandler::onProcessOutbound(
       pTransaction->serverTransport(), pTransaction->serverTransaction(), responseTarget);
     pTransaction->serverTransaction()->sendResponse(trying, responseTarget);
   }
-  else if (pRequest->isRequest("BYE"))
+  else if (pRequest->isBye())
   {
     std::string sessionId;
     OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId));
@@ -1832,7 +1832,7 @@ void SIPB2BScriptableHandler::onProcessAckFor2xxRequest(
       }
     }
   }
-  else if (pMsg->isRequest("ACK"))
+  else if (pMsg->isAck())
   {
     OSS_LOG_DEBUG(logId << "Processing ACK request " << pMsg->startLine());
     OSS::Net::IPAddress localAddress;
@@ -1872,7 +1872,7 @@ void SIPB2BScriptableHandler::onTransactionError(
         pTransaction->serverTransport(), pTransaction->serverTransaction(), responseTarget);
     pTransaction->serverTransaction()->sendResponse(serverError, responseTarget);
 
-    if (pTransaction->serverRequest()->isRequest("BYE"))
+    if (pTransaction->serverRequest()->isBye())
     {
       std::string sessionId;
       OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId));
@@ -1884,7 +1884,7 @@ void SIPB2BScriptableHandler::onTransactionError(
     }
   }
 
-  if (pTransaction->serverRequest()->isRequest("INVITE"))
+  if (pTransaction->serverRequest()->isInvite())
   {
     std::string id;
     if (pTransaction->serverRequest()->getTransactionId(id))

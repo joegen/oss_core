@@ -1397,7 +1397,7 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
   OSS::Net::IPAddress& targetAddress)
 {
   std::string logId = pMsg->createContextId(true);
-  if (!pMsg->isRequest("ACK"))
+  if (!pMsg->isAck())
   {
     OSS_LOG_ERROR(logId << "Non-ACK Request fed to onRouteAckRequest" << pMsg->startLine());
     throw B2BUAStateException("Non-ACK Request fed to onRouteAckRequest");

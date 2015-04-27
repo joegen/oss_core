@@ -38,6 +38,20 @@
 namespace OSS {
 namespace SIP {
 
+static const char METHOD_INVITE[]      = "INVITE";
+static const char METHOD_BYE[]         = "BYE";
+static const char METHOD_CANCEL[]      = "CANCEL";
+static const char METHOD_ACK[]         = "ACK";
+static const char METHOD_PRACK[]       = "PRACK";
+static const char METHOD_REFER[]       = "REFER";
+static const char METHOD_OPTIONS[]     = "OPTIONS";
+static const char METHOD_INFO[]        = "INFO";
+static const char METHOD_UPDATE[]      = "UPDATE";
+static const char METHOD_REGISTER[]    = "REGISTER";
+static const char METHOD_SUBSCRIBE[]   = "SUBSCRIBE";
+static const char METHOD_NOTIFY[]      = "NOTIFY";
+static const char METHOD_PUBLISH[]     = "PUBLISH";
+
 
 class OSS_API SIPMessage : 
   public SIPParser,
@@ -624,6 +638,33 @@ public:
   std::string getTopViaBranch() const;
     /// Return the top via branhc parameter
   
+  bool isInvite() const;
+    /// Returns true if a message is an INVITE request
+  bool isBye() const;
+    /// Returns true if a message is an BYE request
+  bool isCancel() const;
+    /// Returns true if a message is an CANCEL request
+  bool isAck() const;
+    /// Returns true if a message is an ACK request
+  bool isPrack() const;
+    /// Returns true if a message is an PRACK request
+  bool isRefer() const;
+    /// Returns true if a message is an REFER request
+  bool isUpdate() const;
+    /// Returns true if a message is an UPDATE request
+  bool isOptions() const;
+    /// Returns true if a message is an OPTIONS request
+  bool isInfo() const;
+    /// Returns true if a message is an INFO request
+  bool isRegister() const;
+    /// Returns true if a message is an REGISTER request
+  bool isSubscribe() const;
+    /// Returns true if a message is an SUBSCRIBE request
+  bool isNotify() const;
+    /// Returns true if a message is an NOTIFY request
+  bool isPublish() const;
+    /// Returns true if a message is an PUBLISH request
+  
 protected:
   boost::tribool consumeOne(char input);
   enum ConsumeState
@@ -716,6 +757,70 @@ inline SIPMessage::CustomProperties& SIPMessage::properties()
 inline const SIPMessage::CustomProperties& SIPMessage::properties() const
 {
   return _properties;
+}
+
+inline bool SIPMessage::isInvite() const
+{
+  return isRequest(METHOD_INVITE);
+}
+
+inline bool SIPMessage::isBye() const
+{
+  return isRequest(METHOD_BYE);
+}
+
+inline bool SIPMessage::isCancel() const
+{
+  return isRequest(METHOD_CANCEL);
+}
+
+inline bool SIPMessage::isAck() const
+{
+  return isRequest(METHOD_ACK);
+}
+
+inline bool SIPMessage::isPrack() const
+{
+  return isRequest(METHOD_PRACK);
+}
+
+inline bool SIPMessage::isRefer() const
+{
+  return isRequest(METHOD_REFER);
+}
+
+inline bool SIPMessage::isOptions() const
+{
+  return isRequest(METHOD_OPTIONS);
+}
+
+inline bool SIPMessage::isInfo() const
+{
+  return isRequest(METHOD_INFO);
+}
+
+inline bool SIPMessage::isUpdate() const
+{
+  return isRequest(METHOD_UPDATE);
+}
+inline bool SIPMessage::isRegister() const
+{
+  return isRequest(METHOD_REGISTER);
+}
+
+inline bool SIPMessage::isSubscribe() const
+{
+  return isRequest(METHOD_SUBSCRIBE);
+}
+
+inline bool SIPMessage::isNotify() const
+{
+  return isRequest(METHOD_NOTIFY);
+}
+
+inline bool SIPMessage::isPublish() const
+{
+  return isRequest(METHOD_PUBLISH);
 }
 
 }} //OSS::SIP

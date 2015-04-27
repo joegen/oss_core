@@ -124,7 +124,7 @@ void SIPTransaction::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
 {
   OSS::mutex_lock lock(_mutex);
 
-  bool isAck = pMsg->isRequest("ACK");
+  bool isAck = pMsg->isAck();
 
   if (pMsg->isRequest() && !_pInitialRequest && !isAck)
     _pInitialRequest = pMsg;

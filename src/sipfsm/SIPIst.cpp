@@ -81,7 +81,7 @@ void SIPIst::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
       dispatch()->requestHandler()(pMsg, pTransport, pTransaction->shared_from_this());
     }
   }
-  else if (pTransaction->getState() == COMPLETED && pMsg->isRequest("ACK"))
+  else if (pTransaction->getState() == COMPLETED && pMsg->isAck())
   {
     cancelTimerH();
     if (!pTransaction->transport()->isReliableTransport())

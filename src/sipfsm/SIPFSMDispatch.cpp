@@ -148,7 +148,7 @@ void SIPFSMDispatch::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
     //
     // We did not get a transaction, check if this is an ack and find the IST ACK transaction
     //
-    if (transactionType == SIPTransaction::TYPE_IST && pMsg->isRequest("ACK"))
+    if (transactionType == SIPTransaction::TYPE_IST && pMsg->isAck())
     {
         //
         // No IST is existing in the ackable Pool.
