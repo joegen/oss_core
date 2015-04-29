@@ -27,7 +27,6 @@ build:
 		hiredis-devel
 		gtest-devel
 		leveldb-devel
-
     - script: 
         name: configure OSS_CORE
         code: autoreconf -if && mkdir BUILD && cd BUILD && ../configure --prefix=`pwd`/build  
