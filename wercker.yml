@@ -1,9 +1,7 @@
 box:
-  id: urelx/centos6-epel
+  id: joegen/oss_core-centos6
 build:
   steps:
-    - install-packages:
-        packages: automake libtool gcc-c++ openssl-devel libmcrypt-devel libtool-ltdl-devel pcre-devel findutils db4-devel iptables iproute boost-devel v8-devel libsrtp-devel libpcap-devel libdnet-devel xmlrpc-c-devel libevent-devel poco-devel libconfig-devel hiredis-devel gtest-devel leveldb-devel
     - script: 
         name: configure OSS_CORE
         code: autoreconf -if && mkdir BUILD && cd BUILD && ../configure --prefix=`pwd`/build  
