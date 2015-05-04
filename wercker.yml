@@ -1,5 +1,4 @@
-box:
-  id: joegen/oss_core-centos6
+box: joegen/oss_core-centos6:latest
 build:
   steps:
     - script: 
