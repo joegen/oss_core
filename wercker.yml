@@ -1,10 +1,13 @@
 box: joegen/oss_core-centos6:latest
 build:
   steps:
+    - script:
+        name: Init Git submodules
+        code: git submodule update --init --recursive   
     - script: 
-        name: configure OSS_CORE
+        name: Configure OSS_CORE
         code: autoreconf -if && mkdir BUILD && cd BUILD && ../configure --prefix=`pwd`/build  
     - script:
-        name: build OSS_CORE
+        name: Build OSS_CORE
         code: cd BUILD && make && make install
     
