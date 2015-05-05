@@ -2,12 +2,14 @@ box: joegen/oss_core-centos6:latest
 build:
   steps:
     - script:
-        name: Init Git submodules
-        code: git submodule init && git submodule update  
+        name: Init OSS_CORE submodules
+        code: git submodule update --init --recursive
+    - script:
+        name: Copy WS sources to include
+        code: rm -f include/OSS/websocketpp && mkdir -p include/OSS/websocketpp && cp -rpP src/ws/src/* include/OSS/websocketpp/
     - script: 
         name: Configure OSS_CORE
-        code: autoreconf -if && mkdir BUILD && cd BUILD && ../configure --prefix=`pwd`/build  
+        code: autoreconf -if && ./configure
     - script:
         name: Build OSS_CORE
-        code: cd BUILD && make && make install
-    
+        code: make && make install
