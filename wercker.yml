@@ -6,10 +6,16 @@ build:
         code: git submodule update --init --recursive
     - script:
         name: Copy WS sources to include
-        code: rm -f include/OSS/websocketpp && mkdir -p include/OSS/websocketpp && cp -rpP src/ws/src/* include/OSS/websocketpp/
+        code: rm -f include/OSS/websocketpp && git checkout include/OSS/websocketpp 
     - script: 
         name: Configure OSS_CORE
-        code: autoreconf -if && ./configure
+        code: autoreconf -if && mkdir -p BUILD && cd BUILD && ../configure
+    - script: 
+        name: Create tarball
+        code: cd BUILD && make dist
     - script:
-        name: Build OSS_CORE
-        code: make && make install
+        name: Prepare RPM macros
+        code: echo "%_topdir      $HOME/rpmbuild" >> ~/.rpmmacros && mkdir -p ~/rpmbuild/{BUILD,SOURCES,RPMS,SRPMS,SPECS}
+    - script:
+        name: Building RPMs
+        code: cd BUILD && rpmbuild -ta oss_core-*tar.gz
