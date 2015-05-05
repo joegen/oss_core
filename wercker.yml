@@ -3,7 +3,7 @@ build:
   steps:
     - script:
         name: Init Git submodules
-        code: git submodule update --init --recursive   
+        code: git submodule init && git submodule update  
     - script: 
         name: Configure OSS_CORE
         code: autoreconf -if && mkdir BUILD && cd BUILD && ../configure --prefix=`pwd`/build  
