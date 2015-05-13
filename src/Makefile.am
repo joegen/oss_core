@@ -433,7 +433,8 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestAccessControl.cpp \
 	unit_test/TestReplaces.cpp \
 	unit_test/TestTransport.cpp \
-	unit_test/TestUaRegister.cpp
+	unit_test/TestUaRegister.cpp \
+	unit_test/TestV8Engine.cpp
 
 #
 # oss_core - A simple back-to-back user agent
