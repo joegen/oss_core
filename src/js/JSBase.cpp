@@ -716,6 +716,9 @@ bool JSBase::internalInitialize(
   else
     globalsDir = operator/(scriptFile.branch_path(), "global.detail");
 
+  // Create a handle scope to hold the temporary references.
+  v8::HandleScope handle_scope;
+  
   v8::Handle<v8::String> globalScript;
   v8::Handle<v8::String> helperScript;
   v8::Handle<v8::String> mainScript;
