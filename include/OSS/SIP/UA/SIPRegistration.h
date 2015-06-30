@@ -22,6 +22,7 @@
 #define	OSS_SIPREGISTRATION_H_INCLUDED
 
 #include <boost/shared_ptr.hpp>
+#include "OSS/Net/Net.h"
 #include "OSS/UTL/Thread.h"
 #include "OSS/SIP/UA/SIPUserAgent.h"
 #include "OSS/SIP/SIPMessage.h"
@@ -44,6 +45,8 @@ public:
   SIPRegistration(SIPUserAgent& ua);
   
   ~SIPRegistration();
+  
+  void schedule(int millis);
   
   bool run();
   
@@ -112,6 +115,12 @@ public:
   void getContactList(OSS::SIP::SIPContact& contactList) const;
   
   bool isRegisteredBinding(const OSS::SIP::SIPURI& binding) const;
+  
+  SIPRegistration* clone() const;
+  
+protected:
+  void schedule_handler();
+  
 private:
   SIPUserAgent& _ua;
   OSS_HANDLE _registration_handle;
@@ -131,6 +140,7 @@ private:
   mutable OSS::mutex_critic_sec _contactListMutex;
   OSS::SIP::SIPContact _contactList;
   ResponseHandlerList _responseHandlers;
+  NET_TIMER_HANDLE _scheduleTimer;
 };
 
 //
