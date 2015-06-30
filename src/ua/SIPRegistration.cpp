@@ -33,11 +33,15 @@ const OSS::UInt32 DEFAULT_REG_EXPIRES = 3600;
 static void register_response_handler(int err, const struct sip_msg *msg, void *arg)
 {
   SIPRegistration* pRegistration = (SIPRegistration*)arg;
+  
+  
   if (pRegistration && !pRegistration->getResponseHandlers().empty())
   {
     SIPMessage::Ptr pMsg;
     
-    if (msg->mb->size)
+    std::string errorMessage(strerror(err));
+   
+    if (!err && msg && msg->mb->size)
     {
       pMsg = SIPMessage::Ptr(new SIPMessage(msg->mb->buf, msg->mb->size));
       pRegistration->setStatus(pMsg->isResponseFamily(200));
@@ -56,8 +60,6 @@ static void register_response_handler(int err, const struct sip_msg *msg, void *
       }
     }
     
-    std::string errorMessage(strerror(err));
-   
     SIPRegistration::Ptr pReg(pRegistration);
     const SIPRegistration::ResponseHandlerList& handlers = pRegistration->getResponseHandlers();
     for (SIPRegistration::ResponseHandlerList::const_iterator iter = handlers.begin();
@@ -68,6 +70,7 @@ static void register_response_handler(int err, const struct sip_msg *msg, void *
   }
   else
   {
+    OSS_LOG_ERROR("OSS::SIP::UA::register_response_handler - Unable to determine session or response handler not set.");
     delete pRegistration;
     pRegistration = 0;
   }
@@ -104,6 +107,11 @@ SIPRegistration::SIPRegistration(SIPUserAgent& ua) :
 
 SIPRegistration::~SIPRegistration()
 {
+  if (_scheduleTimer)
+  {
+    OSS::net_io_timer_cancel(_scheduleTimer);
+  }
+  
   stop();
 }
 
@@ -117,8 +125,64 @@ void SIPRegistration::stop()
   }
 }
 
+SIPRegistration* SIPRegistration::clone() const
+{
+  SIPRegistration* pClone = new SIPRegistration(_ua);
+
+  pClone->_authUser  = _authUser;
+  pClone->_authPassword  = _authPassword;
+  pClone->_domain  = _domain;
+  pClone->_realm  = _realm;
+  pClone->_fromUser  = _fromUser;
+  pClone->_toUser  = _toUser;
+  pClone->_contactUser  = _contactUser;
+  pClone->_routeHeader  = _routeHeader;
+  pClone->_contactParams  = _contactParams;
+  pClone->_expires  = _expires;
+  pClone->_extraHeaders  = _extraHeaders;
+  pClone->_responseHandlers  = _responseHandlers;
+  
+  return pClone;
+}
+
+void SIPRegistration::schedule(int millis)
+{
+  //
+  // Cancel any previous timer
+  //
+  if (_scheduleTimer)
+  {
+    OSS::net_io_timer_cancel(_scheduleTimer);
+  }
+  
+  //
+  // Stop any previous run
+  //
+  stop();
+  
+  //
+  // Schedule a new timer
+  //
+  OSS_LOG_NOTICE("SIPRegistration::schedule - Next registration attempt after " << millis << " milliseconds.");
+  _scheduleTimer = OSS::net_io_timer_create(millis, boost::bind(&SIPRegistration::schedule_handler, this));
+}
+
+
+void SIPRegistration::schedule_handler()
+{
+  if (!run())
+  {
+    delete this;
+  }
+}
+
 bool SIPRegistration::run()
 {
+  //
+  // Stop any previous call to run
+  //
+  stop();
+  
   int err = 0;
   std::ostringstream fromUri;
   std::ostringstream toUri;

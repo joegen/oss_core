@@ -27,6 +27,9 @@ namespace OSS {
 namespace SIP {
 namespace B2BUA {
 
+  
+#define REG_RETRY_INTERVAL 1000 * 60 /// One minute  
+  
 
 SIPB2BRegisterAgent::SIPB2BRegisterAgent() :
   _pRegisterUa(0)
@@ -162,13 +165,28 @@ void SIPB2BRegisterAgent::onRegisterResponse(
     else
     {
       OSS_LOG_ERROR("SIPB2BRegisterAgent::onClientRegisterResponse - " 
-        << pReg->getContactUser() << "@" << pReg->getDomain() << " registration failure.  " << pMsg->startLine());
+        << pReg->getContactUser() << "@" << pReg->getDomain() << " registration failure.  " << pMsg->startLine());   
+      //
+      // Clone the registration and reschedule it
+      //
+      OSS::SIP::UA::SIPRegistration* pClone = pReg->clone();
+      pClone->schedule(REG_RETRY_INTERVAL);
     }
   }
-  else
+  else if (pReg)
   {
     OSS_LOG_ERROR("SIPB2BRegisterAgent::onClientRegisterResponse - " 
         << pReg->getContactUser() << "@" << pReg->getDomain() << " registration failure.  " << error);
+    
+    //
+    // Clone the registration and reschedule it
+    //
+    OSS::SIP::UA::SIPRegistration* pClone = pReg->clone();
+    pClone->schedule(REG_RETRY_INTERVAL);
+  }
+  else
+  {
+    OSS_LOG_ERROR("SIPB2BRegisterAgent::onClientRegisterResponse - NULL data???"); 
   }
 }
 

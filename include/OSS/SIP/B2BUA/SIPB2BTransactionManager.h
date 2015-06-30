@@ -367,17 +367,8 @@ public:
     const std::string& authUser,
     const std::string& authPassword,
     const std::string& domain,
-    OSS::UInt32 expires
-  );
-    /// Register with a remote domain
-  
-  bool sendLocalRegister(
-    const std::string& user,
-    const std::string& authUser,
-    const std::string& authPassword,
-    const std::string& domain,
     OSS::UInt32 expires,
-    const std::string& route
+    const std::string& registrarAddress
   );
     /// Register with a remote domain
   
