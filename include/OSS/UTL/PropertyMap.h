@@ -64,10 +64,11 @@ struct PropertyMap
     "sdp-answer-route", \
     "reinvite", \
     "generate-local-response", \
-    "inbound-contact," \
+    "inbound-contact", \
     "is-early-dialog-persisted", \
     "is-out-of-dialog-refer", \
     "subnets", \
+    "x-local-reg", \
     "property-undefined" \
   };
 
@@ -115,6 +116,7 @@ struct PropertyMap
     PROP_IsEarlyDialogPersisted,
     PROP_IsOutOfDialogRefer,
     PROP_Subnets,
+    PROP_LocalReg,
     PROP_Max
   };
   
