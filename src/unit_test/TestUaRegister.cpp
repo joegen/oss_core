@@ -16,7 +16,7 @@ static bool gResponseHandled = false;
 static bool gExitHandled = false;
 static bool gIsOkResponse = false;
 
-void reg_response_handler(SIPRegistration::Ptr pReg, const SIPMessage::Ptr& pMsg, const std::string& error)
+void reg_response_handler(SIPRegistration* pReg, const SIPMessage::Ptr& pMsg, const std::string& error)
 {
   //
   // Stop the user-agent

@@ -565,7 +565,9 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteTransaction(
   {
     SIPMessage::Ptr ret = onRouteUpperReg(pRequest, pTransaction, localInterface, target);
     if (ret)
+    {
       return ret;
+    }
   }
   else
   {

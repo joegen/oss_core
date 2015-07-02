@@ -377,7 +377,7 @@ public:
     /// registered account
   
   void onLocalRegisterResponse(
-    OSS::SIP::UA::SIPRegistration::Ptr pReg, 
+    OSS::SIP::UA::SIPRegistration* pReg, 
     const SIPMessage::Ptr& pMsg, 
     const std::string& error);
     /// Notified when a response is received for a local register

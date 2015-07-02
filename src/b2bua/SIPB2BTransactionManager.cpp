@@ -55,6 +55,7 @@ void SIPB2BTransactionManager::initialize(const boost::filesystem::path& cfgDire
 
 void SIPB2BTransactionManager::deinitialize()
 {
+  stopLocalRegistrationAgent();
   //
   // Deinitialize all registed handlers
   //
@@ -665,14 +666,8 @@ bool SIPB2BTransactionManager::sendLocalRegister(
 { 
   std::ostringstream regParam;
   
-  if (!registrarAddress.empty())
-  {
-    regParam << "x-local-reg=" << registrarAddress;
-  }
-  else
-  {
-    regParam << "x-local-reg=" << domain;
-  }
+
+  regParam << PropertyMap::propertyString(PropertyMap::PROP_LocalReg) << "=true";
   
   return _registerAgent.sendRegister(
     domain, 
@@ -688,33 +683,13 @@ bool SIPB2BTransactionManager::sendLocalRegister(
 
 
 void SIPB2BTransactionManager::onLocalRegisterResponse(
-  OSS::SIP::UA::SIPRegistration::Ptr pReg, 
+  OSS::SIP::UA::SIPRegistration* pReg, 
   const SIPMessage::Ptr& pMsg, 
   const std::string& error)
 {
-  if (pMsg)
-  {
-    if (pMsg->isResponseFamily(200))
-    {
-      OSS_LOG_INFO("SIPB2BTransactionManager::onLocalRegisterResponse - " <<
-        pReg->getContactUser() << "@" << pReg->getDomain() << " is now registered.");
-    }
-    else
-    {
-      OSS_LOG_ERROR("SIPB2BTransactionManager::onLocalRegisterResponse - " <<
-        pReg->getContactUser() << "@" << pReg->getDomain() << " is not authorized");
-    }
-  }
-  else if (!error.empty())
-  {
-    OSS_LOG_ERROR("SIPB2BTransactionManager::onLocalRegisterResponse - " <<
-        pReg->getContactUser() << "@" << pReg->getDomain() << " error encountered - " << error);
-  }
-  else
-  {
-    OSS_LOG_ERROR("SIPB2BTransactionManager::onLocalRegisterResponse - " <<
-        pReg->getContactUser() << "@" << pReg->getDomain() << " unknown error encountered");
-  }
+  //
+  // This is where you get a glimpse of responses received by the local registration agent
+  //
 }
 
 bool SIPB2BTransactionManager::isForLocalRegistration(const std::string& contact)

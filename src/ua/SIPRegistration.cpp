@@ -44,7 +44,6 @@ static void register_response_handler(int err, const struct sip_msg *msg, void *
     if (!err && msg && msg->mb->size)
     {
       pMsg = SIPMessage::Ptr(new SIPMessage(msg->mb->buf, msg->mb->size));
-      pRegistration->setStatus(pMsg->isResponseFamily(200));
       
       std::size_t count = pMsg->hdrGetSize(OSS::SIP::HDR_CONTACT); 
       if (count > 0)
@@ -60,12 +59,12 @@ static void register_response_handler(int err, const struct sip_msg *msg, void *
       }
     }
     
-    SIPRegistration::Ptr pReg(pRegistration);
+
     const SIPRegistration::ResponseHandlerList& handlers = pRegistration->getResponseHandlers();
     for (SIPRegistration::ResponseHandlerList::const_iterator iter = handlers.begin();
       iter != handlers.end(); iter++)
     {
-      (*iter)(pReg, pMsg, errorMessage);
+      (*iter)(pRegistration, pMsg, errorMessage);
     }
   }
   else
@@ -113,6 +112,8 @@ SIPRegistration::~SIPRegistration()
   }
   
   stop();
+  
+  OSS_LOG_INFO("SIPRegistration " << _toUser << "@" << _domain << " - " << _callId << " DESTROYED");
 }
 
 void SIPRegistration::stop()
