@@ -135,7 +135,10 @@ autoreconf -if
 %configure @OSSLIBS_RPM_CONFIGURE_OPTIONS@ --enable-turn
 %endif
 cp config.log %name.configlog
-make %{_smp_mflags} all
+
+# Wercker docker image does not seem to like smp flags
+# make %{_smp_mflags} all
+make all
 
 %install
 rm -rf $RPM_BUILD_ROOT
