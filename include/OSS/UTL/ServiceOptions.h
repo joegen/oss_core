@@ -39,6 +39,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/detail/ptree_utils.hpp>
 #include <boost/exception/all.hpp>
+#include <boost/filesystem.hpp>
 #include <stdexcept>
 #include <locale>
 
@@ -263,11 +264,17 @@ inline bool ServiceOptions::parseOptions(bool verbose)
     if (hasOption("pid-file", false))
     {
       getOption("pid-file", _pidFile);
-      if (!writePidFile(_pidFile.c_str(),  true))
+      
+      try
       {
-        std::cerr << std::endl << "ERROR: Unable to lock PID file " << _pidFile << std::endl;
-        std::cerr.flush();
-        _exit(-1);
+        boost::filesystem::remove(_pidFile);
+        std::ofstream pidFile(_pidFile.c_str());
+        pidFile << getpid() << std::endl;
+      }
+      catch(...)
+      {
+        OSS_LOG_ERROR("Unable to create PID file " << _pidFile);
+        _exit(1);
       }
     }
 
