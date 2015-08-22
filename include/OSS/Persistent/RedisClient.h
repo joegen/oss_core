@@ -369,6 +369,16 @@ protected:
         //
         if (connect())
           reply = (redisReply*)redisCommandArgv(_context, argc, (const char**)argv, 0);
+        
+        if (_context->err)
+        {
+          _lastError = _context->errstr;
+          if (_lastError.empty())
+            _lastError = "Unknown exception";
+          freeReply(reply);
+          reply = 0;
+          OSS_LOG_ERROR("[REDIS] Execute Retry FAILED.  - " << _lastError);
+        }
       }
     }
 
