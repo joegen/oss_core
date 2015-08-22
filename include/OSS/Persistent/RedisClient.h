@@ -68,12 +68,26 @@ public:
     UNIX
   };
 
+protected:
+  mutable mutex _mutex;
+  redisContext* _context;
+  Type _type;
+  std::string _tcpHost;
+  int _tcpPort;
+  std::string _unixSocketPath;
+  mutable std::string _lastError;
+  std::string _password;
+  int _db;
+  bool _connected;
+  
+public:
   RedisClient() :
     _context(0),
     _type(TCP),
     _tcpHost("127.0.0.1"),
     _tcpPort(6379),
-    _db(0)
+    _db(0),
+    _connected(false)
   {
     OSS_LOG_INFO("[REDIS] << Redis client CREATED - " << _tcpHost << ":" << _tcpPort);
   }
@@ -83,7 +97,8 @@ public:
     _type(TCP),
     _tcpHost(tcpHost),
     _tcpPort(tcpPort),
-    _db(0)
+    _db(0),
+    _connected(false)
   {
     OSS_LOG_INFO("[REDIS] << Redis client CREATED - " << _tcpHost << ":" << _tcpPort);
   }
@@ -93,7 +108,8 @@ public:
     _type(UNIX),
     _tcpPort(6379),
     _unixSocketPath(unixSocketPath),
-    _db(0)
+    _db(0),
+    _connected(false)
   {
   }
 
@@ -160,6 +176,8 @@ public:
       {
         OSS_LOG_ERROR("[REDIS] Error connecting to unix:" << _unixSocketPath << " - " << _lastError);
       }
+      
+      disconnect();
       return false;
     }
 
@@ -226,6 +244,9 @@ public:
             }
           }
 
+          freeReply(reply);
+          reply = 0;
+        
           disconnect();
           return false;
         }
@@ -249,7 +270,7 @@ public:
       }
     }
 
-    return true;
+    return _connected = true;
   }
 
   void disconnect()
@@ -259,7 +280,15 @@ public:
     {
       redisFree(_context);
       _context = 0;
+      if (_type == TCP)
+      {
+        OSS_LOG_INFO("[REDIS] Disconnecting from " << _tcpHost << ":" << _tcpPort << " - " << _lastError);
+      }else if (_type == UNIX)
+      {
+        OSS_LOG_ERROR("[REDIS] Disconnecting from " << _unixSocketPath << " - " << _lastError);
+      }
     }
+    _connected = false;
   }
 
 protected:
@@ -721,18 +750,6 @@ public:
     long long result = 0;
     return getReplyInt(args, result) && result > 0;
   }
-  
-
-protected:
-  mutable mutex _mutex;
-  redisContext* _context;
-  Type _type;
-  std::string _tcpHost;
-  int _tcpPort;
-  std::string _unixSocketPath;
-  mutable std::string _lastError;
-  std::string _password;
-  int _db;
 };
 
 class RedisBroadcastClient
@@ -753,7 +770,7 @@ public:
     //
   }
 
-  bool connect(const std::string& tcpHost, int tcpPort, const std::string& password = "", int db = 0)
+  bool connect(const std::string& tcpHost, int tcpPort, const std::string& password = "", int db = 0, bool allowReconnect = true)
   {
     std::ostringstream key;
     key << tcpHost << ":" << tcpPort;
@@ -766,9 +783,17 @@ public:
         _defaultClient = new RedisClient(tcpHost, tcpPort);
         if (!_defaultClient->connect(password, db))
         {
-          delete _defaultClient;
-          _defaultClient = 0;
-          return false;
+          if (!allowReconnect)
+          {
+            delete _defaultClient;
+            _defaultClient = 0;
+            return false;
+          }
+          else
+          {
+            _defaultClient->disconnect();
+            OSS_LOG_ERROR("[REDIS] Reconnect enabled for " << tcpHost << ":" << tcpPort);
+          }
         }
         client = _defaultClient;
       }
@@ -777,11 +802,18 @@ public:
         client = new RedisClient(tcpHost, tcpPort);
         if (!client->connect(password, db))
         {
-          delete client;
-          return false;
+          if (!allowReconnect)
+          {
+            delete client;
+            return false;
+          }
+          else
+          {
+            client->disconnect();
+            OSS_LOG_ERROR("[REDIS] Reconnect enabled for " << tcpHost << ":" << tcpPort);
+          }
         }
       }
-
       _pool[key.str()] = client;
     }
     return true;
@@ -842,8 +874,6 @@ public:
     {
       if (_defaultClient->get(key, value))
         return true;
-      else
-        return false;
     }
     catch(...)
     {
@@ -860,7 +890,7 @@ public:
         if (client->get(key, value))
           return true;
         else
-          return false;
+          continue;
       }
       catch(...)
       {
