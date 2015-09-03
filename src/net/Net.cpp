@@ -34,6 +34,7 @@
 #include "OSS/UTL/Exception.h"
 #include "OSS/UTL/Thread.h"
 #include "OSS/UTL/Application.h"
+#include "OSS/UTL/Logger.h"
 
 #if !defined(OSS_OS_FAMILY_WINDOWS)
 #include <ifaddrs.h>
@@ -90,6 +91,7 @@ void net_init()
   if (!_pNetSingletons)
   {
     _pNetSingletons = new net_singletons();
+    _pNetSingletons->_houseKeepingTimer.expires_from_now(boost::posix_time::milliseconds(3600000));
     _pNetSingletons->_houseKeepingTimer.async_wait(boost::bind(&net_singletons::onHouseKeepingTimer, _pNetSingletons, boost::asio::placeholders::error));
     _pNetSingletons->_pIoServiceThread = new boost::thread(boost::bind(&boost::asio::io_service::run, &(_pNetSingletons->_ioService)));
   }
@@ -122,8 +124,6 @@ void net_init()
     }
 	}
   freeifaddrs(list);
-
-
 
 
 #endif
@@ -1035,8 +1035,9 @@ void NetTimer::onTimer(const boost::system::error_code& e)
     {
       OSS::thread_pool::static_schedule(_handler);
     }
-    catch(...)
+    catch(const std::exception& e)
     {
+      OSS_LOG_ERROR("NetTimer::onTimer Exception: " << e.what());
     }
   }
 }
@@ -1046,13 +1047,16 @@ NET_TIMER_HANDLE net_io_timer_create(int millis, net_timer_func handler)
 {
   OSS_VERIFY_NULL(OSS::Private::_pNetSingletons);
   NET_TIMER_HANDLE handle = NET_TIMER_HANDLE(new NetTimer());
-
+ 
   boost::asio::deadline_timer* pTimer = 
     new boost::asio::deadline_timer(OSS::Private::_pNetSingletons->_ioService, boost::posix_time::milliseconds(millis));
 
   handle->_timerHandle = (OSS_HANDLE)pTimer;
   handle->_handler = handler;
+  
+  pTimer->expires_from_now(boost::posix_time::milliseconds(millis));
   pTimer->async_wait(boost::bind(&NetTimer::onTimer, handle, boost::asio::placeholders::error));
+  
 
   return handle;
 }

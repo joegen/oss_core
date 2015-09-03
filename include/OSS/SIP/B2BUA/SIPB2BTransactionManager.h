@@ -367,17 +367,8 @@ public:
     const std::string& authUser,
     const std::string& authPassword,
     const std::string& domain,
-    OSS::UInt32 expires
-  );
-    /// Register with a remote domain
-  
-  bool sendLocalRegister(
-    const std::string& user,
-    const std::string& authUser,
-    const std::string& authPassword,
-    const std::string& domain,
     OSS::UInt32 expires,
-    const std::string& route
+    const std::string& registrarAddress
   );
     /// Register with a remote domain
   
@@ -386,7 +377,7 @@ public:
     /// registered account
   
   void onLocalRegisterResponse(
-    OSS::SIP::UA::SIPRegistration::Ptr pReg, 
+    OSS::SIP::UA::SIPRegistration* pReg, 
     const SIPMessage::Ptr& pMsg, 
     const std::string& error);
     /// Notified when a response is received for a local register

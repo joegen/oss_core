@@ -27,6 +27,9 @@ namespace OSS {
 namespace SIP {
 namespace B2BUA {
 
+  
+#define REG_RETRY_INTERVAL 1000 * 60 /// One minute  
+  
 
 SIPB2BRegisterAgent::SIPB2BRegisterAgent() :
   _pRegisterUa(0)
@@ -82,9 +85,6 @@ OSS::SIP::UA::SIPRegistration* SIPB2BRegisterAgent::prepareRegister(
   
   pReg->setExtraHeaders(extraHeaders);
   
-  pReg->addResponseHandler(boost::bind(&SIPB2BRegisterAgent::onRegisterResponse,
-    this, _1, _2, _3));
-  
   return pReg;
 }
 
@@ -107,6 +107,9 @@ bool SIPB2BRegisterAgent::sendRegister(
     extraHeaders,
     nextHop,
     expires);
+  
+  pReg->addResponseHandler(boost::bind(&SIPB2BRegisterAgent::onRegisterResponse,
+    this, _1, _2, _3));
   
   if (!pReg)
     return false;
@@ -142,33 +145,67 @@ bool SIPB2BRegisterAgent::sendRegister(
 
   pReg->addResponseHandler(responseHandler);
   
+  
+  //
+  // Make sure we add the local response handler as the last because it can invalidate the reg pointer
+  //
+  pReg->addResponseHandler(boost::bind(&SIPB2BRegisterAgent::onRegisterResponse,
+    this, _1, _2, _3));
+  
   return pReg->run();
 }
 
 void SIPB2BRegisterAgent::onRegisterResponse(
-  OSS::SIP::UA::SIPRegistration::Ptr pReg, 
+  OSS::SIP::UA::SIPRegistration* pReg, 
   const SIPMessage::Ptr& pMsg, 
   const std::string& error)
 {
+  OSS::mutex_critic_sec_lock lock(_sessionsMutex);
+  
   if (pMsg)
   {
-    if (pMsg->isResponseFamily(200))
+    std::string callId = pMsg->hdrGet(OSS::SIP::HDR_CALL_ID);
+    OSS_VERIFY_NULL(pReg);
+    pReg->setCallId(callId);
+    
+    if (!callId.empty() && _sessions.find(callId) != _sessions.end())
     {
-      OSS::mutex_critic_sec_lock lock(_sessionsMutex);
-      _sessions.push_back(pReg);
-      OSS_LOG_INFO("SIPB2BRegisterAgent::onClientRegisterResponse - " 
-        << pReg->getContactUser() << "@" << pReg->getDomain() << " registered.");
+      OSS::SIP::UA::SIPRegistration::Ptr pNewReg(pReg);
+      _sessions[callId] = pNewReg;
+    }
+    
+    if (pMsg->is2xx())
+    {
+      if (pMsg->hdrPresent(OSS::SIP::HDR_CONTACT))
+      {
+        
+        if (!pReg->isRegistered())
+        {
+          pReg->markRegistered(true);
+        }
+        OSS_LOG_INFO("SIPB2BRegisterAgent::onClientRegisterResponse - " 
+          << pReg->getContactUser() << "@" << pReg->getDomain() << " - " << callId << " REGISTERED");
+      }
+      else
+      {
+        OSS_LOG_INFO("SIPB2BRegisterAgent::onClientRegisterResponse - " 
+          << pReg->getContactUser() << "@" << pReg->getDomain() << " UNREGISTERED.");
+      }
     }
     else
     {
       OSS_LOG_ERROR("SIPB2BRegisterAgent::onClientRegisterResponse - " 
-        << pReg->getContactUser() << "@" << pReg->getDomain() << " registration failure.  " << pMsg->startLine());
+        << pReg->getContactUser() << "@" << pReg->getDomain() << " registration failure.  " << pMsg->startLine());   
     }
   }
-  else
+  else if (pReg)
   {
     OSS_LOG_ERROR("SIPB2BRegisterAgent::onClientRegisterResponse - " 
         << pReg->getContactUser() << "@" << pReg->getDomain() << " registration failure.  " << error);
+  }
+  else
+  {
+    OSS_LOG_ERROR("SIPB2BRegisterAgent::onClientRegisterResponse - NULL data???"); 
   }
 }
 
@@ -193,9 +230,9 @@ void SIPB2BRegisterAgent::stop()
     //
     // Deregister all clients
     //
-    for (std::vector<OSS::SIP::UA::SIPRegistration::Ptr>::iterator iter = _sessions.begin(); iter != _sessions.end(); iter++)
+    for (Sessions::iterator iter = _sessions.begin(); iter != _sessions.end(); iter++)
     {
-      (*iter)->stop();
+      iter->second->stop();
     }
     _sessions.clear();
     _pRegisterUa->stop(false);
@@ -208,7 +245,7 @@ bool SIPB2BRegisterAgent::isLocalRegistration(const std::string& uri) const
   OSS::SIP::SIPURI binding(uri);
   for (Sessions::const_iterator iter = _sessions.begin(); iter != _sessions.end(); iter++)
   {
-    if ((*iter)->isRegisteredBinding(binding))
+    if (iter->second->isRegisteredBinding(binding))
     {
       return true;
     }

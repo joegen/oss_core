@@ -35,7 +35,7 @@ class SIPB2BRegisterAgent
 {
 public:
   
-  typedef std::vector<OSS::SIP::UA::SIPRegistration::Ptr> Sessions;
+  typedef std::map<std::string, OSS::SIP::UA::SIPRegistration::Ptr> Sessions;
   
   SIPB2BRegisterAgent();
   
@@ -70,7 +70,7 @@ public:
   
   
   void onRegisterResponse(
-    OSS::SIP::UA::SIPRegistration::Ptr pReg, 
+    OSS::SIP::UA::SIPRegistration* pReg, 
     const SIPMessage::Ptr& pMsg, 
     const std::string& error);
     /// Callback handler for the client registration

@@ -22,6 +22,7 @@
 #define	OSS_SIPREGISTRATION_H_INCLUDED
 
 #include <boost/shared_ptr.hpp>
+#include "OSS/Net/Net.h"
 #include "OSS/UTL/Thread.h"
 #include "OSS/SIP/UA/SIPUserAgent.h"
 #include "OSS/SIP/SIPMessage.h"
@@ -38,12 +39,14 @@ class SIPRegistration
 {
 public:
   typedef boost::shared_ptr<SIPRegistration> Ptr;
-  typedef boost::function<void(SIPRegistration::Ptr, const SIPMessage::Ptr&, const std::string& )> ResponseHandler;
+  typedef boost::function<void(SIPRegistration*, const SIPMessage::Ptr&, const std::string& )> ResponseHandler;
   typedef std::vector<ResponseHandler> ResponseHandlerList;
   
   SIPRegistration(SIPUserAgent& ua);
   
   ~SIPRegistration();
+  
+  void schedule(int millis);
   
   bool run();
   
@@ -99,7 +102,7 @@ public:
   
   const std::string& getExtraHeaders() const;
   
-  void setStatus(bool isRegistered);
+  void markRegistered(bool isRegistered);
   
   bool isRegistered() const;
   
@@ -112,6 +115,16 @@ public:
   void getContactList(OSS::SIP::SIPContact& contactList) const;
   
   bool isRegisteredBinding(const OSS::SIP::SIPURI& binding) const;
+  
+  SIPRegistration* clone() const;
+  
+  const std::string& getCallId() const;
+  
+  void setCallId(const std::string& callId);
+  
+protected:
+  void schedule_handler();
+  
 private:
   SIPUserAgent& _ua;
   OSS_HANDLE _registration_handle;
@@ -128,9 +141,11 @@ private:
   std::string _extraHeaders;
   bool _isRegistered;
   OSS::UInt32 _regId;
+  std::string _callId;
   mutable OSS::mutex_critic_sec _contactListMutex;
   OSS::SIP::SIPContact _contactList;
   ResponseHandlerList _responseHandlers;
+  NET_TIMER_HANDLE _scheduleTimer;
 };
 
 //
@@ -263,7 +278,7 @@ inline const std::string& SIPRegistration::getExtraHeaders() const
   return _extraHeaders;
 }
 
-inline void SIPRegistration::setStatus(bool isRegistered)
+inline void SIPRegistration::markRegistered(bool isRegistered)
 {
   _isRegistered = isRegistered;
 }
@@ -293,6 +308,16 @@ inline void  SIPRegistration::getContactList(OSS::SIP::SIPContact& contactList) 
 {
   OSS::mutex_critic_sec_lock lock(_contactListMutex);
   contactList = _contactList;
+}
+
+inline const std::string& SIPRegistration::getCallId() const
+{
+  return _callId;
+}
+  
+inline void SIPRegistration::setCallId(const std::string& callId)
+{
+  _callId = callId;
 }
   
 } } } // OSS::SIP::UA
