@@ -101,24 +101,31 @@ void SIPB2BTransactionManager::handleRequest(
   if (!b2bTransaction)
     return;
   
-#if SEND_ERROR_ON_B2BUA_THREAD_DEPLETION
-  if (_threadPool.schedule(boost::bind(&SIPB2BTransaction::runTask, b2bTransaction)) == -1)
+  if (_externalDispatch)
   {
-    OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleRequest");
-    SIPMessage::Ptr serverError = pMsg->createResponse(500, "Thread Resource Depleted");
-    pTransaction->sendResponse(serverError, pTransport->getRemoteAddress());
-    delete b2bTransaction;
+    _externalDispatch(this, b2bTransaction);
   }
+  else
+  {
+#if SEND_ERROR_ON_B2BUA_THREAD_DEPLETION
+    if (_threadPool.schedule(boost::bind(&SIPB2BTransaction::runTask, b2bTransaction)) == -1)
+    {
+      OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleRequest");
+      SIPMessage::Ptr serverError = pMsg->createResponse(500, "Thread Resource Depleted");
+      pTransaction->sendResponse(serverError, pTransport->getRemoteAddress());
+      delete b2bTransaction;
+    }
 #else
-  //
-  // The idea here is that if the threadpool runs out of threads, then we will directly
-  // call runTask using the current thread which would effectively block the transport.
-  // This is a good thing because blocking the transport yields our threadpool
-  // allowing it to recover.
-  //
-  if (_threadPool.schedule(boost::bind(&SIPB2BTransaction::runTask, b2bTransaction)) == -1)
-    b2bTransaction->runTask();
+    //
+    // The idea here is that if the threadpool runs out of threads, then we will directly
+    // call runTask using the current thread which would effectively block the transport.
+    // This is a good thing because blocking the transport yields our threadpool
+    // allowing it to recover.
+    //
+    if (_threadPool.schedule(boost::bind(&SIPB2BTransaction::runTask, b2bTransaction)) == -1)
+      b2bTransaction->runTask();
 #endif
+  }
 }
 
 void SIPB2BTransactionManager::handleAckFor2xxTransaction(
