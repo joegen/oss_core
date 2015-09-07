@@ -22,6 +22,7 @@
 #include "OSS/UTL/Thread.h"
 #include "Poco/ThreadPool.h"
 #include "Poco/Semaphore.h"
+#include "OSS/Net/Net.h"
 
 
 namespace OSS {
@@ -84,6 +85,34 @@ bool semaphore::tryWait(long milliseconds)
 // Threadpool
 //
 
+typedef boost::function<void()> thread_task;
+typedef boost::function<int(thread_task)> thread_schedule_func;
+
+class thread_pool_timed_task
+{
+public:
+  thread_pool_timed_task(
+    const thread_task& task,
+    const thread_schedule_func& schedule,
+    int millis) :
+    _task(task),
+    _schedule(schedule)
+  {
+    _timer = net_io_timer_create(millis, boost::bind(&thread_pool_timed_task::run, this));
+  }
+  
+  void run()
+  {
+    _schedule(_task);
+    delete this;
+  }
+  
+private:
+  NET_TIMER_HANDLE _timer;
+  thread_task _task;
+  thread_schedule_func _schedule;
+};
+
 class thread_pool_runnable : public Poco::Runnable
 {
 public:
@@ -138,6 +167,11 @@ int thread_pool::schedule(boost::function<void()> task)
     return -1;
   }
   return 0;
+}
+
+void thread_pool::schedule(boost::function<void()> task, int millis)
+{
+  new thread_pool_timed_task(task, boost::bind(&thread_pool::schedule, this, _1), millis);
 }
 
 int thread_pool::schedule_with_arg(boost::function<void(argument_place_holder)> task, argument_place_holder arg)

@@ -52,6 +52,7 @@ class OSS_API SIPB2BTransactionManager : private boost::noncopyable
 public:
   typedef std::map<SIPB2BHandler::MessageType, SIPB2BHandler::Ptr> MessageHandlers;
   typedef std::map<std::string, SIPB2BHandler::Ptr> DomainRouters;
+  typedef boost::function<void(SIPB2BTransactionManager*, SIPB2BTransaction*)> ExternalDispatch;
   
   typedef boost::function<SIPMessage::Ptr(
     SIPMessage::Ptr& pRequest,
@@ -435,6 +436,8 @@ public:
     // This allows the application to execute a retarget prior to actual route scripts being called
     //
 
+  void setExternalDispatch(const ExternalDispatch& externalDispatch);
+    /// Allow the application to set it's own transaction dispatcher
  
 private:
   OSS::thread_pool _threadPool;
@@ -448,6 +451,7 @@ private:
   PostRouteCallback _postRouteCallback;
   std::string _userAgentName;
   SIPB2BHandler* _pDefaultHandler;
+  ExternalDispatch _externalDispatch;
 
   //
   // Plugins
@@ -561,6 +565,11 @@ inline void SIPB2BTransactionManager::registerDefaultHandler(SIPB2BHandler* pDef
 inline OSS::Persistent::RESTKeyValueStore* SIPB2BTransactionManager::getKeyValueStore()
 {
   return _pKeyStore;
+}
+
+inline void SIPB2BTransactionManager::setExternalDispatch(const ExternalDispatch& externalDispatch)
+{
+  _externalDispatch = externalDispatch;;
 }
 
 
