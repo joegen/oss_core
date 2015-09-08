@@ -590,6 +590,38 @@ public:
 
     return status == "ok";
   }
+  
+  bool incrby(const std::string& key, int increment, long long& result)
+  {
+    try
+    {
+      std::vector<std::string> args;
+      args.push_back("INCRBY");
+      args.push_back(key);
+      args.push_back(boost::lexical_cast<std::string>(increment));
+      return getReplyInt(args, result);
+    }
+    catch(...)
+    {
+      return false;
+    }
+  }
+  
+  bool decrby(const std::string& key, int increment, long long& result)
+  {
+    try
+    {
+      std::vector<std::string> args;
+      args.push_back("DECRBY");
+      args.push_back(key);
+      args.push_back(boost::lexical_cast<std::string>(increment));
+      return getReplyInt(args, result);
+    }
+    catch(...)
+    {
+      return false;
+    }
+  }
 
   bool hset(const std::string& key, const std::string& name, const std::string& value)
   {
