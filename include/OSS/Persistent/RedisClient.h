@@ -55,6 +55,7 @@ public:
     SBC_REGDB,
     SBC_DIALOGDB,
     SBC_RTPDB,
+    SBC_CDRDB,
     SBC_RESERVE_1,
     SBC_RESERVE_2,
     SBC_RESERVE_3,
