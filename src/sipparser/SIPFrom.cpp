@@ -333,7 +333,7 @@ bool SIPFrom::getHost(const std::string& from, std::string& host)
 std::string SIPFrom::getAor()
 {
   std::string uri;
-  if (getURI(_data, uri))
+  if (!getURI(_data, uri))
     return "";
   std::string aor;
   SIPURI::getIdentity(uri, aor);
