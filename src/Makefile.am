@@ -358,6 +358,7 @@ liboss_core_la_SOURCES =  \
     utl/DebugMemory.cpp \
     utl/Thread.cpp \
     utl/StackTrace.cpp \
+    utl/LogFile.cpp \
     ws/src/base64/base64.cpp \
     ws/src/md5/md5.c \
     ws/src/messages/data.cpp \

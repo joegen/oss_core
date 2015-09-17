@@ -254,6 +254,15 @@ OSS::UInt64 getTime()
 #endif
 }
 
+std::string boost_format_time(boost::posix_time::ptime now, const std::string& format)
+{
+  static std::locale loc(std::cout.getloc(), new boost::posix_time::time_facet(format.c_str()));
+  std::ostringstream strTime;
+  strTime.imbue(loc);
+  strTime << now;
+  return strTime.str();
+}
+
 std::string string_md5_hash(const char* input)
 {
   OSS_VERIFY_NULL(input);

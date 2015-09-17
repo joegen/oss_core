@@ -34,6 +34,7 @@
 #include <boost/detail/atomic_count.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
+#include "boost/date_time/posix_time/posix_time.hpp"
 
 
 namespace OSS {
@@ -178,6 +179,12 @@ std::string OSS_API boost_file_name(const boost::filesystem::path& path);
 std::string OSS_API boost_path(const boost::filesystem::path& path);
 
 bool OSS_API boost_temp_file(std::string& tempfile);
+
+std::string boost_format_time(boost::posix_time::ptime time, const std::string& format = "%Y-%m-%d %H:%M:%S");
+  /// Utitlity function to format boost ptime to string.  
+  /// Example:
+  /// boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+  /// std::cout << boost_format_time(now) << std::endl;
 
 void vectorToCArray(const std::vector<std::string>& args, char*** argv);
   /// Convert a vector to argv format

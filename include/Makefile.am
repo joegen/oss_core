@@ -221,6 +221,7 @@ nobase_include_HEADERS = \
     OSS/UTL/CoreUtils.h \
     OSS/UTL/Logger.h \
     OSS/UTL/FastRandom.h \
+    OSS/UTL/LogFile.h \
     OSS/websocketpp/common.hpp \
     OSS/websocketpp/connection.hpp \
     OSS/websocketpp/endpoint.hpp \
