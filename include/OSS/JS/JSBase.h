@@ -49,6 +49,7 @@ public:
 
   bool initialize(const boost::filesystem::path& script,
     const std::string& functionName,
+    const std::string& initName,
     void(*extensionGlobals)(OSS_HANDLE) = 0);
     /// Initialize the javascript context and the object template.
     /// The function indicated by funtionName must exist in the script
@@ -58,6 +59,9 @@ public:
 
   bool processRequest(OSS_HANDLE request);
     /// Process the request
+  
+  bool invokeInit();
+    /// Invoke the init function if it is defined
 
   bool isInitialized() const;
     /// Returns true if the script has been initialized
@@ -80,6 +84,7 @@ public:
 protected:
   bool internalInitialize(const boost::filesystem::path& script,
     const std::string& functionName,
+    const std::string& initName,
     void(*extensionGlobals)(OSS_HANDLE));
     /// Initialize the javascript context and the object template.
     /// The function indicated by funtionName must exist in the scri
@@ -96,12 +101,15 @@ protected:
   std::string _helperScriptsDirectory;
   OSS_HANDLE _context;
   OSS_HANDLE _processFunc;
+  OSS_HANDLE _initFunc;
   OSS_HANDLE _requestTemplate;
   OSS_HANDLE _globalTemplate;
   bool _isInitialized;
   static OSS::mutex _mutex;
   std::string _functionName;
+  std::string _initName;
   void(*_extensionGlobals)(OSS_HANDLE);
+  bool _hasInitFunc;
   friend class JSWorker;
 };
 

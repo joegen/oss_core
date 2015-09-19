@@ -41,6 +41,8 @@ namespace JS {
 #define V8_START_PREEMPTION 
 #define V8_STOP_PREEMPTION 
 #endif
+  
+static bool gHasExecutedInitFunc = false;  
 
 //
 // JSWorker
@@ -58,6 +60,7 @@ public:
 
   static bool initialize(JSBase* pJS, const boost::filesystem::path& script,
     const std::string& functionName,
+    const std::string& initName,
     void(*extensionGlobals)(OSS_HANDLE));
     /// Initialize the javascript context and the object template.
     /// The function indicated by funtionName must exist in the script
@@ -107,6 +110,7 @@ bool JSWorker::_retVal = false;
 
 bool JSWorker::initialize(JSBase* pJS, const boost::filesystem::path& script,
   const std::string& functionName,
+  const std::string& initName,
   void(*extensionGlobals)(OSS_HANDLE))
 {
 
@@ -114,7 +118,7 @@ bool JSWorker::initialize(JSBase* pJS, const boost::filesystem::path& script,
 
 #if ENABLE_V8_PREEMPTION
   //OSS_LOG_INFO("Google V8 Preemption ENABLED");
-  return pJS->internalInitialize(script, functionName, extensionGlobals);
+  return pJS->internalInitialize(script, functionName, initName, extensionGlobals);
 #else
   JSWorker::_pJSBase = pJS;
   if (JSWorker::_thread == 0)
@@ -131,7 +135,7 @@ bool JSWorker::initialize(JSBase* pJS, const boost::filesystem::path& script,
   JSWorker::_initData = boost::tuples::tuple<JSBase*,
     boost::filesystem::path,
     std::string,
-    void(*)(OSS_HANDLE) >(pJS, script, functionName, extensionGlobals);
+    void(*)(OSS_HANDLE) >(pJS, script, functionName, initName, extensionGlobals);
 
   JSWorker::_semEvent->set();
   JSWorker::_semComplete->wait();
@@ -564,10 +568,12 @@ JSBase::JSBase(const std::string& contextName) :
   _contextName(contextName),
   _context(0),
   _processFunc(0),
+  _initFunc(0),
   _requestTemplate(0),
   _globalTemplate(0),
   _isInitialized(false),
-  _extensionGlobals(0)
+  _extensionGlobals(0),
+  _hasInitFunc(false)
 {
   
 
@@ -580,24 +586,29 @@ JSBase::~JSBase()
     static_cast<v8::Persistent<v8::ObjectTemplate>*>(_globalTemplate)->Dispose();
     static_cast<v8::Persistent<v8::ObjectTemplate>*>(_requestTemplate)->Dispose();
     static_cast<v8::Persistent<v8::Function>*>(_processFunc)->Dispose();
+    static_cast<v8::Persistent<v8::Function>*>(_initFunc)->Dispose();
     static_cast<v8::Persistent<v8::Context>*>(_context)->Dispose();
   }
 
   delete static_cast<v8::Persistent<v8::ObjectTemplate>*>(_globalTemplate);
   delete static_cast<v8::Persistent<v8::ObjectTemplate>*>(_requestTemplate);
   delete static_cast<v8::Persistent<v8::Function>*>(_processFunc);
+  delete static_cast<v8::Persistent<v8::Function>*>(_initFunc);
   delete static_cast<v8::Persistent<v8::Context>*>(_context);
 
 }
 
-bool JSBase::initialize(const boost::filesystem::path& scriptFile, const std::string& functionName,
+bool JSBase::initialize(const boost::filesystem::path& scriptFile, const std::string& functionName, const std::string& initName,
   void(*extensionGlobals)(OSS_HANDLE) )
 {
-  return JSWorker::initialize(this, scriptFile, functionName, extensionGlobals);
+  //
+  // return JSWorker::initialize(this, scriptFile, functionName, initName, extensionGlobals);
+  //
+  return internalInitialize(scriptFile, functionName, initName, extensionGlobals);
 }
 
 bool JSBase::internalInitialize(
-  const boost::filesystem::path& scriptFile, const std::string& functionName,
+  const boost::filesystem::path& scriptFile, const std::string& functionName, const std::string& initName,
   void(*extensionGlobals)(OSS_HANDLE) )
 {
   if (!boost::filesystem::exists(scriptFile))
@@ -655,8 +666,14 @@ bool JSBase::internalInitialize(
   _requestTemplate = requestTemplate_;
   _globalTemplate = globalTemplate_;
   _functionName = functionName;
+  _initName = initName;
   _script = scriptFile;
   _extensionGlobals = extensionGlobals;
+  
+  if (!_initFunc)
+  {
+    _initFunc = new v8::Persistent<v8::Function>();
+  }
 
   if (!_hasSetErrorCB)
   {
@@ -889,6 +906,32 @@ bool JSBase::internalInitialize(
   objectTemplate->SetInternalFieldCount(1);
   *(static_cast<v8::Persistent<v8::ObjectTemplate>*>(_requestTemplate)) = v8::Persistent<v8::ObjectTemplate>::New(objectTemplate);
 
+  if (!_hasInitFunc)
+  {
+     // The script compiled and ran correctly.  Now we fetch out the
+    // Process function from the global object.
+    v8::Handle<v8::String> init_name = v8::String::New(initName.c_str());
+    v8::Handle<v8::Value> init_val = context->Global()->Get(init_name);
+
+    // If there is no Process function, or if it is not a function,
+    // bail out
+    if (init_val->IsFunction())
+    {
+      _hasInitFunc = true;
+      // It is a function; cast it to a Function
+      v8::Handle<v8::Function> init_fun = v8::Handle<v8::Function>::Cast(init_val);
+
+      // Store the function in a Persistent handle, since we also want
+      // that to remain after this call returns
+      *(static_cast<v8::Persistent<v8::Function>*>(_processFunc)) = v8::Persistent<v8::Function>::New(init_fun);
+
+      // all went well.  request the template creation as the final step
+      v8::Handle<v8::ObjectTemplate> objectTemplate = v8::ObjectTemplate::New();
+      objectTemplate->SetInternalFieldCount(1);
+      *(static_cast<v8::Persistent<v8::ObjectTemplate>*>(_requestTemplate)) = v8::Persistent<v8::ObjectTemplate>::New(objectTemplate);
+    }
+  }
+  
   _isInitialized = true;
 
   return  _isInitialized;
@@ -902,7 +945,7 @@ bool JSBase::recompile()
 bool JSBase::internalRecompile()
 {
   
-  if (!internalInitialize(_script, _functionName, _extensionGlobals))
+  if (!internalInitialize(_script, _functionName, _initName, _extensionGlobals))
   {
     return false;
   }
@@ -965,6 +1008,57 @@ bool JSBase::internalProcessRequest(OSS_HANDLE request)
   return true;
 }
 
+
+bool JSBase::invokeInit()
+{
+  if (!_isInitialized || !_hasInitFunc)
+  {
+    return false;
+  }
+  
+  if (gHasExecutedInitFunc)
+  {
+    return true;
+  }
+  
+  v8::HandleScope handle_scope;
+
+  
+  // Enter this processor's context so all the remaining operations
+  // take place there
+  v8::Context::Scope context_scope(*(static_cast<v8::Persistent<v8::Context>*>(_context)));
+
+  // Fetch the template for creating JavaScript request wrappers.
+  // It only has to be created once, which we do on demand.
+  v8::Handle<v8::ObjectTemplate> templ = *(static_cast<v8::Persistent<v8::ObjectTemplate>*>(_requestTemplate));
+
+    // Set up an exception handler before calling the Process function
+  v8::TryCatch try_catch;
+  
+  // Create an empty http request wrapper.
+  v8::Handle<v8::Object> request_obj = templ->NewInstance();
+
+  if (request_obj.IsEmpty())
+  {
+    reportException(try_catch, true);
+    return false;
+  }
+
+  // Invoke the process function, giving the global object as 'this'
+  // and one argument, the request.
+  const int argc = 1;
+  v8::Handle<v8::Value> argv[argc] = { request_obj };
+  v8::Handle<v8::Value> result = (*(static_cast<v8::Persistent<v8::Function>*>(_initFunc)))->Call((*(static_cast<v8::Persistent<v8::Context>*>(_context)))->Global(), argc, argv);
+  if (result.IsEmpty())
+  {
+    reportException(try_catch, true);
+    return false;
+  }
+
+  gHasExecutedInitFunc = true;
+  
+  return true;
+}
 
 } } // OSS::JS
 

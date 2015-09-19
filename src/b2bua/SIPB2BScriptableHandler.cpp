@@ -1922,7 +1922,7 @@ bool SIPB2BScriptableHandler::loadScript(OSS::JS::JSSIPMessage& script, const bo
   if (script.isInitialized())
     ok = script.recompile();
   else
-    ok = script.initialize(scriptFile, "handle_request", extensionGlobals ? extensionGlobals : msgRegisterGlobals);
+    ok = script.initialize(scriptFile, "handle_request", "sbc_initialize", extensionGlobals ? extensionGlobals : msgRegisterGlobals);
   return ok;
 }
     /// Generic script loader
