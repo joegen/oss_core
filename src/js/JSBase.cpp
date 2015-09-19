@@ -901,10 +901,6 @@ bool JSBase::internalInitialize(
   // that to remain after this call returns
   *(static_cast<v8::Persistent<v8::Function>*>(_processFunc)) = v8::Persistent<v8::Function>::New(process_fun);
 
-  // all went well.  request the template creation as the final step
-  v8::Handle<v8::ObjectTemplate> objectTemplate = v8::ObjectTemplate::New();
-  objectTemplate->SetInternalFieldCount(1);
-  *(static_cast<v8::Persistent<v8::ObjectTemplate>*>(_requestTemplate)) = v8::Persistent<v8::ObjectTemplate>::New(objectTemplate);
 
   if (!_hasInitFunc)
   {
@@ -923,14 +919,15 @@ bool JSBase::internalInitialize(
 
       // Store the function in a Persistent handle, since we also want
       // that to remain after this call returns
-      *(static_cast<v8::Persistent<v8::Function>*>(_processFunc)) = v8::Persistent<v8::Function>::New(init_fun);
-
-      // all went well.  request the template creation as the final step
-      v8::Handle<v8::ObjectTemplate> objectTemplate = v8::ObjectTemplate::New();
-      objectTemplate->SetInternalFieldCount(1);
-      *(static_cast<v8::Persistent<v8::ObjectTemplate>*>(_requestTemplate)) = v8::Persistent<v8::ObjectTemplate>::New(objectTemplate);
+      *(static_cast<v8::Persistent<v8::Function>*>(_initFunc)) = v8::Persistent<v8::Function>::New(init_fun);
     }
   }
+
+   // all went well.  request the template creation as the final step
+  v8::Handle<v8::ObjectTemplate> objectTemplate = v8::ObjectTemplate::New();
+  objectTemplate->SetInternalFieldCount(1);
+  *(static_cast<v8::Persistent<v8::ObjectTemplate>*>(_requestTemplate)) = v8::Persistent<v8::ObjectTemplate>::New(objectTemplate);
+
   
   _isInitialized = true;
 
@@ -1028,27 +1025,12 @@ bool JSBase::invokeInit()
   // take place there
   v8::Context::Scope context_scope(*(static_cast<v8::Persistent<v8::Context>*>(_context)));
 
-  // Fetch the template for creating JavaScript request wrappers.
-  // It only has to be created once, which we do on demand.
-  v8::Handle<v8::ObjectTemplate> templ = *(static_cast<v8::Persistent<v8::ObjectTemplate>*>(_requestTemplate));
-
-    // Set up an exception handler before calling the Process function
   v8::TryCatch try_catch;
   
-  // Create an empty http request wrapper.
-  v8::Handle<v8::Object> request_obj = templ->NewInstance();
-
-  if (request_obj.IsEmpty())
-  {
-    reportException(try_catch, true);
-    return false;
-  }
 
   // Invoke the process function, giving the global object as 'this'
   // and one argument, the request.
-  const int argc = 1;
-  v8::Handle<v8::Value> argv[argc] = { request_obj };
-  v8::Handle<v8::Value> result = (*(static_cast<v8::Persistent<v8::Function>*>(_initFunc)))->Call((*(static_cast<v8::Persistent<v8::Context>*>(_context)))->Global(), argc, argv);
+  v8::Handle<v8::Value> result = (*(static_cast<v8::Persistent<v8::Function>*>(_initFunc)))->Call((*(static_cast<v8::Persistent<v8::Context>*>(_context)))->Global(), 0, 0);
   if (result.IsEmpty())
   {
     reportException(try_catch, true);
