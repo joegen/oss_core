@@ -86,7 +86,8 @@ AccessControl::AccessControl() :
   _currentIterationCount(0),
   _autoBanThresholdViolators(true),
   _banLifeTime(0),
-  _pStore(0)
+  _pStore(0),
+  _denyAllIncoming(false)
 {
   _lastTime = boost::posix_time::microsec_clock::local_time();
 }
@@ -98,7 +99,8 @@ AccessControl::AccessControl(OSS::Persistent::KeyValueStore* pStore) :
   _currentIterationCount(0),
   _autoBanThresholdViolators(true),
   _banLifeTime(0),
-  _pStore(pStore)
+  _pStore(pStore),
+  _denyAllIncoming(false)
 {
   _lastTime = boost::posix_time::microsec_clock::local_time();
 }
@@ -200,7 +202,7 @@ bool AccessControl::isBannedAddress(const boost::asio::ip::address& source)
 {
   if (!_enabled)
     return false;
-
+  
   bool banned = false;
   _packetCounterMutex.lock();
 
@@ -249,10 +251,16 @@ bool AccessControl::isBannedAddress(const boost::asio::ip::address& source)
   }
 
   if (isWhiteListed(source))
+  {
     banned = false;
+  }
   else
   {
-    if (!_pStore)
+    if (_denyAllIncoming)
+    {
+      banned = true;
+    }
+    else if (!_pStore)
     {
       banned = _blackList.find(source) != _blackList.end();
     }

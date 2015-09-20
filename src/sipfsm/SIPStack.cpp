@@ -556,6 +556,30 @@ bool SIPStack::initTlsContextFromConfig(const boost::filesystem::path& cfgFile)
   return initializeTlsContext(tls_certificate_file, tls_private_key_file, tls_cert_password, tls_ca_file, tls_ca_path, tls_verify_peer);
 }
 
+void SIPStack::setTransportThreshold(
+  unsigned long packetsPerSecondThreshold, // The total packets per second threshold
+  unsigned long thresholdViolationRate, // Per IP threshold
+  int banLifeTime // violator jail lifetime
+)
+{
+  if (packetsPerSecondThreshold > thresholdViolationRate)
+  {
+    SIPTransportSession::rateLimit().enabled() = true;
+    SIPTransportSession::rateLimit().autoBanThresholdViolators() = true;
+    SIPTransportSession::rateLimit().setPacketsPerSecondThreshold(packetsPerSecondThreshold);
+    SIPTransportSession::rateLimit().setThresholdViolationRate(thresholdViolationRate);
+    SIPTransportSession::rateLimit().setBanLifeTime(banLifeTime);
+
+    if (_pKeyStore)
+    {
+      OSS::Persistent::KeyValueStore* pAccessControl = _pKeyStore->getStore("/root/access-control", true);
+      SIPTransportSession::rateLimit().setPersistentStore(pAccessControl);
+    }
+    
+    OSS_LOG_INFO("Enforcing packet rate limit = " << thresholdViolationRate);
+  }
+}
+
 void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 {
   ClassType config;
@@ -777,23 +801,8 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       packetsPerSecondThreshold = OSS::string_to_number<unsigned long>(tokens[1].c_str());
       banLifeTime = OSS::string_to_number<int>(tokens[2].c_str());
 
-      if (packetsPerSecondThreshold > thresholdViolationRate)
-      {
-        SIPTransportSession::rateLimit().enabled() = true;
-        SIPTransportSession::rateLimit().autoBanThresholdViolators() = true;
-        SIPTransportSession::rateLimit().setPacketsPerSecondThreshold(packetsPerSecondThreshold);
-        SIPTransportSession::rateLimit().setThresholdViolationRate(thresholdViolationRate);
-        SIPTransportSession::rateLimit().setBanLifeTime(banLifeTime);
-        
-        if (_pKeyStore)
-        {
-          OSS::Persistent::KeyValueStore* pAccessControl = _pKeyStore->getStore("/root/access-control", true);
-          SIPTransportSession::rateLimit().setPersistentStore(pAccessControl);
-        }
-        
-        OSS_LOG_INFO("Enforcing packet rate limit = " << packetRateRatio);
-      }
-
+      setTransportThreshold(packetsPerSecondThreshold, thresholdViolationRate, banLifeTime);
+    
       if (listeners.exists("packet-rate-white-list"))
       {
         DataType whiteList = listeners["packet-rate-white-list"];

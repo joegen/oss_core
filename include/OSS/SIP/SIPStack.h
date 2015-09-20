@@ -273,6 +273,13 @@ public:
   
   OSS::Persistent::RESTKeyValueStore* getKeyValueStore();
     /// Returns a pointer to the key value store
+  
+  void setTransportThreshold(
+    unsigned long packetsPerSecondThreshold, // The total packets per second threshold
+    unsigned long thresholdViolationRate, // Per IP threshold
+    int banLifeTime // violator jail lifetime
+  );
+  
 private:
 
   //

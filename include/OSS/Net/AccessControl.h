@@ -99,6 +99,9 @@ public:
   bool isWhiteListedNetwork(const std::string& address) const;
   
   void setPersistentStore(OSS::Persistent::KeyValueStore* pStore);
+  
+  void denyAll(bool denyAll);
+  
 private:
   bool _enabled;
   unsigned long _packetsPerSecondThreshold;
@@ -113,6 +116,7 @@ private:
   std::map<boost::asio::ip::address, boost::posix_time::ptime> _blackList;
   boost::posix_time::ptime _lastTime;
   OSS::Persistent::KeyValueStore* _pStore;
+  bool _denyAllIncoming;
 };
 
 //
@@ -197,6 +201,11 @@ inline void AccessControl::logPacket(const std::string& source, std::size_t byte
 inline void AccessControl::setPersistentStore(OSS::Persistent::KeyValueStore* pStore)
 {
   _pStore = pStore;
+}
+
+inline void AccessControl::denyAll(bool denyAll)
+{
+  _denyAllIncoming = denyAll;
 }
 
 } } // OSS::SIP
