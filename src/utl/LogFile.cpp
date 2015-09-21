@@ -215,10 +215,7 @@ namespace UTL {
       
       Poco::Logger* pLogFile = Poco::Logger::has(_internalName);
       if (pLogFile)
-      {
-        Poco::LogStream logStrm(*pLogFile);
-        logStrm.notice() << "LogFile::open(" << _internalName << ") path: " << _path << std::endl;
-          
+      {          
         _lastError = "";
         _isOpen = true;
       }
