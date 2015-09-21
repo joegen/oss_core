@@ -30,213 +30,7 @@ namespace OSS {
 namespace JS {
 
   
- 
-#define ENABLE_V8_PREEMPTION 1
-#if ENABLE_V8_PREEMPTION
-#define V8LOCK v8::Locker __v8Locker__
-#define V8_START_PREEMPTION(ms) v8::Locker::StartPreemption(ms)
-#define V8_STOP_PREEMPTION v8::Locker::StopPreemption()
-#else
-#define V8LOCK
-#define V8_START_PREEMPTION 
-#define V8_STOP_PREEMPTION 
-#endif
-
-//
-// JSWorker
-//
-class OSS_API JSWorker : boost::noncopyable
-{
-public:
-  enum RequestType
-  {
-    TYPE_INIT,
-    TYPE_REQUEST,
-    TYPE_RECOMPILE,
-    TYPE_INIT_NODE
-  };
-
-  static bool initialize(JSBase* pJS, const boost::filesystem::path& script,
-    const std::string& functionName,
-    void(*extensionGlobals)(OSS_HANDLE));
-    /// Initialize the javascript context and the object template.
-    /// The function indicated by funtionName must exist in the script
-
-  static bool recompile(JSBase* pJS);
-    /// recompile the current active script
-
-  static bool processRequest(JSBase* pJS, OSS_HANDLE request);
-    /// Process the request
-
-  static void run();
-
-  static void stop();
-
-  static boost::tuples::tuple<
-    JSBase*,
-    boost::filesystem::path,
-    std::string,
-    void(*)(OSS_HANDLE) > _initData;
-  static JSBase* _pJSBase;
-  static boost::tuples::tuple<JSBase*, OSS_HANDLE> _requestData;
-  static OSS::semaphore* _semEvent;
-  static OSS::semaphore* _semComplete;
-  static boost::thread* _thread;
-  static RequestType _requestType;
-  static bool _exit;
-  static bool _retVal;
-};
-
-//
-// Global statics
-//
-OSS::mutex JSBase::_mutex;
-boost::tuples::tuple<
-    JSBase*,
-    boost::filesystem::path,
-    std::string,
-    void(*)(OSS_HANDLE) > JSWorker::_initData;
-JSBase* JSWorker::_pJSBase = 0;
-boost::tuples::tuple<JSBase*, OSS_HANDLE> JSWorker::_requestData;
-OSS::semaphore* JSWorker::_semEvent = 0;
-OSS::semaphore* JSWorker::_semComplete = 0;
-boost::thread* JSWorker::_thread = 0;
-JSWorker::RequestType JSWorker::_requestType;
-bool JSWorker::_exit = false;
-bool JSWorker::_retVal = false;
-
-bool JSWorker::initialize(JSBase* pJS, const boost::filesystem::path& script,
-  const std::string& functionName,
-  void(*extensionGlobals)(OSS_HANDLE))
-{
-
-  V8LOCK;
-
-#if ENABLE_V8_PREEMPTION
-  //OSS_LOG_INFO("Google V8 Preemption ENABLED");
-  return pJS->internalInitialize(script, functionName, extensionGlobals);
-#else
-  JSWorker::_pJSBase = pJS;
-  if (JSWorker::_thread == 0)
-  {
-     JSWorker::_semEvent = new OSS::semaphore(0, 0xFFFF);
-     JSWorker::_semComplete = new OSS::semaphore(0, 0xFFFF);
-     JSWorker::_thread = new boost::thread(boost::bind(JSWorker::run));
-  }
-
-  bool retVal = false;
-  JSBase::_mutex.lock();
-  JSWorker::_requestType = TYPE_INIT;
-
-  JSWorker::_initData = boost::tuples::tuple<JSBase*,
-    boost::filesystem::path,
-    std::string,
-    void(*)(OSS_HANDLE) >(pJS, script, functionName, extensionGlobals);
-
-  JSWorker::_semEvent->set();
-  JSWorker::_semComplete->wait();
-  retVal = JSWorker::_retVal;
-  JSBase::_mutex.unlock();
-  return retVal;
-#endif
-}
-
-bool JSWorker::recompile(JSBase* pJS)
-{
-  V8LOCK;
-
-#if ENABLE_V8_PREEMPTION
-  return pJS->internalRecompile();
-#else
-  JSWorker::_pJSBase = pJS;
-  bool retVal = false;
-  JSBase::_mutex.lock();
-  JSWorker::_requestType = TYPE_RECOMPILE;
-  JSWorker::_semEvent->set();
-  JSWorker::_semComplete->wait();
-  retVal = JSWorker::_retVal;
-  JSBase::_mutex.unlock();
-  return retVal;
-#endif
-}
-
-bool JSWorker::processRequest(JSBase* pJS, OSS_HANDLE request)
-{
-  V8LOCK;
-
-#if ENABLE_V8_PREEMPTION
-  return pJS->internalProcessRequest(request);
-#else
-  JSWorker::_pJSBase = pJS;
-  bool retVal = false;
-
-  JSBase::_mutex.lock();
-  JSWorker::_requestType = TYPE_REQUEST;
-  JSWorker::_requestData = boost::tuples::tuple<JSBase*, OSS_HANDLE>(pJS, request);
-  JSWorker::_semEvent->set();
-  JSWorker::_semComplete->wait();
-  retVal = JSWorker::_retVal;
-  JSBase::_mutex.unlock();
-  return retVal;
-#endif
-}
-
-void JSWorker::stop()
-{
-#if ENABLE_V8_PREEMPTION
-  V8_STOP_PREEMPTION;
-#else
-  if (JSWorker::_thread == 0)
-    return;
-  
-  JSBase::_mutex.lock();
-  JSWorker::_exit = true;
-  _semEvent->set();
-  JSBase::_mutex.unlock();
-  _thread->join();
-
-
-  delete JSWorker::_semEvent;
-  delete JSWorker::_semComplete;
-  delete JSWorker::_thread;
-#endif
-
-}
-void JSWorker::run()
-{
-  OSS::OSS_register_deinit(boost::bind(JSWorker::stop));
-
-#if !ENABLE_V8_PREEMPTION
-
-  for(;;)
-  {
-    _semEvent->wait();
-    if (_exit)
-      return;
-    if (_requestType == TYPE_INIT)
-    {
-      _retVal = _pJSBase->internalInitialize(_initData.get<1>(), _initData.get<2>(), _initData.get<3>());
-    }
-    else if (_requestType == TYPE_REQUEST)
-    {
-      _retVal = _pJSBase->internalProcessRequest(_requestData.get<1>());
-    }
-    else if (_requestType == TYPE_RECOMPILE)
-    {
-      _retVal = _pJSBase->internalRecompile();
-    }
-    _semComplete->set();
-  }
-#endif
-}
-
-
-//
-// Global Callbacks = boost::function<void(OSS_HANDLE)>()
-//
-
-
-static std::string toString(v8::Handle<v8::Value> str)
+ static std::string toString(v8::Handle<v8::Value> str)
 {
   if (!str->IsString())
     return "";
@@ -569,8 +363,6 @@ JSBase::JSBase(const std::string& contextName) :
   _isInitialized(false),
   _extensionGlobals(0)
 {
-  
-
 }
 
 JSBase::~JSBase()
@@ -593,13 +385,15 @@ JSBase::~JSBase()
 bool JSBase::initialize(const boost::filesystem::path& scriptFile, const std::string& functionName,
   void(*extensionGlobals)(OSS_HANDLE) )
 {
-  return JSWorker::initialize(this, scriptFile, functionName, extensionGlobals);
+  return internalInitialize(scriptFile, functionName, extensionGlobals);
 }
 
 bool JSBase::internalInitialize(
   const boost::filesystem::path& scriptFile, const std::string& functionName,
   void(*extensionGlobals)(OSS_HANDLE) )
 {
+  v8::Locker __v8Locker__;
+  
   if (!boost::filesystem::exists(scriptFile))
   {
     OSS_LOG_ERROR("Google V8 is unable to locate file " << scriptFile);
@@ -896,7 +690,7 @@ bool JSBase::internalInitialize(
 
 bool JSBase::recompile()
 {
-  return JSWorker::recompile(this);
+  return internalRecompile();
 }
 
 bool JSBase::internalRecompile()
@@ -912,13 +706,15 @@ bool JSBase::internalRecompile()
 
 bool JSBase::processRequest(OSS_HANDLE request)
 {
-  return JSWorker::processRequest(this, request);
+  return internalProcessRequest(request);
 }
 
 bool JSBase::internalProcessRequest(OSS_HANDLE request)
 {
   if (!_isInitialized)
     return false;
+  
+  v8::Locker __v8Locker__;
   
   v8::HandleScope handle_scope;
 
@@ -964,6 +760,46 @@ bool JSBase::internalProcessRequest(OSS_HANDLE request)
 
   return true;
 }
+
+bool JSBase::callFunction(const std::string& funcName)
+{
+  if (!_isInitialized || !_context)
+    return false;
+  
+  v8::Locker __v8Locker__;
+  
+  v8::HandleScope handle_scope;
+
+  v8::Persistent<v8::Context>& context = *(static_cast<v8::Persistent<v8::Context>*>(_context));
+  // Enter this processor's context so all the remaining operations
+  // take place there
+  v8::Context::Scope context_scope(context);
+   
+  // The script compiled and ran correctly.  Now we fetch out the
+  // Process function from the global object.
+  v8::Handle<v8::String> func_name = v8::String::New(funcName.c_str());
+  v8::Handle<v8::Value> func_val = context->Global()->Get(func_name);
+
+  // If there is no Process function, or if it is not a function,
+  // bail out
+  if (!func_val->IsFunction())
+  {
+    OSS_LOG_ERROR("JSBase::callFunction - Google V8 is unable to load function " << funcName);
+    return false;
+  }
+
+  // It is a function; cast it to a Function
+  v8::Handle<v8::Function> process_fun = v8::Handle<v8::Function>::Cast(func_val);
+  
+  // call it without any arguments
+  
+  process_fun->Call(context->Global(), 0, 0);
+  
+  return true;
+
+}
+
+
 
 
 } } // OSS::JS

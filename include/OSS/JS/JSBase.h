@@ -76,6 +76,9 @@ public:
 
   void setHelperScriptsDirectory(const std::string& helperScriptsDirectory);
     /// Set the helper scripts export. If not set, it will default to {scriptname}.detail
+  
+  bool callFunction(const std::string& funcName);
+    /// Call a JS funciton with zero arguments
 
 protected:
   bool internalInitialize(const boost::filesystem::path& script,
