@@ -570,11 +570,13 @@ void SIPStack::setTransportThreshold(
     SIPTransportSession::rateLimit().setThresholdViolationRate(thresholdViolationRate);
     SIPTransportSession::rateLimit().setBanLifeTime(banLifeTime);
 
+#if 0
     if (_pKeyStore)
     {
       OSS::Persistent::KeyValueStore* pAccessControl = _pKeyStore->getStore("/root/access-control", true);
       SIPTransportSession::rateLimit().setPersistentStore(pAccessControl);
     }
+#endif
     
     OSS_LOG_INFO("Enforcing packet rate limit = " << thresholdViolationRate);
   }
