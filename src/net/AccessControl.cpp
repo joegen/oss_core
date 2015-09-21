@@ -318,6 +318,8 @@ void AccessControl::whiteListAddress(const boost::asio::ip::address& address, bo
 {
   _packetCounterMutex.lock();
   
+  OSS_LOG_NOTICE("AccessControl::whiteListAddress - " << address);
+  
   if (!_pStore)
   {
     if (removeFromBlackList)
@@ -338,6 +340,8 @@ void AccessControl::whiteListAddress(const boost::asio::ip::address& address, bo
 void AccessControl::whiteListNetwork(const std::string& network)
 {
   _packetCounterMutex.lock();
+  
+  OSS_LOG_NOTICE("AccessControl::whiteListNetwork - " << network);
   
   if (!_pStore)
   {
@@ -415,6 +419,12 @@ bool AccessControl::isWhiteListedNetwork(const boost::asio::ip::address& address
   return false;
 }
 
+
+void AccessControl::denyAll(bool denyAll)
+{
+  OSS_LOG_NOTICE("AccessControl::denyAll set to " << denyAll ? "true" : "false");
+  _denyAllIncoming = denyAll;
+}
 } } // OSS::SIP
 
 

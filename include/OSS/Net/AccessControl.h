@@ -203,10 +203,6 @@ inline void AccessControl::setPersistentStore(OSS::Persistent::KeyValueStore* pS
   _pStore = pStore;
 }
 
-inline void AccessControl::denyAll(bool denyAll)
-{
-  _denyAllIncoming = denyAll;
-}
 
 } } // OSS::SIP
 
