@@ -24,6 +24,7 @@
 #include "OSS/SIP/SIPVia.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/UTL/CoreUtils.h"
+#include "OSS/SIP/SIPRequestLine.h"
 
 
 namespace OSS {
@@ -256,16 +257,26 @@ SIPB2BHandler::Ptr SIPB2BTransactionManager::findHandler(SIPB2BHandler::MessageT
   return SIPB2BHandler::Ptr();
 }
 
-SIPB2BHandler::Ptr SIPB2BTransactionManager::findDomainRouter(const OSS::SIP::SIPMessage::Ptr& pMsg) const
+SIPB2BHandler::Ptr SIPB2BTransactionManager::findDomainRouter(const std::string& domain) const
 {
-  std::string domain = pMsg->getFromHost();
   DomainRouters::const_iterator iter = _domainRouters.find(domain);
   if (iter != _domainRouters.end() && iter->second)
   {
-    OSS_LOG_DEBUG(pMsg->createContextId(true) << "Found static route handler for domain " << domain);
     return iter->second;
   }
+  
   return SIPB2BHandler::Ptr();
+}
+
+SIPB2BHandler::Ptr SIPB2BTransactionManager::findDomainRouter(const OSS::SIP::SIPMessage::Ptr& pMsg) const
+{
+  std::string domain = pMsg->getFromHost();
+  SIPB2BHandler::Ptr pRouter = findDomainRouter(domain);
+  if (pRouter)
+  {
+    OSS_LOG_DEBUG(pMsg->createContextId(true) << "Found static route handler for domain " << domain);
+  }
+  return pRouter;
 }
 
 
@@ -324,7 +335,7 @@ SIPMessage::Ptr SIPB2BTransactionManager::onRouteTransaction(
   {
     bool handled = false;
     SIPMessage::Ptr result = pHandler->onRouteTransaction(pRequest, pTransaction, localInterface, target, handled);
-    if (result)
+    if (handled || result)
       return result;
   }
   
