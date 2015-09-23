@@ -35,7 +35,8 @@ SIPListener::SIPListener(
     _address(address),
     _port(port),
     _isVirtual(false),
-    _hasStarted(false)
+    _hasStarted(false),
+    _isEndpoint(false)
 {
   if (_pTransportService)
     _pIoService = (&(_pTransportService->ioService()));

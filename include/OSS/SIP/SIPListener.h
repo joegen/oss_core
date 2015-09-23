@@ -60,6 +60,9 @@ public:
   
   virtual bool canBeRestarted() const;
     /// returns true if the listener can safely be restarted
+  
+  bool isEndpoint() const;
+    /// returns true if this listener is an endpoint
 
   const std::string& getAddress() const;
     /// Returns the address where the listener is bound
@@ -106,6 +109,11 @@ protected:
   std::string _port;
   bool _isVirtual;
   bool _hasStarted;
+  
+  //
+  // Endpoint related declares
+  //
+  bool _isEndpoint;
 };
 
 //
@@ -160,6 +168,11 @@ inline void SIPListener::setVirtual(bool isVirtual)
 inline bool SIPListener::hasStarted() const
 {
   return _hasStarted;
+}
+
+inline bool SIPListener::isEndpoint() const
+{
+  return _isEndpoint;
 }
 
 } } // OSS::SIP

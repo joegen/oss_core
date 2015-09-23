@@ -256,7 +256,9 @@ nobase_include_HEADERS = \
     OSS/SIP/SIPWebSocketConnectionManager.h \
     OSS/SIP/SIPWebSocketListener.h \
     OSS/P2P/Overlay.h \
-    OSS/P2P/DhtStore.h
+    OSS/P2P/DhtStore.h \
+    OSS/EP/EndpointConnection.h \
+    OSS/EP/EndpointListener.h
 
 
 DISTCLEANFILES = Makefile.in

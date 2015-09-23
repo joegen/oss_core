@@ -37,14 +37,17 @@
 #include "OSS/SIP/SIPTCPListener.h"
 #include "OSS/SIP/SIPWebSocketListener.h"
 #include "OSS/SIP/SIPTLSListener.h"
+#include "OSS/EP/EndpointListener.h"
 
 
 
 namespace OSS {
 namespace SIP {
 
-
+  
+using OSS::EP::EndpointListener;
 class SIPFSMDispatch;
+
 
 class OSS_API SIPTransportService: private boost::noncopyable
 {
@@ -53,6 +56,7 @@ public:
   typedef std::map<std::string, SIPTCPListener::Ptr> TCPListeners;
   typedef std::map<std::string, SIPWebSocketListener::Ptr> WSListeners;
   typedef std::map<std::string, SIPTLSListener::Ptr> TLSListeners;
+  typedef std::map<std::string, EndpointListener*> EPListeners;
 
   SIPTransportService(const SIPTransportSession::Dispatch& dispatch);
 
@@ -222,6 +226,9 @@ public:
   
   boost::asio::ssl::context& tlsServerContext();
   boost::asio::ssl::context& tlsClientContext();
+  
+  SIPTransportSession::Dispatch& dispatch();
+  
 private:
   boost::asio::io_service _ioService;
   boost::thread* _pIoServiceThread;
@@ -334,6 +341,11 @@ inline boost::asio::ssl::context& SIPTransportService::tlsServerContext()
 inline boost::asio::ssl::context& SIPTransportService::tlsClientContext()
 {
   return _tlsClientContext;
+}
+
+inline SIPTransportSession::Dispatch& SIPTransportService::dispatch()
+{
+  return _dispatch;
 }
 
 } } // OSS::SIP
