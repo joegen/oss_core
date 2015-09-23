@@ -421,10 +421,12 @@ protected:
 
   SIPB2BHandler::Ptr findHandler(SIPB2BHandler::MessageType type) const;
     /// Returns the iterator for the request handler if one is registered
-  
+
+public:
+  SIPB2BHandler::Ptr findDomainRouter(const std::string& domain) const;
   SIPB2BHandler::Ptr findDomainRouter(const OSS::SIP::SIPMessage::Ptr& pMsg) const;
     /// Returns the iterator for the domain router if one is registered
-public:
+  
   virtual SIPMessage::Ptr postMidDialogTransactionCreated(
     const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction);
     /// Called by handlers when a mid dialog trasaction has been created
