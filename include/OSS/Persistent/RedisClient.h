@@ -49,20 +49,6 @@ public:
     unsigned short port;
   };
 
-  enum RedisWorkspace
-  {
-    SBC_SYSTEMDB,
-    SBC_REGDB,
-    SBC_DIALOGDB,
-    SBC_RTPDB,
-    SBC_CDRDB,
-    SBC_RESERVE_1,
-    SBC_RESERVE_2,
-    SBC_RESERVE_3,
-    SBC_RESERVE_4,
-    PROXY_DATASTORE,
-  };
-
   enum Type
   {
     TCP,

@@ -160,7 +160,7 @@ public:
   RedisBroadcastClient& redisClient();
     /// return a reference to the redis client for the rtp proxy db
 
-  bool redisConnect(const std::vector<RedisClient::ConnectionInfo>& connections);
+  bool redisConnect(const std::vector<RedisClient::ConnectionInfo>& connections, int workspace);
     /// Connect to redis database for state persistence
 
   bool hasRtpDb() const;

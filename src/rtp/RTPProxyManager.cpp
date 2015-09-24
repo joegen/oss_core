@@ -77,14 +77,14 @@ void RTPProxyManager::run(int threadCount, int readTimeout)
   }
 }
 
-bool RTPProxyManager::redisConnect(const std::vector<RedisClient::ConnectionInfo>& connections)
+bool RTPProxyManager::redisConnect(const std::vector<RedisClient::ConnectionInfo>& connections, int workspace)
 {
 	//TODO: What if _redisClient is already connected?
 
   for (std::vector<RedisClient::ConnectionInfo>::const_iterator iter = connections.begin(); iter != connections.end(); iter++)
   {
 	  //TODO: This needs to be disconnected on destructor or stop
-    if (!_redisClient.connect(iter->host, iter->port, iter->password, RedisClient::SBC_RTPDB))
+    if (!_redisClient.connect(iter->host, iter->port, iter->password, workspace))
     {
       OSS_LOG_ERROR("Unable to add rtp proxy database - " << iter->host << ":" << iter->port);
       _hasRtpDb = false;
