@@ -62,6 +62,9 @@ public:
     const std::string& qop,
     const std::string& a2);
     /// Create an authorization with QoP
+  
+  static void setSecretKey(const std::string& key);
+    /// Set the secret key used to generate nonce
 };
 
 

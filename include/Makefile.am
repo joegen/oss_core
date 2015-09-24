@@ -123,7 +123,6 @@ nobase_include_HEADERS = \
     OSS/SIP/SIPMessage.h \
     OSS/SIP/SIPParser.h \
     OSS/SIP/SIPParserException.h \
-    OSS/SIP/SIPProxyAuthenticate.h \
     OSS/SIP/SIPRequestLine.h \
     OSS/SIP/SIPRoute.h \
     OSS/SIP/SIPStatusLine.h \

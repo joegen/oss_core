@@ -271,7 +271,6 @@ liboss_core_la_SOURCES =  \
     sipparser/SIPHeaderTokens.cpp \
     sipparser/SIPMessage.cpp \
     sipparser/SIPParser.cpp \
-    sipparser/SIPProxyAuthenticate.cpp \
     sipparser/SIPRequestLine.cpp \
     sipparser/SIPRoute.cpp \
     sipparser/SIPStatusLine.cpp \
@@ -438,7 +437,8 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestAccessControl.cpp \
 	unit_test/TestReplaces.cpp \
 	unit_test/TestTransport.cpp \
-	unit_test/TestUaRegister.cpp
+	unit_test/TestUaRegister.cpp \
+	unit_test/TestDigestAuth.cpp
 
 #
 # oss_core - A simple back-to-back user agent
