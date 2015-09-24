@@ -58,7 +58,6 @@ See also: For more string comparison tricks (substring, prefix, suffix, and regu
 #include "gtest/gtest.h"
 
 #include "OSS/SIP/SIPAuthorization.h"
-#include "OSS/SIP/SIPProxyAuthenticate.h"
 #include "OSS/SIP/SIPDigestAuth.h"
 
 using namespace OSS::SIP;
