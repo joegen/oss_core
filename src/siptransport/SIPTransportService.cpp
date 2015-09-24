@@ -391,7 +391,21 @@ const SIPListener* SIPTransportService::getTransportForDestination(const std::st
   return 0;
 }
 
-
+bool SIPTransportService::addEndpoint(EndpointListener* pEndpoint)
+{
+  std::string key = pEndpoint->getEndpointName();
+  OSS_LOG_NOTICE("Adding Endpoint " << key);
+  
+  if (_endpoints.find(key) != _endpoints.end())
+  {
+    OSS_LOG_ERROR("Duplicate Endpoint " << key);
+    return false;
+  }
+  
+  _endpoints[key] = pEndpoint;
+  
+  return true;
+}
 void SIPTransportService::addUDPTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp)
 {
   OSS_LOG_INFO("Adding UDP SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
@@ -679,6 +693,19 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
       pTLSConnection = createClientTlsTransport(localAddress, remoteAddress);
     }
     return pTLSConnection;
+  }
+  else
+  {
+    //
+    // check if this is a client endpoint 
+    //
+    std::string endpoint = proto;
+    OSS::string_to_lower(endpoint);
+    Endpoints::iterator iter = _endpoints.find(endpoint);
+    if (iter != _endpoints.end())
+    {
+      return iter->second->getConnection();
+    }
   }
 
   return SIPTransportSession::Ptr();

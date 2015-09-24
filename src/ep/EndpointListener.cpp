@@ -26,16 +26,14 @@ namespace OSS {
 namespace EP {
   
 
-EndpointListener::EndpointListener( 
-                    const std::string& endpointName,
-                    const std::string& address,
-                    const std::string& port) :
-  SIPListener(0, address, port),
+EndpointListener::EndpointListener(const std::string& endpointName) :
+  SIPListener(0, "", ""),
   _endpointName(endpointName),
   _pEventQueueThread(0)
 {
+  _isEndpoint = true;
   _pConnection = EndpointConnection::Ptr(new EndpointConnection(this));
-  assert(_dispatch);
+  OSS::string_to_lower(_endpointName);
 }
 
 EndpointListener::~EndpointListener()
@@ -53,6 +51,11 @@ void EndpointListener::run()
 {
   assert(_pTransportService);
   handleStart();  
+  //
+  // The connection relies on address and port not being empty
+  //
+  assert(!_address.empty() && !_port.empty());
+  
   _pEventQueueThread = new boost::thread(boost::bind(&EndpointListener::monitorEvents, this));
 }
 

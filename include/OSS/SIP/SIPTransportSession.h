@@ -150,6 +150,15 @@ public:
   const OSS::Net::IPAddress& getReconnectAddress() const;
     /// Return the reconnect address
     /// 
+  
+  bool isEndpoint() const;
+    /// Returns rue if this is an Endpoint connection
+    ///
+  
+  const std::string& getEndpointName() const;
+    /// Returns the name of the endpoint for this connection.
+    /// This would be empty for non-endpoint connections
+    ///
 protected:
   static SIPTransportRateLimitStrategy _rateLimit;
 
@@ -164,6 +173,8 @@ protected:
   Dispatch _messageDispatch;
   bool _isClient;
   OSS::Net::IPAddress _reconnectAddress;
+  bool _isEndpoint;
+  std::string _endpointName;
 private:
     SIPTransportSession(const SIPTransportSession&);
     SIPTransportSession& operator = (const SIPTransportSession&);
@@ -172,6 +183,16 @@ private:
 //
 // Inlines
 //
+
+inline bool SIPTransportSession::isEndpoint() const
+{
+  return _isEndpoint;
+}
+
+inline const std::string& SIPTransportSession::getEndpointName() const
+{
+  return _endpointName;
+}
 
 inline bool SIPTransportSession::isReliableTransport() const
 {

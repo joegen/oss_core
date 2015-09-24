@@ -35,6 +35,8 @@ EndpointConnection::EndpointConnection(EndpointListener* pEndpoint) :
   // Endpoint connections must be set reliable or else we will get retransmission events
   //
   _isReliableTransport = true;
+  _isEndpoint = true;
+  _endpointName = _pEndpoint->getEndpointName();
 }
   
 EndpointConnection::~EndpointConnection()

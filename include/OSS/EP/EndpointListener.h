@@ -40,9 +40,7 @@ public:
   typedef BlockingQueue<SIPMessage::Ptr> EventQueue;
   typedef boost::shared_ptr<EndpointListener> Ptr;
   
-  EndpointListener( const std::string& endpointName,
-                    const std::string& address,
-                    const std::string& port);
+  EndpointListener( const std::string& endpointName);
   
   virtual ~EndpointListener();
   
@@ -111,6 +109,7 @@ inline const std::string& EndpointListener::getEndpointName() const
 inline void EndpointListener::setEndpointName(const std::string& endpointName)
 {
   _endpointName = endpointName;
+  OSS::string_to_lower(_endpointName);
 }
 
 inline const EndpointConnection::Ptr& EndpointListener::getConnection() const

@@ -56,7 +56,7 @@ public:
   typedef std::map<std::string, SIPTCPListener::Ptr> TCPListeners;
   typedef std::map<std::string, SIPWebSocketListener::Ptr> WSListeners;
   typedef std::map<std::string, SIPTLSListener::Ptr> TLSListeners;
-  typedef std::map<std::string, EndpointListener*> EPListeners;
+  typedef std::map<std::string, EndpointListener*> Endpoints;;
 
   SIPTransportService(const SIPTransportSession::Dispatch& dispatch);
 
@@ -114,6 +114,9 @@ public:
     ///
     /// If the transport already exists, this function will throw
     /// a SIPDuplicateTransport exception
+  
+  bool addEndpoint(EndpointListener* pEndpoint);
+    /// Add and endpoint
 
   SIPTransportSession::Ptr createClientTransport(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
@@ -243,6 +246,7 @@ private:
   TCPListeners _tcpListeners;
   WSListeners _wsListeners;
   TLSListeners _tlsListeners;
+  Endpoints _endpoints;
   OSS::Net::IPAddress _defaultListenerAddress;
   bool _udpEnabled;
   bool _tcpEnabled;
