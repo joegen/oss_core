@@ -78,7 +78,7 @@ public:
   static bool setDisplayName(std::string& from, const char* uri);
     /// Set the value of the display name.
 
-  std::string getAor();
+  std::string getAor(bool includeScheme = true);
     /// Returns the address of record (exluding port and params)
 
   std::string getURI() const;
