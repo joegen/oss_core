@@ -253,10 +253,10 @@ public:
   static bool verify(const char* uri);
     /// Verifies the validity of a SIP URI based on RFC 3261 ABNF grammar.
 
-  std::string getIdentity() const;
+  std::string getIdentity(bool includeScheme = true) const;
     /// Returns scheme + user + hostport
 
-  static bool getIdentity(const std::string& uri, std::string& identity);
+  static bool getIdentity(const std::string& uri, std::string& identity, bool includeScheme = true);
     /// Returns scheme + user + hostport
 };
 
