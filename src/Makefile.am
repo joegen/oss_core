@@ -404,11 +404,15 @@ if ENABLE_TURN
 endif
 
 bin_PROGRAMS = \
-    oss_core_unit_test \
     oss_garp \
     oss_carp \
     oss_core \
     oss_rest
+
+
+TESTS = oss_core-unit-test
+check_PROGRAMS = oss_core-unit-test
+
 
 oss_core_unit_test_CXXFLAGS = \
 	${common_cxx_flags} \
