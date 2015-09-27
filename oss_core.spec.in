@@ -150,11 +150,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(644,root,root,755)
 %doc CONTRIBUTORS README NEWS TODO ChangeLog %name.configlog
-%attr(755,root,root) %{_bindir}/oss_core_unit_test
-%attr(755,root,root) %{_bindir}/oss_core
-%attr(755,root,root) %{_bindir}/oss_carp
-%attr(755,root,root) %{_bindir}/oss_garp
-%attr(755,root,root) %{_bindir}/oss_rest
+%attr(755,root,root) %{_bindir}/oss_*
 %attr(755,root,root) %{_libdir}/liboss_core.so*
 %attr(755,root,root) %{_libdir}/liboss_carp.so*
 
