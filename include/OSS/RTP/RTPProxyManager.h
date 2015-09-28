@@ -157,10 +157,10 @@ public:
     /// return the active session lists.  Muts be used together with sessionListMutex
     /// for thread safety
 
-  RedisBroadcastClient& redisClient();
+  Persistent::RedisBroadcastClient& redisClient();
     /// return a reference to the redis client for the rtp proxy db
 
-  bool redisConnect(const std::vector<RedisClient::ConnectionInfo>& connections, int workspace);
+  bool redisConnect(const std::vector<Persistent::RedisClient::ConnectionInfo>& connections, int workspace);
     /// Connect to redis database for state persistence
 
   bool hasRtpDb() const;
@@ -201,7 +201,7 @@ private:
   int _readTimeout;
   unsigned _rtpSessionMax;
   bool _canRecycleState;
-  RedisBroadcastClient _redisClient;
+  Persistent::RedisBroadcastClient _redisClient;
   bool _hasRtpDb;
   mutable OSS::mutex_critic_sec _sessionCounterMutex;
   mutable RTPProxyCounter _sessionCounter;
@@ -219,7 +219,7 @@ private:
 //
 
 
-inline RedisBroadcastClient& RTPProxyManager::redisClient()
+inline Persistent::RedisBroadcastClient& RTPProxyManager::redisClient()
 {
   return _redisClient;
 }

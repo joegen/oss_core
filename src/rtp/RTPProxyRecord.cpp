@@ -89,7 +89,7 @@ RTPProxyRecord::RTPProxyRecord()
   fax.control.isLeg2XOREncrypted = false;
 }
 
-bool RTPProxyRecord::writeToRedis(RedisBroadcastClient& client, const std::string& key) const
+bool RTPProxyRecord::writeToRedis(Persistent::RedisBroadcastClient& client, const std::string& key) const
 {
   json::Object params;
 
@@ -241,7 +241,7 @@ bool RTPProxyRecord::writeToRedis(RedisBroadcastClient& client, const std::strin
   return client.set(key, params, 3600 * 12);
 }
 
-bool RTPProxyRecord::readFromRedis(RedisBroadcastClient& client, const std::string& key)
+bool RTPProxyRecord::readFromRedis(Persistent::RedisBroadcastClient& client, const std::string& key)
 {
   json::Object params;
   if (!client.get(key, params))

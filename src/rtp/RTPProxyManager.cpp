@@ -77,11 +77,11 @@ void RTPProxyManager::run(int threadCount, int readTimeout)
   }
 }
 
-bool RTPProxyManager::redisConnect(const std::vector<RedisClient::ConnectionInfo>& connections, int workspace)
+bool RTPProxyManager::redisConnect(const std::vector<Persistent::RedisClient::ConnectionInfo>& connections, int workspace)
 {
 	//TODO: What if _redisClient is already connected?
 
-  for (std::vector<RedisClient::ConnectionInfo>::const_iterator iter = connections.begin(); iter != connections.end(); iter++)
+  for (std::vector<Persistent::RedisClient::ConnectionInfo>::const_iterator iter = connections.begin(); iter != connections.end(); iter++)
   {
 	  //TODO: This needs to be disconnected on destructor or stop
     if (!_redisClient.connect(iter->host, iter->port, iter->password, workspace))
