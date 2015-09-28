@@ -20,6 +20,7 @@ nobase_include_HEADERS = \
     OSS/OSS.h \
     OSS/Persistent/BerkeleyDb.h \
     OSS/Persistent/RedisClient.h \
+    OSS/Persistent/RedisPubSub.h \
     OSS/UTL/Cache.h \
     OSS/UTL/TimedQueue.h \
     OSS/UTL/Application.h \

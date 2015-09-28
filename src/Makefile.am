@@ -260,6 +260,7 @@ liboss_core_la_SOURCES =  \
     persistent/KVLevelDB.cpp \
     persistent/RESTKeyValueStore.cpp \
     persistent/RedisClient.cpp \
+    persistent/RedisPubSub.cpp \
     sdp/SDPHeader.cpp \
     sdp/SDPHeaderList.cpp \
     sdp/SDPMedia.cpp \
