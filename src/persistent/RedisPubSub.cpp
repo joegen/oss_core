@@ -93,11 +93,15 @@ bool RedisPubSub::connect(const std::string& host, int port, const std::string& 
   }
   
   //
-  // Dow we need to delete the old event base or is it owned by the context????
+  // Do we need to delete the old event base or is it owned by the context????
   //
   _pEventBase = event_base_new();
   redisLibeventAttach(_context, _pEventBase);
 
+  if (!password.empty())
+  {
+    redisAsyncCommand(_context, 0, 0, "AUTH %s", password.c_str());
+  }
   
   _pEventThread = new boost::thread(boost::bind(&RedisPubSub::eventLoop, this));
   return true;
