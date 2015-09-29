@@ -19,6 +19,7 @@
 //
 
 
+#include <event.h>
 #include "OSS/Persistent/RedisPubSub.h"
 
 
@@ -27,8 +28,12 @@ namespace Persistent {
 
 static void on_channel_message(redisAsyncContext *c, void *reply, void *privdata)
 {
+  std::cout << "***on_channel_message***" << std::endl;
   redisReply* r = (redisReply*)reply;
-  if (reply == NULL) return;
+  if (!reply)
+  {
+    return;
+  }
 
   if (r->type == REDIS_REPLY_ARRAY)
   {
@@ -37,10 +42,14 @@ static void on_channel_message(redisAsyncContext *c, void *reply, void *privdata
     response << "| ";
     for (std::size_t j = 0; j < r->elements; j++)
     {
+      if (r->element[j]->type == REDIS_REPLY_STRING)
+      {
         eventData.push_back(r->element[j]->str);
         response << r->element[j]->str << " | ";
+      }
     }
     OSS_LOG_DEBUG("[REDIS] RedisPubSub::on_channel_message - " << response.str());
+    std::cout << response.str() << std::endl;
     
     RedisPubSub* pPubSub = (RedisPubSub*)privdata;
     if (pPubSub)
@@ -52,6 +61,7 @@ static void on_channel_message(redisAsyncContext *c, void *reply, void *privdata
 
 static void on_publish_response(redisAsyncContext *c, void *reply, void *privdata)
 {
+  std::cout << "***on_publish_response***" << std::endl;
   redisReply* r = (redisReply*)reply;
   if (reply == NULL) return;
 
@@ -61,9 +71,13 @@ static void on_publish_response(redisAsyncContext *c, void *reply, void *privdat
     response << "| ";
     for (std::size_t j = 0; j < r->elements; j++)
     {
-      response << r->element[j]->str << " | ";
+      if (r->element[j]->type == REDIS_REPLY_STRING)
+      {
+        response << r->element[j]->str << " | ";
+      }
     }
     OSS_LOG_DEBUG("[REDIS] RedisPubSub::on_publish_response - " << response.str());
+    std::cout << response.str() << std::endl;
   }
 }
 
@@ -103,7 +117,6 @@ bool RedisPubSub::connect(const std::string& host, int port, const std::string& 
     redisAsyncCommand(_context, 0, 0, "AUTH %s", password.c_str());
   }
   
-  _pEventThread = new boost::thread(boost::bind(&RedisPubSub::eventLoop, this));
   return true;
 }
 
@@ -126,7 +139,9 @@ void RedisPubSub::disconnect()
 
 void RedisPubSub::eventLoop()
 {
+  std::cout << "RedisPubSub::eventLoop STARTED" << std::endl;
   event_base_dispatch(_pEventBase);
+  std::cout << "RedisPubSub::eventLoop TERMINATED" << std::endl;
 }
 
 bool RedisPubSub::subscribe(const std::string& channelName)
@@ -138,8 +153,14 @@ bool RedisPubSub::subscribe(const std::string& channelName)
   }
   std::ostringstream cmd;
   cmd << "SUBSCRIBE " << channelName; 
-  redisAsyncCommand(_context, on_channel_message, this, cmd.str().c_str());
-  return true;
+  bool ret = redisAsyncCommand(_context, on_channel_message, this, cmd.str().c_str()) == 0;
+  
+  if (ret)
+  {
+    _pEventThread = new boost::thread(boost::bind(&RedisPubSub::eventLoop, this));
+  }
+  
+  return ret;
 }
 
 bool RedisPubSub::publish(const std::string& channelName, const std::string& event)
@@ -151,17 +172,23 @@ bool RedisPubSub::publish(const std::string& channelName, const std::string& eve
   }
   std::ostringstream cmd;
   cmd << "PUBLISH " << event; 
-  redisAsyncCommand(_context, on_publish_response, this, cmd.str().c_str());
-  return true;
+  bool ret = redisAsyncCommand(_context, on_publish_response, this, cmd.str().c_str()) == 0;
+  if (ret)
+  {
+    _pEventThread = new boost::thread(boost::bind(&RedisPubSub::eventLoop, this));
+  }
+  return ret;
 }
 
 void RedisPubSub::receive(Event& event)
 {
   _eventQueue.dequeue(event);
+  std::cout << "dequed event " << event.front() << std::endl;
 }
   
 void RedisPubSub::post(const Event& event)
 {
+  std::cout << "posted event " << event.front() << std::endl;
   _eventQueue.enqueue(event);
 }
 
