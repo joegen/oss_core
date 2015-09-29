@@ -573,6 +573,80 @@ bool RedisClient::publish(const std::string& channel, const std::string& eventDa
   return false;
 }
 
+bool RedisClient::subscribe(const std::string& channelName, std::vector<std::string>& reply)
+{
+  try
+  {
+    std::vector<std::string> args;
+    args.push_back("SUBSCRIBE");
+    args.push_back(channelName);
+    reply = getReplyStringArray(args);
+    return !reply.empty();
+  }
+  catch(...)
+  {
+    return false;
+  }
+  
+  return false;
+}
+
+bool RedisClient::receive(std::vector<std::string>& eventData) const
+{
+  mutex_lock lock(_mutex);
+  
+  if (!_context)
+  {
+    eventData.push_back("connection-error");
+    eventData.push_back(OSS::string_from_number<int>(REDIS_ERR_OTHER));
+    eventData.push_back("Redis context is null");
+    return false;
+  }
+  
+  redisReply* reply = 0;
+  int ret = redisGetReply(_context, (void**)&reply);
+  if (!reply)
+  {
+    if (_context->err)
+    {
+      eventData.push_back("connection-error");
+      eventData.push_back(OSS::string_from_number<int>(_context->err));
+      if (_context->errstr)
+      {
+        eventData.push_back(_context->errstr);
+      }
+    }
+    const_cast<RedisClient*>(this)->disconnect();
+    return false;
+  }
+  
+  if (reply && reply->type == REDIS_REPLY_ARRAY && reply->elements > 0)
+  {
+    for (size_t i = 0; i < reply->elements; i++)
+    {
+      redisReply* item = reply->element[i];
+      if (item && item->type == REDIS_REPLY_STRING && item->len > 0)
+      {
+        eventData.push_back(std::string(item->str, item->len));
+      }
+      else if (item && item->type == REDIS_REPLY_INTEGER)
+      {
+        try
+        {
+          eventData.push_back(boost::lexical_cast<std::string>(item->integer));
+        }
+        catch(...)
+        {
+        }
+      }
+
+    }
+    const_cast<RedisClient*>(this)->freeReply(reply);
+  }
+  
+  return true;
+}
+
 bool RedisClient::decrby(const std::string& key, int increment, long long& result)
 {
   try

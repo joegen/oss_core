@@ -56,32 +56,58 @@ See also: For more string comparison tricks (substring, prefix, suffix, and regu
 */
 
 #include "gtest/gtest.h"
-#include "OSS/Persistent/RedisPubSub.h"
+#include "OSS/Persistent/RedisClient.h"
+#include "OSS/UTL/Thread.h"
 
 using namespace OSS::Persistent;
 
 TEST(TestRedisPubSub, EventHandling)
 {
-  RedisPubSub subscriber;
+  RedisClient subscriber("127.0.0.1", 6379);
   RedisClient publisher("127.0.0.1", 6379);
-  ASSERT_TRUE(subscriber.connect("127.0.0.1", 6379, ""));
-  ASSERT_TRUE(publisher.connect( ""));
-  OSS::thread_sleep(1000);
-  ASSERT_TRUE(subscriber.subscribe("TestChannel"));
-  OSS::thread_sleep(1000);
+  ASSERT_TRUE(subscriber.connect());
+  ASSERT_TRUE(publisher.connect());
+  
+  std::vector<std::string> result;
+  ASSERT_TRUE(subscriber.subscribe("TestChannel", result));
+  
+  std::cout << "result -> | ";
+  for (std::vector<std::string>::iterator iter = result.begin(); iter != result.end(); iter++)
+  {
+    std::cout << *iter << " |";
+  }
+  std::cout << std::endl;
+  
   ASSERT_TRUE(publisher.publish("TestChannel", "hello world"));
   ASSERT_TRUE(publisher.publish("TestChannel", "exit"));
 
-  RedisPubSub::Event eventData;
+  
   while (true)
   {
+    std::vector<std::string> eventData;
     subscriber.receive(eventData);
-    std::cout << eventData[2] << std::endl;
-    if (eventData.size() == 3 && (eventData[2] == "exit" || eventData[2] == "terminated"))
+    std::cout << "event -> | ";
+    for (std::vector<std::string>::iterator iter = eventData.begin(); iter != eventData.end(); iter++)
+    {
+      std::cout << *iter << " |";
+    }
+    std::cout << std::endl;
+    if (eventData.size() == 3 && (eventData[2] == "exit"))
     {
       break;
     }
+    
+    if (eventData.size() >= 1  && eventData[0] == "connection-error")
+    {
+      //
+      // Attempt to reconnect
+      //
+      OSS::thread_sleep(1000);
+      if (subscriber.connect())
+      {
+        std::vector<std::string> reconResult;
+        subscriber.subscribe("TestChannel", reconResult);
+      }
+    }
   }
-
-
 }

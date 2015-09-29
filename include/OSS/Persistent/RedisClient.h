@@ -138,6 +138,10 @@ public:
   bool hdel(const std::string& key, const std::string& field);
   
   bool publish(const std::string& channel, const std::string& eventData);
+  
+  bool receive(std::vector<std::string>& reply) const;
+  
+  bool subscribe(const std::string& channelName, std::vector<std::string>& reply);
 };
 
 class RedisBroadcastClient
