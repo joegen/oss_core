@@ -136,6 +136,8 @@ public:
   bool del(const std::string& key);
 
   bool hdel(const std::string& key, const std::string& field);
+  
+  bool publish(const std::string& channel, const std::string& eventData);
 };
 
 class RedisBroadcastClient

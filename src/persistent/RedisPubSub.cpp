@@ -28,7 +28,6 @@ namespace Persistent {
 
 static void on_channel_message(redisAsyncContext *c, void *reply, void *privdata)
 {
-  std::cout << "***on_channel_message***" << std::endl;
   redisReply* r = (redisReply*)reply;
   if (!reply)
   {
@@ -49,52 +48,61 @@ static void on_channel_message(redisAsyncContext *c, void *reply, void *privdata
       }
     }
     OSS_LOG_DEBUG("[REDIS] RedisPubSub::on_channel_message - " << response.str());
-    std::cout << response.str() << std::endl;
     
     RedisPubSub* pPubSub = (RedisPubSub*)privdata;
     if (pPubSub)
     {
-      pPubSub->post(eventData);
-    }
-  }
-}
-
-static void on_publish_response(redisAsyncContext *c, void *reply, void *privdata)
-{
-  std::cout << "***on_publish_response***" << std::endl;
-  redisReply* r = (redisReply*)reply;
-  if (reply == NULL) return;
-
-  if (r->type == REDIS_REPLY_ARRAY)
-  {
-    std::ostringstream response;
-    response << "| ";
-    for (std::size_t j = 0; j < r->elements; j++)
-    {
-      if (r->element[j]->type == REDIS_REPLY_STRING)
+      if (!eventData.empty() && eventData.front() != "subscribe")
       {
-        response << r->element[j]->str << " | ";
+        pPubSub->post(eventData);
       }
     }
-    OSS_LOG_DEBUG("[REDIS] RedisPubSub::on_publish_response - " << response.str());
-    std::cout << response.str() << std::endl;
   }
+  
+  
+  //
+  // Note: Redis frees the reply object so do not free it here!
+  //
 }
 
+void exit_func(int fd, short flags, void* privdata) 
+{
+  RedisPubSub* pPubSub = (RedisPubSub*)privdata;
+  if (pPubSub)
+  {
+    event_base_loopbreak(pPubSub->getEventBase());
+  }
+}
+  
 RedisPubSub::RedisPubSub() :
   _context(0),
   _pEventBase(0),
-  _pEventThread(0)
+  _pEventThread(0),
+  _exiting(false),
+  _pReconnectThread(0)
 {
 }
   
 RedisPubSub::~RedisPubSub()
 {
+  _exiting = true;
+  
+  if (_pReconnectThread)
+  {
+    _pReconnectThread->join();
+    delete _pReconnectThread;
+    _pReconnectThread = 0;
+  }
+  
   disconnect();
 }
   
 bool RedisPubSub::connect(const std::string& host, int port, const std::string& password)
 {
+  _host = host;
+  _port = port;
+  _password = password;
+  
   disconnect();
   
   OSS::mutex_critic_sec_lock lock(_mutex);
@@ -106,9 +114,6 @@ bool RedisPubSub::connect(const std::string& host, int port, const std::string& 
     return false;
   }
   
-  //
-  // Do we need to delete the old event base or is it owned by the context????
-  //
   _pEventBase = event_base_new();
   redisLibeventAttach(_context, _pEventBase);
 
@@ -116,32 +121,76 @@ bool RedisPubSub::connect(const std::string& host, int port, const std::string& 
   {
     redisAsyncCommand(_context, 0, 0, "AUTH %s", password.c_str());
   }
-  
+   
   return true;
 }
 
 void RedisPubSub::disconnect()
 {
-  OSS::mutex_critic_sec_lock lock(_mutex);
-  if (_context)
+  OSS::mutex_critic_sec_lock lock(_mutex); 
+
+  if (_pEventBase)
   {
-    redisAsyncFree(_context);
-    _context = 0;
+    event_base_once(_pEventBase, 0, EV_WRITE, exit_func, this, 0);
   }
-  
+
   if (_pEventThread)
   {
     _pEventThread->join();
     delete _pEventThread;
     _pEventThread = 0;
   }
+
+  if (_context)
+  {
+    _context->c.flags |= REDIS_CONNECTED;
+    redisAsyncFree(_context);
+    _context = 0;
+  }
+
+  if (_pEventBase)
+  {
+    event_base_free(_pEventBase);
+    _pEventBase = 0;
+  }
+
+  
 }
 
 void RedisPubSub::eventLoop()
 {
-  std::cout << "RedisPubSub::eventLoop STARTED" << std::endl;
   event_base_dispatch(_pEventBase);
-  std::cout << "RedisPubSub::eventLoop TERMINATED" << std::endl;
+  
+  Event eventData;
+  eventData.push_back("event");
+  eventData.push_back("RedisPubSub");
+  eventData.push_back("terminated");
+  post(eventData);
+  
+  if (!_exiting && _pReconnectThread)
+  {
+    _pReconnectThread->join();
+    delete _pReconnectThread;
+    _pReconnectThread = 0;
+  }
+  
+  if (!_host.empty() && !_channelName.empty())
+  {
+    _pReconnectThread = new boost::thread(boost::bind(&RedisPubSub::reconnect, this));
+  }
+}
+
+void RedisPubSub::reconnect()
+{
+  std::cout << "RECONNECTING" << std::endl;
+  OSS::thread_sleep(1000);
+  if (!_host.empty() && connect(_host, _port, _password))
+  {
+    if (!_channelName.empty())
+    {
+      subscribe(_channelName);
+    }
+  }
 }
 
 bool RedisPubSub::subscribe(const std::string& channelName)
@@ -151,11 +200,12 @@ bool RedisPubSub::subscribe(const std::string& channelName)
   {
     return false;
   }
+  _channelName = channelName;
   std::ostringstream cmd;
   cmd << "SUBSCRIBE " << channelName; 
   bool ret = redisAsyncCommand(_context, on_channel_message, this, cmd.str().c_str()) == 0;
   
-  if (ret)
+  if (ret && !_pEventThread)
   {
     _pEventThread = new boost::thread(boost::bind(&RedisPubSub::eventLoop, this));
   }
@@ -163,32 +213,14 @@ bool RedisPubSub::subscribe(const std::string& channelName)
   return ret;
 }
 
-bool RedisPubSub::publish(const std::string& channelName, const std::string& event)
-{
-  OSS::mutex_critic_sec_lock lock(_mutex);
-  if (!_context)
-  {
-    return false;
-  }
-  std::ostringstream cmd;
-  cmd << "PUBLISH " << event; 
-  bool ret = redisAsyncCommand(_context, on_publish_response, this, cmd.str().c_str()) == 0;
-  if (ret)
-  {
-    _pEventThread = new boost::thread(boost::bind(&RedisPubSub::eventLoop, this));
-  }
-  return ret;
-}
 
 void RedisPubSub::receive(Event& event)
 {
   _eventQueue.dequeue(event);
-  std::cout << "dequed event " << event.front() << std::endl;
 }
   
 void RedisPubSub::post(const Event& event)
 {
-  std::cout << "posted event " << event.front() << std::endl;
   _eventQueue.enqueue(event);
 }
 

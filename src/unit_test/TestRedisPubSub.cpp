@@ -63,13 +63,25 @@ using namespace OSS::Persistent;
 TEST(TestRedisPubSub, EventHandling)
 {
   RedisPubSub subscriber;
-  RedisPubSub publisher;
+  RedisClient publisher("127.0.0.1", 6379);
   ASSERT_TRUE(subscriber.connect("127.0.0.1", 6379, ""));
-  ASSERT_TRUE(publisher.connect("127.0.0.1", 6379, ""));
+  ASSERT_TRUE(publisher.connect( ""));
   OSS::thread_sleep(1000);
   ASSERT_TRUE(subscriber.subscribe("TestChannel"));
-  ASSERT_TRUE(publisher.publish("TestChannel", "Hello, World!"));
-  
+  OSS::thread_sleep(1000);
+  ASSERT_TRUE(publisher.publish("TestChannel", "hello world"));
+  ASSERT_TRUE(publisher.publish("TestChannel", "exit"));
+
   RedisPubSub::Event eventData;
-  subscriber.receive(eventData);
+  while (true)
+  {
+    subscriber.receive(eventData);
+    std::cout << eventData[2] << std::endl;
+    if (eventData.size() == 3 && (eventData[2] == "exit" || eventData[2] == "terminated"))
+    {
+      break;
+    }
+  }
+
+
 }

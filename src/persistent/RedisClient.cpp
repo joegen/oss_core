@@ -551,6 +551,28 @@ bool RedisClient::incrby(const std::string& key, int increment, long long& resul
   }
 }
 
+bool RedisClient::publish(const std::string& channel, const std::string& eventData)
+{
+  try
+  {
+    std::vector<std::string> args;
+    args.push_back("PUBLISH");
+    args.push_back(channel);
+    args.push_back(eventData);
+    long long result;
+    if(getReplyInt(args, result) && result == 1)
+    {
+      return true;
+    }
+  }
+  catch(...)
+  {
+    return false;
+  }
+  
+  return false;
+}
+
 bool RedisClient::decrby(const std::string& key, int increment, long long& result)
 {
   try

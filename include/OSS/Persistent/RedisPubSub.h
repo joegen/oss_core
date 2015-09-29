@@ -30,6 +30,7 @@
 #include "OSS/JSON/elements.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/BlockingQueue.h"
+#include "OSS/Persistent/RedisClient.h"
 #include <map>
 
 
@@ -53,20 +54,37 @@ public:
   
   bool subscribe(const std::string& channelName);
   
-  bool publish(const std::string& channelName, const std::string& event);
-  
   void receive(Event& event);
 
   void post(const Event& event);
+  
+  struct event_base* getEventBase();
 protected:
-  void eventLoop();  
+  void eventLoop();
+  void reconnect();  
 private:
   mutable OSS::mutex_critic_sec _mutex;
   redisAsyncContext* _context;
   struct event_base* _pEventBase;
   boost::thread* _pEventThread;
   EventQueue _eventQueue;
+  std::string _host;
+  int _port;
+  std::string _password;
+  std::string _channelName;
+  bool _exiting;
+  boost::thread* _pReconnectThread;
 };
+
+
+//
+// Inlines
+//
+
+inline struct event_base* RedisPubSub::getEventBase()
+{
+  return _pEventBase;
+}
 
 } } // OSS::Presistent  
   
