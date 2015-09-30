@@ -64,9 +64,18 @@ public:
 
     return true;
   }
+  
+  std::size_t size() const
+  {
+    std::size_t ret = 0;
+    _cs.lock();
+    ret = _queue.size();
+    _cs.unlock();
+    return ret;
+  }
 private:
   OSS::semaphore _sem;
-  OSS::mutex_critic_sec _cs;
+  mutable OSS::mutex_critic_sec _cs;
   std::queue<T> _queue;
 };
 
