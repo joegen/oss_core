@@ -78,6 +78,7 @@ public:
   ~RedisClient();
 
   bool connect(const std::string& password_ = "", int db = 0);
+  bool connect(const std::string& tcpHost, int tcpPort, const std::string& password, int db);
 
   void disconnect();
 
@@ -142,6 +143,8 @@ public:
   bool receive(std::vector<std::string>& reply) const;
   
   bool subscribe(const std::string& channelName, std::vector<std::string>& reply);
+  
+  bool setReadTimeout(int seconds);
 };
 
 class RedisBroadcastClient

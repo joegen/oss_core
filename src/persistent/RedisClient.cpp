@@ -62,6 +62,13 @@ RedisClient::~RedisClient()
   disconnect();
 }
 
+bool RedisClient::connect(const std::string& tcpHost, int tcpPort, const std::string& password, int db)
+{
+  _tcpHost = tcpHost;
+  _tcpPort = tcpPort;
+  return connect(password, db);
+}
+
 bool RedisClient::connect(const std::string& password_, int db)
 {
   disconnect();
@@ -591,10 +598,21 @@ bool RedisClient::subscribe(const std::string& channelName, std::vector<std::str
   return false;
 }
 
+
+bool RedisClient::setReadTimeout(int seconds)
+{
+  if (seconds > 0)
+  {
+    struct timeval tv = { seconds, 0 };
+    return redisSetTimeout(_context, tv) == REDIS_OK;
+  }
+  return false;
+}
+
 bool RedisClient::receive(std::vector<std::string>& eventData) const
 {
   mutex_lock lock(_mutex);
-  
+
   if (!_context)
   {
     eventData.push_back("connection-error");
@@ -602,12 +620,22 @@ bool RedisClient::receive(std::vector<std::string>& eventData) const
     eventData.push_back("Redis context is null");
     return false;
   }
-  
+   
   redisReply* reply = 0;
-  int ret = redisGetReply(_context, (void**)&reply);
+  redisGetReply(_context, (void**)&reply);
+
   if (!reply)
   {
-    if (_context->err)
+    if (!_context)
+    {
+      //
+      // Disconnect was called while redisGetReply is blocking?
+      //
+      eventData.push_back("connection-error");
+      eventData.push_back(OSS::string_from_number<int>(REDIS_ERR_OTHER));
+      eventData.push_back("Redis context is null");
+    }
+    else if (_context->err > 1)
     {
       eventData.push_back("connection-error");
       eventData.push_back(OSS::string_from_number<int>(_context->err));
@@ -615,8 +643,18 @@ bool RedisClient::receive(std::vector<std::string>& eventData) const
       {
         eventData.push_back(_context->errstr);
       }
+      const_cast<RedisClient*>(this)->disconnect();
     }
-    const_cast<RedisClient*>(this)->disconnect();
+    else if (_context->err == 1)
+    {
+      eventData.push_back("io-error");
+      eventData.push_back(OSS::string_from_number<int>(_context->err));
+      if (_context->errstr)
+      {
+        eventData.push_back(_context->errstr);
+      }
+      const_cast<RedisClient*>(this)->disconnect();
+    }
     return false;
   }
   

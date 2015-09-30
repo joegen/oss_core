@@ -442,7 +442,7 @@ bool RTPProxy::isInactive() const
 {
   if (_isInactive)
     return true;
-  return OSS::getTime() - _timeStamp > _pManager->_readTimeout;
+  return OSS::getTime() - _timeStamp > (unsigned int)_pManager->_readTimeout;
 }
 
 void RTPProxy::handleLeg2FrameRead(
