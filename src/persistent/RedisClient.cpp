@@ -601,6 +601,13 @@ bool RedisClient::subscribe(const std::string& channelName, std::vector<std::str
 
 bool RedisClient::setReadTimeout(int seconds)
 {
+  mutex_lock lock(_mutex);
+  
+  if (!_context)
+  {
+    return false;
+  }
+  
   if (seconds > 0)
   {
     struct timeval tv = { seconds, 0 };
