@@ -35,10 +35,7 @@ class OSS_API SIPAuthorization: public SIPParser
 {
 public:
   SIPAuthorization();
-    /// Create a new SIPAuthorization vector
-  
-  SIPAuthorization(bool isChallengeResponse);
-    /// Create a new Challenge response (WWW-Authenticate))
+    /// Create a new SIPAuthorization header
 
   SIPAuthorization(const std::string& authorization);
     /// Create a authorization from a string.
@@ -101,8 +98,8 @@ public:
     ///		; equal to request-uri as specified by HTTP/1.1
     ///
 
-  void setMessageQop(const char* qop);
-  std::string getMessageQop() const;
+  void setQop(const char* qop);
+  std::string getQop() const;
     ///
     /// message-qop	= 	"qop" EQUAL qop-value
     ///
@@ -177,12 +174,12 @@ inline std::string SIPAuthorization::getDigestUri() const
   return getQuotedAuthParam("uri");
 }
 
-inline void SIPAuthorization::setMessageQop(const char* qop)
+inline void SIPAuthorization::setQop(const char* qop)
 {
   setQuotedAuthParam("qop", qop);
 }
 
-inline std::string SIPAuthorization::getMessageQop() const
+inline std::string SIPAuthorization::getQop() const
 {
   return getQuotedAuthParam("qop");
 }

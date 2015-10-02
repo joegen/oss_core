@@ -96,7 +96,7 @@ TEST(TestDigestAuth, SIPProxyAuthenticate)
   //
   // Test creation
   //
-  SIPAuthorization pa1(true);
+  SIPAuthorization pa1;
  
   pa1.setAlgorithm(algorithm.c_str());
   ASSERT_STREQ(algorithm.c_str(), pa1.getAlgorithm().c_str());
@@ -107,8 +107,8 @@ TEST(TestDigestAuth, SIPProxyAuthenticate)
   pa1.setNonce(nonce.c_str());
   ASSERT_STREQ(nonce.c_str(), pa1.getNonce().c_str());
   
-  pa1.setMessageQop(qop.c_str());
-  ASSERT_STREQ(qop.c_str(), pa1.getMessageQop().c_str());
+  pa1.setQop(qop.c_str());
+  ASSERT_STREQ(qop.c_str(), pa1.getQop().c_str());
   
   //
   // Test creation from string
@@ -117,7 +117,7 @@ TEST(TestDigestAuth, SIPProxyAuthenticate)
   ASSERT_STREQ(algorithm.c_str(), pa2.getAlgorithm().c_str());
   ASSERT_STREQ(realm.c_str(), pa2.getRealm().c_str());
   ASSERT_STREQ(nonce.c_str(), pa2.getNonce().c_str());
-  ASSERT_STREQ(qop.c_str(), pa2.getMessageQop().c_str());
+  ASSERT_STREQ(qop.c_str(), pa2.getQop().c_str());
   
   //
   // Test copy constructor
@@ -126,7 +126,7 @@ TEST(TestDigestAuth, SIPProxyAuthenticate)
   ASSERT_STREQ(algorithm.c_str(), pa3.getAlgorithm().c_str());
   ASSERT_STREQ(realm.c_str(), pa3.getRealm().c_str());
   ASSERT_STREQ(nonce.c_str(), pa3.getNonce().c_str());
-  ASSERT_STREQ(qop.c_str(), pa3.getMessageQop().c_str());
+  ASSERT_STREQ(qop.c_str(), pa3.getQop().c_str());
   
   //
   // Test equal operator
@@ -136,7 +136,7 @@ TEST(TestDigestAuth, SIPProxyAuthenticate)
   ASSERT_STREQ(algorithm.c_str(), pa4.getAlgorithm().c_str());
   ASSERT_STREQ(realm.c_str(), pa4.getRealm().c_str());
   ASSERT_STREQ(nonce.c_str(), pa4.getNonce().c_str());
-  ASSERT_STREQ(qop.c_str(), pa4.getMessageQop().c_str());
+  ASSERT_STREQ(qop.c_str(), pa4.getQop().c_str());
   
   //
   // Test equal from string
@@ -146,7 +146,7 @@ TEST(TestDigestAuth, SIPProxyAuthenticate)
   ASSERT_STREQ(algorithm.c_str(), pa5.getAlgorithm().c_str());
   ASSERT_STREQ(realm.c_str(), pa5.getRealm().c_str());
   ASSERT_STREQ(nonce.c_str(), pa5.getNonce().c_str());
-  ASSERT_STREQ(qop.c_str(), pa5.getMessageQop().c_str());
+  ASSERT_STREQ(qop.c_str(), pa5.getQop().c_str());
   
   
   //

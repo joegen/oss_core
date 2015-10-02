@@ -74,12 +74,7 @@ namespace SIP {
 
 SIPAuthorization::SIPAuthorization()
 {
-  _data = "Digest username=\"unset\"";
-}
-
-SIPAuthorization::SIPAuthorization(bool isChallengeResponse)
-{
-  _data = "Digest algorithm=MD5";
+   _data = "Digest nonce=\"unset\"";
 }
 
 SIPAuthorization::SIPAuthorization(const std::string& authorization)
