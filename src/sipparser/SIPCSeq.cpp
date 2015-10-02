@@ -20,6 +20,7 @@
 
 #include "OSS/ABNF/ABNFSIPRules.h"
 #include "OSS/SIP/SIPCSeq.h"
+#include "OSS/UTL/CoreUtils.h"
 
 
 namespace OSS {
@@ -79,6 +80,7 @@ bool SIPCSeq::getMethod(const std::string& cseq, std::string& method)
   if (offSet == cseq.c_str())
     return false;
   method = std::string(offSet);
+  OSS::string_to_upper(method);
   return true;
 }
 
