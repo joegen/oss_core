@@ -29,7 +29,8 @@ namespace EP {
 EndpointListener::EndpointListener(const std::string& endpointName) :
   SIPListener(0, "", ""),
   _endpointName(endpointName),
-  _pEventQueueThread(0)
+  _pEventQueueThread(0),
+  _isTerminating(false)
 {
   _isEndpoint = true;
   _pConnection = EndpointConnection::Ptr(new EndpointConnection(this));
@@ -56,12 +57,13 @@ void EndpointListener::run()
   // The connection relies on address and port not being empty
   //
   assert(!_address.empty() && !_port.empty());
-   
+  _isTerminating = false;
   _pEventQueueThread = new boost::thread(boost::bind(&EndpointListener::monitorEvents, this));
 }
 
 void EndpointListener::stop()
 {
+  _isTerminating = true;
   postEvent(SIPMessage::Ptr());
   if (_pEventQueueThread)
   {
@@ -74,15 +76,14 @@ void EndpointListener::stop()
 void EndpointListener::monitorEvents()
 {
   handleStart();
-  while(true)
+  while(!_isTerminating)
   {
     SIPMessage::Ptr pRequest;
     _eventQueue.dequeue(pRequest);
-    if (!pRequest)
+    if (pRequest)
     {
-      break;
+      onHandleEvent(pRequest);
     }
-    onHandleEvent(pRequest);
   }
   handleStop();
 }

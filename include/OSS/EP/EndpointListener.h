@@ -50,17 +50,12 @@ public:
   virtual void handleStop();
     /// handle a stop request.  This should not block
   
-  virtual void onHandleEvent(const SIPMessage::Ptr& pRequest) = 0;
-    /// handle an incoming SIP event
-  
   virtual void run();
     /// Called start the event loop of the ep.  This should not block.
   
   virtual void stop();
     /// Stop the endpoints event loop
   
-  virtual void monitorEvents();
-    /// event loop
   
   void postEvent(const SIPMessage::Ptr& pRequest);
     /// Post an event to the queue
@@ -84,6 +79,14 @@ public:
   
   void setDispatch(const SIPTransportSession::Dispatch& dispatch);
     /// Set the dispatch callback
+  
+protected:
+  virtual void monitorEvents();
+    /// event loop
+  
+  virtual void onHandleEvent(const SIPMessage::Ptr& pRequest) = 0;
+    /// handle an incoming SIP event
+  
 private:
   void handleAccept(const boost::system::error_code& e, OSS_HANDLE userData = 0);
   
@@ -94,6 +97,7 @@ private:
   boost::thread* _pEventQueueThread;
   SIPTransportSession::Dispatch _dispatch;
   EndpointConnection::Ptr _pConnection;
+  bool _isTerminating;
 };
   
 //
