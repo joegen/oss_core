@@ -38,6 +38,7 @@ EndpointListener::EndpointListener(const std::string& endpointName) :
 
 EndpointListener::~EndpointListener()
 {
+  stop();
 }
 
 void EndpointListener::setTransportService(SIPTransportService* pTransportService)
@@ -49,23 +50,41 @@ void EndpointListener::setTransportService(SIPTransportService* pTransportServic
 
 void EndpointListener::run()
 {
-  assert(_pTransportService);
+  assert(_dispatch);
   handleStart();  
   //
   // The connection relies on address and port not being empty
   //
   assert(!_address.empty() && !_port.empty());
-  
+   
   _pEventQueueThread = new boost::thread(boost::bind(&EndpointListener::monitorEvents, this));
+}
+
+void EndpointListener::stop()
+{
+  postEvent(SIPMessage::Ptr());
+  if (_pEventQueueThread)
+  {
+    _pEventQueueThread->join();
+    delete _pEventQueueThread;
+    _pEventQueueThread = 0;
+  }
 }
 
 void EndpointListener::monitorEvents()
 {
+  handleStart();
   while(true)
   {
     SIPMessage::Ptr pRequest;
     _eventQueue.dequeue(pRequest);
+    if (!pRequest)
+    {
+      break;
+    }
+    onHandleEvent(pRequest);
   }
+  handleStop();
 }
 
 void EndpointListener::postEvent(const SIPMessage::Ptr& pRequest)
@@ -79,6 +98,14 @@ void EndpointListener::dispatchMessage(const SIPMessage::Ptr& pRequest)
   {
     _dispatch(pRequest, _pConnection);
   }
+}
+
+void EndpointListener::handleStart()
+{
+}
+  
+void EndpointListener::handleStop()
+{
 }
   
  

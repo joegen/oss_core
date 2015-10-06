@@ -59,6 +59,11 @@ void SIPUDPListener::run()
   }
 }
 
+void SIPUDPListener::handleStart()
+{
+}
+
+
 void SIPUDPListener::handleStop()
 {
   _pNewConnection->stop();

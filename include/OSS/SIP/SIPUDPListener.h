@@ -54,6 +54,9 @@ public:
   virtual void run();
     /// Run the server's io_service loop.
 
+  virtual void handleStart();
+    /// Handle a request to start the server.
+  
   virtual void handleStop();
     /// Handle a request to stop the server.
   

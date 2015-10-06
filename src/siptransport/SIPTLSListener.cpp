@@ -128,6 +128,11 @@ void SIPTLSListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE
   }
 }
 
+void SIPTLSListener::handleStart()
+{
+}
+
+
 void SIPTLSListener::handleStop()
 {
   // The server is stopped by cancelling all outstanding asynchronous

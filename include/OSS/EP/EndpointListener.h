@@ -44,17 +44,20 @@ public:
   
   virtual ~EndpointListener();
   
-  virtual void handleStart() = 0;
+  virtual void handleStart();
     /// handle a start request.  This should not block. 
   
-  virtual void handleStop() = 0;
+  virtual void handleStop();
     /// handle a stop request.  This should not block
   
   virtual void onHandleEvent(const SIPMessage::Ptr& pRequest) = 0;
     /// handle an incoming SIP event
   
   virtual void run();
-    /// Called start the vent loop of the ep.  This should not block.
+    /// Called start the event loop of the ep.  This should not block.
+  
+  virtual void stop();
+    /// Stop the endpoints event loop
   
   virtual void monitorEvents();
     /// event loop
@@ -78,6 +81,9 @@ public:
   
   void setTransportService(SIPTransportService* pTransportService);
     /// Set the transport service
+  
+  void setDispatch(const SIPTransportSession::Dispatch& dispatch);
+    /// Set the dispatch callback
 private:
   void handleAccept(const boost::system::error_code& e, OSS_HANDLE userData = 0);
   
@@ -117,7 +123,10 @@ inline const EndpointConnection::Ptr& EndpointListener::getConnection() const
   return _pConnection;
 }
 
-
+inline void EndpointListener::setDispatch(const SIPTransportSession::Dispatch& dispatch)
+{
+  _dispatch = dispatch;
+}
 
 } }  // OSS::SIP::EP
 

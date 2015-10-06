@@ -155,6 +155,11 @@ void SIPWebSocketListener::handleAccept(const boost::system::error_code& e, OSS_
   }
 }
 
+void SIPWebSocketListener::handleStart()
+{
+}
+
+
 void SIPWebSocketListener::handleStop()
 {
   _connectionManager.stopAll();

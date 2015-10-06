@@ -49,6 +49,9 @@ public:
   virtual void handleAccept(const boost::system::error_code& e, OSS_HANDLE userData = 0) = 0;
     /// Handle completion of an asynchronous accept operation.
 
+  virtual void handleStart() = 0;
+    /// Handle a request to start the server.
+  
   virtual void handleStop() = 0;
     /// Handle a request to stop the server.
   
@@ -64,9 +67,15 @@ public:
   bool isEndpoint() const;
     /// returns true if this listener is an endpoint
 
-  const std::string& getAddress() const;
-    /// Returns the address where the listener is bound
+  void setAddress(const std::string& address);
+      /// Set the address
 
+  const std::string& getAddress() const;
+  /// Returns the address where the listener is bound
+
+  void setPort(const std::string& port);
+  /// Set the port
+  
   const std::string& getPort() const;
     /// Returns the address where the listener is bound
 
@@ -95,6 +104,8 @@ public:
   
   bool hasStarted() const;
     /// Returns true if the listener has started accepting connections
+  
+  
   
 protected:
   SIPListener(const SIPListener&);
@@ -173,6 +184,16 @@ inline bool SIPListener::hasStarted() const
 inline bool SIPListener::isEndpoint() const
 {
   return _isEndpoint;
+}
+
+inline void SIPListener::setAddress(const std::string& address)
+{
+  _address = address;
+}
+
+inline void SIPListener::setPort(const std::string& port)
+{
+  _port = port;
 }
 
 } } // OSS::SIP

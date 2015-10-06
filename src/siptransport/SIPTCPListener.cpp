@@ -127,6 +127,10 @@ void SIPTCPListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE
   }
 }
 
+void SIPTCPListener::handleStart()
+{
+}
+
 void SIPTCPListener::handleStop()
 {
   // The server is stopped by cancelling all outstanding asynchronous
