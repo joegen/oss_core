@@ -330,7 +330,7 @@ bool SIPFrom::getHost(const std::string& from, std::string& host)
   return SIPURI::getHost(uri, host);
 }
 
-std::string SIPFrom::getAor(bool includeScheme)
+std::string SIPFrom::getAor(bool includeScheme) const
 {
   std::string uri;
   if (!getURI(_data, uri))
