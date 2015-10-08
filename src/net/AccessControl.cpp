@@ -422,7 +422,7 @@ bool AccessControl::isWhiteListedNetwork(const boost::asio::ip::address& address
 
 void AccessControl::denyAll(bool denyAll)
 {
-  OSS_LOG_NOTICE("AccessControl::denyAll set to " << denyAll ? "true" : "false");
+  OSS_LOG_NOTICE("AccessControl::denyAll set to " << (denyAll ? "true" : "false"));
   _denyAllIncoming = denyAll;
 }
 } } // OSS::SIP
