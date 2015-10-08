@@ -153,6 +153,7 @@ public:
   static void static_join();
     /// Waits for all threads in the deafult thread pool to complete.
 
+  static void static_schedule(boost::function<void()> task, int millis);
   static int static_schedule(boost::function<void()> task);
     /// Schedule a task using the default thread pool.  Returns the number of
     /// currently used thread if successful or 0 if unsuccessful.

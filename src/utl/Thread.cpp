@@ -193,6 +193,11 @@ int thread_pool::schedule_with_arg(boost::function<void(argument_place_holder)> 
 }
 
 
+void thread_pool::static_schedule(boost::function<void()> task, int millis)
+{
+  new thread_pool_timed_task(task, boost::bind(thread_pool::static_schedule, _1), millis);
+}
+
 int thread_pool::static_schedule(boost::function<void()> task)
 {
   thread_pool_runnable* runnable = new thread_pool_runnable();
