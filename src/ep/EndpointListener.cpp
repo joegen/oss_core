@@ -52,7 +52,6 @@ void EndpointListener::setTransportService(SIPTransportService* pTransportServic
 void EndpointListener::run()
 {
   assert(_dispatch);
-  handleStart();  
   //
   // The connection relies on address and port not being empty
   //
