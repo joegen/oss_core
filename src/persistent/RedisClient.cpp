@@ -119,7 +119,11 @@ bool RedisClient::connect(const std::string& password_, int db)
 
   if (_context->err)
   {
-    _lastError = _context->errstr;
+    if (_context->errstr)
+    {
+      _lastError = _context->errstr;
+    }
+    
     if (_type == TCP)
     {
       OSS_LOG_ERROR("[REDIS] Error connecting to tcp:" << _tcpHost << ":" << _tcpPort << " - " << _lastError);
@@ -229,8 +233,6 @@ void RedisClient::disconnect()
   mutex_lock lock(_mutex);
   if (_context)
   {
-    redisFree(_context);
-    _context = 0;
     if (_type == TCP)
     {
       OSS_LOG_INFO("[REDIS] Disconnecting from " << _tcpHost << ":" << _tcpPort << " - " << _lastError);
@@ -238,6 +240,11 @@ void RedisClient::disconnect()
     {
       OSS_LOG_ERROR("[REDIS] Disconnecting from " << _unixSocketPath << " - " << _lastError);
     }
+     
+    redisReply* reply = (redisReply*)redisCommand(_context, "QUIT");
+    freeReply(reply);
+    redisFree(_context);
+    _context = 0;
   }
   _connected = false;
 }
@@ -305,7 +312,11 @@ redisReply* RedisClient::execute(int argc, char** argv)
 
   if (_context->err)
   {
-    _lastError = _context->errstr;
+    if (_context->errstr)
+    {
+      _lastError = _context->errstr;
+    }
+    
      if (_lastError.empty())
       _lastError = "Unknown exception";
     freeReply(reply);
@@ -323,7 +334,11 @@ redisReply* RedisClient::execute(int argc, char** argv)
 
       if (_context->err)
       {
-        _lastError = _context->errstr;
+        if (_context->errstr)
+        {
+          _lastError = _context->errstr;
+        }
+        
         if (_lastError.empty())
           _lastError = "Unknown exception";
         freeReply(reply);
@@ -599,27 +614,13 @@ bool RedisClient::subscribe(const std::string& channelName, std::vector<std::str
 }
 
 
-bool RedisClient::setReadTimeout(int seconds)
-{
-  mutex_lock lock(_mutex);
-  
-  if (!_context)
-  {
-    return false;
-  }
-  
-  if (seconds > 0)
-  {
-    struct timeval tv = { seconds, 0 };
-    return redisSetTimeout(_context, tv) == REDIS_OK;
-  }
-  return false;
-}
-
 bool RedisClient::receive(std::vector<std::string>& eventData) const
 {
-  mutex_lock lock(_mutex);
-
+  //
+  // We cannot lock the mutex or we wont be able to abort the receive using disconnect
+  //
+  // mutex_lock lock(_mutex);
+  //
   if (!_context)
   {
     eventData.push_back("connection-error");
@@ -652,7 +653,7 @@ bool RedisClient::receive(std::vector<std::string>& eventData) const
       }
       const_cast<RedisClient*>(this)->disconnect();
     }
-    else if (_context->err == 1)
+    else if (_context->err == REDIS_ERR_IO)
     {
       eventData.push_back("io-error");
       eventData.push_back(OSS::string_from_number<int>(_context->err));

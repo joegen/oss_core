@@ -144,7 +144,6 @@ public:
   
   bool subscribe(const std::string& channelName, std::vector<std::string>& reply);
   
-  bool setReadTimeout(int seconds);
 };
 
 class RedisBroadcastClient
