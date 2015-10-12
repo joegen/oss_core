@@ -517,8 +517,10 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
   std::string localIp = localAddress.toString();
   std::string localPort = OSS::string_from_number<unsigned short>(localAddress.getPort());
   std::string proto = proto_;
-  if (transportId == "0")
+  if (transportId == "0" && proto.empty())
+  {
     proto = "UDP";
+  }
 
   if (proto == "UDP" || proto == "udp")
   {
