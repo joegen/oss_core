@@ -37,6 +37,7 @@ EndpointConnection::EndpointConnection(EndpointListener* pEndpoint) :
   _isReliableTransport = true;
   _isEndpoint = true;
   _endpointName = _pEndpoint->getEndpointName();
+  _identifier = 0xFFFF;
 }
   
 EndpointConnection::~EndpointConnection()
