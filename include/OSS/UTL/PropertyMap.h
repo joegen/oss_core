@@ -69,6 +69,7 @@ struct PropertyMap
     "is-out-of-dialog-refer", \
     "subnets", \
     "x-local-reg", \
+    "is-locally-authenticated", \
     "property-undefined" \
   };
 
@@ -117,6 +118,7 @@ struct PropertyMap
     PROP_IsOutOfDialogRefer,
     PROP_Subnets,
     PROP_LocalReg,
+    PROP_IsLocallyAuthenticated,
     PROP_Max
   };
   
