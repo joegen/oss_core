@@ -55,7 +55,7 @@ void SIPFSMDispatch::deinitialize()
 
 void SIPFSMDispatch::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport)
 {
-  if (pTransport->getLastReadCount() < 10)
+  if (!pTransport->isEndpoint() && pTransport->getLastReadCount() < 10)
   {
     //
     // message is too short to be a SIP Message

@@ -402,6 +402,8 @@ bool SIPTransportService::addEndpoint(EndpointListener* pEndpoint)
     return false;
   }
   
+  pEndpoint->setDispatch(_dispatch);
+  
   _endpoints[key] = pEndpoint;
   
   return true;
@@ -698,6 +700,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
   }
   else
   {
+    OSS_LOG_DEBUG(logId << "SIPTransportService::createClientTransport - Find transport for endpoint " << proto);
     //
     // check if this is a client endpoint 
     //
@@ -706,7 +709,12 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
     Endpoints::iterator iter = _endpoints.find(endpoint);
     if (iter != _endpoints.end())
     {
+      OSS_LOG_DEBUG(logId << "SIPTransportService::createClientTransport - Found endpoint connection for " << proto << "  transport-id=" << iter->second->getConnection()->getIdentifier());
       return iter->second->getConnection();
+    }
+    else
+    {
+      OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for endpoint " << proto);
     }
   }
 

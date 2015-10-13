@@ -70,6 +70,7 @@ struct PropertyMap
     "subnets", \
     "x-local-reg", \
     "is-locally-authenticated", \
+    "endpoint-name" \
     "property-undefined" \
   };
 
@@ -119,6 +120,7 @@ struct PropertyMap
     PROP_Subnets,
     PROP_LocalReg,
     PROP_IsLocallyAuthenticated,
+    PROP_EndpointName,
     PROP_Max
   };
   

@@ -87,6 +87,7 @@ void SIPB2BTransaction::releaseInternalRef()
 
 void SIPB2BTransaction::runTask()
 {
+  static OSS::Net::IPAddress LOCALHOST("127.0.0.1");
   _pInternalPtr = new Ptr(this);
   try
   {
@@ -211,7 +212,7 @@ void SIPB2BTransaction::runTask()
       return;
     }
 
-    if (_localInterface.isValid() && !_pManager->stack().transport().isLocalTransport(_localInterface))
+    if (_localInterface.address() != LOCALHOST.address() && _localInterface.isValid() && !_pManager->stack().transport().isLocalTransport(_localInterface))
     {
       OSS::log_critical(_logId + "Invalid Local-Interface returned by onRouteTransaction - " + _localInterface.toIpPortString() );
       SIPMessage::Ptr serverError = _pServerRequest->createResponse(500, "Unable to determine local interface");

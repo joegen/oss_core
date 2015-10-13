@@ -21,6 +21,7 @@
 
 #include "OSS/EP/EndpointConnection.h"
 #include "OSS/EP/EndpointListener.h"
+#include "OSS/UTL/Logger.h"
 
 
 namespace OSS {
@@ -38,6 +39,7 @@ EndpointConnection::EndpointConnection(EndpointListener* pEndpoint) :
   _isEndpoint = true;
   _endpointName = _pEndpoint->getEndpointName();
   _identifier = 0xFFFF;
+  _transportScheme = _endpointName;
 }
   
 EndpointConnection::~EndpointConnection()
@@ -46,6 +48,7 @@ EndpointConnection::~EndpointConnection()
   
 void EndpointConnection::writeMessage(SIPMessage::Ptr pMsg)
 {
+  OSS_LOG_DEBUG(pMsg->createContextId(true) << "EndpointConnection::writeMessage( " << getTransportScheme() << " ) - Handling request " << pMsg->startLine());
   _pEndpoint->postEvent(pMsg);
 }
 

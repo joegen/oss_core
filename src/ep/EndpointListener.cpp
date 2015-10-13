@@ -20,6 +20,7 @@
 
 
 #include "OSS/EP/EndpointListener.h"
+#include "OSS/UTL/Logger.h"
 
 
 namespace OSS {
@@ -74,6 +75,7 @@ void EndpointListener::stop()
 
 void EndpointListener::monitorEvents()
 {
+  OSS_LOG_NOTICE("EndpointListener::monitorEvents( " << _endpointName << " ) - STARTED processing events");
   handleStart();
   while(!_isTerminating)
   {
@@ -81,10 +83,16 @@ void EndpointListener::monitorEvents()
     _eventQueue.dequeue(pRequest);
     if (pRequest)
     {
+      OSS_LOG_DEBUG(pRequest->createContextId(true) << "EndpointListener::monitorEvents( " << _endpointName << " ) - processing event " << pRequest->startLine());
       onHandleEvent(pRequest);
+    }
+    else
+    {
+      OSS_LOG_DEBUG("EndpointListener::monitorEvents( " << _endpointName << " ) - dropping NULL event");
     }
   }
   handleStop();
+  OSS_LOG_NOTICE("EndpointListener::monitorEvents( " << _endpointName << " ) TERMINATED");
 }
 
 void EndpointListener::postEvent(const SIPMessage::Ptr& pRequest)
@@ -96,7 +104,13 @@ void EndpointListener::dispatchMessage(const SIPMessage::Ptr& pRequest)
 {
   if (_dispatch)
   {
+    OSS_LOG_DEBUG(pRequest->createContextId(true) << "EndpointListener::dispatchMessage( " << pRequest->startLine() << " )");
+    pRequest->setProperty(OSS::PropertyMap::PROP_EndpointName, _endpointName);
     _dispatch(pRequest, _pConnection);
+  }
+  else
+  {
+    OSS_LOG_ERROR(pRequest->createContextId(true) << "EndpointListener::dispatchMessage( NULL )");
   }
 }
 

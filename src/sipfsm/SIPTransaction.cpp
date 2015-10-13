@@ -392,6 +392,10 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg)
   {
     _transport->writeMessage(pMsg);
   }
+  else
+  {
+    OSS_LOG_WARNING(_logId << "SIPTransaction::writeMessage - _fsm->onSendMessage() returned false.  Message will be discarded.");
+  }
 }
 
 void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg, const OSS::Net::IPAddress& remoteAddress)
