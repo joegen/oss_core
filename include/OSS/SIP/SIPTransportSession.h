@@ -35,6 +35,7 @@ namespace SIP {
 
 
 class SIPFSMDispatch;
+class SIPTransactionPool;
 
 class OSS_API SIPTransportSession
   /// The SIPTransportSession is the base class to the connection 
@@ -159,6 +160,18 @@ public:
     /// Returns the name of the endpoint for this connection.
     /// This would be empty for non-endpoint connections
     ///
+  
+  void setCurrentTransactionId(const std::string& currentTransactionId);
+    /// Set the current id of the transaciton using this transport.
+    /// This is currently used by reliable connections to report connection
+    /// errors to the transaction
+
+
+  const std::string& getCurrentTransactionId() const;
+    /// Return the transaction id
+  
+  void setTransactionPool(SIPTransactionPool* pTransactionPool);
+  
 protected:
   static SIPTransportRateLimitStrategy _rateLimit;
 
@@ -175,6 +188,8 @@ protected:
   OSS::Net::IPAddress _reconnectAddress;
   bool _isEndpoint;
   std::string _endpointName;
+  std::string _currentTransactionId;
+  SIPTransactionPool* _pTransactionPool;
 private:
     SIPTransportSession(const SIPTransportSession&);
     SIPTransportSession& operator = (const SIPTransportSession&);
@@ -288,6 +303,26 @@ inline const OSS::Net::IPAddress& SIPTransportSession::getReconnectAddress() con
   return _reconnectAddress;
 }
 
+inline void SIPTransportSession::setCurrentTransactionId(const std::string& currentTransactionId)
+{
+  _currentTransactionId = currentTransactionId;
+}
+
+inline const std::string& SIPTransportSession::getCurrentTransactionId() const
+{
+  return _currentTransactionId;
+}
+
+inline void SIPTransportSession::setTransactionPool(SIPTransactionPool* pTransactionPool)
+{
+  _pTransactionPool = pTransactionPool;
+}
+
+
 } } // OSS::SIP
+
+
+
+
 #endif // SIP_SIPTransportSession_INCLUDED
 

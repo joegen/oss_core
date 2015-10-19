@@ -33,6 +33,7 @@
 #include "OSS/SIP/SIPMessage.h"
 #include "OSS/SIP/SIPTransaction.h"
 #include "OSS/SIP/SIPFsm.h"
+#include "OSS/SIP/SIPStreamedConnection.h"
 
 
 namespace OSS {
@@ -176,6 +177,10 @@ public:
 
   Type getType() const;
     /// Returns the transaction type
+  
+  void handleConnectionError(SIPStreamedConnection::ConnectionError errorType, const boost::system::error_code& e);
+    /// Called by the streamed connection when reporting I/O operation errors
+  
 protected:
   void onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport);
     /// This method is called when a SIP message is received from the transport.
@@ -246,6 +251,7 @@ protected:
 
   void handleTimeoutNICT();
     /// Called by the FSM when an outgoing non-invite request times out.
+
 
 	SIPTransportSession::Ptr& transport();
     /// Returns a pointer to the transport

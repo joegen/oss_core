@@ -53,6 +53,16 @@ public:
   typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
   typedef boost::asio::ip::tcp::socket tcp_socket;
   
+  enum ConnectionError
+  {
+    CONNECTION_ERROR_READ,
+    CONNECTION_ERROR_WRITE,
+    CONNECTION_ERROR_CONNECT,
+    CONNECTION_ERROR_CLIENT_HANDSHAKE,
+    CONNECTION_ERROR_SERVER_HANDSHAKE,
+    CONNECTION_ERROR_MAX        
+  };
+  
   explicit SIPStreamedConnection(
       boost::asio::io_service& ioService,
       SIPStreamedConnectionManager& manager);
@@ -104,6 +114,8 @@ private:
   void handleClientHandshake(const boost::system::error_code& error);
   
   void handleServerHandshake(const boost::system::error_code& error);
+  
+  void reportConnectionError(ConnectionError errorType, const boost::system::error_code& e);
 
   OSS::Net::IPAddress getLocalAddress()const;
     /// Returns the local address binding for this transport

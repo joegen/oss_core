@@ -133,7 +133,10 @@ void SIPTransaction::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
     _logId = pMsg->createContextId(true);
 
   if (!_transport)
+  {
     _transport = pTransport;
+    _transport->setTransactionPool(_owner);
+  }
 
   if (!_localAddress.isValid())
     _localAddress = pTransport->getLocalAddress();
@@ -243,9 +246,11 @@ void SIPTransaction::sendRequest(
       std::string transportId;
       pRequest->getProperty(OSS::PropertyMap::PROP_TransportId, transportId);
       _transport = _transportService->createClientTransport(pRequest, localAddress, remoteAddress, transport, transportId);
+      _transport->setTransactionPool(_owner);
     }else if (SIPVia::msgGetTopViaTransport(pRequest.get(), transport))
     {
       _transport = _transportService->createClientTransport(pRequest, localAddress, remoteAddress, transport);
+      _transport->setTransactionPool(_owner);
     }
     if (!_transport)
       throw OSS::SIP::SIPException("Unable to create transport!");
@@ -370,6 +375,11 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg)
     OSS_LOG_ERROR("SIPTransaction::writeMessage - Transport is NULL while attempting to send a request.");
     return;
   }
+  
+  if (!_transport->isEndpoint() && _transport->isReliableTransport() && _transport->getCurrentTransactionId().empty())
+  {
+    _transport->setCurrentTransactionId(_id);
+  }
 
   if (SIPXOR::isEnabled() && _isXOREncrypted)
   {
@@ -492,12 +502,13 @@ int SIPTransaction::getState() const
 void SIPTransaction::handleTimeoutICT()
 {
   OSS_LOG_DEBUG(_logId << getTypeString() << " Transaction Timeout");
-  if (_transport &&_pInitialRequest)
+  if (_transport && _pInitialRequest)
   {
-    SIPMessage::Ptr response = _pInitialRequest->createResponse(OSS::SIP::SIPMessage::CODE_408_RequestTimeout);
-    if (response)
+    SIPMessage::Ptr pResponse = _pInitialRequest->createResponse(OSS::SIP::SIPMessage::CODE_408_RequestTimeout);
+    OSS::mutex_lock lock(_stateMutex);
+    if (_responseTU && TRN_STATE_TERMINATED != _state)
     {
-      informTU(response, _transport);
+      _responseTU(SIPTransaction::Error(new OSS::SIP::SIPException("ICT Timeout")), pResponse, _transport, shared_from_this());
     }
   }
   else
@@ -510,13 +521,14 @@ void SIPTransaction::handleTimeoutICT()
 
 void SIPTransaction::handleTimeoutNICT()
 {
-  OSS_LOG_DEBUG(_logId << getTypeString() << " Transaction Timeout");
-  if (_transport &&_pInitialRequest)
+   OSS_LOG_DEBUG(_logId << getTypeString() << " Transaction Timeout");
+  if (_transport && _pInitialRequest)
   {
-    SIPMessage::Ptr response = _pInitialRequest->createResponse(OSS::SIP::SIPMessage::CODE_408_RequestTimeout);
-    if (response)
+    SIPMessage::Ptr pResponse = _pInitialRequest->createResponse(OSS::SIP::SIPMessage::CODE_408_RequestTimeout);
+    OSS::mutex_lock lock(_stateMutex);
+    if (_responseTU && TRN_STATE_TERMINATED != _state)
     {
-      informTU(response, _transport);
+      _responseTU(SIPTransaction::Error(new OSS::SIP::SIPException("NICT Timeout")), pResponse, _transport, shared_from_this());
     }
   }
   else
@@ -526,6 +538,12 @@ void SIPTransaction::handleTimeoutNICT()
       _responseTU(SIPTransaction::Error(new OSS::SIP::SIPException("NICT Timeout")), SIPMessage::Ptr(), SIPTransportSession::Ptr(), shared_from_this());
   }
 }
+
+void SIPTransaction::handleConnectionError(SIPStreamedConnection::ConnectionError errorType, const boost::system::error_code& e)
+{
+  
+}
+
 
 void SIPTransaction::informTU(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport)
 {
