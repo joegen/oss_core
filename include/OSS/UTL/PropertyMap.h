@@ -30,6 +30,7 @@ struct PropertyMap
     "target-port", \
     "target-transport", \
     "target-host", \
+    "target-identity", \
     "local-address", \
     "transport-id", \
     "session-id", \
@@ -80,6 +81,7 @@ struct PropertyMap
     PROP_TargetPort,
     PROP_TargetTransport,
     PROP_TargetHost,
+    PROP_TargetIdentity,
     PROP_LocalAddress,
     PROP_TransportId,
     PROP_SessionId,
