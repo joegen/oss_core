@@ -105,10 +105,6 @@ public:
   void setOwner(OSS_HANDLE owner);
     /// Set the transaction owner.  This must be a pointer to a newly create SIPTransaction::WeakPtr
 
-  OSS_HANDLE _owner;  /// The transaction attached to the FSM.
-                                 /// Take note that this can't be a share_ptr since it will 
-                                 /// result to a cyclic reference between the transaction and the FSM
-
   SIPTransactionTimers& timerProps();
     /// Return the SIP Transaction Timer expire property object
 
@@ -226,6 +222,9 @@ public:
   TransactionType getType() const;
 protected:
   TransactionType _type;
+  OSS_HANDLE _owner;  /// The transaction attached to the FSM.
+                                 /// Take note that this can't be a share_ptr since it will 
+                                 /// result to a cyclic reference between the transaction and the FSM
   SIPMessage::Ptr _pRequest;
   boost::asio::io_service& _ioService;
   SIPFSMDispatch* _pDispatch;
