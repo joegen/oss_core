@@ -105,9 +105,10 @@ void SIPUDPConnectionClone::clientBind(const OSS::Net::IPAddress& listener, unsi
   // This is only significant for stream based connections (TCP/TLS)
 }
 
-void SIPUDPConnectionClone::clientConnect(const OSS::Net::IPAddress& target)
+bool SIPUDPConnectionClone::clientConnect(const OSS::Net::IPAddress& target)
 {
   // This is only significant for stream based connections (TCP/TLS)
+  return false;
 }
 
 OSS::Net::IPAddress SIPUDPConnectionClone::getLocalAddress() const

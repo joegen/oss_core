@@ -322,10 +322,10 @@ void SIPWebSocketConnection::clientBind(const OSS::Net::IPAddress& ip, unsigned 
 	OSS_ASSERT(false);
 }
 
-void SIPWebSocketConnection::clientConnect(const OSS::Net::IPAddress& target)
+bool SIPWebSocketConnection::clientConnect(const OSS::Net::IPAddress& target)
     /// Connect to a remote host
 {
-	OSS_ASSERT(false);
+	return false;
 }
 
 

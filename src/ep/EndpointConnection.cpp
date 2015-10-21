@@ -146,12 +146,13 @@ void EndpointConnection::clientBind(const OSS::Net::IPAddress& ip, unsigned shor
   assert(false);
 }
 
-void EndpointConnection::clientConnect(const OSS::Net::IPAddress& target)
+bool EndpointConnection::clientConnect(const OSS::Net::IPAddress& target)
 {
   //
   // Not implemented
   //
   assert(false);
+  return false;
 }
 
 

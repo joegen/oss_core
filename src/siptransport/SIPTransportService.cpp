@@ -512,7 +512,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
     OSS_LOG_DEBUG( logId << "SIPTransportService::createClientTransport(" <<
       " SRC: " << localAddress.toIpPortString() <<
       " DST: " << remoteAddress.toIpPortString() <<
-      " Proto: " << proto_);
+      " Proto: " << proto_ << ")");
   }
 
 
@@ -728,8 +728,11 @@ SIPTransportSession::Ptr SIPTransportService::createClientTcpTransport(
   SIPTransportSession::Ptr pTCPConnection(new SIPStreamedConnection(_ioService, _tcpConMgr));
   pTCPConnection->isClient() = true;
   pTCPConnection->clientBind(localAddress, _tcpPortBase, _tcpPortMax);
-  pTCPConnection->clientConnect(remoteAddress);
-  return pTCPConnection;
+  if (pTCPConnection->clientConnect(remoteAddress))
+  {
+    return pTCPConnection;
+  }
+  return SIPTransportSession::Ptr();
 }
 
 SIPTransportSession::Ptr SIPTransportService::createClientTlsTransport(
@@ -739,8 +742,11 @@ SIPTransportSession::Ptr SIPTransportService::createClientTlsTransport(
   SIPTransportSession::Ptr pTlsConnection(new SIPStreamedConnection(_ioService, &_tlsClientContext, _tlsConMgr));
   pTlsConnection->isClient() = true;
   pTlsConnection->clientBind(localAddress, _tcpPortBase, _tcpPortMax);
-  pTlsConnection->clientConnect(remoteAddress);
-  return pTlsConnection;
+  if (pTlsConnection->clientConnect(remoteAddress))
+  {
+    return pTlsConnection;
+  }
+  return SIPTransportSession::Ptr();
 }
 
 SIPTransportSession::Ptr SIPTransportService::createClientWsTransport(

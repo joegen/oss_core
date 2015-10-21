@@ -109,7 +109,7 @@ public:
   virtual void clientBind(const OSS::Net::IPAddress& ip, unsigned short portBase, unsigned short portMax) = 0;
     /// Bind the local client
 
-  virtual void clientConnect(const OSS::Net::IPAddress& target) = 0;
+  virtual bool clientConnect(const OSS::Net::IPAddress& target) = 0;
     /// Connect to a remote host
 
   unsigned long getLastReadCount() const;

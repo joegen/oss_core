@@ -63,10 +63,19 @@ class OSS_API SIPFsm:
 /// well as transaction timeouts.
 {
 public:
+  enum TransactionType
+  {
+    InviteClientTransaction,
+    InviteServerTransaction,
+    NonInviteServerTransaction,
+    NonInviteClientTransaction
+  };
+  
   typedef boost::shared_ptr<SIPFsm> Ptr;
   typedef boost::function<void()> TimerCallback;
 
   SIPFsm(
+    TransactionType type,      
     boost::asio::io_service& ioService,
     const SIPTransactionTimers& timerProps);
     /// Creates a new FSM object
@@ -214,7 +223,9 @@ public:
   virtual void handleDelayedTerminate();
     /// Callback for timers that requires termination of transactions
 
+  TransactionType getType() const;
 protected:
+  TransactionType _type;
   SIPMessage::Ptr _pRequest;
   boost::asio::io_service& _ioService;
   SIPFSMDispatch* _pDispatch;
@@ -363,6 +374,11 @@ inline SIPMessage::Ptr SIPFsm::getRequest() const
 inline void SIPFsm::setRequest(const SIPMessage::Ptr& pRequest)
 {
   _pRequest = pRequest;
+}
+
+inline SIPFsm::TransactionType SIPFsm::getType() const
+{
+  return _type;
 }
 
 } } // OSS::SIP

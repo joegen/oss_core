@@ -434,6 +434,63 @@ void SIPStreamedConnection::writeMessage(SIPMessage::Ptr msg, const std::string&
   writeMessage(msg);
 }
 
+bool SIPStreamedConnection::clientConnect(const OSS::Net::IPAddress& target)
+{
+  _isClient = true;
+  
+  if (_pTcpSocket->is_open())
+  {
+    _connectAddress = target;
+    std::string port = OSS::string_from_number<unsigned short>(target.getPort());
+    boost::asio::ip::tcp::resolver::iterator ep;
+    boost::asio::ip::address addr = const_cast<OSS::Net::IPAddress&>(target).address();
+    boost::asio::ip::tcp::resolver::query
+    query(addr.is_v4() ? boost::asio::ip::tcp::v4() : boost::asio::ip::tcp::v6(),
+      addr.to_string(), port == "0" || port.empty() ? "5060" : port);
+    ep = _resolver.resolve(query);
+    
+    
+#if 1
+    boost::system::error_code e;
+    boost::asio::ip::tcp::endpoint endpoint(addr, target.getPort() == 0 ? 5060 : target.getPort());
+    _pTcpSocket->connect(endpoint, e);
+    
+    if (!e)
+    {
+      if (!_pTlsStream)
+      {
+        _connectionManager.start(shared_from_this());
+      }
+      else
+      {
+        _pTlsStream->async_handshake(boost::asio::ssl::stream_base::client,
+            boost::bind(&SIPStreamedConnection::handleClientHandshake, shared_from_this(),
+              boost::asio::placeholders::error));
+      }
+      return true;
+    }
+    else
+    {
+      reportConnectionError(SIPStreamedConnection::CONNECTION_ERROR_CONNECT, e);
+      OSS_LOG_WARNING("SIPStreamedConnection::clientConnect() Exception " << e.message());
+      socket().close();
+      return false;
+    }
+  }
+  else
+  {
+    return false;
+  }
+
+    
+#else
+    _pTcpSocket->async_connect(*ep, boost::bind(&SIPStreamedConnection::handleConnect, shared_from_this(),
+      boost::asio::placeholders::error, ep));
+    return true;
+#endif
+}
+
+
 void SIPStreamedConnection::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter)
 {
   if (!e && _isClient)
@@ -581,24 +638,7 @@ void SIPStreamedConnection::clientBind(const OSS::Net::IPAddress& listener, unsi
   }
 }
 
-void SIPStreamedConnection::clientConnect(const OSS::Net::IPAddress& target)
-{
-  _isClient = true;
-  
-  if (_pTcpSocket->is_open())
-  {
-    _connectAddress = target;
-    std::string port = OSS::string_from_number<unsigned short>(target.getPort());
-    boost::asio::ip::tcp::resolver::iterator ep;
-    boost::asio::ip::address addr = const_cast<OSS::Net::IPAddress&>(target).address();
-    boost::asio::ip::tcp::resolver::query
-    query(addr.is_v4() ? boost::asio::ip::tcp::v4() : boost::asio::ip::tcp::v6(),
-      addr.to_string(), port == "0" || port.empty() ? "5060" : port);
-    ep = _resolver.resolve(query);
-    _pTcpSocket->async_connect(*ep, boost::bind(&SIPStreamedConnection::handleConnect, shared_from_this(),
-      boost::asio::placeholders::error, ep));
-  }
-}
+
 
 
 

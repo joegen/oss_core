@@ -318,9 +318,10 @@ void SIPUDPConnection::clientBind(const OSS::Net::IPAddress& listener, unsigned 
  // This is only significant for stream based connections (TCP/TLS)
 }
 
-void SIPUDPConnection::clientConnect(const OSS::Net::IPAddress& target)
+bool SIPUDPConnection::clientConnect(const OSS::Net::IPAddress& target)
 {
  // This is only significant for stream based connections (TCP/TLS)
+  return false;
 }
 
 OSS::Net::IPAddress SIPUDPConnection::getLocalAddress() const

@@ -89,7 +89,7 @@ public:
   virtual void clientBind(const OSS::Net::IPAddress& ip, unsigned short portBase, unsigned short portMax);
     /// Bind the local client
 
-  virtual void clientConnect(const OSS::Net::IPAddress& target);
+  virtual bool clientConnect(const OSS::Net::IPAddress& target);
     /// Connect to a remote host
 
 protected:

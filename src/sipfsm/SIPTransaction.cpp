@@ -246,14 +246,32 @@ void SIPTransaction::sendRequest(
       std::string transportId;
       pRequest->getProperty(OSS::PropertyMap::PROP_TransportId, transportId);
       _transport = _transportService->createClientTransport(pRequest, localAddress, remoteAddress, transport, transportId);
-      _transport->setTransactionPool(_owner);
+      if (_transport)
+      {
+        _transport->setTransactionPool(_owner);
+      }
     }else if (SIPVia::msgGetTopViaTransport(pRequest.get(), transport))
     {
       _transport = _transportService->createClientTransport(pRequest, localAddress, remoteAddress, transport);
-      _transport->setTransactionPool(_owner);
+      if (_transport)
+      {
+        _transport->setTransactionPool(_owner);
+      }
     }
     if (!_transport)
-      throw OSS::SIP::SIPException("Unable to create transport!");
+    {
+      //
+      // typedef boost::function<void(const SIPTransaction::Error&, const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> Callback
+      //
+      if (_responseTU)
+      {
+        SIPMessage::Ptr pResponse = pRequest->createResponse(OSS::SIP::SIPMessage::CODE_408_RequestTimeout, "Transport Error");
+        _responseTU(SIPTransaction::Error(new OSS::SIP::SIPException("Transport Creation Error")), pResponse, _transport, shared_from_this());
+        return;
+      }
+      
+      //throw OSS::SIP::SIPException("Unable to create transport!");
+    }
   }
 
   if (_transport->isReliableTransport())
@@ -341,7 +359,10 @@ void SIPTransaction::sendResponse(
           if (SIPVia::msgGetTopViaTransport(pResponse.get(), transport))
           {
             _transport = _transportService->createClientTransport(pResponse, _localAddress, _sendAddress, transport);
-            writeMessage(pResponse);
+            if (_transport)
+            {
+              writeMessage(pResponse);
+            }
           }
         }
         else
@@ -521,7 +542,7 @@ void SIPTransaction::handleTimeoutICT()
 
 void SIPTransaction::handleTimeoutNICT()
 {
-   OSS_LOG_DEBUG(_logId << getTypeString() << " Transaction Timeout");
+  OSS_LOG_DEBUG(_logId << getTypeString() << " Transaction Timeout");
   if (_transport && _pInitialRequest)
   {
     SIPMessage::Ptr pResponse = _pInitialRequest->createResponse(OSS::SIP::SIPMessage::CODE_408_RequestTimeout);
@@ -541,7 +562,25 @@ void SIPTransaction::handleTimeoutNICT()
 
 void SIPTransaction::handleConnectionError(SIPStreamedConnection::ConnectionError errorType, const boost::system::error_code& e)
 {
-  
+  switch (errorType)
+  {
+    case SIPStreamedConnection::CONNECTION_ERROR_READ:
+      break;
+    case SIPStreamedConnection::CONNECTION_ERROR_WRITE:
+    case SIPStreamedConnection::CONNECTION_ERROR_CONNECT:
+      if (_transport && _pInitialRequest)
+      {
+        SIPMessage::Ptr pResponse = _pInitialRequest->createResponse(OSS::SIP::SIPMessage::CODE_503_ServiceUnavailable);
+        _fsm->onReceivedMessage(pResponse, _transport);
+      }
+      
+      break;
+    case SIPStreamedConnection::CONNECTION_ERROR_CLIENT_HANDSHAKE:
+    case SIPStreamedConnection::CONNECTION_ERROR_SERVER_HANDSHAKE:
+      break;
+    default:
+      break;
+  };
 }
 
 

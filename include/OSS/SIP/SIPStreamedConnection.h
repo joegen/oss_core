@@ -126,7 +126,7 @@ private:
   void clientBind(const OSS::Net::IPAddress& listener, unsigned short portBase, unsigned short portMax);
     /// Bind the local client
 
-  void clientConnect(const OSS::Net::IPAddress& target);
+  bool clientConnect(const OSS::Net::IPAddress& target);
     /// Connect to a remote host
 
   void readSome();

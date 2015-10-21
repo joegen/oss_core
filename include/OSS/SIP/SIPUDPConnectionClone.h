@@ -59,7 +59,7 @@ public:
   void clientBind(const OSS::Net::IPAddress& listener, unsigned short portBase, unsigned short portMax);
     /// Bind the local client.  Take note that this is not implemented at all for UDP.
 
-  void clientConnect(const OSS::Net::IPAddress& target);
+  bool clientConnect(const OSS::Net::IPAddress& target);
     /// Connect to a remote host.  Take note taht this is not implemented at all for UDP.
 
   OSS::Net::IPAddress getLocalAddress() const;

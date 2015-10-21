@@ -31,7 +31,7 @@ namespace SIP {
 SIPNict::SIPNict(
   boost::asio::io_service& ioService,
   const SIPTransactionTimers& timerProps) :
-  SIPFsm(ioService, timerProps),
+  SIPFsm(SIPFsm::NonInviteClientTransaction, ioService, timerProps),
   _timerEValue(0),
   _timerEMultiplier(0)
 {

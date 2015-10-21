@@ -34,7 +34,7 @@ namespace SIP {
 SIPIst::SIPIst(
   boost::asio::io_service& ioService,
   const SIPTransactionTimers& timerProps) :
-  SIPFsm(ioService, timerProps),
+  SIPFsm(SIPFsm::InviteServerTransaction, ioService, timerProps),
   _timerGValue(0),
   _istPool(0)
 {

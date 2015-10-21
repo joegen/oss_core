@@ -30,8 +30,10 @@ namespace SIP {
 
 
 SIPFsm::SIPFsm(
+  TransactionType type,
   boost::asio::io_service& ioService,
   const SIPTransactionTimers& timerProps) :
+  _type(type),
   _owner(0),
   _ioService(ioService),
   _pDispatch(0),
