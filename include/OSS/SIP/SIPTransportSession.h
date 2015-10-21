@@ -111,6 +111,12 @@ public:
 
   virtual bool clientConnect(const OSS::Net::IPAddress& target) = 0;
     /// Connect to a remote host
+  
+  bool isConnected() const;
+    /// Returns true if the socket is connected
+  
+  void setConnected(bool connected);
+    /// Set the connected flag
 
   unsigned long getLastReadCount() const;
 
@@ -190,6 +196,7 @@ protected:
   std::string _endpointName;
   std::string _currentTransactionId;
   SIPTransactionPool* _pTransactionPool;
+  bool _isConnected;
 private:
     SIPTransportSession(const SIPTransportSession&);
     SIPTransportSession& operator = (const SIPTransportSession&);
@@ -318,6 +325,15 @@ inline void SIPTransportSession::setTransactionPool(SIPTransactionPool* pTransac
   _pTransactionPool = pTransactionPool;
 }
 
+inline bool SIPTransportSession::isConnected() const
+{
+  return _isConnected;
+}
+ 
+inline void SIPTransportSession::setConnected(bool connected)
+{
+  _isConnected = connected;
+}
 
 } } // OSS::SIP
 

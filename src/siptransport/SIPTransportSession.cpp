@@ -39,7 +39,9 @@ SIPTransportSession::SIPTransportSession() :
   _bytesTransferred(0),
   _bytesRead(0),
   _identifier(0),
-  _isClient(false)
+  _isClient(false),
+  _isEndpoint(false),
+  _isConnected(false)
 {
 }
 
@@ -50,7 +52,8 @@ SIPTransportSession::SIPTransportSession(const SIPTransportSession&) :
   _bytesRead(0),
   _identifier(0),
   _isClient(false),
-  _isEndpoint(false)
+  _isEndpoint(false),
+  _isConnected(false)
 {
 }
 

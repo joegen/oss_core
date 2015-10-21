@@ -258,17 +258,18 @@ void SIPTransaction::sendRequest(
         _transport->setTransactionPool(_owner);
       }
     }
-    if (!_transport)
+    if (_transport->isReliableTransport() && !_transport->isConnected() && !_transport->isEndpoint())
     {
       //
       // typedef boost::function<void(const SIPTransaction::Error&, const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> Callback
       //
       if (_responseTU)
       {
-        SIPMessage::Ptr pResponse = pRequest->createResponse(OSS::SIP::SIPMessage::CODE_408_RequestTimeout, "Transport Error");
+        SIPMessage::Ptr pResponse = pRequest->createResponse(OSS::SIP::SIPMessage::CODE_408_RequestTimeout, "Transport Creation Error");
         _responseTU(SIPTransaction::Error(new OSS::SIP::SIPException("Transport Creation Error")), pResponse, _transport, shared_from_this());
-        return;
       }
+      terminate();
+      return;
       
       //throw OSS::SIP::SIPException("Unable to create transport!");
     }
@@ -570,7 +571,7 @@ void SIPTransaction::handleConnectionError(SIPStreamedConnection::ConnectionErro
     case SIPStreamedConnection::CONNECTION_ERROR_CONNECT:
       if (_transport && _pInitialRequest)
       {
-        SIPMessage::Ptr pResponse = _pInitialRequest->createResponse(OSS::SIP::SIPMessage::CODE_503_ServiceUnavailable);
+        SIPMessage::Ptr pResponse = _pInitialRequest->createResponse(OSS::SIP::SIPMessage::CODE_480_TemporarilyNotAvailable, "Transport Creation Error");
         _fsm->onReceivedMessage(pResponse, _transport);
       }
       

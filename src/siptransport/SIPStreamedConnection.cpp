@@ -467,6 +467,7 @@ bool SIPStreamedConnection::clientConnect(const OSS::Net::IPAddress& target)
             boost::bind(&SIPStreamedConnection::handleClientHandshake, shared_from_this(),
               boost::asio::placeholders::error));
       }
+      _isConnected = true;
       return true;
     }
     else
@@ -505,6 +506,7 @@ void SIPStreamedConnection::handleConnect(const boost::system::error_code& e, bo
           boost::bind(&SIPStreamedConnection::handleClientHandshake, shared_from_this(),
             boost::asio::placeholders::error));
     }
+    _isConnected = true;
   }
   else
   {

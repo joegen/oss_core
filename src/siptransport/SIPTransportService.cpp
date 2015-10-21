@@ -728,11 +728,8 @@ SIPTransportSession::Ptr SIPTransportService::createClientTcpTransport(
   SIPTransportSession::Ptr pTCPConnection(new SIPStreamedConnection(_ioService, _tcpConMgr));
   pTCPConnection->isClient() = true;
   pTCPConnection->clientBind(localAddress, _tcpPortBase, _tcpPortMax);
-  if (pTCPConnection->clientConnect(remoteAddress))
-  {
-    return pTCPConnection;
-  }
-  return SIPTransportSession::Ptr();
+  pTCPConnection->clientConnect(remoteAddress);
+  return pTCPConnection;
 }
 
 SIPTransportSession::Ptr SIPTransportService::createClientTlsTransport(
@@ -742,11 +739,8 @@ SIPTransportSession::Ptr SIPTransportService::createClientTlsTransport(
   SIPTransportSession::Ptr pTlsConnection(new SIPStreamedConnection(_ioService, &_tlsClientContext, _tlsConMgr));
   pTlsConnection->isClient() = true;
   pTlsConnection->clientBind(localAddress, _tcpPortBase, _tcpPortMax);
-  if (pTlsConnection->clientConnect(remoteAddress))
-  {
-    return pTlsConnection;
-  }
-  return SIPTransportSession::Ptr();
+  pTlsConnection->clientConnect(remoteAddress);
+  return pTlsConnection;
 }
 
 SIPTransportSession::Ptr SIPTransportService::createClientWsTransport(
