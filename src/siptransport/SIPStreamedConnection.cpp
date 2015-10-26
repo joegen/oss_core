@@ -61,14 +61,19 @@
 
 namespace OSS {
 namespace SIP {
+  
 
+static const int DEFAULT_STREAMED_CONNECTION_TIMEOUT = 5; // 5 seconds default timeout
+  
 
 SIPStreamedConnection::SIPStreamedConnection(
   boost::asio::io_service& ioService,
   SIPStreamedConnectionManager& manager) :
+    _ioService(ioService),
     _pTcpSocket(0),
     _pTlsContext(0),
     _pTlsStream(0),
+    _deadline(ioService),
     _resolver(ioService),
     _connectionManager(manager),
     _pDispatch(0),
@@ -76,14 +81,24 @@ SIPStreamedConnection::SIPStreamedConnection(
 {
   _transportScheme = "tcp";
   _pTcpSocket = new boost::asio::ip::tcp::socket(ioService);
+  
+  // No deadline is required until the first socket operation is started. We
+  // set the deadline to positive infinity so that the actor takes no action
+  // until a specific deadline is set.
+  _deadline.expires_at(boost::posix_time::pos_infin);
+
+  // Start the persistent actor that checks for deadline expiry.
+  checkDeadline();
 }
 
 SIPStreamedConnection::SIPStreamedConnection(
   boost::asio::io_service& ioService,
   boost::asio::ssl::context* pTlsContext,
   SIPStreamedConnectionManager& manager) :
+    _ioService(ioService),
     _pTcpSocket(0),
     _pTlsContext(pTlsContext),
+    _deadline(ioService),
     _pTlsStream(0),
     _resolver(ioService),
     _connectionManager(manager),
@@ -93,6 +108,13 @@ SIPStreamedConnection::SIPStreamedConnection(
   _transportScheme = "tls";
   _pTlsStream = new ssl_socket(ioService, *_pTlsContext);
   _pTcpSocket = &_pTlsStream->next_layer();
+  // No deadline is required until the first socket operation is started. We
+  // set the deadline to positive infinity so that the actor takes no action
+  // until a specific deadline is set.
+  _deadline.expires_at(boost::posix_time::pos_infin);
+
+  // Start the persistent actor that checks for deadline expiry.
+  checkDeadline();
 }
 
 SIPStreamedConnection::~SIPStreamedConnection()
@@ -434,7 +456,36 @@ void SIPStreamedConnection::writeMessage(SIPMessage::Ptr msg, const std::string&
   writeMessage(msg);
 }
 
+
+void SIPStreamedConnection::checkDeadline()
+{
+  // Check whether the deadline has passed. We compare the deadline against
+    // the current time since a new asynchronous operation may have moved the
+    // deadline before this actor had a chance to run.
+    if (_deadline.expires_at() <= boost::asio::deadline_timer::traits_type::now())
+    {
+      // The deadline has passed. The socket is closed so that any outstanding
+      // asynchronous operations are cancelled. This allows the blocked
+      // connect(), read_line() or write_line() functions to return.
+      boost::system::error_code ignored_ec;
+      socket().close(ignored_ec);
+
+      // There is no longer an active deadline. The expiry is set to positive
+      // infinity so that the actor takes no action until a new deadline is set.
+      _deadline.expires_at(boost::posix_time::pos_infin);
+    }
+
+    // Put the actor back to sleep.
+    _deadline.async_wait(boost::bind(&SIPStreamedConnection::checkDeadline, this));
+}
+
+
 bool SIPStreamedConnection::clientConnect(const OSS::Net::IPAddress& target)
+{
+  return clientConnect(target, boost::posix_time::seconds(DEFAULT_STREAMED_CONNECTION_TIMEOUT));
+}
+
+bool SIPStreamedConnection::clientConnect(const OSS::Net::IPAddress& target, boost::posix_time::time_duration timeout)
 {
   _isClient = true;
   
@@ -450,13 +501,34 @@ bool SIPStreamedConnection::clientConnect(const OSS::Net::IPAddress& target)
     ep = _resolver.resolve(query);
     
     
-#if 1
-    boost::system::error_code e;
     boost::asio::ip::tcp::endpoint endpoint(addr, target.getPort() == 0 ? 5060 : target.getPort());
-    _pTcpSocket->connect(endpoint, e);
     
-    if (!e)
+    // Set a deadline for the asynchronous operation. As a host name may
+    // resolve to multiple endpoints, this function uses the composed operation
+    // async_connect. The deadline applies to the entire operation, rather than
+    // individual connection attempts.
+    _deadline.expires_from_now(timeout);
+    
+    // Set up the variable that receives the result of the asynchronous
+    // operation. The error code is set to would_block to signal that the
+    // operation is incomplete. Asio guarantees that its asynchronous
+    // operations will never fail with would_block, so any other value in
+    // ec indicates completion.
+    boost::system::error_code ec = boost::asio::error::would_block;
+    
+    // Start the asynchronous operation itself. The boost::lambda function
+    // object is used as a callback and will update the ec variable when the
+    // operation completes. The blocking_udp_client.cpp example shows how you
+    // can use boost::bind rather than boost::lambda.
+    
+    _pTcpSocket->async_connect(*ep, boost::bind(&SIPStreamedConnection::handleConnect, shared_from_this(), ec, ep));
+    
+    // Block until the asynchronous operation has completed.
+    do _ioService.run_one(); while (ec == boost::asio::error::would_block);
+    
+    if (!ec && _pTcpSocket->is_open())
     {
+      _isConnected = true;
       if (!_pTlsStream)
       {
         _connectionManager.start(shared_from_this());
@@ -467,28 +539,22 @@ bool SIPStreamedConnection::clientConnect(const OSS::Net::IPAddress& target)
             boost::bind(&SIPStreamedConnection::handleClientHandshake, shared_from_this(),
               boost::asio::placeholders::error));
       }
-      _isConnected = true;
       return true;
     }
     else
     {
-      reportConnectionError(SIPStreamedConnection::CONNECTION_ERROR_CONNECT, e);
-      OSS_LOG_WARNING("SIPStreamedConnection::clientConnect() Exception " << e.message());
+      _isConnected = false;
+      reportConnectionError(SIPStreamedConnection::CONNECTION_ERROR_CONNECT, ec);
+      OSS_LOG_WARNING("SIPStreamedConnection::clientConnect() Exception " << ec.message());
       socket().close();
       return false;
     }
   }
   else
   {
+    _isConnected = false;
     return false;
   }
-
-    
-#else
-    _pTcpSocket->async_connect(*ep, boost::bind(&SIPStreamedConnection::handleConnect, shared_from_this(),
-      boost::asio::placeholders::error, ep));
-    return true;
-#endif
 }
 
 
@@ -510,6 +576,7 @@ void SIPStreamedConnection::handleConnect(const boost::system::error_code& e, bo
   }
   else
   {
+    _isConnected = false;
     reportConnectionError(SIPStreamedConnection::CONNECTION_ERROR_CONNECT, e);
     OSS_LOG_WARNING("SIPStreamedConnection::handleConnect() Exception " << e.message());
     socket().close();

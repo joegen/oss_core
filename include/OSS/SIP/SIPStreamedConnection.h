@@ -127,6 +127,7 @@ private:
     /// Bind the local client
 
   bool clientConnect(const OSS::Net::IPAddress& target);
+  bool clientConnect(const OSS::Net::IPAddress& target, boost::posix_time::time_duration timeout);
     /// Connect to a remote host
 
   void readSome();
@@ -134,12 +135,19 @@ private:
   
   
 protected:
+  void checkDeadline();
 
+  boost::asio::io_service& _ioService;
+    /// The IO Service
+  
   tcp_socket* _pTcpSocket;
     /// Socket for the connection.
   
   boost::asio::ssl::context* _pTlsContext;
     /// The TLS context
+  
+  boost::asio::deadline_timer _deadline;
+    /// Deadline timer
 
   ssl_socket* _pTlsStream;
     /// SSL Socket for the connection.
