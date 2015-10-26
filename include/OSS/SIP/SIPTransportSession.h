@@ -29,6 +29,7 @@
 #include "OSS/SIP/SIP.h"
 #include "OSS/SIP/SIPMessage.h"
 #include "OSS/Net/AccessControl.h"
+#include "OSS/UTL/Semaphore.h"
 
 namespace OSS {
 namespace SIP {
@@ -92,7 +93,7 @@ public:
     /// Handle completion of a write operation.
 
 
-  virtual void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter) = 0;
+  virtual void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter, boost::system::error_code* out_ec, Semaphore* pSem) = 0;
     /// Handle completion of async connect
 
   virtual void handleClientHandshake(const boost::system::error_code& error) = 0;

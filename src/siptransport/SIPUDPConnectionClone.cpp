@@ -83,7 +83,7 @@ void SIPUDPConnectionClone::writeMessage(SIPMessage::Ptr msg)
 }
 
 
-void SIPUDPConnectionClone::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter)
+void SIPUDPConnectionClone::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter, boost::system::error_code* out_ec, Semaphore* pSem)
 {
   // This is only significant for stream based connections (TCP/TLS)
 }

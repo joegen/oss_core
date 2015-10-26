@@ -258,6 +258,7 @@ void SIPTransaction::sendRequest(
         _transport->setTransactionPool(_owner);
       }
     }
+        
     if (_transport->isReliableTransport() && !_transport->isConnected() && !_transport->isEndpoint())
     {
       //
@@ -571,7 +572,7 @@ void SIPTransaction::handleConnectionError(SIPStreamedConnection::ConnectionErro
     case SIPStreamedConnection::CONNECTION_ERROR_CONNECT:
       if (_transport && _pInitialRequest)
       {
-        SIPMessage::Ptr pResponse = _pInitialRequest->createResponse(OSS::SIP::SIPMessage::CODE_480_TemporarilyNotAvailable, "Transport Creation Error");
+        SIPMessage::Ptr pResponse = _pInitialRequest->createResponse(OSS::SIP::SIPMessage::CODE_480_TemporarilyNotAvailable, e.message());
         _fsm->onReceivedMessage(pResponse, _transport);
       }
       

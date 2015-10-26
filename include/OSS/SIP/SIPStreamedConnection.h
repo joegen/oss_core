@@ -108,7 +108,7 @@ private:
   void handleWrite(const boost::system::error_code& e);
     /// Handle completion of a write operation.
 
-  void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter);
+  void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter, boost::system::error_code* out_ec, Semaphore* pSem);
     /// Handle completion of async connect
 
   void handleClientHandshake(const boost::system::error_code& error);

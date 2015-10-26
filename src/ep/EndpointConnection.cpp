@@ -97,7 +97,7 @@ void EndpointConnection::handleWrite(const boost::system::error_code& e)
   assert(false);
 }
 
-void EndpointConnection::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter)
+void EndpointConnection::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter, boost::system::error_code* out_ec, Semaphore* pSem)
 {
   //
   // Not implemented

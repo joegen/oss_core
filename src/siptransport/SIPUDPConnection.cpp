@@ -297,7 +297,7 @@ void SIPUDPConnection::writeMessage(SIPMessage::Ptr msg)
   throw OSS::SIP::SIPException("Invalid UDP Transport Operation");
 }
 
-void SIPUDPConnection::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter)
+void SIPUDPConnection::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter, boost::system::error_code* out_ec, Semaphore* pSem)
 {
   // This is only significant for stream based connections (TCP/TLS)
 }

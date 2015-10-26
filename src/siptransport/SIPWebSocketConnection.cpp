@@ -246,7 +246,7 @@ void SIPWebSocketConnection::writeMessage(SIPMessage::Ptr msg, const std::string
 	  writeMessage(msg);
 }
 
-void SIPWebSocketConnection::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter)
+void SIPWebSocketConnection::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter, boost::system::error_code* out_ec, Semaphore* pSem)
 {
 	// Client side not implemented yet
 	OSS_ASSERT(false);
