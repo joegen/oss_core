@@ -79,6 +79,9 @@ public:
 
   void handleAlertingTimeout();
     /// Callback function for Alerting Timer expiration
+  
+  void handleExpiresTimeout();
+    /// Callback function for ClientExpires Timer
 
   SIPIct::Ptr clone() const;
 

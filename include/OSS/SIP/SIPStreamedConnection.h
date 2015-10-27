@@ -135,7 +135,7 @@ private:
   
   
 protected:
-  void checkDeadline();
+  void handleConnectTimeout(const boost::system::error_code& e);
 
   boost::asio::io_service& _ioService;
     /// The IO Service

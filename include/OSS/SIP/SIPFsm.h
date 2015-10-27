@@ -162,6 +162,11 @@ public:
     /// Starts timer K.  
     ///
     /// The default interval is set from RFC 3261 recommended value if not specified explicitly.
+  
+  void startTimerClientExpires(unsigned long expire);
+    /// Starts the ICT expiration timer extracted from the Expires header.  
+    ///
+
 
   void startTimerMaxLifetime(unsigned long expire);
     /// Starts the max lifetime timer.
@@ -200,6 +205,9 @@ public:
     /// Cancels Timer J execution.
 
   void cancelTimerK();
+    /// Cancels Timer K execution.
+  
+  void cancelTimerClientExpires();
     /// Cancels Timer K execution.
 
   void cancelAllTimers();
@@ -240,6 +248,7 @@ protected:
   boost::asio::deadline_timer _timerI;
   boost::asio::deadline_timer _timerJ;
   boost::asio::deadline_timer _timerK;
+  boost::asio::deadline_timer _timerClientExpires;
   boost::asio::deadline_timer _timerMaxLifetime;
 
   TimerCallback _timerAFunc;
@@ -253,6 +262,7 @@ protected:
   TimerCallback _timerIFunc;
   TimerCallback _timerJFunc;
   TimerCallback _timerKFunc;
+  TimerCallback _timerClientExpiresFunc;
   TimerCallback _timerMaxLifetimeFunc;
 
 private:
@@ -288,6 +298,9 @@ private:
 
   void handleTimerK(const boost::system::error_code& e);
     /// Handler for Timer K expiration
+  
+  void handleTimerClientExpires(const boost::system::error_code& e);
+    /// Handler for Timer ICT expiration extracted from the Expires header
 
   void handleTimerMaxLifetime(const boost::system::error_code& e);
     /// Handler for Timer MaxLifetime expiration
@@ -353,6 +366,11 @@ inline void SIPFsm::cancelTimerJ()
 inline void SIPFsm::cancelTimerK()
 {
   _timerK.cancel();
+}
+
+inline void SIPFsm::cancelTimerClientExpires()
+{
+  _timerClientExpires.cancel();
 }
 
 inline SIPTransactionTimers& SIPFsm::timerProps()

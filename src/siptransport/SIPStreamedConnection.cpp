@@ -443,15 +443,17 @@ void SIPStreamedConnection::writeMessage(SIPMessage::Ptr msg, const std::string&
 }
 
 
-void SIPStreamedConnection::checkDeadline()
+void SIPStreamedConnection::handleConnectTimeout(const boost::system::error_code& e)
 {
-
-  // The deadline has passed. The socket is closed so that any outstanding
-  // asynchronous operations are cancelled. This allows the blocked
-  // connect(), read_line() or write_line() functions to return.
-  boost::system::error_code ignored_ec;
-  socket().cancel(ignored_ec);
-  OSS_LOG_DEBUG("SIPStreamedConnection::checkDeadline - Socket I/O TIMEOUT");
+  if (!e)
+  {
+    // The deadline has passed. The socket is closed so that any outstanding
+    // asynchronous operations are cancelled. This allows the blocked
+    // connect(), read() or write() functions to return.
+    boost::system::error_code ignored_ec;
+    socket().cancel(ignored_ec);
+    OSS_LOG_DEBUG("SIPStreamedConnection::handleConnectTimeout - Socket I/O TIMEOUT");
+  }
 }
 
 
@@ -499,9 +501,9 @@ bool SIPStreamedConnection::clientConnect(const OSS::Net::IPAddress& target, boo
     _pTcpSocket->async_connect(*ep, boost::bind(&SIPStreamedConnection::handleConnect, shared_from_this(), boost::asio::placeholders::error, ep, &ec, &sem));
     
     // Block until the asynchronous operation has completed.
-    _deadline.async_wait(boost::bind(&SIPStreamedConnection::checkDeadline, this));
+    _deadline.async_wait(boost::bind(&SIPStreamedConnection::handleConnectTimeout, shared_from_this(), boost::asio::placeholders::error));
     sem.wait();
-       
+    
     if (_pTcpSocket->is_open())
     {
       if (!_pTlsStream)
