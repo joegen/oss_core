@@ -299,7 +299,16 @@ void SIPStreamedConnection::handleRead(const boost::system::error_code& e, std::
       //
       // Message has been read in full
       //
-      dispatchMessage(_pRequest->shared_from_this(), shared_from_this());
+      if (rateLimit().isBannedAddress(_lastReadAddress.address()))
+      {
+        OSS_LOG_DEBUG("ALERT: Dropping " << _pRequest->data().size() << " bytes from blocked address "
+          << _lastReadAddress.address().to_string());
+      }
+      else
+      {
+        dispatchMessage(_pRequest->shared_from_this(), shared_from_this());
+        rateLimit().logPacket(_lastReadAddress.address(), _pRequest->data().size());
+      }
       
       if (tail >= end)
       {

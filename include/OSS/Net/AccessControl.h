@@ -46,9 +46,11 @@ public:
     ViolationReport() : thresholdViolated(false){};
   };
   
-  AccessControl();
+  typedef std::map<boost::asio::ip::address, boost::posix_time::ptime> BlackList;
   
-  AccessControl(OSS::Persistent::KeyValueStore* pStore);
+  typedef boost::function<void(const boost::asio::ip::address&)> BanCallback;
+  
+  AccessControl();
   
   ~AccessControl();
 
@@ -98,9 +100,11 @@ public:
   
   bool isWhiteListedNetwork(const std::string& address) const;
   
-  void setPersistentStore(OSS::Persistent::KeyValueStore* pStore);
-  
   void denyAll(bool denyAll);
+  
+  void getBannedAddresses(std::vector<boost::asio::ip::address>& banned);
+  
+  void setBanCallback(const BanCallback& banCallback);
   
 private:
   bool _enabled;
@@ -113,10 +117,10 @@ private:
   std::map<boost::asio::ip::address, unsigned int> _packetCounter;
   std::set<boost::asio::ip::address> _whiteList;
   std::set<std::string> _networkWhiteList;
-  std::map<boost::asio::ip::address, boost::posix_time::ptime> _blackList;
+  BlackList _blackList;
   boost::posix_time::ptime _lastTime;
-  OSS::Persistent::KeyValueStore* _pStore;
   bool _denyAllIncoming;
+  BanCallback _banCallback;
 };
 
 //
@@ -198,11 +202,10 @@ inline void AccessControl::logPacket(const std::string& source, std::size_t byte
   logPacket(boost::asio::ip::address::from_string(source), bytesRead, pReport);
 }
 
-inline void AccessControl::setPersistentStore(OSS::Persistent::KeyValueStore* pStore)
+inline void AccessControl::setBanCallback(const BanCallback& banCallback)
 {
-  _pStore = pStore;
+  _banCallback = banCallback;
 }
-
 
 } } // OSS::SIP
 
