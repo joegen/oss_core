@@ -72,8 +72,10 @@ void RTPProxyClient::handleSDP(
       params["sentBy"] = json::String(sentBy.toIpPortString());
       params["packetSourceIP"] = json::String(packetSourceIP.toIpPortString());
       params["packetLocalInterface"] = json::String(packetLocalInterface.toIpPortString());
+      params["packetLocalInterfaceExternal"] = json::String(packetLocalInterface.externalAddress());
       params["route"] = json::String(route.toIpPortString());
       params["routeLocalInterface"] = json::String(routeLocalInterface.toIpPortString());
+      params["routeLocalInterfaceExternal"] = json::String(routeLocalInterface.externalAddress());
       params["requestType"] = json::Number(requestType);
       params["sdp"] = json::String(sdp);
 

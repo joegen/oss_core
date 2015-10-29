@@ -308,8 +308,10 @@ void RTPProxyManager::handleSDP(const std::string& /*method*/,
     json::String sentBy = args["sentBy"];
     json::String packetSourceIP = args["packetSourceIP"];
     json::String packetLocalInterface = args["packetLocalInterface"];
+    json::String packetLocalInterfaceExternal = args["packetLocalInterfaceExternal"];
     json::String route = args["route"];
     json::String routeLocalInterface = args["routeLocalInterface"];
+    json::String routeLocalInterfaceExternal = args["routeLocalInterfaceExternal"];
     json::Number requestType = args["requestType"];
     json::String sdp = args["sdp"];
     json::Boolean attr_verbose = args["attr.verbose"];
@@ -325,9 +327,14 @@ void RTPProxyManager::handleSDP(const std::string& /*method*/,
     std::string sessionId_(sessionId.Value());
     OSS::Net::IPAddress sentBy_ = OSS::Net::IPAddress::fromV4IPPort(sentBy.Value().c_str());
     OSS::Net::IPAddress packetSourceIP_ = OSS::Net::IPAddress::fromV4IPPort(packetSourceIP.Value().c_str());
+    
     OSS::Net::IPAddress packetLocalInterface_ = OSS::Net::IPAddress::fromV4IPPort(packetLocalInterface.Value().c_str());
+    packetLocalInterface_.externalAddress() = packetLocalInterfaceExternal.Value().c_str();
+    
     OSS::Net::IPAddress route_ = OSS::Net::IPAddress::fromV4IPPort(route.Value().c_str());
     OSS::Net::IPAddress routeLocalInterface_ = OSS::Net::IPAddress::fromV4IPPort(routeLocalInterface.Value().c_str());
+    routeLocalInterface_.externalAddress() = routeLocalInterfaceExternal.Value().c_str();
+    
     RTPProxySession::RequestType requestType_((RTPProxySession::RequestType)requestType.Value());
     std::string sdp_(sdp.Value());
 
