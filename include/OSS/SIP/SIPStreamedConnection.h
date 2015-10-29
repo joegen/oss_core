@@ -115,8 +115,6 @@ private:
   
   void handleServerHandshake(const boost::system::error_code& error);
   
-  void reportConnectionError(ConnectionError errorType, const boost::system::error_code& e);
-
   OSS::Net::IPAddress getLocalAddress()const;
     /// Returns the local address binding for this transport
 

@@ -247,18 +247,6 @@ bool SIPStreamedConnection::writeKeepAlive()
   return !ec;
 }
 
-void SIPStreamedConnection::reportConnectionError(ConnectionError errorType, const boost::system::error_code& e)
-{
-  if (!_currentTransactionId.empty() && _pTransactionPool)
-  {
-    SIPTransaction::Ptr pTransaction = _pTransactionPool->findTransaction(_currentTransactionId, false);
-    if (pTransaction)
-    {
-      pTransaction->handleConnectionError(errorType, e);
-    }
-  }
-}
-
 void SIPStreamedConnection::handleRead(const boost::system::error_code& e, std::size_t bytes_transferred, OSS_HANDLE /*userData*/)
 {
   if (!e && bytes_transferred)
@@ -419,8 +407,6 @@ void SIPStreamedConnection::handleRead(const boost::system::error_code& e, std::
     }
     else
     {
-      reportConnectionError(SIPStreamedConnection::CONNECTION_ERROR_READ, e);
-      
       OSS_LOG_ERROR("SIPStreamedConnection::handleRead has reached maximum exception count or error is final.  Bailing out.");
       boost::system::error_code ignored_ec;
       _pTcpSocket->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
@@ -433,7 +419,6 @@ void SIPStreamedConnection::handleWrite(const boost::system::error_code& e)
 {
   if (e)
   {
-    reportConnectionError(SIPStreamedConnection::CONNECTION_ERROR_WRITE, e);
     // Initiate graceful connection closure.
     OSS_LOG_WARNING("SIPStreamedConnection::handleWrite() Exception " << e.message());
     boost::system::error_code ignored_ec;
@@ -565,7 +550,6 @@ void SIPStreamedConnection::handleConnect(const boost::system::error_code& e, bo
   else
   {
     _isConnected = false;
-    reportConnectionError(SIPStreamedConnection::CONNECTION_ERROR_CONNECT, e);
     OSS_LOG_WARNING("SIPStreamedConnection::handleConnect() Exception " << e.message());
     socket().close();
   }
@@ -591,9 +575,7 @@ void SIPStreamedConnection::handleServerHandshake(const boost::system::error_cod
     readSome();
   }
   else
-  {
-    reportConnectionError(SIPStreamedConnection::CONNECTION_ERROR_SERVER_HANDSHAKE, e);
-    
+  {   
     OSS_LOG_ERROR("SIPStreamedConnection::handleServerHandshake() Exception " << e.message() << " - " << ERR_GET_REASON(e.value()));
    
     std::string err = e.message();
@@ -626,7 +608,6 @@ void SIPStreamedConnection::handleClientHandshake(const boost::system::error_cod
   }
   else
   {
-    reportConnectionError(SIPStreamedConnection::CONNECTION_ERROR_CLIENT_HANDSHAKE, e);
     OSS_LOG_ERROR("SIPStreamedConnection::handleClientHandshake() Exception " << e.message() << " - " << ERR_GET_REASON(e.value()));
     socket().close();
   }
