@@ -25,22 +25,6 @@
 namespace OSS {
 namespace Net {
 
-static const std::string DOCUMENT_PREFIX = "/root/access-control";
-static const std::string BANNED_PREFIX = "/banned/";
-static const std::string TRUSTED_PREFIX = "/trustedip/";
-static const std::string TRUSTED_NET_PREFIX = "/trustednet/";
-static const std::string DOCUMENT_PREFIX_BANNED = DOCUMENT_PREFIX + BANNED_PREFIX;
-static const std::string DOCUMENT_PREFIX_TRUSTED = DOCUMENT_PREFIX + TRUSTED_PREFIX;
-static const std::string DOCUMENT_PREFIX_TRUSTED_NET = DOCUMENT_PREFIX + TRUSTED_NET_PREFIX;
- 
-
-
-static std::time_t to_time_t(const boost::posix_time::ptime& t)
-{
-  boost::posix_time::ptime epoch(boost::gregorian::date(1970,1,1));
-  boost::posix_time::time_duration::sec_type x = (t - epoch).total_seconds();
-  return time_t(x);
-}
 
 AccessControl::AccessControl() :
   _enabled(false),
@@ -159,8 +143,8 @@ bool AccessControl::isBannedAddress(const boost::asio::ip::address& source)
   {
     boost::posix_time::ptime now(boost::posix_time::microsec_clock::local_time());
     std::vector<boost::asio::ip::address> parole;
-    for (std::map<boost::asio::ip::address, boost::posix_time::ptime>::iterator iter = _blackList.begin();
-      iter != _blackList.end(); iter++)
+    for (std::map<boost::asio::ip::address, boost::posix_time::ptime>::iterator iter = _banned.begin();
+      iter != _banned.end(); iter++)
     {
       boost::posix_time::time_duration timeDiff = now - iter->second;
       if (timeDiff.total_milliseconds() >  _banLifeTime * 1000)
@@ -169,7 +153,7 @@ bool AccessControl::isBannedAddress(const boost::asio::ip::address& source)
 
     for (std::vector<boost::asio::ip::address>::iterator iter = parole.begin(); iter != parole.end(); iter++)
     {
-      _blackList.erase(*iter);
+      _banned.erase(*iter);
     }
   }
 
@@ -185,8 +169,14 @@ bool AccessControl::isBannedAddress(const boost::asio::ip::address& source)
     }
     else
     {
-      banned = _blackList.find(source) != _blackList.end();
+      banned = _banned.find(source) != _banned.end();
     }
+    
+    if (!banned)
+    {
+      banned = isBlackListed(source);
+    }
+    
   }
   _packetCounterMutex.unlock();
 
@@ -195,7 +185,7 @@ bool AccessControl::isBannedAddress(const boost::asio::ip::address& source)
 
 void AccessControl::getBannedAddresses(std::vector<boost::asio::ip::address>& banned)
 {
-  for (BlackList::iterator iter = _blackList.begin(); iter != _blackList.end(); iter++)
+  for (BannedSources::iterator iter = _banned.begin(); iter != _banned.end(); iter++)
   {
     banned.push_back(iter->first);
   }
@@ -206,7 +196,7 @@ void AccessControl::banAddress(const boost::asio::ip::address& source)
     return;
   
   _packetCounterMutex.lock();
-  _blackList[source] = boost::posix_time::ptime(boost::posix_time::microsec_clock::local_time());
+  _banned[source] = boost::posix_time::ptime(boost::posix_time::microsec_clock::local_time());
   if (_banCallback)
   {
     _banCallback(source);
@@ -220,6 +210,7 @@ void AccessControl::clearAddress(const boost::asio::ip::address& source, bool ad
     return;
   _packetCounterMutex.lock();
   
+  _banned.erase(source);
   _blackList.erase(source);
 
   if (addToWhiteList)
@@ -235,7 +226,7 @@ void AccessControl::whiteListAddress(const boost::asio::ip::address& address, bo
   OSS_LOG_NOTICE("AccessControl::whiteListAddress - " << address);
   
   if (removeFromBlackList)
-    _blackList.erase(address);
+    _banned.erase(address);
 
   _whiteList.insert(address);
 
@@ -285,11 +276,79 @@ bool AccessControl::isWhiteListedNetwork(const boost::asio::ip::address& address
 }
 
 
+void AccessControl::blackListAddress(const boost::asio::ip::address& address, bool removeFromWhiteList)
+{
+  _packetCounterMutex.lock();
+  
+  OSS_LOG_NOTICE("AccessControl::blackListAddress - " << address);
+  
+  if (removeFromWhiteList)
+    _whiteList.erase(address);
+
+  _blackList.insert(address);
+
+  _packetCounterMutex.unlock();
+}
+
+void AccessControl::blackListNetwork(const std::string& network)
+{
+  _packetCounterMutex.lock();
+  
+  OSS_LOG_NOTICE("AccessControl::blackListNetwork - " << network);
+  
+  _networkBlackList.insert(network);
+
+  _packetCounterMutex.unlock();
+}
+
+bool AccessControl::isBlackListed(const boost::asio::ip::address& address) const
+{
+  bool blackListed = false;
+ 
+  _packetCounterMutex.lock();
+
+  blackListed = _blackList.find(address) != _blackList.end();
+  
+  _packetCounterMutex.unlock();
+  
+  if (!blackListed)
+  {
+    blackListed = isBlackListedNetwork(address);
+  }
+  
+  if (blackListed && _banCallback)
+  {
+    _banCallback(address);
+  }
+  
+  return blackListed;
+}
+
+
+bool AccessControl::isBlackListedNetwork(const boost::asio::ip::address& address) const
+{
+  boost::system::error_code ec;
+  std::string ipAddress = address.to_string(ec);
+  if (ec)
+    return false;
+
+  for (std::set<std::string>::const_iterator iter = _networkBlackList.begin();
+    iter != _networkBlackList.end(); iter++)
+  {
+    if (OSS::socket_address_cidr_verify(ipAddress, *iter))
+      return true;
+  }
+  return false;
+}
+
+
 void AccessControl::denyAll(bool denyAll)
 {
   OSS_LOG_NOTICE("AccessControl::denyAll set to " << (denyAll ? "true" : "false"));
   _denyAllIncoming = denyAll;
 }
+
+
 } } // OSS::SIP
 
 

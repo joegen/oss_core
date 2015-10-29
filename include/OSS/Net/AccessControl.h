@@ -46,9 +46,14 @@ public:
     ViolationReport() : thresholdViolated(false){};
   };
   
-  typedef std::map<boost::asio::ip::address, boost::posix_time::ptime> BlackList;
-  
+  typedef std::map<boost::asio::ip::address, boost::posix_time::ptime> BannedSources;
   typedef boost::function<void(const boost::asio::ip::address&)> BanCallback;
+  typedef boost::function<void(const boost::asio::ip::address&)> BlackListCallback;
+  typedef std::set<std::string> NetworkBlackList;
+  typedef std::set<std::string> NetworkWhiteList;
+  typedef std::set<boost::asio::ip::address> IPBlackList;
+  typedef std::set<boost::asio::ip::address> IPWhiteList;
+  typedef std::map<boost::asio::ip::address, unsigned int> PacketCounter;
   
   AccessControl();
   
@@ -87,18 +92,20 @@ public:
   bool& enabled();
 
   void whiteListAddress(const boost::asio::ip::address& address, bool removeFromBlackList = true);
-  
   void whiteListAddress(const std::string& address, bool removeFromBlackList = true);
-  
   void whiteListNetwork(const std::string& network);
-  
   bool isWhiteListed(const boost::asio::ip::address& address) const;
-  
   bool isWhiteListed(const std::string& address) const;
-  
   bool isWhiteListedNetwork(const boost::asio::ip::address& address) const;
-  
   bool isWhiteListedNetwork(const std::string& address) const;
+  
+  void blackListAddress(const boost::asio::ip::address& address, bool removeFromWhiteList = true);
+  void blackListAddress(const std::string& address, bool removeFromWhiteList = true);
+  void blackListNetwork(const std::string& network);
+  bool isBlackListed(const boost::asio::ip::address& address) const;
+  bool isBlackListed(const std::string& address) const;
+  bool isBlackListedNetwork(const boost::asio::ip::address& address) const;
+  bool isBlackListedNetwork(const std::string& address) const;
   
   void denyAll(bool denyAll);
   
@@ -115,9 +122,11 @@ private:
   int _banLifeTime;
   mutable boost::recursive_mutex _packetCounterMutex;
   std::map<boost::asio::ip::address, unsigned int> _packetCounter;
-  std::set<boost::asio::ip::address> _whiteList;
-  std::set<std::string> _networkWhiteList;
-  BlackList _blackList;
+  IPWhiteList _whiteList;
+  NetworkWhiteList _networkWhiteList;
+  IPBlackList _blackList;
+  NetworkBlackList _networkBlackList;
+  BannedSources _banned;
   boost::posix_time::ptime _lastTime;
   bool _denyAllIncoming;
   BanCallback _banCallback;
@@ -197,6 +206,21 @@ inline bool AccessControl::isWhiteListedNetwork(const std::string& address) cons
   return isWhiteListedNetwork(boost::asio::ip::address::from_string(address));
 }
 
+inline void AccessControl::blackListAddress(const std::string& address, bool removeFromBlackList)
+{
+  blackListAddress(boost::asio::ip::address::from_string(address), removeFromBlackList);
+}
+
+inline bool AccessControl::isBlackListed(const std::string& address) const
+{
+  return isBlackListed(boost::asio::ip::address::from_string(address));
+}
+
+inline bool AccessControl::isBlackListedNetwork(const std::string& address) const
+{
+  return isBlackListedNetwork(boost::asio::ip::address::from_string(address));
+}
+
 inline void AccessControl::logPacket(const std::string& source, std::size_t bytesRead, ViolationReport* pReport)
 {
   logPacket(boost::asio::ip::address::from_string(source), bytesRead, pReport);
@@ -206,6 +230,7 @@ inline void AccessControl::setBanCallback(const BanCallback& banCallback)
 {
   _banCallback = banCallback;
 }
+
 
 } } // OSS::SIP
 
