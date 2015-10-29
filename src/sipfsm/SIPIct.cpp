@@ -21,6 +21,7 @@
 #include "OSS/SIP/SIPIct.h"
 #include "OSS/SIP/SIPTransaction.h"
 #include "OSS/SIP/SIPCSeq.h"
+#include "OSS/SIP/SIPRequestLine.h"
 #include "OSS/SIP/SIPFSMDispatch.h"
 #include "OSS/UTL/Logger.h"
 
@@ -120,6 +121,11 @@ void SIPIct::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
     }
     else if (pMsg->is2xx())
     {
+      cancelTimerClientExpires();
+      if (pParent)
+      {
+        pParent->fsm()->cancelTimerClientExpires();
+      }
       pTransaction->informTU(pMsg, pTransport);
       pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
       //
@@ -130,6 +136,11 @@ void SIPIct::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
     }
     else if (pMsg->isErrorResponse())
     {
+      cancelTimerClientExpires();
+      if (pParent)
+      {
+        pParent->fsm()->cancelTimerClientExpires();
+      }
       pTransaction->setState(COMPLETED);
       pTransaction->informTU(pMsg, pTransport);
       handleSendAck(pMsg, pTransport);
@@ -143,6 +154,10 @@ void SIPIct::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
     else if (pMsg->is2xx())
     {
       cancelTimerClientExpires();
+      if (pParent)
+      {
+        pParent->fsm()->cancelTimerClientExpires();
+      }
       pTransaction->informTU(pMsg, pTransport);
       pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
       //
@@ -154,6 +169,10 @@ void SIPIct::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
     else if (pMsg->isErrorResponse())
     {
       cancelTimerClientExpires();
+      if (pParent)
+      {
+        pParent->fsm()->cancelTimerClientExpires();
+      }
       pTransaction->setState(COMPLETED);
       pTransaction->informTU(pMsg, pTransport);
       handleSendAck(pMsg, pTransport);
@@ -229,6 +248,13 @@ void SIPIct::handleExpiresTimeout()
   // Clone the original request
   //
   SIPMessage::Ptr pCancel = SIPMessage::Ptr(new SIPMessage(*_pRequest.get()));
+  //
+  // Change the method to cancel
+  //
+  SIPRequestLine rline(pCancel->startLine());
+  rline.setMethod("CANCEL");
+  pCancel->startLine() = rline.data();
+  
   //
   // Remove body and set content length to zero
   //
