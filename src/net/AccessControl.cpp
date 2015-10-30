@@ -233,6 +233,14 @@ void AccessControl::whiteListAddress(const boost::asio::ip::address& address, bo
   _packetCounterMutex.unlock();
 }
 
+void AccessControl::clearWhiteList(const boost::asio::ip::address& address)
+{
+  _packetCounterMutex.lock();
+  _whiteList.erase(address);
+  _packetCounterMutex.unlock();
+}
+
+
 void AccessControl::whiteListNetwork(const std::string& network)
 {
   _packetCounterMutex.lock();
@@ -241,6 +249,13 @@ void AccessControl::whiteListNetwork(const std::string& network)
   
    _networkWhiteList.insert(network);
 
+  _packetCounterMutex.unlock();
+}
+
+void AccessControl::clearWhiteListNetwork(const std::string& network)
+{
+  _packetCounterMutex.lock();
+  _networkWhiteList.erase(network);
   _packetCounterMutex.unlock();
 }
 
@@ -266,12 +281,18 @@ bool AccessControl::isWhiteListedNetwork(const boost::asio::ip::address& address
   if (ec)
     return false;
 
+  _packetCounterMutex.lock();
   for (std::set<std::string>::const_iterator iter = _networkWhiteList.begin();
     iter != _networkWhiteList.end(); iter++)
   {
     if (OSS::socket_address_cidr_verify(ipAddress, *iter))
+    {
+      _packetCounterMutex.unlock();
       return true;
+    }
   }
+  
+  _packetCounterMutex.unlock();
   return false;
 }
 
@@ -330,15 +351,30 @@ bool AccessControl::isBlackListedNetwork(const boost::asio::ip::address& address
   boost::system::error_code ec;
   std::string ipAddress = address.to_string(ec);
   if (ec)
+  {
     return false;
+  }
 
+  _packetCounterMutex.lock();
   for (std::set<std::string>::const_iterator iter = _networkBlackList.begin();
     iter != _networkBlackList.end(); iter++)
   {
     if (OSS::socket_address_cidr_verify(ipAddress, *iter))
+    {
+      _packetCounterMutex.unlock();
       return true;
+    }
   }
+  
+  _packetCounterMutex.unlock();
   return false;
+}
+
+void AccessControl::clearNetwork(const std::string& cidr)
+{
+  _packetCounterMutex.lock();
+  _networkBlackList.erase(cidr);
+  _packetCounterMutex.unlock();
 }
 
 

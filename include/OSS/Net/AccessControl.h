@@ -98,6 +98,9 @@ public:
   bool isWhiteListed(const std::string& address) const;
   bool isWhiteListedNetwork(const boost::asio::ip::address& address) const;
   bool isWhiteListedNetwork(const std::string& address) const;
+  void clearWhiteList(const boost::asio::ip::address& address);
+  void clearWhiteListNetwork(const std::string& network);
+  
   
   void blackListAddress(const boost::asio::ip::address& address, bool removeFromWhiteList = true);
   void blackListAddress(const std::string& address, bool removeFromWhiteList = true);
@@ -106,6 +109,7 @@ public:
   bool isBlackListed(const std::string& address) const;
   bool isBlackListedNetwork(const boost::asio::ip::address& address) const;
   bool isBlackListedNetwork(const std::string& address) const;
+  void clearNetwork(const std::string& cidr);
   
   void denyAll(bool denyAll);
   
