@@ -18,6 +18,8 @@
 //
 
 
+#include <vector>
+
 #include "OSS/SDP/SDPMedia.h"
 
 
@@ -457,6 +459,54 @@ void SDPMedia::setDataPort(unsigned short port)
     _dataPort = port;
   }
 }
+
+std::vector<std::string> SDPMedia::getICECandidates() const
+{
+  // a=candidate:4022866446 1 udp 2113937151 192.168.0.197 36768 typ host generation 0
+  std::vector<std::string> iceCandidates;
+  for (SDPMedia::iterator iter = const_cast<SDPMedia*>(this)->begin(); iter != const_cast<SDPMedia*>(this)->end(); iter++)
+  {
+    if (iter->name() == 'a' && OSS::string_caseless_starts_with(iter->value(), "candidate"))
+    {
+      std::string candidate(iter->value().c_str() + 9 /* strlen("candidate") */);
+      iceCandidates.push_back(candidate);
+    }     
+  } 
+  return iceCandidates;
+}
+
+void SDPMedia::setIceCandidates(std::vector<std::string>& candidates)
+{
+  //
+  // remove the previous ICE candidates if set
+  //
+  SDPMedia::iterator iter = begin();
+  while (iter != end())
+  {
+    if (iter->name() == 'a' && OSS::string_caseless_starts_with(iter->value(), "candidate"))
+    {
+      iter = erase(iter);
+    }
+    else
+    {
+      iter++;
+    }
+  }
+  
+  //
+  // append each item as a new candidate attribute
+  //
+  for (std::vector<std::string>::iterator iter = candidates.begin(); iter != candidates.end(); iter++)
+  {
+    SDPHeader a;
+    a.name() = 'a';
+    a.value() = "candidate:";
+    a.value() += *iter;
+    push_back(a);
+  }
+}
+
+
 
 SDPMedia::iterator SDPMedia::findAttributeIterator(int payload, const char* attributeName)
 {

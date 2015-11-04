@@ -190,6 +190,12 @@ public:
 
   void setDirection(Direction direction);
     /// Set the direciton of media
+  
+  std::vector<std::string> getICECandidates() const;
+    /// Returns the vector of ice candidates
+  
+  void setIceCandidates(std::vector<std::string>& candidates);
+    /// Set the vector of ice candidates
 
 protected:
   void internalSetAddress(const std::string& address, bool isV4);
