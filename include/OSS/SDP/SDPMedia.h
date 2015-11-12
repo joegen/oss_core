@@ -303,12 +303,12 @@ inline void SDPMedia::setDTLSFingerPrints(const std::vector<std::string>& candid
   setVectorAttributes("fingerprint", candidates);
 }
 
-inline bool SDPMedia::getSSRC(std::vector<std::string>& attributeVector) const;
+inline bool SDPMedia::getSSRC(std::vector<std::string>& attributeVector) const
 {
   return getVectorAttributes("ssrc", attributeVector);
 }
   
-inline void SDPMedia::setSSRC(const std::vector<std::string>& candidates);
+inline void SDPMedia::setSSRC(const std::vector<std::string>& candidates)
 {
   setVectorAttributes("ssrc", candidates);
 }
