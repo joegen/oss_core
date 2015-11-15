@@ -9,15 +9,9 @@ static const std::string DOCUMENT_ROOT = "/root/" + DB_PATH;
 
 TEST(AccessControlTest, BlackList)
 {
-  if (!store.isOpen())
-  {
-    ASSERT_TRUE(store.open(DB_PATH));
-    //store.setKeyPrefix(DOCUMENT_ROOT);
-    store.delKeys(DOCUMENT_ROOT + "/*");
-  }
   
   
-  OSS::Net::AccessControl acc(&store);
+  OSS::Net::AccessControl acc;
   acc.enabled() = true;
   
   acc.banAddress("192.168.1.1");
@@ -30,23 +24,11 @@ TEST(AccessControlTest, BlackList)
   
   ASSERT_FALSE(acc.isBannedAddress("192.168.1.4"));
   ASSERT_FALSE(acc.isBannedAddress("192.168.1.5"));
-  
-  store.delKeys(DOCUMENT_ROOT + "/*");
-  
-  ASSERT_FALSE(acc.isBannedAddress("192.168.1.1"));
-  ASSERT_FALSE(acc.isBannedAddress("192.168.1.2"));
-  ASSERT_FALSE(acc.isBannedAddress("192.168.1.3"));
 }
 
 TEST(AccessControlTest, WhiteList)
 {
-  if (!store.isOpen())
-  {
-    ASSERT_TRUE(store.open(DB_PATH));
-    //store.setKeyPrefix(DOCUMENT_ROOT);
-    store.delKeys(DOCUMENT_ROOT + "/*");
-  }
-  OSS::Net::AccessControl acc(&store);
+  OSS::Net::AccessControl acc;
   acc.enabled() = true;
   
   acc.whiteListAddress("192.168.1.1");
@@ -59,23 +41,11 @@ TEST(AccessControlTest, WhiteList)
   
   ASSERT_FALSE(acc.isWhiteListed("192.168.1.4"));
   ASSERT_FALSE(acc.isWhiteListed("192.168.1.5"));
-  
-  store.delKeys(DOCUMENT_ROOT + "/*");
-  
-  ASSERT_FALSE(acc.isWhiteListed("192.168.1.1"));
-  ASSERT_FALSE(acc.isWhiteListed("192.168.1.2"));
-  ASSERT_FALSE(acc.isWhiteListed("192.168.1.3"));
 }
 
 TEST(AccessControlTest, WhiteListNetwork)
 {
-  if (!store.isOpen())
-  {
-    ASSERT_TRUE(store.open(DB_PATH));
-    //store.setKeyPrefix(DOCUMENT_ROOT);
-    store.delKeys(DOCUMENT_ROOT + "/*");
-  }
-  OSS::Net::AccessControl acc(&store);
+  OSS::Net::AccessControl acc;
   acc.enabled() = true;
   
   acc.whiteListNetwork("192.168.1.0/24");
@@ -88,23 +58,11 @@ TEST(AccessControlTest, WhiteListNetwork)
   
   ASSERT_FALSE(acc.isWhiteListed("192.168.4.4"));
   ASSERT_FALSE(acc.isWhiteListed("192.168.5.5"));
-  
-  store.delKeys(DOCUMENT_ROOT + "/*");
-  
-  ASSERT_FALSE(acc.isWhiteListed("192.168.1.1"));
-  ASSERT_FALSE(acc.isWhiteListed("192.168.2.2"));
-  ASSERT_FALSE(acc.isWhiteListed("192.168.3.3"));
 }
 
 TEST(AccessControlTest, LogPacket)
 {
-  if (!store.isOpen())
-  {
-    ASSERT_TRUE(store.open(DB_PATH));
-    //store.setKeyPrefix(DOCUMENT_ROOT);
-    store.delKeys(DOCUMENT_ROOT + "/*");
-  }
-  OSS::Net::AccessControl acc(&store);
+  OSS::Net::AccessControl acc;
   acc.enabled() = true;
   acc.autoBanThresholdViolators() = true;
   acc.setPacketsPerSecondThreshold(100);
@@ -122,6 +80,4 @@ TEST(AccessControlTest, LogPacket)
     ad.wait();
   }
   ASSERT_TRUE(acc.isBannedAddress("192.168.1.100"));
-  
-  store.delKeys(DOCUMENT_ROOT + "/*");
 }

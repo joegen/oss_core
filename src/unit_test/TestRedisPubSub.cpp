@@ -113,31 +113,3 @@ TEST(TestRedisPubSub, EventHandling)
   }
 }
 
-TEST(TestRedisPubSub, TimeOut)
-{
-  RedisClient subscriber("127.0.0.1", 6379);
-  ASSERT_TRUE(subscriber.connect());
-  
-  //
-  // Set the timeout to 1 second
-  //
-  ASSERT_TRUE(subscriber.setReadTimeout(1));
-  
-  std::vector<std::string> result;
-  ASSERT_TRUE(subscriber.subscribe("TestChannel", result));
-  
-  std::vector<std::string> eventData;
-  subscriber.receive(eventData);
-  
-  std::cout << "event -> | ";
-  for (std::vector<std::string>::iterator iter = eventData.begin(); iter != eventData.end(); iter++)
-  {
-    std::cout << *iter << " |";
-  }
-  std::cout << std::endl;
-  
-  //
-  // Assert the timeout
-  //
-  ASSERT_TRUE(eventData[0] == "io-error");
-}
