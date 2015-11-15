@@ -4,6 +4,7 @@
 #include "gtest/gtest.h"
 #include "OSS/OSS.h"
 #include "OSS/SDP/SDPSession.h"
+#include "OSS/SDP/ICECandidate"
 #include "OSS/Net/IPAddress.h"
 
 
@@ -167,5 +168,60 @@ TEST(ParserTest, test_sdp_parser)
   faxSession.changeAddress("10.0.0.1", "IP4");
 
   std::cout << faxSession.toString() << std::endl;
+  
+  std::ostringstream iceSDP;
+  iceSDP << "v=0" << std::endl;
+  iceSDP << "o=- 5177457569218137435 2 IN IP4 127.0.0.1" << std::endl;
+  iceSDP << "s=-" << std::endl;
+  iceSDP << "t=0 0" << std::endl;
+  iceSDP << "a=group:BUNDLE audio video" << std::endl;
+  iceSDP << "a=msid-semantic: WMS h1bdfpEKn7Q6aA2pWdR5DSDRgZpNkjtrDtMG" << std::endl;
+  iceSDP << "m=audio 59858 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 126" << std::endl;
+  iceSDP << "c=IN IP4 49.146.254.61" << std::endl;
+  iceSDP << "a=rtcp:46555 IN IP4 49.146.254.61" << std::endl;
+  iceSDP << "a=candidate:3988902457 1 udp 2122260223 192.168.0.11 59858 typ host generation 0" << std::endl;
+  iceSDP << "a=candidate:3988902457 2 udp 2122260222 192.168.0.11 46555 typ host generation 0" << std::endl;
+  iceSDP << "a=candidate:2739023561 1 tcp 1518280447 192.168.0.11 0 typ host tcptype active generation 0" << std::endl;
+  iceSDP << "a=candidate:2739023561 2 tcp 1518280446 192.168.0.11 0 typ host tcptype active generation 0" << std::endl;
+  iceSDP << "a=candidate:466725869 1 udp 1686052607 49.146.254.61 59858 typ srflx raddr 192.168.0.11 rport 59858 generation 0" << std::endl;
+  iceSDP << "a=candidate:466725869 2 udp 1686052606 49.146.254.61 46555 typ srflx raddr 192.168.0.11 rport 46555 generation 0" << std::endl;
+  iceSDP << "a=ice-ufrag:hF3q0QqccDnDVc9T" << std::endl;
+  iceSDP << "a=ice-pwd:T+YZ6x411aL7aOWAjCGuIPfq" << std::endl;
+  iceSDP << "a=fingerprint:sha-256 4B:76:39:CE:C9:61:5E:24:AD:0A:20:48:4F:E0:F3:31:75:15:42:3D:AC:B9:B7:33:D4:75:0B:53:6E:34:B1:62" << std::endl;
+  iceSDP << "a=setup:actpass" << std::endl;
+  iceSDP << "a=mid:audio" << std::endl;
+  iceSDP << "a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level" << std::endl;
+  iceSDP << "a=extmap:3 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time" << std::endl;
+  iceSDP << "a=sendrecv" << std::endl;
+  iceSDP << "a=rtcp-mux" << std::endl;
+  iceSDP << "a=rtpmap:111 opus/48000/2" << std::endl;
+  iceSDP << "a=fmtp:111 minptime=10; useinbandfec=1" << std::endl;
+  iceSDP << "a=rtpmap:103 ISAC/16000" << std::endl;
+  iceSDP << "a=rtpmap:104 ISAC/32000" << std::endl;
+  iceSDP << "a=rtpmap:9 G722/8000" << std::endl;
+  iceSDP << "a=rtpmap:0 PCMU/8000" << std::endl;
+  iceSDP << "a=rtpmap:8 PCMA/8000" << std::endl;
+  iceSDP << "a=rtpmap:106 CN/32000" << std::endl;
+  iceSDP << "a=rtpmap:105 CN/16000" << std::endl;
+  iceSDP << "a=rtpmap:13 CN/8000" << std::endl;
+  iceSDP << "a=rtpmap:126 telephone-event/8000" << std::endl;
+  iceSDP << "a=maxptime:60" << std::endl;
+  iceSDP << "a=ssrc:3481721686 cname:lMkkyZKWNcYrEXNo" << std::endl;
+  iceSDP << "a=ssrc:3481721686 msid:h1bdfpEKn7Q6aA2pWdR5DSDRgZpNkjtrDtMG e50af4bb-80cc-4b45-b63a-36a052aa98dd" << std::endl;
+  iceSDP << "a=ssrc:3481721686 mslabel:h1bdfpEKn7Q6aA2pWdR5DSDRgZpNkjtrDtMG" << std::endl;
+  iceSDP << "a=ssrc:3481721686 label:e50af4bb-80cc-4b45-b63a-36a052aa98dd" << std::endl;
 
+  SDPSession iceSession(iceSDP.str().c_str());
+  SDPMedia::Ptr ice = iceSession.getMedia(SDPMedia::TYPE_AUDIO);
+  ASSERT_TRUE(ice);
+  typedef std::vector<std::string> vect;
+  vect candidates;
+  ice->getICECandidates(candidates);
+  
+  for (vect::iterator iter = candidates.begin(); iter != candidates.end(); iter++)
+  {
+    std::cout << *iter << std::endl;
+  }
+  
+  ASSERT_EQ(6, candidates.size());
 }
