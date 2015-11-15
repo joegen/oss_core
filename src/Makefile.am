@@ -264,6 +264,7 @@ liboss_core_la_SOURCES =  \
     sdp/SDPHeaderList.cpp \
     sdp/SDPMedia.cpp \
     sdp/SDPSession.cpp \
+    sdp/ICECandidate.cpp \
     sipparser/SIPAuthorization.cpp \
     sipparser/SIPContact.cpp \
     sipparser/SIPCSeq.cpp \

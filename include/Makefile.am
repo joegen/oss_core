@@ -112,6 +112,7 @@ nobase_include_HEADERS = \
     OSS/SDP/SDPHeaderList.h \
     OSS/SDP/SDPMedia.h \
     OSS/SDP/SDPSession.h \
+    OSS/SDP/ICECandidate.h \
     OSS/SIP/Parser.h \
     OSS/SIP/ReSIPMessage.h \
     OSS/SIP/SIPAuthorization.h \

@@ -226,6 +226,18 @@ public:
   
   void setICESetup(const std::string& iceSetup);
     /// Set the ICE setup
+  
+  bool getICEPassword(std::string& icePwd) const;
+    /// Return the ICE pwd 
+  
+  void setICEPassword(const std::string& icePwd);
+    /// Set the ICE user fragment
+  
+  bool getICEUFrag(std::string& iceUfrag) const;
+    /// Return the ICE pwd 
+  
+  void setICEUFrag(const std::string& iceUfrag);
+    /// Set the ICE user fragment
 protected:
   void internalSetAddress(const std::string& address, bool isV4);
   SDPMedia::iterator findAttributeIterator(int payload, const char* attributeName);
@@ -321,6 +333,26 @@ inline bool SDPMedia::getICESetup(std::string& iceSetup) const
 inline void SDPMedia::setICESetup(const std::string& iceSetup)
 {
   setUniqueAttribute("setup", iceSetup);
+}
+
+inline bool SDPMedia::getICEPassword(std::string& icePassword) const
+{
+  return getUniqueAttribute("ice-pwd", icePassword);
+}
+
+inline void SDPMedia::setICEPassword(const std::string& icePassword)
+{
+  setUniqueAttribute("ice-pwd", icePassword);
+}
+
+inline bool SDPMedia::getICEUFrag(std::string& iceUfrag) const
+{
+  return getUniqueAttribute("ice-ufrag", iceUfrag);
+}
+  
+inline void SDPMedia::setICEUFrag(const std::string& iceUfrag)
+{
+  setUniqueAttribute("ice-ufrag", iceUfrag);
 }
 
 
