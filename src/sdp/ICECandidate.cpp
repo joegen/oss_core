@@ -26,7 +26,12 @@ namespace SDP {
 
 
 
-ICECandidate::ICECandidate()
+ICECandidate::ICECandidate() :
+  _component(0),
+  _priority(0),
+  _port(0),
+  _rport(0),
+  _generation(0)
 {
 }
 
@@ -40,6 +45,9 @@ ICECandidate::ICECandidate(const ICECandidate& candidate)
   _type = candidate._type;
   _protocol = candidate._protocol;
   _generation = candidate._generation;
+  _tcpType = candidate._tcpType;
+  _raddr = candidate._raddr;
+  _rport = candidate._rport;
 }
 
 ICECandidate::ICECandidate(const std::string& candidate)
@@ -76,6 +84,9 @@ void ICECandidate::swap(ICECandidate& candidate)
   std::swap(_type, candidate._type);
   std::swap(_protocol, candidate._protocol);
   std::swap(_generation, candidate._generation);
+  std::swap(_tcpType, candidate._tcpType);
+  std::swap(_raddr, candidate._raddr);
+  std::swap(_rport, candidate._rport);
 }
 
 bool ICECandidate::parseCandidate(const std::string& candidate)
@@ -93,66 +104,97 @@ bool ICECandidate::parseCandidate(const std::string& candidate)
   // a=candidate:4667258690 2 udp 1686052606 49.146.254.61 46555 typ srflx raddr 192.168.0.11 rport 46555 generation 0
   
   std::vector<std::string> tokens = OSS::string_tokenize(candidate, " ");
-  if (tokens.size() == 10)
+  if (tokens.size() < 8)
   {
-    int index = 0;
-    for (std::vector<std::string>::iterator iter = tokens.begin(); iter != tokens.end(); iter++)
-    {
-      switch (index)
-      {
-        case 0:
-          //
-          // Identifier
-          //
-          _identifier = *iter;
-          break;
-        case 1:
-          //
-          // Component (1 for data 2 for control)
-          //
-          _component = OSS::string_to_number<unsigned int>(*iter);
-          break;
-        case 2:
-          //
-          // Protocol
-          //
-          _protocol = *iter;
-          break;
-        case 3:
-          //
-          // Priority
-          //
-          _priority = OSS::string_to_number<unsigned long>(*iter);
-          break;
-        case 4:
-          //
-          // IP Address
-          //
-          _ip = *iter;
-          break;
-        case 5:
-          //
-          // Port
-          //
-          _port = OSS::string_to_number<unsigned short>(*iter);
-          break;
-        case 7:
-          //
-          // Type
-          //
-          _type = *iter;
-          break;
-        case 9:
-          //
-          // Generation
-          //
-          _generation = OSS::string_to_number<unsigned int>(*iter);
-          break;
-
-      };
-      ++index;
-    }
+    return false;
   }
+  
+
+  //
+  // Parse the common elements
+  //
+  int index = 0;
+  std::vector<std::string>::iterator iter;
+  for (iter = tokens.begin(); iter != tokens.end() && index <= 5; iter++)
+  {
+    switch (index)
+    {
+      case 0:
+        //
+        // Identifier
+        //
+        _identifier = *iter;
+        break;
+      case 1:
+        //
+        // Component (1 for data 2 for control)
+        //
+        _component = OSS::string_to_number<unsigned int>(*iter);
+        break;
+      case 2:
+        //
+        // Protocol
+        //
+        _protocol = *iter;
+        break;
+      case 3:
+        //
+        // Priority
+        //
+        _priority = OSS::string_to_number<unsigned long>(*iter);
+        break;
+      case 4:
+        //
+        // IP Address
+        //
+        _ip = *iter;
+        break;
+      case 5:
+        //
+        // Port
+        //
+        _port = OSS::string_to_number<unsigned short>(*iter);
+        break;
+
+    };
+    ++index;
+  }
+  
+  std::string previousLabel;
+  bool isLabelIndex = true;
+  for (; iter != tokens.end(); iter++)
+  {
+    if (isLabelIndex)
+    {
+      previousLabel = *iter;
+    }
+    else
+    {
+      if (previousLabel == "typ")
+      {
+        _type = *iter;
+      }
+      else if (previousLabel == "generation")
+      {
+        _generation = OSS::string_to_number<unsigned int>(*iter);
+      }
+      else if (previousLabel == "tcptype")
+      {
+        _tcpType = *iter;
+      }
+      else if (previousLabel == "raddr")
+      {
+        _raddr = *iter;
+      }
+      else if (previousLabel == "rport")
+      {
+        _rport = OSS::string_to_number<unsigned short>(*iter);
+      }
+      
+    }
+    isLabelIndex = !isLabelIndex;
+  }
+
   
   return true;
 }

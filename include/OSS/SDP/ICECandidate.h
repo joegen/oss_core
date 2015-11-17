@@ -64,16 +64,28 @@ public:
   unsigned int getGeneration() const;
   void setGeneration(unsigned int generation);
   
+  const std::string& getTcpType() const;
+  void setTcpType(const std::string& tcpType);
+  
+  const std::string& getRAddr() const;
+  void setRAddr(const std::string& raddr);
+  
+  unsigned short getRPort() const;
+  void setRPort(unsigned short rport);
+  
 protected:
   void formatCandidate();
   unsigned int _component;
   unsigned long _priority;
   unsigned short _port;
+  unsigned short _rport;
   unsigned int _generation;
   std::string _identifier;
   std::string _ip;
   std::string _protocol;
   std::string _type;
+  std::string _tcpType;
+  std::string _raddr;
   std::string _data;
 };
 
@@ -162,6 +174,34 @@ inline void ICECandidate::setGeneration(unsigned int generation)
   _generation = generation;
 }
 
+inline const std::string& ICECandidate::getTcpType() const
+{
+  return _tcpType;
+}
+inline void ICECandidate::setTcpType(const std::string& tcpType)
+{
+  _tcpType = tcpType;
+}
+
+inline const std::string& ICECandidate::getRAddr() const
+{
+  return _raddr;
+}
+
+inline void ICECandidate::setRAddr(const std::string& raddr)
+{
+  _raddr = raddr;
+}
+
+inline unsigned short ICECandidate::getRPort() const
+{
+  return _rport;
+}
+
+inline void ICECandidate::setRPort(unsigned short rport)
+{
+  _rport = rport;
+}
 
 } } // OSS::SDP
 
