@@ -4,14 +4,16 @@
 #include "gtest/gtest.h"
 #include "OSS/OSS.h"
 #include "OSS/SDP/SDPSession.h"
-#include "OSS/SDP/ICECandidate"
+#include "OSS/SDP/ICECandidate.h"
 #include "OSS/Net/IPAddress.h"
+#include "OSS/SDP/ICECandidate.h"
 
 
 using OSS::SDP::SDPHeader;
 using OSS::SDP::SDPHeaderList;
 using OSS::SDP::SDPMedia;
 using OSS::SDP::SDPSession;
+using OSS::SDP::ICECandidate;
 
 TEST(ParserTest, test_sdp_parser)
 {
@@ -218,10 +220,58 @@ TEST(ParserTest, test_sdp_parser)
   vect candidates;
   ice->getICECandidates(candidates);
   
-  for (vect::iterator iter = candidates.begin(); iter != candidates.end(); iter++)
-  {
-    std::cout << *iter << std::endl;
-  }
-  
+ 
   ASSERT_EQ(6, candidates.size());
+  
+  // "a=candidate:3988902457 1 udp 2122260223 192.168.0.11 59858 typ host generation 0"
+  ICECandidate ice1(candidates[0]);
+  ASSERT_STREQ(ice1.getIdentifier().c_str(), "3988902457");
+  ASSERT_EQ(ice1.getComponent(), 1);
+  ASSERT_STREQ(ice1.getProtocol().c_str(), "udp");
+  ASSERT_EQ(ice1.getPriority(), 2122260223);
+  ASSERT_STREQ(ice1.getIpAddress().c_str(), "192.168.0.11");
+  ASSERT_EQ(ice1.getPort(), 59858);
+  ASSERT_STREQ(ice1.getType().c_str(), "host");
+  ASSERT_EQ(ice1.getGeneration(), 0);
+  
+  //"a=candidate:2739023561 1 tcp 1518280447 192.168.0.11 0 typ host tcptype active generation 0"
+  ICECandidate ice2(candidates[2]);
+  ASSERT_STREQ(ice2.getIdentifier().c_str(), "2739023561");
+  ASSERT_EQ(ice2.getComponent(), 1);
+  ASSERT_STREQ(ice2.getProtocol().c_str(), "tcp");
+  ASSERT_EQ(ice2.getPriority(), 1518280447);
+  ASSERT_STREQ(ice2.getIpAddress().c_str(), "192.168.0.11");
+  ASSERT_EQ(ice2.getPort(), 0);
+  ASSERT_STREQ(ice2.getType().c_str(), "host");
+  ASSERT_STREQ(ice2.getTcpType().c_str(), "active");
+  ASSERT_EQ(ice2.getGeneration(), 0);
+  
+  //"a=candidate:466725869 1 udp 1686052607 49.146.254.61 59858 typ srflx raddr 192.168.0.11 rport 59858 generation 0"
+  ICECandidate ice3(candidates[4]);
+  ASSERT_STREQ(ice3.getIdentifier().c_str(), "466725869");
+  ASSERT_EQ(ice3.getComponent(), 1);
+  ASSERT_STREQ(ice3.getProtocol().c_str(), "udp");
+  ASSERT_EQ(ice3.getPriority(), 1686052607);
+  ASSERT_STREQ(ice3.getIpAddress().c_str(), "49.146.254.61");
+  ASSERT_EQ(ice3.getPort(), 59858);
+  ASSERT_STREQ(ice3.getType().c_str(), "srflx");
+  ASSERT_STREQ(ice3.getRAddr().c_str(), "192.168.0.11");
+  ASSERT_EQ(ice3.getRPort(), 59858);
+  ASSERT_EQ(ice3.getGeneration(), 0);
+  
+  //
+  // Test copying by value
+  //
+  ICECandidate ice4;
+  ice4 = ice3;
+  ASSERT_STREQ(ice4.getIdentifier().c_str(), "466725869");
+  ASSERT_EQ(ice4.getComponent(), 1);
+  ASSERT_STREQ(ice4.getProtocol().c_str(), "udp");
+  ASSERT_EQ(ice4.getPriority(), 1686052607);
+  ASSERT_STREQ(ice4.getIpAddress().c_str(), "49.146.254.61");
+  ASSERT_EQ(ice4.getPort(), 59858);
+  ASSERT_STREQ(ice4.getType().c_str(), "srflx");
+  ASSERT_STREQ(ice4.getRAddr().c_str(), "192.168.0.11");
+  ASSERT_EQ(ice4.getRPort(), 59858);
+  ASSERT_EQ(ice4.getGeneration(), 0);
 }
