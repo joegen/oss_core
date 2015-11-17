@@ -54,6 +54,17 @@ public:
     MEDIA_RECEIVE_ONLY,
     MEDIA_INACTIVE
   };
+  
+  enum Profile
+  {
+    PROFILE_NONE,
+    PROFILE_AVP,
+    PROFILE_AVPF,
+    PROFILE_SAVP,
+    PROFILE_SAVPF,
+    PROFILE_DTLS_SAVP,
+    PROFILE_DTLS_SAVPF
+  };
 
   typedef boost::shared_ptr<SDPMedia> Ptr;
   typedef std::list<int> Payloads;
@@ -87,6 +98,12 @@ public:
 
   void setMediaType(Type type);
     /// Set the media type;
+  
+  Profile getRTPProfile() const;
+    /// Return the RTP profile (AVP, AVPF, SAVP, SAVPF)
+  
+  void setRTPProfile(Profile profile);
+    /// Set the RTP profile (AVP, AVPF, SAVP, SAVPF)
 
   const Payloads& getPayloads() const;
     /// Return the list of payload formats.
@@ -249,6 +266,7 @@ protected:
   Type _type;
   unsigned short _ptime;
   Direction _direction;
+  Profile _profile;
 };
 
 //

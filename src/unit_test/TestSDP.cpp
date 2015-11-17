@@ -216,6 +216,17 @@ TEST(ParserTest, test_sdp_parser)
   SDPSession iceSession(iceSDP.str().c_str());
   SDPMedia::Ptr ice = iceSession.getMedia(SDPMedia::TYPE_AUDIO);
   ASSERT_TRUE(ice);
+  
+  //
+  // Check RTP Profile
+  //
+  ASSERT_EQ(ice->getRTPProfile(), SDPMedia::PROFILE_DTLS_SAVPF);
+  ASSERT_TRUE(ice->front().value().find("UDP/TLS") != std::string::npos);
+  ice->setRTPProfile(SDPMedia::PROFILE_SAVPF);
+  ASSERT_TRUE(ice->front().value().find("UDP/TLS") == std::string::npos);
+  ice->setRTPProfile(SDPMedia::PROFILE_DTLS_SAVPF);
+  ASSERT_TRUE(ice->front().value().find("UDP/TLS") != std::string::npos);
+  
   typedef std::vector<std::string> vect;
   vect candidates;
   ice->getICECandidates(candidates);
