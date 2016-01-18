@@ -55,7 +55,7 @@ public:
   typedef boost::weak_ptr<SIPTransaction> WeakPtr;
   typedef boost::shared_ptr<OSS::Exception> Error;
   typedef boost::function<void(const SIPTransaction::Error&, const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> Callback;
-	typedef boost::function<void()> TerminateCallback;
+	typedef boost::function<void(const SIPTransaction::Ptr&)> TerminateCallback;
   typedef boost::function<void(const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> RequestCallback;
   typedef std::map<std::string, SIPTransaction::Ptr> Branches;
   enum Type

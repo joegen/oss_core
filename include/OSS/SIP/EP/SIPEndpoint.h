@@ -26,43 +26,78 @@
 #include "OSS/SIP/SIPStack.h"
 
 
+#define TCP_PORT_BASE 20000
+#define TCP_PORT_MAX  30000
+#define DEFAULT_SIP_PORT 5060
+#define DEFAULT_SIP_TLS_PORT 5061
+#define DEFAULT_SIP_WS_PORT 5062
+
+
 namespace OSS {
 namespace SIP {
 namespace EP {
   
   
+  
+  
 class SIPEndpoint : boost::noncopyable
 {
 public:
-  enum TransportType
+  
+  enum EventType
   {
-    TYPE_UDP,
-    TYPE_TCP,
-    TYPE_TLS,
-    TYPE_WS,
-    TYPE_WSS,
-    NUM_TYPE
+    IncomingRequest,
+    IncomingResponse,
+    TransactionError,
+    TransactionTermination,
+    Ackfor2xx,
+    EndpointTerminated
   };
+  
+  struct EndpointEvent
+  {
+    EventType eventType;
+    SIPMessage::Ptr sipRequest; 
+    SIPTransportSession::Ptr transportSession;
+    SIPTransaction::Ptr transaction;
+    SIPTransaction::Error transactionError;
+  };
+  
+  typedef boost::shared_ptr<EndpointEvent> EndpointEventPtr;
+  typedef BlockingQueue<EndpointEventPtr> EndpointEventQueue;
+          
   
   SIPEndpoint();
   
   ~SIPEndpoint();
         
-  bool addTransport(TransportType transportType, unsigned short port);
-  bool addTransport(TransportType transportType, const std::string& address, unsigned short port);
-  bool addTransport(TransportType transportType, const OSS::Net::IPAddress& address);
-  // Add transport to the endpoint.  This must be done
-  // prior to calling run();)
-  //  
+  bool addTransport(const OSS::Net::IPAddress& address);
+  /// Add transport to the endpoint.  This must be done
+  /// prior to calling run();)
+  ///  
   
   virtual bool runEndpoint();
-  // Initialize the endpoint and start processing incoming SIP messages.
-  // This function will return right away.  If it returns false,
-  // something went wrong with initialization.  Consult logs.
-  //
+  /// Initialize the endpoint and start processing incoming SIP messages.
+  /// This function will return right away.  If it returns false,
+  /// something went wrong with initialization.  Consult logs.
+  ///
   
   virtual void stopEndpoint();
   // Stop processing incoming messages and deinitialize the endpoint.
+  
+  void sendEndpointRequest(
+    const SIPMessage::Ptr& pRequest,
+    const OSS::Net::IPAddress& localAddress,
+    const OSS::Net::IPAddress& remoteAddress);
+  /// Send a SIP request to the specified destination
+
+  
+  void handleEndpointResponse(const SIPTransaction::Error& e, const SIPMessage::Ptr& pMsg, const SIPTransportSession::Ptr& pTransport, const SIPTransaction::Ptr& pTransaction);
+  /// Handle an incoming response.
+
+  void onTransactionTerminated(const SIPTransaction::Ptr& pTransaction);
+  /// Callback for transaction termination
+  
   
   SIPStack& stack();
     /// Return a reference to the SIP stack
@@ -94,6 +129,9 @@ public:
     OSS::Net::IPAddress& internalIp) const;
     /// Return the internal IP if the host:port for the external IP is known
   
+  void receiveEndpointEvent(EndpointEventPtr& ev);
+    /// receive a new event
+  
 protected:
   virtual void handleRequest(
     const OSS::SIP::SIPMessage::Ptr& pMsg, 
@@ -109,6 +147,7 @@ protected:
 protected:
   SIPStack _stack;
   std::string _userAgentName;
+  EndpointEventQueue _endpointEventQueue;
 };
 
 //

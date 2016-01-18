@@ -36,14 +36,16 @@ IPAddress::IPAddress() :
   _address(),
   _port(0),
   _cidr(0),
-  _isVirtual(false)
+  _isVirtual(false),
+  _protocol(UnknownTransport)
 {
 }
 
 IPAddress::IPAddress(const std::string& address) :
   _port(0),
   _cidr(0),
-  _isVirtual(false)
+  _isVirtual(false),
+  _protocol(UnknownTransport)
 {
   try
   {
@@ -59,7 +61,8 @@ IPAddress::IPAddress(unsigned long address) :
   _address(address_v4(address)),
   _port(0),
   _cidr(0),
-  _isVirtual(false)
+  _isVirtual(false),
+  _protocol(UnknownTransport)
 {
 }
 
@@ -67,7 +70,8 @@ IPAddress::IPAddress(const boost::asio::ip::address_v4& address) :
   _address(address),
   _port(0),
   _cidr(0),
-  _isVirtual(false)
+  _isVirtual(false),
+  _protocol(UnknownTransport)
 {
 }
 
@@ -75,7 +79,8 @@ IPAddress::IPAddress(const boost::asio::ip::address_v6& address) :
   _address(address),
   _port(0),
   _cidr(0),
-  _isVirtual(false)
+  _isVirtual(false),
+  _protocol(UnknownTransport)
 {
 }
 
@@ -86,11 +91,13 @@ IPAddress::IPAddress(const IPAddress& address)
   _port = address._port;
   _cidr = address._cidr;
   _isVirtual = address._isVirtual;
-
+  _protocol = address._protocol;
 }
 
 IPAddress::IPAddress(const std::string& address, unsigned short port) :
-  _cidr(0)
+  _cidr(0),
+  _isVirtual(false),
+  _protocol(UnknownTransport)
 {
   try
   {
@@ -112,6 +119,7 @@ void IPAddress::swap(IPAddress& address)
   std::swap(_port, address._port);
   std::swap(_cidr, address._cidr);
   std::swap(_isVirtual, address._isVirtual);
+  std::swap(_protocol, address._protocol);
 }
 
 bool IPAddress::isPrivate()

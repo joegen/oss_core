@@ -488,7 +488,9 @@ void SIPTransaction::terminate()
     }
     
     if (_terminateCallback)
-      _terminateCallback();
+    {
+      _terminateCallback(shared_from_this());
+    }
 
     _owner->removeTransaction(_id);
   }

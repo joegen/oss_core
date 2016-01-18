@@ -33,6 +33,16 @@ class OSS_API IPAddress
   /// This is a helper class on top of the asio address_v4 and address_v6 objects
 {
 public:
+  enum Protocol
+  {
+    UDP,
+    TCP,
+    TLS,
+    WS,
+    WSS,
+    UnknownTransport
+  };
+  
   IPAddress();
     /// Default constructor
 
@@ -132,6 +142,12 @@ public:
     /// Return the external address.  This is a custom property used
     /// by applications that would want to retain a map between an internal
     /// and external addresses in cases of servers deplyed within NAT
+  
+  Protocol getProtocol() const;
+    /// Returns the protocol.  Default is UnknownTransport.
+  
+  void setProtocol(Protocol protocol);
+    /// Set the transport
 
   bool isPrivate();
     /// Returns true if the IP address is of private type.  eg 192.168.x.x
@@ -168,6 +184,7 @@ protected:
   unsigned short _port;
   unsigned short _cidr;
   bool _isVirtual;
+  Protocol _protocol;
 };
 
 //
@@ -360,7 +377,16 @@ inline void IPAddress::setVirtual(bool isVirtual)
 {
   _isVirtual = isVirtual;
 }
-    /// Flag this IP address as virtual
+
+inline IPAddress::Protocol IPAddress::getProtocol() const\
+{
+  return _protocol;
+}
+  
+inline void IPAddress::setProtocol(Protocol protocol)
+{
+  _protocol = protocol;
+}
 
 } } // OSS::Net
 
