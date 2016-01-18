@@ -34,13 +34,10 @@ namespace B2BUA {
 
 SIPB2BTransactionManager::SIPB2BTransactionManager(int minThreadcount, int maxThreadCount) :
   _threadPool(minThreadcount, maxThreadCount),
-  _stack(),
   _useSourceAddressForResponses(false),
   _pDefaultHandler(0),
   _pKeyStore(0)
 {
-  _stack.setRequestHandler(boost::bind(&SIPB2BTransactionManager::handleRequest, this, _1, _2, _3));
-  _stack.setAckFor2xxTransactionHandler(boost::bind(&SIPB2BTransactionManager::handleAckFor2xxTransaction, this, _1, _2));
 }
 
 SIPB2BTransactionManager::~SIPB2BTransactionManager()

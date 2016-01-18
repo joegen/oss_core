@@ -235,6 +235,9 @@ public:
     /// prior to processing of the rest of the callback parameters.
     /// Normal cause of errors are transaction timeouts.
     ///
+    /// The _terminateCallback functor can be provided if the upper
+    /// layer wants to be notified when the client transaction terminates
+    ///
     /// This function may throw a SIPException if the request cannot be processed.
     ///
 

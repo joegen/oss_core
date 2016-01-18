@@ -27,12 +27,10 @@ namespace SIP {
 namespace EP {
   
   
-using namespace OSS::SIP::B2BUA;
-  
-SIPEndpoint::SIPEndpoint() :
-  _transactionManager(2, 1024)
+SIPEndpoint::SIPEndpoint()
 {
-  _transactionManager.addUserAgentHandler(this);
+  _stack.setRequestHandler(boost::bind(&SIPEndpoint::handleRequest, this, _1, _2, _3));
+  _stack.setAckFor2xxTransactionHandler(boost::bind(&SIPEndpoint::handleAckFor2xxTransaction, this, _1, _2));
 }
 
 SIPEndpoint::~SIPEndpoint()
@@ -54,30 +52,40 @@ bool SIPEndpoint::addTransport(TransportType transportType, const OSS::Net::IPAd
   return false;
 }
 
-bool SIPEndpoint::run()
+bool SIPEndpoint::runEndpoint()
 {
   try 
   {
-    _transactionManager.stack().run();
+    _stack.run();
   }
   catch(...)
   {
     return false;
   }
+  
+  return true;
 }
 
-void SIPEndpoint::stop()
+void SIPEndpoint::stopEndpoint()
 {
-  _transactionManager.stack().stop();
+  _stack.stop();
 }
 
-SIPB2BUserAgentHandler::Action SIPEndpoint::handleRequest(
-  const OSS::SIP::SIPMessage::Ptr& pMsg,
-  const OSS::SIP::SIPTransportSession::Ptr& pTransport,
-  const OSS::SIP::SIPTransaction::Ptr& pTransaction)
+void SIPEndpoint::handleRequest(
+    const OSS::SIP::SIPMessage::Ptr& pMsg, 
+    const OSS::SIP::SIPTransportSession::Ptr& pTransport, 
+    const OSS::SIP::SIPTransaction::Ptr& pTransaction)
 {
-  return OSS::SIP::B2BUA::SIPB2BUserAgentHandler::Handled;
+    
 }
+
+ void SIPEndpoint::handleAckFor2xxTransaction(
+    const OSS::SIP::SIPMessage::Ptr& pMsg,
+    const OSS::SIP::SIPTransportSession::Ptr& pTransport)
+ {
+     
+ }
+
 
 
 } } } // OSS::SIP::EP
