@@ -97,6 +97,7 @@ struct Config
   std::string carpInterface;
   std::string carpUpScript;
   std::string carpDownScript;
+  bool rewriteCallId;
   
   Config() : 
     port(5060), 
@@ -104,7 +105,8 @@ struct Config
     wsPort(5062),
     targetType(UNKNOWN), 
     allowRelay(false),
-    targetInterfacePort(0)
+    targetInterfacePort(0),
+    rewriteCallId(false)
     {
     }
 };
@@ -393,6 +395,21 @@ public:
         pRequest->setProperty(OSS::PropertyMap::PROP_InterfacePort, OSS::string_from_number<int>(_config.targetInterfacePort));
       }
       
+      //
+      // Check if rewrite call-id is set.
+      // The default behavior is to use the same call-id
+      // for both inbound and outbound legs
+      //
+      
+      if (_config.rewriteCallId && pRequest->isRequest("INVITE"))
+      {
+        const std::string& callId = pRequest->hdrGet(OSS::SIP::HDR_CALL_ID);
+        unsigned int hash = OSS::string_to_js_hash(callId);
+        std::ostringstream strm;
+        strm << hash << "-" << OSS::string_create_uuid();
+        pRequest->hdrSet(OSS::SIP::HDR_CALL_ID, strm.str());
+      }
+      
       SIPRoute::msgAddRoute(pRequest.get(), route.str());
     }
 
@@ -672,6 +689,8 @@ void prepareTargetInfo(Config& config, ServiceOptions& options)
   options.getOption("reg-uri", config.regUri);
   options.getOption("reg-user", config.regUser);
   options.getOption("reg-pass", config.regPassword);
+  
+  config.rewriteCallId = options.hasOption("rewrite-call-id");
 }
 
 bool prepareOptions(ServiceOptions& options)
@@ -693,6 +712,7 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionInt('R', "rtp-port-low", "Lowest port used for RTP");
   options.addOptionInt('H', "rtp-port-high", "Highest port used for RTP");
   options.addOptionString('J', "route-script", "Path for the route script");
+  options.addOptionFlag("rewrite-call-id", "Use a different call-id for outbound legs");
   options.addOptionString("tls-cert", "Certificate to be used by this server.  File should be in PEM format.");
   options.addOptionString("tls-private-key", "Private Key to be used by this server.  File should be in PEM format.");
   options.addOptionString("tls-peer-ca", "Peer CA File. If the remote peer this server is connecting to uses a self signed certificate, this file is used to verify authenticity of the peer identity.");
@@ -703,7 +723,7 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionString("reg-pass", "Password credential to be used for registration");
   options.addOptionString("carp-virtual-ip", "Virtual IP assigned for CARP. Take note that this requires root permissions to work.");
   options.addOptionString("carp-interface", "Interface where the virtual IP will be registered.  Example: eth0");
-  options.addOptionString("carp-up-script", "Script called tto bring up the virtual interface");
+  options.addOptionString("carp-up-script", "Script called to bring up the virtual interface");
   options.addOptionString("carp-down-script", "Script called to bring up the virtual interface");
   
 
