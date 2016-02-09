@@ -396,18 +396,16 @@ void SIPStreamedConnection::handleRead(const boost::system::error_code& e, std::
   }
   else
   {
-    OSS_LOG_WARNING("SIPStreamedConnection::handleRead() Exception " << e.message());
     if (++_readExceptionCount < 5 && e != boost::asio::error::eof)
     {
       //
       // Try reading again until exception reaches 5 iterations
       //
-      
       readSome();
     }
     else
     {
-      OSS_LOG_ERROR("SIPStreamedConnection::handleRead has reached maximum exception count or error is final.  Bailing out.");
+      OSS_LOG_WARNING("SIPStreamedConnection::handleRead() Exception " << e.message());
       boost::system::error_code ignored_ec;
       _pTcpSocket->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
       _connectionManager.stop(shared_from_this());

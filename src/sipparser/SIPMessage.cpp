@@ -953,11 +953,54 @@ bool SIPMessage::read(std::istream& strm, std::size_t& totalRead)
 boost::tuple<boost::tribool, const char*> SIPMessage::consume(const char* begin, const char* end)
 {
   _finalized = false;
+  int index = 0;
   while (begin != end)
   {
-    boost::tribool result = consumeOne(*begin++);
+    char input = *begin++;
+    boost::tribool result = consumeOne(input);
     if (result || !result)
+    {
+      if (!result)
+      {
+        std::string state;
+        switch (_consumeState)
+        {
+          case IDLE:
+            state = "IDLE";
+            break;
+          case START_LINE_PARSE:
+            state = "START_LINE_PARSE";
+            break;
+          case EXPECTING_NEW_LINE_1:
+            state = "EXPECTING_NEW_LINE_1";
+            break;
+          case HEADER_LINE_START:
+            state = "HEADER_LINE_START";
+            break;
+          case HEADER_LWS:
+            state = "HEADER_LWS";
+            break;
+          case HEADER_NAME:
+            state = "HEADER_NAME";
+            break;
+          case HEADER_VALUE:
+            state = "HEADER_VALUE";
+            break;
+          case EXPECTING_NEW_LINE_2:
+            state = "EXPECTING_NEW_LINE_2";
+            break;
+          case EXPECTING_NEW_LINE_3:
+            state = "EXPECTING_NEW_LINE_3";
+            break;
+          case EXPECTING_BODY:
+            state = "EXPECTING_BODY";
+            break;
+        }
+        OSS_LOG_ERROR("SIPMessage::consume - Invalid char 0x" << std::setfill('0') << std::hex << std::setw(2) << (int)input << std::dec << " at index " << index << " state==" << state);
+      }
       return boost::make_tuple(result, begin);
+    }
+    index++;
   }
   boost::tribool result = boost::indeterminate;
   return boost::make_tuple(result, begin);
