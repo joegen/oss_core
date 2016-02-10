@@ -39,6 +39,9 @@ public:
   
   SIPListener(SIPTransportService* pTransportService, const std::string& address, const std::string& port);
     /// Construct the server to listen on the specified TCP address and port.
+  
+  SIPListener(SIPTransportService* pTransportService, const std::string& address, const std::string& port, const std::string& alias);
+    /// Construct the server to listen on the specified TCP address and port.
 
   virtual ~SIPListener();
     /// Destroys the server.
@@ -105,7 +108,9 @@ public:
   bool hasStarted() const;
     /// Returns true if the listener has started accepting connections
   
+  void setTransportAlias(const std::string& alias);
   
+  const std::string& getTransportAlias() const;
   
 protected:
   SIPListener(const SIPListener&);
@@ -116,6 +121,7 @@ protected:
   std::string _externalAddress;
   SubNets _subNets;
 
+  std::string _alias;
   std::string _address;
   std::string _port;
   bool _isVirtual;
@@ -194,6 +200,16 @@ inline void SIPListener::setAddress(const std::string& address)
 inline void SIPListener::setPort(const std::string& port)
 {
   _port = port;
+}
+
+inline void SIPListener::setTransportAlias(const std::string& alias)
+{
+  _alias = alias;
+}
+  
+inline const std::string& SIPListener::getTransportAlias() const
+{
+  return _alias;
 }
 
 } } // OSS::SIP
