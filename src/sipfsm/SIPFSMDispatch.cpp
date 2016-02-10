@@ -26,6 +26,8 @@
 
 namespace OSS {
 namespace SIP {
+  
+#define MIN_DATAGRAM_SIZE 10
 
 
 SIPFSMDispatch::SIPFSMDispatch() :
@@ -55,11 +57,14 @@ void SIPFSMDispatch::deinitialize()
 
 void SIPFSMDispatch::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport)
 {
-  if (!pTransport->isEndpoint() && pTransport->getLastReadCount() < 10)
+  if (!pTransport->isEndpoint() && pTransport->getLastReadCount() < MIN_DATAGRAM_SIZE && !pTransport->isReliableTransport())
   {
     //
-    // message is too short to be a SIP Message
-    // Bailing out
+    // datagram is too short to be a SIP Message
+    // Bailing out.  Take note that streamed connection
+    // can split SIP messages to smaller frames
+    // and the last frame can be smaller than MIN_DATAGRAM_SIZE
+    // so we do not impose a limit for streams
     //
     return;
   }
