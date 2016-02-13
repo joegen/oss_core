@@ -174,6 +174,9 @@ public:
   
   std::size_t getSessionCount(const std::string& address) const;
     /// Return the number of sessions terminating to a particular address
+  
+  std::size_t getSessionCount() const;
+    /// Return the total number of active session sessions
 
   bool persistStateFiles() const;
     /// If this flag is true, state files for RTP will be stored in the diretory
@@ -280,6 +283,13 @@ inline OSS::mutex_critic_sec& RTPProxyManager::sessionListMutex()
 inline RTPProxySessionList& RTPProxyManager::sessionList()
 {
   return _sessionList;
+}
+
+
+inline std::size_t RTPProxyManager::getSessionCount() const
+{
+  OSS::mutex_critic_sec_lock lock(_sessionListMutex);
+  return _sessionList.size();
 }
 
 inline bool RTPProxyManager::persistStateFiles() const
