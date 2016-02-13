@@ -98,6 +98,8 @@ struct Config
   std::string carpUpScript;
   std::string carpDownScript;
   bool rewriteCallId;
+  int testLoopbackIterationCount;
+  std::string testLoopbackTargetUri;
   
   Config() : 
     port(5060), 
@@ -106,7 +108,8 @@ struct Config
     targetType(UNKNOWN), 
     allowRelay(false),
     targetInterfacePort(0),
-    rewriteCallId(false)
+    rewriteCallId(false),
+    testLoopbackIterationCount(0)
     {
     }
 };
@@ -369,16 +372,45 @@ public:
     }
     else if (type == SIPB2BScriptableHandler::TYPE_ROUTE)
     {
+      std::string target = _config.target;
+      SIPURI testLoopbackUri;
+      if (!_config.testLoopbackTargetUri.empty())
+      {
+        testLoopbackUri = _config.testLoopbackTargetUri;
+      }
+      //
+      // Check if loopback mode is in effect
+      //
+      if (_config.testLoopbackIterationCount && !_config.testLoopbackTargetUri.empty())
+      {
+        if (this->rtpProxy().getSessionCount() > _config.testLoopbackIterationCount)
+        {
+          //
+          // Iteration count is reached.  retarget the request to the final destination
+          //
+          target = testLoopbackUri.getHostPort();
+          SIPRequestLine rline(pRequest->startLine());
+          rline.setURI(testLoopbackUri);
+          pRequest->startLine() = rline.data();
+        }
+      }
+      
       pRequest->setProperty(OSS::PropertyMap::PROP_RouteAction, "accept");
       std::ostringstream route;
-      std::vector<std::string> tokens = OSS::string_tokenize(_config.target, ":");
-      if (tokens.size() == 2)
+      std::vector<std::string> tokens = OSS::string_tokenize(target, ":");
+      if (tokens.size() == 1)
+      {
+        pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, target);
+        pRequest->setProperty(OSS::PropertyMap::PROP_TargetPort, "5060");
+        route << "sip:" << target << ":" << "5060" << ";lr";
+      }
+      else if (tokens.size() == 2)
       {
         pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, tokens[0]);
         pRequest->setProperty(OSS::PropertyMap::PROP_TargetPort, tokens[1]);
         route << "sip:" << tokens[0] << ":" << tokens[1] << ";lr";
       }
-      else
+      else if (tokens.size() == 3)
       {
         pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, _config.target);
         route << "sip:" << _config.target << ";lr";
@@ -400,7 +432,6 @@ public:
       // The default behavior is to use the same call-id
       // for both inbound and outbound legs
       //
-      
       if (_config.rewriteCallId && pRequest->isRequest("INVITE"))
       {
         const std::string& callId = pRequest->hdrGet(OSS::SIP::HDR_CALL_ID);
@@ -690,7 +721,24 @@ void prepareTargetInfo(Config& config, ServiceOptions& options)
   options.getOption("reg-user", config.regUser);
   options.getOption("reg-pass", config.regPassword);
   
+  //
+  // Check if we need to rewrite the call-id.
+  // The default is to reuse the call-id
+  // sent by the caller
+  //
   config.rewriteCallId = options.hasOption("rewrite-call-id");
+  
+  //
+  // Check if loopback test is enabled
+  //
+  if (options.hasOption("test-loopback-target-uri") && options.hasOption("test-loopback-iteration-count"))
+  {
+    options.getOption("test-loopback-iteration-count", config.testLoopbackIterationCount);
+    options.getOption("test-loopback-target-uri", config.testLoopbackTargetUri);
+    OSS_LOG_INFO("Loop Back Test Enabled:" 
+      << " iteration-count=" << config.testLoopbackIterationCount 
+      << " target-uri=" << config.testLoopbackTargetUri);
+  }
 }
 
 bool prepareOptions(ServiceOptions& options)
@@ -713,6 +761,8 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionInt('H', "rtp-port-high", "Highest port used for RTP");
   options.addOptionString('J', "route-script", "Path for the route script");
   options.addOptionFlag("rewrite-call-id", "Use a different call-id for outbound legs");
+  options.addOptionFlag("test-loopback-iteration-count", "Emulate traffic by looping the call back to the sender");
+  options.addOptionFlag("test-loopback-target-uri", "Final URI where the loopback will be sent after the designated iteration has completed");
   options.addOptionString("tls-cert", "Certificate to be used by this server.  File should be in PEM format.");
   options.addOptionString("tls-private-key", "Private Key to be used by this server.  File should be in PEM format.");
   options.addOptionString("tls-peer-ca", "Peer CA File. If the remote peer this server is connecting to uses a self signed certificate, this file is used to verify authenticity of the peer identity.");
@@ -794,6 +844,11 @@ int main(int argc, char** argv)
       
       ua.rtpProxy().setUdpPortBase(portLow);
       ua.rtpProxy().setUdpPortMax(portHigh);
+      
+      if (config.testLoopbackIterationCount && !config.testLoopbackTargetUri.empty())
+      {
+        ua.rtpProxy().alwaysProxyMedia(true);
+      }
     }
 
 #if ENABLE_TURN
