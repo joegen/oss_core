@@ -80,6 +80,9 @@ public:
   static bool setMethod(std::string& rline, const char* method);
     /// Set the method token of a valid startline string
 
+  bool setURI(const SIPURI& uri);
+    /// Set the URI token
+  
   bool setURI(const char* uri);
     /// Set the URI token
 
@@ -120,6 +123,11 @@ inline bool SIPRequestLine::setMethod(const char* method)
 inline bool SIPRequestLine::setURI(const char* uri)
 {
   return SIPRequestLine::setURI(_data, uri);
+}
+
+inline bool SIPRequestLine::setURI(const SIPURI& uri)
+{
+  return setURI(uri.data().c_str());
 }
 
 inline bool SIPRequestLine::setVersion(const char* version)
