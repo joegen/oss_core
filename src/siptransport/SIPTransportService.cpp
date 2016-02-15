@@ -408,7 +408,7 @@ bool SIPTransportService::addEndpoint(EndpointListener* pEndpoint)
   
   return true;
 }
-void SIPTransportService::addUDPTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp)
+void SIPTransportService::addUDPTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp, const std::string& alias)
 {
   OSS_LOG_INFO("Adding UDP SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
@@ -421,6 +421,12 @@ void SIPTransportService::addUDPTransport(const std::string& ip, const std::stri
   udpListener->setExternalAddress(externalIp);
   udpListener->subNets() = subnets;
   _udpListeners[key] = udpListener;
+  
+  if (!alias.empty())
+  {
+    udpListener->setTransportAlias(alias);
+    _udpListeners[alias] = udpListener;
+  }
 
   boost::system::error_code ec;
   boost::asio::ip::address whiteList = boost::asio::ip::address::from_string(ip, ec);
@@ -430,7 +436,7 @@ void SIPTransportService::addUDPTransport(const std::string& ip, const std::stri
   OSS_LOG_INFO("UDP SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
 }
 
-void SIPTransportService::addTCPTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp)
+void SIPTransportService::addTCPTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp, const std::string& alias)
 {
   OSS_LOG_INFO("Adding TCP SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
@@ -443,6 +449,13 @@ void SIPTransportService::addTCPTransport(const std::string& ip, const std::stri
   pTcpListener->setExternalAddress(externalIp);
   pTcpListener->subNets() = subnets;
   _tcpListeners[key] = pTcpListener;
+  
+  if (!alias.empty())
+  {
+    pTcpListener->setTransportAlias(alias);
+    _tcpListeners[alias] = pTcpListener;
+  }
+  
   boost::system::error_code ec;
   boost::asio::ip::address whiteList = boost::asio::ip::address::from_string(ip, ec);
   if (!ec)
@@ -450,7 +463,7 @@ void SIPTransportService::addTCPTransport(const std::string& ip, const std::stri
   OSS_LOG_INFO("TCP SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
 }
 
-void SIPTransportService::addWSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp)
+void SIPTransportService::addWSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp, const std::string& alias)
 {
   OSS_LOG_INFO("Adding WebSocket SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
@@ -463,6 +476,13 @@ void SIPTransportService::addWSTransport(const std::string& ip, const std::strin
   pWsListener->setExternalAddress(externalIp);
   pWsListener->subNets() = subnets;
   _wsListeners[key] = pWsListener;
+  
+  if (!alias.empty())
+  {
+    pWsListener->setTransportAlias(alias);
+    _wsListeners[alias] = pWsListener;
+  }
+  
   boost::system::error_code ec;
   boost::asio::ip::address whiteList = boost::asio::ip::address::from_string(ip, ec);
   if (!ec)
@@ -470,7 +490,7 @@ void SIPTransportService::addWSTransport(const std::string& ip, const std::strin
   OSS_LOG_INFO("WebSocket SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
 }
 
-void SIPTransportService::addTLSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp)
+void SIPTransportService::addTLSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp, const std::string& alias)
 {
   OSS_LOG_INFO("Adding TLS SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
@@ -483,6 +503,13 @@ void SIPTransportService::addTLSTransport(const std::string& ip, const std::stri
   pTlsListener->setExternalAddress(externalIp);
   pTlsListener->subNets() = subnets;
   _tlsListeners[key] = pTlsListener;
+  
+  if (!alias.empty())
+  {
+    pTlsListener->setTransportAlias(alias);
+    _tlsListeners[alias] = pTlsListener;
+  }
+  
   boost::system::error_code ec;
   boost::asio::ip::address whiteList = boost::asio::ip::address::from_string(ip, ec);
   if (!ec)
@@ -786,6 +813,46 @@ std::list<std::string> SIPTransportService::resolve(
     endpoint_iterator++;
   }
   return results;
+}
+
+SIPUDPListener::Ptr SIPTransportService::findUDPListener(const std::string& key) const
+{
+  UDPListeners::const_iterator iter = _udpListeners.find(key);
+  if (iter != _udpListeners.end())
+  {
+    return iter->second;
+  }
+  return SIPUDPListener::Ptr();
+}
+  
+SIPTCPListener::Ptr SIPTransportService::findTCPListener(const std::string& key) const
+{
+  TCPListeners::const_iterator iter = _tcpListeners.find(key);
+  if (iter != _tcpListeners.end())
+  {
+    return iter->second;
+  }
+  return SIPTCPListener::Ptr();
+}
+  
+SIPWebSocketListener::Ptr SIPTransportService::findWSListener(const std::string& key) const
+{
+  WSListeners::const_iterator iter = _wsListeners.find(key);
+  if (iter != _wsListeners.end())
+  {
+    return iter->second;
+  }
+  return SIPWebSocketListener::Ptr();
+}
+  
+SIPTLSListener::Ptr SIPTransportService::findTLSListener(const std::string& key) const
+{
+  TLSListeners::const_iterator iter = _tlsListeners.find(key);
+  if (iter != _tlsListeners.end())
+  {
+    return iter->second;
+  }
+  return SIPTLSListener::Ptr();
 }
 
 bool SIPTransportService::getExternalAddress(

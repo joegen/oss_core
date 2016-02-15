@@ -91,29 +91,45 @@ public:
   void handleStop();
     /// Handle a request to stop the transport service.
 
-  void addUDPTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp = false);
+  void addUDPTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp = false, const std::string& alias = std::string());
     /// Add a new UDP transport bound to the ip address and port.
     ///
     /// If the transport already exists, this function will throw
     /// a SIPDuplicateTransport exception
 
-  void addTCPTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp = false);
+  void addTCPTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp = false, const std::string& alias = std::string());
     /// Add a new TCP transport bound to the ip address and port.
     ///
     /// If the transport already exists, this function will throw
     /// a SIPDuplicateTransport exception
 
-  void addWSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp = false);
+  void addWSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp = false, const std::string& alias = std::string());
     /// Add a new WebSocket transport bound to the ip address and port.
     ///
     /// If the transport already exists, this function will throw
     /// a SIPDuplicateTransport exception
 
-  void addTLSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp = false);
+  void addTLSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp = false, const std::string& alias = std::string());
     /// Add a new TLS transport bound to the ip address and port.
     ///
     /// If the transport already exists, this function will throw
     /// a SIPDuplicateTransport exception
+  
+  SIPUDPListener::Ptr findUDPListener(const std::string& key) const;
+    /// Get the transport pointer using either the alais or ip:port as key
+    ///
+  
+  SIPTCPListener::Ptr findTCPListener(const std::string& key) const;
+    /// Get the transport pointer using either the alais or ip:port as key
+    ///
+  
+  SIPWebSocketListener::Ptr findWSListener(const std::string& key) const;
+    /// Get the transport pointer using either the alais or ip:port as key
+    ///
+  
+  SIPTLSListener::Ptr findTLSListener(const std::string& key) const;
+    /// Get the transport pointer using either the alais or ip:port as key
+    ///
   
   bool addEndpoint(EndpointListener* pEndpoint);
     /// Add and endpoint

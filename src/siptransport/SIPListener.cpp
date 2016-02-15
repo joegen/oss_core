@@ -42,6 +42,25 @@ SIPListener::SIPListener(
     _pIoService = (&(_pTransportService->ioService()));
 }
 
+SIPListener::SIPListener(
+  SIPTransportService* pTransportService,
+  const std::string& address,
+  const std::string& port,
+  const std::string& alias) :
+    _pIoService(0),
+    _pTransportService(pTransportService),
+    _address(address),
+    _port(port),
+    _isVirtual(false),
+    _hasStarted(false),
+    _isEndpoint(false),
+    _alias(alias)
+{
+  if (_pTransportService)
+    _pIoService = (&(_pTransportService->ioService()));
+}
+
+
 SIPListener::~SIPListener()
 {
 }
