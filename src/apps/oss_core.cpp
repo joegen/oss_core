@@ -207,6 +207,7 @@ public:
         listener.externalAddress() = _config.externalAddress;
         listener.setPort(config.port);
         listener.setVirtual(true);
+        listener.alias() = "external";
         stack().udpListeners().push_back(listener);
         stack().tcpListeners().push_back(listener);
         listener.setPort(config.wsPort);
@@ -221,30 +222,16 @@ public:
     listener = _config.address;
     listener.externalAddress() = _config.externalAddress;
     listener.setPort(config.port);
+    listener.alias() = "external";
     stack().udpListeners().push_back(listener);
     stack().tcpListeners().push_back(listener);
-    
-    //
-    // Initialize the local registration agent
-    //
-    std::ostringstream regRoute;
-    regRoute << "sip:" << _config.address << ":" << _config.port;
-    startLocalRegistrationAgent("oss-core", regRoute.str(), local_reg_exit_handler);
-    
-    if (!_config.targetInterface.empty() && _config.targetInterfacePort)
-    {
-      OSS::Net::IPAddress targetListener;
-      targetListener = _config.targetInterface;
-      targetListener.externalAddress() = _config.targetExternalAddress;
-      targetListener.setPort(_config.targetInterfacePort);
-      stack().udpListeners().push_back(targetListener);
-      stack().tcpListeners().push_back(targetListener);
-    }
+    stack().transport().defaultListenerAddress() = listener;
 
     OSS::Net::IPAddress wsListener;
     wsListener = _config.address;
     wsListener.externalAddress() = _config.externalAddress;
     wsListener.setPort(config.wsPort);
+    wsListener.alias() = "external";
     stack().wsListeners().push_back(wsListener);
     
     //
@@ -262,13 +249,34 @@ public:
         tlsListener = _config.address;
         tlsListener.externalAddress() = _config.externalAddress;
         tlsListener.setPort(config.tlsPort);
+        tlsListener.alias() = "external";
         stack().tlsListeners().push_back(tlsListener);    
         OSS_LOG_INFO("TLS Transport initialized");
       }
     }
     
 
-    stack().transport().defaultListenerAddress() = listener;
+    //
+    // Initialize the local registration agent
+    //
+    std::ostringstream regRoute;
+    regRoute << "sip:" << _config.address << ":" << _config.port;
+    startLocalRegistrationAgent("oss-core", regRoute.str(), local_reg_exit_handler);
+    
+    //
+    // Initialize the transport facing the PBX
+    //
+    if (!_config.targetInterface.empty() && _config.targetInterfacePort)
+    {
+      OSS::Net::IPAddress targetListener;
+      targetListener = _config.targetInterface;
+      targetListener.externalAddress() = _config.targetExternalAddress;
+      targetListener.setPort(_config.targetInterfacePort);
+      targetListener.alias() = "internal";
+      stack().udpListeners().push_back(targetListener);
+      stack().tcpListeners().push_back(targetListener);
+    }
+    
     stack().transport().setTCPPortRange(TCP_PORT_BASE, TCP_PORT_MAX);
     stack().transport().setWSPortRange(40000, 50000);
     stack().transportInit();

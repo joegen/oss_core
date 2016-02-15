@@ -226,6 +226,16 @@ inline const std::string& IPAddress::externalAddress() const
   return _externalAddress;
 }
 
+inline std::string& IPAddress::alias()
+{
+  return _alias;
+}
+
+inline const std::string& IPAddress::alias() const
+{
+  return _alias;
+}
+
 
 inline const unsigned short& IPAddress::getPort() const
 {
