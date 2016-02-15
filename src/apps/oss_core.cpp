@@ -81,6 +81,7 @@ struct Config
   std::string targetInterface;
   std::string targetExternalAddress;
   std::string targetTransport;
+  std::string targetDomain;
   TargetType targetType;
   bool allowRelay;
   int targetInterfacePort;
@@ -327,6 +328,100 @@ public:
     }
   }
   
+  //
+  // route calls coming from the external->internal
+  //
+  bool onRouteExternalCall(OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction, const SIPMessage::Ptr& pRequest)
+  {
+    std::string target = _config.target;
+    SIPURI testLoopbackUri;
+    if (!_config.testLoopbackTargetUri.empty())
+    {
+      testLoopbackUri = _config.testLoopbackTargetUri;
+    }
+    //
+    // Check if loopback mode is in effect
+    //
+    if (_config.testLoopbackIterationCount && !_config.testLoopbackTargetUri.empty())
+    {
+      if (this->rtpProxy().getSessionCount() > (unsigned int)_config.testLoopbackIterationCount)
+      {
+        //
+        // Iteration count is reached.  retarget the request to the final destination
+        //
+        target = testLoopbackUri.getHostPort();
+        SIPRequestLine rline(pRequest->startLine());
+        rline.setURI(testLoopbackUri);
+        pRequest->startLine() = rline.data();
+      }
+    }
+    else
+    {
+      //
+      // If target domain is not empty, use it as the host:port
+      //
+      if (!_config.targetDomain.empty())
+      {
+        SIPRequestLine rline(pRequest->startLine());
+        SIPURI ruri;
+        rline.getURI(ruri);
+        ruri.setHostPort(_config.targetDomain.c_str());
+        rline.setURI(ruri);
+        pRequest->startLine() = rline.data();
+      }
+    }
+
+    pRequest->setProperty(OSS::PropertyMap::PROP_RouteAction, "accept");
+    std::ostringstream route;
+    std::vector<std::string> tokens = OSS::string_tokenize(target, ":");
+    if (tokens.size() == 1)
+    {
+      pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, target);
+      pRequest->setProperty(OSS::PropertyMap::PROP_TargetPort, "5060");
+      route << "sip:" << target << ":" << "5060" << ";lr";
+    }
+    else if (tokens.size() == 2)
+    {
+      pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, tokens[0]);
+      pRequest->setProperty(OSS::PropertyMap::PROP_TargetPort, tokens[1]);
+      route << "sip:" << tokens[0] << ":" << tokens[1] << ";lr";
+    }
+    else if (tokens.size() == 3)
+    {
+      pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, _config.target);
+      route << "sip:" << _config.target << ";lr";
+    }
+
+    if (!_config.targetTransport.empty())
+    {
+      pRequest->setProperty(OSS::PropertyMap::PROP_TargetTransport, _config.targetTransport);
+    }
+
+    if (!_config.targetInterface.empty())
+    {
+      pRequest->setProperty(OSS::PropertyMap::PROP_InterfaceAddress, _config.targetInterface);
+      pRequest->setProperty(OSS::PropertyMap::PROP_InterfacePort, OSS::string_from_number<int>(_config.targetInterfacePort));
+    }
+
+    //
+    // Check if rewrite call-id is set.
+    // The default behavior is to use the same call-id
+    // for both inbound and outbound legs
+    //
+    if (_config.rewriteCallId && pRequest->isRequest("INVITE"))
+    {
+      const std::string& callId = pRequest->hdrGet(OSS::SIP::HDR_CALL_ID);
+      unsigned int hash = OSS::string_to_js_hash(callId);
+      std::ostringstream strm;
+      strm << hash << "-" << OSS::string_create_uuid();
+      pRequest->hdrSet(OSS::SIP::HDR_CALL_ID, strm.str());
+    }
+
+    SIPRoute::msgAddRoute(pRequest.get(), route.str());
+      
+    return true;;
+  }
+  
   bool onProcessRequest(OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,MessageType type, const SIPMessage::Ptr& pRequest)
   {
     if (type == SIPB2BScriptableHandler::TYPE_AUTH)
@@ -380,76 +475,26 @@ public:
     }
     else if (type == SIPB2BScriptableHandler::TYPE_ROUTE)
     {
-      std::string target = _config.target;
-      SIPURI testLoopbackUri;
-      if (!_config.testLoopbackTargetUri.empty())
+      std::string transportAlias;
+      if (!pRequest->getProperty(OSS::PropertyMap::PROP_TransportAlias, transportAlias) || transportAlias.empty())
       {
-        testLoopbackUri = _config.testLoopbackTargetUri;
-      }
-      //
-      // Check if loopback mode is in effect
-      //
-      if (_config.testLoopbackIterationCount && !_config.testLoopbackTargetUri.empty())
-      {
-        if (this->rtpProxy().getSessionCount() > _config.testLoopbackIterationCount)
-        {
-          //
-          // Iteration count is reached.  retarget the request to the final destination
-          //
-          target = testLoopbackUri.getHostPort();
-          SIPRequestLine rline(pRequest->startLine());
-          rline.setURI(testLoopbackUri);
-          pRequest->startLine() = rline.data();
-        }
+        pRequest->setProperty(OSS::PropertyMap::PROP_RouteAction, "reject");
+        return true;
       }
       
-      pRequest->setProperty(OSS::PropertyMap::PROP_RouteAction, "accept");
-      std::ostringstream route;
-      std::vector<std::string> tokens = OSS::string_tokenize(target, ":");
-      if (tokens.size() == 1)
+      if (transportAlias == "external")
       {
-        pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, target);
-        pRequest->setProperty(OSS::PropertyMap::PROP_TargetPort, "5060");
-        route << "sip:" << target << ":" << "5060" << ";lr";
+        return onRouteExternalCall(pTransaction, pRequest);
       }
-      else if (tokens.size() == 2)
+      else
       {
-        pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, tokens[0]);
-        pRequest->setProperty(OSS::PropertyMap::PROP_TargetPort, tokens[1]);
-        route << "sip:" << tokens[0] << ":" << tokens[1] << ";lr";
-      }
-      else if (tokens.size() == 3)
-      {
-        pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, _config.target);
-        route << "sip:" << _config.target << ";lr";
+        //
+        // We do not do routing from internal->external yet
+        //
+        pRequest->setProperty(OSS::PropertyMap::PROP_RouteAction, "reject");
+        return true;
       }
 
-      if (!_config.targetTransport.empty())
-      {
-        pRequest->setProperty(OSS::PropertyMap::PROP_TargetTransport, _config.targetTransport);
-      }
-      
-      if (!_config.targetInterface.empty())
-      {
-        pRequest->setProperty(OSS::PropertyMap::PROP_InterfaceAddress, _config.targetInterface);
-        pRequest->setProperty(OSS::PropertyMap::PROP_InterfacePort, OSS::string_from_number<int>(_config.targetInterfacePort));
-      }
-      
-      //
-      // Check if rewrite call-id is set.
-      // The default behavior is to use the same call-id
-      // for both inbound and outbound legs
-      //
-      if (_config.rewriteCallId && pRequest->isRequest("INVITE"))
-      {
-        const std::string& callId = pRequest->hdrGet(OSS::SIP::HDR_CALL_ID);
-        unsigned int hash = OSS::string_to_js_hash(callId);
-        std::ostringstream strm;
-        strm << hash << "-" << OSS::string_create_uuid();
-        pRequest->hdrSet(OSS::SIP::HDR_CALL_ID, strm.str());
-      }
-      
-      SIPRoute::msgAddRoute(pRequest.get(), route.str());
     }
 
     
@@ -708,7 +753,8 @@ void prepareTargetInfo(Config& config, ServiceOptions& options)
   if (options.getOption("target-address", config.target) && !config.target.empty())
   {
     config.allowRelay = options.hasOption("allow-relay");
-
+    options.getOption("target-domain", config.targetDomain);
+    
     if (!options.getOption("target-transport", config.targetTransport))
     {
       OSS_LOG_INFO("target-transport is not set.  Using udp transport by default.");
@@ -763,6 +809,7 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionInt('I', "target-interface-port", "The port where the B2BUA will listen for connections.");
   options.addOptionString('X', "target-external-address", "The Public IP Address if the B2BUA is behind a firewall facing the SIP Server.");
   options.addOptionString('P', "target-transport", "Transport to be used to communicate with your SIP Server.");
+  options.addOptionString("target-domain", "Domain to be used in the request uri for sending calls to the SIP server");
   options.addOptionFlag('r', "allow-relay", "Allow relaying of transactions towards SIP Servers other than the one specified in the target-domain.");
   options.addOptionFlag('n', "no-rtp-proxy", "Disable built in media relay.");
   options.addOptionInt('R', "rtp-port-low", "Lowest port used for RTP");

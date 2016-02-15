@@ -44,8 +44,7 @@ class SIPFSMDispatch;
 
 class OSS_API SIPStreamedConnection: 
   public SIPTransportSession,
-  public boost::enable_shared_from_this<SIPStreamedConnection>,
-  private boost::noncopyable
+  public boost::enable_shared_from_this<SIPStreamedConnection>
 {
 public:
 
@@ -65,13 +64,15 @@ public:
   
   explicit SIPStreamedConnection(
       boost::asio::io_service& ioService,
-      SIPStreamedConnectionManager& manager);
+      SIPStreamedConnectionManager& manager,
+      SIPListener* pListener);
     /// Creates a TCP connection using the given I/O service
   
   explicit SIPStreamedConnection(
       boost::asio::io_service& ioService,
       boost::asio::ssl::context* pTlsContext,
-      SIPStreamedConnectionManager& manager);
+      SIPStreamedConnectionManager& manager,
+      SIPListener* pListener);
     /// Creates a TLS connection using the given I/O service and TLS context
   
   virtual ~SIPStreamedConnection();

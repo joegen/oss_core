@@ -93,8 +93,12 @@ SIPWebSocketListener::~SIPWebSocketListener()
 
 void SIPWebSocketListener::run()
 {
-  assert(!_pServerThread);
-  _pServerThread = new boost::thread(boost::bind(&SIPWebSocketListener::run_server, this));
+  if (!_hasStarted)
+  {
+    assert(!_pServerThread);
+    _pServerThread = new boost::thread(boost::bind(&SIPWebSocketListener::run_server, this));
+    _hasStarted = true;
+  }
 }
 
 void SIPWebSocketListener::run_server()
@@ -144,7 +148,7 @@ void SIPWebSocketListener::handleAccept(const boost::system::error_code& e, OSS_
     		reinterpret_cast<websocketpp::server::connection_ptr*>(connectionPtr);
     OSS_VERIFY_NULL(pWsConnection);
 
-    SIPWebSocketConnection::Ptr pNewConnection(new SIPWebSocketConnection(*pWsConnection, _connectionManager));
+    SIPWebSocketConnection::Ptr pNewConnection(new SIPWebSocketConnection(*pWsConnection, _connectionManager, this));
 
     pNewConnection->setExternalAddress(_externalAddress);
     _connectionManager.start(pNewConnection);

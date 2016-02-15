@@ -27,14 +27,14 @@
 #include "OSS/SIP/SIPUDPConnectionClone.h"
 #include "OSS/SIP/SIPFSMDispatch.h"
 #include "OSS/SIP/SIPException.h"
-
+#include "OSS/SIP/SIPListener.h"
 
 namespace OSS {
 namespace SIP {
 
 
 SIPUDPConnectionClone::SIPUDPConnectionClone(SIPUDPConnection::Ptr clonable):
-  
+  SIPTransportSession(dynamic_cast<SIPUDPConnection*>(clonable.get())->_pListener),
   _socket(dynamic_cast<SIPUDPConnection*>(clonable.get())->_socket),
   _senderEndPoint(dynamic_cast<SIPUDPConnection*>(clonable.get())->_senderEndPoint)
 {

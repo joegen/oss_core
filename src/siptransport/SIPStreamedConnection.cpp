@@ -57,6 +57,7 @@
 #include "OSS/SIP/SIPStreamedConnection.h"
 #include "OSS/SIP/SIPStreamedConnectionManager.h"
 #include "OSS/SIP/SIPFSMDispatch.h"
+#include "OSS/SIP/SIPListener.h"
 
 
 namespace OSS {
@@ -68,7 +69,9 @@ static const int DEFAULT_STREAMED_CONNECTION_TIMEOUT = 2; // 2 seconds default t
 
 SIPStreamedConnection::SIPStreamedConnection(
   boost::asio::io_service& ioService,
-  SIPStreamedConnectionManager& manager) :
+  SIPStreamedConnectionManager& manager,
+  SIPListener* pListener) :
+    SIPTransportSession(pListener),
     _ioService(ioService),
     _pTcpSocket(0),
     _pTlsContext(0),
@@ -86,7 +89,9 @@ SIPStreamedConnection::SIPStreamedConnection(
 SIPStreamedConnection::SIPStreamedConnection(
   boost::asio::io_service& ioService,
   boost::asio::ssl::context* pTlsContext,
-  SIPStreamedConnectionManager& manager) :
+  SIPStreamedConnectionManager& manager,
+  SIPListener* pListener) :
+    SIPTransportSession(pListener),
     _ioService(ioService),
     _pTcpSocket(0),
     _pTlsContext(pTlsContext),

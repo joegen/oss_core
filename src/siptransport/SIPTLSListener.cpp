@@ -39,7 +39,7 @@ SIPTLSListener::SIPTLSListener(
   _resolver(pTransportService->ioService()),
   _tlsContext(pTransportService->tlsServerContext()),
   _connectionManager(connectionManager),
-  _pNewConnection(new SIPStreamedConnection(pTransportService->ioService(), &_tlsContext, _connectionManager)),
+  _pNewConnection(new SIPStreamedConnection(pTransportService->ioService(), &_tlsContext, _connectionManager, this)),
   _dispatch(dispatch)
 {
 }
@@ -112,7 +112,7 @@ void SIPTLSListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE
     if (_acceptor.is_open())
     {
       OSS_LOG_DEBUG("SIPTLSListener::handleAccept RESTARTING async accept loop");
-      _pNewConnection.reset(new SIPStreamedConnection(*_pIoService, &_tlsContext, _connectionManager));
+      _pNewConnection.reset(new SIPStreamedConnection(*_pIoService, &_tlsContext, _connectionManager, this));
       _acceptor.async_accept(dynamic_cast<SIPStreamedConnection*>(_pNewConnection.get())->socket().lowest_layer(),
         boost::bind(&SIPTLSListener::handleAccept, this,
           boost::asio::placeholders::error, userData));

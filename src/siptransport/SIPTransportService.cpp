@@ -77,7 +77,7 @@ void SIPTransportService::run()
 
   for (UDPListeners::iterator iter = _udpListeners.begin(); iter != _udpListeners.end(); iter++)
   {
-    if (!iter->second->isVirtual())
+    if (!iter->second->isVirtual() && !iter->second->hasStarted())
     {
       iter->second->run();
       OSS_LOG_INFO("Started UDP Listener " << iter->first);
@@ -86,7 +86,7 @@ void SIPTransportService::run()
 
   for (TCPListeners::iterator iter = _tcpListeners.begin(); iter != _tcpListeners.end(); iter++)
   {
-    if (!iter->second->isVirtual())
+    if (!iter->second->isVirtual() && !iter->second->hasStarted())
     {
       iter->second->run();
       OSS_LOG_INFO("Started TCP Listener " << iter->first);
@@ -95,7 +95,7 @@ void SIPTransportService::run()
 
   for (WSListeners::iterator iter = _wsListeners.begin(); iter != _wsListeners.end(); iter++)
   {
-    if (!iter->second->isVirtual())
+    if (!iter->second->isVirtual() && !iter->second->hasStarted())
     {
       iter->second->run();
       OSS_LOG_INFO("Started WebSocket Listener " << iter->first);
@@ -104,7 +104,7 @@ void SIPTransportService::run()
 
   for (TLSListeners::iterator iter = _tlsListeners.begin(); iter != _tlsListeners.end(); iter++)
   {
-    if (!iter->second->isVirtual())
+    if (!iter->second->isVirtual() && !iter->second->hasStarted())
     {
       iter->second->run();
       OSS_LOG_INFO("Started TLS Listener " << iter->first);
@@ -752,7 +752,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientTcpTransport(
     const OSS::Net::IPAddress& localAddress,
     const OSS::Net::IPAddress& remoteAddress)
 {
-  SIPTransportSession::Ptr pTCPConnection(new SIPStreamedConnection(_ioService, _tcpConMgr));
+  SIPTransportSession::Ptr pTCPConnection(new SIPStreamedConnection(_ioService, _tcpConMgr, 0));
   pTCPConnection->isClient() = true;
   pTCPConnection->clientBind(localAddress, _tcpPortBase, _tcpPortMax);
   pTCPConnection->clientConnect(remoteAddress);
@@ -763,7 +763,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientTlsTransport(
     const OSS::Net::IPAddress& localAddress,
     const OSS::Net::IPAddress& remoteAddress)
 {
-  SIPTransportSession::Ptr pTlsConnection(new SIPStreamedConnection(_ioService, &_tlsClientContext, _tlsConMgr));
+  SIPTransportSession::Ptr pTlsConnection(new SIPStreamedConnection(_ioService, &_tlsClientContext, _tlsConMgr, 0));
   pTlsConnection->isClient() = true;
   pTlsConnection->clientBind(localAddress, _tcpPortBase, _tcpPortMax);
   pTlsConnection->clientConnect(remoteAddress);

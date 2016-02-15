@@ -40,14 +40,14 @@ class SIPFSMDispatch;
 
 class OSS_API SIPUDPConnection: 
   public SIPTransportSession,
-  public boost::enable_shared_from_this<SIPUDPConnection>,
-  private boost::noncopyable
+  public boost::enable_shared_from_this<SIPUDPConnection>
 {
 public:
 
   explicit SIPUDPConnection(
       boost::asio::io_service& ioService,
-      boost::asio::ip::udp::socket& socket);
+      boost::asio::ip::udp::socket& socket,
+      SIPListener* pListener);
     /// Creates a UDP connection using the given I/O service
 
   virtual ~SIPUDPConnection();

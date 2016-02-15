@@ -72,9 +72,7 @@ class SIPFSMDispatch;
 
 class SIPWebSocketConnection :
 		public SIPTransportSession,
-		public boost::enable_shared_from_this<SIPWebSocketConnection>,
-		private boost::noncopyable
-
+		public boost::enable_shared_from_this<SIPWebSocketConnection>
 {
 protected:
   class ServerReadWriteHandler : public websocketpp::server::handler
@@ -98,9 +96,10 @@ protected:
 public:
   typedef boost::asio::ip::tcp::socket::endpoint_type EndPoint;
 
-  SIPWebSocketConnection(SIPWebSocketConnectionManager& manager);
+  SIPWebSocketConnection(SIPWebSocketConnectionManager& manager, SIPListener* pListener);
 
-  SIPWebSocketConnection(const websocketpp::server::connection_ptr& pConnection, SIPWebSocketConnectionManager& manager);
+  SIPWebSocketConnection(const websocketpp::server::connection_ptr& pConnection, SIPWebSocketConnectionManager& manager,
+      SIPListener* pListener);
 
   virtual ~SIPWebSocketConnection();
 

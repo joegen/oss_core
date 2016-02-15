@@ -34,8 +34,7 @@ class SIPFSMDispatch;
 
 class OSS_API SIPUDPConnectionClone: 
   public SIPTransportSession,
-  public boost::enable_shared_from_this<SIPUDPConnectionClone>,
-  private boost::noncopyable
+  public boost::enable_shared_from_this<SIPUDPConnectionClone>
 {
 public:
 

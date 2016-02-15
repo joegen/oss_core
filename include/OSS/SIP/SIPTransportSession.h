@@ -30,6 +30,7 @@
 #include "OSS/SIP/SIPMessage.h"
 #include "OSS/Net/AccessControl.h"
 #include "OSS/UTL/Semaphore.h"
+#include "SIPListener.h"
 
 namespace OSS {
 namespace SIP {
@@ -37,8 +38,9 @@ namespace SIP {
 
 class SIPFSMDispatch;
 class SIPTransactionPool;
+class SIPListener;
 
-class OSS_API SIPTransportSession
+class OSS_API SIPTransportSession : boost::noncopyable
   /// The SIPTransportSession is the base class to the connection 
   /// that received the message.  This will be used by the 
   /// transaction to send mid-transaction SIP Messages
@@ -54,7 +56,7 @@ public:
   typedef OSS::Net::AccessControl SIPTransportRateLimitStrategy;
   typedef boost::function<void(SIPMessage::Ptr, SIPTransportSession::Ptr)> Dispatch;
 
-  SIPTransportSession();
+  SIPTransportSession(SIPListener* pListener);
     /// Creates a new SIPTransportSession
 
   virtual ~SIPTransportSession();
@@ -179,6 +181,9 @@ public:
   
   void setTransactionPool(SIPTransactionPool* pTransactionPool);
   
+  SIPListener* getListener() const;
+    /// Return the associated listener for this connection
+  
 protected:
   static SIPTransportRateLimitStrategy _rateLimit;
 
@@ -198,9 +203,7 @@ protected:
   std::string _currentTransactionId;
   SIPTransactionPool* _pTransactionPool;
   bool _isConnected;
-private:
-    SIPTransportSession(const SIPTransportSession&);
-    SIPTransportSession& operator = (const SIPTransportSession&);
+  SIPListener* _pListener;
 };
 
 //
@@ -287,6 +290,10 @@ inline void SIPTransportSession::dispatchMessage(const SIPMessage::Ptr& pMsg, co
 {
   if (_messageDispatch)
   {
+    if (_pListener && !_pListener->getTransportAlias().empty())
+    {
+      pMsg->setProperty(OSS::PropertyMap::PROP_TransportAlias, _pListener->getTransportAlias());
+    }
     _messageDispatch(pMsg, pTransport);
   }
 }
@@ -334,6 +341,11 @@ inline bool SIPTransportSession::isConnected() const
 inline void SIPTransportSession::setConnected(bool connected)
 {
   _isConnected = connected;
+}
+
+inline SIPListener* SIPTransportSession::getListener() const
+{
+  return _pListener;
 }
 
 } } // OSS::SIP

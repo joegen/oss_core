@@ -31,6 +31,8 @@
 #include "OSS/SIP/SIPXOR.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/UTL/PropertyMap.h"
+#include "OSS/SIP/SIPListener.h"
+
 
 namespace OSS {
 namespace SIP {
@@ -38,7 +40,9 @@ namespace SIP {
 
 SIPUDPConnection::SIPUDPConnection(
   boost::asio::io_service& ioService,
-  boost::asio::ip::udp::socket& socket): 
+  boost::asio::ip::udp::socket& socket,
+  SIPListener* pListener) :
+    SIPTransportSession(pListener),
     _socket(socket),
     _resolver(ioService),
     _pRequest()

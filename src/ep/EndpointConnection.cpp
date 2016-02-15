@@ -29,7 +29,7 @@ namespace EP {
 
 
 EndpointConnection::EndpointConnection(EndpointListener* pEndpoint) :
-  SIPTransportSession(),
+  SIPTransportSession(pEndpoint),
   _pEndpoint(pEndpoint)
 {
   //

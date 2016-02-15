@@ -126,11 +126,8 @@ protected:
   std::string _port;
   bool _isVirtual;
   bool _hasStarted;
-  
-  //
-  // Endpoint related declares
-  //
   bool _isEndpoint;
+  bool _isRunning;
 };
 
 //
