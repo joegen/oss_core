@@ -92,6 +92,7 @@ IPAddress::IPAddress(const IPAddress& address)
   _cidr = address._cidr;
   _isVirtual = address._isVirtual;
   _protocol = address._protocol;
+  _alias = address._alias;
 }
 
 IPAddress::IPAddress(const std::string& address, unsigned short port) :
@@ -120,6 +121,7 @@ void IPAddress::swap(IPAddress& address)
   std::swap(_cidr, address._cidr);
   std::swap(_isVirtual, address._isVirtual);
   std::swap(_protocol, address._protocol);
+  std::swap(_alias, address._alias);
 }
 
 bool IPAddress::isPrivate()

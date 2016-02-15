@@ -143,6 +143,12 @@ public:
     /// by applications that would want to retain a map between an internal
     /// and external addresses in cases of servers deplyed within NAT
   
+  std::string& alias();
+    /// alternative name for this address
+  
+  const std::string& alias() const;
+    /// alternative name for this address
+  
   Protocol getProtocol() const;
     /// Returns the protocol.  Default is UnknownTransport.
   
@@ -185,6 +191,7 @@ protected:
   unsigned short _cidr;
   bool _isVirtual;
   Protocol _protocol;
+  std::string _alias;
 };
 
 //
