@@ -141,7 +141,7 @@ boost::asio::ip::tcp::socket& SIPStreamedConnection::socket()
 void SIPStreamedConnection::start(const SIPTransportSession::Dispatch& dispatch)
 {
   setMessageDispatch(dispatch);
-  
+  _isConnected = true; 
   if (_isClient)
   {
     //

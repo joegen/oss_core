@@ -157,6 +157,11 @@ void SIPB2BTransaction::runTask()
     //
     SIPMessage* outbound = new SIPMessage();
     *outbound = *(_pServerRequest.get());
+    std::string transportAlias;
+    if (_pServerRequest->getProperty(OSS::PropertyMap::PROP_TransportAlias, transportAlias) && !transportAlias.empty())
+    {
+      outbound->setProperty(OSS::PropertyMap::PROP_TransportAlias, transportAlias);
+    }
     _pClientRequest = SIPMessage::Ptr(outbound);
 
     //
