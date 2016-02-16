@@ -905,6 +905,8 @@ int main(int argc, char** argv)
         ua.rtpProxy().alwaysProxyMedia(true);
       }
     }
+    
+    ua.rtpProxy().enableHairpins() = true;
 
 #if ENABLE_TURN
     if (options.hasOption("enable-turn-relay"))

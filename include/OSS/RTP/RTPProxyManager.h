@@ -188,6 +188,9 @@ public:
   
   void alwaysProxyMedia(bool alwaysProxyMedia = true);
     /// Global flag to always enable media proxying regardless of the handler option parameter
+  
+  bool enableHairpins() const;
+  bool& enableHairpins();
 private:
   boost::asio::io_service _ioService;
   mutable OSS::mutex_critic_sec _sessionListMutex;
@@ -211,6 +214,7 @@ private:
   bool _persistStateFiles;
   bool _enabled;
   bool _alwaysProxyMedia;
+  bool _enableHairpins;
 
   friend class RTPProxy;
   friend class RTPProxySession;
@@ -305,6 +309,15 @@ inline void RTPProxyManager::disable()
 inline void RTPProxyManager::alwaysProxyMedia(bool alwaysProxyMedia)
 {
   _alwaysProxyMedia = alwaysProxyMedia;
+}
+
+inline bool RTPProxyManager::enableHairpins() const
+{
+  return _enableHairpins;
+}
+inline bool& RTPProxyManager::enableHairpins()
+{
+  return _enableHairpins;
 }
 
 } } //OSS::RTP

@@ -39,7 +39,8 @@ RTPProxyManager::RTPProxyManager(int houseKeepingInterval) :
   _hasRtpDb(false),
   _persistStateFiles(false),
   _enabled(true),
-  _alwaysProxyMedia(false)
+  _alwaysProxyMedia(false),
+  _enableHairpins(false)
 {
 }
 
