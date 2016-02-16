@@ -739,7 +739,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteOutOfDialogTransaction(
 
       std::string reason;
       SIPMessage::Ptr serverError;
-      if (pRequest->getProperty(OSS::PropertyMap::PROP_RouteAction, reason) && !reason.empty())
+      if (pRequest->getProperty(OSS::PropertyMap::PROP_RejectReason, reason) && !reason.empty())
         serverError = pRequest->createResponse(statusCode, reason.c_str());
       else
         serverError = pRequest->createResponse(statusCode);
