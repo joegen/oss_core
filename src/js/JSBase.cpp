@@ -125,6 +125,10 @@ static void reportException(v8::TryCatch &try_catch, bool show_line)
     }
     OSS_LOG_ERROR("\t[CID=00000000] JS: " << *error << std::endl << "{" << std::endl << errorMsg.str() << std::endl << "}");
   }
+  else
+  {
+    OSS_LOG_ERROR("\t[CID=00000000] JS: Unknown Exception");
+  }
 }
 
 
