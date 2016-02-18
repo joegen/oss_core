@@ -1171,8 +1171,28 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
   {
     if (!findDialog(pTransaction, pMsg, logId,  senderLeg, targetLeg, sessionId, dialogData))
     {
-      SIPMessage::Ptr serverError = pMsg->createResponse(SIPMessage::CODE_481_TransactionDoesNotExist, "Unable to match dialog");
-      return serverError;
+      //
+      // HACK: This can be a NOTIFY for a subscribe transaction that has not received a 2xx just yet
+      // we wait for it for 1 second prior to failing
+      //
+      bool noDialog = true;
+      if (pMsg->isRequest("NOTIFY"))
+      {
+        for (int i = 0; i < 10; i++)
+        {
+          if (findDialog(pTransaction, pMsg, logId,  senderLeg, targetLeg, sessionId, dialogData))
+          {
+            noDialog = false;
+            break;
+          }
+        }
+      }
+      
+      if (noDialog)
+      {
+        SIPMessage::Ptr serverError = pMsg->createResponse(SIPMessage::CODE_481_TransactionDoesNotExist, "Unable to match dialog");
+        return serverError;
+      }
     }
 
     //
