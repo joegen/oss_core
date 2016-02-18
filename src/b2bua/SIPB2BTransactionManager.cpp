@@ -719,5 +719,23 @@ bool SIPB2BTransactionManager::isForLocalRegistration(const std::string& contact
   return false;
 }
 
+void SIPB2BTransactionManager::addPendingSubscription(const std::string& callId)
+{
+  OSS::mutex_critic_sec_lock lock(_pendingSubscriptionsMutex);
+  _pendingSubscriptions.insert(callId);
+}
+
+void SIPB2BTransactionManager::removePendingSubscription(const std::string& callId)
+{
+  OSS::mutex_critic_sec_lock lock(_pendingSubscriptionsMutex);
+  _pendingSubscriptions.erase(callId);
+}
+
+bool SIPB2BTransactionManager::isSubscriptionPending(const std::string& callId) const
+{
+  OSS::mutex_critic_sec_lock lock(_pendingSubscriptionsMutex);
+  return _pendingSubscriptions.find(callId) != _pendingSubscriptions.end();
+}
+
 } } } // OSS::SIP::B2BUA
 

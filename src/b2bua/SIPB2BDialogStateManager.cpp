@@ -1176,10 +1176,17 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
       // we wait for it for 1 second prior to failing
       //
       bool noDialog = true;
-      if (pMsg->isRequest("NOTIFY"))
+      if (pMsg->isRequest("NOTIFY") && _pTransactionManager->isSubscriptionPending(pMsg->hdrGet(OSS::SIP::HDR_CALL_ID)))
       {
+        OSS_LOG_WARNING(logId << "Received a NOTIFY prior to receiving a final response for the subscription");
         for (int i = 0; i < 10; i++)
         {
+          OSS::thread_sleep(100);
+          if (_pTransactionManager->isSubscriptionPending(pMsg->hdrGet(OSS::SIP::HDR_CALL_ID)))
+          {
+            continue;
+          }
+          
           if (findDialog(pTransaction, pMsg, logId,  senderLeg, targetLeg, sessionId, dialogData))
           {
             noDialog = false;

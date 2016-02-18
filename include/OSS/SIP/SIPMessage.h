@@ -484,6 +484,13 @@ public:
     /// This method will return inderterminate if the message is neither 
     /// a request nor a response.  It will throw SIPABNFSyntaxException
     /// if the start line is empty.
+  
+  boost::tribool isFinalResponse() const;
+    /// Returns true if the SIP Message belongs to the response code group (200, 300, 400, 500, 600)
+    ///
+    /// This method will return inderterminate if the message is neither 
+    /// a request nor a response.  It will throw SIPABNFSyntaxException
+    /// if the start line is empty.
 
   boost::tribool isMidDialog() const;
     /// Determines whether the message is sent within a dialog

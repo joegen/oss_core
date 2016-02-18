@@ -412,6 +412,10 @@ public:
   void setExternalDispatch(const ExternalDispatch& externalDispatch);
     /// Allow the application to set it's own transaction dispatcher
  
+  void addPendingSubscription(const std::string& callId);
+  void removePendingSubscription(const std::string& callId);
+  bool isSubscriptionPending(const std::string& callId) const;
+  
 private:
   OSS::thread_pool _threadPool;
   OSS::mutex_critic_sec _csDialogsMutex;
@@ -424,6 +428,8 @@ private:
   std::string _userAgentName;
   SIPB2BHandler* _pDefaultHandler;
   ExternalDispatch _externalDispatch;
+  std::set<std::string> _pendingSubscriptions;
+  mutable OSS::mutex_critic_sec _pendingSubscriptionsMutex;
 
   //
   // Plugins

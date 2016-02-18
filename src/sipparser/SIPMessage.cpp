@@ -817,6 +817,27 @@ boost::tribool SIPMessage::isErrorResponse() const
   return false;
 }
 
+boost::tribool SIPMessage::isFinalResponse() const
+{
+  boost::tribool checkReponse = isResponse();
+  if (!checkReponse)
+    return checkReponse;
+
+  if (_startLine[8] == '2')
+     return true;
+  else if (_startLine[8] == '3')
+    return true;
+  else if (_startLine[8] == '4')
+    return true;
+  else if (_startLine[8] == '5')
+    return true;
+  else if (_startLine[8] == '6')
+    return true;
+  
+  return false;
+}
+
+
 std::string SIPMessage::getMethod() const
 {
   SIPCSeq cseq;

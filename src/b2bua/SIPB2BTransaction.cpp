@@ -342,9 +342,20 @@ void SIPB2BTransaction::runTask()
     _pClientRequest->commitData();
 
     //
+    // If this is a subscribe, preserve the call-id in the hash so that
+    // later notifies would know there is actually a subscription.
+    // This will handy if notify did not match any dialog yet because 200 ok 
+    // for subscribe did not arrive yet.   Current implementation is to 
+    // yield processing until the 200 ok has arrived
+    //
+    if (_pClientRequest->isRequest("SUBSCRIBE"))
+    {
+      _pManager->addPendingSubscription(_pClientRequest->hdrGet(OSS::SIP::HDR_CALL_ID));
+    }
+    
+    //
     // Send the request
     //
-
     OSS::SIP::SIPTransaction::Callback responseCallback
       = boost::bind(&SIPB2BTransaction::handleResponse, this, _1, _2, _3, _4);
 
@@ -479,7 +490,6 @@ void SIPB2BTransaction::runResponseTask()
           }
         }
       }
-      return;
     }
     else if (response->is1xx())
     {
@@ -545,7 +555,14 @@ void SIPB2BTransaction::runResponseTask()
           }
         }
       }
-      return;
+    }
+    
+    //
+    // Remove pending subscription from the set
+    //
+    if (response->isFinalResponse() && _pClientRequest->isRequest("SUBSCRIBE"))
+    {
+      _pManager->removePendingSubscription(_pClientRequest->hdrGet(OSS::SIP::HDR_CALL_ID));
     }
   }
   catch(OSS::Exception e)
