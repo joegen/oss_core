@@ -1368,7 +1368,7 @@ void SIPB2BScriptableHandler::onProcessResponseInbound(
 {
   bool isDialogForming = false;
   bool isInvite = pResponse->isResponseTo("INVITE");
-  bool isSubscribe = pResponse->isResponseTo("INVITE");
+  bool isSubscribe = pResponse->isResponseTo("SUBSCRIBE");
   bool isMidDialog = pTransaction->serverRequest()->isMidDialog();
   
   if (isInvite || isSubscribe)
