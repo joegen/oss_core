@@ -43,6 +43,16 @@ SIPB2BTransaction::SIPB2BTransaction(SIPB2BTransactionManager* pManager) :
 
 SIPB2BTransaction::~SIPB2BTransaction()
 {
+  //
+  // Remove pending subscription from the set
+  //
+  if (_pClientRequest && _pClientRequest->isRequest("SUBSCRIBE"))
+  {
+    const std::string& callId = _pClientRequest->hdrGet(OSS::SIP::HDR_CALL_ID);
+    OSS_LOG_DEBUG(_logId << "REmoving pending subscription for call-id " << callId);
+    _pManager->removePendingSubscription(callId);
+  }
+    
   std::string trnId;
   if (_pServerRequest)
     _pServerRequest->getTransactionId(trnId);
@@ -350,7 +360,9 @@ void SIPB2BTransaction::runTask()
     //
     if (_pClientRequest->isRequest("SUBSCRIBE"))
     {
-      _pManager->addPendingSubscription(_pClientRequest->hdrGet(OSS::SIP::HDR_CALL_ID));
+      const std::string& callId = _pClientRequest->hdrGet(OSS::SIP::HDR_CALL_ID);
+      OSS_LOG_DEBUG(_logId << "REmoving pending subscription for call-id " << callId);
+      _pManager->addPendingSubscription(callId);
     }
     
     //
@@ -555,14 +567,6 @@ void SIPB2BTransaction::runResponseTask()
           }
         }
       }
-    }
-    
-    //
-    // Remove pending subscription from the set
-    //
-    if (response->isFinalResponse() && _pClientRequest->isRequest("SUBSCRIBE"))
-    {
-      _pManager->removePendingSubscription(_pClientRequest->hdrGet(OSS::SIP::HDR_CALL_ID));
     }
   }
   catch(OSS::Exception e)

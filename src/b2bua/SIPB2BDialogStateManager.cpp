@@ -1169,16 +1169,11 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
   
   try
   {
-    if (!findDialog(pTransaction, pMsg, logId,  senderLeg, targetLeg, sessionId, dialogData))
+    if (pMsg->isRequest("NOTIFY") && _pTransactionManager->isSubscriptionPending(pMsg->hdrGet(OSS::SIP::HDR_CALL_ID)))
     {
-      //
-      // HACK: This can be a NOTIFY for a subscribe transaction that has not received a 2xx just yet
-      // we wait for it for 1 second prior to failing
-      //
-      bool noDialog = true;
-      if (pMsg->isRequest("NOTIFY") && _pTransactionManager->isSubscriptionPending(pMsg->hdrGet(OSS::SIP::HDR_CALL_ID)))
+      OSS_LOG_WARNING(logId << "Received a NOTIFY prior to receiving a final response for the subscription.  Waiting for subscription transaction to end.");
+      if (_pTransactionManager->getMaxThreadCount() > 1)
       {
-        OSS_LOG_WARNING(logId << "Received a NOTIFY prior to receiving a final response for the subscription");
         for (int i = 0; i < 10; i++)
         {
           OSS::thread_sleep(100);
@@ -1186,20 +1181,18 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
           {
             continue;
           }
-          
-          if (findDialog(pTransaction, pMsg, logId,  senderLeg, targetLeg, sessionId, dialogData))
+          else
           {
-            noDialog = false;
             break;
           }
         }
       }
-      
-      if (noDialog)
-      {
-        SIPMessage::Ptr serverError = pMsg->createResponse(SIPMessage::CODE_481_TransactionDoesNotExist, "Unable to match dialog");
-        return serverError;
-      }
+    }
+    
+    if (!findDialog(pTransaction, pMsg, logId,  senderLeg, targetLeg, sessionId, dialogData))
+    {
+      SIPMessage::Ptr serverError = pMsg->createResponse(SIPMessage::CODE_481_TransactionDoesNotExist, "Unable to match dialog");
+      return serverError;
     }
 
     //

@@ -416,6 +416,8 @@ public:
   void removePendingSubscription(const std::string& callId);
   bool isSubscriptionPending(const std::string& callId) const;
   
+  int getMaxThreadCount() const;
+  
 private:
   OSS::thread_pool _threadPool;
   OSS::mutex_critic_sec _csDialogsMutex;
@@ -430,6 +432,7 @@ private:
   ExternalDispatch _externalDispatch;
   std::set<std::string> _pendingSubscriptions;
   mutable OSS::mutex_critic_sec _pendingSubscriptionsMutex;
+  int _maxThreadCount; 
 
   //
   // Plugins
@@ -500,6 +503,11 @@ inline OSS::Persistent::RESTKeyValueStore* SIPB2BTransactionManager::getKeyValue
 inline void SIPB2BTransactionManager::setExternalDispatch(const ExternalDispatch& externalDispatch)
 {
   _externalDispatch = externalDispatch;;
+}
+
+inline int SIPB2BTransactionManager::getMaxThreadCount() const
+{
+  return _maxThreadCount;
 }
 
 

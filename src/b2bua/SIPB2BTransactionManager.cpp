@@ -36,7 +36,9 @@ SIPB2BTransactionManager::SIPB2BTransactionManager(int minThreadcount, int maxTh
   _threadPool(minThreadcount, maxThreadCount),
   _useSourceAddressForResponses(false),
   _pDefaultHandler(0),
+  _maxThreadCount(maxThreadCount),
   _pKeyStore(0)
+  
 {
 }
 
