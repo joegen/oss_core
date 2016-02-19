@@ -46,7 +46,7 @@ SIPB2BTransaction::~SIPB2BTransaction()
   //
   // Remove pending subscription from the set
   //
-  if (_pClientRequest && _pClientRequest->isRequest("SUBSCRIBE"))
+  if (_pManager && _pClientRequest && _pClientRequest->isRequest("SUBSCRIBE"))
   {
     const std::string& callId = _pClientRequest->hdrGet(OSS::SIP::HDR_CALL_ID);
     OSS_LOG_DEBUG(_logId << "REmoving pending subscription for call-id " << callId);
