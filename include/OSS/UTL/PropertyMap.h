@@ -73,6 +73,7 @@ struct PropertyMap
     "is-locally-authenticated", \
     "endpoint-name", \
     "transport-alias", \
+    "reg-id", \
     "property-undefined" \
   };
 
@@ -125,6 +126,7 @@ struct PropertyMap
     PROP_IsLocallyAuthenticated,
     PROP_EndpointName,
     PROP_TransportAlias,
+    PROP_RegId,
     PROP_Max
   };
   

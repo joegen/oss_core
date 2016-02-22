@@ -44,22 +44,29 @@ SIPB2BTransaction::SIPB2BTransaction(SIPB2BTransactionManager* pManager) :
 SIPB2BTransaction::~SIPB2BTransaction()
 {
   //
-  // Remove pending subscription from the set
+  // When instantiated from karooctl scripts validate,
+  // _pManager will be null
   //
-  if (_pManager && _pClientRequest && _pClientRequest->isRequest("SUBSCRIBE"))
+  if (_pManager)
   {
-    const std::string& callId = _pClientRequest->hdrGet(OSS::SIP::HDR_CALL_ID);
-    OSS_LOG_DEBUG(_logId << "REmoving pending subscription for call-id " << callId);
-    _pManager->removePendingSubscription(callId);
-  }
-    
-  std::string trnId;
-  if (_pServerRequest)
-    _pServerRequest->getTransactionId(trnId);
-  {
-    std::ostringstream logMsg;
-    logMsg << _logId << "B2B Transaction DESTROYED - " << trnId;
-    OSS::log_information(logMsg.str());
+    //
+    // Remove pending subscription from the set
+    //
+    if (_pClientRequest && _pClientRequest->isRequest("SUBSCRIBE"))
+    {
+      const std::string& callId = _pClientRequest->hdrGet(OSS::SIP::HDR_CALL_ID);
+      OSS_LOG_DEBUG(_logId << "Removing pending subscription for call-id " << callId);
+      _pManager->removePendingSubscription(callId);
+    }
+
+    std::string trnId;
+    if (_pServerRequest)
+      _pServerRequest->getTransactionId(trnId);
+    {
+      std::ostringstream logMsg;
+      logMsg << _logId << "B2B Transaction DESTROYED - " << trnId;
+      OSS::log_information(logMsg.str());
+    }
   }
 }
 

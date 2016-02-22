@@ -128,8 +128,19 @@ bool SIPB2BContact::transformAsParams(SIPB2BTransactionManager* pManager,
 
   if (!sessionInfo.sessionId.empty())
     contact << ";" << "sbc-session-id=" << sessionInfo.sessionId;
+  
   if (sessionInfo.callIndex != 0)
+  {
     contact << ";" << "sbc-call-index=" << sessionInfo.callIndex;
+    if (pRequest->isResponse() && !pRequest->isResponseTo("REGISTER") && sessionInfo.callIndex == 1)
+    {
+      std::string regId;
+      if (pTransaction->getProperty(PropertyMap::PROP_RegId, regId) && !regId.empty())
+      {
+        contact << ";" << PropertyMap::PROP_RegId << "=" << regId;
+      }
+    }
+  }
   contact<< ">";
 
   pRequest->hdrListRemove(OSS::SIP::HDR_CONTACT);
@@ -188,7 +199,17 @@ bool SIPB2BContact::transformAsRecordRouteParams(SIPB2BTransactionManager* pMana
   if (!sessionInfo.sessionId.empty())
     recordRoute << ";" << "sbc-session-id=" << sessionInfo.sessionId;
   if (sessionInfo.callIndex != 0)
+  {
     recordRoute << ";" << "sbc-call-index=" << sessionInfo.callIndex;
+    if (pRequest->isResponse() && !pRequest->isResponseTo("REGISTER") && sessionInfo.callIndex == 1)
+    {
+      std::string regId;
+      if (pTransaction->getProperty(PropertyMap::PROP_RegId, regId) && !regId.empty())
+      {
+        contact << ";" << PropertyMap::PROP_RegId << "=" << regId;
+      }
+    }
+  }
   recordRoute<< ";lr>";
 
   if (sessionInfo.callIndex == 1)
@@ -225,6 +246,15 @@ bool SIPB2BContact::transformAsUserInfo(SIPB2BTransactionManager* pManager,
   else
     hostPort = localInterface;
 
+  if (pRequest->isResponse() && !pRequest->isResponseTo("REGISTER") && sessionInfo.callIndex == 1)
+  {
+    std::string regId;
+    if (pTransaction->getProperty(PropertyMap::PROP_RegId, regId) && !regId.empty())
+    {
+      contact << ";" << PropertyMap::PROP_RegId << "=" << regId;
+    }
+  }
+  
   contact << hostPort.toIpPortString();
   contact << ";transport=" << transportScheme << ">";
 
