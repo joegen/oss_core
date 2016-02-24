@@ -866,6 +866,9 @@ int main(int argc, char** argv)
 
   try
   {
+    SIPB2BContact::_dialogStateInParams = true;
+    SIPB2BContact::_registerStateInParams = true;
+
     //
     // Run the UA event loop
     //
