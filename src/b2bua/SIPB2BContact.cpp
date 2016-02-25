@@ -137,7 +137,7 @@ bool SIPB2BContact::transformAsParams(SIPB2BTransactionManager* pManager,
       std::string regId;
       if (pTransaction->getProperty(PropertyMap::PROP_RegId, regId) && !regId.empty())
       {
-        contact << ";" << PropertyMap::PROP_RegId << "=" << regId;
+        contact << ";" << PropertyMap::propertyString(PropertyMap::PROP_RegId) << "=" << regId;
       }
     }
   }
@@ -206,7 +206,7 @@ bool SIPB2BContact::transformAsRecordRouteParams(SIPB2BTransactionManager* pMana
       std::string regId;
       if (pTransaction->getProperty(PropertyMap::PROP_RegId, regId) && !regId.empty())
       {
-        contact << ";" << PropertyMap::PROP_RegId << "=" << regId;
+        contact << ";" << PropertyMap::propertyString(PropertyMap::PROP_RegId) << "=" << regId;
       }
     }
   }
@@ -251,7 +251,7 @@ bool SIPB2BContact::transformAsUserInfo(SIPB2BTransactionManager* pManager,
     std::string regId;
     if (pTransaction->getProperty(PropertyMap::PROP_RegId, regId) && !regId.empty())
     {
-      contact << ";" << PropertyMap::PROP_RegId << "=" << regId;
+      contact << ";" << PropertyMap::propertyString(PropertyMap::PROP_RegId) << "=" << regId;
     }
   }
   
