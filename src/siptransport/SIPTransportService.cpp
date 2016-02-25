@@ -920,25 +920,13 @@ bool SIPTransportService::getInternalAddress(
     const OSS::Net::IPAddress& externalIp,
     OSS::Net::IPAddress& internalIp) const
 {
-  //
-  // UDP and TCP always have the same port map so just use UDP
-  //
-	  // TODO: Does WebSockets have the same port ???
-  if (isLocalTransport(externalIp))
-  {
-    internalIp = externalIp;
-    if (const_cast<OSS::Net::IPAddress&>(externalIp).externalAddress().empty())
-    {
-      std::string external;
-      getExternalAddress(externalIp, external);
-      internalIp.externalAddress() = external;
-      return true;
-    }
-  }
-
   if (getInternalAddress("udp", externalIp, internalIp))
     return true;
+  if (getInternalAddress("tcp", externalIp, internalIp))
+    return true;
   else if (getInternalAddress("tls", externalIp, internalIp))
+    return true;
+  else if (getInternalAddress("ws", externalIp, internalIp))
     return true;
   return false;
 }
@@ -951,13 +939,7 @@ bool SIPTransportService::getInternalAddress(
   if (isLocalTransport(externalIp))
   {
     internalIp = externalIp;
-    if (const_cast<OSS::Net::IPAddress&>(externalIp).externalAddress().empty())
-    {
-      std::string external;
-      getExternalAddress(proto, externalIp, external);
-      internalIp.externalAddress() = external;
-      return true;
-    }
+    return true;
   }
 
   std::string ip = externalIp.toString();
