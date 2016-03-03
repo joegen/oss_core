@@ -21,6 +21,8 @@
 
 #include "OSS/SIP/EP/SIPEndpoint.h"
 #include "OSS/SIP/SIPVia.h"
+#include "OSS/UTL/Logger.h"
+#include "OSS/SIP/SIPMessage.h"
 
 
 namespace OSS {
@@ -38,7 +40,8 @@ namespace EP {
 #define DEFAULT_SIP_TLS_PORT 5061
 #define DEFAULT_SIP_WS_PORT 5062
   
-SIPEndpoint::SIPEndpoint()
+SIPEndpoint::SIPEndpoint() :
+  _2xxRetransmitCache(32)
 {
   _stack.setRequestHandler(boost::bind(&SIPEndpoint::handleRequest, this, _1, _2, _3));
   _stack.setAckFor2xxTransactionHandler(boost::bind(&SIPEndpoint::handleAckFor2xxTransaction, this, _1, _2));
@@ -55,6 +58,7 @@ bool SIPEndpoint::addTransport(const OSS::Net::IPAddress& address)
   switch (address.getProtocol())
   {
     case OSS::Net::IPAddress::UnknownTransport:
+      _stack.tcpListeners().push_back(address);
     case OSS::Net::IPAddress::UDP:
       _stack.udpListeners().push_back(address);
       break;
@@ -107,6 +111,39 @@ void SIPEndpoint::sendEndpointRequest(
   _stack.sendRequest(pRequest, localAddress, remoteAddress,
     boost::bind(&SIPEndpoint::handleEndpointResponse, this, _1,_2, _3, _4),
     boost::bind(&SIPEndpoint::onTransactionTerminated, this, _1));
+}
+
+void SIPEndpoint::sendEndpointResponse(
+    const SIPMessage::Ptr& pResponse,
+    const SIPTransaction::Ptr& pTransaction,
+    const OSS::Net::IPAddress& remoteAddress)
+{
+  if (!pTransaction || !remoteAddress.isValid())
+  {
+    OSS_LOG_ERROR("SIPEndpoint::sendEndpointResponse - Invalid transaction target");
+    return;
+  }
+  
+  bool is2xx = pResponse->isResponseFamily(OSS::SIP::SIPMessage::CODE_200_Ok);
+  bool isInvite = pResponse->isResponseTo(OSS::SIP::REQ_INVITE);
+  bool isReliableTransport = pTransaction->transport()->isReliableTransport();
+
+  if (!isReliableTransport && is2xx && isInvite)
+  {
+    //
+    // If this is a 2xx, add it to the re-tranmission cache
+    //
+    std::ostringstream cacheId;
+    cacheId << pResponse->getDialogId(false) << pResponse->hdrGet(OSS::SIP::HDR_CSEQ);
+    boost::any cacheItem = pResponse;
+    _2xxRetransmitCache.add(cacheId.str(), cacheItem);
+    OSS_LOG_DEBUG(pTransaction->getLogId() << "Added 2xx cache-id: " << cacheId.str() << " to retransmission cache.");
+  }
+
+  if (pTransaction && pResponse)
+  {
+    pTransaction->sendResponse(pResponse, remoteAddress);
+  }
 }
 
 void SIPEndpoint::handleRequest(

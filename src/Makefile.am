@@ -179,7 +179,7 @@ liboss_core_la_LIBADD = @OSS_CORE_DEP_LIBS@
 
 # this is helpful if you're debugging something with lots of inlines (like the UtlLink code)
 # 		-fno-gcse -O0 -fno-implement-inlines -fno-default-inline
-liboss_core_la_CXXFLAGS = 
+liboss_core_la_CXXFLAGS = \
 	-DOSSLIBS_TMPDIR=\"@OSSLIBS_TMPDIR@\" \
 	-DOSSLIBS_CONFDIR=\"@OSSLIBS_CONFDIR@\" \
 	-DOSSAPP_LIB_VERSION=\"@OSS_CORE_VERSION_FULL@\" \
@@ -406,13 +406,6 @@ if ENABLE_TURN
     liboss_core_la_SOURCES += net/TurnServer.cpp
 endif
 
-bin_PROGRAMS = \
-    oss_garp \
-    oss_carp \
-    oss_core \
-    oss_rest
-
-
 TESTS = oss_core-unit-test
 check_PROGRAMS = oss_core-unit-test
 
@@ -447,6 +440,23 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestUaRegister.cpp \
 	unit_test/TestDigestAuth.cpp \
 	unit_test/TestRedisPubSub.cpp
+
+
+SIP_TEST = \
+    test_sip_invite_simple
+
+#
+# test_forked_100rel
+#
+test_sip_invite_simple_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
+test_sip_invite_simple_SOURCES = siptest/TestInviteSimple.cpp
+
+bin_PROGRAMS = \
+    $(SIP_TEST) \
+    oss_garp \
+    oss_carp \
+    oss_core \
+    oss_rest
 
 #
 # oss_core - A simple back-to-back user agent

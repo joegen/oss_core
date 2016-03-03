@@ -24,6 +24,7 @@
 
 #include "OSS/SIP/SIP.h"
 #include "OSS/SIP/SIPStack.h"
+#include "OSS/UTL/Cache.h"
 
 
 #define TCP_PORT_BASE 20000
@@ -90,6 +91,12 @@ public:
     const OSS::Net::IPAddress& localAddress,
     const OSS::Net::IPAddress& remoteAddress);
   /// Send a SIP request to the specified destination
+  
+  void sendEndpointResponse(
+    const SIPMessage::Ptr& pResponse,
+    const SIPTransaction::Ptr& pTransaction,
+    const OSS::Net::IPAddress& remoteAddress);
+  /// Send a SIP response through this transaction
 
   
   void handleEndpointResponse(const SIPTransaction::Error& e, const SIPMessage::Ptr& pMsg, const SIPTransportSession::Ptr& pTransport, const SIPTransaction::Ptr& pTransaction);
@@ -148,6 +155,7 @@ protected:
   SIPStack _stack;
   std::string _userAgentName;
   EndpointEventQueue _endpointEventQueue;
+  OSS::CacheManager _2xxRetransmitCache;
 };
 
 //

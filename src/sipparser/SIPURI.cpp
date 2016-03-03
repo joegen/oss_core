@@ -67,6 +67,7 @@ ABNFEvaluate<ABNF_SIP_headers> headersVerify;
 
 SIPURI::SIPURI()
 {
+  _data = "sip:invalid";
 }
 
 SIPURI::SIPURI(const std::string& uri)

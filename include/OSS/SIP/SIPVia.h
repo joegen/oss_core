@@ -132,7 +132,7 @@ public:
   bool setSentBy(const char* hostPort);
     /// Set the sent-by of the via in the form host ":" port
 
-  static bool setSentBy(const std::string& via, const char* hostPort);
+  static bool setSentBy(std::string& via, const char* hostPort);
     /// Set the sent-by of the via in the form host ":" port
 
 

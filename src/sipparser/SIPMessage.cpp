@@ -1279,6 +1279,119 @@ SIPMessage::Ptr SIPMessage::reformatResponse(const SIPMessage::Ptr& pResponse)
   return pFormatedResponse;
 }
 
+SIPMessage::Ptr SIPMessage::createRequest(
+      SIPMessage::RequestTypes type,
+      const SIPURI& requestUri,
+      const std::string& callId,
+      unsigned int cseq,
+      const SIPURI& fromUri,
+      const std::string& fromDisplayName,
+      const std::string& fromTag,
+      const SIPURI& toUri,
+      const std::string& toDisplayName,
+      const std::string& toTag,
+      const SIPURI& contactUri,
+      const std::string& contactDisplayName, 
+      const OSS::Net::IPAddress& viaTransport,
+      const std::string& viaBranch,
+      const std::string& contentType,
+      const std::string& body)
+{
+  SIPMessage::Ptr pMsg;
+  
+  const char* method = SIPMessage::requestTypeToString(type);
+  
+  if (!method ||
+    requestUri.data().empty() ||
+    callId.empty() ||
+    !cseq ||
+    fromUri.data().empty() ||
+    fromTag.empty() ||
+    toUri.data().empty() ||
+    contactUri.data().empty() ||
+    !viaTransport.isValid() ||
+    viaBranch.empty())
+  {
+    OSS_LOG_ERROR("SIPMessage::createRequest - Required parameter is missing");
+    return pMsg;
+  }
+  
+  std::ostringstream strm;
+  
+  strm << method << " " << requestUri.data() << " SIP/2.0" << "\r\n";
+  strm << "Call-Id: " << callId << "\r\n";
+  strm << "CSeq: " << cseq << " " << method << "\r\n";
+  
+  strm << "From: ";
+  if (fromDisplayName.empty())
+  {
+    strm << fromUri.data() << ";tag=" << fromTag << "\r\n";
+  }
+  else
+  {
+    strm << "\"" << fromDisplayName << "\" <" << fromUri.data() << ">;tag=" << fromTag << "\r\n";
+  }
+  
+  strm << "To: ";
+  if (toDisplayName.empty())
+  {
+    if (!toTag.empty())
+    {
+      strm << toUri.data() << ";tag=" << toTag << "\r\n";
+    }
+    else
+    {
+      strm << toUri.data() << "\r\n";
+    }
+  }
+  else
+  {
+    if (!toTag.empty())
+    {
+      strm << "\"" << toDisplayName << "\" <" << toUri.data() << ">;tag=" << toTag << "\r\n";
+    }
+    else
+    {
+      strm << "\"" << toDisplayName << "\"<" << toUri.data() << ">" << "\r\n";
+    }
+  }
+  
+  strm << "Contact: ";
+  if (contactDisplayName.empty())
+  {
+    strm << contactUri.data() <<  "\r\n";
+  }
+  else
+  {
+    strm << "\"" << contactDisplayName << "\" <" << contactUri.data() << ">" << "\r\n";
+  }
+  
+  std::string viaProto("UDP");
+  if (viaTransport.getProtocol() == OSS::Net::IPAddress::TCP)
+  {
+    viaProto = "TCP";
+  }
+  else if (viaTransport.getProtocol() == OSS::Net::IPAddress::TLS)
+  {
+    viaProto = "TLS";
+  }
+  
+  strm << "Via: " << "SIP/2.0/" << viaProto << " " << viaTransport.toIpPortString() << ";branch=" << viaBranch << "\r\n";
+  
+  if (!contentType.empty())
+  {
+    if (!body.empty())
+    {
+      strm << "Content-Type: " << contentType << "\r\n";
+      strm << "Content-Length: " << body.size() <<  "\r\n\r\n";
+      strm << body;
+    }
+  }
+  pMsg = SIPMessage::Ptr(new SIPMessage(strm.str()));
+  pMsg->commitData();
+  return pMsg;
+}
+
 SIPMessage::Ptr SIPMessage::createResponse(
   int statusCode,
   const std::string& reasonPhrase, 

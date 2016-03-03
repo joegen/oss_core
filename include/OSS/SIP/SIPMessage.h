@@ -32,11 +32,27 @@
 #include "OSS/SIP/SIPParser.h"
 #include "OSS/SIP/SIPHeaderTokens.h"
 #include "OSS/SIP/SIPDigestAuth.h"
+#include "OSS/SIP/SIPURI.h"
 #include "OSS/UTL/PropertyMap.h"
 
 
 namespace OSS {
 namespace SIP {
+
+  
+static const char REQ_INVITE[]    = "INVITE";
+static const char REQ_BYE[]       = "BYE";
+static const char REQ_ACK[]       = "ACK";
+static const char REQ_PRACK[]     = "PRACK";
+static const char REQ_CANCEL[]    = "CANCEL";
+static const char REQ_INFO[]      = "INFO";
+static const char REQ_REFER[]     = "REFER";
+static const char REQ_UPDATE[]    = "UPDATE";
+static const char REQ_SUBSCRIBE[] = "SUBSCRIBE";
+static const char REQ_NOTIFY[]    = "NOTIFY";
+static const char REQ_PUBLISH[]   = "PUBLISH";
+static const char REQ_MESSAGE[]   = "MESSAGE";
+static const char REQ_OPTIONS[]   = "OPTIONS";
 
 
 class OSS_API SIPMessage : 
@@ -115,6 +131,54 @@ public:
     CODE_606_NotAcceptable = 606,
     CODE_MAX_CODE = 699
   };
+  
+  enum RequestTypes
+  {
+    REQUEST_INVITE,
+    REQUEST_BYE,
+    REQUEST_ACK,
+    REQUEST_PRACK,
+    REQUEST_CANCEL,
+    REQUEST_INFO,
+    REQUEST_REFER,
+    REQUEST_UPDATE,
+    REQUEST_SUBSCRIBE,
+    REQUEST_NOTIFY,
+    REQUEST_PUBLISH,
+    REQUEST_MESSAGE,
+    REQUEST_OPTIONS,
+    REQUEST_UNKNOWN
+  };
+  
+  static const char* requestTypeToString(RequestTypes type)
+    /// returns the string representation of a Request Type
+  {
+    char* ret = 0;
+    
+    if (type < REQUEST_UNKNOWN)
+    {
+      static const char* method_map[] = 
+      {
+        "INVITE",
+        "BYE",
+        "ACK",
+        "PRACK",
+        "CANCEL",
+        "INFO",
+        "REFER",
+        "UPDATE",
+        "SUBSCRIBE",
+        "NOTIFY",
+        "PUBLISH",
+        "MESSAGE",
+        "OPTIONS"
+      };
+      
+      ret = (char*)method_map[type];
+    }
+    
+    return ret;
+  }
 
   SIPMessage();
     /// Creates a blank SIP Message
@@ -348,7 +412,30 @@ public:
     /// Erase a list header including all its elements.  
     /// To simply remove the first element in a list header,
     /// use hdrListPopFront instead.
-
+  
+  static SIPMessage::Ptr createRequest(
+      SIPMessage::RequestTypes type,
+      const SIPURI& requestUri,
+      const std::string& callId,
+      unsigned int cseq,
+      const SIPURI& fromUri,
+      const std::string& fromDisplayName,
+      const std::string& fromTag,
+      const SIPURI& toUri,
+      const std::string& toDisplayName,
+      const std::string& toTag,
+      const SIPURI& contactUri,
+      const std::string& contactDisplayName,
+      const OSS::Net::IPAddress& viaTransport,
+      const std::string& viaBranch,
+      const std::string& contentType,
+      const std::string& body);
+    /// Create a basic request with the mandatory headers
+    ///
+    /// Display names, toTag, contentType and body can be empty
+    ///
+  
+  
   SIPMessage::Ptr createResponse(
     int statusCode,
     const std::string& reasonPhrase = "", 

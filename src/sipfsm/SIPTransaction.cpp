@@ -258,6 +258,13 @@ void SIPTransaction::sendRequest(
         _transport->setTransactionPool(_owner);
       }
     }
+    
+    if (!_transport)
+    {
+      OSS_LOG_ERROR(_logId << "SIPTransaction::sendRequest - Unable to create transport");
+      terminate();
+      return;
+    }
         
     if (_transport->isReliableTransport() && !_transport->isConnected() && !_transport->isEndpoint())
     {

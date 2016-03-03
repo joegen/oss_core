@@ -181,7 +181,6 @@ public:
   void handleConnectionError(SIPStreamedConnection::ConnectionError errorType, const boost::system::error_code& e);
     /// Called by the streamed connection when reporting I/O operation errors
   
-protected:
   void onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport);
     /// This method is called when a SIP message is received from the transport.
     ///

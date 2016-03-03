@@ -35,6 +35,7 @@ using namespace OSS::ABNF;
 
 SIPVia::SIPVia()
 {
+  _data = "SIP/2.0/UDP invalid:0;branch=empty";
 }
 
 SIPVia::SIPVia(const std::string& via)
@@ -89,6 +90,42 @@ bool SIPVia::getSentBy(const std::string& via, std::string& sentBy)
   sentBy = tokens[2];
   return true;
 }
+
+ bool SIPVia::setSentBy(const char* hostPort)
+ {
+   return setSentBy(_data, hostPort);
+ }
+
+ bool SIPVia::setSentBy(std::string& via, const char* hostPort)
+ {
+   typedef ABNFLRSequence5<ABNF_SIP_token, ABNF_SIP_SLASH, ABNF_SIP_token, ABNF_SIP_SLASH, ABNF_SIP_token> _pvar1; //sent-protocol =  protocol-name SLASH protocol-version SLASH transport
+  static ABNFLRSequence3<_pvar1, ABNF_SIP_LWS, ABNF_SIP_hostport> parser;
+  
+  ABNFTokens tokens;  
+  parser.parseTokens(via.c_str(), tokens);
+  if (tokens.size() != 3)
+    return false;
+  
+  std::ostringstream newData;
+  newData << tokens[0] << " " << hostPort;
+  
+  //
+  // append the parameters
+  //
+  const char* params = ABNF::findNextIterFromString(";", via.c_str());
+  if (params && params != via.c_str())
+  {
+    newData << ";" << params;
+  }
+  else
+  {
+    newData << ";branch=unset";
+  }
+  
+  via = newData.str();
+  
+  return true;
+ }
 
 std::string SIPVia::getTransport() const
 {
