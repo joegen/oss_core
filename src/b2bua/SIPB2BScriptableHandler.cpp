@@ -859,6 +859,8 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteUpperReg(
       SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_404_NotFound);
       return serverError;
     }
+    
+    pTransaction->setProperty(PropertyMap::PROP_RegId, regId);
 
     SIPTo to(registration.aor);
     localInterface = IPAddress::fromV4IPPort(registration.localInterface.c_str());

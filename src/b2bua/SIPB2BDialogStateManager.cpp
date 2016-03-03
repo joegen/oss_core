@@ -1377,10 +1377,20 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteInviteWithReplaces(
   ruri.getHostPort(host, port);
   if (!port)
     port = 5060;
-  OSS::Net::IPAddress hostPort(host, port);
   
-  if (!_pTransactionManager->stack().transport().isLocalTransport(hostPort))
+  //
+  // Check if the request-uri points back to us.
+  // Take note that using isLocalTransport() will fail
+  // if the SBC is behind a NAT because the uri might point back
+  // to the external address.  Instead we use getInternalAddress()
+  // which accounts for both local and external
+  //
+  OSS::Net::IPAddress hostPort(host, port);
+  OSS::Net::IPAddress localInterface;
+  if (!_pTransactionManager->stack().transport().getInternalAddress(hostPort, localInterface))
+  {
     return OSS::SIP::SIPMessage::Ptr();
+  }
   
   //
   // Parse replaces header and check if there is a session existing for the states
