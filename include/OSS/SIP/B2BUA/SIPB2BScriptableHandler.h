@@ -315,7 +315,7 @@ public:
   //
   // INVITE handlers
   //
-  virtual void onProcessAckFor2xxRequest(
+  virtual void onProcessAckOr2xxRequest(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport);
     /// Callback for ACK and 200 OK retransmission for INVITE

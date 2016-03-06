@@ -123,15 +123,6 @@ void uac_send_ack_for_invite(SIPEndpoint* pEndpoint, const SIPEndpoint::Endpoint
   pEndpoint->sendEndpointRequest(pAck, uacHostPort, uasHostPort);
 }
 
-void uac_handle_response(SIPEndpoint* pEndpoint, const SIPEndpoint::EndpointEventPtr& pEvent)
-{
-  if (pEvent->sipRequest->isResponseTo(OSS::SIP::REQ_INVITE) && pEvent->sipRequest->isResponseFamily(OSS::SIP::SIPMessage::CODE_200_Ok))
-  {
-    uac_send_ack_for_invite(pEndpoint, pEvent);
-    return;
-  }
-}
-
 void uac_thread(SIPEndpoint* pEndpoint)
 {
   unsigned int cseq = 0;
@@ -202,13 +193,15 @@ void uac_thread(SIPEndpoint* pEndpoint)
         case SIPEndpoint::IncomingRequest:
           break;
         case SIPEndpoint::IncomingResponse:
-          uac_handle_response(pEndpoint, pEvent);
           break;
         case SIPEndpoint::TransactionError:
           break;
         case SIPEndpoint::TransactionTermination:
           break;
-        case SIPEndpoint::Ackfor2xx:
+        case SIPEndpoint::IncomingAckFor2xx:
+          break;
+        case SIPEndpoint::Incoming2xxRetran:
+          uac_send_ack_for_invite(pEndpoint, pEvent);
           break;
         case SIPEndpoint::EndpointTerminated:
           terminated = true;
@@ -250,7 +243,9 @@ void uas_thread(SIPEndpoint* pEndpoint)
           break;
         case SIPEndpoint::TransactionTermination:
           break;
-        case SIPEndpoint::Ackfor2xx:
+        case SIPEndpoint::IncomingAckFor2xx:
+          break;
+        case SIPEndpoint::Incoming2xxRetran:
           break;
         case SIPEndpoint::EndpointTerminated:
           terminated = true;

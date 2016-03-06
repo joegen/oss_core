@@ -308,6 +308,7 @@ liboss_core_la_SOURCES =  \
     sipfsm/SIPNict.cpp \
     sipfsm/SIPTransaction.cpp \
     sipep/SIPEndpoint.cpp \
+    sipep/SIPEndpointRetransmitter.cpp \
     stun/STUNProto.cpp \
     stun/STUNMappedAddress.cpp \
     stun/STUNServer.cpp \

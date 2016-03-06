@@ -173,6 +173,7 @@ nobase_include_HEADERS = \
     OSS/SIP/B2BUA/SIPB2BUserAgentHandlerList.h \
     OSS/SIP/B2BUA/SIPB2BRegisterAgent.h \
     OSS/SIP/EP/SIPEndpoint.h \
+    OSS/SIP/EP/SIPEndpointRetransmitter.h \
     OSS/STUN/VovidaSTUN.inl \
     OSS/STUN/VovidaUDP.h \
     OSS/STUN/STUNMappedAddress.h \

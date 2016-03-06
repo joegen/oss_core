@@ -256,6 +256,11 @@ void SIPUDPConnection::writeMessage(SIPMessage::Ptr msg, const std::string& ip, 
 #else
         boost::system::error_code ec;
         _socket.send_to(boost::asio::buffer(newBuff, len), *ep, 0, ec);
+        
+        if (ec)
+        {
+          OSS_LOG_DEBUG("SIPUDPConnection::writeMessage Exception " << ec.message());
+        }
 #endif
       }
     }
@@ -288,6 +293,10 @@ bool SIPUDPConnection::writeKeepAlive(const std::string& ip, const std::string& 
 void SIPUDPConnection::handleWrite(const boost::system::error_code& e)
 {
   // This is only significant for stream based connections (TCP/TLS)
+  if (e)
+  {
+    OSS_LOG_ERROR("SIPUDPConnection::handleWrite Exception " << e.message());
+  }
 }
 
 void SIPUDPConnection::stop()

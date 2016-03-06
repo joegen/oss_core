@@ -24,7 +24,7 @@
 
 #include "OSS/SIP/SIP.h"
 #include "OSS/SIP/SIPStack.h"
-#include "OSS/UTL/Cache.h"
+#include "OSS/SIP/EP/SIPEndpointRetransmitter.h"
 
 
 #define TCP_PORT_BASE 20000
@@ -49,9 +49,11 @@ public:
   {
     IncomingRequest,
     IncomingResponse,
+    IncomingAckFor2xx,
+    Incoming2xxRetran,
     TransactionError,
     TransactionTermination,
-    Ackfor2xx,
+    AckTimeout,
     EndpointTerminated
   };
   
@@ -66,6 +68,7 @@ public:
   
   typedef boost::shared_ptr<EndpointEvent> EndpointEventPtr;
   typedef BlockingQueue<EndpointEventPtr> EndpointEventQueue;
+  typedef std::map<std::string, SIPEndpointRetransmitter::Ptr> RetransmitCache;
           
   
   SIPEndpoint();
@@ -104,6 +107,9 @@ public:
 
   void onTransactionTerminated(const SIPTransaction::Ptr& pTransaction);
   /// Callback for transaction termination
+  
+  void onHandleAckTimeout(const SIPMessage::Ptr& pRequest);
+  /// 200 Ok retransmit timeout handler 
   
   
   SIPStack& stack();
@@ -146,7 +152,7 @@ protected:
     const OSS::SIP::SIPTransaction::Ptr& pTransaction);
     /// This is the incoming request callback that will be attached to the stack
 
-  virtual void handleAckFor2xxTransaction(
+  virtual void handleAckOr2xxTransaction(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport);
     /// Handler of ACK and 200 Ok retransmission
@@ -155,7 +161,8 @@ protected:
   SIPStack _stack;
   std::string _userAgentName;
   EndpointEventQueue _endpointEventQueue;
-  OSS::CacheManager _2xxRetransmitCache;
+  RetransmitCache _2xxRetransmitCache;
+  OSS::mutex_critic_sec _2xxRetransmitCacheMutex;
 };
 
 //

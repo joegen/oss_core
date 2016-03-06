@@ -159,13 +159,13 @@ void SIPFSMDispatch::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
         // No IST is existing in the ackable Pool.
         // Report this ACK as orphaned to the UA CORE
         //
-        if (_ackFor2xxTransactionHandler)
-          _ackFor2xxTransactionHandler(pMsg, pTransport);
+        if (_ackOr2xxTransactionHandler)
+          _ackOr2xxTransactionHandler(pMsg, pTransport);
     }
     else if (transactionType == SIPTransaction::TYPE_ICT && pMsg->is2xx())
     {
-      if (_ackFor2xxTransactionHandler)
-        _ackFor2xxTransactionHandler(pMsg, pTransport);
+      if (_ackOr2xxTransactionHandler)
+        _ackOr2xxTransactionHandler(pMsg, pTransport);
     }
     else
     {
@@ -205,6 +205,7 @@ void SIPFSMDispatch::sendRequest(
 
   SIPTransaction::Ptr trn;
   SIPTransportSession::Ptr nullTransport;
+  bool isAck = false;
   if (OSS::string_caseless_starts_with(pRequest->startLine(), "invite"))
   {
     //
@@ -217,7 +218,11 @@ void SIPFSMDispatch::sendRequest(
     //
     // This is an NICT
     //
-    trn = _nict.findTransaction(pRequest, nullTransport);
+    isAck = pRequest->isRequest(OSS::SIP::REQ_ACK);
+    if (!isAck)
+    {
+      trn = _nict.findTransaction(pRequest, nullTransport);
+    }
   }
 
   if (trn)

@@ -943,6 +943,7 @@ void SIPStack::sendRequestDirect(const SIPMessage::Ptr& pRequest,
   const OSS::Net::IPAddress& remoteAddress)
 {
 
+  std::string logId = pRequest->createContextId(true);
   std::string transport;
   if (SIPVia::msgGetTopViaTransport(pRequest.get(), transport))
   {
@@ -950,10 +951,24 @@ void SIPStack::sendRequestDirect(const SIPMessage::Ptr& pRequest,
     pRequest->getProperty(OSS::PropertyMap::PROP_TransportId, transportId);
     if (transportId.empty())
       transportId="0";
-    OSS_LOG_DEBUG("Sending request directly protocol=" << transport << " id=" << transportId);
+    OSS_LOG_DEBUG(logId << "Sending request directly protocol=" << transport << " id=" << transportId);
     SIPTransportSession::Ptr client = _fsmDispatch.transport().createClientTransport(pRequest, localAddress, remoteAddress, transport, transportId);
-    if (client)
+    if (client) 
+    {
+      std::string isXOREncrypted = "0";
+      pRequest->getProperty("xor", isXOREncrypted);
+
+      std::ostringstream logMsg;
+      logMsg << logId << ">>> " << pRequest->startLine()
+      << " LEN: " << pRequest->data().size()
+      << " SRC: " << localAddress.toIpPortString()
+      << " DST: " << remoteAddress.toIpPortString()
+      << " ENC: " << isXOREncrypted;
+      OSS::log_information(logMsg.str());
+      if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
+        OSS::log_debug(pRequest->createLoggerData());
       client->writeMessage(pRequest, remoteAddress.toString(), OSS::string_from_number(remoteAddress.getPort()));
+    }
     else
       OSS_LOG_ERROR("SIPStack::sendRequestDirect failed - Unable to create client transport");
   }

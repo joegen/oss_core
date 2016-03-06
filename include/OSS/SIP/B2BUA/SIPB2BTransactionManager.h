@@ -362,7 +362,7 @@ protected:
     const OSS::SIP::SIPTransaction::Ptr& pTransaction);
     /// This is the incoming request callback that will be attached to the stack
 
-  void handleAckFor2xxTransaction(
+  void handleAckOr2xxTransaction(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport);
     /// Handler of ACK and 200 Ok retransmission

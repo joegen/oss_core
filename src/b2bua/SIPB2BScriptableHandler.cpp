@@ -1778,12 +1778,17 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
   }
 }
 
-void SIPB2BScriptableHandler::onProcessAckFor2xxRequest(
+void SIPB2BScriptableHandler::onProcessAckOr2xxRequest(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport)
 {
   std::string logId = pMsg->createContextId(true);
-  OSS_LOG_DEBUG(logId << "Processing ACK for 2xx request " << pMsg->startLine());
+  std::string msgType = "2xx";
+  if (pMsg->isRequest(OSS::SIP::REQ_ACK))
+  {
+    msgType = "ACK";
+  }
+  OSS_LOG_DEBUG(logId << "Processing " << msgType << " request " << pMsg->startLine());
   {
     std::string isXOREncrypted = "0";
     pMsg->getProperty(OSS::PropertyMap::PROP_XOR, isXOREncrypted);

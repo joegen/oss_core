@@ -128,23 +128,23 @@ void SIPB2BTransactionManager::handleRequest(
   }
 }
 
-void SIPB2BTransactionManager::handleAckFor2xxTransaction(
+void SIPB2BTransactionManager::handleAckOr2xxTransaction(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport)
 {
   SIPB2BHandler::Ptr pHandler = findHandler(SIPB2BHandler::TYPE_INVITE);
   if (pHandler)
   {
-    if (_threadPool.schedule(boost::bind(&SIPB2BHandler::onProcessAckFor2xxRequest, pHandler, pMsg, pTransport)) == -1)
+    if (_threadPool.schedule(boost::bind(&SIPB2BHandler::onProcessAckOr2xxRequest, pHandler, pMsg, pTransport)) == -1)
     {
-      OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleAckFor2xxTransaction");
+      OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleAckOr2xxTransaction");
     }
   }
   else if (_pDefaultHandler)
   {
-    if (_threadPool.schedule(boost::bind(&SIPB2BHandler::onProcessAckFor2xxRequest, _pDefaultHandler, pMsg, pTransport)) == -1)
+    if (_threadPool.schedule(boost::bind(&SIPB2BHandler::onProcessAckOr2xxRequest, _pDefaultHandler, pMsg, pTransport)) == -1)
     {
-      OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleAckFor2xxTransaction");
+      OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleAckOr2xxTransaction");
     }
   }
 }

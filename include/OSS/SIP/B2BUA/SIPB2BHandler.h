@@ -248,7 +248,7 @@ public:
     /// headers to the desired application-specific values for as long
     /// as it wont conflict with dialog creation states.
 
-  virtual void onProcessAckFor2xxRequest(
+  virtual void onProcessAckOr2xxRequest(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport){};
     /// Call back for ACK and 200 OK request for INVITE handler
