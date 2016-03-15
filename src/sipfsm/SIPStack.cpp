@@ -834,6 +834,15 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       }
     }
   }
+  
+  if (listeners.exists("auto-null-route-on-ban"))
+  {
+    bool autoNullRouteOnBan = (bool)listeners["auto-null-route-on-ban"];
+    if (autoNullRouteOnBan)
+    {
+      SIPTransportSession::rateLimit().setAutoNullRoute(true);
+    }
+  }
 
   transportInit();
 }

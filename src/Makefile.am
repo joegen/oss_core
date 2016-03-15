@@ -444,13 +444,13 @@ oss_core_unit_test_SOURCES = \
 
 
 SIP_TEST = \
-    test_sip_invite_simple
+    oss_test_sip_invite_simple
 
 #
 # test_forked_100rel
 #
-test_sip_invite_simple_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
-test_sip_invite_simple_SOURCES = siptest/TestInviteSimple.cpp
+oss_test_sip_invite_simple_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
+oss_test_sip_invite_simple_SOURCES = siptest/TestInviteSimple.cpp
 
 bin_PROGRAMS = \
     $(SIP_TEST) \

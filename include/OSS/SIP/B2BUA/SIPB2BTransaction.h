@@ -219,6 +219,8 @@ protected:
   OSS::dns_srv_record_list _tlsSrvTargets;
   OSS::Net::IPAddress _localInterface;
   SIPB2BDialogData _dialogData;
+  bool _isChallenged;
+  std::string _pendingSubscriptionId;
   friend class SIPB2BTransactionManager;
 };
 

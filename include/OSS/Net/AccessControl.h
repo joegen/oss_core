@@ -117,6 +117,16 @@ public:
   
   void setBanCallback(const BanCallback& banCallback);
   
+  static bool addNullRoute(const boost::asio::ip::address& address);
+  
+  static bool delNullRoute(const boost::asio::ip::address& address);
+  
+  static bool addNullRoute(long host);
+  
+  static bool delNullRoute(long host);
+  
+  void setAutoNullRoute(bool autoNullRoute);
+  
 private:
   bool _enabled;
   unsigned long _packetsPerSecondThreshold;
@@ -134,6 +144,7 @@ private:
   boost::posix_time::ptime _lastTime;
   bool _denyAllIncoming;
   BanCallback _banCallback;
+  bool _autoNullRoute;
 };
 
 //
@@ -233,6 +244,23 @@ inline void AccessControl::logPacket(const std::string& source, std::size_t byte
 inline void AccessControl::setBanCallback(const BanCallback& banCallback)
 {
   _banCallback = banCallback;
+}
+
+inline bool AccessControl::addNullRoute(const boost::asio::ip::address& address)
+{
+  long addr = boost::asio::ip::address_v4::from_string(address.to_string()).to_ulong(); 
+  return addNullRoute(addr);
+}
+  
+inline bool AccessControl::delNullRoute(const boost::asio::ip::address& address)
+{
+  long addr = boost::asio::ip::address_v4::from_string(address.to_string()).to_ulong(); 
+  return delNullRoute(addr);
+}
+
+inline void AccessControl::setAutoNullRoute(bool autoNullRoute)
+{
+  _autoNullRoute = autoNullRoute;
 }
 
 

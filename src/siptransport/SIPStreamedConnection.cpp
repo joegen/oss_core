@@ -598,6 +598,8 @@ void SIPStreamedConnection::handleServerHandshake(const boost::system::error_cod
     }
     
     socket().close();
+    
+    _connectionManager.stop(shared_from_this());
   }
 }
 

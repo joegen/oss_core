@@ -37,36 +37,20 @@ SIPB2BTransaction::SIPB2BTransaction(SIPB2BTransactionManager* pManager) :
   _pManager(pManager),
   _pInternalPtr(0),
   _hasSentLocalResponse(false),
-  _isMidDialog(false)
+  _isMidDialog(false),
+  _isChallenged(false)
 {
 }
 
 SIPB2BTransaction::~SIPB2BTransaction()
 {
-  //
-  // When instantiated from karooctl scripts validate,
-  // _pManager will be null
-  //
-  if (_pManager)
+  std::string trnId;
+  if (_pServerRequest)
+    _pServerRequest->getTransactionId(trnId);
   {
-    //
-    // Remove pending subscription from the set
-    //
-    if (_pClientRequest && _pClientRequest->isRequest("SUBSCRIBE"))
-    {
-      const std::string& callId = _pClientRequest->hdrGet(OSS::SIP::HDR_CALL_ID);
-      OSS_LOG_DEBUG(_logId << "Removing pending subscription for call-id " << callId);
-      _pManager->removePendingSubscription(callId);
-    }
-
-    std::string trnId;
-    if (_pServerRequest)
-      _pServerRequest->getTransactionId(trnId);
-    {
-      std::ostringstream logMsg;
-      logMsg << _logId << "B2B Transaction DESTROYED - " << trnId;
-      OSS::log_information(logMsg.str());
-    }
+    std::ostringstream logMsg;
+    logMsg << _logId << "B2B Transaction DESTROYED - " << trnId;
+    OSS::log_information(logMsg.str());
   }
 }
 
@@ -96,6 +80,24 @@ bool SIPB2BTransaction::onRouteResponse(
 
 void SIPB2BTransaction::releaseInternalRef()
 {
+  //
+  // When instantiated from karooctl scripts validate,
+  // _pManager will be null
+  //
+
+  //
+  // Remove pending subscription from the set
+  //
+  if (!_isChallenged && !_pendingSubscriptionId.empty())
+  {
+    if (_pManager) 
+    {
+      OSS_LOG_DEBUG(_logId << "Removing pending subscription for call-id " << _pendingSubscriptionId);
+      _pManager->removePendingSubscription(_pendingSubscriptionId);
+    }
+  }
+  
+  
   _pManager->onDestroyTransaction(shared_from_this());
   delete _pInternalPtr;
   _pInternalPtr = 0;
@@ -162,8 +164,12 @@ void SIPB2BTransaction::runTask()
       if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
       {
         if (target.isValid())
+        {
+          _isChallenged = true;
           _pServerTransaction->sendResponse(pAuthenticator, target);
+        }
       }
+      
       releaseInternalRef();
       return;
     }
@@ -367,9 +373,9 @@ void SIPB2BTransaction::runTask()
     //
     if (_pClientRequest->isRequest("SUBSCRIBE"))
     {
-      const std::string& callId = _pClientRequest->hdrGet(OSS::SIP::HDR_CALL_ID);
-      OSS_LOG_DEBUG(_logId << "REmoving pending subscription for call-id " << callId);
-      _pManager->addPendingSubscription(callId);
+      _pendingSubscriptionId = _pClientRequest->hdrGet(OSS::SIP::HDR_CALL_ID);
+      OSS_LOG_DEBUG(_logId << "Adding pending subscription for call-id " << _pendingSubscriptionId);
+      _pManager->addPendingSubscription(_pendingSubscriptionId);
     }
     
     //
