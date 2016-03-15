@@ -265,7 +265,14 @@ void SIPTransaction::sendRequest(
       terminate();
       return;
     }
-        
+    
+    //
+    // Note.  Connect function is async.  We cannot guaranty that
+    // the socket is already connected.  Instead, if the transport
+    // is reliable, writeMessage() will simply queue the request
+    // and send it as soon as the transport is started
+    //
+#if 0        
     if (_transport->isReliableTransport() && !_transport->isConnected() && !_transport->isEndpoint())
     {
       //
@@ -281,6 +288,7 @@ void SIPTransaction::sendRequest(
       
       //throw OSS::SIP::SIPException("Unable to create transport!");
     }
+#endif
   }
 
   if (_transport->isReliableTransport())

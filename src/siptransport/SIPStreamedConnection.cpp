@@ -80,7 +80,8 @@ SIPStreamedConnection::SIPStreamedConnection(
     _resolver(ioService),
     _connectionManager(manager),
     _pDispatch(0),
-    _readExceptionCount(0)
+    _readExceptionCount(0),
+    _isClientStarted(false)
 {
   _transportScheme = "tcp";
   _pTcpSocket = new boost::asio::ip::tcp::socket(ioService);
@@ -149,6 +150,17 @@ void SIPStreamedConnection::start(const SIPTransportSession::Dispatch& dispatch)
     // we can start reading from the secure stream at this point 
     //  
     readSome();
+    
+    OSS::mutex_critic_sec_lock lock(_pendingMutex);
+    _isClientStarted = true;
+    
+    while (!_pending.empty())
+    {
+      SIPMessage::Ptr pPending = _pending.front();
+      _pending.pop();
+      writeMessage(pPending->data());
+    }
+    
   }
   else
   {
@@ -197,7 +209,7 @@ void SIPStreamedConnection::readSome()
 }
 
 void SIPStreamedConnection::writeMessage(const std::string& buf)
-{
+{ 
   if (_pTlsStream)
   {
     ssl_socket& sock = *_pTlsStream;
@@ -228,6 +240,14 @@ void SIPStreamedConnection::writeMessage(const std::string& buf, boost::system::
 
 void SIPStreamedConnection::writeMessage(SIPMessage::Ptr msg)
 {
+  {
+    OSS::mutex_critic_sec_lock lock(_pendingMutex);
+    if (_isClient && !_isClientStarted)
+    {
+      _pending.push(msg);
+      return;
+    }
+  }
   writeMessage(msg->data());
 }
 
@@ -477,6 +497,7 @@ bool SIPStreamedConnection::clientConnect(const OSS::Net::IPAddress& target, boo
     
     boost::asio::ip::tcp::endpoint endpoint(addr, target.getPort() == 0 ? 5060 : target.getPort());
     
+#if 0
     // Set a deadline for the asynchronous operation. As a host name may
     // resolve to multiple endpoints, this function uses the composed operation
     // async_connect. The deadline applies to the entire operation, rather than
@@ -496,10 +517,12 @@ bool SIPStreamedConnection::clientConnect(const OSS::Net::IPAddress& target, boo
     // can use boost::bind rather than boost::lambda.
     Semaphore sem;
     _pTcpSocket->async_connect(*ep, boost::bind(&SIPStreamedConnection::handleConnect, shared_from_this(), boost::asio::placeholders::error, ep, &ec, &sem));
-    
-    // Block until the asynchronous operation has completed.
     _deadline.async_wait(boost::bind(&SIPStreamedConnection::handleConnectTimeout, shared_from_this(), boost::asio::placeholders::error));
+    // Block until the asynchronous operation has completed.
     sem.wait();
+#else
+    _pTcpSocket->async_connect(*ep, boost::bind(&SIPStreamedConnection::handleConnect, shared_from_this(), boost::asio::placeholders::error, ep, (boost::system::error_code*)0, (Semaphore*)0));
+#endif    
     
     if (_pTcpSocket->is_open())
     {
@@ -536,7 +559,6 @@ void SIPStreamedConnection::handleConnect(const boost::system::error_code& e, bo
   
   if (!e && _isClient)
   {
-    _isConnected = true;
     boost::system::error_code ignore_ec;
     _deadline.cancel(ignore_ec);
     if (!_pTlsStream)

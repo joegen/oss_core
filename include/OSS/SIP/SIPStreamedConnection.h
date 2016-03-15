@@ -27,6 +27,7 @@
 #include <boost/array.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <queue>
 #include "OSS/SIP/SIP.h"
 #include "OSS/SIP/SIPMessage.h"
 #include "OSS/SIP/SIPTransportSession.h"
@@ -51,6 +52,7 @@ public:
   typedef boost::asio::ip::tcp::socket::endpoint_type EndPoint;
   typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
   typedef boost::asio::ip::tcp::socket tcp_socket;
+  typedef std::queue<SIPMessage::Ptr> Pending;
   
   enum ConnectionError
   {
@@ -169,6 +171,9 @@ protected:
   mutable OSS::Net::IPAddress _lastReadAddress;
   
   int _readExceptionCount;
+  bool _isClientStarted;
+  Pending _pending;
+  OSS::mutex_critic_sec _pendingMutex;
 };
 
 
