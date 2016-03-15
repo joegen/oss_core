@@ -602,7 +602,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
       pTCPConnection = _tcpConMgr.findConnectionByAddress(remoteAddress);
     }
     
-    if (pTCPConnection)
+    if (!pTCPConnection)
     {
       //
       // Check if the previous TCP connection has a persistent reconnect address
