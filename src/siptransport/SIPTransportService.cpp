@@ -604,26 +604,6 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
     
     if (!pTCPConnection)
     {
-      //
-      // Check if the previous TCP connection has a persistent reconnect address
-      //
-      if (pTCPConnection->getReconnectAddress().isValid())
-      {
-        OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
-          << " with remote-address=" << remoteAddress.toIpPortString()
-          << " .  Reconnecting to " << pTCPConnection->getReconnectAddress().toIpPortString());
-        pTCPConnection = createClientTcpTransport(localAddress, pTCPConnection->getReconnectAddress());
-      }
-      else
-      {
-        OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
-          << " with remote-address=" << remoteAddress.toIpPortString()
-          << " .  Reconnecting to " << localAddress.toIpPortString() );
-        pTCPConnection = createClientTcpTransport(localAddress, remoteAddress);
-      }
-    }
-    else if (!pTCPConnection)
-    {
       OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
           << " with remote-address=" << remoteAddress.toIpPortString()
           << " creating new connection.");

@@ -80,11 +80,12 @@ SIPStreamedConnection::SIPStreamedConnection(
     _resolver(ioService),
     _connectionManager(manager),
     _pDispatch(0),
-    _readExceptionCount(0),
-    _isClientStarted(false)
+    _readExceptionCount(0)
 {
   _transportScheme = "tcp";
   _pTcpSocket = new boost::asio::ip::tcp::socket(ioService);
+  _isClient = false;
+  _isClientStarted = false;
 }
 
 SIPStreamedConnection::SIPStreamedConnection(
@@ -106,6 +107,8 @@ SIPStreamedConnection::SIPStreamedConnection(
   _transportScheme = "tls";
   _pTlsStream = new ssl_socket(ioService, *_pTlsContext);
   _pTcpSocket = &_pTlsStream->next_layer();
+  _isClient = false;
+  _isClientStarted = false;
   
 }
 
@@ -244,6 +247,7 @@ void SIPStreamedConnection::writeMessage(SIPMessage::Ptr msg)
     OSS::mutex_critic_sec_lock lock(_pendingMutex);
     if (_isClient && !_isClientStarted)
     {
+      OSS_LOG_INFO("SIPStreamedConnection::writeMessage - delaying sending of SIP Request " << msg->startLine());
       _pending.push(msg);
       return;
     }
