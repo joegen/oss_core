@@ -671,9 +671,10 @@ OSS::Net::IPAddress SIPStreamedConnection::getLocalAddress() const
 OSS::Net::IPAddress SIPStreamedConnection::getRemoteAddress() const
 {
   if (_lastReadAddress.isValid())
+  {
     return _lastReadAddress;
-
-  if (_pTcpSocket->is_open())
+  }
+  else if (_pTcpSocket->is_open())
   {
 
       boost::system::error_code ec;
@@ -686,10 +687,15 @@ OSS::Net::IPAddress SIPStreamedConnection::getRemoteAddress() const
       }
       else
       {
-        OSS_LOG_WARNING("SIPStreamedConnection::getRemoteAddress() Exception " << ec.message());
+        OSS_LOG_WARNING("SIPStreamedConnection::getRemoteAddress() Exception " << ec.message() << ". Using connect address");
         return _connectAddress;
       }
   }
+  else if (_connectAddress.isValid())
+  {
+    return _connectAddress;
+  }
+  
   return OSS::Net::IPAddress();
 }
 
