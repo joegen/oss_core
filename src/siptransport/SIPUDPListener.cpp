@@ -23,6 +23,7 @@
 #include "OSS/SIP/SIPUDPListener.h"
 #include "OSS/SIP/SIPTransportService.h"
 #include "OSS/UTL/Logger.h"
+#include "OSS/Net/Net.h"
 
 namespace OSS {
 namespace SIP {
@@ -52,6 +53,7 @@ void SIPUDPListener::run()
     assert(!_socket);
     boost::asio::ip::address addr = boost::asio::ip::address::from_string(getAddress());
     _socket = new boost::asio::ip::udp::socket(_pTransportService->ioService(), boost::asio::ip::udp::endpoint(addr, atoi(_port.c_str())));
+    socket_ip_tos_set(_socket->native(), addr.is_v4() ? AF_INET : AF_INET6, 96 /*DSCP=24(CS3) ECN=00*/);
     _pNewConnection.reset(new SIPUDPConnection(_pTransportService->ioService(), *_socket, this));
     _pNewConnection->setExternalAddress(_externalAddress);
     _pNewConnection->start(_dispatch);

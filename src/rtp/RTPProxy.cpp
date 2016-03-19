@@ -25,6 +25,8 @@
 #include "OSS/RTP/RTPProxyManager.h"
 #include "OSS/RTP/RTPProxySession.h"
 #include "OSS/SIP/SIPXOR.h"
+#include "OSS/Net/Net.h"
+
 
 namespace OSS {
 namespace RTP {
@@ -76,6 +78,9 @@ bool RTPProxy::open(
   _pLeg2Socket = new boost::asio::ip::udp::socket(_pManager->_ioService);
   _pLeg1Socket->open(boost::asio::ip::udp::v4());
   _pLeg2Socket->open(boost::asio::ip::udp::v4());
+  
+  socket_ip_tos_set(_pLeg1Socket->native(), leg1Listener.address().is_v4() ? AF_INET : AF_INET6, 184 /*DSCP=46(EF) ECN=00*/);
+  socket_ip_tos_set(_pLeg2Socket->native(), leg2Listener.address().is_v4() ? AF_INET : AF_INET6, 184 /*DSCP=46(EF) ECN=00*/);
 
   boost::asio::ip::address addr1 = const_cast<OSS::Net::IPAddress&>(leg1Listener).address();
   _localEndPointLeg1 = boost::asio::ip::udp::endpoint(addr1, leg1Listener.getPort());

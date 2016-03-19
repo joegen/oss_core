@@ -24,6 +24,7 @@
 #include <boost/asio.hpp>
 #include <boost/system/error_code.hpp>
 #include "OSS/SIP/SIP.h"
+#include "OSS/Net/IPAddress.h"
 
 
 namespace OSS {
@@ -112,6 +113,10 @@ public:
   
   const std::string& getTransportAlias() const;
   
+  bool isV4() const;
+  
+  bool isV6() const;
+   
 protected:
   SIPListener(const SIPListener&);
   SIPListener& operator = (const SIPListener&);
@@ -128,6 +133,7 @@ protected:
   bool _hasStarted;
   bool _isEndpoint;
   bool _isRunning;
+  OSS::Net::IPAddress _netAddress;
 };
 
 //
@@ -207,6 +213,16 @@ inline void SIPListener::setTransportAlias(const std::string& alias)
 inline const std::string& SIPListener::getTransportAlias() const
 {
   return _alias;
+}
+
+inline bool SIPListener::isV4() const
+{
+  return _netAddress.address().is_v4();
+}
+  
+inline bool SIPListener::isV6() const
+{
+  return _netAddress.address().is_v6();
 }
 
 } } // OSS::SIP

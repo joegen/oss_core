@@ -146,6 +146,12 @@ void SIPStreamedConnection::start(const SIPTransportSession::Dispatch& dispatch)
 {
   setMessageDispatch(dispatch);
   _isConnected = true; 
+  
+  if (_pTcpSocket)
+  {
+    socket_ip_tos_set(_pTcpSocket->native(), _pListener->isV4() ? AF_INET : AF_INET6, 96 /*DSCP=24(CS3) ECN=00*/);
+  }
+  
   if (_isClient)
   {
     //

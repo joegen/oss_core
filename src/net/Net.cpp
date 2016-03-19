@@ -1013,6 +1013,15 @@ bool socket_udp_get_broadcast(socket_handle handle)
   }
 }
 
+bool socket_ip_tos_set(int fd, int family, int tos)
+{
+    if (family != AF_INET6) {
+        return (setsockopt(fd, IPPROTO_IP, IP_TOS, (const void*)&tos, sizeof(tos)) < 0) ? false : true;
+    } else {
+        return (setsockopt(fd, IPPROTO_IPV6, IPV6_TCLASS, &tos, sizeof(tos)) < 0) ? false : true;
+    }
+}
+
 //
 // Net Timer functions
 //

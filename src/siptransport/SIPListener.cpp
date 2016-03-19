@@ -39,7 +39,11 @@ SIPListener::SIPListener(
     _isEndpoint(false)
 {
   if (_pTransportService)
+  {
     _pIoService = (&(_pTransportService->ioService()));
+  }
+  
+  _netAddress = OSS::Net::IPAddress(address);
 }
 
 SIPListener::SIPListener(
@@ -58,6 +62,8 @@ SIPListener::SIPListener(
 {
   if (_pTransportService)
     _pIoService = (&(_pTransportService->ioService()));
+  
+  _netAddress = OSS::Net::IPAddress(address);
 }
 
 
