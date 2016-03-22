@@ -58,6 +58,8 @@ public:
 	typedef boost::function<void(const SIPTransaction::Ptr&)> TerminateCallback;
   typedef boost::function<void(const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> RequestCallback;
   typedef std::map<std::string, SIPTransaction::Ptr> Branches;
+  typedef RequestCallback FinalResponseCallback;
+  
   enum Type
   {
     TYPE_UNKNOWN,
@@ -305,9 +307,13 @@ public:
     /// Called from SIPTransaction::termiante to signal the parent transaction
     /// that a child has terminated
 
+  void setFinalResponseCallback(const FinalResponseCallback& finalResponseCallback);
+  
 protected:
   SIPTransaction::Callback _responseTU;
   SIPTransaction::TerminateCallback _terminateCallback;
+  SIPTransaction::FinalResponseCallback _finalResponseCallback;
+  
   Type _type;
 private:
   SIPTransaction(const SIPTransaction&);
@@ -440,6 +446,11 @@ inline bool SIPTransaction::isParent() const
 inline SIPTransaction::Type SIPTransaction::getType() const
 {
   return _type;
+}
+
+inline void SIPTransaction::setFinalResponseCallback(const FinalResponseCallback& finalResponseCallback)
+{
+  _finalResponseCallback = finalResponseCallback;
 }
 
 } } // namespace OSS::SIP

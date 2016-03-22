@@ -353,6 +353,14 @@ void SIPTransaction::sendResponse(
   else
   {
     //
+    // Check if a final response callback is present
+    //
+    if (_finalResponseCallback && pResponse->isFinalResponse())
+    {
+      _finalResponseCallback(pResponse, _transport, shared_from_this());
+    }
+    
+    //
     // No branch is found.  This instance will handle the response
     //
     if (_transport && _transport->isReliableTransport())
