@@ -53,6 +53,7 @@ static const char REQ_NOTIFY[]    = "NOTIFY";
 static const char REQ_PUBLISH[]   = "PUBLISH";
 static const char REQ_MESSAGE[]   = "MESSAGE";
 static const char REQ_OPTIONS[]   = "OPTIONS";
+static const char REQ_REGISTER[]   = "REGISTER";
 
 
 class OSS_API SIPMessage : 
