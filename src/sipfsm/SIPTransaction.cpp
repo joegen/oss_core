@@ -67,6 +67,7 @@ SIPTransaction::SIPTransaction(SIPTransaction::Ptr pParent) :
   _id = pParent->getId();
   _logId = pParent->getLogId();
   _pInitialRequest = pParent->getInitialRequest();
+  _responseCallback = pParent->_responseCallback;
   std::ostringstream logMsg;
   logMsg << _logId << getTypeString() << " " << _id << " CREATED";
   OSS::log_debug(logMsg.str());
@@ -353,11 +354,11 @@ void SIPTransaction::sendResponse(
   else
   {
     //
-    // Check if a final response callback is present
+    // Check if a response callback is present
     //
-    if (_finalResponseCallback && pResponse->isFinalResponse())
+    if (_responseCallback)
     {
-      _finalResponseCallback(pResponse, _transport, shared_from_this());
+      _responseCallback(pResponse, _transport, shared_from_this());
     }
     
     //
