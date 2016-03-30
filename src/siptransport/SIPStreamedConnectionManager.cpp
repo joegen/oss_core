@@ -56,7 +56,7 @@ void SIPStreamedConnectionManager::add(SIPStreamedConnection::Ptr conn)
   _connections[conn->getIdentifier()] = conn;
   OSS_LOG_INFO("SIPStreamedConnectionManager Added transport (" << conn->getIdentifier() << ") "
     << conn->getLocalAddress().toIpPortString() <<
-    "->" << conn->getRemoteAddress().toIpPortString() );
+    "->" << conn->getRemoteAddress().toIpPortString() << " Count: " << _connections.size() );
 }
 
 void SIPStreamedConnectionManager::start(SIPStreamedConnection::Ptr conn)
@@ -68,7 +68,7 @@ void SIPStreamedConnectionManager::start(SIPStreamedConnection::Ptr conn)
   conn->start(_dispatch);
   OSS_LOG_INFO("SIPStreamedConnectionManager started reading from transport (" << conn->getIdentifier() << ") "
     << conn->getLocalAddress().toIpPortString() <<
-    "->" << conn->getRemoteAddress().toIpPortString() );
+    "->" << conn->getRemoteAddress().toIpPortString() << " Count: " << _connections.size());
 }
 
 void SIPStreamedConnectionManager::stop(SIPStreamedConnection::Ptr conn)
@@ -77,7 +77,7 @@ void SIPStreamedConnectionManager::stop(SIPStreamedConnection::Ptr conn)
 
   OSS_LOG_INFO("Deleting SIPStreamedConnection transport (" << conn->getIdentifier() << ") "
     << conn->getLocalAddress().toIpPortString() <<
-    "->" << conn->getRemoteAddress().toIpPortString() );
+    "->" << conn->getRemoteAddress().toIpPortString() << " Count: " << _connections.size() - 1);
 
   _connections.erase(conn->getIdentifier());
   conn->stop();
