@@ -174,6 +174,7 @@ protected:
   bool _isClientStarted;
   Pending _pending;
   OSS::mutex_critic_sec _pendingMutex;
+  bool _isStopping;
 };
 
 
