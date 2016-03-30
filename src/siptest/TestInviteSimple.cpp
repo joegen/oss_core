@@ -203,6 +203,8 @@ void uac_thread(SIPEndpoint* pEndpoint)
         case SIPEndpoint::Incoming2xxRetran:
           uac_send_ack_for_invite(pEndpoint, pEvent);
           break;
+        case SIPEndpoint::AckTimeout:
+          break;
         case SIPEndpoint::EndpointTerminated:
           terminated = true;
           break;
@@ -246,6 +248,8 @@ void uas_thread(SIPEndpoint* pEndpoint)
         case SIPEndpoint::IncomingAckFor2xx:
           break;
         case SIPEndpoint::Incoming2xxRetran:
+          break;
+        case SIPEndpoint::AckTimeout:
           break;
         case SIPEndpoint::EndpointTerminated:
           terminated = true;

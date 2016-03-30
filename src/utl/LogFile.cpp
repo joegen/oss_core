@@ -89,7 +89,7 @@ namespace UTL {
   static const std::string LOGGER_DEFAULT_NAME = "Core Logger";
   static const std::string LOGGER_DEFAULT_FORMAT = "%h-%M-%S.%i: %t"; 
   static const LogFile::Priority LOGGER_DEFAULT_PRIORITY = LogFile::PRIO_INFORMATION;
-  static const unsigned int LOGGER_DEFAULT_PURGE_COUNT = 0; /// Disable log rotatepoco
+  static const unsigned int LOGGER_DEFAULT_PURGE_COUNT = 7; /// Default to one week
   static unsigned int DEFAULT_VERIFY_TTL = 5; /// TTL in seconds for verification to kick in
 
     
@@ -188,13 +188,12 @@ namespace UTL {
       _priority = priority;
       _format = format;
       _purgeCount = purgeCount;
-
-      bool enableLogRotate = LOGGER_DEFAULT_PURGE_COUNT > 0;
-      std::string strPurgeCount = boost::lexical_cast<std::string>(purgeCount);
+   
       Poco::AutoPtr<Poco::FileChannel> fileChannel(new Poco::FileChannel(path));
 
-      if (enableLogRotate)
+      if (_purgeCount > 0)
       {
+        std::string strPurgeCount = boost::lexical_cast<std::string>(purgeCount);
         fileChannel->setProperty("rotation", "daily");
         fileChannel->setProperty("archive", "timestamp");
         fileChannel->setProperty("compress", "true");
