@@ -173,10 +173,22 @@ public:
 
   bool del(const std::string& key);
   
+  RedisClient* defaultClient();
+  
 protected:
   Pool _pool;
   RedisClient* _defaultClient;
 };
+
+
+//
+// Inlines
+//
+
+inline RedisClient* RedisBroadcastClient::defaultClient()
+{
+  return _defaultClient;
+}
 
 } } // OSS::Persistent
 
