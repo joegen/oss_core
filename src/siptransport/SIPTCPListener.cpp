@@ -118,12 +118,24 @@ void SIPTCPListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE
     }
     else
     {
-      OSS_LOG_DEBUG("SIPTCPListener::handleAccept ABORTING async accept loop");
+      OSS_LOG_ERROR("SIPTCPListener::handleAccept ABORTING async accept loop");
     }
   }
   else
   {
-    OSS_LOG_DEBUG("SIPTCPListener::handleAccept INVOKED with exception " << e.message());
+    OSS_LOG_ERROR("SIPTCPListener::handleAccept INVOKED with exception " << e.message());
+    if (_acceptor.is_open())
+    {
+      OSS_LOG_DEBUG("SIPTCPListener::handleAccept RESTARTING async accept loop");
+      _pNewConnection.reset(new SIPStreamedConnection(*_pIoService, _connectionManager, this));
+      _acceptor.async_accept(dynamic_cast<SIPStreamedConnection*>(_pNewConnection.get())->socket(),
+        boost::bind(&SIPTCPListener::handleAccept, this,
+          boost::asio::placeholders::error, userData));
+    }
+    else
+    {
+      OSS_LOG_ERROR("SIPTCPListener::handleAccept ABORTING async accept loop");
+    }
   }
 }
 
