@@ -28,6 +28,7 @@
 #include "OSS/SIP/SIPException.h"
 #include "OSS/SIP/SIPXOR.h"
 #include "OSS/SIP/SIPFrom.h"
+#include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 
 
 namespace OSS {
@@ -704,6 +705,16 @@ bool SIPTransaction::allBranchesTerminated() const
     if (iter->second->getState() != SIPTransaction::TRN_STATE_TERMINATED)
       return false;
   return true;
+}
+
+void SIPTransaction::attachB2BTransaction(const B2BTransactionSharedPtr& pB2BTransaction)
+{
+  _pB2BTransaction = pB2BTransaction;
+}
+
+SIPTransaction::B2BTransactionSharedPtr  SIPTransaction::getB2BTransaction()
+{
+  return _pB2BTransaction.lock();
 }
 
 

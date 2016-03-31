@@ -127,6 +127,7 @@ void SIPB2BTransaction::runTask()
     }
 
     _logId =  _pServerTransaction->getLogId();
+    _pServerTransaction->attachB2BTransaction(shared_from_this());
 
     std::string trnId;
     _pServerRequest->getTransactionId(trnId);
@@ -431,7 +432,10 @@ void SIPB2BTransaction::handleResponse(
     _pTransactionError = e;
 
   if (!_pClientTransaction)
+  {
     _pClientTransaction = pTransaction;
+    _pClientTransaction->attachB2BTransaction(shared_from_this());
+  }
 
   if (!_pClientTransport)
     _pClientTransport = pTransport;

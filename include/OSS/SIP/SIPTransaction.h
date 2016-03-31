@@ -35,6 +35,17 @@
 #include "OSS/SIP/SIPFsm.h"
 #include "OSS/SIP/SIPStreamedConnection.h"
 
+//
+// Forward declaration for SIPB2BTransaction
+//
+
+namespace OSS {
+namespace SIP {
+namespace B2BUA {
+  
+class SIPB2BTransaction;  
+  
+} } }
 
 namespace OSS {
 namespace SIP {
@@ -58,6 +69,8 @@ public:
 	typedef boost::function<void(const SIPTransaction::Ptr&)> TerminateCallback;
   typedef boost::function<void(const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> RequestCallback;
   typedef std::map<std::string, SIPTransaction::Ptr> Branches;
+  typedef boost::weak_ptr<OSS::SIP::B2BUA::SIPB2BTransaction> B2BTransactionWeakPtr;
+  typedef boost::shared_ptr<OSS::SIP::B2BUA::SIPB2BTransaction> B2BTransactionSharedPtr;
   typedef RequestCallback ResponseCallback;
   
   enum Type
@@ -307,12 +320,17 @@ public:
     /// Called from SIPTransaction::termiante to signal the parent transaction
     /// that a child has terminated
 
-  void setResponseCallback(const ResponseCallback& _esponseCallback);
+  void setResponseCallback(const ResponseCallback& responseCallback);
+    /// Set a response callback for server transactions
   
+  void attachB2BTransaction(const B2BTransactionSharedPtr& pB2BTransaction);
+  
+  B2BTransactionSharedPtr getB2BTransaction();
 protected:
   SIPTransaction::Callback _responseTU;
   SIPTransaction::TerminateCallback _terminateCallback;
   SIPTransaction::ResponseCallback _responseCallback;
+  B2BTransactionWeakPtr _pB2BTransaction;
   
   Type _type;
 private:
