@@ -401,7 +401,8 @@ liboss_core_la_SOURCES =  \
     ws/src/sockets/tls.hpp \
     ws/src/utf8_validator/utf8_validator.hpp \
     ep/EndpointConnection.cpp \
-    ep/EndpointListener.cpp
+    ep/EndpointListener.cpp \
+    zmq/ZMQSocket.cpp
 
 if ENABLE_TURN
     liboss_core_la_SOURCES += net/TurnServer.cpp

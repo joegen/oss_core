@@ -168,7 +168,7 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     AC_CHECK_LIB(xmlrpc, main, [], [SF_MISSING_DEP("XML RPC C Foundation classes not found")])
     AC_CHECK_LIB(xmlrpc_client++, main, [], [SF_MISSING_DEP("XML RPC C++ client classes not found")])
     AC_CHECK_LIB(xmlrpc_server_abyss++, main, [], [SF_MISSING_DEP("XML RPC C++ server classes not found")])
-
+    AC_CHECK_LIB(zmq, main, [], [SF_MISSING_DEP("ZeroMQ Libary not found")])
 
     OSS_CORE_DEP_LIBS=""
     OSS_CORE_DEP_LIBS+=" -lgtest "
@@ -190,6 +190,7 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     OSS_CORE_DEP_LIBS+=" -lxmlrpc "
     OSS_CORE_DEP_LIBS+=" -lxmlrpc_client++  "
     OSS_CORE_DEP_LIBS+=" -lxmlrpc_server_abyss++ "
+    OSS_CORE_DEP_LIBS+=" -lzmq "
 
     #
     # Check for TURN dependencies
