@@ -118,6 +118,8 @@ bool ZMQSocket::bind(const std::string& bindAddress)
   case REP:
      _socket = zeromq_create_socket(_context, ZMQ_REP);
     break;
+  case REQ:
+    return false;
   }
   
   if (!_socket)
@@ -171,6 +173,8 @@ bool ZMQSocket::internal_connect(const std::string& peerAddress)
   case REQ:
      _socket = zeromq_create_socket(_context, ZMQ_REQ);
     break;
+  case REP:
+    return false;
   }
   
   if (!_socket)
@@ -222,11 +226,22 @@ bool ZMQSocket::sendAndReceive(const std::string& cmd, const std::string& data, 
 {
   OSS::mutex_critic_sec_lock lock(_mutex);
   
-  if (!_context)
+  if (!internal_send_request(cmd, data))
   {
     return false;
   }
   
+  return internal_receive_reply(response, timeoutms);
+}
+
+bool ZMQSocket::sendRequest(const std::string& cmd, const std::string& data)
+{
+  OSS::mutex_critic_sec_lock lock(_mutex);
+  return internal_send_request(cmd, data);
+}
+
+bool ZMQSocket::internal_send_request(const std::string& cmd, const std::string& data)
+{  
   //
   // reconnect the socket 
   //
@@ -255,17 +270,34 @@ bool ZMQSocket::sendAndReceive(const std::string& cmd, const std::string& data, 
     return false;
   }
   
-  return internal_receive(response, timeoutms);
+  return true;
 }
 
-bool ZMQSocket::receive(std::string& data, unsigned int timeoutms)
+bool ZMQSocket::sendReply(const std::string& data)
 {
   OSS::mutex_critic_sec_lock lock(_mutex);
-  return internal_receive(data, timeoutms);
+  return internal_send_reply(data);
+}
+
+
+bool ZMQSocket::internal_send_reply(const std::string& data)
+{  
+  if (!_socket || !zeromq_send(*zeromq_socket(_socket), data))
+  {
+    OSS_LOG_ERROR("ZMQSocket::send() - Exception: zeromq_send(data) failed");
+    return false;
+  }
+  return true;
+}
+
+bool ZMQSocket::receiveReply(std::string& data, unsigned int timeoutms)
+{
+  OSS::mutex_critic_sec_lock lock(_mutex);
+  return internal_receive_reply(data, timeoutms);
 }
 
  
-bool ZMQSocket::internal_receive(std::string& response, unsigned int timeoutms)
+bool ZMQSocket::internal_receive_reply(std::string& response, unsigned int timeoutms)
 {
   if (!_socket)
   {
@@ -281,6 +313,30 @@ bool ZMQSocket::internal_receive(std::string& response, unsigned int timeoutms)
   }
   
   zeromq_receive(*zeromq_socket(_socket), response);  
+  return true;
+}
+
+bool ZMQSocket::receiveRequest(std::string& cmd, std::string& data, unsigned int timeoutms)
+{
+  OSS::mutex_critic_sec_lock lock(_mutex);
+  return internal_receive_request(cmd, data, timeoutms);
+}
+
+bool ZMQSocket::internal_receive_request(std::string& cmd, std::string& data, unsigned int timeoutms)
+{
+  if (!_socket)
+  {
+    return false;
+  }
+  
+  if (!zeromq_poll_read(zeromq_socket(_socket), timeoutms))
+  {
+    OSS_LOG_ERROR("ZMQSocket::internal_receive() - Exception: zeromq_poll_read() failed");
+    return false;
+  }
+  
+  zeromq_receive(*zeromq_socket(_socket), cmd); 
+  zeromq_receive(*zeromq_socket(_socket), data);  
   return true;
 }
 
