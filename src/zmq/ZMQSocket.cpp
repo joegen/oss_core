@@ -85,7 +85,20 @@ static bool zeromq_poll_read(zmq::socket_t* sock, int timeoutms)
 {
   int timeoutnano = timeoutms * 1000; // convert to nanoseconds
   zmq::pollitem_t items[] = { { *sock, 0, ZMQ_POLLIN, 0 } };
-  zmq::poll (&items[0], 1, timeoutnano);
+  int rc = zmq::poll (&items[0], 1, timeoutnano);
+  switch (rc)
+  {
+    case ETERM:
+      OSS_LOG_ERROR("zeromq_poll_read - At least one of the members of the items array refers to a socket whose associated ØMQ context was terminated.");
+      return false;
+    case EFAULT:
+      OSS_LOG_ERROR("zeromq_poll_read - The provided items was not valid (NULL).");
+      return false;
+    case EINTR:
+      OSS_LOG_ERROR("zeromq_poll_read - The operation was interrupted by delivery of a signal before any events were available.");
+      return false;
+  }
+  
   return items[0].revents & ZMQ_POLLIN;
 }
   
@@ -163,7 +176,7 @@ bool ZMQSocket::connect(const std::string& peerAddress)
 
 bool ZMQSocket::internal_connect(const std::string& peerAddress)
 {
-  if ( _socket || !_context)
+  if (_socket)
   {
     return false;
   }
@@ -184,7 +197,7 @@ bool ZMQSocket::internal_connect(const std::string& peerAddress)
   
   try
   {
-    zeromq_socket(_socket)->connect(_peerAddress.c_str());
+    zeromq_socket(_socket)->connect(peerAddress.c_str());
   }
   catch(zmq::error_t& error_)
   {
@@ -211,15 +224,19 @@ bool ZMQSocket::internal_connect(const std::string& peerAddress)
 void ZMQSocket::close()
 {
   OSS::mutex_critic_sec_lock lock(_mutex);
-  internal_close();
   _canReconnect = false;
+  internal_close();
 }
 
 void ZMQSocket::internal_close()
 {
   delete zeromq_socket(_socket);
   _socket = 0;
-  _peerAddress = "";
+  
+  if (!_canReconnect)
+  {
+    _peerAddress = "";
+  }
 }
 
 bool ZMQSocket::sendAndReceive(const std::string& cmd, const std::string& data, std::string& response, unsigned int timeoutms)
@@ -257,16 +274,16 @@ bool ZMQSocket::internal_send_request(const std::string& cmd, const std::string&
   if (!zeromq_sendmore(*zeromq_socket(_socket), cmd))
   {
     OSS_LOG_ERROR("ZMQSocket::send() - Exception: zeromq_sendmore(cmd) failed");
-    internal_close();
     _canReconnect = true;
+    internal_close();    
     return false;
   }
   
   if (!zeromq_send(*zeromq_socket(_socket), data))
   {
     OSS_LOG_ERROR("ZMQSocket::send() - Exception: zeromq_send(data) failed");
-    internal_close();
     _canReconnect = true;
+    internal_close();
     return false;
   }
   
@@ -307,8 +324,8 @@ bool ZMQSocket::internal_receive_reply(std::string& response, unsigned int timeo
   if (!zeromq_poll_read(zeromq_socket(_socket), timeoutms))
   {
     OSS_LOG_ERROR("ZMQSocket::internal_receive() - Exception: zeromq_poll_read() failed");
-    internal_close();
     _canReconnect = true;
+    internal_close();
     return false;
   }
   
