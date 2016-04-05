@@ -298,6 +298,11 @@ AC_DEFUN([SFAC_LIB_CORE],
         AC_SUBST(LIB_OSS_TURN_LA, "$foundpath/liboss_turn.la")
     fi
 
+    #
+    # Generate inline javascript exports
+    #
+    cd $srcdir/src/js/scripts; ./generate.sh
+
     AC_REQUIRE([SFAC_LIB_CORE_FLAGS])
 
 ]) # SFAC_LIB_CORE
