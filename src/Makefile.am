@@ -441,7 +441,8 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestTransport.cpp \
 	unit_test/TestUaRegister.cpp \
 	unit_test/TestDigestAuth.cpp \
-	unit_test/TestRedisPubSub.cpp
+	unit_test/TestRedisPubSub.cpp \
+	unit_test/TestZMQSocket.cpp
 
 
 SIP_TEST = \

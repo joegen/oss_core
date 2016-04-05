@@ -53,14 +53,23 @@ public:
   
   bool sendAndReceive(const std::string& cmd, const std::string& data, std::string& response, unsigned int timeoutms);
 
-  bool receive(std::string& response, unsigned int timeoutms);
+  bool sendRequest(const std::string& cmd, const std::string& data);
+  
+  bool sendReply(const std::string& data);
+  
+  bool receiveReply(std::string& response, unsigned int timeoutms);
+  
+  bool receiveRequest(std::string& cmd, std::string& data, unsigned int timeoutms);
   
   void close();
   
 protected:
   void internal_close();
   bool internal_connect(const std::string& peerAddress);
-  bool internal_receive(std::string& response, unsigned int timeoutms);
+  bool internal_send_reply(const std::string& data);
+  bool internal_send_request(const std::string& cmd, const std::string& data);
+  bool internal_receive_reply(std::string& response, unsigned int timeoutms);
+  bool internal_receive_request(std::string& cmd, std::string& data, unsigned int timeoutms);
   SocketType _type;
   OSS_HANDLE _context;
   OSS_HANDLE _socket;
