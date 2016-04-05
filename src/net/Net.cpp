@@ -1077,5 +1077,83 @@ void net_io_timer_cancel(NET_TIMER_HANDLE timerHandle)
   pTimer->cancel();
 }
 
+bool net_get_default_interface_name(std::string& iface)
+{
+  FILE *f;
+  char line[100] , *p , *c;
+  f = fopen("/proc/net/route" , "r");
+
+  while(fgets(line , 100 , f))
+  {
+    p = strtok(line , " \t");
+    c = strtok(NULL , " \t");
+
+    if(p!=NULL && c!=NULL)
+    {
+      if(strcmp(c , "00000000") == 0)
+      {
+        iface = p;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool net_get_interface_address(const std::string iface, std::string& address, int fm)
+{
+  struct ifaddrs *ifaddr, *ifa;
+  int family , s;
+  char host[NI_MAXHOST];
+
+  if (getifaddrs(&ifaddr) == -1) 
+  {
+    return false;
+  }
+
+  //Walk through linked list, maintaining head pointer so we can free list later
+  for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) 
+  {
+    if (ifa->ifa_addr == NULL)
+    {
+      continue;
+    }
+
+    family = ifa->ifa_addr->sa_family;
+
+    if(strcmp( ifa->ifa_name , iface.c_str()) == 0)
+    {
+      if (family == fm) 
+      {
+        s = getnameinfo( ifa->ifa_addr, (family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6) , host , NI_MAXHOST , NULL , 0 , NI_NUMERICHOST);
+
+        if (s != 0) 
+        {
+          freeifaddrs(ifaddr);
+          return false;
+        }
+        else
+        {
+          address = host;
+          break;
+        }
+      }
+    }
+  }
+
+  freeifaddrs(ifaddr);
+  return true;
+}
+
+bool net_get_default_interface_address(std::string& address, int fm)
+{
+  std::string iface;
+  if (!net_get_default_interface_name(iface))
+  {
+    return false;
+  }
+  return net_get_interface_address(iface, address, fm);
+}
+
 } // OSS
 

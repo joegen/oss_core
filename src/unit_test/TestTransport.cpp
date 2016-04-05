@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/SIP/SIPTransportService.h" 
+#include "OSS/Net/Net.h"
 
 using namespace OSS::SIP;
 
@@ -99,3 +100,14 @@ TEST(TransportTest, test_tls_transport)
   }
 }
 
+TEST(TransportTest, test_get_default_address)
+{
+  std::string iface;
+  ASSERT_TRUE(OSS::net_get_default_interface_name(iface));
+  ASSERT_FALSE(iface.empty());
+  std::cout << "TransportTest::test_get_default_address result: interface-name=" << iface << std::endl;
+  std::string address;
+  ASSERT_TRUE(OSS::net_get_interface_address(iface, address));
+  ASSERT_FALSE(address.empty());
+  std::cout << "TransportTest::test_get_default_address result: address=" << address << std::endl;
+}

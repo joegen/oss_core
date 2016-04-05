@@ -431,6 +431,15 @@ NET_TIMER_HANDLE OSS_API net_io_timer_create(int millis, net_timer_func handler)
 void OSS_API net_io_timer_cancel(NET_TIMER_HANDLE timerHandle);
   /// Cancel execution of a timer.  
 
+bool net_get_default_interface_name(std::string& iface);
+  /// Return the name of the default interface
+
+bool net_get_interface_address(const std::string iface, std::string& address, int family = AF_INET);
+  /// Return the IP address of a given interface
+
+bool net_get_default_interface_address(std::string& address, int family = AF_INET);
+  /// Return the IP address of a given interface
+
 //
 // Inlines
 //
