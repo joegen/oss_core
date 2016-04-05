@@ -607,6 +607,9 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
   DataType interfaces = listeners["interfaces"];
   int ifaceCount = interfaces.getElementCount();
   bool hasFoundDefault = false;
+  std::string defaultAddress;
+  OSS::net_get_default_interface_address(defaultAddress);
+  
   for (int i = 0; i < ifaceCount; i++)
   {
     DataType iface = interfaces[i];
@@ -617,6 +620,17 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       external = (const char*)iface["external-address"];
     }
 
+    if ((ip == "auto" || ip == "AUTO") && defaultAddress.empty())
+    {
+      OSS_LOG_ERROR("SIPStack::initTransportFromConfig - unable to determine default interface address");
+      return;
+    }
+    else if (ip == "auto" || ip == "AUTO")
+    {
+      ip = defaultAddress;
+      OSS_LOG_NOTICE("SIPStack::initTransportFromConfig - using default address " << defaultAddress);
+    }
+    
     bool tlsEnabled = iface.exists("tls-enabled") && (bool)iface["tls-enabled"];
     bool tcpEnabled = iface.exists("tcp-enabled") && (bool)iface["tcp-enabled"];
     bool wsEnabled = iface.exists("ws-enabled") && (bool)iface["ws-enabled"];
@@ -706,7 +720,20 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       hasFoundDefault = true;
       DataType defaultIface = listeners["default-interface-address"];
       DataType defaultPort = listeners["default-interface-port"];
-      OSS::Net::IPAddress defaultInterface((const char*)defaultIface);
+      
+      std::string ip = (const char*)defaultIface;
+      
+      if ((ip == "auto" || ip == "AUTO") && defaultAddress.empty())
+      {
+        OSS_LOG_ERROR("SIPStack::initTransportFromConfig - unable to determine default interface address");
+        return;
+      }
+      else if (ip == "auto" || ip == "AUTO")
+      {
+        ip = defaultAddress;
+      }
+      
+      OSS::Net::IPAddress defaultInterface(ip);
       defaultInterface.setPort((int)defaultPort);
       _fsmDispatch.transport().defaultListenerAddress() = defaultInterface;
     }
@@ -718,7 +745,17 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
     // We don't have the defualt interface yet.  Lets use the first configured listener
     //
     DataType iface = interfaces[0];
-    std::string ip = iface["ip-address"];
+    std::string ip = (const char*)iface["ip-address"];
+    if ((ip == "auto" || ip == "AUTO") && defaultAddress.empty())
+    {
+      OSS_LOG_ERROR("SIPStack::initTransportFromConfig - unable to determine default interface address");
+      return;
+    }
+    else if (ip == "auto" || ip == "AUTO")
+    {
+      ip = defaultAddress;
+    }
+    
     if (iface.exists("udp-enabled") && (bool)iface["udp-enabled"])
     {
       int port = iface.exists("sip-port") ? (int)iface["sip-port"] : 5060;
