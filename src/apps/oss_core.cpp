@@ -96,6 +96,7 @@ struct Config
   std::string carpUpScript;
   std::string carpDownScript;
   bool rewriteCallId;
+  bool tlsVerifyPeer;
   int testLoopbackIterationCount;
   std::string testLoopbackTargetUri;
   
@@ -107,6 +108,7 @@ struct Config
     allowRelay(false),
     targetInterfacePort(0),
     rewriteCallId(false),
+    tlsVerifyPeer(false),
     testLoopbackIterationCount(0)
     {
     }
@@ -231,7 +233,7 @@ public:
     
     if (enableTls)
     {
-      bool verifyPeer = !_config.tlsPeerCa.empty() || !_config.tlsPeerCaDirectory.empty();
+      bool verifyPeer = (config.tlsVerifyPeer) && (!_config.tlsPeerCa.empty() || !_config.tlsPeerCaDirectory.empty());
       
       if (stack().initializeTlsContext(_config.tlsCertFile, _config.tlsPrivateKey, _config.tlsCertPassword, _config.tlsPeerCa, _config.tlsPeerCaDirectory, verifyPeer))
       {
@@ -658,6 +660,11 @@ void prepareTargetInfo(Config& config, ServiceOptions& options)
   // sent by the caller
   //
   config.rewriteCallId = options.hasOption("rewrite-call-id");
+
+  //
+  // Check if we need to verify certificates
+  //
+  config.tlsVerifyPeer = options.hasOption("tls-verify-peer");
   
   //
   // Check if loopback test is enabled
@@ -700,6 +707,7 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionString("tls-peer-ca", "Peer CA File. If the remote peer this server is connecting to uses a self signed certificate, this file is used to verify authenticity of the peer identity.");
   options.addOptionString("tls-peer-ca-directory", "Additional CA file directory. The files must be named with the CA subject name hash value.");
   options.addOptionString("tls-password", "TLS Certificate Key Password");
+  options.addOptionFlag("tls-verify-peer", "Verify TLS peer certificates");
   options.addOptionString("carp-virtual-ip", "Virtual IP assigned for CARP. Take note that this requires root permissions to work.");
   options.addOptionString("carp-interface", "Interface where the virtual IP will be registered.  Example: eth0");
   options.addOptionString("carp-up-script", "Script called to bring up the virtual interface");
