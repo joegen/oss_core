@@ -698,6 +698,12 @@ public:
     /// This is normally used to determine if the consume() method has dropped
     /// leading CRLF bytes
 
+  bool getRequestUri(SIPURI& ruri) const;
+    /// Return the request uri
+  
+  bool setRequestUri(SIPURI& ruri);
+    /// Set the request URI
+  
   std::string getFromTag() const;
     /// Return the tag parameter of the From header.
   
