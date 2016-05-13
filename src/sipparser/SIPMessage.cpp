@@ -23,6 +23,7 @@
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
 #include "OSS/UTL/CoreUtils.h"
+#include "OSS/UTL/Logger.h"
 #include "OSS/SIP/SIPMessage.h"
 #include "OSS/ABNF/ABNFParser.h"
 #include "OSS/ABNF/ABNFSIPRules.h"
@@ -33,7 +34,7 @@
 #include "OSS/SIP/SIPVia.h"
 #include "OSS/SIP/SIPCSeq.h"
 #include "OSS/SIP/SIPFrom.h"
-#include "OSS/UTL/Logger.h"
+#include "OSS/SIP/SIPRequestLine.h"
 
 namespace OSS {
 namespace SIP {
@@ -1711,6 +1712,29 @@ std::string SIPMessage::createLoggerData(SIPMessage* pMsg)
   return strm.str();
 }
 
+
+ bool SIPMessage::getRequestUri(SIPURI& ruri) const
+ {
+   if (_startLine.empty() || isResponse())
+   {
+     return false;
+   }
+   SIPRequestLine rline(_startLine);
+   return rline.getURI(ruri);
+ }
+ 
+ bool SIPMessage::setRequestUri(SIPURI& ruri)
+ {
+   if (_startLine.empty() || isResponse())
+   {
+     return false;
+   }
+   SIPRequestLine rline(_startLine);
+   rline.setURI(ruri);
+   _startLine = rline.data();
+   return true;
+ }
+ 
 std::string SIPMessage::getFromTag() const
 {
   std::string tag;
