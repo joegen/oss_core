@@ -305,15 +305,13 @@ void Thread::stop()
     _terminateFlag = true;
   }
   
-  {
-    onTerminate();
-    
-    mutex_critic_sec_lock lock(_threadMutex);
-    assert(_pThread);
-    _pThread->join();
-    delete _pThread;
-    _pThread = 0;
-  }
+
+  onTerminate();
+
+  waitForTermination();
+  delete _pThread;
+  _pThread = 0;
+  
 }
 
 void Thread::setTask(const Task& task)
@@ -338,6 +336,15 @@ void Thread::runTask()
 
 void Thread::onTerminate()
 {
+}
+
+void Thread::waitForTermination()
+{  
+  mutex_critic_sec_lock lock(_threadMutex);
+  if (_pThread)
+  {
+    _pThread->join();
+  }
 }
 
 

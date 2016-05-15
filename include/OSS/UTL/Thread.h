@@ -177,7 +177,7 @@ public:
   void stop();
   void setTask(const Task& task);
   bool isTerminated();
-  
+  void waitForTermination();
 protected:
   virtual void runTask();
   virtual void onTerminate();
