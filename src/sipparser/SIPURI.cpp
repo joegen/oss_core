@@ -295,6 +295,37 @@ bool SIPURI::getPort(const std::string& uri, std::string& port)
 }
     /// Returns the port
 
+bool SIPURI::setHost(const char* host)
+{
+  std::string port;
+  if (!SIPURI::getPort(_data, port))
+  {
+    return setHostPort(host);
+  }
+  else
+  {
+    std::ostringstream hostPort;
+    hostPort << host << ":" << port;
+    return setHostPort(hostPort.str().c_str());
+  }
+}
+
+bool SIPURI::setPort(const char* port)
+{
+  std::string host;
+  host = getHost();
+  std::ostringstream hostPort;
+  if (port && strcmp(port, "0"))
+  { 
+    hostPort << host << ":" << port;
+  }
+  else
+  {
+    hostPort << host;
+  }
+  return setHostPort(hostPort.str().c_str());
+}
+
 bool SIPURI::setHostPort(const char* hostPort)
 {
   return setHostPort(_data, hostPort);

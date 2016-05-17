@@ -105,6 +105,12 @@ public:
   static bool getPort(const std::string& uri, std::string& port);
     /// Returns the port
 
+  bool setHost(const char* hostPort);
+    /// Set the host but preserve the port if set previously
+  
+  bool setPort(const char* port);
+    /// Set the port
+  
   bool setHostPort(const char* hostPort);
     /// Sets the value of the uri hostport.
     ///
@@ -258,6 +264,9 @@ public:
 
   static bool getIdentity(const std::string& uri, std::string& identity, bool includeScheme = true);
     /// Returns scheme + user + hostport
+  
+  void setData(const std::string& data);
+    /// Set the data held by this uri
 };
 
 //
@@ -291,6 +300,11 @@ inline std::string SIPURI::getEscapedParam(const char* paramName) const
   std::string value;
   getEscapedParam(paramName, value);
   return value;
+}
+
+inline void SIPURI::setData(const std::string& data)
+{
+  _data = data;
 }
 
 
