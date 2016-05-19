@@ -61,6 +61,8 @@ typedef ABNFLRSequence2<
   ABNFLROptional<ABNF_SIP_uri_parameters> > URIParametersParser;
 static URIParametersParser uriParametersParser;
 
+static ABNF_SIP_uri_parameters uriParametersValidator;
+
 typedef ABNFLRSequence2<URIParametersParser, ABNFLROptional<ABNF_SIP_headers> > URIHeadersParser;
 static URIHeadersParser uriHeadersParser;
 ABNFEvaluate<ABNF_SIP_headers> headersVerify;
@@ -416,6 +418,11 @@ bool SIPURI::setParams(const std::string& params)
 bool SIPURI::setParams(std::string& uri, const std::string& params)
 {
   static ABNFSIPURIHeaders headersParser;
+  
+  if (uriParametersValidator.parse(params.c_str()) == params.c_str())
+  {
+    return false;
+  }
 
   char* hostPortOffSet = hostPortParser.parse(uri.c_str());
   if (hostPortOffSet == uri.c_str())
@@ -519,6 +526,13 @@ bool SIPURI::setParamEx(std::string& params, const char* paramName, const char* 
   char* offSet = ABNF::findNextIterFromString(key, params.c_str());
   if (offSet == params.c_str())
   {
+    if (params.find(";lr") != std::string::npos)
+    {
+      //
+      // lr parameter already exists
+      //
+      return true;
+    }
     std::ostringstream strm; 
     if (::strcasecmp(paramName, "lr") != 0)
       strm << ";" << paramName << "=" << paramValue;
