@@ -68,13 +68,13 @@ typedef ABNFLRSequence2<URIParametersParser, ABNFLROptional<ABNF_SIP_headers> > 
 static URIHeadersParser uriHeadersParser;
 ABNFEvaluate<ABNF_SIP_headers> headersVerify;
 
-static const char* EMPTY_URI = "sip:invalid";
+const char* SIPURI::EMPTY_URI = "sip:invalid";
 
 void check_empty(SIPURI* uri)
 {
   if (uri->data().empty())
   {
-    uri->data() = EMPTY_URI;
+    uri->data() = SIPURI::EMPTY_URI;
   }
 }
 

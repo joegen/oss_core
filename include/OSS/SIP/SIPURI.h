@@ -287,6 +287,8 @@ public:
   static bool getIdentity(const std::string& uri, std::string& identity, bool includeScheme = true);
     /// Returns scheme + user + hostport
   
+public:
+  static const char* EMPTY_URI;
 };
 
 //

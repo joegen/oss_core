@@ -19,6 +19,7 @@
 
 
 #include "OSS/SIP/SIPFrom.h"
+#include "OSS/SIP/SIPURI.h"
 #include "OSS/ABNF/ABNFSIPFromSpec.h"
 #include "OSS/ABNF/ABNFSIPNameAddr.h"
 #include "OSS/ABNF/ABNFSIPURIParameters.h"
@@ -44,8 +45,17 @@ namespace OSS {
 namespace SIP {
 
 
+void check_empty(SIPFrom* header)
+{
+  if (header->data().empty())
+  {
+    header->data() = SIPURI::EMPTY_URI;
+  }
+}
+
 SIPFrom::SIPFrom()
 {
+  check_empty(this);
 }
 
 SIPFrom::SIPFrom(const std::string& from)
@@ -98,6 +108,7 @@ bool SIPFrom::getDisplayName(const std::string& from, std::string& displayName)
 
 bool SIPFrom::setDisplayName(const char* displayName)
 {
+  check_empty(this);
   return setDisplayName(_data, displayName);
 }
 
@@ -248,6 +259,7 @@ bool SIPFrom::getURI(const std::string& from, std::string& uri)
 
 bool SIPFrom::setURI(const char* uri)
 {
+  check_empty(this);
   return setURI(_data, uri);
 }
 
@@ -315,6 +327,7 @@ bool SIPFrom::setURI(std::string& from, const char* uri)
 
 bool SIPFrom::setUser(const char* user)
 {
+  check_empty(this);
   return setUser(_data, user);
 }
 
@@ -346,6 +359,7 @@ bool SIPFrom::getUser(const std::string& from, std::string& user)
 
 bool SIPFrom::setHostPort(const char* hostPort)
 {
+  check_empty(this);
   return setHostPort(_data, hostPort);
 }
 
@@ -437,6 +451,7 @@ bool SIPFrom::getHeaderParams(const std::string& from, std::string& headerParams
 
 bool SIPFrom::setHeaderParams(const char* headerParams)
 {
+  check_empty(this);
   return setHeaderParams(_data, headerParams);
 }
 
@@ -508,6 +523,7 @@ bool SIPFrom::getHeaderParamEx(const std::string& headerParams, const char* para
 
 bool SIPFrom::setHeaderParam(const char* paramName, const char* paramValue)
 {
+  check_empty(this);
   return setHeaderParam(_data, paramName, paramValue);
 }
 
