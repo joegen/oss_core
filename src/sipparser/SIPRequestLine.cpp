@@ -25,9 +25,12 @@ namespace OSS {
 namespace SIP {
 
 
+const char* SIPRequestLine::EMPTY_REQUEST_LINE = "INVALID sip:invalid SIP/2.0";
+
+
 SIPRequestLine::SIPRequestLine()
 {
-  _data = "* * SIP/2.0";
+  _data = SIPRequestLine::EMPTY_REQUEST_LINE;
 }
 
 SIPRequestLine::SIPRequestLine(const std::string& rline)

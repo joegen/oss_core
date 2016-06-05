@@ -53,6 +53,9 @@ public:
   void swap(SIPRequestLine& rline);
     /// Exchange the values of two request lines
 
+  std::string getMethod() const;
+    /// Get the method token
+  
   bool getMethod(std::string& method) const; 
     /// Get the method token
 
@@ -94,6 +97,8 @@ public:
 
   static bool setVersion(std::string& rline, const char* version);
     /// Set the version of a valid startline string
+  
+  static const char* EMPTY_REQUEST_LINE; 
 };
 
 //
@@ -103,6 +108,13 @@ public:
 inline bool SIPRequestLine::getMethod(std::string& method) const
 {
   return SIPRequestLine::getMethod(_data, method);
+}
+
+inline std::string SIPRequestLine::getMethod() const
+{
+  std::string method;
+  getMethod(method);
+  return method;
 }
 
 inline bool SIPRequestLine::getURI(std::string& uri) const
@@ -134,6 +146,7 @@ inline bool SIPRequestLine::setVersion(const char* version)
 {
   return SIPRequestLine::setVersion(_data, version);
 }
+
 
 } } // OSS::SIP
 #endif // SIPRequestLine_INCLUDED
