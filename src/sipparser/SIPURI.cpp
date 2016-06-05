@@ -68,9 +68,19 @@ typedef ABNFLRSequence2<URIParametersParser, ABNFLROptional<ABNF_SIP_headers> > 
 static URIHeadersParser uriHeadersParser;
 ABNFEvaluate<ABNF_SIP_headers> headersVerify;
 
+static const char* EMPTY_URI = "sip:invalid";
+
+void check_empty(SIPURI* uri)
+{
+  if (uri->data().empty())
+  {
+    uri->data() = EMPTY_URI;
+  }
+}
+
 SIPURI::SIPURI()
 {
-  _data = "sip:invalid";
+  _data = EMPTY_URI;
 }
 
 SIPURI::SIPURI(const std::string& uri)
@@ -120,6 +130,7 @@ bool SIPURI::getScheme(const std::string& uri, std::string& value)
 
 bool SIPURI::setScheme(const char* scheme)
 {
+  check_empty(this);
   return setScheme(_data, scheme);
 }
 
@@ -157,6 +168,7 @@ bool SIPURI::getUser(const std::string& uri, std::string& value)
 
 bool SIPURI::setUserInfo(const char* userInfo)
 {
+  check_empty(this);
   return setUserInfo(_data, userInfo);
 }
 
@@ -302,6 +314,7 @@ bool SIPURI::getPort(const std::string& uri, std::string& port)
 
 bool SIPURI::setHost(const char* host)
 {
+  check_empty(this);
   std::string port;
   if (!SIPURI::getPort(_data, port))
   {
@@ -317,6 +330,7 @@ bool SIPURI::setHost(const char* host)
 
 bool SIPURI::setPort(const char* port)
 {
+  check_empty(this);
   std::string host;
   host = getHost();
   std::ostringstream hostPort;
@@ -333,11 +347,13 @@ bool SIPURI::setPort(const char* port)
 
 bool SIPURI::setHostPort(const char* hostPort)
 {
+  check_empty(this);
   return setHostPort(_data, hostPort);
 }
 
 bool SIPURI::setHostPort(const OSS::Net::IPAddress& hostPort)
 {
+  check_empty(this);
   std::string host = hostPort.toIpPortString();
   return setHostPort(_data, host.c_str());
 }
@@ -415,6 +431,7 @@ bool SIPURI::getParams(const std::string& uri, std::string& params)
 
 bool SIPURI::setParams(const std::string& params)
 {
+  check_empty(this);
   return setParams(_data, params);
 }
 
@@ -503,6 +520,7 @@ bool SIPURI::hasParam(const std::string& uri, const char* paramName)
 
 bool SIPURI::setParam(const char* paramName, const char* paramValue)
 {
+  check_empty(this);
   return setParam(_data, paramName, paramValue);
 }
 
@@ -703,6 +721,7 @@ bool SIPURI::getHeaders(const std::string& uri, std::string& headers)
 
 bool SIPURI::setHeaders(const std::string& headers)
 {
+  check_empty(this);
   return setHeaders(_data, headers);
 }
 
