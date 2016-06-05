@@ -252,6 +252,28 @@ public:
 
   static bool setHeaders(std::string& uri, const std::string& headers);
     /// Replace the headers of a uri with a new one
+  
+  static bool setHeaderEx(std::string& params, const char* headerName, const char* headerValue);
+    /// Set the value of the URI header.
+    /// 
+    /// This is basically the same as setHeader except that it requires
+    /// that the first parameter is already the parsed parameter list
+    /// usually coming from the return value of a previous call to getHeaders()
+    ///
+    /// This is the recommended function to use when setting multiple uri headers
+    /// because setParam() function would always parse the headers list
+    /// which requires it to traverse the entire uri string every time.
+    ///
+    /// Usage:
+    ///
+    ///   std::string headers = uri.getHeaders();
+    ///   SIPURI::setHeaderEx(params, "param-name", "param-value");
+    ///   uri.setParams(params);
+    ///
+    /// Take note that this function may throw SIPABNFSyntaxException
+    /// if there are invalid characters in the parameter.
+    ///
+    /// Use SIPURI::escapeParam() function to escape the invalid characters.
 
   bool verify() const;
     /// Verifies the validity of a SIP URI based on RFC 3261 ABNF grammar.
@@ -265,8 +287,6 @@ public:
   static bool getIdentity(const std::string& uri, std::string& identity, bool includeScheme = true);
     /// Returns scheme + user + hostport
   
-  void setData(const std::string& data);
-    /// Set the data held by this uri
 };
 
 //
@@ -300,11 +320,6 @@ inline std::string SIPURI::getEscapedParam(const char* paramName) const
   std::string value;
   getEscapedParam(paramName, value);
   return value;
-}
-
-inline void SIPURI::setData(const std::string& data)
-{
-  _data = data;
 }
 
 

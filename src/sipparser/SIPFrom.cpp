@@ -101,6 +101,30 @@ bool SIPFrom::setDisplayName(const char* displayName)
   return setDisplayName(_data, displayName);
 }
 
+static bool display_name_needs_quote(const char* displayName)
+{
+  size_t len = strlen(displayName);
+  if (!len)
+  {
+    return false;
+  }
+  
+  if (displayName[0] == '"')
+  {
+    return false;
+  }
+  
+  for (size_t i = 0; i < len; i++)
+  {
+    if (isspace(displayName[i]) != 0)
+    {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
 bool SIPFrom::setDisplayName(std::string& from, const char* displayName)
 {
   ABNFTokens fsTokens;
@@ -108,12 +132,31 @@ bool SIPFrom::setDisplayName(std::string& from, const char* displayName)
   if (fsTokens.size() != 2) 
     return false;
   
+  bool empty = (strlen(displayName) == 0);
+  
   ABNFTokens naTokens;
   char* offSet = nameAddrParser.parseTokens(fsTokens[0].c_str(), naTokens);
   if (offSet == fsTokens[0].c_str() || naTokens.size() != 4)
   {
-    from = displayName;
-    from += " <";
+    if (!display_name_needs_quote(displayName))
+    {
+      from = displayName;
+    }
+    else
+    {
+      std::ostringstream quoted;
+      quoted << "\"" << displayName << "\"";
+      from = quoted.str();
+    }
+    
+    if (!empty)
+    {
+      from += " <";
+    }
+    else
+    {
+      from += "<";
+    }
     
     char* paramsOffSet = uriParamsFinder.parse(fsTokens[0].c_str());
     if (paramsOffSet == fsTokens[0].c_str())
@@ -131,8 +174,25 @@ bool SIPFrom::setDisplayName(std::string& from, const char* displayName)
     return true;
   }
 
-  from = displayName;
-  from += " <";
+  if (!display_name_needs_quote(displayName))
+  {
+    from = displayName;
+  }
+  else
+  {
+    std::ostringstream quoted;
+    quoted << "\"" << displayName << "\"";
+    from = quoted.str();
+  }
+  
+  if (!empty)
+  {
+    from += " <";
+  }
+  else
+  {
+    from += "<";
+  }
   from += naTokens[2];
   from += ">";
   from += fsTokens[1];
@@ -286,7 +346,7 @@ bool SIPFrom::getUser(const std::string& from, std::string& user)
 
 bool SIPFrom::setHostPort(const char* hostPort)
 {
-  return setUser(_data, hostPort);
+  return setHostPort(_data, hostPort);
 }
 
 bool SIPFrom::setHostPort(std::string& from, const char* hostPort)

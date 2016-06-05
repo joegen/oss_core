@@ -42,7 +42,8 @@ static ABNF::ABNF_SIP_pname pnameParser;
 static ABNFEvaluate<ABNF_SIP_pname> pnameVerify;
 static ABNFEvaluate<ABNF_SIP_pvalue> pvalueVerify;
 static ABNFEvaluate<ABNF_SIP_URI> uriVerify;
-
+static ABNFEvaluate<ABNF_SIP_hname> hnameVerify;
+static ABNFEvaluate<ABNF_SIP_hvalue> hvalueVerify;
 
 static ABNFEvaluate< ABNFLRSequence2<
     ABNF_SIP_user, 
@@ -161,7 +162,9 @@ bool SIPURI::setUserInfo(const char* userInfo)
 
 bool SIPURI::setUserInfo(std::string& uri, const char* userInfo)
 {
-  if (userInfo != 0)
+  bool empty = (userInfo == 0 || strlen(userInfo) == 0);
+  
+  if (!empty)
   {
     if (!userInfoVerify(userInfo))
       throw OSS::SIP::SIPParserException("ABNF Syntax Exception");
@@ -172,7 +175,7 @@ bool SIPURI::setUserInfo(std::string& uri, const char* userInfo)
     return false;
 
   std::string front(uri.c_str(), (const char*)schemeOffSet);
-  if (userInfo != 0)
+  if (!empty)
   {
     front += userInfo;
     front += "@";
@@ -512,6 +515,15 @@ bool SIPURI::setParam(std::string& uri, const char* paramName, const char* param
     return false;
 
   return setParams(uri, params);
+}
+
+bool SIPURI::setHeaderEx(std::string& params, const char* headerName, const char* headerValue)
+{
+  if (!hnameVerify(headerName) || !hvalueVerify(headerValue))
+  {
+    throw OSS::SIP::SIPParserException("ABNF Syntax Exception");
+  }
+  return false;
 }
 
 bool SIPURI::setParamEx(std::string& params, const char* paramName, const char* paramValue)
