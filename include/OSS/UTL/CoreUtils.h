@@ -97,10 +97,10 @@ bool OSS_API string_caseless_ends_with(const std::string& str, const char* key);
   /// This function is NONE case-sensitive
 
 template <typename T>
-T string_to_number(const std::string& str)
+T string_to_number(const std::string& str, T errorValue = 0)
   /// Convert a string to a numeric value
 {
-  try { return boost::lexical_cast<T>(str);} catch(...){return 0;};
+  try { return boost::lexical_cast<T>(str);} catch(...){return errorValue;};
 }
 
 void OSS_API string_to_lower(std::string& str);
