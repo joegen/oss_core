@@ -45,12 +45,17 @@ namespace OSS {
 namespace SIP {
 
 
-void check_empty(SIPFrom* header)
+static void check_empty(SIPFrom* header)
 {
   if (header->data().empty())
   {
     header->data() = SIPURI::EMPTY_URI;
   }
+}
+
+static bool is_empty(const char* str)
+{
+  return (!str || strlen(str) == 0);
 }
 
 SIPFrom::SIPFrom()
@@ -265,6 +270,16 @@ bool SIPFrom::setURI(const char* uri)
 
 bool SIPFrom::setURI(std::string& from, const char* uri)
 {
+  if (is_empty(uri))
+  {
+    return false;
+  }
+  
+  if (!SIPURI::verify(uri))
+  {
+    return false;
+  }
+  
   char* laQuotOffSet = laquotFinder_1.parse(from.c_str());
   if (laQuotOffSet == from.c_str())
   {
@@ -365,6 +380,11 @@ bool SIPFrom::setHostPort(const char* hostPort)
 
 bool SIPFrom::setHostPort(std::string& from, const char* hostPort)
 {
+  if (is_empty(hostPort))
+  {
+    return false;
+  }
+  
   std::string uri;
   if (!getURI(from, uri))
     return false;

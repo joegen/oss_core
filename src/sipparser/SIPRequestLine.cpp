@@ -28,6 +28,19 @@ namespace SIP {
 const char* SIPRequestLine::EMPTY_REQUEST_LINE = "INVALID sip:invalid SIP/2.0";
 
 
+static void check_empty(SIPRequestLine* rline)
+{
+  if (rline->data().empty())
+  {
+    rline->data() = SIPRequestLine::EMPTY_REQUEST_LINE;
+  }
+}
+
+static bool is_empty(const char* str)
+{
+  return (!str || strlen(str) == 0);
+}
+
 SIPRequestLine::SIPRequestLine()
 {
   _data = SIPRequestLine::EMPTY_REQUEST_LINE;
@@ -108,6 +121,11 @@ bool SIPRequestLine::getURI(const std::string& rline, std::string& uri)
 
 bool SIPRequestLine::setURI(std::string& rline, const char* uri)
 {
+  if (!SIPURI::verify(uri))
+  {
+    return false;
+  }
+  
   std::ostringstream data;
   const char* methodOffset = ABNF::findNextIterFromString(" ", rline.c_str());
   if (methodOffset == rline.c_str())
@@ -146,7 +164,77 @@ bool SIPRequestLine::setVersion(std::string& rline, const char* version)
   return true;
 }
 
+bool SIPRequestLine::getMethod(std::string& method) const
+{
+  return SIPRequestLine::getMethod(_data, method);
+}
 
+std::string SIPRequestLine::getMethod() const
+{
+  std::string method;
+  getMethod(method);
+  return method;
+}
+
+bool SIPRequestLine::getURI(std::string& uri) const
+{
+  return SIPRequestLine::getURI(_data, uri);
+}
+
+std::string SIPRequestLine::getURI() const
+{
+  std::string uri;
+  getURI(uri);
+  return uri;
+}
+
+bool SIPRequestLine::getVersion(std::string& version) const
+{
+  return SIPRequestLine::getVersion(_data, version);
+}
+
+std::string SIPRequestLine::getVersion() const
+{
+  std::string version;
+  getVersion(version);
+  return version;
+}
+
+bool SIPRequestLine::setMethod(const char* method)
+{
+  if (is_empty(method))
+  {
+    return false;
+  }
+  
+  check_empty(this);
+  return SIPRequestLine::setMethod(_data, method);
+}
+
+bool SIPRequestLine::setURI(const char* uri)
+{
+  if (is_empty(uri))
+  {
+    return false;
+  }
+  check_empty(this);
+  return SIPRequestLine::setURI(_data, uri);
+}
+
+bool SIPRequestLine::setURI(const SIPURI& uri)
+{
+  return setURI(uri.data().c_str());
+}
+
+bool SIPRequestLine::setVersion(const char* version)
+{
+  if (is_empty(version))
+  {
+    return false;
+  }
+  check_empty(this);
+  return SIPRequestLine::setVersion(_data, version);
+}
 
 
 

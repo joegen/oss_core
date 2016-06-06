@@ -54,6 +54,9 @@ public:
 
   bool getVersion(std::string& version) const;
     /// Get the version token
+  
+  std::string getVersion() const;
+    /// Get the version token
 
   static bool getVersion(const std::string& sline, std::string& version);
     /// Get the version token from a string
@@ -67,16 +70,25 @@ public:
   bool getStatusCode(std::string& statusCode) const; 
     /// Get the status code token
 
+  unsigned int getStatusCode() const;
+    /// Get the status code token
+  
   static bool getStatusCode(const std::string& sline,std::string& statusCode);
     /// Get the status code token from a string
 
   bool setStatusCode(const char* statusCode);
     /// Set the status code
+  
+  bool setStatusCodeInt(unsigned int statusCode);
+  /// Set the status code
 
   static bool setStatusCode(std::string& sline, const char* statusCode);
     /// Set the status code of a valid startline string
 
   bool getReasonPhrase(std::string& reasonPhrase) const;
+    /// Get the reason phrase token
+  
+  std::string getReasonPhrase() const;
     /// Get the reason phrase token
 
   static bool getReasonPhrase(const std::string& sline, std::string& reasonPhrase);
@@ -87,41 +99,13 @@ public:
 
   static bool setReasonPhrase(std::string& sline, const char* reasonPhrase);
     /// Set the reason phrase of a valid startline string
+  
+  static const char* EMPTY_STATUS_LINE;
 };
 
 //
 // Inlines
 //
-
-inline bool SIPStatusLine::getVersion(std::string& version) const
-{
-  return SIPStatusLine::getVersion(_data, version);
-}
-
-inline bool SIPStatusLine::setVersion(const char* version)
-{
-  return SIPStatusLine::setVersion(_data, version);
-}
-
-inline bool SIPStatusLine::getStatusCode(std::string& statusCode) const
-{
-  return SIPStatusLine::getStatusCode(_data, statusCode);
-}
-
-inline bool SIPStatusLine::setStatusCode(const char* statusCode)
-{
-  return SIPStatusLine::setStatusCode(_data, statusCode);
-}
-
-inline bool SIPStatusLine::getReasonPhrase(std::string& reasonPhrase) const
-{
-  return SIPStatusLine::getReasonPhrase(_data, reasonPhrase);
-}
-
-inline bool SIPStatusLine::setReasonPhrase(const char* reasonPhrase)
-{
-  return SIPStatusLine::setReasonPhrase(_data, reasonPhrase);
-}
 
 } } // OSS::SIP
 #endif // SIPStatusLine_INCLUDED

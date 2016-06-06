@@ -64,6 +64,9 @@ public:
 
   bool getURI(std::string& uri) const;
     /// Get the URI token
+  
+  std::string getURI() const;
+    /// Get the URI token
 
   bool getURI(SIPURI& uri);
     /// Get the URI token
@@ -72,6 +75,9 @@ public:
     /// Get the URI token from a string
 
   bool getVersion(std::string& version) const;
+    /// Get the version token
+  
+  std::string getVersion() const;
     /// Get the version token
 
   static bool getVersion(const std::string& rline, std::string& version);
@@ -104,49 +110,6 @@ public:
 //
 // Inlines
 //
-
-inline bool SIPRequestLine::getMethod(std::string& method) const
-{
-  return SIPRequestLine::getMethod(_data, method);
-}
-
-inline std::string SIPRequestLine::getMethod() const
-{
-  std::string method;
-  getMethod(method);
-  return method;
-}
-
-inline bool SIPRequestLine::getURI(std::string& uri) const
-{
-  return SIPRequestLine::getURI(_data, uri);
-}
-
-inline bool SIPRequestLine::getVersion(std::string& version) const
-{
-  return SIPRequestLine::getVersion(_data, version);
-}
-
-inline bool SIPRequestLine::setMethod(const char* method)
-{
-  return SIPRequestLine::setMethod(_data, method);
-}
-
-inline bool SIPRequestLine::setURI(const char* uri)
-{
-  return SIPRequestLine::setURI(_data, uri);
-}
-
-inline bool SIPRequestLine::setURI(const SIPURI& uri)
-{
-  return setURI(uri.data().c_str());
-}
-
-inline bool SIPRequestLine::setVersion(const char* version)
-{
-  return SIPRequestLine::setVersion(_data, version);
-}
-
 
 } } // OSS::SIP
 #endif // SIPRequestLine_INCLUDED

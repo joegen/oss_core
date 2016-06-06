@@ -158,7 +158,7 @@ public:
 
   static std::string getTag(const std::string& from);
   
-  void setTag(const std::string& tag);
+  bool setTag(const std::string& tag);
 };
 
 typedef SIPFrom SIPTo;
@@ -181,9 +181,9 @@ inline std::string SIPFrom::getTag(const std::string& from)
   return tag;
 }
 
-inline void SIPFrom::setTag(const std::string& tag)
+inline bool SIPFrom::setTag(const std::string& tag)
 {
-  setHeaderParam("tag", tag.c_str());
+  return setHeaderParam("tag", tag.c_str());
 }
 
 } } // OSS::SIP

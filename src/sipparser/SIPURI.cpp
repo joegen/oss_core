@@ -70,12 +70,17 @@ ABNFEvaluate<ABNF_SIP_headers> headersVerify;
 
 const char* SIPURI::EMPTY_URI = "sip:invalid";
 
-void check_empty(SIPURI* uri)
+static void check_empty(SIPURI* uri)
 {
   if (uri->data().empty())
   {
     uri->data() = SIPURI::EMPTY_URI;
   }
+}
+
+static bool is_empty(const char* str)
+{
+  return (!str || strlen(str) == 0);
 }
 
 SIPURI::SIPURI()
@@ -136,6 +141,11 @@ bool SIPURI::setScheme(const char* scheme)
 
 bool SIPURI::setScheme(std::string& uri, const char* scheme)
 {
+  if (is_empty(scheme))
+  {
+    return false;
+  }
+  
   char * offSet = schemeParser.parse(uri.c_str());
   if( offSet == uri.c_str())
     return false;
@@ -179,7 +189,9 @@ bool SIPURI::setUserInfo(std::string& uri, const char* userInfo)
   if (!empty)
   {
     if (!userInfoVerify(userInfo))
-      throw OSS::SIP::SIPParserException("ABNF Syntax Exception");
+    {
+      return false;
+    }
   }
 
   char* schemeOffSet = ABNF::findNextIterFromString(":", uri.c_str());
@@ -314,6 +326,11 @@ bool SIPURI::getPort(const std::string& uri, std::string& port)
 
 bool SIPURI::setHost(const char* host)
 {
+  if (is_empty(host))
+  {
+    return false;
+  }
+  
   check_empty(this);
   std::string port;
   if (!SIPURI::getPort(_data, port))
@@ -398,8 +415,15 @@ bool SIPURI::getIdentity(const std::string& uri, std::string& identity, bool inc
 
 bool SIPURI::setHostPort(std::string& uri, const char* hostPort)
 {
+  if (is_empty(hostPort))
+  {
+    return false;
+  }
+  
   if (!hostPortVerify(hostPort))
-    throw OSS::SIP::SIPParserException("ABNF Syntax Exception");
+  {
+    return false;
+  }
 
   ABNFTokens tokens;
   char* tailOffSet = hostPortParser.parseTokens(uri.c_str(), tokens);
@@ -446,7 +470,9 @@ bool SIPURI::setParams(std::string& uri, const std::string& params)
 
   char* hostPortOffSet = hostPortParser.parse(uri.c_str());
   if (hostPortOffSet == uri.c_str())
+  {
     return false;
+  }
 
   std::string front(uri.c_str(), (const char*)hostPortOffSet);
 
@@ -539,7 +565,7 @@ bool SIPURI::setHeaderEx(std::string& params, const char* headerName, const char
 {
   if (!hnameVerify(headerName) || !hvalueVerify(headerValue))
   {
-    throw OSS::SIP::SIPParserException("ABNF Syntax Exception");
+    return false;
   }
   return false;
 }
@@ -547,7 +573,9 @@ bool SIPURI::setHeaderEx(std::string& params, const char* headerName, const char
 bool SIPURI::setParamEx(std::string& params, const char* paramName, const char* paramValue)
 {
   if (!pnameVerify(paramName) || !pvalueVerify(paramValue))
-    throw OSS::SIP::SIPParserException("ABNF Syntax Exception");
+  {
+    return false;
+  }
   
   std::string k = paramName;
   boost::to_lower(k);
@@ -728,7 +756,9 @@ bool SIPURI::setHeaders(const std::string& headers)
 bool SIPURI::setHeaders(std::string& uri, const std::string& headers)
 {
   if (!headersVerify(headers.c_str()))
-    throw OSS::SIP::SIPParserException("ABNF Syntax Exception");
+  {
+    return false;
+  }
   char* paramsOffSet = uriParametersParser.parse(uri.c_str());
   if (paramsOffSet == uri.c_str())
     return false;

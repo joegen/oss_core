@@ -20,14 +20,32 @@
 
 #include "OSS/SIP/SIPStatusLine.h"
 #include "OSS/ABNF/ABNFBaseRule.h"
+#include "OSS/UTL/CoreUtils.h"
+
 
 namespace OSS {
 namespace SIP {
 
 
+const char* SIPStatusLine::EMPTY_STATUS_LINE = "SIP/2.0 0 INVALID";
+
+
+static void check_empty(SIPStatusLine* rline)
+{
+  if (rline->data().empty())
+  {
+    rline->data() = SIPStatusLine::EMPTY_STATUS_LINE;
+  }
+}
+
+static bool is_empty(const char* str)
+{
+  return (!str || strlen(str) == 0);
+}
+
 SIPStatusLine::SIPStatusLine()
 {
-  _data = "SIP/2.0 * *";
+  _data = SIPStatusLine::EMPTY_STATUS_LINE;
 }
 
 SIPStatusLine::SIPStatusLine(const std::string& sline)
@@ -72,6 +90,11 @@ bool SIPStatusLine::getVersion(const std::string& sline, std::string& version)
 
 bool SIPStatusLine::setVersion(std::string& sline, const char* version)
 {
+  if (is_empty(version))
+  {
+    return false;
+  }
+  
   const char* versionOffSet = ABNF::findNextIterFromString(" ", sline.c_str());
   if (versionOffSet == sline.c_str())
     return false;
@@ -91,6 +114,16 @@ bool SIPStatusLine::getStatusCode(const std::string& sline,std::string& statusCo
     return false;
   statusCode = std::string(versionOffSet, statusCodeOffSet-1);
   return true;
+}
+
+unsigned int  SIPStatusLine::getStatusCode() const
+{
+  std::string scode;
+  if (!getStatusCode(scode))
+  {
+    return 0;
+  }
+  return OSS::string_to_number<unsigned int>(scode.c_str(), 0);
 }
 
 bool SIPStatusLine::setStatusCode(std::string& sline, const char* statusCode)
@@ -131,6 +164,70 @@ bool SIPStatusLine::setReasonPhrase(std::string& sline, const char* reasonPhrase
   sline = std::string(sline.c_str(), statusCodeOffSet);
   sline += reasonPhrase;
   return true;
+}
+
+bool SIPStatusLine::getVersion(std::string& version) const
+{
+  return SIPStatusLine::getVersion(_data, version);
+}
+
+std::string SIPStatusLine::getVersion() const
+{
+  std::string version; 
+  getVersion(version); 
+  return version;
+}
+
+bool SIPStatusLine::setVersion(const char* version)
+{
+  if (is_empty(version))
+  {
+    return false;
+  }
+  check_empty(this);
+  return SIPStatusLine::setVersion(_data, version);
+}
+
+bool SIPStatusLine::getStatusCode(std::string& statusCode) const
+{
+  return SIPStatusLine::getStatusCode(_data, statusCode);
+}
+
+bool SIPStatusLine::setStatusCode(const char* statusCode)
+{
+  if (is_empty(statusCode))
+  {
+    return false;
+  }
+  check_empty(this);
+  return SIPStatusLine::setStatusCode(_data, statusCode);
+}
+
+bool SIPStatusLine::setStatusCodeInt(unsigned int statusCode)
+{
+  return setStatusCode(OSS::string_from_number<unsigned int>(statusCode).c_str());
+}
+
+bool SIPStatusLine::getReasonPhrase(std::string& reasonPhrase) const
+{
+  return SIPStatusLine::getReasonPhrase(_data, reasonPhrase);
+}
+
+std::string SIPStatusLine::getReasonPhrase() const
+{
+  std::string reasonPhrase;
+  getReasonPhrase(reasonPhrase);
+  return reasonPhrase;
+}
+
+bool SIPStatusLine::setReasonPhrase(const char* reasonPhrase)
+{
+  if (is_empty(reasonPhrase))
+  {
+    return false;
+  }
+  check_empty(this);
+  return SIPStatusLine::setReasonPhrase(_data, reasonPhrase);
 }
 
 } } // OSS::SIP
