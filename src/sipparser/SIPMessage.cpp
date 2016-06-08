@@ -430,12 +430,16 @@ size_t SIPMessage::hdrPresent(const char * headerName) const
   ReadLock lock(_rwlock);
 
   if (!_finalized)
-    throw OSS::SIP::SIPParserException("Invalid Parser State Exception");
+  {
+    return 0;
+  }
 
   std::string key = headerName;
   boost::to_lower(key);
   if (_headers.find(key)==_headers.end())
+  {
     return 0;
+  }
   return const_cast<SIPMessage*>(this)->_headers[key].size();
 }
 
@@ -444,16 +448,24 @@ const std::string& SIPMessage::hdrGet(const char * headerName, size_t index) con
   ReadLock lock(_rwlock);
 
   if (!_finalized)
-    throw OSS::SIP::SIPParserException("Invalid Parser State Exception");
+  {
+    return _headerEmptyRet;
+  }
 
   std::string key = headerName;
   boost::to_lower(key);
   if (_headers.find(key)==_headers.end())
+  {
     return _headerEmptyRet;
+  }
   if (const_cast<SIPMessage*>(this)->_headers[key].size() == 0)
+  {
     return _headerEmptyRet;
+  }
   if (index >= const_cast<SIPMessage*>(this)->_headers[key].size())
-    throw OSS::SIP::SIPParserException("Invalid Index Exception");
+  {
+    return _headerEmptyRet;
+  }
   return const_cast<SIPMessage*>(this)->_headers[key][index];
 }
 
@@ -461,11 +473,10 @@ bool SIPMessage::hdrSet(const char * headerName, const std::string& headerValue)
 {
   WriteLock lock(_rwlock);
 
-  if (!_finalized)
-    throw OSS::SIP::SIPParserException("Invalid Parser State Exception");
-
-  if (headerValue.empty())
-    throw OSS::SIP::SIPParserException("Header Value is empty while calling SIPMessage::hdrSet()");
+  if (!_finalized || headerValue.empty())
+  {
+    return false;
+  }
 
   std::string key = headerName;
   boost::to_lower(key);
@@ -489,15 +500,14 @@ bool SIPMessage::hdrSet(const char* headerName, const std::string& headerValue, 
   WriteLock lock(_rwlock);
 
 
-  if (!_finalized)
-    throw OSS::SIP::SIPParserException("Invalid Parser State Exception");
-
-  if (headerValue.empty())
-    throw OSS::SIP::SIPParserException("Header Value is empty while calling SIPMessage::hdrSet()");
+  if (!_finalized || headerValue.empty())
+  {
+    return false;
+  }
 
   std::string key = headerName;
   boost::to_lower(key);
-  if (_headers.find(key)==_headers.end())
+  if (_headers.find(key)==_headers.end() && index == 0)
   {
     SIPHeaderTokens tokens;
     tokens.push_back(headerValue);
@@ -508,7 +518,9 @@ bool SIPMessage::hdrSet(const char* headerName, const std::string& headerValue, 
   }
 
   if (_headers[key].size() == 0 || index >= _headers[key].size())
-    throw OSS::SIP::SIPParserException("Invalid Index Exception");
+  {
+    return false;
+  }
 
   _headers[key][index]=headerValue;
   return true;
@@ -518,11 +530,15 @@ bool SIPMessage::hdrRemove(const char* headerName)
 {
   WriteLock lock(_rwlock);
   if (!_finalized)
-    throw OSS::SIP::SIPParserException("Invalid Parser State Exception");
+  {
+    return false;
+  }
   std::string key = headerName;
   boost::to_lower(key);
   if (_headers.find(key)==_headers.end())
+  {
     return false;
+  }
   if (_headers[key].size() > 1)
   {
     OSS_LOG_WARNING("SIPMessage::hdrRemove - Attempt to remove a header with more than one element! HeaderName: " << headerName);
@@ -537,11 +553,10 @@ bool SIPMessage::hdrListAppend(const char* name, const std::string & value)
 {
   WriteLock lock(_rwlock);
 
-  if (!_finalized)
-    throw OSS::SIP::SIPParserException("Invalid Parser State Exception");
-
-  if (value.empty())
-    throw OSS::SIP::SIPParserException("Header Value is empty while calling SIPMessage::hdrListAppend()");
+  if (!_finalized || value.empty())
+  {
+    return false;
+  }
 
   std::string key = name;
   boost::to_lower(key);
@@ -564,11 +579,10 @@ bool SIPMessage::hdrListPrepend(const char* name, const std::string& value)
 {
   WriteLock lock(_rwlock);
 
-  if (!_finalized)
-    throw OSS::SIP::SIPParserException("Invalid Parser State Exception");
-
-  if (value.empty())
-    throw OSS::SIP::SIPParserException("Header Value is empty while calling SIPMessage::hdrListAppend()");
+  if (!_finalized || value.empty())
+  {
+    return false;
+  }
 
   std::string key = name;
   boost::to_lower(key);
@@ -591,7 +605,9 @@ std::string SIPMessage::hdrListPopFront(const char* headerName)
 {
   WriteLock lock(_rwlock);
   if (!_finalized)
-    throw OSS::SIP::SIPParserException("Invalid Parser State Exception");
+  {
+    return _headerEmptyRet;
+  }
   std::string key = headerName;
   boost::to_lower(key);
   if (_headers.find(key)==_headers.end())
@@ -604,7 +620,7 @@ std::string SIPMessage::hdrListPopFront(const char* headerName)
     // This should never happen but handle it just in case
     //
     _headers.erase(key);
-    return "";
+    return _headerEmptyRet;
   }
   else if (tokens.size() == 1)
   {
@@ -625,7 +641,9 @@ bool SIPMessage::hdrListRemove(const char* headerName)
 {
   WriteLock lock(_rwlock);
   if (!_finalized)
-    throw OSS::SIP::SIPParserException("Invalid Parser State Exception");
+  {
+    return false;
+  }
   std::string key = headerName;
   boost::to_lower(key);
   if (_headers.find(key)==_headers.end())
@@ -718,7 +736,9 @@ boost::tribool SIPMessage::isRequest(const char* method) const
     return _isRequest;
 
   if (_startLine.empty())
-    throw OSS::SIP::SIPParserException("ABNF Syntax Exception");
+  {
+    return false;
+  }
 
   if (requestLineVerify(_startLine.c_str()))
   {
@@ -736,7 +756,9 @@ boost::tribool SIPMessage::isRequest(const char* method) const
 boost::tribool SIPMessage::isResponseTo(const char* meth) const
 {
   if (_startLine.empty())
-    throw OSS::SIP::SIPParserException("ABNF Syntax Exception");
+  {
+    return false;
+  }
 
   if (!_isResponse)
     _isResponse = statusLineVerify(_startLine.c_str());
