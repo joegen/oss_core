@@ -414,6 +414,12 @@ public:
     /// To simply remove the first element in a list header,
     /// use hdrListPopFront instead.
   
+   const std::string& hdrListBottom(const char* headerName) const;
+    /// Returns the last header in the list.
+    ///
+    /// If the header is not present, this function will return a reference
+
+  
   static SIPMessage::Ptr createRequest(
       SIPMessage::RequestTypes type,
       const SIPURI& requestUri,
@@ -818,6 +824,7 @@ inline const SIPMessage::CustomProperties& SIPMessage::properties() const
 {
   return _properties;
 }
+
 
 }} //OSS::SIP
 #endif //SIP_SIPMessage_INCLUDED
