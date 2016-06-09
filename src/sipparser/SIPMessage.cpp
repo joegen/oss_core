@@ -652,6 +652,19 @@ bool SIPMessage::hdrListRemove(const char* headerName)
   return true;
 }
 
+const std::string& SIPMessage::hdrListBottom(const char* headerName) const
+{
+  size_t count = hdrGetSize(headerName);
+  if (count)
+  {
+    return hdrGet(headerName, count - 1);
+  }
+  else
+  {
+    return _headerEmptyRet;
+  }
+}
+
 bool SIPMessage::commitData()
 {
   WriteLock lock(_rwlock);
