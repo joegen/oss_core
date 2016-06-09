@@ -74,6 +74,7 @@ struct PropertyMap
     "endpoint-name", \
     "transport-alias", \
     "reg-id", \
+    "require-persistent-connection", \
     "property-undefined" \
   };
 
@@ -127,6 +128,7 @@ struct PropertyMap
     PROP_EndpointName,
     PROP_TransportAlias,
     PROP_RegId,
+    PROP_RequirePersistentConnection,
     PROP_Max
   };
   

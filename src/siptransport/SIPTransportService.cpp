@@ -525,6 +525,9 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
   const std::string& transportId)
 {
   std::string logId = pMsg->createContextId(true);
+  std::string requirePersistentValue;
+  pMsg->getProperty(OSS::PropertyMap::PROP_RequirePersistentConnection, requirePersistentValue);
+  bool requirePersistent = pMsg->isResponse() || !requirePersistentValue.empty();
   
   if (!transportId.empty())
   {
@@ -589,6 +592,13 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
     {
       OSS_LOG_INFO(logId << "SIPTransportService::createClientTransport - Finding persistent TCP connection with ID " <<  transportId);
       pTCPConnection = _tcpConMgr.findConnectionById(OSS::string_to_number<OSS::UInt64>(transportId.c_str()));
+      
+      if (requirePersistent && !pTCPConnection)
+      {
+        OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
+          << " and a persistent connection has been requested.  Giving up...");
+        return pTCPConnection;
+      }
     }
 
     if (!pTCPConnection)
@@ -621,6 +631,12 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
     if (!transportId.empty())
     {
       pWSConnection = _wsConMgr.findConnectionById(OSS::string_to_number<OSS::UInt64>(transportId.c_str()));
+      if (requirePersistent && !pWSConnection)
+      {
+        OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
+          << " and a persistent connection has been requested.  Giving up...");
+        return pWSConnection;
+      }
     }
 
     if (!pWSConnection)
@@ -648,6 +664,12 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
     {
       OSS_LOG_INFO(logId << "SIPTransportService::createClientTransport - Finding persistent TLS connection with ID " <<  transportId);
       pTLSConnection = _tlsConMgr.findConnectionById(OSS::string_to_number<OSS::UInt64>(transportId.c_str()));
+      if (requirePersistent && !pTLSConnection)
+      {
+        OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
+          << " and a persistent connection has been requested.  Giving up...");
+        return pTLSConnection;
+      }
     }
 
     if (!pTLSConnection)
