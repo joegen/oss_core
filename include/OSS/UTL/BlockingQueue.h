@@ -24,6 +24,7 @@
 #include <queue>
 #include <boost/noncopyable.hpp>
 #include "OSS/UTL/Thread.h"
+#include <unistd.h>
 
 namespace OSS {
 
@@ -31,14 +32,33 @@ template <class T>
 class BlockingQueue : boost::noncopyable
 {
 public:
-  BlockingQueue(): _sem(0, 0xFFFF)
+  BlockingQueue(bool usePipe = false) :
+    _sem(0, 0xFFFF),
+    _usePipe(usePipe)
   {
+    if (_usePipe)
+    {
+      pipe(_pipe);
+    }
+  }
+  
+  ~BlockingQueue()
+  {
+    if (_usePipe)
+    {
+      close(_pipe[0]);
+      close(_pipe[1]);
+    }
   }
 
   void enqueue(T data)
   {
     _cs.lock();
     _queue.push(data);
+    if (_usePipe)
+    {
+      write(_pipe[1], " ", 1);
+    }
     _cs.unlock();
     _sem.set();
   }
@@ -47,6 +67,11 @@ public:
   {
     _sem.wait();
     _cs.lock();
+    if (_usePipe)
+    {
+      char buf[1];
+      read(_pipe[0], buf, 1);
+    }
     data = _queue.front();
     _queue.pop();
     _cs.unlock();
@@ -58,6 +83,11 @@ public:
       return false;
 
     _cs.lock();
+    if (_usePipe)
+    {
+      char buf[1];
+      read(_pipe[0], buf, 1);
+    }
     data = _queue.front();
     _queue.pop();
     _cs.unlock();
@@ -73,10 +103,18 @@ public:
     _cs.unlock();
     return ret;
   }
+  
+  int getFd() const
+  {
+    return _usePipe ? _pipe[0] : 0;
+  }
+  
 private:
   OSS::semaphore _sem;
   mutable OSS::mutex_critic_sec _cs;
   std::queue<T> _queue;
+  int _pipe[2];
+  bool _usePipe;
 };
 
 } // OSS

@@ -145,6 +145,12 @@ public:
   void receiveEndpointEvent(EndpointEventPtr& ev);
     /// receive a new event
   
+  int getFd() const;
+    /// return fd for polling read status of the event queue
+  
+  OSS::SIP::SIPTransaction::Ptr createClientTransaction(const OSS::SIP::SIPMessage::Ptr& pMsg);
+    /// Create a new SIP client transaction for the SIP request
+  
 protected:
   virtual void handleRequest(
     const OSS::SIP::SIPMessage::Ptr& pMsg, 
@@ -213,6 +219,11 @@ inline bool SIPEndpoint::getInternalAddress(
 {
   return const_cast<SIPTransportService&>(const_cast<SIPStack&>(_stack).transport()).getInternalAddress(
     proto, externalIp, internalIp);
+}
+
+inline int SIPEndpoint::getFd() const
+{
+  return _endpointEventQueue.getFd();
 }
 
 } } } // OSS::SIP::EP

@@ -283,6 +283,9 @@ public:
     int banLifeTime // violator jail lifetime
   );
   
+  SIPTransaction::Ptr createClientTransaction(const SIPMessage::Ptr& pRequest);
+    /// Create a new transaction for a new non-ACK outgoing request
+  
 private:
 
   //
@@ -388,7 +391,12 @@ inline OSS::Persistent::RESTKeyValueStore* SIPStack::getKeyValueStore()
 {
   return _pKeyStore; 
 }
-    /// Returns a pointer to the key value store
+
+inline SIPTransaction::Ptr SIPStack::createClientTransaction(const SIPMessage::Ptr& pRequest)
+{
+  return _fsmDispatch.createClientTransaction(pRequest);
+}
+
 
 } } // OSS::SIP
 #endif // SIP_SIPStack_INCLUDED

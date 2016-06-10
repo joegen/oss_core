@@ -69,6 +69,9 @@ public:
     /// transport proactor thread and should therefore
     /// not block and result to a transport sleep.
 
+  SIPTransaction::Ptr createClientTransaction(const SIPMessage::Ptr& pRequest);
+    /// Create a new transaction for a new non-ACK outgoing request
+  
   void sendRequest(
     const SIPMessage::Ptr& pRequest,
     const OSS::Net::IPAddress& localAddress,

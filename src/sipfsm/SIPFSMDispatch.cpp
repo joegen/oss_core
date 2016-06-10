@@ -189,12 +189,7 @@ void SIPFSMDispatch::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
   }
 }
 
-void SIPFSMDispatch::sendRequest(
-  const SIPMessage::Ptr& pRequest,
-  const OSS::Net::IPAddress& localAddress,
-  const OSS::Net::IPAddress& remoteAddress,
-  SIPTransaction::Callback& callback,
-  SIPTransaction::TerminateCallback& terminateCallback)
+SIPTransaction::Ptr SIPFSMDispatch::createClientTransaction(const SIPMessage::Ptr& pRequest)
 {
   if (!pRequest->isRequest())
     throw OSS::SIP::SIPException("Sending a response using sendRequest() method is illegal");
@@ -224,7 +219,19 @@ void SIPFSMDispatch::sendRequest(
       trn = _nict.findTransaction(pRequest, nullTransport);
     }
   }
+  
+  return trn;
+}
 
+void SIPFSMDispatch::sendRequest(
+  const SIPMessage::Ptr& pRequest,
+  const OSS::Net::IPAddress& localAddress,
+  const OSS::Net::IPAddress& remoteAddress,
+  SIPTransaction::Callback& callback,
+  SIPTransaction::TerminateCallback& terminateCallback)
+{
+  SIPTransaction::Ptr trn = createClientTransaction(pRequest);
+ 
   if (trn)
   {
     if (!trn->transportService())

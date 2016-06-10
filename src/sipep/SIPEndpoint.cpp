@@ -43,7 +43,8 @@ namespace EP {
   
 typedef SIPEndpointRetransmitter Retransmitter;
   
-SIPEndpoint::SIPEndpoint()
+SIPEndpoint::SIPEndpoint() :
+  _endpointEventQueue(true/*enable pipe */)
 {
   _stack.setRequestHandler(boost::bind(&SIPEndpoint::handleRequest, this, _1, _2, _3));
   _stack.setAckOr2xxTransactionHandler(boost::bind(&SIPEndpoint::handleAckOr2xxTransaction, this, _1, _2));
@@ -295,6 +296,9 @@ void SIPEndpoint::onHandleAckTimeout(const SIPMessage::Ptr& pRequest)
   }
 }
 
-
+OSS::SIP::SIPTransaction::Ptr SIPEndpoint::createClientTransaction(const OSS::SIP::SIPMessage::Ptr& pMsg)
+{
+  return _stack.createClientTransaction(pMsg);
+}
 
 } } } // OSS::SIP::EP
