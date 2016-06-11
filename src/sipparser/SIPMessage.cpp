@@ -239,7 +239,7 @@ static std::string hdrGetExpandedForm(const std::string & header)
   else if( h == "s" )//s
     return "Subject";
   else if( h == "t" )//t
-    return "to";
+    return "To";
   else if( h == "u" )//u
     return "Allow-Events";
   else if( h == "v" )//v
