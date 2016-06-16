@@ -102,24 +102,44 @@ void net_init()
 	struct ifaddrs *list;
 	getifaddrs(&list);
 	{
+    char buff[INET6_ADDRSTRLEN];
     struct ifaddrs *cur;
     for(cur = list; cur != 0; cur = cur->ifa_next)
     {
-      if(!cur || !cur->ifa_addr || cur->ifa_addr->sa_family != AF_INET)
+      if(!cur || !cur->ifa_addr)
         continue;
 
-      struct sockaddr_in *addrStruct = (struct sockaddr_in *)cur->ifa_addr;
-      struct sockaddr_in *netmaskStruct = (struct sockaddr_in *)cur->ifa_netmask;
-      struct sockaddr_in *broadcastStruct = (struct sockaddr_in *)cur->ifa_broadaddr;
-      struct sockaddr_in *destAddrStruct = (struct sockaddr_in *)cur->ifa_dstaddr;
-      
       network_interface iface;
-      iface._ipAddress = inet_ntoa(addrStruct->sin_addr);
-      iface._netMask = inet_ntoa(netmaskStruct->sin_addr);
-      iface._broadcastAddress = inet_ntoa(broadcastStruct->sin_addr);
-      iface._destAddr = inet_ntoa(destAddrStruct->sin_addr);
-      iface._flags = cur->ifa_flags;
-      iface._ifName = cur->ifa_name;
+      if (cur->ifa_addr->sa_family == AF_INET)
+      {
+        iface._ipAddress = inet_ntop(AF_INET, &((struct sockaddr_in *)cur->ifa_addr)->sin_addr, buff, sizeof(buff));
+        iface._netMask = inet_ntop(AF_INET, &((struct sockaddr_in *)cur->ifa_netmask)->sin_addr, buff, sizeof(buff));
+        iface._flags = cur->ifa_flags;
+        iface._ifName = cur->ifa_name;
+        if (cur->ifa_broadaddr)
+        {
+          iface._broadcastAddress = inet_ntop(AF_INET, &((struct sockaddr_in *)cur->ifa_broadaddr)->sin_addr, buff, sizeof(buff));
+        }
+        if (cur->ifa_dstaddr)
+        {
+          iface._destAddr = inet_ntop(AF_INET, &((struct sockaddr_in *)cur->ifa_dstaddr)->sin_addr, buff, sizeof(buff));
+        }
+      }
+      else if (cur->ifa_addr->sa_family == AF_INET6)
+      {
+        iface._ipAddress = inet_ntop(AF_INET6, &((struct sockaddr_in6 *)cur->ifa_addr)->sin6_addr, buff, sizeof(buff));
+        iface._netMask = inet_ntop(AF_INET6, &((struct sockaddr_in6 *)cur->ifa_netmask)->sin6_addr, buff, sizeof(buff));
+        iface._flags = cur->ifa_flags;
+        iface._ifName = cur->ifa_name;
+        if (cur->ifa_broadaddr)
+        {
+          iface._broadcastAddress = inet_ntop(AF_INET6, &((struct sockaddr_in6 *)cur->ifa_broadaddr)->sin6_addr, buff, sizeof(buff));
+        }
+        if (cur->ifa_dstaddr)
+        {
+          iface._destAddr = inet_ntop(AF_INET6, &((struct sockaddr_in6 *)cur->ifa_dstaddr)->sin6_addr, buff, sizeof(buff));
+        }
+      }
       network_interface::_table.push_back(iface);
     }
 	}
