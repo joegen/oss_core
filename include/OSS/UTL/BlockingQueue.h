@@ -23,6 +23,8 @@
 
 #include <queue>
 #include <boost/noncopyable.hpp>
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
 #include "OSS/UTL/Thread.h"
 #include <unistd.h>
 
@@ -32,6 +34,8 @@ template <class T>
 class BlockingQueue : boost::noncopyable
 {
 public:
+  typedef boost::function<bool(BlockingQueue<T>&, const T&)> QueueObserver;
+  
   BlockingQueue(bool usePipe = false) :
     _sem(0, 0xFFFF),
     _usePipe(usePipe)
@@ -51,9 +55,14 @@ public:
     }
   }
 
-  void enqueue(T data)
+  bool enqueue(T data)
   {
     _cs.lock();
+    if (_enqueueObserver && !_enqueueObserver(*this, data))
+    {
+      _cs.unlock();
+      return false;
+    }
     _queue.push(data);
     if (_usePipe)
     {
@@ -61,6 +70,7 @@ public:
     }
     _cs.unlock();
     _sem.set();
+    return true;
   }
 
   void dequeue(T& data)
@@ -74,6 +84,10 @@ public:
     }
     data = _queue.front();
     _queue.pop();
+    if (_dequeueObserver)
+    {
+      _dequeueObserver(*this, data);
+    }
     _cs.unlock();
   }
 
@@ -90,6 +104,10 @@ public:
     }
     data = _queue.front();
     _queue.pop();
+    if (_dequeueObserver)
+    {
+      _dequeueObserver(*this, data);
+    }
     _cs.unlock();
 
     return true;
@@ -109,12 +127,23 @@ public:
     return _usePipe ? _pipe[0] : 0;
   }
   
+  void setEnqueueObserver(const QueueObserver& observer)
+  {
+    _enqueueObserver = observer;
+  }
+  
+  void setDequeueObserver(const QueueObserver& observer)
+  {
+    _dequeueObserver = observer;
+  }
 private:
   OSS::semaphore _sem;
   mutable OSS::mutex_critic_sec _cs;
   std::queue<T> _queue;
   int _pipe[2];
   bool _usePipe;
+  QueueObserver _enqueueObserver;
+  QueueObserver _dequeueObserver;
 };
 
 } // OSS

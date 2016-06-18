@@ -110,7 +110,8 @@ void net_init()
         continue;
 
       network_interface iface;
-      if (cur->ifa_addr->sa_family != AF_INET)
+
+      if (cur->ifa_addr->sa_family == AF_INET)
       {
         iface._ipAddress = inet_ntop(AF_INET, &((struct sockaddr_in *)cur->ifa_addr)->sin_addr, buff, sizeof(buff));
         iface._netMask = inet_ntop(AF_INET, &((struct sockaddr_in *)cur->ifa_netmask)->sin_addr, buff, sizeof(buff));
@@ -125,7 +126,7 @@ void net_init()
           iface._destAddr = inet_ntop(AF_INET, &((struct sockaddr_in *)cur->ifa_dstaddr)->sin_addr, buff, sizeof(buff));
         }
       }
-      else if (cur->ifa_addr->sa_family != AF_INET6)
+      else if (cur->ifa_addr->sa_family == AF_INET6)
       {
         iface._ipAddress = inet_ntop(AF_INET6, &((struct sockaddr_in6 *)cur->ifa_addr)->sin6_addr, buff, sizeof(buff));
         iface._netMask = inet_ntop(AF_INET6, &((struct sockaddr_in6 *)cur->ifa_netmask)->sin6_addr, buff, sizeof(buff));
