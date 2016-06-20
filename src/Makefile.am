@@ -6,9 +6,12 @@ corelibs = liboss_carp.la
 corelibldadd = \
     @OSS_CORE_DEP_LIBS@ \
     liboss_core.la \
-    liboss_carp.la \
-    ua/core/re/libre.a \
-    ua/core/rem/librem.a
+    liboss_carp.la
+
+if ENABLE_REM
+    corelibldadd += ua/core/re/libre.a \
+		    ua/core/rem/librem.a
+endif
 
 if ENABLE_TURN
     corelibs += liboss_turn.la
@@ -21,6 +24,8 @@ lib_LTLIBRARIES = $(corelibs)
 localedir = $(datadir)/locale
 
 AM_CPPFLAGS = \
+    -I/usr/include \
+    -I$(top_builddir)/include \
     -I@OSS_CORE_SRCDIR@/include \
     -I@OSS_CORE_SRCDIR@/src/utl/linux/pidfile \
     -I@OSS_CORE_SRCDIR@/src/net/turn/carp \
@@ -46,6 +51,7 @@ LDADD = $(corelibldadd)
 
 LDFLAGS = -rdynamic
 
+if ENABLE_UCARP
 liboss_carp_la_LDFLAGS = -version-info @OSS_CORE_VERSION_INFO@
 
 liboss_carp_la_LIBADD = $(LTLIBINTL)
@@ -79,6 +85,7 @@ liboss_carp_la_SOURCES = \
 	net/carp/log.c \
 	net/carp/log.h \
 	net/carp/syslognames.h
+endif
 
 if ENABLE_TURN
 
@@ -329,7 +336,6 @@ liboss_core_la_SOURCES =  \
     rtp/RTPPacket.cpp \
     rtp/RTPPCAPReader.cpp \
     rtp/RTPProxy.cpp \
-    rtp/RTPProxyClient.cpp \
     rtp/RTPProxyManager.cpp \
     rtp/RTPProxyRecord.cpp \
     rtp/RTPProxySession.cpp \

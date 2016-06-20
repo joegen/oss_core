@@ -37,6 +37,9 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+#include "OSS/OSS.h"
+
+#if OSS_HAVE_PCAP
 
 #include <pcap.h>
 #include <net/ethernet.h>
@@ -564,6 +567,6 @@ void Carp::signal_exit()
 
 } } // OSS::Net
 
-
+#endif //OSS_HAVE_PCAP
 
 

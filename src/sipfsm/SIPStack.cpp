@@ -49,8 +49,7 @@ SIPStack::SIPStack() :
   _tcpListeners(),
   _wsListeners(),
   _tlsListeners(),
-  _tlsCertPassword(),
-  _pKeyStore(0)
+  _tlsCertPassword()
 {
 }
 
@@ -568,16 +567,7 @@ void SIPStack::setTransportThreshold(
     SIPTransportSession::rateLimit().autoBanThresholdViolators() = true;
     SIPTransportSession::rateLimit().setPacketsPerSecondThreshold(packetsPerSecondThreshold);
     SIPTransportSession::rateLimit().setThresholdViolationRate(thresholdViolationRate);
-    SIPTransportSession::rateLimit().setBanLifeTime(banLifeTime);
-
-#if 0
-    if (_pKeyStore)
-    {
-      OSS::Persistent::KeyValueStore* pAccessControl = _pKeyStore->getStore("/root/access-control", true);
-      SIPTransportSession::rateLimit().setPersistentStore(pAccessControl);
-    }
-#endif
-    
+    SIPTransportSession::rateLimit().setBanLifeTime(banLifeTime);    
     OSS_LOG_INFO("Enforcing packet rate limit = " << thresholdViolationRate);
   }
 }

@@ -6,6 +6,9 @@ include config/project.am
 
 SUBDIRS = \
 	. \
-	src/ua/core \
 	src \
         include
+
+if ENABLE_REM
+    SUBDIRS += src/ua/core
+endif

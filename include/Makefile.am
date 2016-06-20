@@ -17,7 +17,7 @@ nobase_include_HEADERS = \
     OSS/UTL/DebugMemory.h \
     OSS/UTL/Endian.h \
     OSS/UTL/PropertyMap.h \
-    OSS/OSS.h \
+    OSS/OSS.h.in \
     OSS/Persistent/BerkeleyDb.h \
     OSS/Persistent/RedisClient.h \
     OSS/UTL/Cache.h \
@@ -198,7 +198,6 @@ nobase_include_HEADERS = \
     OSS/RTP/RTPPacket.h \
     OSS/RTP/RTPPCAPReader.h \
     OSS/RTP/RTPProxy.h \
-    OSS/RTP/RTPProxyClient.h \
     OSS/RTP/RTPProxyManager.h \
     OSS/RTP/RTPProxyRecord.h \
     OSS/RTP/RTPProxySession.h \

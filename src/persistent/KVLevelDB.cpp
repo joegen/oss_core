@@ -21,6 +21,8 @@
 #include "OSS/Persistent/KVLevelDB.h"
 
 
+#if OSS_HAVE_LEVELDB
+
 namespace OSS {
 namespace Persistent {
 
@@ -180,5 +182,5 @@ const std::string KVLevelDB::getPath() const
 
 } } // OSS::Persistent
 
-
+#endif // OSS_HAVE_LEVELDB
 

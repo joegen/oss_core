@@ -67,7 +67,7 @@ OSS::SIP::UA::SIPRegistration* SIPB2BRegisterAgent::prepareRegister(
   if (!_pRegisterUa)
   {
     OSS_LOG_ERROR("SIPB2BRegisterAgent::sendClientRegister - Registration User Agent not initialized.");
-    return false;
+    return 0;
   }
   
   OSS::SIP::UA::SIPRegistration* pReg  = new OSS::SIP::UA::SIPRegistration(*_pRegisterUa);

@@ -25,6 +25,8 @@
 
 #include "OSS/Crypto/BlockCipher.h"
 
+#if OSS_HAVE_MCRYPT
+
 namespace OSS {
 namespace Crypto {
 
@@ -100,6 +102,8 @@ inline void FileEncryptor::setPassword(const std::string& password)
 }
 
 } } // OSS::Crypto
+
+#endif // OSS_HAVE_MCRYPT
 
 #endif
 

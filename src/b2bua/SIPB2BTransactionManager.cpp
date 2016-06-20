@@ -36,9 +36,7 @@ SIPB2BTransactionManager::SIPB2BTransactionManager(int minThreadcount, int maxTh
   _threadPool(minThreadcount, maxThreadCount),
   _useSourceAddressForResponses(false),
   _pDefaultHandler(0),
-  _maxThreadCount(maxThreadCount),
-  _pKeyStore(0)
-  
+  _maxThreadCount(maxThreadCount)  
 {
 }
 
@@ -647,12 +645,6 @@ bool SIPB2BTransactionManager::registerPlugin(const std::string& name, const std
   }
 
   return true;
-}
-
-void SIPB2BTransactionManager::setKeyValueStore(OSS::Persistent::RESTKeyValueStore* pKeyStore)
-{
-  _pKeyStore = pKeyStore;
-  _stack.setKeyValueStore(_pKeyStore);
 }
 
 bool SIPB2BTransactionManager::startLocalRegistrationAgent(

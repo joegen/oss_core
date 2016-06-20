@@ -29,7 +29,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include "OSS/Persistent/KeyValueStore.h"
+#include <boost/function.hpp>
 
 
 namespace OSS {

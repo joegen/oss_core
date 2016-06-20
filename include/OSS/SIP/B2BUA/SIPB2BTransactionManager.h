@@ -314,13 +314,6 @@ public:
     /// will no longer process the transaction and instead, let the handler
     /// respond to the transaction.
   
-  void setKeyValueStore(OSS::Persistent::RESTKeyValueStore* pKeyStore);
-    /// Set the key value store to be used for persisting some states
-  
-  OSS::Persistent::RESTKeyValueStore* getKeyValueStore();
-    /// Returns a pointer to the key value store
-  
-  
   bool startLocalRegistrationAgent(
     const std::string& agentName,
     const std::string& route,
@@ -439,12 +432,7 @@ private:
   //
   SIPB2BUserAgentHandlerList _userAgentHandler;
   SIPB2BUserAgentHandlerLoader _pluginLoader;
-  
-  ///
-  /// REST Key Value Store
-  ///
-  OSS::Persistent::RESTKeyValueStore* _pKeyStore;
-  
+   
   //
   // Local registration agent
   //
@@ -493,11 +481,6 @@ inline const SIPB2BTransactionManager::PostRouteCallback& SIPB2BTransactionManag
 inline void SIPB2BTransactionManager::registerDefaultHandler(SIPB2BHandler* pDefaultHandler)
 {
   _pDefaultHandler = pDefaultHandler;
-}
-
-inline OSS::Persistent::RESTKeyValueStore* SIPB2BTransactionManager::getKeyValueStore()
-{
-  return _pKeyStore;
 }
 
 inline void SIPB2BTransactionManager::setExternalDispatch(const ExternalDispatch& externalDispatch)

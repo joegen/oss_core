@@ -22,6 +22,7 @@
 #include "OSS/Net/Net.h"
 #include "OSS/UTL/Logger.h"
 #include "Poco/Stopwatch.h"
+#include "Poco/Timestamp.h"
 
 
 namespace OSS {

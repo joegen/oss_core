@@ -22,10 +22,11 @@
 //
 
 
-#include <zmq.hpp>
+
 #include "OSS/ZMQ/ZMQSocket.h"
 #include "OSS/UTL/Logger.h"
-
+#if OSS_HAVE_ZMQ
+#include <zmq.hpp>
 
 namespace OSS {
 namespace ZMQ {
@@ -360,4 +361,4 @@ bool ZMQSocket::internal_receive_request(std::string& cmd, std::string& data, un
 
 } } // OSS::ZMQ
 
-
+#endif // OSS_HAVE_ZMQ

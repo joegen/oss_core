@@ -271,12 +271,6 @@ public:
   SIPTransportService& transport();
     /// Return a reference to the transport service
   
-  void setKeyValueStore(OSS::Persistent::RESTKeyValueStore* pKeyStore);
-    /// Set the key value store to be used for persisting some states
-  
-  OSS::Persistent::RESTKeyValueStore* getKeyValueStore();
-    /// Returns a pointer to the key value store
-  
   void setTransportThreshold(
     unsigned long packetsPerSecondThreshold, // The total packets per second threshold
     unsigned long thresholdViolationRate, // Per IP threshold
@@ -313,11 +307,6 @@ private:
   SubNets _tlsSubnets;
   
   std::string _tlsCertPassword;
-  
-  //
-  // REST Key Value Store
-  //
-  OSS::Persistent::RESTKeyValueStore* _pKeyStore;
 };
 
 typedef SIPStack SIPStack;
@@ -380,16 +369,6 @@ inline SIPTransportService& SIPStack::transport()
 inline std::string SIPStack::getTlsCertPassword() const
 {
   return _tlsCertPassword;
-}
-
-inline void SIPStack::setKeyValueStore(OSS::Persistent::RESTKeyValueStore* pKeyStore)
-{
-  _pKeyStore = pKeyStore;
-}
-
-inline OSS::Persistent::RESTKeyValueStore* SIPStack::getKeyValueStore()
-{
-  return _pKeyStore; 
 }
 
 inline SIPTransaction::Ptr SIPStack::createClientTransaction(const SIPMessage::Ptr& pRequest)

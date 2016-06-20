@@ -31,6 +31,7 @@
 #include "OSS/SIP/SIP.h"
 #include "OSS/SIP/SIPMessage.h"
 #include "OSS/SIP/SIPTransportSession.h"
+#include "OSS/UTL/Thread.h"
 
 
 namespace OSS {

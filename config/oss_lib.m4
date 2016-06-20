@@ -201,7 +201,6 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     AC_CHECK_LIB([event_pthreads], [main], [], libevent_thread_found=no)
 
     AM_CONDITIONAL([ENABLE_TURN], false)
-
     AC_ARG_ENABLE(turn,
       AC_HELP_STRING([--enable-turn], [Build TURN Server]),
       enable_turn=yes)

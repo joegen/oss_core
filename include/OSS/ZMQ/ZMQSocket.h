@@ -24,11 +24,12 @@
 #ifndef OSS_ZMQSOCKET_H_INCLUDED
 #define OSS_ZMQSOCKET_H_INCLUDED
 
-
+#include "OSS/OSS.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/Net/IPAddress.h"
 #include "OSS/UTL/Thread.h"
 
+#if OSS_HAVE_ZMQ
 
 namespace OSS {
 namespace ZMQ {
@@ -81,6 +82,7 @@ protected:
     
 } } // OSS::ZMQ
 
+#endif // OSS_HAVE_ZMQ
 
 #endif // OSS_ZMQSOCKET_H_INCLUDED
 
