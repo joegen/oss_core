@@ -20,8 +20,10 @@
 #ifndef SIPB2BDIALOGSTATEMANAGER_H
 #define	SIPB2BDIALOGSTATEMANAGER_H
 
-#include <list>
+#include "OSS/build.h"
+#if ENABLE_FEATURE_B2BUA
 
+#include <list>
 #include <boost/function.hpp>
 
 #include "OSS/UTL/Cache.h"
@@ -202,6 +204,8 @@ public:
 };
 
 } } } // OSS::SIP::B2BUA
+
+#endif // ENABLE_FEATURE_B2BUA
 
 #endif	/* SIPB2BDIALOGSTATEMANAGER_H */
 

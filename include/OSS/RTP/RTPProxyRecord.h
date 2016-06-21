@@ -20,6 +20,9 @@
 #ifndef OSS_RTPPROXYRECORD_H_INCLUDED
 #define	OSS_RTPPROXYRECORD_H_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_RTP
+
 #include "OSS/Persistent/RedisClient.h"
 #include <boost/filesystem.hpp>
 
@@ -53,11 +56,13 @@ struct SBCMediaTuple
 struct RTPProxyRecord
 {
   RTPProxyRecord();
+#if OSS_HAVE_HIREDIS
   bool writeToRedis(Persistent::RedisBroadcastClient& client, const std::string& key) const;
   bool writeToRedis(Persistent::RedisBroadcastClient& client, const boost::filesystem::path& key) const;
   bool readFromRedis(Persistent::RedisBroadcastClient& client, const boost::filesystem::path& key);
   bool readFromRedis(Persistent::RedisBroadcastClient& client, const std::string& key);
-
+#endif
+  
   std::string identifier;
   std::string logId;
   std::string leg1Identifier;
@@ -84,6 +89,7 @@ struct RTPProxyRecord
 //
 // Inlines
 //
+#if OSS_HAVE_HIREDIS
 inline bool RTPProxyRecord::writeToRedis(Persistent::RedisBroadcastClient& client, const boost::filesystem::path& key) const
 {
   return writeToRedis(client, OSS::boost_file_name(key));
@@ -93,8 +99,11 @@ inline bool RTPProxyRecord::readFromRedis(Persistent::RedisBroadcastClient& clie
 {
   return readFromRedis(client, OSS::boost_file_name(key));
 }
+#endif
 
 } } // OSS::RTP
+
+#endif // ENABLE_FEATURE_RTP
 
 #endif	// OSS_RTPPROXYRECORD_H_INCLUDED
 

@@ -21,6 +21,9 @@
 #define	SIPB2BUSERAGENTHANDLER_H_INCLUDED
 
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_B2BUA
+
 #include <boost/noncopyable.hpp>
 #include <boost/function.hpp>
 #include <Poco/ClassLoader.h>
@@ -103,6 +106,8 @@ typedef Poco::Manifest<SIPB2BUserAgentHandler> SIPB2BUserAgentHandlerManifest;
 
 } } } // OSS::SIP::B2BUA
 
+
+#endif // ENABLE_FEATURE_B2BUA
 
 #endif	/// SIPB2BUSERAGENTHANDLER_H_INCLUDED
 

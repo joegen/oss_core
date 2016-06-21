@@ -63,9 +63,15 @@ RTPProxySession::~RTPProxySession()
 {
   stop();
   if (!_pManager->hasRtpDb() && _pManager->persistStateFiles())
+  {
     ClassType::remove(_stateFile);
+  }
+#if OSS_HAVE_HIREDIS
   else if (_pManager->hasRtpDb())
+  {
     _pManager->redisClient().del(_identifier);
+  }
+#endif
 }
 
 void RTPProxySession::stop()
@@ -1766,6 +1772,7 @@ void RTPProxySession::handleSDPAnswer(
   }
 }
 
+#if OSS_HAVE_HIREDIS
 void RTPProxySession::dumpStateToRedis()
 {
   RTPProxyRecord record;
@@ -2018,18 +2025,20 @@ void RTPProxySession::dumpStateToRedis()
   
   record.writeToRedis(_pManager->redisClient(), _identifier);
 }
+#endif
 
 void RTPProxySession::dumpStateFile()
 {
   //
   // Check if we will be using redis
   //
+#if OSS_HAVE_HIREDIS
   if (_pManager->hasRtpDb())
   {
     dumpStateToRedis();
     return;
   }
-
+#endif
   //
   // Check if the manager allows persistence of state files to the disc
   //
@@ -2339,6 +2348,8 @@ void RTPProxySession::dumpStateFile()
 
 }
 
+#if OSS_HAVE_HIREDIS
+
 RTPProxySession::Ptr RTPProxySession::reconstructFromRedis(RTPProxyManager* pManager, const std::string& identifier)
 {
   RTPProxySession* pSession = 0;
@@ -2585,7 +2596,7 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromRedis(RTPProxyManager* pMan
   }
   return RTPProxySession::Ptr(pSession);
 }
-
+#endif
 
 RTPProxySession::Ptr RTPProxySession::reconstructFromStateFile(
   RTPProxyManager* pManager, const boost::filesystem::path& stateFile)

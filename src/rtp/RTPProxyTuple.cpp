@@ -20,6 +20,8 @@
 #include "OSS/RTP/RTPProxyTuple.h"
 #include "OSS/RTP/RTPProxyManager.h"
 #include "OSS/RTP/RTPProxySession.h"
+#include "OSS/UTL/Logger.h"
+
 
 namespace OSS {
 namespace RTP {

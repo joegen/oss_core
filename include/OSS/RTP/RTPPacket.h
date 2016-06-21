@@ -20,6 +20,10 @@
 #ifndef OSS_RTPPACKET_H_INCLUDED
 #define OSS_RTPPACKET_H_INCLUDED
 
+#define RTP_PACKET_BUFFER_SIZE 4098
+
+#include "OSS/build.h"
+#if ENABLE_FEATURE_RTP
 
 #include <endian.h>
 #include <stdint.h>
@@ -32,7 +36,7 @@
 namespace OSS {
 namespace RTP {
 
-#define RTP_PACKET_BUFFER_SIZE 4098
+
 
 class RTPPacket
 {
@@ -350,6 +354,7 @@ inline u_char* RTPPacket::data()
 
 } } // OSS::RTP
 
+#endif //ENABLE_FEATURE_RTP
 
 #endif // OSS_RTPPACKET_H_INCLUDED
 

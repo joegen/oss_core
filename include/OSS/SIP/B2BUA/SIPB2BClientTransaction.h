@@ -21,6 +21,8 @@
 #ifndef SIP_SIPStackClientTransaction_INCLUDED
 #define SIP_SIPStackClientTransaction_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_B2BUA
 
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 
@@ -65,6 +67,8 @@ public:
 
 
 } } } // OSS::SIP
+
+#endif // ENABLE_FEATURE_B2BUA
 
 #endif //SIP_SIPStackClientTransaction_INCLUDED
 

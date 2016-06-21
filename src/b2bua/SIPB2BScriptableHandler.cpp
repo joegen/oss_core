@@ -38,8 +38,6 @@ namespace OSS {
 namespace SIP {
 namespace B2BUA {
 
-  
-using namespace OSS::RTP;
 
 
 OSS::SIP::SIPMessage* unwrapRequest(const v8::Arguments& args)
@@ -1025,7 +1023,8 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
   std::string noRTPProxy;
   if (pTransaction->getProperty(OSS::PropertyMap::PROP_NoRTPProxy, noRTPProxy) && noRTPProxy == "1")
     return OSS::SIP::SIPMessage::Ptr();
-
+  
+#if ENABLE_FEATURE_RTP  
   //
   // do not handle SDP for SIP over websockets.  It is using ICE
   // to traverse NAT.  Media anchor will mess that up.
@@ -1152,6 +1151,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
   pRequest->setBody(sdp);
   std::string clen = OSS::string_from_number<size_t>(sdp.size());
   pRequest->hdrSet(OSS::SIP::HDR_CONTENT_LENGTH, clen.c_str());
+#endif
   return OSS::SIP::SIPMessage::Ptr();
 }
 
@@ -1173,7 +1173,8 @@ void SIPB2BScriptableHandler::onProcessResponseBody(
   //
   if (pResponse->isResponseTo("OPTIONS"))
     return;
-
+  
+#if ENABLE_FEATURE_RTP  
   std::string contentType = pResponse->hdrGet(OSS::SIP::HDR_CONTENT_TYPE);
   OSS::string_to_lower(contentType);
   if (contentType != "application/sdp")
@@ -1279,6 +1280,7 @@ void SIPB2BScriptableHandler::onProcessResponseBody(
   std::string clen = OSS::string_from_number<size_t>(sdp.size());
   pTransaction->setProperty(OSS::PropertyMap::PROP_ResponseSDP, sdp.c_str());
   pResponse->hdrSet(OSS::SIP::HDR_CONTENT_LENGTH, clen.c_str());
+#endif
 }
 
 void SIPB2BScriptableHandler::onProcessOutbound(
@@ -1318,6 +1320,7 @@ void SIPB2BScriptableHandler::onProcessOutbound(
   {
     std::string sessionId;
     OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId));
+ #if ENABLE_FEATURE_RTP  
     //
     // Remove the rtp proxies if they were created
     //
@@ -1325,6 +1328,7 @@ void SIPB2BScriptableHandler::onProcessOutbound(
     {
       rtpProxy().removeSession(sessionId);
     }catch(...){}
+#endif
   }
 
   if (_outboundScript.isInitialized())
@@ -1742,6 +1746,7 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
   }
   else if (pResponse->isResponseTo("INVITE") && pResponse->isErrorResponse())
   {
+ #if ENABLE_FEATURE_RTP  
     std::string sessionId;
     pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId);
     //
@@ -1754,6 +1759,7 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
         rtpProxy().removeSession(sessionId);
       }catch(...){}
     }
+#endif
   }
   else // Any response that isn't covered by the if else block
   {
@@ -1910,6 +1916,7 @@ void SIPB2BScriptableHandler::onTransactionError(
       _pDialogState->removeDialog(pTransaction->serverRequest()->hdrGet(OSS::SIP::HDR_CALL_ID), sessionId);
     }
 
+ #if ENABLE_FEATURE_RTP     
     std::string sessionId;
     OSS_VERIFY(pTransaction->getProperty(OSS::PropertyMap::PROP_SessionId, sessionId));
     //
@@ -1922,6 +1929,7 @@ void SIPB2BScriptableHandler::onTransactionError(
         rtpProxy().removeSession(sessionId);
       }catch(...){}
     }
+#endif
   }
 }
 

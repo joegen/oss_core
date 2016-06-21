@@ -19,8 +19,11 @@
 #ifndef RTPPCAPREADER_H_
 #define RTPPCAPREADER_H_
 
-#include "OSS/OSS.h"
 #include "OSS/build.h"
+#if ENABLE_FEATURE_RTP
+
+#include "OSS/OSS.h"
+
 
 
 #if OSS_HAVE_PCAP
@@ -60,5 +63,7 @@ private:
 } } // OSS::RTP
 
 #endif // OSS_HAVE_PCAP
+#endif // ENABLE_FEATURE_RTP
+
 
 #endif /* RTPPCAPREADER_H_ */

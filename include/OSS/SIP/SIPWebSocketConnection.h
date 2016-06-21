@@ -52,6 +52,9 @@
 #ifndef OSS_SIPWEBSOCKETCONNECTION_H_INCLUDED
 #define	OSS_SIPWEBSOCKETCONNECTION_H_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_WEBSOCKETS
+
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
 #include <boost/shared_ptr.hpp>
@@ -176,6 +179,7 @@ private:
 
 } } /// OSS::SIP
 
+#endif // ENABLE_FEATURE_WEBSOCKETS
 
 #endif	// OSS_SIPWEBSOCKETCONNECTION_H_INCLUDED
 

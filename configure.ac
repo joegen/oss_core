@@ -90,6 +90,31 @@ AC_ARG_ENABLE([v8],
     [DISABLE_FEATURE(V8)])
 
 #
+# Enable B2BUA compilation
+#
+AC_ARG_ENABLE([b2bua],
+    AC_HELP_STRING([--enable-b2bua], [Enable B2BUA Feature]),
+    [ENABLE_FEATURE(B2BUA)],
+    [DISABLE_FEATURE(B2BUA)])
+
+#
+# Enable Websocket compilation
+#
+AC_ARG_ENABLE([websockets],
+    AC_HELP_STRING([--enable-websockets], [Enable Websockets Feature]),
+    [ENABLE_FEATURE(WEBSOCKETS)],
+    [DISABLE_FEATURE(WEBSOCKETS)])
+
+
+#
+# Enable RTP Proxy compilation
+#
+AC_ARG_ENABLE([rtp],
+    AC_HELP_STRING([--enable-rtp], [Enable RTP Proxy Feature]),
+    [ENABLE_FEATURE(RTP)],
+    [DISABLE_FEATURE(RTP)])
+
+#
 # Flag dependecy whether they are missing or not
 #
 AC_DEFUN([FLAG_MISSING_DEP],[
@@ -170,31 +195,25 @@ AC_CHECK_LIB(PocoNet, main,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_POCO_NET, -lPocoNet -lPocoNetSSL)],
     [ERROR_MISSING_DEP(OSS_HAVE_POCO_NET,"Poco C++ Net Library not found")])
 
-#
-# Config ++
-#
-AC_CHECK_HEADER(libconfig.h,
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_CONFIGPP, -lconfig++)], 
-    [ERROR_MISSING_DEP(OSS_HAVE_CONFIGPP, "libconfig++ not installed.  Please install libconfig-devel package)])
-#
-# Redis Client
-# 
-AC_CHECK_HEADER(hiredis/hiredis.h,
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_HIREDIS, -lhiredis)], 
-    [ERROR_MISSING_DEP(OSS_HAVE_HIREDIS, Redis client not installed.  Please install hiredis-devel package)])
 
-#
-# Google V8
-#
-AC_LANG_PUSH([C++])
-AC_CHECK_HEADER(v8.h, 
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_V8, -lv8)],
-    [ERROR_MISSING_DEP(OSS_HAVE_V8, Google V8 not install.  Please install v8-devel package)])
-AC_LANG_POP([C++])
 
 #
 # Search for optional packages
 #
+
+AC_CHECK_HEADER(libconfig.h,
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_CONFIGPP, -lconfig++)], 
+    [FLAG_MISSING_DEP(OSS_HAVE_CONFIGPP)])
+
+AC_CHECK_HEADER(hiredis/hiredis.h,
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_HIREDIS, -lhiredis)], 
+    [FLAG_MISSING_DEP(OSS_HAVE_HIREDIS)])
+
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADER(v8.h, 
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_V8, -lv8)],
+    [FLAG_MISSING_DEP(OSS_HAVE_V8)])
+AC_LANG_POP([C++])
 
 AC_CHECK_HEADER(leveldb/db.h, 
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_LEVELDB, -lleveldb)], 

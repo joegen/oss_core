@@ -19,6 +19,7 @@
 
 #include "OSS/Persistent/RedisClient.h"
 
+#if OSS_HAVE_HIREDIS
 
 namespace OSS {
 namespace Persistent {
@@ -1113,7 +1114,7 @@ bool RedisBroadcastClient::del(const std::string& key)
   
 } } // OSS::Persistent
 
-
+#endif // OSS_HAVE_HIREDIS
 
 
 

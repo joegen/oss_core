@@ -46,9 +46,11 @@ SIPB2BTransactionManager::~SIPB2BTransactionManager()
 
 void SIPB2BTransactionManager::initialize(const boost::filesystem::path& cfgDirectory)
 {
+#if OSS_HAVE_CONFIGPP
   OSS_VERIFY(!_sipConfigFile.empty());
   _transportConfigurationFile = operator/(cfgDirectory, _sipConfigFile);
   stack().initTransportFromConfig(_transportConfigurationFile);
+#endif
 }
 
 void SIPB2BTransactionManager::deinitialize()

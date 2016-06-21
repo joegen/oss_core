@@ -86,7 +86,9 @@ bool SIPEndpoint::runEndpoint()
   try 
   {
     _stack.transport().setTCPPortRange(TCP_PORT_BASE, TCP_PORT_MAX);
+#if ENABLE_FEATURE_WEBSOCKETS
     _stack.transport().setWSPortRange(WS_PORT_BASE, WS_PORT_MAX);
+#endif
     _stack.transportInit();
     _stack.run();
   }

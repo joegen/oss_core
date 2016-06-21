@@ -31,9 +31,11 @@
 #include <boost/asio/ssl.hpp>
 
 
+#if OSS_HAVE_CONFIGPP
 using OSS::Persistent::ClassType;
 using OSS::Persistent::DataType;
 using OSS::Persistent::PersistenceException;
+#endif
 
 namespace OSS {
 namespace SIP {
@@ -113,6 +115,7 @@ void SIPStack::transportInit()
     }
   }
 
+#if ENABLE_FEATURE_WEBSOCKETS  
   //
   // Prepare the WebSocket Transport
   //
@@ -132,6 +135,7 @@ void SIPStack::transportInit()
       _fsmDispatch.transport().addWSTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual(), iface.alias());
     }
   }
+#endif
 
   //
   // Prepare the TLS Transport
@@ -245,6 +249,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
     }
   }
 
+#if ENABLE_FEATURE_WEBSOCKETS
   //
   // Prepare the WebSocket Transport
   //
@@ -277,6 +282,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
       }
     }
   }
+#endif
 
   //
   // Prepare the TLS Transport
@@ -315,6 +321,8 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
     throw OSS::SIP::SIPException("No Listener Address Configured");
 }
 
+
+#if OSS_HAVE_CONFIGPP
 bool SIPStack::initVirtualTransportFromConfig(const boost::filesystem::path& cfgFile)
 {
   ClassType configFile;
@@ -555,6 +563,8 @@ bool SIPStack::initTlsContextFromConfig(const boost::filesystem::path& cfgFile)
   return initializeTlsContext(tls_certificate_file, tls_private_key_file, tls_cert_password, tls_ca_file, tls_ca_path, tls_verify_peer);
 }
 
+#endif // OSS_HAVE_CONFIGPP
+
 void SIPStack::setTransportThreshold(
   unsigned long packetsPerSecondThreshold, // The total packets per second threshold
   unsigned long thresholdViolationRate, // Per IP threshold
@@ -571,6 +581,9 @@ void SIPStack::setTransportThreshold(
     OSS_LOG_INFO("Enforcing packet rate limit = " << thresholdViolationRate);
   }
 }
+
+
+#if OSS_HAVE_CONFIGPP
 
 void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 {
@@ -873,6 +886,8 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 
   transportInit();
 }
+
+#endif // OSS_HAVE_CONFIGPP
 
 bool SIPStack::initializeTlsContext(
     const std::string& tlsCertFile, // Certificate to be used by this server.  File should be in PEM format

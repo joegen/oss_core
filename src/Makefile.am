@@ -191,13 +191,8 @@ liboss_core_la_LDFLAGS = \
 
 liboss_core_la_LIBADD = @OSS_CORE_DEP_LIBS@
 
-# this is helpful if you're debugging something with lots of inlines (like the UtlLink code)
-# 		-fno-gcse -O0 -fno-implement-inlines -fno-default-inline
-liboss_core_la_CXXFLAGS = \
-	-DOSSLIBS_TMPDIR=\"@OSSLIBS_TMPDIR@\" \
-	-DOSSLIBS_CONFDIR=\"@OSSLIBS_CONFDIR@\" \
-	-DOSSAPP_LIB_VERSION=\"@OSS_CORE_VERSION_FULL@\" \
-	-fno-gcse -O0 -fno-implement-inlines -fno-default-inline 
+# this is helpful if you're debugging something with lots of inlines
+liboss_core_la_CXXFLAGS = -fno-gcse -O0 -fno-implement-inlines -fno-default-inline 
 
 liboss_core_la_CFLAGS = \
     -DHAVE_INET_PTON_NTOP
@@ -304,9 +299,6 @@ liboss_core_la_SOURCES =  \
     siptransport/SIPListener.cpp \
     siptransport/SIPTransportSession.cpp \
     siptransport/SIPTLSListener.cpp \
-    siptransport/SIPWebSocketConnection.cpp \
-    siptransport/SIPWebSocketListener.cpp \
-    siptransport/SIPWebSocketConnectionManager.cpp \
     sipfsm/SIPNist.cpp \
     sipfsm/SIPTransactionTimers.cpp \
     sipfsm/SIPIst.cpp \
@@ -327,24 +319,6 @@ liboss_core_la_SOURCES =  \
     stun/STUNMappedAddress.cpp \
     stun/STUNServer.cpp \
     stun/STUNClient.cpp \
-    b2bua/SIPB2BClientTransaction.cpp \
-    b2bua/SIPB2BTransaction.cpp \
-    b2bua/SIPB2BScriptableHandler.cpp \
-    b2bua/SIPB2BTransactionManager.cpp \
-    b2bua/SIPB2BDialogStateManager.cpp \
-    b2bua/SIPB2BContact.cpp \
-    b2bua/SIPB2BUserAgentHandlerList.cpp \
-    js/JSBase.cpp \
-    js/JSSIPMessage.cpp \
-    rtp/RTPPacket.cpp \
-    rtp/RTPPCAPReader.cpp \
-    rtp/RTPProxy.cpp \
-    rtp/RTPProxyManager.cpp \
-    rtp/RTPProxyRecord.cpp \
-    rtp/RTPProxySession.cpp \
-    rtp/RTPProxyTuple.cpp \
-    rtp/RTPResizer.cpp \
-    rtp/RTPResizingQueue.cpp \
     net/FirewallRule.cpp \
     net/Firewall.cpp \
     net/HTTPServer.cpp \
@@ -370,6 +344,58 @@ liboss_core_la_SOURCES =  \
     utl/Thread.cpp \
     utl/StackTrace.cpp \
     utl/LogFile.cpp \
+    ep/EndpointConnection.cpp \
+    ep/EndpointListener.cpp \
+    zmq/ZMQSocket.cpp
+
+if ENABLE_FEATURE_TURN
+    liboss_core_la_SOURCES += net/TurnServer.cpp
+endif
+
+if ENABLE_FEATURE_LIBRE
+liboss_core_la_SOURCES += \
+    ua/SIPUserAgent.cpp \
+    ua/SIPRegistration.cpp \
+    ua/SIPEventLoop.cpp \
+    b2bua/SIPB2BRegisterAgent.cpp
+endif
+
+if ENABLE_FEATURE_CARP
+liboss_core_la_SOURCES += net/Carp.cpp
+endif
+
+if ENABLE_FEATURE_RTP
+liboss_core_la_SOURCES +=  \
+    rtp/RTPPacket.cpp \
+    rtp/RTPPCAPReader.cpp \
+    rtp/RTPProxy.cpp \
+    rtp/RTPProxyManager.cpp \
+    rtp/RTPProxyRecord.cpp \
+    rtp/RTPProxySession.cpp \
+    rtp/RTPProxyTuple.cpp \
+    rtp/RTPResizer.cpp \
+    rtp/RTPResizingQueue.cpp
+endif
+
+if ENABLE_FEATURE_B2BUA
+liboss_core_la_SOURCES +=  \
+    b2bua/SIPB2BClientTransaction.cpp \
+    b2bua/SIPB2BTransaction.cpp \
+    b2bua/SIPB2BTransactionManager.cpp \
+    b2bua/SIPB2BDialogStateManager.cpp \
+    b2bua/SIPB2BContact.cpp \
+    b2bua/SIPB2BUserAgentHandlerList.cpp
+endif
+
+if ENABLE_FEATURE_V8
+liboss_core_la_SOURCES +=  \
+    b2bua/SIPB2BScriptableHandler.cpp \
+    js/JSBase.cpp \
+    js/JSSIPMessage.cpp
+endif
+
+if ENABLE_FEATURE_WEBSOCKETS
+liboss_core_la_SOURCES +=  \
     ws/src/base64/base64.cpp \
     ws/src/md5/md5.c \
     ws/src/messages/data.cpp \
@@ -408,24 +434,9 @@ liboss_core_la_SOURCES =  \
     ws/src/sockets/socket_base.hpp \
     ws/src/sockets/tls.hpp \
     ws/src/utf8_validator/utf8_validator.hpp \
-    ep/EndpointConnection.cpp \
-    ep/EndpointListener.cpp \
-    zmq/ZMQSocket.cpp
-
-if ENABLE_FEATURE_TURN
-    liboss_core_la_SOURCES += net/TurnServer.cpp
-endif
-
-if ENABLE_FEATURE_LIBRE
-liboss_core_la_SOURCES += \
-    ua/SIPUserAgent.cpp \
-    ua/SIPRegistration.cpp \
-    ua/SIPEventLoop.cpp \
-    b2bua/SIPB2BRegisterAgent.cpp
-endif
-
-if ENABLE_FEATURE_CARP
-liboss_core_la_SOURCES += net/Carp.cpp
+    siptransport/SIPWebSocketConnection.cpp \
+    siptransport/SIPWebSocketListener.cpp \
+    siptransport/SIPWebSocketConnectionManager.cpp 
 endif
 
 TESTS = oss_core-unit-test
@@ -477,12 +488,14 @@ oss_test_sip_invite_simple_SOURCES = siptest/TestInviteSimple.cpp
 bin_PROGRAMS = \
     $(SIP_TEST)
 
+if ENABLE_FEATURE_B2BUA
 if ENABLE_FEATURE_CARP 
 if ENABLE_FEATURE_LIBRE 
 if ENABLE_FEATURE_V8
 bin_PROGRAMS += \
     oss_core \
     oss_rest
+endif
 endif
 endif
 endif

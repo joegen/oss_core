@@ -89,6 +89,8 @@ RTPProxyRecord::RTPProxyRecord()
   fax.control.isLeg2XOREncrypted = false;
 }
 
+#if OSS_HAVE_HIREDIS
+
 bool RTPProxyRecord::writeToRedis(Persistent::RedisBroadcastClient& client, const std::string& key) const
 {
   json::Object params;
@@ -403,6 +405,7 @@ bool RTPProxyRecord::readFromRedis(Persistent::RedisBroadcastClient& client, con
   return true;
 }
 
+#endif // OSS_HAVE_HIREDIS
 
 
 } } // OSS::RTP

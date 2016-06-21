@@ -20,6 +20,9 @@
 #ifndef RTP_RTPProxyManager_INCLUDED
 #define RTP_RTPProxyManager_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_RTP
+
 #include "OSS/OSS.h"
 
 #include <map>
@@ -157,13 +160,16 @@ public:
     /// return the active session lists.  Muts be used together with sessionListMutex
     /// for thread safety
 
+#if OSS_HAVE_HIREDIS
   Persistent::RedisBroadcastClient& redisClient();
     /// return a reference to the redis client for the rtp proxy db
 
   bool redisConnect(const std::vector<Persistent::RedisClient::ConnectionInfo>& connections, int workspace);
     /// Connect to redis database for state persistence
-
+#endif
+  
   bool hasRtpDb() const;
+
     /// returns true if redis client is connected to the rtp proxy db
 
   void incrementSessionCount(const std::string& address);
@@ -207,7 +213,9 @@ private:
   int _readTimeout;
   unsigned _rtpSessionMax;
   bool _canRecycleState;
+#if OSS_HAVE_HIREDIS
   Persistent::RedisBroadcastClient _redisClient;
+#endif
   bool _hasRtpDb;
   mutable OSS::mutex_critic_sec _sessionCounterMutex;
   mutable RTPProxyCounter _sessionCounter;
@@ -225,16 +233,18 @@ private:
 // Inlines
 //
 
-
+#if OSS_HAVE_HIREDIS
 inline Persistent::RedisBroadcastClient& RTPProxyManager::redisClient()
 {
   return _redisClient;
 }
+#endif
 
 inline bool RTPProxyManager::hasRtpDb() const
 {
   return _hasRtpDb;
 }
+
 
 inline int& RTPProxyManager::houseKeepingInterval()
 {
@@ -321,4 +331,7 @@ inline bool& RTPProxyManager::enableHairpins()
 }
 
 } } //OSS::RTP
+
+#endif // ENABLE_FEATURE_RTP
+
 #endif //RTP_RTPProxyManager_INCLUDED

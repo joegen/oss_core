@@ -22,6 +22,7 @@
 
 #include "OSS/build.h"
 
+#if ENABLE_FEATURE_B2BUA
 #if ENABLE_FEATURE_LIBRE
 
 #include "OSS/UTL/Thread.h"
@@ -110,6 +111,7 @@ private:
 } } } //OSS::SIP::B2BUA
 
 #endif // ENABLE_FEATURE_LIBRE
+#endif // ENABLE_FEATURE_B2BUA
 
 #endif	// OSS_SIPB2BREGISTERAGENT_H_INCLUDED
 

@@ -17,6 +17,8 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+#include "OSS/build.h"
+#if OSS_HAVE_CONFIGPP
 
 #include "OSS/Persistent/DataType.h"
 #include <libconfig.h++>
@@ -655,3 +657,5 @@ bool DataType::exists(const char* name) const
 
 
 } }  // OSS::Persistent
+
+#endif // OSS_HAVE_CONFIGPP

@@ -21,6 +21,8 @@
 #ifndef SIP_SIPStackB2BTransaction_INCLUDED
 #define SIP_SIPStackB2BTransaction_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_B2BUA
 
 #include <queue>
 
@@ -321,6 +323,8 @@ inline const SIPB2BTransaction::CustomProperties& SIPB2BTransaction::properties(
 }
   
 } } } // OSS::SIP::B2BUA
+
+#endif // ENABLE_FEATURE_B2BUA
 
 #endif
 

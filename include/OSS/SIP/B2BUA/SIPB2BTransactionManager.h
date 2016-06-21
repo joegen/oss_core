@@ -20,6 +20,8 @@
 #ifndef SIP_SIPStackB2BTransactionManager_INCLUDED
 #define SIP_SIPStackB2BTransactionManager_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_B2BUA
 
 #include <list>
 
@@ -500,6 +502,8 @@ inline int SIPB2BTransactionManager::getMaxThreadCount() const
 
 
 } } } // OSS::SIP::B2BUA
+
+#endif // ENABLE_FEATURE_B2BUA
 
 #endif
 

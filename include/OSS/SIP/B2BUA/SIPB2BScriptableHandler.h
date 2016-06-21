@@ -19,8 +19,11 @@
 #ifndef SIPB2BSCRIPTABLEHANDLER_H_INCLUDED
 #define SIPB2BSCRIPTABLEHANDLER_H_INCLUDED
 
-#include <map>
+#include "OSS/build.h"
+#if ENABLE_FEATURE_B2BUA
+#if ENABLE_FEATURE_V8
 
+#include <map>
 #include "OSS/UTL/Cache.h"
 #include "OSS/SIP/SIPMessage.h"
 #include "OSS/SIP/SIPRequestLine.h"
@@ -334,8 +337,10 @@ public:
   bool getRegistrationId(const ContactURI& curi, std::string& regId) const;
   bool getRegistrationId(const SIPURI& binding, std::string& regId) const;
 
+#if ENABLE_FEATURE_RTP
   OSS::RTP::RTPProxyManager& rtpProxy();
-
+#endif
+  
   bool getExternalAddress(
     const OSS::Net::IPAddress& internalIp,
     std::string& externalIp) const;
@@ -376,10 +381,12 @@ protected:
   typedef std::map<OSS::Net::IPAddress, OSS::Net::IPAddress> KeepAliveList;
   KeepAliveList _keepAliveList;
   OSS::thread_pool _threadPool;
+#if ENABLE_FEATURE_RTP
   //
   // RTP Proxy
   //
   OSS::RTP::RTPProxyManager _rtpProxy;
+#endif
 };
 
 //
@@ -422,10 +429,12 @@ inline bool SIPB2BScriptableHandler::loadOutboundResponseScript(const boost::fil
   return loadScript(_outboundResponseScript, scriptFile, extensionGlobals, globals, helpers);
 }
 
+#if ENABLE_FEATURE_RTP
 inline OSS::RTP::RTPProxyManager& SIPB2BScriptableHandler::rtpProxy()
 {
   return _rtpProxy;
 }
+#endif
 
 inline bool SIPB2BScriptableHandler::getExternalAddress(
     const OSS::Net::IPAddress& internalIp,
@@ -435,5 +444,8 @@ inline bool SIPB2BScriptableHandler::getExternalAddress(
 }
 
 } } } // OSS::SIP::B2BUA
+
+#endif // ENABLE_FEATURE_V8
+#endif // ENABLE_FEATURE_B2BUA
 
 #endif // SIPB2BSCRIPTABLEHANDLER_H_INCLUDED

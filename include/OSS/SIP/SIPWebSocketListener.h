@@ -51,8 +51,10 @@
 #ifndef OSS_SIPWEBSOCKETLISTENER_H_INCLUDED
 #define	OSS_SIPWEBSOCKETLISTENER_H_INCLUDED
 
-#include <boost/noncopyable.hpp>
+#include "OSS/build.h"
+#if ENABLE_FEATURE_WEBSOCKETS
 
+#include <boost/noncopyable.hpp>
 #include "OSS/SIP/SIPListener.h"
 #include "OSS/SIP/SIPWebSocketConnection.h"
 #include "OSS/SIP/SIPWebSocketConnectionManager.h"
@@ -140,6 +142,8 @@ protected:
 //
 
 } } // OSS::SIP
+
+#endif // ENABLE_FEATURE_WEBSOCKETS
 
 #endif	/// OSS_SIPWEBSOCKETLISTENER_H_INCLUDED
 

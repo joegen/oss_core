@@ -20,6 +20,10 @@
 #ifndef OSS_REDISCLIENT_H_INCLUDED
 #define	OSS_REDISCLIENT_H_INCLUDED
 
+#include "OSS/build.h"
+
+#if OSS_HAVE_HIREDIS
+
 #include "OSS/UTL/Logger.h"
 #include "hiredis/hiredis.h"
 #include <boost/noncopyable.hpp>
@@ -192,6 +196,8 @@ inline RedisClient* RedisBroadcastClient::defaultClient()
 
 } } // OSS::Persistent
 
+
+#endif // OSS_HAVE_HIREDIS
 
 #endif	/* OSS_REDISCLIENT_H_INCLUDED */
 

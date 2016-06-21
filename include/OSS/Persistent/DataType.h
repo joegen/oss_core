@@ -21,8 +21,11 @@
 #ifndef OSS_PERSISTENT_DATATYPE_H_INCLUDED
 #define OSS_PERSISTENT_DATATYPE_H_INCLUDED
 
-#include <typeinfo>
 
+#include "OSS/build.h"
+#if OSS_HAVE_CONFIGPP
+
+#include <typeinfo>
 #include <boost/any.hpp>
 
 #include "OSS/OSS.h"
@@ -385,5 +388,9 @@ inline bool DataType::exists(const std::string& name) const
 }
 
 } }  // OSS::Persistent
+
+
+#endif // OSS_HAVE_CONFIGPP
+
 #endif // OSS_PERSISTENT_DATATYPE_H_INCLUDED
 

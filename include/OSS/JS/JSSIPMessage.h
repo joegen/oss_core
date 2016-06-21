@@ -22,8 +22,10 @@
 #define JSSIPMESSAGE_H_INCLUDED
 
 
-#include "OSS/JS/JSBase.h"
+#include "OSS/build.h"
+#if ENABLE_FEATURE_V8
 
+#include "OSS/JS/JSBase.h"
 #include "OSS/SIP/SIPMessage.h"
 
 
@@ -75,6 +77,8 @@ inline bool JSSIPMessage::processRequest(OSS::OSS_HANDLE request)
 
 } } //const JSSIPMessage& msg OSS::JS
 
+
+#endif // ENABLE_FEATURE_V8
 
 #endif // JSSIPMESSAGE_H_INCLUDED
 

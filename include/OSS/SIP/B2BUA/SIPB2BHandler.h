@@ -20,6 +20,8 @@
 #ifndef _SIPB2BHANDLER_INCLUDED_H
 #define	_SIPB2BHANDLER_INCLUDED_H
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_B2BUA
 
 #include <boost/noncopyable.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -313,6 +315,8 @@ inline SIPB2BHandler::~SIPB2BHandler()
 
 } } } // OSS::SIP::B2BUA
 
+
+#endif // ENABLE_FEATURE_B2BUA
 
 #endif	// SIPB2BHANDLER_INCLUDED_H
 

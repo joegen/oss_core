@@ -78,6 +78,8 @@ void RTPProxyManager::run(int threadCount, int readTimeout)
   }
 }
 
+#if OSS_HAVE_HIREDIS
+
 bool RTPProxyManager::redisConnect(const std::vector<Persistent::RedisClient::ConnectionInfo>& connections, int workspace)
 {
 	//TODO: What if _redisClient is already connected?
@@ -99,6 +101,7 @@ bool RTPProxyManager::redisConnect(const std::vector<Persistent::RedisClient::Co
   return _hasRtpDb;
 }
     /// Connect to redis database for state persistence
+#endif
 
 void RTPProxyManager::recycleState()
 {
@@ -150,6 +153,7 @@ void RTPProxyManager::recycleState()
       OSS::log_warning(logMsg.str());
     }
   }
+#if OSS_HAVE_HIREDIS
   else
   {
     std::vector<std::string> keys;
@@ -165,6 +169,7 @@ void RTPProxyManager::recycleState()
       _sessionListMutex.unlock();
     }
   }
+#endif
 }
 
 void RTPProxyManager::stop()

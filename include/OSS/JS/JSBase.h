@@ -21,6 +21,9 @@
 #ifndef JSBase_H_INCLUDED
 #define JSBase_H_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_V8
+
 #include "OSS/OSS.h"
 #include <boost/filesystem.hpp>
 #include <boost/noncopyable.hpp>
@@ -142,6 +145,8 @@ inline void JSBase::setHelperScriptsDirectory(const std::string& helperScriptsDi
 
 } } // OSS::JS
 
+
+#endif // ENABLE_FEATURE_V8
 
 #endif // JSBase_H_INCLUDED
 

@@ -17,6 +17,8 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+#include "OSS/build.h"
+#if OSS_HAVE_CONFIGPP
 
 #include <sstream>
 #include "OSS/Persistent/ClassType.h"
@@ -205,4 +207,6 @@ void ClassType::remove(const boost::filesystem::path& file)
 }
 
 } } // OSS::Persistent
+
+#endif // OSS_HAVE_CONFIGPP
 

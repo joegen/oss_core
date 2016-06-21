@@ -38,19 +38,21 @@ SIPTransportService::SIPTransportService(const SIPTransportSession::Dispatch& di
   _tlsClientContext(_ioService, boost::asio::ssl::context::sslv23_client),
   _dispatch(dispatch),
   _tcpConMgr(_dispatch),
-  _wsConMgr(_dispatch),
   _tlsConMgr(_dispatch),
   _udpListeners(),
   _tcpListeners(),
   _tlsListeners(),
   _udpEnabled(true),
   _tcpEnabled(true),
-  _wsEnabled(true),
   _tlsEnabled(false),
   _tcpPortBase(10000),
-  _tcpPortMax(20000),
+  _tcpPortMax(20000)
+#if ENABLE_FEATURE_WEBSOCKETS
+ ,_wsConMgr(_dispatch),
+  _wsEnabled(true),
   _wsPortBase(10000),
   _wsPortMax(20000)
+#endif
 {
 }
 
@@ -93,6 +95,7 @@ void SIPTransportService::run()
     }
   }
 
+#if ENABLE_FEATURE_WEBSOCKETS  
   for (WSListeners::iterator iter = _wsListeners.begin(); iter != _wsListeners.end(); iter++)
   {
     if (!iter->second->isVirtual() && !iter->second->hasStarted())
@@ -101,6 +104,7 @@ void SIPTransportService::run()
       OSS_LOG_INFO("Started WebSocket Listener " << iter->first);
     }
   }
+#endif
 
   for (TLSListeners::iterator iter = _tlsListeners.begin(); iter != _tlsListeners.end(); iter++)
   {
@@ -160,6 +164,7 @@ void SIPTransportService::runVirtualTransports()
     }
   }
 
+#if ENABLE_FEATURE_WEBSOCKETS
   for (WSListeners::iterator iter = _wsListeners.begin(); iter != _wsListeners.end(); iter++)
   {
     if (iter->second->isVirtual())
@@ -181,6 +186,7 @@ void SIPTransportService::runVirtualTransports()
       }
     }
   }
+#endif
 
   for (TLSListeners::iterator iter = _tlsListeners.begin(); iter != _tlsListeners.end(); iter++)
   {
@@ -241,6 +247,7 @@ void SIPTransportService::stopVirtualTransports()
     }
   }
 
+ #if ENABLE_FEATURE_WEBSOCKETS
   for (WSListeners::iterator iter = _wsListeners.begin(); iter != _wsListeners.end(); iter++)
   {
     if (iter->second->isVirtual())
@@ -257,7 +264,8 @@ void SIPTransportService::stopVirtualTransports()
       }
     }
   }
-
+#endif
+  
   for (TLSListeners::iterator iter = _tlsListeners.begin(); iter != _tlsListeners.end(); iter++)
   {
     if (iter->second->isVirtual())
@@ -298,10 +306,11 @@ void SIPTransportService::handleStop()
   TCPListeners::iterator tcpIter;
   for (tcpIter = _tcpListeners.begin(); tcpIter != _tcpListeners.end(); tcpIter++)
     tcpIter->second->handleStop();
-
+#if ENABLE_FEATURE_WEBSOCKETS
   WSListeners::iterator wsIter;
   for (wsIter = _wsListeners.begin(); wsIter != _wsListeners.end(); wsIter++)
     wsIter->second->handleStop();
+#endif
 
   TLSListeners::iterator tlsIter;
   for (tlsIter = _tlsListeners.begin(); tlsIter != _tlsListeners.end(); tlsIter++)
@@ -321,8 +330,10 @@ bool SIPTransportService::isLocalTransport(const OSS::Net::IPAddress& transportA
     return true;
   else if (_tcpListeners.find(key) != _tcpListeners.end())
     return true;
+#if ENABLE_FEATURE_WEBSOCKETS
   else if (_wsListeners.find(key) != _wsListeners.end())
     return true;
+#endif
   else if (_tlsListeners.find(key) != _tlsListeners.end())
     return true;
   return false;
@@ -338,8 +349,10 @@ bool SIPTransportService::isLocalTransport(const std::string& proto,
     return _udpListeners.find(key) != _udpListeners.end();
   else if (proto == "tcp")
     return _tcpListeners.find(key) != _tcpListeners.end();
+#if ENABLE_FEATURE_WEBSOCKETS
   else if (proto == "ws")
     return _wsListeners.find(key) != _wsListeners.end();
+#endif
   else if (proto == "tls")
     return _tlsListeners.find(key) != _tlsListeners.end();
   return false;
@@ -377,6 +390,7 @@ const SIPListener* SIPTransportService::getTransportForDestination(const std::st
       }
     }
   }
+#if ENABLE_FEATURE_WEBSOCKETS
   else if (proto == "ws" || proto == "WS")
   {
     for (WSListeners::const_iterator iter = _wsListeners.begin(); iter != _wsListeners.end(); iter++)
@@ -387,6 +401,7 @@ const SIPListener* SIPTransportService::getTransportForDestination(const std::st
       }
     }
   }
+#endif
   
   return 0;
 }
@@ -463,6 +478,7 @@ void SIPTransportService::addTCPTransport(const std::string& ip, const std::stri
   OSS_LOG_INFO("TCP SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
 }
 
+#if ENABLE_FEATURE_WEBSOCKETS
 void SIPTransportService::addWSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp, const std::string& alias)
 {
   OSS_LOG_INFO("Adding WebSocket SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
@@ -489,6 +505,7 @@ void SIPTransportService::addWSTransport(const std::string& ip, const std::strin
     SIPTransportSession::rateLimit().clearAddress(whiteList, true);
   OSS_LOG_INFO("WebSocket SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
 }
+#endif
 
 void SIPTransportService::addTLSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp, const std::string& alias)
 {
@@ -621,6 +638,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
     }
     return pTCPConnection;
   }
+#if ENABLE_FEATURE_WEBSOCKETS
   else if (proto == "WS" || proto == "ws")
   {
     SIPTransportSession::Ptr pWSConnection;
@@ -653,6 +671,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
     }
     return pWSConnection;
   }
+#endif
   else if (proto == "TLS" || proto == "tls")
   {
     SIPTransportSession::Ptr pTLSConnection;
@@ -737,6 +756,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientTlsTransport(
   return pTlsConnection;
 }
 
+#if ENABLE_FEATURE_WEBSOCKETS
 SIPTransportSession::Ptr SIPTransportService::createClientWsTransport(
     const OSS::Net::IPAddress& localAddress,
     const OSS::Net::IPAddress& remoteAddress)
@@ -746,6 +766,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientWsTransport(
   //
   return SIPTransportSession::Ptr();
 }
+#endif
 
 void SIPTransportService::sendUDPKeepAlive(const OSS::Net::IPAddress& localAddress,
     const OSS::Net::IPAddress& target)
@@ -802,6 +823,7 @@ SIPTCPListener::Ptr SIPTransportService::findTCPListener(const std::string& key)
   return SIPTCPListener::Ptr();
 }
   
+#if ENABLE_FEATURE_WEBSOCKETS
 SIPWebSocketListener::Ptr SIPTransportService::findWSListener(const std::string& key) const
 {
   WSListeners::const_iterator iter = _wsListeners.find(key);
@@ -811,6 +833,7 @@ SIPWebSocketListener::Ptr SIPTransportService::findWSListener(const std::string&
   }
   return SIPWebSocketListener::Ptr();
 }
+#endif
   
 SIPTLSListener::Ptr SIPTransportService::findTLSListener(const std::string& key) const
 {
@@ -861,6 +884,7 @@ bool SIPTransportService::getExternalAddress(
       return true;
     }
   }
+#if ENABLE_FEATURE_WEBSOCKETS
   else if (proto == "ws" || proto == "WS")
   {
     WSListeners::const_iterator iter = _wsListeners.find(key);
@@ -870,6 +894,7 @@ bool SIPTransportService::getExternalAddress(
       return true;
     }
   }
+#endif
   else if (proto == "tls" || proto == "TLS")
   {
     TLSListeners::const_iterator iter = _tlsListeners.find(key);
@@ -893,8 +918,10 @@ bool SIPTransportService::getInternalAddress(
     return true;
   else if (getInternalAddress("tls", externalIp, internalIp))
     return true;
+#if ENABLE_FEATURE_WEBSOCKETS
   else if (getInternalAddress("ws", externalIp, internalIp))
     return true;
+#endif
   return false;
 }
 
@@ -938,6 +965,7 @@ bool SIPTransportService::getInternalAddress(
       }
     }
   }
+#if ENABLE_FEATURE_WEBSOCKETS
   else if (proto == "ws" || proto == "WS")
   {
     for (WSListeners::const_iterator iter = _wsListeners.begin();
@@ -952,6 +980,7 @@ bool SIPTransportService::getInternalAddress(
       }
     }
   }
+#endif
   else if (proto == "tls" || proto == "TLS")
   {
     for (TLSListeners::const_iterator iter = _tlsListeners.begin();

@@ -17,6 +17,8 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+#include "OSS/build.h"
+#if OSS_HAVE_CONFIGPP
 
 #include "OSS/Persistent/Reference.h"
 #include <libconfig.h++>
@@ -36,3 +38,5 @@ Reference::~Reference()
 }
 
 } } // OSS::Persistent
+
+#endif // OSS_HAVE_CONFIGPP

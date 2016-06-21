@@ -54,7 +54,9 @@ class OSS_API SIPTransportService: private boost::noncopyable
 public:
   typedef std::map<std::string, SIPUDPListener::Ptr> UDPListeners;
   typedef std::map<std::string, SIPTCPListener::Ptr> TCPListeners;
+#if ENABLE_FEATURE_WEBSOCKETS
   typedef std::map<std::string, SIPWebSocketListener::Ptr> WSListeners;
+#endif
   typedef std::map<std::string, SIPTLSListener::Ptr> TLSListeners;
   typedef std::map<std::string, EndpointListener*> Endpoints;;
 
@@ -102,12 +104,13 @@ public:
     ///
     /// If the transport already exists, this function will throw
     /// a SIPDuplicateTransport exception
-
+#if ENABLE_FEATURE_WEBSOCKETS
   void addWSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp = false, const std::string& alias = std::string());
     /// Add a new WebSocket transport bound to the ip address and port.
     ///
     /// If the transport already exists, this function will throw
     /// a SIPDuplicateTransport exception
+#endif
 
   void addTLSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp = false, const std::string& alias = std::string());
     /// Add a new TLS transport bound to the ip address and port.
@@ -122,10 +125,11 @@ public:
   SIPTCPListener::Ptr findTCPListener(const std::string& key) const;
     /// Get the transport pointer using either the alais or ip:port as key
     ///
-  
+#if ENABLE_FEATURE_WEBSOCKETS  
   SIPWebSocketListener::Ptr findWSListener(const std::string& key) const;
     /// Get the transport pointer using either the alais or ip:port as key
     ///
+#endif
   
   SIPTLSListener::Ptr findTLSListener(const std::string& key) const;
     /// Get the transport pointer using either the alais or ip:port as key
@@ -155,11 +159,13 @@ public:
     /// Creates a new client transport based
     /// on local and remote address tuples
 
+#if ENABLE_FEATURE_WEBSOCKETS  
   SIPTransportSession::Ptr createClientWsTransport(
     const OSS::Net::IPAddress& localAddress,
     const OSS::Net::IPAddress& remoteAddress);
     /// Creates a new client transport based
     /// on local and remote address tuples
+#endif
 
   std::list<std::string> resolve(
     const std::string& host,
@@ -195,12 +201,14 @@ public:
   bool isTcpEnabled() const;
     /// Flag whether TCP transport is enabled for this service
 
+#if ENABLE_FEATURE_WEBSOCKETS  
   void setWsEnabled(bool enabled);
     /// Enable or disable WebSocket transport;
 
   bool isWsEnabled() const;
     /// Flag whether WebSocket transport is enabled for this service
-
+#endif
+  
   void setTlsEnabled(bool enabled);
     /// Enable or disable TLS transport;
 
@@ -232,8 +240,10 @@ public:
   void setTCPPortRange(unsigned short base, unsigned short max);
     /// Set the TCP port range.  Applies to both TCP and TLS transports
 
+#if ENABLE_FEATURE_WEBSOCKETS  
   void setWSPortRange(unsigned short base, unsigned short max);
     /// Set the WebSocket port range.  Applies to both WebSocket and WebSocket Secure transports
+#endif
 
   unsigned short getTCPPortBase() const;
     /// Return the minimum port for TCP clients
@@ -256,22 +266,24 @@ private:
   boost::asio::ssl::context _tlsClientContext;
   SIPTransportSession::Dispatch _dispatch;
   SIPStreamedConnectionManager _tcpConMgr;
-  SIPWebSocketConnectionManager _wsConMgr;
   SIPStreamedConnectionManager _tlsConMgr;
   UDPListeners _udpListeners;
   TCPListeners _tcpListeners;
-  WSListeners _wsListeners;
   TLSListeners _tlsListeners;
   Endpoints _endpoints;
   OSS::Net::IPAddress _defaultListenerAddress;
   bool _udpEnabled;
   bool _tcpEnabled;
-  bool _wsEnabled;
   bool _tlsEnabled;
   unsigned short _tcpPortBase;
   unsigned short _tcpPortMax;
+#if ENABLE_FEATURE_WEBSOCKETS
+  SIPWebSocketConnectionManager _wsConMgr;
+  WSListeners _wsListeners;
+  bool _wsEnabled;
   unsigned short _wsPortBase;
   unsigned short _wsPortMax;
+#endif
 
 };
 
@@ -303,6 +315,7 @@ inline bool SIPTransportService::isTcpEnabled() const
   return _tcpEnabled;
 }
 
+#if ENABLE_FEATURE_WEBSOCKETS
 inline void SIPTransportService::setWsEnabled(bool enabled)
 {
   _wsEnabled = enabled;
@@ -312,6 +325,7 @@ inline bool SIPTransportService::isWsEnabled() const
 {
   return _wsEnabled;
 }
+#endif
 
 inline void SIPTransportService::setTlsEnabled(bool enabled)
 {
@@ -330,12 +344,14 @@ inline void SIPTransportService::setTCPPortRange(unsigned short base, unsigned s
   _tcpPortMax = max;
 }
 
+#if ENABLE_FEATURE_WEBSOCKETS
 inline void SIPTransportService::setWSPortRange(unsigned short base, unsigned short max)
 {
   OSS_VERIFY(base < max);
   _wsPortBase = base;
   _wsPortMax = max;
 }
+#endif
 
 
 inline unsigned short SIPTransportService::getTCPPortBase() const
