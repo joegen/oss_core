@@ -475,11 +475,23 @@ oss_test_sip_invite_simple_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-imp
 oss_test_sip_invite_simple_SOURCES = siptest/TestInviteSimple.cpp
 
 bin_PROGRAMS = \
-    $(SIP_TEST) \
-    oss_garp \
-    oss_carp \
+    $(SIP_TEST)
+
+if ENABLE_FEATURE_CARP 
+if ENABLE_FEATURE_LIBRE 
+if ENABLE_FEATURE_V8
+bin_PROGRAMS += \
     oss_core \
     oss_rest
+endif
+endif
+endif
+
+if ENABLE_FEATURE_CARP
+bin_PROGRAMS += \
+    oss_garp \
+    oss_carp
+endif
 
 #
 # oss_core - A simple back-to-back user agent
