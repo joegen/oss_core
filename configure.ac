@@ -148,7 +148,8 @@ AC_CHECK_LIB(boost_thread-mt, main,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_THREAD, -lboost_thread-mt)],
     [AC_CHECK_LIB(boost_thread, main,
     	[FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_THREAD, -lboost_thread)],
-    	[ERROR_MISSING_DEP(OSS_HAVE_BOOST_THREAD, "Boost Thread Library is not installed")])])
+    	[ERROR_MISSING_DEP(OSS_HAVE_BOOST_THREAD, "Boost Thread Library is not installed")],
+        /usr/local/opt/openssl/include /usr/local usr)])
 
 AC_CHECK_LIB(boost_date_time-mt, main,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_DATE_TIME, -lboost_date_time-mt)],
