@@ -134,6 +134,13 @@ AC_DEFUN([FLAG_EXISTING_CXX_DEP],[
 #
 
 #
+# OpenSSL
+#
+AC_CHECK_HEADER(openssl/conf.h,
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_SSL, -lssl)], 
+    [ERROR_MISSING_DEP(OSS_HAVE_SSL,"OpenSSL Library not installed")])
+
+#
 # Boost
 #
 
@@ -231,9 +238,6 @@ AC_CHECK_HEADER(mcrypt.h,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_MCRYPT, -lmcrypt)], 
     [FLAG_MISSING_DEP(OSS_HAVE_MCRYPT)])
 
-AC_CHECK_LIB(ssl, main, 
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_SSL, -lssl)], 
-    [FLAG_MISSING_DEP(OSS_HAVE_SSL)])
 
 AC_CHECK_LIB(crypto, main, 
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_CRYPTO, -lcrypto)], 
