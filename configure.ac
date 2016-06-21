@@ -45,29 +45,49 @@ AC_DEFUN([ERROR_MISSING_DEP],[
     AC_SUBST([$1], 0)
 ])
 
+AC_DEFUN([ENABLE_FEATURE],[
+    AM_CONDITIONAL([ENABLE_FEATURE_$1], true)
+    AC_SUBST([ENABLE_FEATURE_$1], 1)
+    AC_MSG_NOTICE([$1 feature ENABLED])
+])
+
+AC_DEFUN([DISABLE_FEATURE],[
+    AM_CONDITIONAL([ENABLE_FEATURE_$1], false)
+    AC_SUBST([ENABLE_FEATURE_$1], 0)
+    AC_MSG_NOTICE([$1 feature DISABLED])
+])
+
 #
 # Enable TURN compilation
 #
-AM_CONDITIONAL([ENABLE_TURN], false)
-AC_ARG_ENABLE(turn,
-  AC_HELP_STRING([--enable-turn], [Build TURN Server]),
-  AM_CONDITIONAL([ENABLE_TURN], true))
+AC_ARG_ENABLE([turn],
+    AC_HELP_STRING([--enable-turn], [Enable TURN Server Feature]),
+    [ENABLE_FEATURE(TURN)],
+    [DISABLE_FEATURE(TURN)])
 
 #
 # Enable libre UA wrapper compilation
 #
-AM_CONDITIONAL([ENABLE_REM], false)
-AC_ARG_ENABLE(rem,
-  AC_HELP_STRING([--enable-rem], [Build libre UA wrapper]),
-  AM_CONDITIONAL([ENABLE_REM], true))
+AC_ARG_ENABLE([libre],
+    AC_HELP_STRING([--enable-libre], [Enable libre UA Feature]),
+    [ENABLE_FEATURE(LIBRE)],
+    [DISABLE_FEATURE(LIBRE)])
 
 #
 # Enable UCARP compilation
 #
-AM_CONDITIONAL([ENABLE_UCARP], false)
-AC_ARG_ENABLE(ucarp,
-  AC_HELP_STRING([--enable-ucarp], [Enable UCARP support]),
-  AM_CONDITIONAL([ENABLE_UCARP], true))
+AC_ARG_ENABLE([carp],
+    AC_HELP_STRING([--enable-carp], [Enable CARP-HA Feature]),
+    [ENABLE_FEATURE(CARP)],
+    [DISABLE_FEATURE(CARP)])
+
+#
+# Enable V8 compilation
+#
+AC_ARG_ENABLE([v8],
+    AC_HELP_STRING([--enable-v8], [Enable V8 JavaScript Feature]),
+    [ENABLE_FEATURE(V8)],
+    [DISABLE_FEATURE(V8)])
 
 #
 # Flag dependecy whether they are missing or not
@@ -268,6 +288,7 @@ AC_SUBST(OSS_CORE_DEP_LIBS)
 
 AC_CONFIG_FILES([
     include/OSS/OSS.h
+    include/OSS/build.h
     Makefile
     src/Makefile
     include/Makefile

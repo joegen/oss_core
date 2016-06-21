@@ -25,6 +25,8 @@
 
 #include "OSS/ZMQ/ZMQSocket.h"
 #include "OSS/UTL/Logger.h"
+
+
 #if OSS_HAVE_ZMQ
 #include <zmq.hpp>
 

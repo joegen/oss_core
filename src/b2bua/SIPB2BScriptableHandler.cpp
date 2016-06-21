@@ -902,6 +902,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteUpperReg(
     //
     pTransaction->setProperty(OSS::PropertyMap::PROP_RequireRTPProxy, "1");
     
+#if ENABLE_FEATURE_LIBRE
     //
     // Now let's check if this message is intended for a locally registered account
     //
@@ -913,6 +914,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteUpperReg(
         localInterface,
         target);
     }
+#endif
   }
   catch(OSS::Exception e)
   {
@@ -2142,7 +2144,7 @@ void SIPB2BScriptableHandler::runOptionsResponseThread()
 
 void SIPB2BScriptableHandler::sendOptionsKeepAlive(RegData& regData)
 {
-
+#if ENABLE_FEATURE_LIBRE
   if (_pTransactionManager->isForLocalRegistration(regData.contact))
   {
     //
@@ -2150,6 +2152,7 @@ void SIPB2BScriptableHandler::sendOptionsKeepAlive(RegData& regData)
     //
     return;
   }
+#endif  
   
   try
   {

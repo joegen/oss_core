@@ -20,6 +20,9 @@
 #ifndef OSS_SIPB2BREGISTERAGENT_H_INCLUDED
 #define	OSS_SIPB2BREGISTERAGENT_H_INCLUDED
 
+#include "OSS/build.h"
+
+#if ENABLE_FEATURE_LIBRE
 
 #include "OSS/UTL/Thread.h"
 #include "OSS/SIP/UA/SIPRegistration.h"
@@ -105,6 +108,8 @@ private:
 //
 
 } } } //OSS::SIP::B2BUA
+
+#endif // ENABLE_FEATURE_LIBRE
 
 #endif	// OSS_SIPB2BREGISTERAGENT_H_INCLUDED
 

@@ -22,6 +22,8 @@
 #define	KVLEVELDB_H_INLCUDED
 
 #include "OSS/OSS.h"
+#include "OSS/build.h"
+
 
 #if OSS_HAVE_LEVELDB
 

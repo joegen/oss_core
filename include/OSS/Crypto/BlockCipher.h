@@ -30,6 +30,7 @@
 #include "OSS/Crypto/OSSCrypto.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/Exception.h"
+#include "OSS/build.h"
 
 #if OSS_HAVE_MCRYPT
 

@@ -9,6 +9,6 @@ SUBDIRS = \
 	src \
         include
 
-if ENABLE_REM
+if ENABLE_FEATURE_LIBRE
     SUBDIRS += src/ua/core
 endif

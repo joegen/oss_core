@@ -20,6 +20,8 @@
 #define RTPPCAPREADER_H_
 
 #include "OSS/OSS.h"
+#include "OSS/build.h"
+
 
 #if OSS_HAVE_PCAP
 

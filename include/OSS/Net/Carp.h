@@ -42,8 +42,10 @@
 #define	OSS_CARP_H_INCLUDED
 
 
-#include <boost/thread.hpp>
+#include "OSS/build.h"
+#if ENABLE_FEATURE_CARP
 
+#include <boost/thread.hpp>
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/Net/Net.h"
 #include "OSS/UTL/ServiceOptions.h"
@@ -136,6 +138,8 @@ inline Carp::Config& Carp::config()
 
 } } // OSS::Net
 
+
+#endif // ENABLE_FEATURE_CARP
 
 #endif	/* CARP_H */
 

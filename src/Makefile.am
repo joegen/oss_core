@@ -8,12 +8,12 @@ corelibldadd = \
     liboss_core.la \
     liboss_carp.la
 
-if ENABLE_REM
+if ENABLE_FEATURE_LIBRE
     corelibldadd += ua/core/re/libre.a \
 		    ua/core/rem/librem.a
 endif
 
-if ENABLE_TURN
+if ENABLE_FEATURE_TURN
     corelibs += liboss_turn.la
     corelibldadd += liboss_turn.la
 endif
@@ -28,16 +28,23 @@ AM_CPPFLAGS = \
     -I$(top_builddir)/include \
     -I@OSS_CORE_SRCDIR@/include \
     -I@OSS_CORE_SRCDIR@/src/utl/linux/pidfile \
-    -I@OSS_CORE_SRCDIR@/src/net/turn/carp \
+    -I@OSS_CORE_SRCDIR@/src/udns/include
+
+if ENABLE_FEATURE_LIBRE
+AM_CPPFLAGS +=	\
+    -I@OSS_CORE_SRCDIR@/src/ua/core/re/include \
+    -I@OSS_CORE_SRCDIR@/src/ua/core/rem/include
+endif
+
+if ENABLE_FEATURE_TURN
+AM_CPPFLAGS += \
     -I@OSS_CORE_SRCDIR@/src/net/turn \
     -I@OSS_CORE_SRCDIR@/src/net/turn/client \
     -I@OSS_CORE_SRCDIR@/src/net/turn/client++ \
     -I@OSS_CORE_SRCDIR@/src/net/turn/server \
     -I@OSS_CORE_SRCDIR@/src/net/turn/apps/common \
-    -I@OSS_CORE_SRCDIR@/src/net/turn/apps/relay \
-    -I@OSS_CORE_SRCDIR@/src/udns/include \
-    -I@OSS_CORE_SRCDIR@/src/ua/core/re/include \
-    -I@OSS_CORE_SRCDIR@/src/ua/core/rem/include
+    -I@OSS_CORE_SRCDIR@/src/net/turn/apps/relay
+endif
 
 AM_CFLAGS = \
     DHAVE_INET_PTON_NTOP \
@@ -51,7 +58,7 @@ LDADD = $(corelibldadd)
 
 LDFLAGS = -rdynamic
 
-if ENABLE_UCARP
+if ENABLE_FEATURE_CARP
 liboss_carp_la_LDFLAGS = -version-info @OSS_CORE_VERSION_INFO@
 
 liboss_carp_la_LIBADD = $(LTLIBINTL)
@@ -87,7 +94,7 @@ liboss_carp_la_SOURCES = \
 	net/carp/syslognames.h
 endif
 
-if ENABLE_TURN
+if ENABLE_FEATURE_TURN
 
     liboss_turn_la_LDFLAGS = -version-info @OSS_CORE_VERSION_INFO@
     liboss_turn_la_LIBADD = @OSS_CORE_DEP_LIBS@
@@ -320,9 +327,6 @@ liboss_core_la_SOURCES =  \
     stun/STUNMappedAddress.cpp \
     stun/STUNServer.cpp \
     stun/STUNClient.cpp \
-    ua/SIPUserAgent.cpp \
-    ua/SIPRegistration.cpp \
-    ua/SIPEventLoop.cpp \
     b2bua/SIPB2BClientTransaction.cpp \
     b2bua/SIPB2BTransaction.cpp \
     b2bua/SIPB2BScriptableHandler.cpp \
@@ -330,7 +334,6 @@ liboss_core_la_SOURCES =  \
     b2bua/SIPB2BDialogStateManager.cpp \
     b2bua/SIPB2BContact.cpp \
     b2bua/SIPB2BUserAgentHandlerList.cpp \
-    b2bua/SIPB2BRegisterAgent.cpp \
     js/JSBase.cpp \
     js/JSSIPMessage.cpp \
     rtp/RTPPacket.cpp \
@@ -344,7 +347,6 @@ liboss_core_la_SOURCES =  \
     rtp/RTPResizingQueue.cpp \
     net/FirewallRule.cpp \
     net/Firewall.cpp \
-    net/Carp.cpp \
     net/HTTPServer.cpp \
     net/AccessControl.cpp \
     net/TLSManager.cpp \
@@ -410,8 +412,20 @@ liboss_core_la_SOURCES =  \
     ep/EndpointListener.cpp \
     zmq/ZMQSocket.cpp
 
-if ENABLE_TURN
+if ENABLE_FEATURE_TURN
     liboss_core_la_SOURCES += net/TurnServer.cpp
+endif
+
+if ENABLE_FEATURE_LIBRE
+liboss_core_la_SOURCES += \
+    ua/SIPUserAgent.cpp \
+    ua/SIPRegistration.cpp \
+    ua/SIPEventLoop.cpp \
+    b2bua/SIPB2BRegisterAgent.cpp
+endif
+
+if ENABLE_FEATURE_CARP
+liboss_core_la_SOURCES += net/Carp.cpp
 endif
 
 TESTS = oss_core-unit-test

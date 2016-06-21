@@ -314,6 +314,7 @@ public:
     /// will no longer process the transaction and instead, let the handler
     /// respond to the transaction.
   
+#if ENABLE_FEATURE_LIBRE
   bool startLocalRegistrationAgent(
     const std::string& agentName,
     const std::string& route,
@@ -346,7 +347,8 @@ public:
     const SIPMessage::Ptr& pMsg, 
     const std::string& error);
     /// Notified when a response is received for a local register
-  
+
+#endif
    
 protected:
   void handleRequest(
@@ -433,11 +435,14 @@ private:
   SIPB2BUserAgentHandlerList _userAgentHandler;
   SIPB2BUserAgentHandlerLoader _pluginLoader;
    
+#if ENABLE_FEATURE_LIBRE
   //
   // Local registration agent
   //
   SIPB2BRegisterAgent _registerAgent;
   std::string _registerAgentRoute;
+#endif
+  
 };
 
 //

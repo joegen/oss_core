@@ -22,8 +22,9 @@
 #define OSS_CRYPTO_FileEncryptor_H_INCLUDED
 
 #include "OSS/OSS.h"
-
 #include "OSS/Crypto/BlockCipher.h"
+#include "OSS/build.h"
+
 
 #if OSS_HAVE_MCRYPT
 

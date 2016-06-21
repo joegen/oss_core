@@ -21,6 +21,8 @@
 #ifndef OSS_SIPEVENTLOOP_H_INCLUDED
 #define	OSS_SIPEVENTLOOP_H_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_LIBRE
 
 #include "OSS/UTL/CoreUtils.h"
 
@@ -48,6 +50,8 @@ private:
 };
 
 } } } // OSS::SIP::UA
+
+#endif // ENABLE_FEATURE_LIBRE
 
 #endif	// OSS_SIPEVENTLOOP_H_INCLUDED
 

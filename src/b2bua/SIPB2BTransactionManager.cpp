@@ -53,7 +53,10 @@ void SIPB2BTransactionManager::initialize(const boost::filesystem::path& cfgDire
 
 void SIPB2BTransactionManager::deinitialize()
 {
+#if ENABLE_FEATURE_LIBRE
   stopLocalRegistrationAgent();
+#endif
+  
   //
   // Deinitialize all registed handlers
   //
@@ -647,6 +650,7 @@ bool SIPB2BTransactionManager::registerPlugin(const std::string& name, const std
   return true;
 }
 
+#if ENABLE_FEATURE_LIBRE
 bool SIPB2BTransactionManager::startLocalRegistrationAgent(
   const std::string& agentName,
   const std::string& route,
@@ -712,6 +716,8 @@ bool SIPB2BTransactionManager::isForLocalRegistration(const std::string& contact
   
   return false;
 }
+
+#endif
 
 void SIPB2BTransactionManager::addPendingSubscription(const std::string& callId)
 {

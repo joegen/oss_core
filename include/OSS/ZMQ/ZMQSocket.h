@@ -28,6 +28,8 @@
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/Net/IPAddress.h"
 #include "OSS/UTL/Thread.h"
+#include "OSS/build.h"
+
 
 #if OSS_HAVE_ZMQ
 
