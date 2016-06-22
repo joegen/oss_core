@@ -11,12 +11,11 @@ OSS_CORE_VERSION_REVISION="3"
 AC_CONFIG_AUX_DIR(config)
 AM_INIT_AUTOMAKE([subdir-objects foreign] )
 AC_CONFIG_SRCDIR([src/OSS.cpp])
-AM_CONFIG_HEADER([include/OSS/config.h])
+AM_CONFIG_HEADER([src/config.h])
 AC_PROG_LIBTOOL
 AC_LTDL_SHLIBEXT
 AC_PATH_PROG([BASH], [bash])
 AC_PROG_CXX
-AX_COMPILER_VENDOR
 AC_PROG_CC
 AC_CANONICAL_HOST
 
@@ -50,6 +49,7 @@ AC_DEFUN([ENABLE_FEATURE],[
     AM_CONDITIONAL([ENABLE_FEATURE_$1], true)
     AC_SUBST([ENABLE_FEATURE_$1], 1)
     AC_MSG_NOTICE([$1 feature ENABLED])
+    FEATURE_$1="enabled"
 ])
 
 AC_DEFUN([DISABLE_FEATURE],[
@@ -60,77 +60,86 @@ AC_DEFUN([DISABLE_FEATURE],[
 
 
 #
-# Enable REST KV compilation
+# Enable ALL featured
 #
-AC_ARG_ENABLE([restkv],
-    AC_HELP_STRING([--enable-turn], [Enable REST Key Value Store Feature]),
-    [ENABLE_FEATURE(RESTKV)],
-    [DISABLE_FEATURE(RESTKV)])
-
-#
-# Enable TURN compilation
-#
-AC_ARG_ENABLE([turn],
-    AC_HELP_STRING([--enable-turn], [Enable TURN Server Feature]),
-    [ENABLE_FEATURE(TURN)],
-    [DISABLE_FEATURE(TURN)])
-
-#
-# Enable libre UA wrapper compilation
-#
-AC_ARG_ENABLE([libre],
-    AC_HELP_STRING([--enable-libre], [Enable libre UA Feature]),
-    [ENABLE_FEATURE(LIBRE)],
-    [DISABLE_FEATURE(LIBRE)])
-
-#
-# Enable UCARP compilation
-#
-AC_ARG_ENABLE([carp],
-    AC_HELP_STRING([--enable-carp], [Enable CARP-HA Feature]),
-    [ENABLE_FEATURE(CARP)],
-    [DISABLE_FEATURE(CARP)])
-
-#
-# Enable V8 compilation
-#
-AC_ARG_ENABLE([v8],
-    AC_HELP_STRING([--enable-v8], [Enable V8 JavaScript Feature]),
-    [ENABLE_FEATURE(V8)],
-    [DISABLE_FEATURE(V8)])
-
-#
-# Enable B2BUA compilation
-#
-AC_ARG_ENABLE([b2bua],
-    AC_HELP_STRING([--enable-b2bua], [Enable B2BUA Feature]),
-    [ENABLE_FEATURE(B2BUA)],
-    [DISABLE_FEATURE(B2BUA)])
-
-#
-# Enable Websocket compilation
-#
-AC_ARG_ENABLE([websockets],
-    AC_HELP_STRING([--enable-websockets], [Enable Websockets Feature]),
-    [ENABLE_FEATURE(WEBSOCKETS)],
-    [DISABLE_FEATURE(WEBSOCKETS)])
-
-#
-# Enable Websocket compilation
-#
-AC_ARG_ENABLE([xor],
-    AC_HELP_STRING([--enable-xor], [Enable XOR Encryption Feature]),
-    [ENABLE_FEATURE(XOR)],
-    [DISABLE_FEATURE(XOR)])
-
-
-#
-# Enable RTP Proxy compilation
-#
-AC_ARG_ENABLE([rtp],
-    AC_HELP_STRING([--enable-rtp], [Enable RTP Proxy Feature]),
-    [ENABLE_FEATURE(RTP)],
-    [DISABLE_FEATURE(RTP)])
+AC_ARG_ENABLE([all-features],
+    AC_HELP_STRING([--enable-all-features], [Enable ALL features]),
+    [
+        ENABLE_FEATURE(RESTKV)
+        ENABLE_FEATURE(TURN)
+        ENABLE_FEATURE(LIBRE)
+        ENABLE_FEATURE(CARP)
+        ENABLE_FEATURE(V8)
+        ENABLE_FEATURE(B2BUA)
+        ENABLE_FEATURE(WEBSOCKETS)
+        ENABLE_FEATURE(XOR)
+        ENABLE_FEATURE(RTP)
+    ],
+    [
+        #
+        # Enable REST KV compilation
+        #
+        AC_ARG_ENABLE([restkv],
+            AC_HELP_STRING([--enable-turn], [Enable REST Key Value Store Feature]),
+            [ENABLE_FEATURE(RESTKV)],
+            [DISABLE_FEATURE(RESTKV)])
+        #
+        # Enable TURN compilation
+        #
+        AC_ARG_ENABLE([turn],
+            AC_HELP_STRING([--enable-turn], [Enable TURN Server Feature]),
+            [ENABLE_FEATURE(TURN)],
+            [DISABLE_FEATURE(TURN)])
+        #
+        # Enable libre UA wrapper compilation
+        #
+        AC_ARG_ENABLE([libre],
+            AC_HELP_STRING([--enable-libre], [Enable libre UA Feature]),
+            [ENABLE_FEATURE(LIBRE)],
+            [DISABLE_FEATURE(LIBRE)])
+        #
+        # Enable UCARP compilation
+        #
+        AC_ARG_ENABLE([carp],
+            AC_HELP_STRING([--enable-carp], [Enable CARP-HA Feature]),
+            [ENABLE_FEATURE(CARP)],
+            [DISABLE_FEATURE(CARP)])
+        #
+        # Enable V8 compilation
+        #
+        AC_ARG_ENABLE([v8],
+            AC_HELP_STRING([--enable-v8], [Enable V8 JavaScript Feature]),
+            [ENABLE_FEATURE(V8)],
+            [DISABLE_FEATURE(V8)])
+        #
+        # Enable B2BUA compilation
+        #
+        AC_ARG_ENABLE([b2bua],
+            AC_HELP_STRING([--enable-b2bua], [Enable B2BUA Feature]),
+            [ENABLE_FEATURE(B2BUA)],
+            [DISABLE_FEATURE(B2BUA)])
+        #
+        # Enable Websocket compilation
+        #
+        AC_ARG_ENABLE([websockets],
+            AC_HELP_STRING([--enable-websockets], [Enable Websockets Feature]),
+            [ENABLE_FEATURE(WEBSOCKETS)],
+            [DISABLE_FEATURE(WEBSOCKETS)])
+        #
+        # Enable XOR compilation
+        #
+        AC_ARG_ENABLE([xor],
+            AC_HELP_STRING([--enable-xor], [Enable XOR Encryption Feature]),
+            [ENABLE_FEATURE(XOR)],
+            [DISABLE_FEATURE(XOR)])
+        #
+        # Enable RTP Proxy compilation
+        #
+        AC_ARG_ENABLE([rtp],
+            AC_HELP_STRING([--enable-rtp], [Enable RTP Proxy Feature]),
+            [ENABLE_FEATURE(RTP)],
+            [DISABLE_FEATURE(RTP)])
+    ])
 
 #
 # Flag dependecy whether they are missing or not
@@ -250,12 +259,23 @@ AC_CHECK_HEADER(Poco/Net/Net.h, [], [ERROR_MISSING_DEP(OSS_HAVE_POCO_NET,
 AC_CHECK_LIB(PocoNet, main,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_POCO_NET, -lPocoNet -lPocoNetSSL)],
     [ERROR_MISSING_DEP(OSS_HAVE_POCO_NET,"Poco C++ Net Library not found")])
-
 AC_LANG_POP([C++])
+
+if test "x$FEATURE_V8" == "xenabled"; then
+    AC_LANG_PUSH([C++])
+    AC_CHECK_HEADER(v8.h, 
+        [FLAG_EXISTING_CXX_DEP(OSS_HAVE_V8, -lv8)],
+        [ERROR_MISSING_DEP(OSS_HAVE_V8, "V8 Library is not installed")])
+    AC_LANG_POP([C++])
+fi
 
 #
 # Search for optional packages
 #
+
+if test "x$FEATURE_CARP" == "xenabled"; then
+    m4_include([config/carp.m4])
+fi
 
 AC_CHECK_HEADER(libconfig.h,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_CONFIGPP, -lconfig++)], 
@@ -264,12 +284,6 @@ AC_CHECK_HEADER(libconfig.h,
 AC_CHECK_HEADER(hiredis/hiredis.h,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_HIREDIS, -lhiredis)], 
     [FLAG_MISSING_DEP(OSS_HAVE_HIREDIS)])
-
-AC_LANG_PUSH([C++])
-AC_CHECK_HEADER(v8.h, 
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_V8, -lv8)],
-    [FLAG_MISSING_DEP(OSS_HAVE_V8)])
-AC_LANG_POP([C++])
 
 AC_CHECK_HEADER(leveldb/db.h, 
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_LEVELDB, -lleveldb)], 
