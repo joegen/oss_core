@@ -297,7 +297,9 @@ private:
   //
   bool _enableUDP;
   bool _enableTCP;
+#if ENABLE_FEATURE_WEBSOCKETS
   bool _enableWS;
+#endif
   bool _enableTLS;
   
   OSS::socket_address_list _udpListeners;

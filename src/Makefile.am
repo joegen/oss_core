@@ -2,11 +2,19 @@ SUBDIRS = .
 
 EXTRA_DIST = js/scripts
 
-corelibs = liboss_carp.la
+corelibs =
+
+if ENABLE_FEATURE_CARP
+corelibs += liboss_carp.la
+endif
+
 corelibldadd = \
     @OSS_CORE_DEP_LIBS@ \
-    liboss_core.la \
-    liboss_carp.la
+    liboss_core.la
+
+if ENABLE_FEATURE_CARP
+    corelibldadd += liboss_carp.la
+endif
 
 if ENABLE_FEATURE_LIBRE
     corelibldadd += ua/core/re/libre.a \
@@ -192,7 +200,7 @@ liboss_core_la_LDFLAGS = \
 liboss_core_la_LIBADD = @OSS_CORE_DEP_LIBS@
 
 # this is helpful if you're debugging something with lots of inlines
-liboss_core_la_CXXFLAGS = -fno-gcse -O0 -fno-implement-inlines -fno-default-inline 
+liboss_core_la_CXXFLAGS = -O0 -fno-implement-inlines 
 
 liboss_core_la_CFLAGS = \
     -DHAVE_INET_PTON_NTOP
@@ -266,8 +274,6 @@ liboss_core_la_SOURCES =  \
     persistent/ClassType.cpp \
     persistent/DataType.cpp \
     persistent/Reference.cpp \
-    persistent/KVLevelDB.cpp \
-    persistent/RESTKeyValueStore.cpp \
     persistent/RedisClient.cpp \
     sdp/SDPHeader.cpp \
     sdp/SDPHeaderList.cpp \
@@ -340,13 +346,19 @@ liboss_core_la_SOURCES =  \
     utl/Cache.cpp \
     utl/Compress.cpp \
     utl/DynamicHashTable.cpp \
-    utl/DebugMemory.cpp \
     utl/Thread.cpp \
     utl/StackTrace.cpp \
     utl/LogFile.cpp \
     ep/EndpointConnection.cpp \
     ep/EndpointListener.cpp \
     zmq/ZMQSocket.cpp
+
+if ENABLE_FEATURE_RESTKV
+liboss_core_la_SOURCES += \
+    persistent/KVLevelDB.cpp \
+    persistent/RESTKeyValueStore.cpp
+endif
+
 
 if ENABLE_FEATURE_TURN
     liboss_core_la_SOURCES += net/TurnServer.cpp
@@ -521,14 +533,14 @@ oss_garp_SOURCES = apps/oss_garp.cpp
 #
 # oss_carp - tool for Common Address Redundancy Protocol
 #
-oss_carp_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
+oss_carp_CXXFLAGS = ${common_cxx_flags} -O0 -fno-implement-inlines
 #oss_carp_LDFLAGS = -rdynamic
 oss_carp_SOURCES = apps/oss_carp.cpp
 
 #
 # oss_rest - REST Server implementation
 #
-oss_rest_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
+oss_rest_CXXFLAGS = ${common_cxx_flags} -O0 -fno-implement-inlines
 oss_rest_SOURCES = apps/oss_rest.cpp
 
 
@@ -539,4 +551,4 @@ DISTCLEANFILES = Makefile.in
 #
 BUILT_SOURCES = boost_pch.hpp.gch
 %.hpp.gch: %.hpp
-	$(CXX) -D_REENTRANT -D_FILE_OFFSET_BITS=64 -fno-gcse -O0 -fno-implement-inlines -g -O2 -fmessage-length=0 -Wall -Wformat -Wwrite-strings -Wpointer-arith -fPIC -DPIC -c $<
+	$(CXX) -D_REENTRANT -D_FILE_OFFSET_BITS=64 -O0 -fno-implement-inlines -g -O2 -fmessage-length=0 -Wall -Wformat -Wwrite-strings -Wpointer-arith -fPIC -DPIC -c $<

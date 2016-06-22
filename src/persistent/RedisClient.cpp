@@ -120,7 +120,7 @@ bool RedisClient::connect(const std::string& password_, int db)
 
   if (_context->err)
   {
-    if (_context->errstr)
+    if (strlen(_context->errstr))
     {
       _lastError = _context->errstr;
     }
@@ -313,7 +313,7 @@ redisReply* RedisClient::execute(int argc, char** argv)
 
   if (_context->err)
   {
-    if (_context->errstr)
+    if (strlen(_context->errstr))
     {
       _lastError = _context->errstr;
     }
@@ -335,7 +335,7 @@ redisReply* RedisClient::execute(int argc, char** argv)
 
       if (_context->err)
       {
-        if (_context->errstr)
+        if (strlen(_context->errstr))
         {
           _lastError = _context->errstr;
         }
@@ -648,7 +648,7 @@ bool RedisClient::receive(std::vector<std::string>& eventData) const
     {
       eventData.push_back("connection-error");
       eventData.push_back(OSS::string_from_number<int>(_context->err));
-      if (_context->errstr)
+      if (strlen(_context->errstr))
       {
         eventData.push_back(_context->errstr);
       }
@@ -658,7 +658,7 @@ bool RedisClient::receive(std::vector<std::string>& eventData) const
     {
       eventData.push_back("io-error");
       eventData.push_back(OSS::string_from_number<int>(_context->err));
-      if (_context->errstr)
+      if (strlen(_context->errstr))
       {
         eventData.push_back(_context->errstr);
       }

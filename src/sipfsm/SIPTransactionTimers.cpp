@@ -44,9 +44,10 @@ static const int SIP_TIMER_H_VAL = 64 * SIP_TIMER_T1_VAL; /// Timer H  64*T1 - W
 static const int SIP_TIMER_I_VAL = SIP_TIMER_T4_VAL; ///Timer I  T4 for UDP / 0s for TCP/SCTP - Wait time for ACK retransmits
 static const int SIP_TIMER_J_VAL = 64 * SIP_TIMER_T1_VAL; /// Timer J  64*T1 for UDP / 0s for TCP/SCTP - Wait time for non-INVITE request retransmits
 static const int SIP_TIMER_K_VAL = SIP_TIMER_T4_VAL; /// Timer K  T4 for UDP / 0s for TCP/SCTP - Wait time for response retransmits
+#if 0 // So far these two are unused
 static const int SIP_TIMER_100REL_VAL = SIP_TIMER_T1_VAL; /// Timer 100 Rel T1 - Retransmission Timer for reliable provisional response
 static const int SIP_TIMER_100RELACK_VAL = SIP_TIMER_F_VAL; /// Timer 100 Rel ACK Timer F - Retransmission timeout timer for reliable provisional response
-
+#endif
 SIPTransactionTimers::SIPTransactionTimers() :
   _timerA(SIP_TIMER_A_VAL),
   _timerB(SIP_TIMER_B_VAL),

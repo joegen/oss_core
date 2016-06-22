@@ -113,12 +113,9 @@ public:
     VerificationMode verificationMode);
   
 protected:
-  TLSManager() : _clientInitialized(false), _serverInitialized(false){};
+  TLSManager(){};
   ~TLSManager(){};
   
-private:
-  bool _clientInitialized;
-  bool _serverInitialized;
 };
   
 //

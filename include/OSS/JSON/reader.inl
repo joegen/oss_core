@@ -478,7 +478,7 @@ inline void Reader::Parse(Number& number, Reader::TokenStream& tokenStream)
    // did we consume all characters in the token?
    if (iStr.eof() == false)
    {
-      std::string sMessage = "Unexpected character in NUMBER token: " + iStr.peek();
+      std::string sMessage = "Unexpected character in NUMBER";
       throw ParseException(sMessage, currentToken.locBegin, currentToken.locEnd);
    }
 

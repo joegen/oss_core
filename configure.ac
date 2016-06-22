@@ -9,7 +9,7 @@ OSS_CORE_VERSION_AGE="0"
 OSS_CORE_VERSION_REVISION="3"
 
 AC_CONFIG_AUX_DIR(config)
-AM_INIT_AUTOMAKE([subdir-objects foreign tar-ustar] )
+AM_INIT_AUTOMAKE([subdir-objects foreign] )
 AC_CONFIG_SRCDIR([src/OSS.cpp])
 AM_CONFIG_HEADER([include/OSS/config.h])
 AC_PROG_LIBTOOL
@@ -56,6 +56,15 @@ AC_DEFUN([DISABLE_FEATURE],[
     AC_SUBST([ENABLE_FEATURE_$1], 0)
     AC_MSG_NOTICE([$1 feature DISABLED])
 ])
+
+
+#
+# Enable REST KV compilation
+#
+AC_ARG_ENABLE([restkv],
+    AC_HELP_STRING([--enable-turn], [Enable REST Key Value Store Feature]),
+    [ENABLE_FEATURE(RESTKV)],
+    [DISABLE_FEATURE(RESTKV)])
 
 #
 # Enable TURN compilation
@@ -140,6 +149,15 @@ AC_CHECK_HEADER(openssl/conf.h,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_SSL, -lssl)], 
     [ERROR_MISSING_DEP(OSS_HAVE_SSL,"OpenSSL Library not installed")])
 
+AC_CANONICAL_HOST
+case $host_os in
+    darwin* )
+        OSS_CORE_DEP_LIBS="-L/usr/local/opt/openssl/lib $OSS_CORE_DEP_LIBS"
+        ;;
+
+esac
+
+
 #
 # Boost
 #
@@ -148,8 +166,7 @@ AC_CHECK_LIB(boost_thread-mt, main,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_THREAD, -lboost_thread-mt)],
     [AC_CHECK_LIB(boost_thread, main,
     	[FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_THREAD, -lboost_thread)],
-    	[ERROR_MISSING_DEP(OSS_HAVE_BOOST_THREAD, "Boost Thread Library is not installed")],
-        /usr/local/opt/openssl/include /usr/local usr)])
+    	[ERROR_MISSING_DEP(OSS_HAVE_BOOST_THREAD, "Boost Thread Library is not installed")])])
 
 AC_CHECK_LIB(boost_date_time-mt, main,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_DATE_TIME, -lboost_date_time-mt)],

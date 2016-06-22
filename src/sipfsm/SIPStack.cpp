@@ -45,7 +45,9 @@ SIPStack::SIPStack() :
   _fsmDispatch(),
   _enableUDP(true),
   _enableTCP(true),
+#if ENABLE_FEATURE_WEBSOCKETS 
   _enableWS(true),
+#endif
   _enableTLS(true),
   _udpListeners(),
   _tcpListeners(),
@@ -812,8 +814,9 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
   }
 
   //
-  // Set the TCP port range
+  // Set the WS port range
   //
+#if ENABLE_FEATURE_WEBSOCKETS
   if (listeners.exists("sip-ws-port-base") && listeners.exists("sip-ws-port-max"))
   {
     unsigned int wsPortBase = listeners["sip-ws-port-base"];
@@ -828,7 +831,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       OSS_LOG_ERROR("Unable to set WebSocket port base " << wsPortBase << "-" << wsPortMax << " Using default values.");
     }
   }
-
+#endif
 
   if (listeners.exists("packet-rate-ratio"))
   {

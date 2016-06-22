@@ -89,9 +89,6 @@ protected:
   
 private:
   void handleAccept(const boost::system::error_code& e, OSS_HANDLE userData = 0);
-  
-  std::string _listenerAddess;
-  unsigned short _listenerPort;
   std::string _endpointName;
   EventQueue _eventQueue;
   boost::thread* _pEventQueueThread;

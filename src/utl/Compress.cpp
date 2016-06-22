@@ -17,8 +17,10 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+#include "OSS/build.h"
+#if OSS_HAVE_BOOST_IOSTREAMS
+
 #include "OSS/OSS.h"
-#if HAVE_BOOST_IOSTREAMS
 
 #ifndef NO_BZIP2
 #define NO_BZIP2 1

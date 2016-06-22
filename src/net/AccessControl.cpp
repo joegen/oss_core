@@ -27,6 +27,7 @@
 #include <net/route.h>
 #include <sys/ioctl.h>
 
+
 namespace OSS {
 namespace Net {
 
@@ -406,6 +407,7 @@ void AccessControl::denyAll(bool denyAll)
 
 bool AccessControl::addNullRoute(long host)            
 { 
+#if OSS_OS == OSS_OS_LINUX
    //
    // Source:  https://oroboro.com/linux-routing-tables-in-c/
    //
@@ -452,10 +454,14 @@ bool AccessControl::addNullRoute(long host)
    // remember to close the socket lest you leak handles.
    close( fd );
    return true; 
+#else
+   return false;
+#endif
 }
 
 bool AccessControl::delNullRoute(long host)            
 { 
+#if OSS_OS == OSS_OS_LINUX
    //
    // Source:  https://oroboro.com/linux-routing-tables-in-c/
    //
@@ -489,6 +495,9 @@ bool AccessControl::delNullRoute(long host)
  
    close( fd );
    return true; 
+#else
+   return false;
+#endif
 }
 
 } } // OSS::SIP

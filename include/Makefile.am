@@ -14,7 +14,6 @@ nobase_include_HEADERS = \
     OSS/UTL/ServiceOptions.h \
     OSS/Crypto/Crypto.h \
     OSS/UTL/Thread.h \
-    OSS/UTL/DebugMemory.h \
     OSS/UTL/Endian.h \
     OSS/UTL/PropertyMap.h \
     OSS/OSS.h.in \
