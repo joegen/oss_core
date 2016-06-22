@@ -69,6 +69,7 @@ void SIPUDPConnection::start(const SIPTransportSession::Dispatch& dispatch)
           boost::asio::placeholders::bytes_transferred, (void*)0));
 }
 
+#if ENABLE_FEATURE_XOR
 static bool isSIPPacket(const char* p)
 {
   if (p[0]=='A' && p[1]=='C' && p[2]=='K' && p[3]==' ') /* ACK */
@@ -104,6 +105,7 @@ static bool isSIPPacket(const char* p)
 
   return false;
 }
+#endif
 
 void SIPUDPConnection::handleRead(const boost::system::error_code& e, std::size_t bytes_transferred, OSS_HANDLE userData)
 {
@@ -146,7 +148,8 @@ void SIPUDPConnection::handleRead(const boost::system::error_code& e, std::size_
       }
 
       std::string buffer(_buffer.data(), _buffer.data() + bytes_transferred);
-
+      
+#if ENABLE_FEATURE_XOR
       if (!SIPXOR::isEnabled())
       {
         _pRequest->setData(buffer);
@@ -174,6 +177,9 @@ void SIPUDPConnection::handleRead(const boost::system::error_code& e, std::size_
         _pRequest->setData(buffer);
         _pRequest->setProperty(OSS::PropertyMap::PROP_XOR, "1");
       }
+#else
+      _pRequest->setData(buffer);
+#endif
 
       //
       // Clone the current connection so that the dispatcher gets a static snapshot
@@ -227,6 +233,7 @@ void SIPUDPConnection::writeMessage(SIPMessage::Ptr msg, const std::string& ip, 
       addr.to_string(), port == "0" || port.empty() ? "5060" : port);
     ep = _resolver.resolve(query);
 
+#if ENABLE_FEATURE_XOR
     if (!SIPXOR::isEnabled())
     {
       _socket.async_send_to(boost::asio::buffer(msg->data(), msg->data().size()), *ep,
@@ -264,6 +271,11 @@ void SIPUDPConnection::writeMessage(SIPMessage::Ptr msg, const std::string& ip, 
 #endif
       }
     }
+#else
+    _socket.async_send_to(boost::asio::buffer(msg->data(), msg->data().size()), *ep,
+        boost::bind(&SIPUDPConnection::handleWrite, shared_from_this(),
+                boost::asio::placeholders::error));
+#endif
   }
 }
 

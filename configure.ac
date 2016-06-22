@@ -18,6 +18,7 @@ AC_PATH_PROG([BASH], [bash])
 AC_PROG_CXX
 AX_COMPILER_VENDOR
 AC_PROG_CC
+AC_CANONICAL_HOST
 
 #
 # Export version variables
@@ -114,6 +115,14 @@ AC_ARG_ENABLE([websockets],
     [ENABLE_FEATURE(WEBSOCKETS)],
     [DISABLE_FEATURE(WEBSOCKETS)])
 
+#
+# Enable Websocket compilation
+#
+AC_ARG_ENABLE([xor],
+    AC_HELP_STRING([--enable-xor], [Enable XOR Encryption Feature]),
+    [ENABLE_FEATURE(XOR)],
+    [DISABLE_FEATURE(XOR)])
+
 
 #
 # Enable RTP Proxy compilation
@@ -145,35 +154,44 @@ AC_DEFUN([FLAG_EXISTING_CXX_DEP],[
 #
 # OpenSSL
 #
-AC_CHECK_HEADER(openssl/conf.h,
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_SSL, -lssl)], 
+AC_CHECK_HEADER(openssl/conf.h, [], 
+    [ERROR_MISSING_DEP(OSS_HAVE_SSL,"OpenSSL Library Headers are not installed")])
+AC_CHECK_LIB(ssl, main,
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_DL, -lssl)], 
     [ERROR_MISSING_DEP(OSS_HAVE_SSL,"OpenSSL Library not installed")])
-
-AC_CANONICAL_HOST
+AC_CHECK_LIB(crypto, main, 
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_CRYPTO, -lcrypto)], 
+    [ERROR_MISSING_DEP(OSS_HAVE_CRYPTO)])
 case $host_os in
     darwin* )
         OSS_CORE_DEP_LIBS="-L/usr/local/opt/openssl/lib $OSS_CORE_DEP_LIBS"
         ;;
-
 esac
 
 
 #
 # Boost
 #
+AC_LANG_PUSH([C++])
 
+AC_CHECK_HEADER(boost/thread.hpp, [], [ERROR_MISSING_DEP(OSS_HAVE_BOOST_THREAD, 
+    "Boost Thread Library Headers are not installed")])
 AC_CHECK_LIB(boost_thread-mt, main,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_THREAD, -lboost_thread-mt)],
     [AC_CHECK_LIB(boost_thread, main,
     	[FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_THREAD, -lboost_thread)],
     	[ERROR_MISSING_DEP(OSS_HAVE_BOOST_THREAD, "Boost Thread Library is not installed")])])
 
+AC_CHECK_HEADER(boost/date_time.hpp, [], [ERROR_MISSING_DEP(OSS_HAVE_BOOST_DATE_TIME, 
+    "Boost Date Library Headers are not installed")])
 AC_CHECK_LIB(boost_date_time-mt, main,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_DATE_TIME, -lboost_date_time-mt)],
     [AC_CHECK_LIB(boost_date_time, main,
     	[FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_DATE_TIME, -lboost_date_time)],
     	[ERROR_MISSING_DEP(OSS_HAVE_BOOST_DATE_TIME, "Boost Date Library is not installed")])])
 
+AC_CHECK_HEADER(boost/filesystem.hpp, [], [ERROR_MISSING_DEP(OSS_HAVE_BOOST_FILESYSTEM, 
+    "Boost Filesystem Library Headers are not installed")])
 AC_CHECK_LIB(boost_filesystem-mt, main,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_FILESYSTEM, -lboost_filesystem-mt)],
     [AC_CHECK_LIB(boost_filesystem, main,
@@ -186,6 +204,8 @@ AC_CHECK_LIB(boost_system-mt, main,
     	[FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_SYSTEM, -lboost_system)],
     	[ERROR_MISSING_DEP(OSS_HAVE_BOOST_SYSTEM, "Boost System Library is not installed")])])
 
+AC_CHECK_HEADER(boost/program_options.hpp, [], [ERROR_MISSING_DEP(OSS_HAVE_BOOST_PROGRAM_OPTIONS, 
+    "Boost Program Options Library Headers are not installed")])
 AC_CHECK_LIB(boost_program_options-mt, main,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_PROGRAM_OPTIONS, -lboost_program_options-mt)],
     [AC_CHECK_LIB(boost_program_options, main,
@@ -198,29 +218,40 @@ AC_CHECK_LIB(boost_iostreams-mt, main,
     	[FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_IOSTREAMS, -lboost_iostreams)],
     	[ERROR_MISSING_DEP(OSS_HAVE_BOOST_IOSTREAMS, "Boost Iostreams Library is not installed")])])
 
+AC_CHECK_HEADER(boost/regex.hpp, [], [ERROR_MISSING_DEP(OSS_HAVE_BOOST_REGEX, 
+    "Boost Regex Library Headers are not installed")])
 AC_CHECK_LIB(boost_regex-mt, main,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_REGEX, -lboost_regex-mt)],
     [AC_CHECK_LIB(boost_regex, main,
     	[FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_regex, -lboost_regex)],
     	[ERROR_MISSING_DEP(OSS_HAVE_BOOST_REGEX, "Boost Regex Library is not installed")])])
 
+AC_LANG_POP([C++])
 
 #
 # POCO
 #
+AC_LANG_PUSH([C++])
+
+AC_CHECK_HEADER(Poco/Foundation.h, [], [ERROR_MISSING_DEP(OSS_HAVE_POCO_FOUNDATION, 
+    "Poco C++ Foundation Library Headers not found")])
 AC_CHECK_LIB(PocoFoundation, main,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_POCO_FOUNDATION, -lPocoFoundation)],
     [ERROR_MISSING_DEP(OSS_HAVE_POCO_FOUNDATION,"Poco C++ Foundation Library not found")])
 
+AC_CHECK_HEADER(Poco/Util/Util.h, [], [ERROR_MISSING_DEP(OSS_HAVE_POCO_UTIL, 
+    "Poco C++ Util Library Headers not found")])
 AC_CHECK_LIB(PocoUtil, main,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_POCO_UTIL, -lPocoUtil)],
     [ERROR_MISSING_DEP(OSS_HAVE_POCO_UTIL,"Poco C++ Util Library not found")])
 
+AC_CHECK_HEADER(Poco/Net/Net.h, [], [ERROR_MISSING_DEP(OSS_HAVE_POCO_NET, 
+    "Poco C++ Util Library Headers not found")])
 AC_CHECK_LIB(PocoNet, main,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_POCO_NET, -lPocoNet -lPocoNetSSL)],
     [ERROR_MISSING_DEP(OSS_HAVE_POCO_NET,"Poco C++ Net Library not found")])
 
-
+AC_LANG_POP([C++])
 
 #
 # Search for optional packages
@@ -244,60 +275,40 @@ AC_CHECK_HEADER(leveldb/db.h,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_LEVELDB, -lleveldb)], 
     [FLAG_MISSING_DEP(OSS_HAVE_LEVELDB)])
 
-AC_CHECK_LIB(gtest, main, 
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADER(gtest/gtest.h, 
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_GTEST, -lgtest)],
     [FLAG_MISSING_DEP(OSS_HAVE_GTEST)])
+AC_LANG_POP([C++])
 
-AC_CHECK_LIB(ltdl, main, 
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_LTDL, -lltdl)],
-    [FLAG_MISSING_DEP(OSS_HAVE_LTDL)])
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADER(zmq.hpp, 
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_ZMQ, -lzmq)], 
+    [FLAG_MISSING_DEP(OSS_HAVE_ZMQ)])
+AC_LANG_POP([C++])
 
 AC_CHECK_HEADER(mcrypt.h,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_MCRYPT, -lmcrypt)], 
     [FLAG_MISSING_DEP(OSS_HAVE_MCRYPT)])
 
-
-AC_CHECK_LIB(crypto, main, 
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_CRYPTO, -lcrypto)], 
-    [FLAG_MISSING_DEP(OSS_HAVE_CRYPTO)])
-
-AC_CHECK_LIB(pthread, main, 
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_THREAD, -lpthread)], 
-    [FLAG_MISSING_DEP(OSS_HAVE_THREAD)])
-
-AC_CHECK_LIB(dl, main,
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_DL, -ldl)], 
-    [FLAG_MISSING_DEP(OSS_HAVE_DL)])
-
-AC_CHECK_LIB(rt, main,     
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_RT, -lrt)], 
-    [FLAG_MISSING_DEP(OSS_HAVE_RT)])
-
-AC_CHECK_LIB(z, main, 
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_ZLIB, -lz)], 
-    [FLAG_MISSING_DEP(OSS_HAVE_ZLIB)])
-
-AC_CHECK_LIB(crypt, main, 
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_CRYPT, -lcrypt)], 
-    [FLAG_MISSING_DEP(OSS_HAVE_CRYPT)])
-
-AC_CHECK_LIB(resolv, main, 
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_RESOLV, -lresolv)], 
-    [FLAG_MISSING_DEP(OSS_HAVE_RESOLV)])
-
-AC_CHECK_LIB(pcap, main, 
+AC_CHECK_HEADER(pcap/pcap.h,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_PCAP, -lpcap)], 
     [FLAG_MISSING_DEP(OSS_HAVE_PCAP)])
 
-AC_CHECK_LIB(gtest, main, 
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_GTEST, -lgtest)], 
-    [FLAG_MISSING_DEP(OSS_HAVE_GTEST)])
 
-AC_CHECK_LIB(zmq, main, 
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_ZMQ, -lzmq)], 
-    [FLAG_MISSING_DEP(OSS_HAVE_ZMQ)])
+AC_CHECK_HEADER(pthread.h, 
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_THREAD, -lpthread)], 
+    [FLAG_MISSING_DEP(OSS_HAVE_THREAD)])
 
-AC_CHECK_LIB([event], [main],     
+AC_CHECK_HEADER(resolv.h, 
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_RESOLV, -lresolv)], 
+    [FLAG_MISSING_DEP(OSS_HAVE_RESOLV)])
+
+AC_CHECK_HEADER(zlib.h, 
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_ZLIB, -lz)], 
+    [FLAG_MISSING_DEP(OSS_HAVE_ZLIB)])
+
+AC_CHECK_HEADER(event2/event.h,    
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_LIBEVENT, -levent)], 
     [FLAG_MISSING_DEP(OSS_HAVE_LIBEVENT)])
 
@@ -308,6 +319,18 @@ AC_CHECK_LIB([event_openssl], [main],
 AC_CHECK_LIB([event_pthreads], [main], 
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_LIBEVENT_PTHREADS, -levent_pthreads)], 
     [FLAG_MISSING_DEP(OSS_HAVE_LIBEVENT_PTHREAD)])
+
+AC_CHECK_LIB(ltdl, main, 
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_LTDL, -lltdl)],
+    [FLAG_MISSING_DEP(OSS_HAVE_LTDL)])
+
+AC_CHECK_LIB(dl, main,
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_DL, -ldl)], 
+    [FLAG_MISSING_DEP(OSS_HAVE_DL)])
+
+AC_CHECK_LIB(rt, main,     
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_RT, -lrt)], 
+    [FLAG_MISSING_DEP(OSS_HAVE_RT)])
 
 CURRENT_DIR=`pwd`
 cd ${srcdir}

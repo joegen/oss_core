@@ -133,6 +133,7 @@ void RTPProxyManager::recycleState()
           boost::filesystem::path currentFile = operator/(_rtpStateDirectory, OSS::boost_file_name(itr->path()));
           if (boost::filesystem::is_regular(currentFile))
           {
+#if OSS_HAVE_CONFIGPP 
             _sessionListMutex.lock();
             RTPProxySession::Ptr session = RTPProxySession::reconstructFromStateFile(this, currentFile);
             if (session)
@@ -141,6 +142,7 @@ void RTPProxyManager::recycleState()
             }
             
             _sessionListMutex.unlock();
+#endif
           }
         }
       }

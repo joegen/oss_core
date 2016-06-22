@@ -32,7 +32,11 @@ namespace RTP {
 
 
 using namespace OSS::SDP;
+
+#if OSS_HAVE_CONFIGPP
 using namespace OSS::Persistent;
+#endif
+
 using namespace OSS::Net;
 
 
@@ -62,10 +66,13 @@ RTPProxySession::RTPProxySession(RTPProxyManager* pManager, const std::string& i
 RTPProxySession::~RTPProxySession()
 {
   stop();
+
+#if OSS_HAVE_CONFIGPP
   if (!_pManager->hasRtpDb() && _pManager->persistStateFiles())
   {
     ClassType::remove(_stateFile);
   }
+#endif
 #if OSS_HAVE_HIREDIS
   else if (_pManager->hasRtpDb())
   {
@@ -1034,7 +1041,9 @@ void RTPProxySession::handleInitialSDPAnswer(
   if (_hasOfferedAudioProxy || _hasOfferedVideoProxy || _hasOfferedFaxProxy)
   {
     sdp = offer.toString();
+#if OSS_HAVE_CONFIGPP
     dumpStateFile();
+#endif
   }
   else
   {
@@ -1768,7 +1777,9 @@ void RTPProxySession::handleSDPAnswer(
   if (_hasOfferedAudioProxy || _hasOfferedVideoProxy || _hasOfferedFaxProxy)
   {
     sdp = offer.toString();
+#if OSS_HAVE_CONFIGPP 
     dumpStateFile();
+#endif
   }
 }
 
@@ -2027,6 +2038,7 @@ void RTPProxySession::dumpStateToRedis()
 }
 #endif
 
+#if OSS_HAVE_CONFIGPP
 void RTPProxySession::dumpStateFile()
 {
   //
@@ -2347,6 +2359,7 @@ void RTPProxySession::dumpStateFile()
   persistent.persist(_stateFile);
 
 }
+#endif
 
 #if OSS_HAVE_HIREDIS
 
@@ -2598,6 +2611,7 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromRedis(RTPProxyManager* pMan
 }
 #endif
 
+#if OSS_HAVE_CONFIGPP
 RTPProxySession::Ptr RTPProxySession::reconstructFromStateFile(
   RTPProxyManager* pManager, const boost::filesystem::path& stateFile)
 {
@@ -2799,6 +2813,7 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromStateFile(
 
   return RTPProxySession::Ptr(pSession);
 }
+#endif
 
 void RTPProxySession::handleAuthStateTimeout(const boost::system::error_code& e)
 {

@@ -146,11 +146,13 @@ void SIPTransaction::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
   if (!_remoteAddress.isValid())
     _remoteAddress = pTransport->getRemoteAddress();
 
+#if ENABLE_FEATURE_XOR  
   if (SIPXOR::isEnabled() && !_isXOREncrypted)
   {
     std::string isXOR;
     _isXOREncrypted = pMsg->getProperty(OSS::PropertyMap::PROP_XOR, isXOR) && isXOR == "1";
   }
+#endif
 
   if (isParent())
   {
@@ -215,12 +217,13 @@ void SIPTransaction::sendRequest(
     _pInitialRequest = pRequest;
     if (_logId.empty())
       _logId = pRequest->createContextId(true);
-    
+#if ENABLE_FEATURE_XOR    
     if (SIPXOR::isEnabled() && !_isXOREncrypted)
     {
       std::string isXOR;
       _isXOREncrypted = pRequest->getProperty(OSS::PropertyMap::PROP_XOR, isXOR) && isXOR == "1";
     }
+#endif
   }
 
   if (!_responseTU)
@@ -313,10 +316,12 @@ void SIPTransaction::sendAckFor2xx(
   if (!_dialogTarget.isValid())
     _dialogTarget = dialogTarget;
 
+#if ENABLE_FEATURE_XOR
   if (SIPXOR::isEnabled() && _isXOREncrypted)
   {
     pAck->setProperty(OSS::PropertyMap::PROP_XOR, "1");
   }
+#endif
 
   if (_transport->isReliableTransport())
   {
@@ -429,10 +434,12 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg)
     _transport->setCurrentTransactionId(_id);
   }
 
+#if ENABLE_FEATURE_XOR
   if (SIPXOR::isEnabled() && _isXOREncrypted)
   {
     pMsg->setProperty(OSS::PropertyMap::PROP_XOR, "1");
   }
+#endif
 
   std::ostringstream logMsg;
   logMsg << _logId << ">>> " << pMsg->startLine()
@@ -465,12 +472,14 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg, const OSS::Net::IPAddres
     OSS_LOG_ERROR("SIPTransaction::writeMessage does not have a transport to use");
     return;
   }
-
+  
+#if ENABLE_FEATURE_XOR
   if (SIPXOR::isEnabled() && _isXOREncrypted)
   {
     pMsg->setProperty(OSS::PropertyMap::PROP_XOR, "1");
   }
-
+#endif
+  
   if (_fsm->onSendMessage(pMsg))
   {
     std::ostringstream logMsg;

@@ -21,6 +21,10 @@
 #ifndef SIP_XOR_INCLUDED
 #define SIP_XOR_INCLUDED
 
+#include "OSS/build.h"
+
+#if ENABLE_FEATURE_XOR
+
 #include <vector>
 #include "boost/array.hpp"
 #include "OSS/OSS.h"
@@ -69,5 +73,8 @@ public:
 };
 
 } } // OSS::SIP
+
+#endif // ENABLE_FEATURE_XOR
+
 #endif //  SIP_XOR_INCLUDED
 

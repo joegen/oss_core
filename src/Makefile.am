@@ -298,7 +298,6 @@ liboss_core_la_SOURCES =  \
     siptransport/SIPStreamedConnectionManager.cpp \
     siptransport/SIPTransportService.cpp \
     siptransport/SIPUDPListener.cpp \
-    siptransport/SIPXOR.cpp \
     siptransport/SIPUDPConnection.cpp \
     siptransport/SIPTCPListener.cpp \
     siptransport/SIPUDPConnectionClone.cpp \
@@ -404,6 +403,10 @@ liboss_core_la_SOURCES +=  \
     b2bua/SIPB2BScriptableHandler.cpp \
     js/JSBase.cpp \
     js/JSSIPMessage.cpp
+endif
+
+if ENABLE_FEATURE_XOR
+liboss_core_la_SOURCES += siptransport/SIPXOR.cpp
 endif
 
 if ENABLE_FEATURE_WEBSOCKETS

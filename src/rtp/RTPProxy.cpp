@@ -237,8 +237,12 @@ void RTPProxy::handleLeg1FrameRead(
   {
     _isInactive = false;
 
+#if ENABLE_FEATURE_XOR    
     // _isLeg1XOREncrypted = ((_leg1Buffer[0]>>6)&3) != 2;
     _isLeg1XOREncrypted = OSS::SIP::SIPXOR::isEnabled() ? !validateBuffer(_leg1Buffer, bytes_transferred) : false;
+#else
+    _isLeg1XOREncrypted = false;
+#endif
 #if RTP_THREADED      
     _csLeg2Mutex.lock();
 #endif
@@ -248,6 +252,7 @@ void RTPProxy::handleLeg1FrameRead(
     {
       if (_senderEndPointLeg2.port() != 0)
       {
+ #if ENABLE_FEATURE_XOR   
         if (!OSS::SIP::SIPXOR::isEnabled())
         {
           if (isResizing)
@@ -370,6 +375,24 @@ void RTPProxy::handleLeg1FrameRead(
             }
           }
         }
+#else
+        if (isResizing)
+        {
+          if (!_leg2Resizer.enqueue(_leg1Buffer, bytes_transferred))
+          {
+            isResizing = false;
+            _pLeg2Socket->async_send_to(boost::asio::buffer(_leg1Buffer, bytes_transferred), _senderEndPointLeg2,
+            boost::bind(&RTPProxy::handleLeg2FrameWrite, shared_from_this(),
+                    boost::asio::placeholders::error));
+          }
+        }
+        else
+        {
+          _pLeg2Socket->async_send_to(boost::asio::buffer(_leg1Buffer, bytes_transferred), _senderEndPointLeg2,
+            boost::bind(&RTPProxy::handleLeg2FrameWrite, shared_from_this(),
+                    boost::asio::placeholders::error));
+        }
+#endif
 
         if (_verbose && !isResizing)
         {
@@ -471,8 +494,12 @@ void RTPProxy::handleLeg2FrameRead(
   {
     _isInactive = false;
 
+#if ENABLE_FEATURE_XOR    
     //_isLeg2XOREncrypted = ((_leg2Buffer[0]>>6)&3) != 2;
     _isLeg2XOREncrypted = OSS::SIP::SIPXOR::isEnabled() ? !validateBuffer(_leg2Buffer, bytes_transferred) : false;
+#else
+    _isLeg2XOREncrypted = false;
+#endif
 
     bool isResizing = _leg1Resizer.isEnabled() && _type == Data;
 #if RTP_THREADED  
@@ -482,6 +509,7 @@ void RTPProxy::handleLeg2FrameRead(
     {
       if (_senderEndPointLeg1.port() != 0)
       {
+ #if ENABLE_FEATURE_XOR  
         if (!OSS::SIP::SIPXOR::isEnabled())
         {
           if (isResizing)
@@ -612,7 +640,27 @@ void RTPProxy::handleLeg2FrameRead(
             }
           }
         }
-
+#else
+        if (isResizing)
+        {
+          if (!_leg1Resizer.enqueue(_leg2Buffer, bytes_transferred))
+          {
+            isResizing = false;
+            //
+            // if it fails to queue up, send it immediately
+            //
+            _pLeg1Socket->async_send_to(boost::asio::buffer(_leg2Buffer, bytes_transferred), _senderEndPointLeg1,
+            boost::bind(&RTPProxy::handleLeg2FrameWrite, shared_from_this(),
+                    boost::asio::placeholders::error));
+          }
+        }
+        else
+        {
+          _pLeg1Socket->async_send_to(boost::asio::buffer(_leg2Buffer, bytes_transferred), _senderEndPointLeg1,
+            boost::bind(&RTPProxy::handleLeg2FrameWrite, shared_from_this(),
+                    boost::asio::placeholders::error));
+        }
+#endif
         if (_verbose && !isResizing)
         {
           try
@@ -704,9 +752,11 @@ void RTPProxy::processResizerQueue()
     {
       if (_pLeg2Socket && size)
       {
+          
+#if ENABLE_FEATURE_XOR
         if (_isLeg2XOREncrypted && !_isXORDisabled)
           OSS::SIP::SIPXOR::rtpEncrypt(buff, size);
-
+#endif
         _pLeg2Socket->async_send_to(boost::asio::buffer(buff, size), _senderEndPointLeg2,
                     boost::bind(&RTPProxy::handleLeg2FrameWrite, shared_from_this(),
                             boost::asio::placeholders::error));
@@ -727,8 +777,11 @@ void RTPProxy::processResizerQueue()
     {
         if (_pLeg1Socket && size)
         {
+            
+#if ENABLE_FEATURE_XOR
           if (_isLeg1XOREncrypted && !_isXORDisabled)
             OSS::SIP::SIPXOR::rtpEncrypt(buff, size);
+#endif
 
           _pLeg1Socket->async_send_to(boost::asio::buffer(buff, size), _senderEndPointLeg1,
                       boost::bind(&RTPProxy::handleLeg1FrameWrite, shared_from_this(),
@@ -761,9 +814,11 @@ void RTPProxy::onResizerDequeue(RTPResizer& resizer, OSS::RTP::RTPPacket& packet
 #endif
     if (_pLeg1Socket && size)
     {
+        
+#if ENABLE_FEATURE_XOR
       if (_isLeg1XOREncrypted && !_isXORDisabled)
         OSS::SIP::SIPXOR::rtpEncrypt(buff, size);
-
+#endif
       _pLeg1Socket->async_send_to(boost::asio::buffer(buff, size), _senderEndPointLeg1,
                   boost::bind(&RTPProxy::handleLeg1FrameWrite, shared_from_this(),
                           boost::asio::placeholders::error));
@@ -779,9 +834,12 @@ void RTPProxy::onResizerDequeue(RTPResizer& resizer, OSS::RTP::RTPPacket& packet
 #endif
     if (_pLeg2Socket && size)
     {
+        
+#if ENABLE_FEATURE_XOR
       if (_isLeg2XOREncrypted && !_isXORDisabled)
         OSS::SIP::SIPXOR::rtpEncrypt(buff, size);
-
+#endif
+      
       _pLeg2Socket->async_send_to(boost::asio::buffer(buff, size), _senderEndPointLeg2,
                   boost::bind(&RTPProxy::handleLeg2FrameWrite, shared_from_this(),
                           boost::asio::placeholders::error));

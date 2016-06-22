@@ -11,8 +11,18 @@
     * Session Border Controller Implementation
     * REST Persistence Store
 
+## Minimal Prerequisites (Mac or Linux)
+### Mac build is tested using homebrew installed packages
+    * openssl-devel
+    * boost-devel
+    * poco-devel
+
+Note: In Mac, you will need to create a softlink of the openssl include directory in /usr/local/include
+
 ## Prerequisites (CentOS or Fedora)
 -----------------------------------
+You can use the spec file to install all dependencies
+
 To list build dependencies
 
   grep '^BuildRequires' oss_core/oss_core.spec.in | awk '{print $2}'
@@ -27,17 +37,15 @@ To install build dependencies
   
 ## Building From Source (CentOS or Fedora)
 ------------------------------------------
-### OSS Core Library build environment is influenced by [sipXecs](http://www.sipfoundry.org) build setup.
 ### Download the source code from https://github.com/joegen/oss_core and build it
     git clone https://github.com/joegen/oss_core.git
     cd oss_core
-    git submodule init
-    git submoule update
+    git submodule update --init --recursive
     autoreconf -if
     mkdir -p .build
     cd .build
     ../configure
-    make
+    make && sudo make install
   
 ## Building RPMS (CentOS or Fedora)
 -----------------------------------
