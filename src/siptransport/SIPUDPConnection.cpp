@@ -17,6 +17,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+#include "OSS/OSS.h"
 #include <iostream>
 #include <vector>
 #include <sstream>
@@ -59,10 +60,13 @@ void SIPUDPConnection::start(const SIPTransportSession::Dispatch& dispatch)
 {
   setMessageDispatch(dispatch);
   
+#if OSS_OS == OSS_OS_LINUX
   boost::asio::socket_base::receive_buffer_size recBuffSize(25165824);
   boost::asio::socket_base::send_buffer_size sendBuffSize(25165824);
   _socket.set_option(recBuffSize);
   _socket.set_option(sendBuffSize);
+#endif
+  
   _socket.async_receive_from(boost::asio::buffer(_buffer), _senderEndPoint,
       boost::bind(&SIPUDPConnection::handleRead, shared_from_this(),
         boost::asio::placeholders::error,
