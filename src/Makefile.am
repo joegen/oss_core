@@ -320,10 +320,6 @@ liboss_core_la_SOURCES =  \
     sipfsm/SIPTransaction.cpp \
     sipep/SIPEndpoint.cpp \
     sipep/SIPEndpointRetransmitter.cpp \
-    stun/STUNProto.cpp \
-    stun/STUNMappedAddress.cpp \
-    stun/STUNServer.cpp \
-    stun/STUNClient.cpp \
     net/FirewallRule.cpp \
     net/Firewall.cpp \
     net/HTTPServer.cpp \
@@ -361,6 +357,14 @@ endif
 
 if ENABLE_FEATURE_TURN
     liboss_core_la_SOURCES += net/TurnServer.cpp
+endif
+
+if ENABLE_FEATURE_STUN
+liboss_core_la_SOURCES += \
+    stun/STUNProto.cpp \
+    stun/STUNMappedAddress.cpp \
+    stun/STUNServer.cpp \
+    stun/STUNClient.cpp
 endif
 
 if ENABLE_FEATURE_LIBRE

@@ -74,10 +74,12 @@ public:
 
   SIPUDPConnection::Ptr connection();
 
+#if ENABLE_FEATURE_STUN  
   const OSS::STUN::STUNClient::Ptr& getStunClient();
-
+  
   OSS::Net::IPAddress detectNATBinding(const std::string& stunServer);
-
+#endif
+  
 private:
   virtual void handleAccept(const boost::system::error_code& e, OSS_HANDLE userData = 0);
     /// Handle completion of an asynchronous accept operation.
@@ -90,8 +92,11 @@ private:
 
   friend class SIPUDPConnection;
 
+#if ENABLE_FEATURE_STUN
   OSS::STUN::STUNClient::Ptr _pStunClient;
   OSS::STUN::STUNMappedAddress _stunMappedAddress;
+#endif
+  
 };
 
 //
@@ -103,11 +108,13 @@ inline SIPUDPConnection::Ptr SIPUDPListener::connection()
   return _pNewConnection;
 }
 
+#if ENABLE_FEATURE_STUN
   /// Return the stun client shared pointer
 inline const OSS::STUN::STUNClient::Ptr& SIPUDPListener::getStunClient()
 {
   return _pStunClient;
 }
+#endif
 
 
 } } // OSS::SIP

@@ -60,7 +60,7 @@ AC_DEFUN([DISABLE_FEATURE],[
 
 
 #
-# Enable ALL featured
+# Enable ALL features
 #
 AC_ARG_ENABLE([all-features],
     AC_HELP_STRING([--enable-all-features], [Enable ALL features]),
@@ -74,6 +74,7 @@ AC_ARG_ENABLE([all-features],
         ENABLE_FEATURE(WEBSOCKETS)
         ENABLE_FEATURE(XOR)
         ENABLE_FEATURE(RTP)
+        ENABLE_FEATURE(STUN)
     ],
     [
         #
@@ -139,6 +140,13 @@ AC_ARG_ENABLE([all-features],
             AC_HELP_STRING([--enable-rtp], [Enable RTP Proxy Feature]),
             [ENABLE_FEATURE(RTP)],
             [DISABLE_FEATURE(RTP)])
+        #
+        # Enable STUN compilation
+        #
+        AC_ARG_ENABLE([stun],
+            AC_HELP_STRING([--enable-stun], [Enable STUN Feature]),
+            [ENABLE_FEATURE(STUN)],
+            [DISABLE_FEATURE(STUN)])
     ])
 
 #
@@ -285,9 +293,11 @@ AC_CHECK_HEADER(hiredis/hiredis.h,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_HIREDIS, -lhiredis)], 
     [FLAG_MISSING_DEP(OSS_HAVE_HIREDIS)])
 
+AC_LANG_PUSH([C++])
 AC_CHECK_HEADER(leveldb/db.h, 
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_LEVELDB, -lleveldb)], 
     [FLAG_MISSING_DEP(OSS_HAVE_LEVELDB)])
+AC_LANG_POP([C++])
 
 AC_LANG_PUSH([C++])
 AC_CHECK_HEADER(gtest/gtest.h, 

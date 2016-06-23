@@ -22,6 +22,8 @@
 #ifndef OSS_STUNMAPPEDADDRES_H
 #define OSS_STUNMAPPEDADDRES_H
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_STUN
 
 #include "OSS/Net/IPAddress.h"
 #include "OSS/STUN/STUNClient.h"
@@ -125,6 +127,7 @@ inline void STUNMappedAddress::setStunServer(const std::string& stunServer)
 
 } } // OSS::STUN
 
+#endif // ENABLE_FEATURE_STUN
 
 #endif // OSS_STUNMAPPEDADDRES_H
 

@@ -23,6 +23,9 @@
 #define	OSS_STUNCLIENT_H
 
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_STUN
+
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
 #include <boost/shared_ptr.hpp>
@@ -145,5 +148,8 @@ inline unsigned STUNClient::getReadTimeout() const
 
 
 } } // OSS::STUN
+
+#endif // ENABLE_FEATURE_STUN
+
 #endif //OSS_STUNCLIENT_H
 

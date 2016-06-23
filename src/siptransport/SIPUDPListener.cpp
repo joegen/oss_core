@@ -38,7 +38,9 @@ SIPUDPListener::SIPUDPListener(
   _socket(0),
   _dispatch(dispatch)
 {
+#if ENABLE_FEATURE_STUN
   _pStunClient = OSS::STUN::STUNClient::Ptr(new OSS::STUN::STUNClient(pTransportService->ioService()));
+#endif
 }
 
 SIPUDPListener::~SIPUDPListener()
@@ -109,6 +111,7 @@ void SIPUDPListener::handleAccept(const boost::system::error_code& e, OSS_HANDLE
   // This is only significant for stream based connections (TCP/TLS)
 }
 
+#if ENABLE_FEATURE_STUN
 OSS::Net::IPAddress SIPUDPListener::detectNATBinding(const std::string& stunServer)
 {
   OSS_VERIFY_NULL(_socket);
@@ -117,9 +120,9 @@ OSS::Net::IPAddress SIPUDPListener::detectNATBinding(const std::string& stunServ
     << _socket->local_endpoint().address().to_string()
     << ":" << _socket->local_endpoint()
     << " NAT: " << external.toIpPortString());
-  run();
   return external;
 }
+#endif
 
 } } // OSS::SIP
 

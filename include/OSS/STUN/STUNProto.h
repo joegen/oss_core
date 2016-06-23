@@ -23,6 +23,9 @@
 #define	OSS_STUNPROTO_H
 
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_STUN
+
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
 #include <boost/shared_ptr.hpp>
@@ -254,6 +257,8 @@ namespace Proto {
 
 } } } // OSS::STUN::Proto
 
+
+#endif // ENABLE_FEATURE_STUN
 
 #endif	// OSS_STUNPROTO_H
 
