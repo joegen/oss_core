@@ -16,7 +16,8 @@ nobase_include_HEADERS = \
     OSS/UTL/Thread.h \
     OSS/UTL/Endian.h \
     OSS/UTL/PropertyMap.h \
-    OSS/OSS.h.in \
+    OSS/OSS.h \
+    OSS/build.h \
     OSS/Persistent/BerkeleyDb.h \
     OSS/Persistent/RedisClient.h \
     OSS/UTL/Cache.h \
