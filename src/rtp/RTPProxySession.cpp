@@ -33,7 +33,7 @@ namespace RTP {
 
 using namespace OSS::SDP;
 
-#if OSS_HAVE_CONFIGPP
+#if ENABLE_FEATURE_CONFIG
 using namespace OSS::Persistent;
 #endif
 
@@ -67,13 +67,13 @@ RTPProxySession::~RTPProxySession()
 {
   stop();
 
-#if OSS_HAVE_CONFIGPP
+#if ENABLE_FEATURE_CONFIG
   if (!_pManager->hasRtpDb() && _pManager->persistStateFiles())
   {
     ClassType::remove(_stateFile);
   }
 #endif
-#if OSS_HAVE_HIREDIS
+#if ENABLE_FEATURE_REDIS
   else if (_pManager->hasRtpDb())
   {
     _pManager->redisClient().del(_identifier);
@@ -1041,7 +1041,7 @@ void RTPProxySession::handleInitialSDPAnswer(
   if (_hasOfferedAudioProxy || _hasOfferedVideoProxy || _hasOfferedFaxProxy)
   {
     sdp = offer.toString();
-#if OSS_HAVE_CONFIGPP
+#if ENABLE_FEATURE_CONFIG
     dumpStateFile();
 #endif
   }
@@ -1777,13 +1777,13 @@ void RTPProxySession::handleSDPAnswer(
   if (_hasOfferedAudioProxy || _hasOfferedVideoProxy || _hasOfferedFaxProxy)
   {
     sdp = offer.toString();
-#if OSS_HAVE_CONFIGPP 
+#if ENABLE_FEATURE_CONFIG 
     dumpStateFile();
 #endif
   }
 }
 
-#if OSS_HAVE_HIREDIS
+#if ENABLE_FEATURE_REDIS
 void RTPProxySession::dumpStateToRedis()
 {
   RTPProxyRecord record;
@@ -2038,13 +2038,13 @@ void RTPProxySession::dumpStateToRedis()
 }
 #endif
 
-#if OSS_HAVE_CONFIGPP
+#if ENABLE_FEATURE_CONFIG
 void RTPProxySession::dumpStateFile()
 {
   //
   // Check if we will be using redis
   //
-#if OSS_HAVE_HIREDIS
+#if ENABLE_FEATURE_REDIS
   if (_pManager->hasRtpDb())
   {
     dumpStateToRedis();
@@ -2361,7 +2361,7 @@ void RTPProxySession::dumpStateFile()
 }
 #endif
 
-#if OSS_HAVE_HIREDIS
+#if ENABLE_FEATURE_REDIS
 
 RTPProxySession::Ptr RTPProxySession::reconstructFromRedis(RTPProxyManager* pManager, const std::string& identifier)
 {
@@ -2611,7 +2611,7 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromRedis(RTPProxyManager* pMan
 }
 #endif
 
-#if OSS_HAVE_CONFIGPP
+#if ENABLE_FEATURE_CONFIG
 RTPProxySession::Ptr RTPProxySession::reconstructFromStateFile(
   RTPProxyManager* pManager, const boost::filesystem::path& stateFile)
 {

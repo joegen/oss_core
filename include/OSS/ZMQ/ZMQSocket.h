@@ -24,6 +24,9 @@
 #ifndef OSS_ZMQSOCKET_H_INCLUDED
 #define OSS_ZMQSOCKET_H_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_ZMQ
+
 #include "OSS/OSS.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/Net/IPAddress.h"
@@ -85,6 +88,8 @@ protected:
 } } // OSS::ZMQ
 
 #endif // OSS_HAVE_ZMQ
+
+#endif // ENABLE_FEATURE_ZMQ
 
 #endif // OSS_ZMQSOCKET_H_INCLUDED
 

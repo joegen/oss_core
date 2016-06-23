@@ -31,7 +31,7 @@
 #include <boost/asio/ssl.hpp>
 
 
-#if OSS_HAVE_CONFIGPP
+#if ENABLE_FEATURE_CONFIG
 using OSS::Persistent::ClassType;
 using OSS::Persistent::DataType;
 using OSS::Persistent::PersistenceException;
@@ -324,7 +324,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
 }
 
 
-#if OSS_HAVE_CONFIGPP
+#if ENABLE_FEATURE_CONFIG
 bool SIPStack::initVirtualTransportFromConfig(const boost::filesystem::path& cfgFile)
 {
   ClassType configFile;
@@ -565,7 +565,7 @@ bool SIPStack::initTlsContextFromConfig(const boost::filesystem::path& cfgFile)
   return initializeTlsContext(tls_certificate_file, tls_private_key_file, tls_cert_password, tls_ca_file, tls_ca_path, tls_verify_peer);
 }
 
-#endif // OSS_HAVE_CONFIGPP
+#endif // ENABLE_FEATURE_CONFIG
 
 void SIPStack::setTransportThreshold(
   unsigned long packetsPerSecondThreshold, // The total packets per second threshold
@@ -585,7 +585,7 @@ void SIPStack::setTransportThreshold(
 }
 
 
-#if OSS_HAVE_CONFIGPP
+#if ENABLE_FEATURE_CONFIG
 
 void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 {
@@ -890,7 +890,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
   transportInit();
 }
 
-#endif // OSS_HAVE_CONFIGPP
+#endif // ENABLE_FEATURE_CONFIG
 
 bool SIPStack::initializeTlsContext(
     const std::string& tlsCertFile, // Certificate to be used by this server.  File should be in PEM format

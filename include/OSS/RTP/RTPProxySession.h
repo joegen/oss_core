@@ -117,26 +117,26 @@ public:
     /// True if verbose logging is set by the application.
     /// Use this only to debug the rtp stream and not for production
     /// environment.
-#if OSS_HAVE_CONFIGPP
+#if ENABLE_FEATURE_CONFIG
   void dumpStateFile();
     /// This method will save session information to a state-file to allow the
     /// manager to reconstruct during retarts
 #endif
   
-#if OSS_HAVE_HIREDIS
+#if ENABLE_FEATURE_REDIS
   void dumpStateToRedis();
     /// This method will save session information to a redis to allow the
     /// manager to reconstruct during retarts
 #endif
 
-#if OSS_HAVE_CONFIGPP
+#if ENABLE_FEATURE_CONFIG
   static RTPProxySession::Ptr reconstructFromStateFile(RTPProxyManager* pManager,
     const boost::filesystem::path& stateFile);
     /// Reconstruct session-state from a state file.  Will return false
     /// if the session can't be reconstructed
 #endif  
   
-#if OSS_HAVE_HIREDIS
+#if ENABLE_FEATURE_REDIS
   static RTPProxySession::Ptr reconstructFromRedis(RTPProxyManager* pManager,
     const std::string& identifier);
     /// Reconstruct session-state from redis.  Will return false

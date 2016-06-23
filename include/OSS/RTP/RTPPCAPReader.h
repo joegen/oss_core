@@ -21,12 +21,9 @@
 
 #include "OSS/build.h"
 #if ENABLE_FEATURE_RTP
+#if OSS_HAVE_PCAP
 
 #include "OSS/OSS.h"
-
-
-
-#if OSS_HAVE_PCAP
 
 #if 0
 #include <pcap/pcap.h>

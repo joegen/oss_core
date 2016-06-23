@@ -58,6 +58,23 @@ AC_DEFUN([DISABLE_FEATURE],[
     AC_MSG_NOTICE([$1 feature DISABLED])
 ])
 
+#
+# Flag dependecy whether they are missing or not
+#
+AC_DEFUN([FLAG_MISSING_DEP],[
+    AC_SUBST([$1], 0)
+    AM_CONDITIONAL([$1], false)
+])
+
+#
+# Flag existing CXX dependencies
+#
+AC_DEFUN([FLAG_EXISTING_CXX_DEP],[
+    AC_SUBST([$1], 1)
+    AM_CONDITIONAL([$1], true)
+    OSS_CORE_DEP_LIBS="$2 $OSS_CORE_DEP_LIBS"
+])
+
 
 #
 # Enable ALL features
@@ -75,15 +92,12 @@ AC_ARG_ENABLE([all-features],
         ENABLE_FEATURE(XOR)
         ENABLE_FEATURE(RTP)
         ENABLE_FEATURE(STUN)
+        ENABLE_FEATURE(ZMQ)
+        ENABLE_FEATURE(REDIS)
+        ENABLE_FEATURE(MCRYPT)
+        ENABLE_FEATURE(CONFIG)
     ],
     [
-        #
-        # Enable REST KV compilation
-        #
-        AC_ARG_ENABLE([restkv],
-            AC_HELP_STRING([--enable-turn], [Enable REST Key Value Store Feature]),
-            [ENABLE_FEATURE(RESTKV)],
-            [DISABLE_FEATURE(RESTKV)])
         #
         # Enable TURN compilation
         #
@@ -113,6 +127,27 @@ AC_ARG_ENABLE([all-features],
             [ENABLE_FEATURE(V8)],
             [DISABLE_FEATURE(V8)])
         #
+        # Enable REST KV compilation
+        #
+        AC_ARG_ENABLE([restkv],
+            AC_HELP_STRING([--enable-turn], [Enable REST Key Value Store Feature]),
+            [ENABLE_FEATURE(RESTKV)],
+            [DISABLE_FEATURE(RESTKV)])
+        #
+        # Enable ZeroMQ compilation
+        #
+        AC_ARG_ENABLE([zmq],
+            AC_HELP_STRING([--enable-zmq], [Enable ZeroMQ Feature]),
+            [ENABLE_FEATURE(ZMQ)],
+            [DISABLE_FEATURE(ZMQ)])
+        #
+        # Enable Redis compilation
+        #
+        AC_ARG_ENABLE([redis],
+            AC_HELP_STRING([--enable-redis], [Enable Redis Feature]),
+            [ENABLE_FEATURE(REDIS)],
+            [DISABLE_FEATURE(REDIS)])
+        #
         # Enable B2BUA compilation
         #
         AC_ARG_ENABLE([b2bua],
@@ -134,6 +169,20 @@ AC_ARG_ENABLE([all-features],
             [ENABLE_FEATURE(XOR)],
             [DISABLE_FEATURE(XOR)])
         #
+        # Enable File Encryption compilation
+        #
+        AC_ARG_ENABLE([mcrypt],
+            AC_HELP_STRING([--enable-mcrypt], [Enable File Encryption Feature]),
+            [ENABLE_FEATURE(MCRYPT)],
+            [DISABLE_FEATURE(MCRYPT)])
+        #
+        # Enable Configpp Wrapper compilation
+        #
+        AC_ARG_ENABLE([config],
+            AC_HELP_STRING([--enable-config], [Enable Configuration File Feature]),
+            [ENABLE_FEATURE(CONFIG)],
+            [DISABLE_FEATURE(CONFIG)])
+        #
         # Enable RTP Proxy compilation
         #
         AC_ARG_ENABLE([rtp],
@@ -148,22 +197,6 @@ AC_ARG_ENABLE([all-features],
             [ENABLE_FEATURE(STUN)],
             [DISABLE_FEATURE(STUN)])
     ])
-
-#
-# Flag dependecy whether they are missing or not
-#
-AC_DEFUN([FLAG_MISSING_DEP],[
-    AC_SUBST([$1], 0)
-])
-
-#
-# Flag existing CXX dependencies
-#
-AC_DEFUN([FLAG_EXISTING_CXX_DEP],[
-    AC_SUBST([$1], 1)
-    OSS_CORE_DEP_LIBS="$2 $OSS_CORE_DEP_LIBS"
-])
-
 #
 # Search for mandatory packages
 #
@@ -240,7 +273,7 @@ AC_CHECK_HEADER(boost/regex.hpp, [], [ERROR_MISSING_DEP(OSS_HAVE_BOOST_REGEX,
 AC_CHECK_LIB(boost_regex-mt, main,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_REGEX, -lboost_regex-mt)],
     [AC_CHECK_LIB(boost_regex, main,
-    	[FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_regex, -lboost_regex)],
+    	[FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_REGEX, -lboost_regex)],
     	[ERROR_MISSING_DEP(OSS_HAVE_BOOST_REGEX, "Boost Regex Library is not installed")])])
 
 AC_LANG_POP([C++])
@@ -269,35 +302,92 @@ AC_CHECK_LIB(PocoNet, main,
     [ERROR_MISSING_DEP(OSS_HAVE_POCO_NET,"Poco C++ Net Library not found")])
 AC_LANG_POP([C++])
 
+#
+# UCARP
+#
+if test "x$FEATURE_CARP" == "xenabled"; then
+    m4_include([config/carp.m4])
+fi
+
+#
+# Google V8
+#
 if test "x$FEATURE_V8" == "xenabled"; then
     AC_LANG_PUSH([C++])
     AC_CHECK_HEADER(v8.h, 
         [FLAG_EXISTING_CXX_DEP(OSS_HAVE_V8, -lv8)],
         [ERROR_MISSING_DEP(OSS_HAVE_V8, "V8 Library is not installed")])
     AC_LANG_POP([C++])
+else
+    AM_CONDITIONAL(OSS_HAVE_V8, false)
+    AC_SUBST(OSS_HAVE_V8, 0)
+fi
+
+#
+# ZeroMQ
+#
+if test "x$FEATURE_ZMQ" == "xenabled"; then
+    AC_LANG_PUSH([C++])
+    AC_CHECK_HEADER(zmq.hpp, 
+        [FLAG_EXISTING_CXX_DEP(OSS_HAVE_ZMQ, -lzmq)], 
+        [ERROR_MISSING_DEP(OSS_HAVE_ZMQ, "ZeroMQ Library is not installed")])
+    AC_LANG_POP([C++])
+else
+    AM_CONDITIONAL(OSS_HAVE_ZMQ, false)
+    AC_SUBST(OSS_HAVE_ZMQ, 0)
+fi
+#
+# Redis
+#
+if test "x$FEATURE_REDIS" == "xenabled"; then
+AC_CHECK_HEADER(hiredis/hiredis.h,
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_HIREDIS, -lhiredis)], 
+    [ERROR_MISSING_DEP(OSS_HAVE_HIREDIS, "Hiredis Library is not installed")])
+else
+    AM_CONDITIONAL(OSS_HAVE_HIREDIS, false)
+    AC_SUBST(OSS_HAVE_HIREDIS, 0)
+fi
+#
+# MCRYPT
+#
+if test "x$FEATURE_MCRYPT" == "xenabled"; then
+AC_CHECK_HEADER(mcrypt.h,
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_MCRYPT, -lmcrypt)], 
+    [FLAG_MISSING_DEP(OSS_HAVE_MCRYPT, "Mcrypt Library is not installed")])
+else
+    AM_CONDITIONAL(OSS_HAVE_MCRYPT, false)
+    AC_SUBST(OSS_HAVE_MCRYPT, 0)
+fi
+#
+# Config file support
+#
+if test "x$FEATURE_CONFIG" == "xenabled"; then
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADER(libconfig.h++,
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_CONFIGPP, -lconfig++)], 
+    [FLAG_MISSING_DEP(OSS_HAVE_CONFIGPP, "libconfig Library not installed")])
+AC_LANG_POP([C++])
+else
+    AM_CONDITIONAL(OSS_HAVE_CONFIGPP, false)
+    AC_SUBST(OSS_HAVE_CONFIGPP, 0)
+fi
+#
+# REST Key/Value Store
+#
+if test "x$FEATURE_RESTKV" == "xenabled"; then
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADER(leveldb/db.h, 
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_LEVELDB, -lleveldb)], 
+    [ERROR_MISSING_DEP(OSS_HAVE_LEVELDB,"LevelDB Library is not installed")])
+AC_LANG_POP([C++])
+else
+    AM_CONDITIONAL(OSS_HAVE_LEVELDB, false)
+    AC_SUBST(OSS_HAVE_LEVELDB, 0)
 fi
 
 #
 # Search for optional packages
 #
-
-if test "x$FEATURE_CARP" == "xenabled"; then
-    m4_include([config/carp.m4])
-fi
-
-AC_CHECK_HEADER(libconfig.h,
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_CONFIGPP, -lconfig++)], 
-    [FLAG_MISSING_DEP(OSS_HAVE_CONFIGPP)])
-
-AC_CHECK_HEADER(hiredis/hiredis.h,
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_HIREDIS, -lhiredis)], 
-    [FLAG_MISSING_DEP(OSS_HAVE_HIREDIS)])
-
-AC_LANG_PUSH([C++])
-AC_CHECK_HEADER(leveldb/db.h, 
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_LEVELDB, -lleveldb)], 
-    [FLAG_MISSING_DEP(OSS_HAVE_LEVELDB)])
-AC_LANG_POP([C++])
 
 AC_LANG_PUSH([C++])
 AC_CHECK_HEADER(gtest/gtest.h, 
@@ -305,20 +395,9 @@ AC_CHECK_HEADER(gtest/gtest.h,
     [FLAG_MISSING_DEP(OSS_HAVE_GTEST)])
 AC_LANG_POP([C++])
 
-AC_LANG_PUSH([C++])
-AC_CHECK_HEADER(zmq.hpp, 
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_ZMQ, -lzmq)], 
-    [FLAG_MISSING_DEP(OSS_HAVE_ZMQ)])
-AC_LANG_POP([C++])
-
-AC_CHECK_HEADER(mcrypt.h,
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_MCRYPT, -lmcrypt)], 
-    [FLAG_MISSING_DEP(OSS_HAVE_MCRYPT)])
-
 AC_CHECK_HEADER(pcap/pcap.h,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_PCAP, -lpcap)], 
     [FLAG_MISSING_DEP(OSS_HAVE_PCAP)])
-
 
 AC_CHECK_HEADER(pthread.h, 
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_THREAD, -lpthread)], 
@@ -342,7 +421,7 @@ AC_CHECK_LIB([event_openssl], [main],
 
 AC_CHECK_LIB([event_pthreads], [main], 
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_LIBEVENT_PTHREADS, -levent_pthreads)], 
-    [FLAG_MISSING_DEP(OSS_HAVE_LIBEVENT_PTHREAD)])
+    [FLAG_MISSING_DEP(OSS_HAVE_LIBEVENT_PTHREADS)])
 
 AC_CHECK_LIB(ltdl, main, 
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_LTDL, -lltdl)],

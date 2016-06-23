@@ -21,9 +21,12 @@
 #ifndef OSS_CRYPTO_FileEncryptor_H_INCLUDED
 #define OSS_CRYPTO_FileEncryptor_H_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_MCRYPT
+
 #include "OSS/OSS.h"
 #include "OSS/Crypto/BlockCipher.h"
-#include "OSS/build.h"
+
 
 
 #if OSS_HAVE_MCRYPT
@@ -105,7 +108,7 @@ inline void FileEncryptor::setPassword(const std::string& password)
 } } // OSS::Crypto
 
 #endif // OSS_HAVE_MCRYPT
-
+#endif // ENABLE_FEATURE_MCRYPT
 #endif
 
 

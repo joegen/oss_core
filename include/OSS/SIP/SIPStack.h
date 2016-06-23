@@ -142,7 +142,7 @@ public:
     /// If initTransportFromConfig() is used, transportInit will be called
     /// automatically so there is no need to call it before calling run.
 
-#if OSS_HAVE_CONFIGPP
+#if ENABLE_FEATURE_CONFIG
   void initTransportFromConfig(const boost::filesystem::path& cfgFile);
     /// Initialize the sip stack properties from a preexisting CFG files.
     /// This method will throw PersistenceException if the file is none
@@ -172,14 +172,14 @@ public:
   );
     /// This method intializes the TLS context if secure transport is enabled
   
- #if OSS_HAVE_CONFIGPP 
+ #if ENABLE_FEATURE_CONFIG 
   bool initTlsContextFromConfig(const boost::filesystem::path& cfgFile);
     /// Initialize TLS using a configuration file
 #endif
   
   std::string getTlsCertPassword() const;
     /// Returns the tlsCertPassword.  This is used internally by initializeTlsContext
-#if OSS_HAVE_CONFIGPP
+#if ENABLE_FEATURE_CONFIG
   bool initVirtualTransportFromConfig(const boost::filesystem::path& cfgFile);
     /// Initialize CARP virtual interface(s)
 #endif

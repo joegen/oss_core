@@ -78,7 +78,7 @@ void RTPProxyManager::run(int threadCount, int readTimeout)
   }
 }
 
-#if OSS_HAVE_HIREDIS
+#if ENABLE_FEATURE_REDIS
 
 bool RTPProxyManager::redisConnect(const std::vector<Persistent::RedisClient::ConnectionInfo>& connections, int workspace)
 {
@@ -133,7 +133,7 @@ void RTPProxyManager::recycleState()
           boost::filesystem::path currentFile = operator/(_rtpStateDirectory, OSS::boost_file_name(itr->path()));
           if (boost::filesystem::is_regular(currentFile))
           {
-#if OSS_HAVE_CONFIGPP 
+#if ENABLE_FEATURE_CONFIG 
             _sessionListMutex.lock();
             RTPProxySession::Ptr session = RTPProxySession::reconstructFromStateFile(this, currentFile);
             if (session)
@@ -155,7 +155,7 @@ void RTPProxyManager::recycleState()
       OSS::log_warning(logMsg.str());
     }
   }
-#if OSS_HAVE_HIREDIS
+#if ENABLE_FEATURE_REDIS
   else
   {
     std::vector<std::string> keys;

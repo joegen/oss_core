@@ -269,12 +269,6 @@ liboss_core_la_SOURCES =  \
     abnf/ABNFSIPGenericParam.cpp \
     abnf/ABNFSIPHierPart.cpp \
     crypto/Crypto.cpp \
-    crypto/BlockCipher.cpp \
-    crypto/FileEncryptor.cpp \
-    persistent/ClassType.cpp \
-    persistent/DataType.cpp \
-    persistent/Reference.cpp \
-    persistent/RedisClient.cpp \
     sdp/SDPHeader.cpp \
     sdp/SDPHeaderList.cpp \
     sdp/SDPMedia.cpp \
@@ -345,8 +339,7 @@ liboss_core_la_SOURCES =  \
     utl/StackTrace.cpp \
     utl/LogFile.cpp \
     ep/EndpointConnection.cpp \
-    ep/EndpointListener.cpp \
-    zmq/ZMQSocket.cpp
+    ep/EndpointListener.cpp
 
 if ENABLE_FEATURE_RESTKV
 liboss_core_la_SOURCES += \
@@ -382,7 +375,6 @@ endif
 if ENABLE_FEATURE_RTP
 liboss_core_la_SOURCES +=  \
     rtp/RTPPacket.cpp \
-    rtp/RTPPCAPReader.cpp \
     rtp/RTPProxy.cpp \
     rtp/RTPProxyManager.cpp \
     rtp/RTPProxyRecord.cpp \
@@ -390,6 +382,10 @@ liboss_core_la_SOURCES +=  \
     rtp/RTPProxyTuple.cpp \
     rtp/RTPResizer.cpp \
     rtp/RTPResizingQueue.cpp
+
+if OSS_HAVE_PCAP
+    liboss_core_la_SOURCES +=  rtp/RTPPCAPReader.cpp
+endif
 endif
 
 if ENABLE_FEATURE_B2BUA
@@ -456,6 +452,27 @@ liboss_core_la_SOURCES +=  \
     siptransport/SIPWebSocketConnection.cpp \
     siptransport/SIPWebSocketListener.cpp \
     siptransport/SIPWebSocketConnectionManager.cpp 
+endif
+
+if ENABLE_FEATURE_ZMQ
+liboss_core_la_SOURCES +=  zmq/ZMQSocket.cpp
+endif
+
+if ENABLE_FEATURE_REDIS
+liboss_core_la_SOURCES += persistent/RedisClient.cpp
+endif
+
+if ENABLE_FEATURE_MCRYPT
+liboss_core_la_SOURCES += \
+    crypto/BlockCipher.cpp \
+    crypto/FileEncryptor.cpp
+endif
+
+if ENABLE_FEATURE_CONFIG
+liboss_core_la_SOURCES += \
+    persistent/ClassType.cpp \
+    persistent/DataType.cpp \
+    persistent/Reference.cpp
 endif
 
 TESTS = oss_core-unit-test

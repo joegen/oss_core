@@ -23,6 +23,7 @@
 
 
 #include "OSS/build.h"
+#if ENABLE_FEATURE_CONFIG
 #if OSS_HAVE_CONFIGPP
 
 #include <typeinfo>
@@ -391,6 +392,6 @@ inline bool DataType::exists(const std::string& name) const
 
 
 #endif // OSS_HAVE_CONFIGPP
-
+#endif // ENABLE_FEATURE_CONFIG
 #endif // OSS_PERSISTENT_DATATYPE_H_INCLUDED
 

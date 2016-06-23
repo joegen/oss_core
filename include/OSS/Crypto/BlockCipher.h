@@ -21,6 +21,9 @@
 #ifndef OSS_CRYPTO_BlockCipher_H_INCLUDED
 #define OSS_CRYPTO_BlockCipher_H_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_MCRYPT
+
 #include <vector>
 #include <string>
 
@@ -120,6 +123,8 @@ protected:
 } } // OSS::Crypto
 
 #endif // OSS_HAVE_MCRYPT
+
+#endif // ENABLE_FEATURE_MCRYPT
 
 #endif // OSS_CRYPTO_BlockCipher_H_INCLUDED
 

@@ -160,7 +160,7 @@ public:
     /// return the active session lists.  Muts be used together with sessionListMutex
     /// for thread safety
 
-#if OSS_HAVE_HIREDIS
+#if ENABLE_FEATURE_REDIS
   Persistent::RedisBroadcastClient& redisClient();
     /// return a reference to the redis client for the rtp proxy db
 
@@ -213,7 +213,7 @@ private:
   int _readTimeout;
   unsigned _rtpSessionMax;
   bool _canRecycleState;
-#if OSS_HAVE_HIREDIS
+#if ENABLE_FEATURE_REDIS
   Persistent::RedisBroadcastClient _redisClient;
 #endif
   bool _hasRtpDb;
@@ -233,7 +233,7 @@ private:
 // Inlines
 //
 
-#if OSS_HAVE_HIREDIS
+#if ENABLE_FEATURE_REDIS
 inline Persistent::RedisBroadcastClient& RTPProxyManager::redisClient()
 {
   return _redisClient;

@@ -56,7 +56,7 @@ struct SBCMediaTuple
 struct RTPProxyRecord
 {
   RTPProxyRecord();
-#if OSS_HAVE_HIREDIS
+#if ENABLE_FEATURE_REDIS
   bool writeToRedis(Persistent::RedisBroadcastClient& client, const std::string& key) const;
   bool writeToRedis(Persistent::RedisBroadcastClient& client, const boost::filesystem::path& key) const;
   bool readFromRedis(Persistent::RedisBroadcastClient& client, const boost::filesystem::path& key);
@@ -89,7 +89,7 @@ struct RTPProxyRecord
 //
 // Inlines
 //
-#if OSS_HAVE_HIREDIS
+#if ENABLE_FEATURE_REDIS
 inline bool RTPProxyRecord::writeToRedis(Persistent::RedisBroadcastClient& client, const boost::filesystem::path& key) const
 {
   return writeToRedis(client, OSS::boost_file_name(key));

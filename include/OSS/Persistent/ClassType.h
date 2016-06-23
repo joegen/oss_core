@@ -22,6 +22,7 @@
 #define OSS_PERSISTENT_CLASSTYPE_H_INCLUDED
 
 #include "OSS/build.h"
+#if ENABLE_FEATURE_CONFIG
 #if OSS_HAVE_CONFIGPP
 
 #include "OSS/OSS.h"
@@ -129,5 +130,5 @@ inline void ClassType::remove()
 
 
 #endif // OSS_HAVE_CONFIGPP
-
+#endif // ENABLE_FEATURE_CONFIG
 #endif // OSS_PERSISTENT_CLASSTYPE_H_INCLUDED

@@ -57,6 +57,6 @@ To install build dependencies
     autoreconf -if
     mkdir -p .build
     cd .build
-    ../configure
+    ../configure --enable-all-features --disable-dep-check
     make dist
     rpmbuild -ta oss_core-*tar.gz

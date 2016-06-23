@@ -22,6 +22,7 @@
 
 #include "OSS/build.h"
 
+#if ENABLE_FEATURE_REDIS
 #if OSS_HAVE_HIREDIS
 
 #include "OSS/UTL/Logger.h"
@@ -198,6 +199,8 @@ inline RedisClient* RedisBroadcastClient::defaultClient()
 
 
 #endif // OSS_HAVE_HIREDIS
+
+#endif // ENABLE_FEATURE_REDIS
 
 #endif	/* OSS_REDISCLIENT_H_INCLUDED */
 
