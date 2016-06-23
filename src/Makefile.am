@@ -364,8 +364,11 @@ if ENABLE_FEATURE_LIBRE
 liboss_core_la_SOURCES += \
     ua/SIPUserAgent.cpp \
     ua/SIPRegistration.cpp \
-    ua/SIPEventLoop.cpp \
-    b2bua/SIPB2BRegisterAgent.cpp
+    ua/SIPEventLoop.cpp 
+
+if ENABLE_FEATURE_B2BUA
+liboss_core_la_SOURCES += b2bua/SIPB2BRegisterAgent.cpp
+endif
 endif
 
 if ENABLE_FEATURE_CARP

@@ -311,6 +311,16 @@ if test "x$FEATURE_CARP" == "xenabled"; then
 fi
 
 #
+# LIBRE
+#
+if test "x$FEATURE_LIBRE" == "xenabled"; then
+    m4_include([config/libre.m4])
+    SFAC_LIBRE_CONFIGURE()
+    SFAC_LIBREM_CONFIGURE()
+fi
+
+
+#
 # Google V8
 #
 if test "x$FEATURE_V8" == "xenabled"; then
