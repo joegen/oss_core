@@ -481,12 +481,6 @@ endif
 TESTS = oss_core-unit-test
 check_PROGRAMS = oss_core-unit-test
 
-
-oss_core_unit_test_CXXFLAGS = \
-	${common_cxx_flags} \
-	-fno-gcse -O0 -fno-implement-inlines -fno-default-inline
-
-
 oss_core_unit_test_SOURCES = \
 	unit_test/TestSuite.cpp \
         unit_test/TestSemaphore.cpp \
@@ -521,7 +515,6 @@ SIP_TEST = \
 #
 # test_forked_100rel
 #
-oss_test_sip_invite_simple_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
 oss_test_sip_invite_simple_SOURCES = siptest/TestInviteSimple.cpp
 
 bin_PROGRAMS = \
@@ -548,26 +541,22 @@ endif
 #
 # oss_core - A simple back-to-back user agent
 #
-oss_core_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
 oss_core_SOURCES = apps/oss_core.cpp
 
 #
 # oss_garp - tool for sending gratuitous ARP requests
 #
-oss_garp_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
 oss_garp_SOURCES = apps/oss_garp.cpp
 
 #
 # oss_carp - tool for Common Address Redundancy Protocol
 #
-oss_carp_CXXFLAGS = ${common_cxx_flags} -O0 -fno-implement-inlines
 #oss_carp_LDFLAGS = -rdynamic
 oss_carp_SOURCES = apps/oss_carp.cpp
 
 #
 # oss_rest - REST Server implementation
 #
-oss_rest_CXXFLAGS = ${common_cxx_flags} -O0 -fno-implement-inlines
 oss_rest_SOURCES = apps/oss_rest.cpp
 
 

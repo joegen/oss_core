@@ -10,6 +10,7 @@ OSS_CORE_VERSION_REVISION="3"
 
 AC_CONFIG_AUX_DIR(config)
 AM_INIT_AUTOMAKE([subdir-objects foreign] )
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_SRCDIR([src/OSS.cpp])
 AM_CONFIG_HEADER([src/config.h])
 AC_PROG_LIBTOOL
@@ -456,7 +457,7 @@ cd ${CURRENT_DIR}
 #
 OSS_CXX_C_FLAGS="-fmessage-length=0"
 OSS_CXX_WARNINGS="-Wall -Wformat -Wwrite-strings -Wpointer-arith"
-CXXFLAGS="$CXXFLAGS $OSS_CXX_C_FLAGS $OSS_CXX_WARNINGS"
+CXXFLAGS="$CXXFLAGS -O0 -fno-implement-inlines $OSS_CXX_C_FLAGS $OSS_CXX_WARNINGS"
 CFLAGS="$CFLAGS $OSS_CXX_C_FLAGS -Wnested-externs"
 
 AC_SUBST(CXXFLAGS)
@@ -464,7 +465,6 @@ AC_SUBST(CFLAGS)
 AC_SUBST(OSS_CORE_DEP_LIBS)
 
 AC_CONFIG_FILES([
-    include/OSS/OSS.h
     include/OSS/build.h
     Makefile
     src/Makefile
