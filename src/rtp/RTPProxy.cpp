@@ -56,7 +56,6 @@ RTPProxy::RTPProxy(Type type, RTPProxyManager* pManager, RTPProxySession* pSessi
   //
   assert(_pSession);
   _logId = _pSession->logId();
-  _verbose = _verbose;
   _timeStamp = OSS::getTime();
 }
 
