@@ -20,6 +20,8 @@
 #ifndef SIP_SIPStackB2BTransactionManager_INCLUDED
 #define SIP_SIPStackB2BTransactionManager_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_B2BUA
 
 #include <list>
 
@@ -35,6 +37,7 @@
 #include "OSS/SIP/SIP.h"
 #include "OSS/SIP/SIPStack.h"
 #include "OSS/SIP/SIPTransaction.h"
+#include "OSS/SIP/EP/SIPEndpoint.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 #include "OSS/SIP/B2BUA/SIPB2BHandler.h"
 #include "OSS/SIP/B2BUA/SIPB2BUserAgentHandlerList.h"
@@ -47,11 +50,12 @@ namespace SIP {
 namespace B2BUA {
 
 
-class OSS_API SIPB2BTransactionManager : private boost::noncopyable
+class OSS_API SIPB2BTransactionManager : public OSS::SIP::EP::SIPEndpoint
 {
 public:
   typedef std::map<SIPB2BHandler::MessageType, SIPB2BHandler::Ptr> MessageHandlers;
   typedef std::map<std::string, SIPB2BHandler::Ptr> DomainRouters;
+  typedef boost::function<void(SIPB2BTransactionManager*, SIPB2BTransaction*)> ExternalDispatch;
   
   typedef boost::function<SIPMessage::Ptr(
     SIPMessage::Ptr& pRequest,
@@ -240,9 +244,6 @@ public:
     /// events that are not handled by specific message handlers
     ///
 
-  SIPStack& stack();
-    /// Returns a direct reference to the SIP Stack
-
   OSS::thread_pool& threadPool();
     /// Returns a direct reference to the thread pool
 
@@ -302,33 +303,6 @@ public:
   const PostRouteCallback& getPostRouteCallback() const;
     /// Returns a constat reference to the post route callback
 
-  bool getExternalAddress(const OSS::Net::IPAddress& internalIp, std::string& externalIp) const;
-    /// Return the assigned external address for a particular transport.
-    /// This is normally used in relation to messages that has to passthrough
-    /// a firewall.
-
-  bool getExternalAddress(const std::string& proto, const OSS::Net::IPAddress& internalIp, std::string& externalIp) const;
-    /// Return the assigned external address for a particular transport.
-    /// This is normally used in relation to messages that has to passthrough
-    /// a firewall.
-
-  bool getInternalAddress(
-    const OSS::Net::IPAddress& externalIp,
-    OSS::Net::IPAddress& internalIp) const;
-    /// Return the internal IP if the host:port for the external IP is known
-
-  bool getInternalAddress(
-    const std::string& proto,
-    const OSS::Net::IPAddress& externalIp,
-    OSS::Net::IPAddress& internalIp) const;
-    /// Return the internal IP if the host:port for the external IP is known
-
-  const std::string& getUserAgentName() const;
-    /// Returns the user agent name to be used by the B2BUA if set
-
-  void setUserAgentName(const std::string& userAgentName);
-    /// Set the user-agent name.
-
   void addUserAgentHandler(SIPB2BUserAgentHandler* pHandler);
     /// Register a user agent handler
 
@@ -342,13 +316,7 @@ public:
     /// will no longer process the transaction and instead, let the handler
     /// respond to the transaction.
   
-  void setKeyValueStore(OSS::Persistent::RESTKeyValueStore* pKeyStore);
-    /// Set the key value store to be used for persisting some states
-  
-  OSS::Persistent::RESTKeyValueStore* getKeyValueStore();
-    /// Returns a pointer to the key value store
-  
-  
+#if ENABLE_FEATURE_LIBRE
   bool startLocalRegistrationAgent(
     const std::string& agentName,
     const std::string& route,
@@ -381,7 +349,8 @@ public:
     const SIPMessage::Ptr& pMsg, 
     const std::string& error);
     /// Notified when a response is received for a local register
-  
+
+#endif
    
 protected:
   void handleRequest(
@@ -390,7 +359,7 @@ protected:
     const OSS::SIP::SIPTransaction::Ptr& pTransaction);
     /// This is the incoming request callback that will be attached to the stack
 
-  void handleAckFor2xxTransaction(
+  void handleAckOr2xxTransaction(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport);
     /// Handler of ACK and 200 Ok retransmission
@@ -420,10 +389,12 @@ protected:
 
   SIPB2BHandler::Ptr findHandler(SIPB2BHandler::MessageType type) const;
     /// Returns the iterator for the request handler if one is registered
-  
+
+public:
+  SIPB2BHandler::Ptr findDomainRouter(const std::string& domain) const;
   SIPB2BHandler::Ptr findDomainRouter(const OSS::SIP::SIPMessage::Ptr& pMsg) const;
     /// Returns the iterator for the domain router if one is registered
-public:
+  
   virtual SIPMessage::Ptr postMidDialogTransactionCreated(
     const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction);
     /// Called by handlers when a mid dialog trasaction has been created
@@ -435,10 +406,17 @@ public:
     // This allows the application to execute a retarget prior to actual route scripts being called
     //
 
+  void setExternalDispatch(const ExternalDispatch& externalDispatch);
+    /// Allow the application to set it's own transaction dispatcher
  
+  void addPendingSubscription(const std::string& callId);
+  void removePendingSubscription(const std::string& callId);
+  bool isSubscriptionPending(const std::string& callId) const;
+  
+  int getMaxThreadCount() const;
+  
 private:
   OSS::thread_pool _threadPool;
-  SIPStack _stack;
   OSS::mutex_critic_sec _csDialogsMutex;
   bool _useSourceAddressForResponses;
   MessageHandlers _handlers;
@@ -448,34 +426,30 @@ private:
   PostRouteCallback _postRouteCallback;
   std::string _userAgentName;
   SIPB2BHandler* _pDefaultHandler;
+  ExternalDispatch _externalDispatch;
+  std::set<std::string> _pendingSubscriptions;
+  mutable OSS::mutex_critic_sec _pendingSubscriptionsMutex;
+  int _maxThreadCount; 
 
   //
   // Plugins
   //
   SIPB2BUserAgentHandlerList _userAgentHandler;
   SIPB2BUserAgentHandlerLoader _pluginLoader;
-  
-  ///
-  /// REST Key Value Store
-  ///
-  OSS::Persistent::RESTKeyValueStore* _pKeyStore;
-  
+   
+#if ENABLE_FEATURE_LIBRE
   //
   // Local registration agent
   //
   SIPB2BRegisterAgent _registerAgent;
   std::string _registerAgentRoute;
+#endif
+  
 };
 
 //
 // Inlines
 //
-
-inline SIPStack& SIPB2BTransactionManager::stack()
-{
-  return _stack;
-}
-
 inline OSS::thread_pool& SIPB2BTransactionManager::threadPool()
 {
   return _threadPool;
@@ -511,60 +485,25 @@ inline const SIPB2BTransactionManager::PostRouteCallback& SIPB2BTransactionManag
   return _postRouteCallback;
 }
 
-inline bool SIPB2BTransactionManager::getExternalAddress(
-    const OSS::Net::IPAddress& internalIp,
-    std::string& externalIp) const
-{
-  return const_cast<SIPTransportService&>(const_cast<SIPStack&>(_stack).transport()).getExternalAddress(internalIp, externalIp);
-}
-
-inline bool SIPB2BTransactionManager::getExternalAddress(
-  const std::string& proto,
-  const OSS::Net::IPAddress& internalIp,
-  std::string& externalIp) const
-{
-  return const_cast<SIPTransportService&>(const_cast<SIPStack&>(_stack).transport()).getExternalAddress(proto, internalIp, externalIp);
-}
-
-inline bool SIPB2BTransactionManager::getInternalAddress(
-  const OSS::Net::IPAddress& externalIp,
-  OSS::Net::IPAddress& internalIp) const
-{
-  return const_cast<SIPTransportService&>(const_cast<SIPStack&>(_stack).transport()).getInternalAddress(
-   externalIp, internalIp);
-}
-
-inline bool SIPB2BTransactionManager::getInternalAddress(
-  const std::string& proto,
-  const OSS::Net::IPAddress& externalIp,
-  OSS::Net::IPAddress& internalIp) const
-{
-  return const_cast<SIPTransportService&>(const_cast<SIPStack&>(_stack).transport()).getInternalAddress(
-    proto, externalIp, internalIp);
-}
-
-inline const std::string& SIPB2BTransactionManager::getUserAgentName() const
-{
-  return _userAgentName;
-}
-
-inline void SIPB2BTransactionManager::setUserAgentName(const std::string& userAgentName)
-{
-  _userAgentName = userAgentName;
-}
-
 inline void SIPB2BTransactionManager::registerDefaultHandler(SIPB2BHandler* pDefaultHandler)
 {
   _pDefaultHandler = pDefaultHandler;
 }
 
-inline OSS::Persistent::RESTKeyValueStore* SIPB2BTransactionManager::getKeyValueStore()
+inline void SIPB2BTransactionManager::setExternalDispatch(const ExternalDispatch& externalDispatch)
 {
-  return _pKeyStore;
+  _externalDispatch = externalDispatch;;
+}
+
+inline int SIPB2BTransactionManager::getMaxThreadCount() const
+{
+  return _maxThreadCount;
 }
 
 
 } } } // OSS::SIP::B2BUA
+
+#endif // ENABLE_FEATURE_B2BUA
 
 #endif
 

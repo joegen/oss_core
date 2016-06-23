@@ -26,6 +26,7 @@
 
 #include "OSS/OSS.h"
 
+#if HAVE_BOOST_IOSTREAMS
 
 namespace OSS {
 
@@ -43,6 +44,8 @@ void OSS_API compress_bzip_deflate(const std::vector<char>& in, std::vector<char
   /// Deflate data using bzip2 compression algorithm
 
 } // OSS
+
+#endif //#if HAVE_BOOST_IOSTREAM
 
 #endif // OSS_COMPRESS_H_INCLUDED
 

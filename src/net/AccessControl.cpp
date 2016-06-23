@@ -22,63 +22,16 @@
 #include "OSS/UTL/Logger.h"
 #include "OSS/Net/Net.h"
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <net/route.h>
+#include <sys/ioctl.h>
+
+
 namespace OSS {
 namespace Net {
 
-static const std::string DOCUMENT_PREFIX = "/root/access-control";
-static const std::string BANNED_PREFIX = "/banned/";
-static const std::string TRUSTED_PREFIX = "/trustedip/";
-static const std::string TRUSTED_NET_PREFIX = "/trustednet/";
-static const std::string DOCUMENT_PREFIX_BANNED = DOCUMENT_PREFIX + BANNED_PREFIX;
-static const std::string DOCUMENT_PREFIX_TRUSTED = DOCUMENT_PREFIX + TRUSTED_PREFIX;
-static const std::string DOCUMENT_PREFIX_TRUSTED_NET = DOCUMENT_PREFIX + TRUSTED_NET_PREFIX;
- 
-
-static std::string get_prefix(OSS::Persistent::KeyValueStore* pStore, const std::string& prefix, const std::string& def)
-{
-  if (pStore && !pStore->getKeyPrefix().empty())
-  {
-    if (!OSS::string_ends_with(pStore->getKeyPrefix(), "/"))
-      return pStore->getKeyPrefix() + prefix;
-    else
-      return OSS::string_left(pStore->getKeyPrefix(), pStore->getKeyPrefix().length() - 1) + prefix;
-  }
-  return def;
-}
-
-static std::string get_banned_prefix(OSS::Persistent::KeyValueStore* pStore)
-{ 
-  return get_prefix(pStore, BANNED_PREFIX, DOCUMENT_PREFIX_BANNED);
-}
-
-static std::string get_trusted_prefix(OSS::Persistent::KeyValueStore* pStore)
-{ 
-  return get_prefix(pStore, TRUSTED_PREFIX, DOCUMENT_PREFIX_TRUSTED);
-}
-
-static std::string get_trusted_net_prefix(OSS::Persistent::KeyValueStore* pStore)
-{ 
-  return get_prefix(pStore, TRUSTED_NET_PREFIX, DOCUMENT_PREFIX_TRUSTED_NET);
-}
-
-static std::time_t to_time_t(const boost::posix_time::ptime& t)
-{
-  boost::posix_time::ptime epoch(boost::gregorian::date(1970,1,1));
-  boost::posix_time::time_duration::sec_type x = (t - epoch).total_seconds();
-  return time_t(x);
-}
-
-static void get_path_vector(const std::string& path, std::vector<std::string>& pathVector)
-{
-  std::vector<std::string> tokens = OSS::string_tokenize(path, "/");
   
-  for (std::vector<std::string>::const_iterator iter = tokens.begin(); iter != tokens.end(); iter++)
-  {
-    if (!iter->empty())
-      pathVector.push_back(*iter);
-  }
-}
-
 AccessControl::AccessControl() :
   _enabled(false),
   _packetsPerSecondThreshold(100),
@@ -86,19 +39,8 @@ AccessControl::AccessControl() :
   _currentIterationCount(0),
   _autoBanThresholdViolators(true),
   _banLifeTime(0),
-  _pStore(0)
-{
-  _lastTime = boost::posix_time::microsec_clock::local_time();
-}
-
-AccessControl::AccessControl(OSS::Persistent::KeyValueStore* pStore) :
-  _enabled(false),
-  _packetsPerSecondThreshold(100),
-  _thresholdViolationRate(50),
-  _currentIterationCount(0),
-  _autoBanThresholdViolators(true),
-  _banLifeTime(0),
-  _pStore(pStore)
+  _denyAllIncoming(false),
+  _autoNullRoute(false)
 {
   _lastTime = boost::posix_time::microsec_clock::local_time();
 }
@@ -200,92 +142,81 @@ bool AccessControl::isBannedAddress(const boost::asio::ip::address& source)
 {
   if (!_enabled)
     return false;
-
+  
   bool banned = false;
   _packetCounterMutex.lock();
 
   if (_banLifeTime > 0)
   {
-    if (!_pStore)
+    boost::posix_time::ptime now(boost::posix_time::microsec_clock::local_time());
+    std::vector<boost::asio::ip::address> parole;
+    for (std::map<boost::asio::ip::address, boost::posix_time::ptime>::iterator iter = _banned.begin();
+      iter != _banned.end(); iter++)
     {
-      boost::posix_time::ptime now(boost::posix_time::microsec_clock::local_time());
-      std::vector<boost::asio::ip::address> parole;
-      for (std::map<boost::asio::ip::address, boost::posix_time::ptime>::iterator iter = _blackList.begin();
-        iter != _blackList.end(); iter++)
-      {
-        boost::posix_time::time_duration timeDiff = now - iter->second;
-        if (timeDiff.total_milliseconds() >  _banLifeTime * 1000)
-          parole.push_back(iter->first);
-      }
-
-      for (std::vector<boost::asio::ip::address>::iterator iter = parole.begin(); iter != parole.end(); iter++)
-      {
-        _blackList.erase(*iter);
-      }
+      boost::posix_time::time_duration timeDiff = now - iter->second;
+      if (timeDiff.total_milliseconds() >  _banLifeTime * 1000)
+        parole.push_back(iter->first);
     }
-    else
-    {
-      OSS::Persistent::KVRecords records;
-      _pStore->getRecords(get_banned_prefix(_pStore), records);
-      
-      std::vector<std::string> parole;
-      boost::posix_time::ptime now(boost::posix_time::microsec_clock::local_time());
-      
-      for (OSS::Persistent::KVRecords::iterator iter = records.begin();
-        iter != records.end(); iter++)
-      {
-        std::time_t t = OSS::string_to_number<std::time_t>(iter->value);
-        boost::posix_time::ptime violationTime = boost::posix_time::from_time_t(t);  
-        boost::posix_time::time_duration timeDiff = now - violationTime;
-        if (timeDiff.total_milliseconds() >  _banLifeTime * 1000)
-          parole.push_back(iter->key);
-      }
 
-      for (std::vector<std::string>::iterator iter = parole.begin(); iter != parole.end(); iter++)
+    for (std::vector<boost::asio::ip::address>::iterator iter = parole.begin(); iter != parole.end(); iter++)
+    {
+      if (_autoNullRoute)
       {
-        _pStore->del(*iter);
+        delNullRoute(*iter);
       }
+      _banned.erase(*iter);
     }
   }
 
   if (isWhiteListed(source))
+  {
     banned = false;
+  }
   else
   {
-    if (!_pStore)
+    if (_denyAllIncoming)
     {
-      banned = _blackList.find(source) != _blackList.end();
+      banned = true;
     }
     else
     {
-      std::string key = get_banned_prefix(_pStore) + source.to_string() + std::string("/");
-      std::string value;
-      banned = _pStore->get(key, value);
+      banned = _banned.find(source) != _banned.end();
     }
+    
+    if (!banned)
+    {
+      banned = isBlackListed(source);
+    }
+    
   }
   _packetCounterMutex.unlock();
+  
+  if (banned && _autoNullRoute)
+  {
+    addNullRoute(source);
+  }
 
   return banned;
 }
 
+void AccessControl::getBannedAddresses(std::vector<boost::asio::ip::address>& banned)
+{
+  for (BannedSources::iterator iter = _banned.begin(); iter != _banned.end(); iter++)
+  {
+    banned.push_back(iter->first);
+  }
+}
 void AccessControl::banAddress(const boost::asio::ip::address& source)
 {
   if (!_enabled)
     return;
   
   _packetCounterMutex.lock();
-  
-  if (!_pStore)
+  _banned[source] = boost::posix_time::ptime(boost::posix_time::microsec_clock::local_time());
+  if (_banCallback)
   {
-    _blackList[source] = boost::posix_time::ptime(boost::posix_time::microsec_clock::local_time());
+    _banCallback(source);
   }
-  else
-  {
-    std::time_t now = to_time_t(boost::posix_time::ptime(boost::posix_time::microsec_clock::local_time()));
-       
-    _pStore->put(get_banned_prefix(_pStore) + source.to_string() + std::string("/"), OSS::string_from_number<std::time_t>(now));
-  }
-  
   _packetCounterMutex.unlock();
 }
 
@@ -295,14 +226,17 @@ void AccessControl::clearAddress(const boost::asio::ip::address& source, bool ad
     return;
   _packetCounterMutex.lock();
   
-  if (!_pStore)
-    _blackList.erase(source);
-  else
-    _pStore->del(get_banned_prefix(_pStore) + source.to_string() + std::string("/"));
-  
+  _banned.erase(source);
+  _blackList.erase(source);
+
   if (addToWhiteList)
     whiteListAddress(source, false);
   _packetCounterMutex.unlock();
+  
+  if (_autoNullRoute)
+  {
+    delNullRoute(source);
+  }
 }
 
 
@@ -310,38 +244,39 @@ void AccessControl::whiteListAddress(const boost::asio::ip::address& address, bo
 {
   _packetCounterMutex.lock();
   
-  if (!_pStore)
-  {
-    if (removeFromBlackList)
-      _blackList.erase(address);
-    
-    _whiteList.insert(address);
-  }
-  else
-  {
-    if (removeFromBlackList)
-      _pStore->del(get_banned_prefix(_pStore) + address.to_string() + std::string("/"));
-    
-    _pStore->put(get_trusted_prefix(_pStore) + address.to_string() + std::string("/"), "-");
-  }
+  OSS_LOG_NOTICE("AccessControl::whiteListAddress - " << address);
+  
+  if (removeFromBlackList)
+    _banned.erase(address);
+
+  _whiteList.insert(address);
+
   _packetCounterMutex.unlock();
 }
+
+void AccessControl::clearWhiteList(const boost::asio::ip::address& address)
+{
+  _packetCounterMutex.lock();
+  _whiteList.erase(address);
+  _packetCounterMutex.unlock();
+}
+
 
 void AccessControl::whiteListNetwork(const std::string& network)
 {
   _packetCounterMutex.lock();
   
-  if (!_pStore)
-  {
-    _networkWhiteList.insert(network);
-  }
-  else
-  {
-    std::string key = network;
-    OSS::string_replace(key, "/", "-");
-    _pStore->put(get_trusted_net_prefix(_pStore) + key + std::string("/"), "-");
-  }
+  OSS_LOG_NOTICE("AccessControl::whiteListNetwork - " << network);
   
+   _networkWhiteList.insert(network);
+
+  _packetCounterMutex.unlock();
+}
+
+void AccessControl::clearWhiteListNetwork(const std::string& network)
+{
+  _packetCounterMutex.lock();
+  _networkWhiteList.erase(network);
   _packetCounterMutex.unlock();
 }
 
@@ -350,16 +285,8 @@ bool AccessControl::isWhiteListed(const boost::asio::ip::address& address) const
   bool whiteListed = false;
  
   _packetCounterMutex.lock();
-  
-  if (!_pStore)
-  {
-    whiteListed = _whiteList.find(address) != _whiteList.end();
-  }
-  else
-  {
-    std::string value;
-    whiteListed = _pStore->get(get_trusted_prefix(_pStore) + address.to_string() + std::string("/"), value);
-  }
+
+  whiteListed = _whiteList.find(address) != _whiteList.end();
   
   _packetCounterMutex.unlock();
   
@@ -375,36 +302,202 @@ bool AccessControl::isWhiteListedNetwork(const boost::asio::ip::address& address
   if (ec)
     return false;
 
-  if (!_pStore)
+  _packetCounterMutex.lock();
+  for (std::set<std::string>::const_iterator iter = _networkWhiteList.begin();
+    iter != _networkWhiteList.end(); iter++)
   {
-    for (std::set<std::string>::const_iterator iter = _networkWhiteList.begin();
-      iter != _networkWhiteList.end(); iter++)
+    if (OSS::socket_address_cidr_verify(ipAddress, *iter))
     {
-      if (OSS::socket_address_cidr_verify(ipAddress, *iter))
-        return true;
-    }
-  }
-  else
-  {
-    OSS::Persistent::KVRecords records;
-    std::string filter = get_trusted_net_prefix(_pStore) + "*";
-    _pStore->getRecords(filter, records);
-    
-    for (OSS::Persistent::KVRecords::iterator iter = records.begin(); iter != records.end(); iter++)
-    {
-      std::vector<std::string> keyVector;
-      get_path_vector(iter->key, keyVector);
-      if (!keyVector.empty())
-      {
-        std::string net = keyVector.back();
-
-        if (OSS::socket_address_cidr_verify(ipAddress, net))
-          return true;
-      }
+      _packetCounterMutex.unlock();
+      return true;
     }
   }
   
+  _packetCounterMutex.unlock();
   return false;
+}
+
+
+void AccessControl::blackListAddress(const boost::asio::ip::address& address, bool removeFromWhiteList)
+{
+  _packetCounterMutex.lock();
+  
+  OSS_LOG_NOTICE("AccessControl::blackListAddress - " << address);
+  
+  if (removeFromWhiteList)
+    _whiteList.erase(address);
+
+  _blackList.insert(address);
+
+  _packetCounterMutex.unlock();
+}
+
+void AccessControl::blackListNetwork(const std::string& network)
+{
+  _packetCounterMutex.lock();
+  
+  OSS_LOG_NOTICE("AccessControl::blackListNetwork - " << network);
+  
+  _networkBlackList.insert(network);
+
+  _packetCounterMutex.unlock();
+}
+
+bool AccessControl::isBlackListed(const boost::asio::ip::address& address) const
+{
+  bool blackListed = false;
+ 
+  _packetCounterMutex.lock();
+
+  blackListed = _blackList.find(address) != _blackList.end();
+  
+  _packetCounterMutex.unlock();
+  
+  if (!blackListed)
+  {
+    blackListed = isBlackListedNetwork(address);
+  }
+  
+  if (blackListed && _banCallback)
+  {
+    _banCallback(address);
+  }
+  
+  return blackListed;
+}
+
+
+bool AccessControl::isBlackListedNetwork(const boost::asio::ip::address& address) const
+{
+  boost::system::error_code ec;
+  std::string ipAddress = address.to_string(ec);
+  if (ec)
+  {
+    return false;
+  }
+
+  _packetCounterMutex.lock();
+  for (std::set<std::string>::const_iterator iter = _networkBlackList.begin();
+    iter != _networkBlackList.end(); iter++)
+  {
+    if (OSS::socket_address_cidr_verify(ipAddress, *iter))
+    {
+      _packetCounterMutex.unlock();
+      return true;
+    }
+  }
+  
+  _packetCounterMutex.unlock();
+  return false;
+}
+
+void AccessControl::clearNetwork(const std::string& cidr)
+{
+  _packetCounterMutex.lock();
+  _networkBlackList.erase(cidr);
+  _packetCounterMutex.unlock();
+}
+
+
+void AccessControl::denyAll(bool denyAll)
+{
+  OSS_LOG_NOTICE("AccessControl::denyAll set to " << (denyAll ? "true" : "false"));
+  _denyAllIncoming = denyAll;
+}
+
+bool AccessControl::addNullRoute(long host)            
+{ 
+#if OSS_OS == OSS_OS_LINUX
+   //
+   // Source:  https://oroboro.com/linux-routing-tables-in-c/
+   //
+  
+   // create the control socket.
+   int fd = socket( PF_INET, SOCK_DGRAM, IPPROTO_IP );
+ 
+   struct rtentry route;
+   memset( &route, 0, sizeof( route ) );
+ 
+   // set the gateway to 0.
+   struct sockaddr_in *addr = (struct sockaddr_in *)&route.rt_gateway;
+   (*addr).sin_family = AF_INET;
+   (*addr).sin_addr.s_addr = 0;
+ 
+   // set the host we are rejecting. 
+   addr = (struct sockaddr_in*) &route.rt_dst;
+   (*addr).sin_family = AF_INET;
+   (*addr).sin_addr.s_addr = htonl(host);
+ 
+   // Set the mask. In this case we are using 255.255.255.255, to block a single
+   // IP. But you could use a less restrictive mask to block a range of IPs. 
+   // To block and entire C block you would use 255.255.255.0, or 0x00FFFFFFF
+   addr = (struct sockaddr_in*) &route.rt_genmask;
+   (*addr).sin_family = AF_INET;
+   (*addr).sin_addr.s_addr = 0xFFFFFFFF;
+ 
+   // These flags mean: this route is created "up", or active
+   // The blocked entity is a "host" as opposed to a "gateway"
+   // The packets should be rejected. On BSD there is a flag RTF_BLACKHOLE
+   // that causes packets to be dropped silently. We would use that if Linux
+   // had it. RTF_REJECT will cause the network interface to signal that the 
+   // packets are being actively rejected.
+   route.rt_flags = RTF_UP | RTF_HOST | RTF_REJECT;
+   route.rt_metric = 0;
+ 
+   // this is where the magic happens..
+   if ( ioctl( fd, SIOCADDRT, &route ) )
+   {
+      close( fd );
+      return false;
+   }
+ 
+   // remember to close the socket lest you leak handles.
+   close( fd );
+   return true; 
+#else
+   return false;
+#endif
+}
+
+bool AccessControl::delNullRoute(long host)            
+{ 
+#if OSS_OS == OSS_OS_LINUX
+   //
+   // Source:  https://oroboro.com/linux-routing-tables-in-c/
+   //
+  
+   int fd = socket( PF_INET, SOCK_DGRAM, IPPROTO_IP );
+ 
+   struct rtentry route;
+   memset( &route, 0, sizeof( route ) );
+ 
+   struct sockaddr_in *addr = (struct sockaddr_in *)&route.rt_gateway;
+   (*addr).sin_family = AF_INET;
+   (*addr).sin_addr.s_addr = 0;
+ 
+   addr = (struct sockaddr_in*) &route.rt_dst;
+   (*addr).sin_family = AF_INET;
+   (*addr).sin_addr.s_addr = htonl(host);
+ 
+   addr = (struct sockaddr_in*) &route.rt_genmask;
+   (*addr).sin_family = AF_INET;
+   (*addr).sin_addr.s_addr = 0xFFFFFFFF;
+ 
+   route.rt_flags = RTF_UP | RTF_HOST | RTF_REJECT;
+   route.rt_metric = 0;
+ 
+   // this time we are deleting the route:
+   if ( ioctl( fd, SIOCDELRT, &route ) )
+   {
+      close( fd );
+      return false;
+   }
+ 
+   close( fd );
+   return true; 
+#else
+   return false;
+#endif
 }
 
 } } // OSS::SIP

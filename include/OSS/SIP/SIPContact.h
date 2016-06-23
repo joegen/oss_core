@@ -34,6 +34,7 @@ namespace SIP {
 class SIPMessage;
 
 typedef SIPFrom ContactURI;
+typedef std::vector<ContactURI> ContactList;
 
 class OSS_API SIPContact: public SIPParser
   /// CSeq header lazy parser.
@@ -55,6 +56,9 @@ public:
     ///   std::string hdr = msg.hdrGet(OSS::SIP::HDR_CONTACT);
     ///   SIPContact contact(hdr);
   
+  SIPContact(const ContactList& contacts);
+    /// Create a new SIPcontact from a vector of contacts
+    
   SIPContact(const std::vector<std::string>& contacts);
     /// Create a new SIPcontact from a vector of contacts
 
@@ -68,6 +72,9 @@ public:
     /// Copy the content from another a contact string.
   
   SIPContact& operator = (const std::vector<std::string>& contacts);
+    /// Copy the content from another a contact vector.
+  
+  SIPContact& operator = (const ContactList& contacts);
     /// Copy the content from another a contact vector.
 
   SIPContact& operator = (const SIPContact& contact);
@@ -100,9 +107,12 @@ public:
   static bool popTopURI(std::string& contact, ContactURI& topURI);
     /// Pop the top most URI from a contact header string
 
+  static int msgGetContacts(SIPMessage* pMsg, ContactList& contacts);
+    /// Get all the contacts as a vector of ContactURI
+    /// Returns the number of contact retrieved
 
   static int msgGetContacts(SIPMessage* pMsg, std::vector<std::string>& contacts);
-    /// Get all the contacts as a vector
+    /// Get all the contacts as a vector of string
     /// Returns the number of contact retrieved
 };
 

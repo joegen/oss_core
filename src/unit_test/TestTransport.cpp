@@ -1,12 +1,7 @@
 #include "gtest/gtest.h"
-
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/SIP/SIPTransportService.h" 
-
-#include "OSS/Net/DTLSContext.h"
-#include "OSS/Net/DTLSSession.h"
-#include "OSS/Net/DTLSSocket.h"
-#include "OSS/RTP/SRTPProfile.h"
+#include "OSS/Net/Net.h"
 
 using namespace OSS::SIP;
 
@@ -38,352 +33,81 @@ std::string password_callback(
 
 TEST(TransportTest, test_tls_transport)
 {
-  boost::asio::ssl::context& tlsServerContext = tlsServer.tlsServerContext();
-  boost::asio::ssl::context& tlsClientContext = tlsServer.tlsClientContext();
-
-
-  tlsClientContext.set_verify_mode( boost::asio::ssl::context::verify_peer);
-  tlsServerContext.set_verify_mode(boost::asio::ssl::context::verify_peer | boost::asio::ssl::context::verify_fail_if_no_peer_cert);
-  
- 
-  ASSERT_TRUE(boost::filesystem::exists(SERVER_KEY_FILE));
-  ASSERT_TRUE(boost::filesystem::exists(SERVER_CERT_FILE));
-  ASSERT_TRUE(boost::filesystem::exists(TLS_CA_FILE));
-  
- 
-  tlsServerContext.set_password_callback(password_callback);
-  tlsServerContext.use_certificate_file(SERVER_CERT_FILE, boost::asio::ssl::context::pem);
-  tlsServerContext.use_private_key_file(SERVER_KEY_FILE, boost::asio::ssl::context::pem);
-  tlsServerContext.load_verify_file(TLS_CA_FILE);
-  
-  tlsClientContext.set_password_callback(password_callback);
-  tlsClientContext.use_certificate_file(SERVER_CERT_FILE, boost::asio::ssl::context::pem);
-  tlsClientContext.use_private_key_file(SERVER_KEY_FILE, boost::asio::ssl::context::pem);
-  tlsClientContext.load_verify_file(TLS_CA_FILE);
-
-  
-  OSS::Net::IPAddress localAddress("127.0.0.1");
-  OSS::Net::IPAddress remoteAddress("127.0.0.1");
-  remoteAddress.setPort(35061);
-  
-
-  SIPListener::SubNets subnets;
-  subnets.push_back("0.0.0.0/0");
-  tlsServer.addTLSTransport("127.0.0.1", "35061", "127.0.0.1", subnets);
-  
-  tlsServer.run();
-
-  OSS::thread_sleep(100);
-  
-  SIPTransportSession::Ptr pClient = tlsServer.createClientTlsTransport(localAddress, remoteAddress);
-  
-  ASSERT_TRUE(pClient);
-  
-  OSS::thread_sleep(100);
-  
-  std::ostringstream msg;
-  msg << "OPTIONS sips:900@127.0.0.1:35061 SIP/2.0" << CRLF;
-  msg << "To: <sips:900@127.0.0.1>" << CRLF;
-  msg << "From: 9011 <sips:9011@127.0.0.1>;tag=6657e067" << CRLF;
-  msg << "Via: SIP/2.0/TLS 127.0.0.1:5061;branch=z9hG4bK-d87543-419889160-1--d87543-;rport" << CRLF;
-  msg << "Call-ID: 885e5e180c04c509" << CRLF;
-  msg << "CSeq: 1 OPTIONS" << CRLF;
-  msg << "Contact: <sips:9011@127.0.0.1:5061>" << CRLF << CRLF;
-  
-  SIPMessage::Ptr pMsg(new SIPMessage(msg.str()));
-  
-  pClient->writeKeepAlive();
-  pClient->writeMessage(pMsg);
-
-  
-  OSS::thread_sleep(100);
-  tlsServer.stop();
-  
-  ASSERT_TRUE(tlsDispatched);
-}
-
-void handle_dtls_server(OSS::Net::DTLSSession* pServer)
-{
-  //int fd = pServer->getFd();
- 
-  //
-  // Poll for new connections
-  //
-  
-  OSS::Net::IPAddress remotePeer;
-  ASSERT_TRUE(pServer->socketAccept(remotePeer));
-  
-  std::string remoteAddress = remotePeer.toIpPortString();
-  ASSERT_STREQ(remoteAddress.c_str(), "127.0.0.1:30000");
-  
-  char buf[1024];
-  int len = 0;
-  while (true)
+  if (boost::filesystem::exists(SERVER_KEY_FILE))
   {
-    OSS::Net::DTLSSession::PacketType packetType = pServer->socketPeek();
-    if (packetType == OSS::Net::DTLSSession::DTLS)
-    {
-      len = pServer->read(buf, sizeof(buf));
-      std::string msg(buf, len);
-      if (msg == "exit")
-      {
-        break;
-      }
-      pServer->write(buf, len);
-    }
-    else if (packetType == OSS::Net::DTLSSession::RTP)
-    {
-      len = pServer->readRaw(buf, sizeof(buf));
-      std::string rtpResponse("TypeRTP");
-      ASSERT_EQ(pServer->write(rtpResponse.c_str(), rtpResponse.size()), rtpResponse.size());
-    }
+    boost::asio::ssl::context& tlsServerContext = tlsServer.tlsServerContext();
+    boost::asio::ssl::context& tlsClientContext = tlsServer.tlsClientContext();
+
+
+    tlsClientContext.set_verify_mode( boost::asio::ssl::context::verify_peer);
+    tlsServerContext.set_verify_mode(boost::asio::ssl::context::verify_peer | boost::asio::ssl::context::verify_fail_if_no_peer_cert);
+
+
+    ASSERT_TRUE(boost::filesystem::exists(SERVER_KEY_FILE));
+    ASSERT_TRUE(boost::filesystem::exists(SERVER_CERT_FILE));
+    ASSERT_TRUE(boost::filesystem::exists(TLS_CA_FILE));
+
+
+    tlsServerContext.set_password_callback(password_callback);
+    tlsServerContext.use_certificate_file(SERVER_CERT_FILE, boost::asio::ssl::context::pem);
+    tlsServerContext.use_private_key_file(SERVER_KEY_FILE, boost::asio::ssl::context::pem);
+    tlsServerContext.load_verify_file(TLS_CA_FILE);
+
+    tlsClientContext.set_password_callback(password_callback);
+    tlsClientContext.use_certificate_file(SERVER_CERT_FILE, boost::asio::ssl::context::pem);
+    tlsClientContext.use_private_key_file(SERVER_KEY_FILE, boost::asio::ssl::context::pem);
+    tlsClientContext.load_verify_file(TLS_CA_FILE);
+
+
+    OSS::Net::IPAddress localAddress("127.0.0.1");
+    OSS::Net::IPAddress remoteAddress("127.0.0.1");
+    remoteAddress.setPort(35061);
+
+
+    SIPListener::SubNets subnets;
+    subnets.push_back("0.0.0.0/0");
+    tlsServer.addTLSTransport("127.0.0.1", "35061", "127.0.0.1", subnets);
+
+    tlsServer.run();
+
+    OSS::thread_sleep(100);
+
+    SIPTransportSession::Ptr pClient = tlsServer.createClientTlsTransport(localAddress, remoteAddress);
+
+    ASSERT_TRUE(pClient);
+
+    OSS::thread_sleep(100);
+
+    std::ostringstream msg;
+    msg << "OPTIONS sips:900@127.0.0.1:35061 SIP/2.0" << CRLF;
+    msg << "To: <sips:900@127.0.0.1>" << CRLF;
+    msg << "From: 9011 <sips:9011@127.0.0.1>;tag=6657e067" << CRLF;
+    msg << "Via: SIP/2.0/TLS 127.0.0.1:5061;branch=z9hG4bK-d87543-419889160-1--d87543-;rport" << CRLF;
+    msg << "Call-ID: 885e5e180c04c509" << CRLF;
+    msg << "CSeq: 1 OPTIONS" << CRLF;
+    msg << "Contact: <sips:9011@127.0.0.1:5061>" << CRLF << CRLF;
+
+    SIPMessage::Ptr pMsg(new SIPMessage(msg.str()));
+
+    pClient->writeKeepAlive();
+    pClient->writeMessage(pMsg);
+
+
+    OSS::thread_sleep(100);
+    tlsServer.stop();
+
+    ASSERT_TRUE(tlsDispatched);
   }
 }
 
-void handle_dtls_external_server(OSS::Net::DTLSSocket* pServer)
+TEST(TransportTest, test_get_default_address)
 {
-  //int fd = pServer->getFd();
- 
-  //
-  // Poll for new connections
-  //
-  
-  
-  ASSERT_TRUE(pServer->sslAccept());
-  OSS::Net::IPAddress remotePeer = pServer->getRemoteAddress();
-  std::string remoteAddress = remotePeer.toIpPortString();
-  ASSERT_STREQ(remoteAddress.c_str(), "127.0.0.1:30000");
-  
-  char buf[1024];
-  int len = 0;
-  while (true)
-  {
-    char peekBuf[1];
-    pServer->peek(peekBuf,  1);
-    OSS::Net::DTLSSession::PacketType packetType = OSS::Net::DTLSSession::peek(peekBuf);
-    
-    if (packetType == OSS::Net::DTLSSession::DTLS)
-    {
-      len = pServer->sslRead(buf, sizeof(buf));
-      std::string msg(buf, len);
-      if (msg == "exit")
-      {
-        break;
-      }
-      pServer->sslWrite(buf, len);
-    }
-    else if (packetType == OSS::Net::DTLSSession::RTP)
-    {
-      len = pServer->read(buf, sizeof(buf));
-      std::string rtpResponse("TypeRTP");
-      ASSERT_EQ(pServer->sslWrite(rtpResponse.c_str(), rtpResponse.size()), rtpResponse.size());
-    }
-  }
+  std::string iface;
+  ASSERT_TRUE(OSS::net_get_default_interface_name(iface));
+  ASSERT_FALSE(iface.empty());
+  std::cout << "TransportTest::test_get_default_address result: interface-name=" << iface << std::endl;
+  std::string address;
+  ASSERT_TRUE(OSS::net_get_interface_address(iface, address));
+  ASSERT_FALSE(address.empty());
+  std::cout << "TransportTest::test_get_default_address result: address=" << address << std::endl;
 }
-
-TEST(TransportTest, test_dtls_transport)
-{
-  ASSERT_TRUE(OSS::Net::DTLSContext::initialize("ossapp.com", true));
-  ASSERT_TRUE(OSS::Net::DTLSContext::instance());
-  ASSERT_TRUE(OSS::Net::DTLSContext::willVerifyCerts());
-  
-  //
-  // Create the client and server sockets
-  //
-  int client, server;
-	union {
-		struct sockaddr_storage ss;
-		struct sockaddr_in s4;
-		struct sockaddr_in6 s6;
-	} server_addr, client_addr;
-  
-  memset((void *) &server_addr, 0, sizeof(struct sockaddr_storage));
-	memset((void *) &client_addr, 0, sizeof(struct sockaddr_storage));
-  
-  inet_pton(AF_INET, "127.0.0.1", &client_addr.s4.sin_addr);
-  client_addr.s4.sin_family = AF_INET;
-	client_addr.s4.sin_port = htons(30000);
-  
-  inet_pton(AF_INET, "127.0.0.1", &server_addr.s4.sin_addr);
-  server_addr.s4.sin_family = AF_INET;
-	server_addr.s4.sin_port = htons(30002);
-  
-  client = socket(server_addr.ss.ss_family, SOCK_DGRAM, 0);
-  server = socket(server_addr.ss.ss_family, SOCK_DGRAM, 0);
-  
-  bind(client, (const struct sockaddr *) &client_addr, sizeof(struct sockaddr_in));
-  bind(server, (const struct sockaddr *) &server_addr, sizeof(struct sockaddr_in));
-  
-  OSS::Net::DTLSSession* clientSession = new OSS::Net::DTLSSession(OSS::Net::DTLSSession::CLIENT);
-  OSS::Net::DTLSSession* serverSession = new OSS::Net::DTLSSession(OSS::Net::DTLSSession::SERVER);
-  
-  clientSession->attachSocket(client);
-  serverSession->attachSocket(server);
-  
-  boost::thread t(boost::bind(handle_dtls_server, serverSession));
-  
-  OSS::thread_sleep(500);
- 
-
-  OSS::Net::IPAddress connectAddress("127.0.0.1");
-  connectAddress.setPort(30002);
-  
-  ASSERT_TRUE(!clientSession->isConnected());
-  ASSERT_TRUE(clientSession->socketConnect(connectAddress, false));
-  ASSERT_TRUE(clientSession->isConnected());
-  
-  OSS::RTP::SRTPProfile srtpProfile;
-  ASSERT_TRUE(srtpProfile.create(*clientSession));
-  ASSERT_TRUE(srtpProfile.isValid());
-  ASSERT_TRUE(!srtpProfile.getLocalFingerPrint().empty());
-  ASSERT_TRUE(!srtpProfile.getRemoteFingerPrint().empty());
-  ASSERT_TRUE(!srtpProfile.getClientMasterKey().empty());
-  ASSERT_TRUE(!srtpProfile.getServerMasterKey().empty());
-  ASSERT_TRUE(!srtpProfile.getClientMasterSalt().empty());
-  ASSERT_TRUE(!srtpProfile.getServerMasterSalt().empty());
-  
-  std::cout << "SHA-256 (local)  :  " << srtpProfile.getLocalFingerPrint() << std::endl;
-  std::cout << "SHA-256 (remote) :  " << srtpProfile.getRemoteFingerPrint() << std::endl;
-  std::string hello("hello");
-  ASSERT_TRUE((std::size_t)clientSession->write(hello.c_str(), hello.size()) == hello.size());
-  
-  char buf[1024];
-  int len = clientSession->read(buf, sizeof(buf));
-  ASSERT_TRUE((std::size_t)len == hello.size());
-  
-  std::string response(buf, len);
-  ASSERT_STREQ(response.c_str(), hello.c_str());
-  
-  //
-  // Test sending RTP
-  //
-  unsigned char rtp_pkt[] =
-  {
-    0x80, 0x12, 0x00, 0xb5, 0x00, 0x2c, 0xcb, 0x6c,
-    0x00, 0x00, 0x3a, 0x87, 0x22, 0xb3, 0x40, 0x77,
-    0x02, 0x6d, 0x21, 0x37, 0xc3, 0x82, 0x26, 0xda,
-    0x7f, 0xe4, 0xe8, 0x58, 0xd6, 0xa2, 0x3c, 0x5a
-  };
-  
-  ASSERT_TRUE(clientSession->writeRaw((const char*)rtp_pkt, sizeof(rtp_pkt)) == sizeof(rtp_pkt));
-  len = clientSession->read(buf, sizeof(buf));
-  std::string rtpResponse(buf, len);
-  ASSERT_STREQ(rtpResponse.c_str(), "TypeRTP");
-  
-  std::string exit("exit");
-  ASSERT_TRUE((std::size_t)clientSession->write(exit.c_str(), exit.size()) == exit.size());
-  
-  t.join();
-  
-  delete clientSession;
-  delete serverSession;
-  
-  ::close(client);
-  ::close(server);
-  
-  OSS::Net::DTLSContext::releaseInstance();
-}
-
-
-TEST(TransportTest, test_dtls_external_c)
-{
-  ASSERT_TRUE(OSS::Net::DTLSContext::initialize("ossapp.com", true));
-  ASSERT_TRUE(OSS::Net::DTLSContext::instance());
-  ASSERT_TRUE(OSS::Net::DTLSContext::willVerifyCerts());
-  
-  //
-  // Create the server socket
-  //
- 
-  OSS::Net::IPAddress server_addr("127.0.0.1");
-  server_addr.setPort(30002);
-  OSS::Net::DTLSSocket serverSession(OSS::Net::DTLSSession::SERVER);
-  ASSERT_TRUE(serverSession.bind(server_addr) == 0);
-
-  boost::thread t(boost::bind(handle_dtls_external_server, &serverSession));
-  OSS::thread_sleep(500);
-  
-  
-  OSS::Net::IPAddress client_addr("127.0.0.1");
-  client_addr.setPort(30000);
-  OSS::Net::DTLSSocket clientSession(OSS::Net::DTLSSession::CLIENT);
-  
-  ASSERT_TRUE(clientSession.bind(client_addr) == 0);
-  ASSERT_TRUE(clientSession.connect(server_addr) == 0);
-  ASSERT_TRUE(clientSession.sslConnect());
-
-  OSS::RTP::SRTPProfile srtpProfile;
-  ASSERT_TRUE(srtpProfile.create(clientSession.dtlsSession()));
-  ASSERT_TRUE(srtpProfile.isValid());
-  ASSERT_TRUE(!srtpProfile.getLocalFingerPrint().empty());
-  ASSERT_TRUE(!srtpProfile.getRemoteFingerPrint().empty());
-  ASSERT_TRUE(!srtpProfile.getClientMasterKey().empty());
-  ASSERT_TRUE(!srtpProfile.getServerMasterKey().empty());
-  ASSERT_TRUE(!srtpProfile.getClientMasterSalt().empty());
-  ASSERT_TRUE(!srtpProfile.getServerMasterSalt().empty());
-  
-  std::cout << "SHA-256 (local)  :  " << srtpProfile.getLocalFingerPrint() << std::endl;
-  std::cout << "SHA-256 (remote) :  " << srtpProfile.getRemoteFingerPrint() << std::endl;
-  
-  
-  std::string hello("hello");
-  ASSERT_TRUE((std::size_t)clientSession.sslWrite(hello.c_str(), hello.size()) == hello.size());
-  char buf[1024];
-  int len = clientSession.sslRead(buf, sizeof(buf));
-  ASSERT_TRUE((std::size_t)len == hello.size());
-  std::string response(buf, len);
-  ASSERT_STREQ(response.c_str(), hello.c_str());
-  
-  //
-  // Test sending RTP
-  //
-  unsigned char rtp_pkt[] =
-  {
-    0x80, 0x12, 0x00, 0xb5, 0x00, 0x2c, 0xcb, 0x6c,
-    0x00, 0x00, 0x3a, 0x87, 0x22, 0xb3, 0x40, 0x77,
-    0x02, 0x6d, 0x21, 0x37, 0xc3, 0x82, 0x26, 0xda,
-    0x7f, 0xe4, 0xe8, 0x58, 0xd6, 0xa2, 0x3c, 0x5a
-  };
-  
-  ASSERT_TRUE(clientSession.write((const char*)rtp_pkt, sizeof(rtp_pkt)) == sizeof(rtp_pkt));
-  len = clientSession.sslRead(buf, sizeof(buf));
-  std::string rtpResponse(buf, len);
-  ASSERT_STREQ(rtpResponse.c_str(), "TypeRTP");
-  
-  std::string exit("exit");
-  ASSERT_TRUE((std::size_t)clientSession.sslWrite(exit.c_str(), exit.size()) == exit.size());
-  
-  t.join();
-   
-  OSS::Net::DTLSContext::releaseInstance();
-}
-
-TEST(TransportTest, test_dtls_external_c_nosrv)
-{
-  ASSERT_TRUE(OSS::Net::DTLSContext::initialize("ossapp.com", true));
-  ASSERT_TRUE(OSS::Net::DTLSContext::instance());
-  ASSERT_TRUE(OSS::Net::DTLSContext::willVerifyCerts());
-  
-  OSS::Net::IPAddress client_addr("127.0.0.1");
-  client_addr.setPort(30000);
-
-  OSS::Net::DTLSSocket clientSession(OSS::Net::DTLSSession::CLIENT);
-  
-  ASSERT_TRUE(clientSession.bind(client_addr) == 0);
-
-  //
-  // Bind a server but do not read from it
-  //
-  OSS::Net::IPAddress client_target("127.0.0.1");
-  OSS::Net::DTLSSocket serverSession(OSS::Net::DTLSSession::SERVER);
-  ASSERT_TRUE(serverSession.bind(client_target) == 0);
-  
-  
-  client_target.setPort(30002);
-  ASSERT_TRUE(clientSession.connect(client_target) == 0);
-  
-  ASSERT_FALSE(clientSession.sslConnect());
-  
-  OSS::Net::DTLSContext::releaseInstance();
-}
-

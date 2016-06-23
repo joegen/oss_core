@@ -107,9 +107,9 @@ TEST(TestFoundation, adaptive_timer)
   // Give or take 1 iteration 
   //
   if (actual > expected)
-    ASSERT_TRUE( actual - expected <= resolution);
+    ASSERT_LE( actual - expected, resolution);
   else if (expected > actual)
-    ASSERT_TRUE( expected - actual  <= resolution);
+    ASSERT_LE( expected - actual, resolution);
 }
 
 TEST(TestFoundation, socket_address_range_verify)

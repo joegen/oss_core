@@ -20,6 +20,7 @@
 
 #include "OSS/SIP/SIPTransportSession.h"
 #include "OSS/SIP/SIPFSMDispatch.h"
+#include "OSS/SIP/SIPListener.h"
 
 
 namespace OSS {
@@ -33,33 +34,23 @@ SIPTransportSession::SIPTransportRateLimitStrategy& SIPTransportSession::rateLim
   return SIPTransportSession::_rateLimit;
 }
 
-SIPTransportSession::SIPTransportSession() :
+SIPTransportSession::SIPTransportSession(SIPListener* pListener) :
   _isReliableTransport(true),
   _pDispatch(0),
   _bytesTransferred(0),
   _bytesRead(0),
   _identifier(0),
-  _isClient(false)
+  _isClient(false),
+  _isEndpoint(false),
+  _isConnected(false),
+  _pListener(pListener)
 {
 }
 
-SIPTransportSession::SIPTransportSession(const SIPTransportSession&) :
-  _isReliableTransport(true),
-  _pDispatch(0),
-  _bytesTransferred(0),
-  _bytesRead(0),
-  _identifier(0),
-  _isClient(false)
-{
-}
 
 SIPTransportSession::~SIPTransportSession()
 {
 }
 
-SIPTransportSession& SIPTransportSession::operator = (const SIPTransportSession&)
-{
-  return *this;
-}
 
 } } // OSS::SIP

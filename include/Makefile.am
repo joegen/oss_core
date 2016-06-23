@@ -14,10 +14,9 @@ nobase_include_HEADERS = \
     OSS/UTL/ServiceOptions.h \
     OSS/Crypto/Crypto.h \
     OSS/UTL/Thread.h \
-    OSS/UTL/DebugMemory.h \
     OSS/UTL/Endian.h \
     OSS/UTL/PropertyMap.h \
-    OSS/OSS.h \
+    OSS/OSS.h.in \
     OSS/Persistent/BerkeleyDb.h \
     OSS/Persistent/RedisClient.h \
     OSS/UTL/Cache.h \
@@ -112,6 +111,7 @@ nobase_include_HEADERS = \
     OSS/SDP/SDPHeaderList.h \
     OSS/SDP/SDPMedia.h \
     OSS/SDP/SDPSession.h \
+    OSS/SDP/ICECandidate.h \
     OSS/SIP/Parser.h \
     OSS/SIP/ReSIPMessage.h \
     OSS/SIP/SIPAuthorization.h \
@@ -123,7 +123,6 @@ nobase_include_HEADERS = \
     OSS/SIP/SIPMessage.h \
     OSS/SIP/SIPParser.h \
     OSS/SIP/SIPParserException.h \
-    OSS/SIP/SIPProxyAuthenticate.h \
     OSS/SIP/SIPRequestLine.h \
     OSS/SIP/SIPRoute.h \
     OSS/SIP/SIPStatusLine.h \
@@ -172,6 +171,8 @@ nobase_include_HEADERS = \
     OSS/SIP/B2BUA/SIPB2BUserAgentHandler.h \
     OSS/SIP/B2BUA/SIPB2BUserAgentHandlerList.h \
     OSS/SIP/B2BUA/SIPB2BRegisterAgent.h \
+    OSS/SIP/EP/SIPEndpoint.h \
+    OSS/SIP/EP/SIPEndpointRetransmitter.h \
     OSS/STUN/VovidaSTUN.inl \
     OSS/STUN/VovidaUDP.h \
     OSS/STUN/STUNMappedAddress.h \
@@ -196,14 +197,12 @@ nobase_include_HEADERS = \
     OSS/RTP/RTPPacket.h \
     OSS/RTP/RTPPCAPReader.h \
     OSS/RTP/RTPProxy.h \
-    OSS/RTP/RTPProxyClient.h \
     OSS/RTP/RTPProxyManager.h \
     OSS/RTP/RTPProxyRecord.h \
     OSS/RTP/RTPProxySession.h \
     OSS/RTP/RTPProxyTuple.h \
     OSS/RTP/RTPResizer.h \
     OSS/RTP/RTPResizingQueue.h \
-    OSS/RTP/SRTPProfile.h \
     OSS/Net/FirewallRule.h \
     OSS/Net/Firewall.h \
     OSS/Net/oss_carp.h \
@@ -218,15 +217,11 @@ nobase_include_HEADERS = \
     OSS/Net/FramedTcpListener.h \
     OSS/Net/FramedTcpClient.h \
     OSS/Net/FramedTcpConnection.h \
-    OSS/Net/DTLSContext.h \
-    OSS/Net/DTLSSession.h \
-    OSS/Net/DTLSBio.h \
-    OSS/Net/DTLSSocketInterface.h \
-    OSS/Net/DTLSSocket.h \
     OSS/UTL/AdaptiveDelay.h \
     OSS/UTL/CoreUtils.h \
     OSS/UTL/Logger.h \
     OSS/UTL/FastRandom.h \
+    OSS/UTL/LogFile.h \
     OSS/websocketpp/common.hpp \
     OSS/websocketpp/connection.hpp \
     OSS/websocketpp/endpoint.hpp \
@@ -261,7 +256,10 @@ nobase_include_HEADERS = \
     OSS/SIP/SIPWebSocketConnectionManager.h \
     OSS/SIP/SIPWebSocketListener.h \
     OSS/P2P/Overlay.h \
-    OSS/P2P/DhtStore.h
+    OSS/P2P/DhtStore.h \
+    OSS/EP/EndpointConnection.h \
+    OSS/EP/EndpointListener.h \
+    OSS/ZMQ/ZMQSocket.h
 
 
 DISTCLEANFILES = Makefile.in

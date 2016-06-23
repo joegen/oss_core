@@ -20,6 +20,7 @@
 
 #include "OSS/RTP/RTPPCAPReader.h"
 
+#if OSS_HAVE_PCAP
 
 namespace OSS {
 namespace RTP {
@@ -68,5 +69,5 @@ bool RTPPCAPReader::read(RTPPacket& packet)
 
 } } // OSS::RTP
 
-
+#endif // OSS_HAVE_PCAP
 

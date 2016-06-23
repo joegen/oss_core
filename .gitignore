@@ -3,4 +3,13 @@ aclocal.m4
 autom4te.cache/
 configure
 /BUILD/
+.build
 /nbproject/private/
+src/boost_pch.hpp.gch
+*.lo
+*.o
+*.deps
+*.dirstamp
+*.a
+*.la
+*.so

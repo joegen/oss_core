@@ -29,14 +29,18 @@
 #include "OSS/SIP/SIP.h"
 #include "OSS/SIP/SIPMessage.h"
 #include "OSS/Net/AccessControl.h"
+#include "OSS/UTL/Semaphore.h"
+#include "SIPListener.h"
 
 namespace OSS {
 namespace SIP {
 
 
 class SIPFSMDispatch;
+class SIPTransactionPool;
+class SIPListener;
 
-class OSS_API SIPTransportSession
+class OSS_API SIPTransportSession : boost::noncopyable
   /// The SIPTransportSession is the base class to the connection 
   /// that received the message.  This will be used by the 
   /// transaction to send mid-transaction SIP Messages
@@ -52,7 +56,7 @@ public:
   typedef OSS::Net::AccessControl SIPTransportRateLimitStrategy;
   typedef boost::function<void(SIPMessage::Ptr, SIPTransportSession::Ptr)> Dispatch;
 
-  SIPTransportSession();
+  SIPTransportSession(SIPListener* pListener);
     /// Creates a new SIPTransportSession
 
   virtual ~SIPTransportSession();
@@ -91,7 +95,7 @@ public:
     /// Handle completion of a write operation.
 
 
-  virtual void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter) = 0;
+  virtual void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter, boost::system::error_code* out_ec, Semaphore* pSem) = 0;
     /// Handle completion of async connect
 
   virtual void handleClientHandshake(const boost::system::error_code& error) = 0;
@@ -108,8 +112,14 @@ public:
   virtual void clientBind(const OSS::Net::IPAddress& ip, unsigned short portBase, unsigned short portMax) = 0;
     /// Bind the local client
 
-  virtual void clientConnect(const OSS::Net::IPAddress& target) = 0;
+  virtual bool clientConnect(const OSS::Net::IPAddress& target) = 0;
     /// Connect to a remote host
+  
+  bool isConnected() const;
+    /// Returns true if the socket is connected
+  
+  void setConnected(bool connected);
+    /// Set the connected flag
 
   unsigned long getLastReadCount() const;
 
@@ -150,6 +160,30 @@ public:
   const OSS::Net::IPAddress& getReconnectAddress() const;
     /// Return the reconnect address
     /// 
+  
+  bool isEndpoint() const;
+    /// Returns rue if this is an Endpoint connection
+    ///
+  
+  const std::string& getEndpointName() const;
+    /// Returns the name of the endpoint for this connection.
+    /// This would be empty for non-endpoint connections
+    ///
+  
+  void setCurrentTransactionId(const std::string& currentTransactionId);
+    /// Set the current id of the transaciton using this transport.
+    /// This is currently used by reliable connections to report connection
+    /// errors to the transaction
+
+
+  const std::string& getCurrentTransactionId() const;
+    /// Return the transaction id
+  
+  void setTransactionPool(SIPTransactionPool* pTransactionPool);
+  
+  SIPListener* getListener() const;
+    /// Return the associated listener for this connection
+  
 protected:
   static SIPTransportRateLimitStrategy _rateLimit;
 
@@ -164,14 +198,27 @@ protected:
   Dispatch _messageDispatch;
   bool _isClient;
   OSS::Net::IPAddress _reconnectAddress;
-private:
-    SIPTransportSession(const SIPTransportSession&);
-    SIPTransportSession& operator = (const SIPTransportSession&);
+  bool _isEndpoint;
+  std::string _endpointName;
+  std::string _currentTransactionId;
+  SIPTransactionPool* _pTransactionPool;
+  bool _isConnected;
+  SIPListener* _pListener;
 };
 
 //
 // Inlines
 //
+
+inline bool SIPTransportSession::isEndpoint() const
+{
+  return _isEndpoint;
+}
+
+inline const std::string& SIPTransportSession::getEndpointName() const
+{
+  return _endpointName;
+}
 
 inline bool SIPTransportSession::isReliableTransport() const
 {
@@ -243,6 +290,10 @@ inline void SIPTransportSession::dispatchMessage(const SIPMessage::Ptr& pMsg, co
 {
   if (_messageDispatch)
   {
+    if (_pListener && !_pListener->getTransportAlias().empty())
+    {
+      pMsg->setProperty(OSS::PropertyMap::PROP_TransportAlias, _pListener->getTransportAlias());
+    }
     _messageDispatch(pMsg, pTransport);
   }
 }
@@ -267,6 +318,40 @@ inline const OSS::Net::IPAddress& SIPTransportSession::getReconnectAddress() con
   return _reconnectAddress;
 }
 
+inline void SIPTransportSession::setCurrentTransactionId(const std::string& currentTransactionId)
+{
+  _currentTransactionId = currentTransactionId;
+}
+
+inline const std::string& SIPTransportSession::getCurrentTransactionId() const
+{
+  return _currentTransactionId;
+}
+
+inline void SIPTransportSession::setTransactionPool(SIPTransactionPool* pTransactionPool)
+{
+  _pTransactionPool = pTransactionPool;
+}
+
+inline bool SIPTransportSession::isConnected() const
+{
+  return _isConnected;
+}
+ 
+inline void SIPTransportSession::setConnected(bool connected)
+{
+  _isConnected = connected;
+}
+
+inline SIPListener* SIPTransportSession::getListener() const
+{
+  return _pListener;
+}
+
 } } // OSS::SIP
+
+
+
+
 #endif // SIP_SIPTransportSession_INCLUDED
 

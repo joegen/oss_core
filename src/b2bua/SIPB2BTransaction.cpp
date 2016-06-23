@@ -37,7 +37,8 @@ SIPB2BTransaction::SIPB2BTransaction(SIPB2BTransactionManager* pManager) :
   _pManager(pManager),
   _pInternalPtr(0),
   _hasSentLocalResponse(false),
-  _isMidDialog(false)
+  _isMidDialog(false),
+  _isChallenged(false)
 {
 }
 
@@ -79,6 +80,24 @@ bool SIPB2BTransaction::onRouteResponse(
 
 void SIPB2BTransaction::releaseInternalRef()
 {
+  //
+  // When instantiated from karooctl scripts validate,
+  // _pManager will be null
+  //
+
+  //
+  // Remove pending subscription from the set
+  //
+  if (!_isChallenged && !_pendingSubscriptionId.empty())
+  {
+    if (_pManager) 
+    {
+      OSS_LOG_DEBUG(_logId << "Removing pending subscription for call-id " << _pendingSubscriptionId);
+      _pManager->removePendingSubscription(_pendingSubscriptionId);
+    }
+  }
+  
+  
   _pManager->onDestroyTransaction(shared_from_this());
   delete _pInternalPtr;
   _pInternalPtr = 0;
@@ -87,6 +106,7 @@ void SIPB2BTransaction::releaseInternalRef()
 
 void SIPB2BTransaction::runTask()
 {
+  static OSS::Net::IPAddress LOCALHOST("127.0.0.1");
   _pInternalPtr = new Ptr(this);
   try
   {
@@ -107,6 +127,7 @@ void SIPB2BTransaction::runTask()
     }
 
     _logId =  _pServerTransaction->getLogId();
+    _pServerTransaction->attachB2BTransaction(shared_from_this());
 
     std::string trnId;
     _pServerRequest->getTransactionId(trnId);
@@ -144,8 +165,12 @@ void SIPB2BTransaction::runTask()
       if (onRouteResponse(_pServerRequest, _pServerTransport,_pServerTransaction, target))
       {
         if (target.isValid())
+        {
+          _isChallenged = true;
           _pServerTransaction->sendResponse(pAuthenticator, target);
+        }
       }
+      
       releaseInternalRef();
       return;
     }
@@ -156,6 +181,11 @@ void SIPB2BTransaction::runTask()
     //
     SIPMessage* outbound = new SIPMessage();
     *outbound = *(_pServerRequest.get());
+    std::string transportAlias;
+    if (_pServerRequest->getProperty(OSS::PropertyMap::PROP_TransportAlias, transportAlias) && !transportAlias.empty())
+    {
+      outbound->setProperty(OSS::PropertyMap::PROP_TransportAlias, transportAlias);
+    }
     _pClientRequest = SIPMessage::Ptr(outbound);
 
     //
@@ -211,7 +241,7 @@ void SIPB2BTransaction::runTask()
       return;
     }
 
-    if (_localInterface.isValid() && !_pManager->stack().transport().isLocalTransport(_localInterface))
+    if (_localInterface.address() != LOCALHOST.address() && _localInterface.isValid() && !_pManager->stack().transport().isLocalTransport(_localInterface))
     {
       OSS::log_critical(_logId + "Invalid Local-Interface returned by onRouteTransaction - " + _localInterface.toIpPortString() );
       SIPMessage::Ptr serverError = _pServerRequest->createResponse(500, "Unable to determine local interface");
@@ -336,9 +366,22 @@ void SIPB2BTransaction::runTask()
     _pClientRequest->commitData();
 
     //
+    // If this is a subscribe, preserve the call-id in the hash so that
+    // later notifies would know there is actually a subscription.
+    // This will handy if notify did not match any dialog yet because 200 ok 
+    // for subscribe did not arrive yet.   Current implementation is to 
+    // yield processing until the 200 ok has arrived
+    //
+    if (_pClientRequest->isRequest("SUBSCRIBE"))
+    {
+      _pendingSubscriptionId = _pClientRequest->hdrGet(OSS::SIP::HDR_CALL_ID);
+      OSS_LOG_DEBUG(_logId << "Adding pending subscription for call-id " << _pendingSubscriptionId);
+      _pManager->addPendingSubscription(_pendingSubscriptionId);
+    }
+    
+    //
     // Send the request
     //
-
     OSS::SIP::SIPTransaction::Callback responseCallback
       = boost::bind(&SIPB2BTransaction::handleResponse, this, _1, _2, _3, _4);
 
@@ -389,7 +432,10 @@ void SIPB2BTransaction::handleResponse(
     _pTransactionError = e;
 
   if (!_pClientTransaction)
+  {
     _pClientTransaction = pTransaction;
+    _pClientTransaction->attachB2BTransaction(shared_from_this());
+  }
 
   if (!_pClientTransport)
     _pClientTransport = pTransport;
@@ -473,7 +519,6 @@ void SIPB2BTransaction::runResponseTask()
           }
         }
       }
-      return;
     }
     else if (response->is1xx())
     {
@@ -539,7 +584,6 @@ void SIPB2BTransaction::runResponseTask()
           }
         }
       }
-      return;
     }
   }
   catch(OSS::Exception e)

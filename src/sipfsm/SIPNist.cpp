@@ -32,7 +32,7 @@ namespace SIP {
 SIPNist::SIPNist(
   boost::asio::io_service& ioService,
   const SIPTransactionTimers& timerProps) :
-  SIPFsm(ioService, timerProps)
+  SIPFsm(SIPFsm::NonInviteServerTransaction, ioService, timerProps)
 {
   _timerJFunc = boost::bind(&SIPNist::handleDelayedTerminate, this);
   _timerMaxLifetimeFunc = boost::bind(&SIPNist::handleDelayedTerminate, this);

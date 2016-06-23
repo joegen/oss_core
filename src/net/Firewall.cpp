@@ -25,6 +25,8 @@
 
 extern "C" { size_t strlcpy(char *dst, const char *src, size_t siz); };
 
+#define IP_TABLES_BIN "/sbin/iptables"
+
 namespace OSS {
 namespace Net {
 
@@ -37,8 +39,11 @@ std::string iptable_add_rule(const FirewallRule& rule)
   assert (rule.getDirection() != -1 && rule.getOperation() != -1);
 
   std::ostringstream cmd;
+#ifdef OSS_IP_TABLES
   cmd << OSS_IP_TABLES << "  --append";
-
+#else
+  cmd << IP_TABLES_BIN << " --append";
+#endif
   //
   // Check which chain we are concerned with
   //
@@ -106,8 +111,12 @@ std::string iptable_add_rule(const FirewallRule& rule)
 static std::string iptables_delete(FirewallRule::Direction direction,  std::size_t index)
 {
   std::ostringstream cmd;
+#ifdef OSS_IP_TABLES
   cmd << OSS_IP_TABLES << "  --delete";
-
+#else
+  cmd << IP_TABLES_BIN << " --delete";
+#endif
+  
   if (direction == FirewallRule::DIR_IN)
     cmd << " INPUT ";
   else
@@ -121,8 +130,13 @@ static std::string iptables_delete(FirewallRule::Direction direction,  std::size
 static std::string iptables_get_rules(FirewallRule::Direction direction)
 {
   std::ostringstream cmd;
+  
+#ifdef OSS_IP_TABLES
   cmd << OSS_IP_TABLES << "  --list-rules";
-
+#else
+  cmd << IP_TABLES_BIN << " --list-rules";
+#endif
+  
   if (direction == FirewallRule::DIR_IN)
     cmd << " INPUT ";
   else

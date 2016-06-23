@@ -66,33 +66,3 @@ TEST(ParserTest, test_contact_parser)
   std::string contact_7142040030 = bindings[0];
   ASSERT_STREQ(contact_7142040030.c_str(), "<sip:7142040030@199.0.0.5:5060;sbc-reg=14400287697715549924>;Expires=3600");
 }
-
-TEST(ParserTest, test_comma_in_user_info)
-{
-  const char* pMsg = "REGISTER sip:sip.biloxy.com SIP/2.0\r\n" 
-    "Via: SIP/2.0/UDP 10.5.10.50:5060;branch=z9hG4bKjar7i5004g50u2hbb3e1.1\r\n" 
-    "From: <sip:%3cOpenUC%20%23,ie,%2019195551212%3e@sip.biloxy.com>;tag=qcccWUSx7\r\n" 
-    "To: sip:%3cOpenUC%20%23,ie,%2019195551212%3e@sip.biloxy.com\r\n" 
-    "CSeq: 34 REGISTER\r\n" 
-    "Call-ID: bvxlIej1fx\r\n" 
-    "Max-Forwards: 69\r\n" 
-    "Supported: outbound\r\n" 
-    "Contact: <sip:%3cOpenUC%20%23,ie,%2019195551212%3e-1sqld00p76pu8@10.5.10.50:5060;transport=udp>;+sip.instance=\"<urn:uuid:c2bcbd2b-18e5-42f9-913e-1513cc37ada8>\"\r\n" 
-    "Expires: 3600\r\n" 
-    "User-Agent: LinphoneIphone/2.2.4.1-27-ge8ab36a (belle-sip/1.3.3)\r\n" 
-    "Route: <sip:10.5.10.245:5060;lr>\r\n"; 
-
-  OSS::SIP::SIPMessage msg(pMsg);
-  
-  std::vector<std::string> bindings;
-  ASSERT_TRUE(OSS::SIP::SIPContact::msgGetContacts(&msg, bindings) != 0);
-
-  ASSERT_TRUE(bindings.size() == 1);
-  std::string contact = bindings[0];
-  
-  ASSERT_STREQ(contact.c_str(), "<sip:%3cOpenUC%20%23,ie,%2019195551212%3e-1sqld00p76pu8@10.5.10.50:5060;transport=udp>;+sip.instance=\"<urn:uuid:c2bcbd2b-18e5-42f9-913e-1513cc37ada8>\"");
-
-  OSS::SIP::ContactURI hContact(contact);
-  std::string user = hContact.getUser();
-  ASSERT_STREQ(user.c_str(), "%3cOpenUC%20%23,ie,%2019195551212%3e-1sqld00p76pu8");
-}

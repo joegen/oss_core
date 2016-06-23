@@ -81,6 +81,7 @@ struct Config
   std::string targetInterface;
   std::string targetExternalAddress;
   std::string targetTransport;
+  std::string targetDomain;
   TargetType targetType;
   bool allowRelay;
   int targetInterfacePort;
@@ -97,6 +98,9 @@ struct Config
   std::string carpInterface;
   std::string carpUpScript;
   std::string carpDownScript;
+  bool rewriteCallId;
+  int testLoopbackIterationCount;
+  std::string testLoopbackTargetUri;
   
   Config() : 
     port(5060), 
@@ -104,7 +108,9 @@ struct Config
     wsPort(5062),
     targetType(UNKNOWN), 
     allowRelay(false),
-    targetInterfacePort(0)
+    targetInterfacePort(0),
+    rewriteCallId(false),
+    testLoopbackIterationCount(0)
     {
     }
 };
@@ -202,6 +208,7 @@ public:
         listener.externalAddress() = _config.externalAddress;
         listener.setPort(config.port);
         listener.setVirtual(true);
+        listener.alias() = "external";
         stack().udpListeners().push_back(listener);
         stack().tcpListeners().push_back(listener);
         listener.setPort(config.wsPort);
@@ -216,30 +223,16 @@ public:
     listener = _config.address;
     listener.externalAddress() = _config.externalAddress;
     listener.setPort(config.port);
+    listener.alias() = "external";
     stack().udpListeners().push_back(listener);
     stack().tcpListeners().push_back(listener);
-    
-    //
-    // Initialize the local registration agent
-    //
-    std::ostringstream regRoute;
-    regRoute << "sip:" << _config.address << ":" << _config.port;
-    startLocalRegistrationAgent("oss-core", regRoute.str(), local_reg_exit_handler);
-    
-    if (!_config.targetInterface.empty() && _config.targetInterfacePort)
-    {
-      OSS::Net::IPAddress targetListener;
-      targetListener = _config.targetInterface;
-      targetListener.externalAddress() = _config.targetExternalAddress;
-      targetListener.setPort(_config.targetInterfacePort);
-      stack().udpListeners().push_back(targetListener);
-      stack().tcpListeners().push_back(targetListener);
-    }
+    stack().transport().defaultListenerAddress() = listener;
 
     OSS::Net::IPAddress wsListener;
     wsListener = _config.address;
     wsListener.externalAddress() = _config.externalAddress;
     wsListener.setPort(config.wsPort);
+    wsListener.alias() = "external";
     stack().wsListeners().push_back(wsListener);
     
     //
@@ -257,13 +250,34 @@ public:
         tlsListener = _config.address;
         tlsListener.externalAddress() = _config.externalAddress;
         tlsListener.setPort(config.tlsPort);
+        tlsListener.alias() = "external";
         stack().tlsListeners().push_back(tlsListener);    
         OSS_LOG_INFO("TLS Transport initialized");
       }
     }
     
 
-    stack().transport().defaultListenerAddress() = listener;
+    //
+    // Initialize the local registration agent
+    //
+    std::ostringstream regRoute;
+    regRoute << "sip:" << _config.address << ":" << _config.port;
+    startLocalRegistrationAgent("oss-core", regRoute.str(), local_reg_exit_handler);
+    
+    //
+    // Initialize the transport facing the PBX
+    //
+    if (!_config.targetInterface.empty() && _config.targetInterfacePort)
+    {
+      OSS::Net::IPAddress targetListener;
+      targetListener = _config.targetInterface;
+      targetListener.externalAddress() = _config.targetExternalAddress;
+      targetListener.setPort(_config.targetInterfacePort);
+      targetListener.alias() = "internal";
+      stack().udpListeners().push_back(targetListener);
+      stack().tcpListeners().push_back(targetListener);
+    }
+    
     stack().transport().setTCPPortRange(TCP_PORT_BASE, TCP_PORT_MAX);
     stack().transport().setWSPortRange(40000, 50000);
     stack().transportInit();
@@ -312,6 +326,100 @@ public:
     {
       OSS::Net::Carp::signal_exit();
     }
+  }
+  
+  //
+  // route calls coming from the external->internal
+  //
+  bool onRouteExternalCall(OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction, const SIPMessage::Ptr& pRequest)
+  {
+    std::string target = _config.target;
+    SIPURI testLoopbackUri;
+    if (!_config.testLoopbackTargetUri.empty())
+    {
+      testLoopbackUri = _config.testLoopbackTargetUri;
+    }
+    //
+    // Check if loopback mode is in effect
+    //
+    if (_config.testLoopbackIterationCount && !_config.testLoopbackTargetUri.empty())
+    {
+      if (this->rtpProxy().getSessionCount() > (unsigned int)_config.testLoopbackIterationCount)
+      {
+        //
+        // Iteration count is reached.  retarget the request to the final destination
+        //
+        target = testLoopbackUri.getHostPort();
+        SIPRequestLine rline(pRequest->startLine());
+        rline.setURI(testLoopbackUri);
+        pRequest->startLine() = rline.data();
+      }
+    }
+    else
+    {
+      //
+      // If target domain is not empty, use it as the host:port
+      //
+      if (!_config.targetDomain.empty())
+      {
+        SIPRequestLine rline(pRequest->startLine());
+        SIPURI ruri;
+        rline.getURI(ruri);
+        ruri.setHostPort(_config.targetDomain.c_str());
+        rline.setURI(ruri);
+        pRequest->startLine() = rline.data();
+      }
+    }
+
+    pRequest->setProperty(OSS::PropertyMap::PROP_RouteAction, "accept");
+    std::ostringstream route;
+    std::vector<std::string> tokens = OSS::string_tokenize(target, ":");
+    if (tokens.size() == 1)
+    {
+      pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, target);
+      pRequest->setProperty(OSS::PropertyMap::PROP_TargetPort, "5060");
+      route << "sip:" << target << ":" << "5060" << ";lr";
+    }
+    else if (tokens.size() == 2)
+    {
+      pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, tokens[0]);
+      pRequest->setProperty(OSS::PropertyMap::PROP_TargetPort, tokens[1]);
+      route << "sip:" << tokens[0] << ":" << tokens[1] << ";lr";
+    }
+    else if (tokens.size() == 3)
+    {
+      pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, _config.target);
+      route << "sip:" << _config.target << ";lr";
+    }
+
+    if (!_config.targetTransport.empty())
+    {
+      pRequest->setProperty(OSS::PropertyMap::PROP_TargetTransport, _config.targetTransport);
+    }
+
+    if (!_config.targetInterface.empty())
+    {
+      pRequest->setProperty(OSS::PropertyMap::PROP_InterfaceAddress, _config.targetInterface);
+      pRequest->setProperty(OSS::PropertyMap::PROP_InterfacePort, OSS::string_from_number<int>(_config.targetInterfacePort));
+    }
+
+    //
+    // Check if rewrite call-id is set.
+    // The default behavior is to use the same call-id
+    // for both inbound and outbound legs
+    //
+    if (_config.rewriteCallId && pRequest->isRequest("INVITE"))
+    {
+      const std::string& callId = pRequest->hdrGet(OSS::SIP::HDR_CALL_ID);
+      unsigned int hash = OSS::string_to_js_hash(callId);
+      std::ostringstream strm;
+      strm << hash << "-" << OSS::string_create_uuid();
+      pRequest->hdrSet(OSS::SIP::HDR_CALL_ID, strm.str());
+    }
+
+    SIPRoute::msgAddRoute(pRequest.get(), route.str());
+      
+    return true;;
   }
   
   bool onProcessRequest(OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,MessageType type, const SIPMessage::Ptr& pRequest)
@@ -367,33 +475,26 @@ public:
     }
     else if (type == SIPB2BScriptableHandler::TYPE_ROUTE)
     {
-      pRequest->setProperty(OSS::PropertyMap::PROP_RouteAction, "accept");
-      std::ostringstream route;
-      std::vector<std::string> tokens = OSS::string_tokenize(_config.target, ":");
-      if (tokens.size() == 2)
+      std::string transportAlias;
+      if (!pRequest->getProperty(OSS::PropertyMap::PROP_TransportAlias, transportAlias) || transportAlias.empty())
       {
-        pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, tokens[0]);
-        pRequest->setProperty(OSS::PropertyMap::PROP_TargetPort, tokens[1]);
-        route << "sip:" << tokens[0] << ":" << tokens[1] << ";lr";
+        pRequest->setProperty(OSS::PropertyMap::PROP_RouteAction, "reject");
+        return true;
+      }
+      
+      if (transportAlias == "external")
+      {
+        return onRouteExternalCall(pTransaction, pRequest);
       }
       else
       {
-        pRequest->setProperty(OSS::PropertyMap::PROP_TargetAddress, _config.target);
-        route << "sip:" << _config.target << ";lr";
+        //
+        // We do not do routing from internal->external yet
+        //
+        pRequest->setProperty(OSS::PropertyMap::PROP_RouteAction, "reject");
+        return true;
       }
 
-      if (!_config.targetTransport.empty())
-      {
-        pRequest->setProperty(OSS::PropertyMap::PROP_TargetTransport, _config.targetTransport);
-      }
-      
-      if (!_config.targetInterface.empty())
-      {
-        pRequest->setProperty(OSS::PropertyMap::PROP_InterfaceAddress, _config.targetInterface);
-        pRequest->setProperty(OSS::PropertyMap::PROP_InterfacePort, OSS::string_from_number<int>(_config.targetInterfacePort));
-      }
-      
-      SIPRoute::msgAddRoute(pRequest.get(), route.str());
     }
 
     
@@ -652,7 +753,8 @@ void prepareTargetInfo(Config& config, ServiceOptions& options)
   if (options.getOption("target-address", config.target) && !config.target.empty())
   {
     config.allowRelay = options.hasOption("allow-relay");
-
+    options.getOption("target-domain", config.targetDomain);
+    
     if (!options.getOption("target-transport", config.targetTransport))
     {
       OSS_LOG_INFO("target-transport is not set.  Using udp transport by default.");
@@ -672,6 +774,25 @@ void prepareTargetInfo(Config& config, ServiceOptions& options)
   options.getOption("reg-uri", config.regUri);
   options.getOption("reg-user", config.regUser);
   options.getOption("reg-pass", config.regPassword);
+  
+  //
+  // Check if we need to rewrite the call-id.
+  // The default is to reuse the call-id
+  // sent by the caller
+  //
+  config.rewriteCallId = options.hasOption("rewrite-call-id");
+  
+  //
+  // Check if loopback test is enabled
+  //
+  if (options.hasOption("test-loopback-target-uri") && options.hasOption("test-loopback-iteration-count"))
+  {
+    options.getOption("test-loopback-iteration-count", config.testLoopbackIterationCount);
+    options.getOption("test-loopback-target-uri", config.testLoopbackTargetUri);
+    OSS_LOG_INFO("Loop Back Test Enabled:" 
+      << " iteration-count=" << config.testLoopbackIterationCount 
+      << " target-uri=" << config.testLoopbackTargetUri);
+  }
 }
 
 bool prepareOptions(ServiceOptions& options)
@@ -688,11 +809,15 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionInt('I', "target-interface-port", "The port where the B2BUA will listen for connections.");
   options.addOptionString('X', "target-external-address", "The Public IP Address if the B2BUA is behind a firewall facing the SIP Server.");
   options.addOptionString('P', "target-transport", "Transport to be used to communicate with your SIP Server.");
+  options.addOptionString("target-domain", "Domain to be used in the request uri for sending calls to the SIP server");
   options.addOptionFlag('r', "allow-relay", "Allow relaying of transactions towards SIP Servers other than the one specified in the target-domain.");
   options.addOptionFlag('n', "no-rtp-proxy", "Disable built in media relay.");
   options.addOptionInt('R', "rtp-port-low", "Lowest port used for RTP");
   options.addOptionInt('H', "rtp-port-high", "Highest port used for RTP");
   options.addOptionString('J', "route-script", "Path for the route script");
+  options.addOptionFlag("rewrite-call-id", "Use a different call-id for outbound legs");
+  options.addOptionFlag("test-loopback-iteration-count", "Emulate traffic by looping the call back to the sender");
+  options.addOptionFlag("test-loopback-target-uri", "Final URI where the loopback will be sent after the designated iteration has completed");
   options.addOptionString("tls-cert", "Certificate to be used by this server.  File should be in PEM format.");
   options.addOptionString("tls-private-key", "Private Key to be used by this server.  File should be in PEM format.");
   options.addOptionString("tls-peer-ca", "Peer CA File. If the remote peer this server is connecting to uses a self signed certificate, this file is used to verify authenticity of the peer identity.");
@@ -703,7 +828,7 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionString("reg-pass", "Password credential to be used for registration");
   options.addOptionString("carp-virtual-ip", "Virtual IP assigned for CARP. Take note that this requires root permissions to work.");
   options.addOptionString("carp-interface", "Interface where the virtual IP will be registered.  Example: eth0");
-  options.addOptionString("carp-up-script", "Script called tto bring up the virtual interface");
+  options.addOptionString("carp-up-script", "Script called to bring up the virtual interface");
   options.addOptionString("carp-down-script", "Script called to bring up the virtual interface");
   
 
@@ -741,6 +866,9 @@ int main(int argc, char** argv)
 
   try
   {
+    SIPB2BContact::_dialogStateInParams = true;
+    SIPB2BContact::_registerStateInParams = false;
+
     //
     // Run the UA event loop
     //
@@ -774,7 +902,14 @@ int main(int argc, char** argv)
       
       ua.rtpProxy().setUdpPortBase(portLow);
       ua.rtpProxy().setUdpPortMax(portHigh);
+      
+      if (config.testLoopbackIterationCount && !config.testLoopbackTargetUri.empty())
+      {
+        ua.rtpProxy().alwaysProxyMedia(true);
+      }
     }
+    
+    ua.rtpProxy().enableHairpins() = true;
 
 #if ENABLE_TURN
     if (options.hasOption("enable-turn-relay"))

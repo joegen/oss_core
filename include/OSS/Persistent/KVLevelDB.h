@@ -21,9 +21,14 @@
 #ifndef KVLEVELDB_H_INLCUDED
 #define	KVLEVELDB_H_INLCUDED
 
+#include "OSS/OSS.h"
+#include "OSS/build.h"
+
+
+#if OSS_HAVE_LEVELDB
+
 #include <leveldb/db.h>
 
-#include "OSS/OSS.h"
 #include "OSS/UTL/Thread.h"
 #include "OSS/Persistent/KeyValueStoreBase.h"
 
@@ -92,6 +97,8 @@ inline void KVLevelDB::setKeyPrefix(const std::string& keyPrefix)
 }
 
 } } // OSS::Persistent
+
+#endif //OSS_HAVE_LEVELDB
 
 #endif	// KVLEVELDB_H_INLCUDED
 

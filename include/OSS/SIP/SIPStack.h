@@ -142,11 +142,12 @@ public:
     /// If initTransportFromConfig() is used, transportInit will be called
     /// automatically so there is no need to call it before calling run.
 
-  
+#if ENABLE_FEATURE_CONFIG
   void initTransportFromConfig(const boost::filesystem::path& cfgFile);
     /// Initialize the sip stack properties from a preexisting CFG files.
     /// This method will throw PersistenceException if the file is none
     /// existent or the file can't be parsed
+#endif
 
 #if 0
   void initTransportFromConfig(const boost::filesystem::path& cfgFile,
@@ -171,14 +172,17 @@ public:
   );
     /// This method intializes the TLS context if secure transport is enabled
   
+ #if ENABLE_FEATURE_CONFIG 
   bool initTlsContextFromConfig(const boost::filesystem::path& cfgFile);
     /// Initialize TLS using a configuration file
+#endif
   
   std::string getTlsCertPassword() const;
     /// Returns the tlsCertPassword.  This is used internally by initializeTlsContext
-  
+#if ENABLE_FEATURE_CONFIG
   bool initVirtualTransportFromConfig(const boost::filesystem::path& cfgFile);
     /// Initialize CARP virtual interface(s)
+#endif
   
   void run();
     /// Starts the SIPStack event subsytem.
@@ -235,6 +239,9 @@ public:
     /// prior to processing of the rest of the callback parameters.
     /// Normal cause of errors are transaction timeouts.
     ///
+    /// The _terminateCallback functor can be provided if the upper
+    /// layer wants to be notified when the client transaction terminates
+    ///
     /// This function may throw a SIPException if the request cannot be processed.
     ///
 
@@ -259,7 +266,7 @@ public:
     ///
     /// If this callback is not set, the request will be silently dropped.
 
-  void setAckFor2xxTransactionHandler(const SIPFSMDispatch::UnknownTransactionCallback& handler);
+  void setAckOr2xxTransactionHandler(const SIPFSMDispatch::UnknownTransactionCallback& handler);
     /// This function sets the callback handler for ACK and 200 OK retranmissions.
     ///
     /// If this callback is not set, the request will be silently dropped.
@@ -268,11 +275,15 @@ public:
   SIPTransportService& transport();
     /// Return a reference to the transport service
   
-  void setKeyValueStore(OSS::Persistent::RESTKeyValueStore* pKeyStore);
-    /// Set the key value store to be used for persisting some states
+  void setTransportThreshold(
+    unsigned long packetsPerSecondThreshold, // The total packets per second threshold
+    unsigned long thresholdViolationRate, // Per IP threshold
+    int banLifeTime // violator jail lifetime
+  );
   
-  OSS::Persistent::RESTKeyValueStore* getKeyValueStore();
-    /// Returns a pointer to the key value store
+  SIPTransaction::Ptr createClientTransaction(const SIPMessage::Ptr& pRequest);
+    /// Create a new transaction for a new non-ACK outgoing request
+  
 private:
 
   //
@@ -286,7 +297,9 @@ private:
   //
   bool _enableUDP;
   bool _enableTCP;
+#if ENABLE_FEATURE_WEBSOCKETS
   bool _enableWS;
+#endif
   bool _enableTLS;
   
   OSS::socket_address_list _udpListeners;
@@ -300,11 +313,6 @@ private:
   SubNets _tlsSubnets;
   
   std::string _tlsCertPassword;
-  
-  //
-  // REST Key Value Store
-  //
-  OSS::Persistent::RESTKeyValueStore* _pKeyStore;
 };
 
 typedef SIPStack SIPStack;
@@ -354,9 +362,9 @@ inline void SIPStack::setRequestHandler(const SIPTransaction::RequestCallback& h
   _fsmDispatch.requestHandler() = handler;
 }
 
-inline void SIPStack::setAckFor2xxTransactionHandler(const SIPFSMDispatch::UnknownTransactionCallback& handler)
+inline void SIPStack::setAckOr2xxTransactionHandler(const SIPFSMDispatch::UnknownTransactionCallback& handler)
 {
-  _fsmDispatch.ackFor2xxTransactionHandler() = handler;
+  _fsmDispatch.ackOr2xxTransactionHandler() = handler;
 }
 
 inline SIPTransportService& SIPStack::transport()
@@ -369,16 +377,11 @@ inline std::string SIPStack::getTlsCertPassword() const
   return _tlsCertPassword;
 }
 
-inline void SIPStack::setKeyValueStore(OSS::Persistent::RESTKeyValueStore* pKeyStore)
+inline SIPTransaction::Ptr SIPStack::createClientTransaction(const SIPMessage::Ptr& pRequest)
 {
-  _pKeyStore = pKeyStore;
+  return _fsmDispatch.createClientTransaction(pRequest);
 }
 
-inline OSS::Persistent::RESTKeyValueStore* SIPStack::getKeyValueStore()
-{
-  return _pKeyStore; 
-}
-    /// Returns a pointer to the key value store
 
 } } // OSS::SIP
 #endif // SIP_SIPStack_INCLUDED

@@ -32,25 +32,28 @@
 #include "OSS/SIP/SIPParser.h"
 #include "OSS/SIP/SIPHeaderTokens.h"
 #include "OSS/SIP/SIPDigestAuth.h"
+#include "OSS/SIP/SIPURI.h"
 #include "OSS/UTL/PropertyMap.h"
 
 
 namespace OSS {
 namespace SIP {
 
-static const char METHOD_INVITE[]      = "INVITE";
-static const char METHOD_BYE[]         = "BYE";
-static const char METHOD_CANCEL[]      = "CANCEL";
-static const char METHOD_ACK[]         = "ACK";
-static const char METHOD_PRACK[]       = "PRACK";
-static const char METHOD_REFER[]       = "REFER";
-static const char METHOD_OPTIONS[]     = "OPTIONS";
-static const char METHOD_INFO[]        = "INFO";
-static const char METHOD_UPDATE[]      = "UPDATE";
-static const char METHOD_REGISTER[]    = "REGISTER";
-static const char METHOD_SUBSCRIBE[]   = "SUBSCRIBE";
-static const char METHOD_NOTIFY[]      = "NOTIFY";
-static const char METHOD_PUBLISH[]     = "PUBLISH";
+  
+static const char REQ_INVITE[]    = "INVITE";
+static const char REQ_BYE[]       = "BYE";
+static const char REQ_ACK[]       = "ACK";
+static const char REQ_PRACK[]     = "PRACK";
+static const char REQ_CANCEL[]    = "CANCEL";
+static const char REQ_INFO[]      = "INFO";
+static const char REQ_REFER[]     = "REFER";
+static const char REQ_UPDATE[]    = "UPDATE";
+static const char REQ_SUBSCRIBE[] = "SUBSCRIBE";
+static const char REQ_NOTIFY[]    = "NOTIFY";
+static const char REQ_PUBLISH[]   = "PUBLISH";
+static const char REQ_MESSAGE[]   = "MESSAGE";
+static const char REQ_OPTIONS[]   = "OPTIONS";
+static const char REQ_REGISTER[]   = "REGISTER";
 
 
 class OSS_API SIPMessage : 
@@ -129,6 +132,54 @@ public:
     CODE_606_NotAcceptable = 606,
     CODE_MAX_CODE = 699
   };
+  
+  enum RequestTypes
+  {
+    REQUEST_INVITE,
+    REQUEST_BYE,
+    REQUEST_ACK,
+    REQUEST_PRACK,
+    REQUEST_CANCEL,
+    REQUEST_INFO,
+    REQUEST_REFER,
+    REQUEST_UPDATE,
+    REQUEST_SUBSCRIBE,
+    REQUEST_NOTIFY,
+    REQUEST_PUBLISH,
+    REQUEST_MESSAGE,
+    REQUEST_OPTIONS,
+    REQUEST_UNKNOWN
+  };
+  
+  static const char* requestTypeToString(RequestTypes type)
+    /// returns the string representation of a Request Type
+  {
+    char* ret = 0;
+    
+    if (type < REQUEST_UNKNOWN)
+    {
+      static const char* method_map[] = 
+      {
+        "INVITE",
+        "BYE",
+        "ACK",
+        "PRACK",
+        "CANCEL",
+        "INFO",
+        "REFER",
+        "UPDATE",
+        "SUBSCRIBE",
+        "NOTIFY",
+        "PUBLISH",
+        "MESSAGE",
+        "OPTIONS"
+      };
+      
+      ret = (char*)method_map[type];
+    }
+    
+    return ret;
+  }
 
   SIPMessage();
     /// Creates a blank SIP Message
@@ -362,7 +413,36 @@ public:
     /// Erase a list header including all its elements.  
     /// To simply remove the first element in a list header,
     /// use hdrListPopFront instead.
+  
+   const std::string& hdrListBottom(const char* headerName) const;
+    /// Returns the last header in the list.
+    ///
+    /// If the header is not present, this function will return a reference
 
+  
+  static SIPMessage::Ptr createRequest(
+      SIPMessage::RequestTypes type,
+      const SIPURI& requestUri,
+      const std::string& callId,
+      unsigned int cseq,
+      const SIPURI& fromUri,
+      const std::string& fromDisplayName,
+      const std::string& fromTag,
+      const SIPURI& toUri,
+      const std::string& toDisplayName,
+      const std::string& toTag,
+      const SIPURI& contactUri,
+      const std::string& contactDisplayName,
+      const OSS::Net::IPAddress& viaTransport,
+      const std::string& viaBranch,
+      const std::string& contentType,
+      const std::string& body);
+    /// Create a basic request with the mandatory headers
+    ///
+    /// Display names, toTag, contentType and body can be empty
+    ///
+  
+  
   SIPMessage::Ptr createResponse(
     int statusCode,
     const std::string& reasonPhrase = "", 
@@ -498,6 +578,13 @@ public:
     /// This method will return inderterminate if the message is neither 
     /// a request nor a response.  It will throw SIPABNFSyntaxException
     /// if the start line is empty.
+  
+  boost::tribool isFinalResponse() const;
+    /// Returns true if the SIP Message belongs to the response code group (200, 300, 400, 500, 600)
+    ///
+    /// This method will return inderterminate if the message is neither 
+    /// a request nor a response.  It will throw SIPABNFSyntaxException
+    /// if the start line is empty.
 
   boost::tribool isMidDialog() const;
     /// Determines whether the message is sent within a dialog
@@ -617,6 +704,12 @@ public:
     /// This is normally used to determine if the consume() method has dropped
     /// leading CRLF bytes
 
+  bool getRequestUri(SIPURI& ruri) const;
+    /// Return the request uri
+  
+  bool setRequestUri(SIPURI& ruri);
+    /// Set the request URI
+  
   std::string getFromTag() const;
     /// Return the tag parameter of the From header.
   
@@ -637,33 +730,6 @@ public:
 
   std::string getTopViaBranch() const;
     /// Return the top via branhc parameter
-  
-  bool isInvite() const;
-    /// Returns true if a message is an INVITE request
-  bool isBye() const;
-    /// Returns true if a message is an BYE request
-  bool isCancel() const;
-    /// Returns true if a message is an CANCEL request
-  bool isAck() const;
-    /// Returns true if a message is an ACK request
-  bool isPrack() const;
-    /// Returns true if a message is an PRACK request
-  bool isRefer() const;
-    /// Returns true if a message is an REFER request
-  bool isUpdate() const;
-    /// Returns true if a message is an UPDATE request
-  bool isOptions() const;
-    /// Returns true if a message is an OPTIONS request
-  bool isInfo() const;
-    /// Returns true if a message is an INFO request
-  bool isRegister() const;
-    /// Returns true if a message is an REGISTER request
-  bool isSubscribe() const;
-    /// Returns true if a message is an SUBSCRIBE request
-  bool isNotify() const;
-    /// Returns true if a message is an NOTIFY request
-  bool isPublish() const;
-    /// Returns true if a message is an PUBLISH request
   
 protected:
   boost::tribool consumeOne(char input);
@@ -759,69 +825,6 @@ inline const SIPMessage::CustomProperties& SIPMessage::properties() const
   return _properties;
 }
 
-inline bool SIPMessage::isInvite() const
-{
-  return isRequest(METHOD_INVITE);
-}
-
-inline bool SIPMessage::isBye() const
-{
-  return isRequest(METHOD_BYE);
-}
-
-inline bool SIPMessage::isCancel() const
-{
-  return isRequest(METHOD_CANCEL);
-}
-
-inline bool SIPMessage::isAck() const
-{
-  return isRequest(METHOD_ACK);
-}
-
-inline bool SIPMessage::isPrack() const
-{
-  return isRequest(METHOD_PRACK);
-}
-
-inline bool SIPMessage::isRefer() const
-{
-  return isRequest(METHOD_REFER);
-}
-
-inline bool SIPMessage::isOptions() const
-{
-  return isRequest(METHOD_OPTIONS);
-}
-
-inline bool SIPMessage::isInfo() const
-{
-  return isRequest(METHOD_INFO);
-}
-
-inline bool SIPMessage::isUpdate() const
-{
-  return isRequest(METHOD_UPDATE);
-}
-inline bool SIPMessage::isRegister() const
-{
-  return isRequest(METHOD_REGISTER);
-}
-
-inline bool SIPMessage::isSubscribe() const
-{
-  return isRequest(METHOD_SUBSCRIBE);
-}
-
-inline bool SIPMessage::isNotify() const
-{
-  return isRequest(METHOD_NOTIFY);
-}
-
-inline bool SIPMessage::isPublish() const
-{
-  return isRequest(METHOD_PUBLISH);
-}
 
 }} //OSS::SIP
 #endif //SIP_SIPMessage_INCLUDED

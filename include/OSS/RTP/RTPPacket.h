@@ -20,19 +20,53 @@
 #ifndef OSS_RTPPACKET_H_INCLUDED
 #define OSS_RTPPACKET_H_INCLUDED
 
+#define RTP_PACKET_BUFFER_SIZE 4098
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_RTP
+
+#include "OSS/OSS.h"
+
+#if OSS_OS == OSS_OS_MAC_OS_X
+#include <machine/endian.h>
+#include <libkern/OSByteOrder.h>
+#define htobe16(x) OSSwapHostToBigInt16(x)
+#define htole16(x) OSSwapHostToLittleInt16(x)
+#define be16toh(x) OSSwapBigToHostInt16(x)
+#define le16toh(x) OSSwapLittleToHostInt16(x)
+
+#define htobe32(x) OSSwapHostToBigInt32(x)
+#define htole32(x) OSSwapHostToLittleInt32(x)
+#define be32toh(x) OSSwapBigToHostInt32(x)
+#define le32toh(x) OSSwapLittleToHostInt32(x)
+
+#define htobe64(x) OSSwapHostToBigInt64(x)
+#define htole64(x) OSSwapHostToLittleInt64(x)
+#define be64toh(x) OSSwapBigToHostInt64(x)
+#define le64toh(x) OSSwapLittleToHostInt64(x)
+
+#define bswap_16 OSSwapInt16
+#define bswap_32 OSSwapInt32
+#define bswap_64 OSSwapInt64
+
+#define __BIG_ENDIAN    BIG_ENDIAN
+#define __LITTLE_ENDIAN LITTLE_ENDIAN
+#define __BYTE_ORDER    BYTE_ORDER
+#else
 #include <endian.h>
+#include <byteswap.h>
+#endif
+
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
-#include <byteswap.h>
 #include <string>
 
 
 namespace OSS {
 namespace RTP {
 
-#define RTP_PACKET_BUFFER_SIZE 4098
+
 
 class RTPPacket
 {
@@ -132,7 +166,6 @@ private:
 	unsigned short _packetSourcePort;
 	std::string _packetDestinationIp;
 	unsigned short _packetDestinationPort;
-	u_char _data[RTP_PACKET_BUFFER_SIZE];
 };
   
 //
@@ -350,6 +383,7 @@ inline u_char* RTPPacket::data()
 
 } } // OSS::RTP
 
+#endif //ENABLE_FEATURE_RTP
 
 #endif // OSS_RTPPACKET_H_INCLUDED
 

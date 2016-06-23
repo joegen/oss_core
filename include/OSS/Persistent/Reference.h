@@ -21,8 +21,11 @@
 #ifndef OSS_PERSISTENT_REFERENCE_H_INCLUDED
 #define OSS_PERSISTENT_REFERENCE_H_INCLUDED
 
-#include <boost/shared_ptr.hpp>
+#include "OSS/build.h"
+#if ENABLE_FEATURE_CONFIG
+#if OSS_HAVE_CONFIGPP
 
+#include <boost/shared_ptr.hpp>
 #include "OSS/OSS.h"
 
 
@@ -43,5 +46,8 @@ private:
 };
 
 } } // OSS::Persistent
+
+#endif // OSS_HAVE_CONFIGPP
+#endif // ENABLE_FEATURE_CONFIG
 #endif// OSS_PERSISTENT_REFERENCE_H_INCLUDED
 

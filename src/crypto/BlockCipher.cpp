@@ -17,9 +17,9 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-
 #include "OSS/Crypto/BlockCipher.h"
 
+#if OSS_HAVE_MCRYPT
 
 namespace OSS {
 namespace Crypto {
@@ -212,7 +212,7 @@ namespace Crypto {
 
 } } // OSS::Crypto
 
-
+#endif // OSS_HAVE_MCRYPT
 
 
 

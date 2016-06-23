@@ -1,14 +1,27 @@
 SUBDIRS = .
 
-corelibs = liboss_carp.la
+EXTRA_DIST = js/scripts
+
+corelibs =
+
+if ENABLE_FEATURE_CARP
+corelibs += liboss_carp.la
+endif
+
 corelibldadd = \
     @OSS_CORE_DEP_LIBS@ \
-    liboss_core.la \
-    liboss_carp.la \
-    ua/core/re/libre.a \
-    ua/core/rem/librem.a
+    liboss_core.la
 
-if ENABLE_TURN
+if ENABLE_FEATURE_CARP
+    corelibldadd += liboss_carp.la
+endif
+
+if ENABLE_FEATURE_LIBRE
+    corelibldadd += ua/core/re/libre.a \
+		    ua/core/rem/librem.a
+endif
+
+if ENABLE_FEATURE_TURN
     corelibs += liboss_turn.la
     corelibldadd += liboss_turn.la
 endif
@@ -19,18 +32,27 @@ lib_LTLIBRARIES = $(corelibs)
 localedir = $(datadir)/locale
 
 AM_CPPFLAGS = \
+    -I/usr/include \
+    -I$(top_builddir)/include \
     -I@OSS_CORE_SRCDIR@/include \
     -I@OSS_CORE_SRCDIR@/src/utl/linux/pidfile \
-    -I@OSS_CORE_SRCDIR@/src/net/turn/carp \
+    -I@OSS_CORE_SRCDIR@/src/udns/include
+
+if ENABLE_FEATURE_LIBRE
+AM_CPPFLAGS +=	\
+    -I@OSS_CORE_SRCDIR@/src/ua/core/re/include \
+    -I@OSS_CORE_SRCDIR@/src/ua/core/rem/include
+endif
+
+if ENABLE_FEATURE_TURN
+AM_CPPFLAGS += \
     -I@OSS_CORE_SRCDIR@/src/net/turn \
     -I@OSS_CORE_SRCDIR@/src/net/turn/client \
     -I@OSS_CORE_SRCDIR@/src/net/turn/client++ \
     -I@OSS_CORE_SRCDIR@/src/net/turn/server \
     -I@OSS_CORE_SRCDIR@/src/net/turn/apps/common \
-    -I@OSS_CORE_SRCDIR@/src/net/turn/apps/relay \
-    -I@OSS_CORE_SRCDIR@/src/udns/include \
-    -I@OSS_CORE_SRCDIR@/src/ua/core/re/include \
-    -I@OSS_CORE_SRCDIR@/src/ua/core/rem/include
+    -I@OSS_CORE_SRCDIR@/src/net/turn/apps/relay
+endif
 
 AM_CFLAGS = \
     DHAVE_INET_PTON_NTOP \
@@ -44,6 +66,7 @@ LDADD = $(corelibldadd)
 
 LDFLAGS = -rdynamic
 
+if ENABLE_FEATURE_CARP
 liboss_carp_la_LDFLAGS = -version-info @OSS_CORE_VERSION_INFO@
 
 liboss_carp_la_LIBADD = $(LTLIBINTL)
@@ -77,8 +100,9 @@ liboss_carp_la_SOURCES = \
 	net/carp/log.c \
 	net/carp/log.h \
 	net/carp/syslognames.h
+endif
 
-if ENABLE_TURN
+if ENABLE_FEATURE_TURN
 
     liboss_turn_la_LDFLAGS = -version-info @OSS_CORE_VERSION_INFO@
     liboss_turn_la_LIBADD = @OSS_CORE_DEP_LIBS@
@@ -175,13 +199,8 @@ liboss_core_la_LDFLAGS = \
 
 liboss_core_la_LIBADD = @OSS_CORE_DEP_LIBS@
 
-# this is helpful if you're debugging something with lots of inlines (like the UtlLink code)
-# 		-fno-gcse -O0 -fno-implement-inlines -fno-default-inline
-liboss_core_la_CXXFLAGS = 
-	-DOSSLIBS_TMPDIR=\"@OSSLIBS_TMPDIR@\" \
-	-DOSSLIBS_CONFDIR=\"@OSSLIBS_CONFDIR@\" \
-	-DOSSAPP_LIB_VERSION=\"@OSS_CORE_VERSION_FULL@\" \
-	-fno-gcse -O0 -fno-implement-inlines -fno-default-inline 
+# this is helpful if you're debugging something with lots of inlines
+liboss_core_la_CXXFLAGS = -O0 -fno-implement-inlines 
 
 liboss_core_la_CFLAGS = \
     -DHAVE_INET_PTON_NTOP
@@ -250,17 +269,11 @@ liboss_core_la_SOURCES =  \
     abnf/ABNFSIPGenericParam.cpp \
     abnf/ABNFSIPHierPart.cpp \
     crypto/Crypto.cpp \
-    crypto/BlockCipher.cpp \
-    crypto/FileEncryptor.cpp \
-    persistent/ClassType.cpp \
-    persistent/DataType.cpp \
-    persistent/Reference.cpp \
-    persistent/KVLevelDB.cpp \
-    persistent/RESTKeyValueStore.cpp \
     sdp/SDPHeader.cpp \
     sdp/SDPHeaderList.cpp \
     sdp/SDPMedia.cpp \
     sdp/SDPSession.cpp \
+    sdp/ICECandidate.cpp \
     sipparser/SIPAuthorization.cpp \
     sipparser/SIPContact.cpp \
     sipparser/SIPCSeq.cpp \
@@ -269,7 +282,6 @@ liboss_core_la_SOURCES =  \
     sipparser/SIPHeaderTokens.cpp \
     sipparser/SIPMessage.cpp \
     sipparser/SIPParser.cpp \
-    sipparser/SIPProxyAuthenticate.cpp \
     sipparser/SIPRequestLine.cpp \
     sipparser/SIPRoute.cpp \
     sipparser/SIPStatusLine.cpp \
@@ -280,16 +292,12 @@ liboss_core_la_SOURCES =  \
     siptransport/SIPStreamedConnectionManager.cpp \
     siptransport/SIPTransportService.cpp \
     siptransport/SIPUDPListener.cpp \
-    siptransport/SIPXOR.cpp \
     siptransport/SIPUDPConnection.cpp \
     siptransport/SIPTCPListener.cpp \
     siptransport/SIPUDPConnectionClone.cpp \
     siptransport/SIPListener.cpp \
     siptransport/SIPTransportSession.cpp \
     siptransport/SIPTLSListener.cpp \
-    siptransport/SIPWebSocketConnection.cpp \
-    siptransport/SIPWebSocketListener.cpp \
-    siptransport/SIPWebSocketConnectionManager.cpp \
     sipfsm/SIPNist.cpp \
     sipfsm/SIPTransactionTimers.cpp \
     sipfsm/SIPIst.cpp \
@@ -304,37 +312,10 @@ liboss_core_la_SOURCES =  \
     sipfsm/SIPFsm.cpp \
     sipfsm/SIPNict.cpp \
     sipfsm/SIPTransaction.cpp \
-    stun/STUNProto.cpp \
-    stun/STUNMappedAddress.cpp \
-    stun/STUNServer.cpp \
-    stun/STUNClient.cpp \
-    ua/SIPUserAgent.cpp \
-    ua/SIPRegistration.cpp \
-    ua/SIPEventLoop.cpp \
-    b2bua/SIPB2BClientTransaction.cpp \
-    b2bua/SIPB2BTransaction.cpp \
-    b2bua/SIPB2BScriptableHandler.cpp \
-    b2bua/SIPB2BTransactionManager.cpp \
-    b2bua/SIPB2BDialogStateManager.cpp \
-    b2bua/SIPB2BContact.cpp \
-    b2bua/SIPB2BUserAgentHandlerList.cpp \
-    b2bua/SIPB2BRegisterAgent.cpp \
-    js/JSBase.cpp \
-    js/JSSIPMessage.cpp \
-    rtp/RTPPacket.cpp \
-    rtp/RTPPCAPReader.cpp \
-    rtp/RTPProxy.cpp \
-    rtp/RTPProxyClient.cpp \
-    rtp/RTPProxyManager.cpp \
-    rtp/RTPProxyRecord.cpp \
-    rtp/RTPProxySession.cpp \
-    rtp/RTPProxyTuple.cpp \
-    rtp/RTPResizer.cpp \
-    rtp/RTPResizingQueue.cpp \
-    rtp/SRTPProfile.cpp \
+    sipep/SIPEndpoint.cpp \
+    sipep/SIPEndpointRetransmitter.cpp \
     net/FirewallRule.cpp \
     net/Firewall.cpp \
-    net/Carp.cpp \
     net/HTTPServer.cpp \
     net/AccessControl.cpp \
     net/TLSManager.cpp \
@@ -344,11 +325,6 @@ liboss_core_la_SOURCES =  \
     net/FramedTcpClient.cpp \
     net/FramedTcpConnection.cpp \
     net/FramedTcpListener.cpp \
-    net/DTLSContext.cpp \
-    net/DTLSSession.cpp \
-    net/DTLSBio.cpp \
-    net/DTLSSocketInterface.cpp \
-    net/DTLSSocket.cpp \
     utl/AdaptiveDelay.cpp \
     utl/CoreUtils.cpp \
     utl/Logger.cpp \
@@ -359,9 +335,85 @@ liboss_core_la_SOURCES =  \
     utl/Cache.cpp \
     utl/Compress.cpp \
     utl/DynamicHashTable.cpp \
-    utl/DebugMemory.cpp \
     utl/Thread.cpp \
     utl/StackTrace.cpp \
+    utl/LogFile.cpp \
+    ep/EndpointConnection.cpp \
+    ep/EndpointListener.cpp
+
+if ENABLE_FEATURE_RESTKV
+liboss_core_la_SOURCES += \
+    persistent/KVLevelDB.cpp \
+    persistent/RESTKeyValueStore.cpp
+endif
+
+
+if ENABLE_FEATURE_TURN
+    liboss_core_la_SOURCES += net/TurnServer.cpp
+endif
+
+if ENABLE_FEATURE_STUN
+liboss_core_la_SOURCES += \
+    stun/STUNProto.cpp \
+    stun/STUNMappedAddress.cpp \
+    stun/STUNServer.cpp \
+    stun/STUNClient.cpp
+endif
+
+if ENABLE_FEATURE_LIBRE
+liboss_core_la_SOURCES += \
+    ua/SIPUserAgent.cpp \
+    ua/SIPRegistration.cpp \
+    ua/SIPEventLoop.cpp 
+
+if ENABLE_FEATURE_B2BUA
+liboss_core_la_SOURCES += b2bua/SIPB2BRegisterAgent.cpp
+endif
+endif
+
+if ENABLE_FEATURE_CARP
+liboss_core_la_SOURCES += net/Carp.cpp
+endif
+
+if ENABLE_FEATURE_RTP
+liboss_core_la_SOURCES +=  \
+    rtp/RTPPacket.cpp \
+    rtp/RTPProxy.cpp \
+    rtp/RTPProxyManager.cpp \
+    rtp/RTPProxyRecord.cpp \
+    rtp/RTPProxySession.cpp \
+    rtp/RTPProxyTuple.cpp \
+    rtp/RTPResizer.cpp \
+    rtp/RTPResizingQueue.cpp
+
+if OSS_HAVE_PCAP
+    liboss_core_la_SOURCES +=  rtp/RTPPCAPReader.cpp
+endif
+endif
+
+if ENABLE_FEATURE_B2BUA
+liboss_core_la_SOURCES +=  \
+    b2bua/SIPB2BClientTransaction.cpp \
+    b2bua/SIPB2BTransaction.cpp \
+    b2bua/SIPB2BTransactionManager.cpp \
+    b2bua/SIPB2BDialogStateManager.cpp \
+    b2bua/SIPB2BContact.cpp \
+    b2bua/SIPB2BUserAgentHandlerList.cpp
+endif
+
+if ENABLE_FEATURE_V8
+liboss_core_la_SOURCES +=  \
+    b2bua/SIPB2BScriptableHandler.cpp \
+    js/JSBase.cpp \
+    js/JSSIPMessage.cpp
+endif
+
+if ENABLE_FEATURE_XOR
+liboss_core_la_SOURCES += siptransport/SIPXOR.cpp
+endif
+
+if ENABLE_FEATURE_WEBSOCKETS
+liboss_core_la_SOURCES +=  \
     ws/src/base64/base64.cpp \
     ws/src/md5/md5.c \
     ws/src/messages/data.cpp \
@@ -399,18 +451,36 @@ liboss_core_la_SOURCES =  \
     ws/src/sockets/plain.hpp \
     ws/src/sockets/socket_base.hpp \
     ws/src/sockets/tls.hpp \
-    ws/src/utf8_validator/utf8_validator.hpp
-
-if ENABLE_TURN
-    liboss_core_la_SOURCES += net/TurnServer.cpp
+    ws/src/utf8_validator/utf8_validator.hpp \
+    siptransport/SIPWebSocketConnection.cpp \
+    siptransport/SIPWebSocketListener.cpp \
+    siptransport/SIPWebSocketConnectionManager.cpp 
 endif
 
-bin_PROGRAMS = \
-    oss_core_unit_test \
-    oss_garp \
-    oss_carp \
-    oss_core \
-    oss_rest
+if ENABLE_FEATURE_ZMQ
+liboss_core_la_SOURCES +=  zmq/ZMQSocket.cpp
+endif
+
+if ENABLE_FEATURE_REDIS
+liboss_core_la_SOURCES += persistent/RedisClient.cpp
+endif
+
+if ENABLE_FEATURE_MCRYPT
+liboss_core_la_SOURCES += \
+    crypto/BlockCipher.cpp \
+    crypto/FileEncryptor.cpp
+endif
+
+if ENABLE_FEATURE_CONFIG
+liboss_core_la_SOURCES += \
+    persistent/ClassType.cpp \
+    persistent/DataType.cpp \
+    persistent/Reference.cpp
+endif
+
+TESTS = oss_core-unit-test
+check_PROGRAMS = oss_core-unit-test
+
 
 oss_core_unit_test_CXXFLAGS = \
 	${common_cxx_flags} \
@@ -440,7 +510,40 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestReplaces.cpp \
 	unit_test/TestTransport.cpp \
 	unit_test/TestUaRegister.cpp \
-	unit_test/TestV8Engine.cpp
+	unit_test/TestDigestAuth.cpp \
+	unit_test/TestRedisPubSub.cpp \
+	unit_test/TestZMQSocket.cpp
+
+
+SIP_TEST = \
+    oss_test_sip_invite_simple
+
+#
+# test_forked_100rel
+#
+oss_test_sip_invite_simple_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
+oss_test_sip_invite_simple_SOURCES = siptest/TestInviteSimple.cpp
+
+bin_PROGRAMS = \
+    $(SIP_TEST)
+
+if ENABLE_FEATURE_B2BUA
+if ENABLE_FEATURE_CARP 
+if ENABLE_FEATURE_LIBRE 
+if ENABLE_FEATURE_V8
+bin_PROGRAMS += \
+    oss_core \
+    oss_rest
+endif
+endif
+endif
+endif
+
+if ENABLE_FEATURE_CARP
+bin_PROGRAMS += \
+    oss_garp \
+    oss_carp
+endif
 
 #
 # oss_core - A simple back-to-back user agent
@@ -457,14 +560,14 @@ oss_garp_SOURCES = apps/oss_garp.cpp
 #
 # oss_carp - tool for Common Address Redundancy Protocol
 #
-oss_carp_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
+oss_carp_CXXFLAGS = ${common_cxx_flags} -O0 -fno-implement-inlines
 #oss_carp_LDFLAGS = -rdynamic
 oss_carp_SOURCES = apps/oss_carp.cpp
 
 #
 # oss_rest - REST Server implementation
 #
-oss_rest_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
+oss_rest_CXXFLAGS = ${common_cxx_flags} -O0 -fno-implement-inlines
 oss_rest_SOURCES = apps/oss_rest.cpp
 
 
@@ -475,4 +578,4 @@ DISTCLEANFILES = Makefile.in
 #
 BUILT_SOURCES = boost_pch.hpp.gch
 %.hpp.gch: %.hpp
-	$(CXX) -D_REENTRANT -D_FILE_OFFSET_BITS=64 -fno-gcse -O0 -fno-implement-inlines -g -O2 -fmessage-length=0 -Wall -Wformat -Wwrite-strings -Wpointer-arith -fPIC -DPIC -c $<
+	$(CXX) -D_REENTRANT -D_FILE_OFFSET_BITS=64 -O0 -fno-implement-inlines -g -O2 -fmessage-length=0 -Wall -Wformat -Wwrite-strings -Wpointer-arith -fPIC -DPIC -c $<

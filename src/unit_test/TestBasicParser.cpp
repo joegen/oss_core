@@ -1085,3 +1085,27 @@ TEST(ParserTest, test_abnf_parser)
     ASSERT_TRUE(token == "9999");
   }
 }
+
+TEST(ParserTest, test_message_consume_late_crlf)
+{
+  const char* strm0 = "ACK sip:0911000002@xxx.xx.xxx.xx:5061;transport=tls;sbc-session-id=14907826164498974465678749180;sbc-call-index=1 SIP/2.0\r\n"
+  "Via: SIP/2.0/TLS 192.168.3.2:6010;rport;branch=z9hG4bK1543036756\r\n" 
+  "From: <sip:0911000001@chat2.somehost.net>;tag=439959295\r\n"
+  "To: <sip:0911000002@chat2.somehost.net>;tag=as13dced7d\r\n" 
+  "Call-ID: 1435267409\r\n"
+  "CSeq: 20 ACK\r\n" 
+  "Contact: <sip:0911000001@xx.xxx.xxx.xxx:49823;transport=TLS>\r\n"
+  "Max-Forwards: 70\r\n" 
+  "User-Agent: antisip/5.1.0-Feb--5-2016 SecurePhone/1.0a-186_1602\r\n" 
+  "Content-Length: 0\r";
+  
+  const char* strm1 = "\n\r\n";
+  
+
+  SIPMessage msg;
+  boost::tuple<boost::tribool, const char*> ret;
+  ret = msg.consume(strm0, strm0 + strlen(strm0));
+  ASSERT_TRUE(boost::indeterminate(ret.get<0>()));
+  ret = msg.consume(strm1, strm1 + strlen(strm1));
+  ASSERT_TRUE(ret.get<0>() == true);
+}

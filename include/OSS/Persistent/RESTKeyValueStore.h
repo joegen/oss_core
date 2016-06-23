@@ -20,7 +20,13 @@
 #ifndef OSS_RESTKEYVALUESTORE_H_INCLUDED
 #define	OSS_RESTKEYVALUESTORE_H_INCLUDED
 
+#include "OSS/build.h"
 
+#if ENABLE_FEATURE_RESTKV
+
+#if OSS_HAVE_LEVELDB
+
+#include "OSS/OSS.h"
 #include "OSS/Net/HTTPServer.h"
 #include "OSS/Persistent/KeyValueStore.h"
 
@@ -142,6 +148,10 @@ inline void RESTKeyValueStore::setDataDirectory(const std::string& dataDirectory
 }
 
 } }
+
+#endif // OSS_HAVE_LEVELDB
+
+#endif // ENABLE_FEATURE_RESTKV
 
 #endif	// OSS_RESTKEYVALUESTORE_H_INCLUDED
 

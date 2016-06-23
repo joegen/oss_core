@@ -24,6 +24,7 @@
 #include "OSS/SIP/SIPVia.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/UTL/CoreUtils.h"
+#include "OSS/SIP/SIPRequestLine.h"
 
 
 namespace OSS {
@@ -33,13 +34,10 @@ namespace B2BUA {
 
 SIPB2BTransactionManager::SIPB2BTransactionManager(int minThreadcount, int maxThreadCount) :
   _threadPool(minThreadcount, maxThreadCount),
-  _stack(),
   _useSourceAddressForResponses(false),
   _pDefaultHandler(0),
-  _pKeyStore(0)
+  _maxThreadCount(maxThreadCount)  
 {
-  _stack.setRequestHandler(boost::bind(&SIPB2BTransactionManager::handleRequest, this, _1, _2, _3));
-  _stack.setAckFor2xxTransactionHandler(boost::bind(&SIPB2BTransactionManager::handleAckFor2xxTransaction, this, _1, _2));
 }
 
 SIPB2BTransactionManager::~SIPB2BTransactionManager()
@@ -48,14 +46,19 @@ SIPB2BTransactionManager::~SIPB2BTransactionManager()
 
 void SIPB2BTransactionManager::initialize(const boost::filesystem::path& cfgDirectory)
 {
+#if ENABLE_FEATURE_CONFIG
   OSS_VERIFY(!_sipConfigFile.empty());
   _transportConfigurationFile = operator/(cfgDirectory, _sipConfigFile);
   stack().initTransportFromConfig(_transportConfigurationFile);
+#endif
 }
 
 void SIPB2BTransactionManager::deinitialize()
 {
+#if ENABLE_FEATURE_LIBRE
   stopLocalRegistrationAgent();
+#endif
+  
   //
   // Deinitialize all registed handlers
   //
@@ -101,43 +104,50 @@ void SIPB2BTransactionManager::handleRequest(
   if (!b2bTransaction)
     return;
   
-#if SEND_ERROR_ON_B2BUA_THREAD_DEPLETION
-  if (_threadPool.schedule(boost::bind(&SIPB2BTransaction::runTask, b2bTransaction)) == -1)
+  if (_externalDispatch)
   {
-    OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleRequest");
-    SIPMessage::Ptr serverError = pMsg->createResponse(500, "Thread Resource Depleted");
-    pTransaction->sendResponse(serverError, pTransport->getRemoteAddress());
-    delete b2bTransaction;
+    _externalDispatch(this, b2bTransaction);
   }
+  else
+  {
+#if SEND_ERROR_ON_B2BUA_THREAD_DEPLETION
+    if (_threadPool.schedule(boost::bind(&SIPB2BTransaction::runTask, b2bTransaction)) == -1)
+    {
+      OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleRequest");
+      SIPMessage::Ptr serverError = pMsg->createResponse(500, "Thread Resource Depleted");
+      pTransaction->sendResponse(serverError, pTransport->getRemoteAddress());
+      delete b2bTransaction;
+    }
 #else
-  //
-  // The idea here is that if the threadpool runs out of threads, then we will directly
-  // call runTask using the current thread which would effectively block the transport.
-  // This is a good thing because blocking the transport yields our threadpool
-  // allowing it to recover.
-  //
-  if (_threadPool.schedule(boost::bind(&SIPB2BTransaction::runTask, b2bTransaction)) == -1)
-    b2bTransaction->runTask();
+    //
+    // The idea here is that if the threadpool runs out of threads, then we will directly
+    // call runTask using the current thread which would effectively block the transport.
+    // This is a good thing because blocking the transport yields our threadpool
+    // allowing it to recover.
+    //
+    if (_threadPool.schedule(boost::bind(&SIPB2BTransaction::runTask, b2bTransaction)) == -1)
+      b2bTransaction->runTask();
 #endif
+  }
 }
 
-void SIPB2BTransactionManager::handleAckFor2xxTransaction(
+void SIPB2BTransactionManager::handleAckOr2xxTransaction(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport)
 {
   SIPB2BHandler::Ptr pHandler = findHandler(SIPB2BHandler::TYPE_INVITE);
   if (pHandler)
   {
-    if (_threadPool.schedule(boost::bind(&SIPB2BHandler::onProcessAckFor2xxRequest, pHandler, pMsg, pTransport)) == -1)
+    if (_threadPool.schedule(boost::bind(&SIPB2BHandler::onProcessAckOr2xxRequest, pHandler, pMsg, pTransport)) == -1)
     {
-      OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleAckFor2xxTransaction");
+      OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleAckOr2xxTransaction");
     }
   }
   else if (_pDefaultHandler)
   {
-    if (_threadPool.schedule(boost::bind(&SIPB2BHandler::onProcessAckFor2xxRequest, _pDefaultHandler, pMsg, pTransport)) == -1)
+    if (_threadPool.schedule(boost::bind(&SIPB2BHandler::onProcessAckOr2xxRequest, _pDefaultHandler, pMsg, pTransport)) == -1)
     {
-      OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleAckFor2xxTransaction");
+      OSS::log_error(pMsg->createContextId(true) + "No available thread to handle SIPB2BTransactionManager::handleAckOr2xxTransaction");
     }
   }
 }
@@ -249,16 +259,26 @@ SIPB2BHandler::Ptr SIPB2BTransactionManager::findHandler(SIPB2BHandler::MessageT
   return SIPB2BHandler::Ptr();
 }
 
-SIPB2BHandler::Ptr SIPB2BTransactionManager::findDomainRouter(const OSS::SIP::SIPMessage::Ptr& pMsg) const
+SIPB2BHandler::Ptr SIPB2BTransactionManager::findDomainRouter(const std::string& domain) const
 {
-  std::string domain = pMsg->getFromHost();
   DomainRouters::const_iterator iter = _domainRouters.find(domain);
   if (iter != _domainRouters.end() && iter->second)
   {
-    OSS_LOG_DEBUG(pMsg->createContextId(true) << "Found static route handler for domain " << domain);
     return iter->second;
   }
+  
   return SIPB2BHandler::Ptr();
+}
+
+SIPB2BHandler::Ptr SIPB2BTransactionManager::findDomainRouter(const OSS::SIP::SIPMessage::Ptr& pMsg) const
+{
+  std::string domain = pMsg->getFromHost();
+  SIPB2BHandler::Ptr pRouter = findDomainRouter(domain);
+  if (pRouter)
+  {
+    OSS_LOG_DEBUG(pMsg->createContextId(true) << "Found static route handler for domain " << domain);
+  }
+  return pRouter;
 }
 
 
@@ -317,7 +337,7 @@ SIPMessage::Ptr SIPB2BTransactionManager::onRouteTransaction(
   {
     bool handled = false;
     SIPMessage::Ptr result = pHandler->onRouteTransaction(pRequest, pTransaction, localInterface, target, handled);
-    if (result)
+    if (handled || result)
       return result;
   }
   
@@ -632,12 +652,7 @@ bool SIPB2BTransactionManager::registerPlugin(const std::string& name, const std
   return true;
 }
 
-void SIPB2BTransactionManager::setKeyValueStore(OSS::Persistent::RESTKeyValueStore* pKeyStore)
-{
-  _pKeyStore = pKeyStore;
-  _stack.setKeyValueStore(_pKeyStore);
-}
-
+#if ENABLE_FEATURE_LIBRE
 bool SIPB2BTransactionManager::startLocalRegistrationAgent(
   const std::string& agentName,
   const std::string& route,
@@ -702,6 +717,26 @@ bool SIPB2BTransactionManager::isForLocalRegistration(const std::string& contact
   }
   
   return false;
+}
+
+#endif
+
+void SIPB2BTransactionManager::addPendingSubscription(const std::string& callId)
+{
+  OSS::mutex_critic_sec_lock lock(_pendingSubscriptionsMutex);
+  _pendingSubscriptions.insert(callId);
+}
+
+void SIPB2BTransactionManager::removePendingSubscription(const std::string& callId)
+{
+  OSS::mutex_critic_sec_lock lock(_pendingSubscriptionsMutex);
+  _pendingSubscriptions.erase(callId);
+}
+
+bool SIPB2BTransactionManager::isSubscriptionPending(const std::string& callId) const
+{
+  OSS::mutex_critic_sec_lock lock(_pendingSubscriptionsMutex);
+  return _pendingSubscriptions.find(callId) != _pendingSubscriptions.end();
 }
 
 } } } // OSS::SIP::B2BUA

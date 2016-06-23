@@ -21,6 +21,9 @@
 #define	OSS_SIPB2BUSERAGENTHANDLERLIST_H_INCLUDED
 
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_B2BUA
+
 #include "OSS/UTL/Thread.h"
 #include "OSS/SIP/B2BUA/SIPB2BUserAgentHandler.h"
 #include "OSS/UTL/DynamicHashTable.h"
@@ -67,6 +70,7 @@ inline bool SIPB2BUserAgentHandlerList::Item::operator < (const SIPB2BUserAgentH
 } } } // OSS::SIP::B2BUA
 
 
+#endif // ENABLE_FEATURE_B2BUA
 
 #endif	/// OSS_SIPB2BUSERAGENTHANDLERLIST_H_INCLUDED
 

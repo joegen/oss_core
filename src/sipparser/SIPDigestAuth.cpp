@@ -23,7 +23,7 @@
 #include "OSS/SIP/SIPDigestAuth.h"
 #include "OSS/SIP/SIPParser.h"
 
-#define MD5_NONCE_KEY "toadfish"
+static std::string MD5_NONCE_KEY = "toadfish";
 
 namespace OSS {
 namespace SIP {
@@ -35,6 +35,11 @@ SIPDigestAuth::SIPDigestAuth()
 
 SIPDigestAuth::~SIPDigestAuth()
 {
+}
+
+void SIPDigestAuth::setSecretKey(const std::string& key)
+{
+  MD5_NONCE_KEY = key;
 }
 
 std::string SIPDigestAuth::digestCreateA1Hash(

@@ -141,22 +141,26 @@ public:
 
   int schedule(boost::function<void()> task);
     /// Schedule a task for execution.  Returns the number of
-    /// currently used thread if sucessful or -1 if unsuccessful.
+    /// currently used thread if successful or -1 if unsuccessful.
+  
+  void schedule(boost::function<void()> task, int millis);
+    /// Schedule a task for execution (with delay). 
 
   int schedule_with_arg(boost::function<void(argument_place_holder)> task, argument_place_holder arg);
     /// Schedule a task with a placeholder argument.  Returns the number of
-    /// currently used thread if sucessful or -1 if unsuccessful.
+    /// currently used thread if successful or -1 if unsuccessful.
 
   static void static_join();
     /// Waits for all threads in the deafult thread pool to complete.
 
+  static void static_schedule(boost::function<void()> task, int millis);
   static int static_schedule(boost::function<void()> task);
     /// Schedule a task using the default thread pool.  Returns the number of
-    /// currently used thread if sucessful or 0 if unsuccessful.
+    /// currently used thread if successful or 0 if unsuccessful.
 
   static int static_schedule_with_arg(boost::function<void(argument_place_holder)> task, argument_place_holder arg);
     /// Schedule a task with a placeholder argument using the default thread pool.  Returns the number of
-    /// currently used thread if sucessful or 0 if unsuccessful.
+    /// currently used thread if successful or 0 if unsuccessful.
 private:
   void* _threadPool;
 };
@@ -173,7 +177,7 @@ public:
   void stop();
   void setTask(const Task& task);
   bool isTerminated();
-  
+  void waitForTermination();
 protected:
   virtual void runTask();
   virtual void onTerminate();

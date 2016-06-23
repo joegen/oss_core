@@ -33,7 +33,19 @@
 #include "OSS/SIP/SIPMessage.h"
 #include "OSS/SIP/SIPTransaction.h"
 #include "OSS/SIP/SIPFsm.h"
+#include "OSS/SIP/SIPStreamedConnection.h"
 
+//
+// Forward declaration for SIPB2BTransaction
+//
+
+namespace OSS {
+namespace SIP {
+namespace B2BUA {
+  
+class SIPB2BTransaction;  
+  
+} } }
 
 namespace OSS {
 namespace SIP {
@@ -54,9 +66,13 @@ public:
   typedef boost::weak_ptr<SIPTransaction> WeakPtr;
   typedef boost::shared_ptr<OSS::Exception> Error;
   typedef boost::function<void(const SIPTransaction::Error&, const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> Callback;
-	typedef boost::function<void()> TerminateCallback;
+	typedef boost::function<void(const SIPTransaction::Ptr&)> TerminateCallback;
   typedef boost::function<void(const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> RequestCallback;
   typedef std::map<std::string, SIPTransaction::Ptr> Branches;
+  typedef boost::weak_ptr<OSS::SIP::B2BUA::SIPB2BTransaction> B2BTransactionWeakPtr;
+  typedef boost::shared_ptr<OSS::SIP::B2BUA::SIPB2BTransaction> B2BTransactionSharedPtr;
+  typedef RequestCallback ResponseCallback;
+  
   enum Type
   {
     TYPE_UNKNOWN,
@@ -176,7 +192,10 @@ public:
 
   Type getType() const;
     /// Returns the transaction type
-protected:
+  
+  void handleConnectionError(SIPStreamedConnection::ConnectionError errorType, const boost::system::error_code& e);
+    /// Called by the streamed connection when reporting I/O operation errors
+  
   void onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport);
     /// This method is called when a SIP message is received from the transport.
     ///
@@ -247,6 +266,7 @@ protected:
   void handleTimeoutNICT();
     /// Called by the FSM when an outgoing non-invite request times out.
 
+
 	SIPTransportSession::Ptr& transport();
     /// Returns a pointer to the transport
 
@@ -300,9 +320,18 @@ protected:
     /// Called from SIPTransaction::termiante to signal the parent transaction
     /// that a child has terminated
 
+  void setResponseCallback(const ResponseCallback& responseCallback);
+    /// Set a response callback for server transactions
+  
+  void attachB2BTransaction(const B2BTransactionSharedPtr& pB2BTransaction);
+  
+  B2BTransactionSharedPtr getB2BTransaction();
 protected:
   SIPTransaction::Callback _responseTU;
   SIPTransaction::TerminateCallback _terminateCallback;
+  SIPTransaction::ResponseCallback _responseCallback;
+  B2BTransactionWeakPtr _pB2BTransaction;
+  
   Type _type;
 private:
   SIPTransaction(const SIPTransaction&);
@@ -435,6 +464,11 @@ inline bool SIPTransaction::isParent() const
 inline SIPTransaction::Type SIPTransaction::getType() const
 {
   return _type;
+}
+
+inline void SIPTransaction::setResponseCallback(const ResponseCallback& responseCallback)
+{
+  _responseCallback = responseCallback;
 }
 
 } } // namespace OSS::SIP

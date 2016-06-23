@@ -51,6 +51,9 @@
 #ifndef SIPWEBSOCKETCONNECTIONMANAGER_H
 #define	SIPWEBSOCKETCONNECTIONMANAGER_H
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_WEBSOCKETS
+
 #include <set>
 #include <map>
 #include <boost/asio.hpp>
@@ -158,6 +161,8 @@ inline SIPWebSocketConnection::Ptr SIPWebSocketConnectionManager::findConnection
 
 
 } } // OSS::SIP
+
+#endif // ENABLE_FEATURE_WEBSOCKETS
 
 #endif	/* SIPWEBSOCKETCONNECTIONMANAGER_H */
 

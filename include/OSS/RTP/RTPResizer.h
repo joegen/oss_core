@@ -19,6 +19,10 @@
 #ifndef RTPRESIZER_H_INCLUDED
 #define	RTPRESIZER_H_INCLUDED
 
+
+#include "OSS/build.h"
+#if ENABLE_FEATURE_RTP
+
 #include <boost/noncopyable.hpp>
 #include <boost/array.hpp>
 #include <OSS/UTL/Thread.h>
@@ -90,6 +94,8 @@ inline const unsigned int RTPResizer::legIndex() const
 }
 
 } } // OSS::RTP
+
+#endif // ENABLE_FEATURE_RTP
 
 #endif	// RTPRESIZER_H_INCLUDED
 

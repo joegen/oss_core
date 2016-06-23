@@ -24,6 +24,7 @@
 #include <boost/asio.hpp>
 #include <boost/system/error_code.hpp>
 #include "OSS/SIP/SIP.h"
+#include "OSS/Net/IPAddress.h"
 
 
 namespace OSS {
@@ -39,6 +40,9 @@ public:
   
   SIPListener(SIPTransportService* pTransportService, const std::string& address, const std::string& port);
     /// Construct the server to listen on the specified TCP address and port.
+  
+  SIPListener(SIPTransportService* pTransportService, const std::string& address, const std::string& port, const std::string& alias);
+    /// Construct the server to listen on the specified TCP address and port.
 
   virtual ~SIPListener();
     /// Destroys the server.
@@ -49,6 +53,9 @@ public:
   virtual void handleAccept(const boost::system::error_code& e, OSS_HANDLE userData = 0) = 0;
     /// Handle completion of an asynchronous accept operation.
 
+  virtual void handleStart() = 0;
+    /// Handle a request to start the server.
+  
   virtual void handleStop() = 0;
     /// Handle a request to stop the server.
   
@@ -60,10 +67,19 @@ public:
   
   virtual bool canBeRestarted() const;
     /// returns true if the listener can safely be restarted
+  
+  bool isEndpoint() const;
+    /// returns true if this listener is an endpoint
+
+  void setAddress(const std::string& address);
+      /// Set the address
 
   const std::string& getAddress() const;
-    /// Returns the address where the listener is bound
+  /// Returns the address where the listener is bound
 
+  void setPort(const std::string& port);
+  /// Set the port
+  
   const std::string& getPort() const;
     /// Returns the address where the listener is bound
 
@@ -93,6 +109,14 @@ public:
   bool hasStarted() const;
     /// Returns true if the listener has started accepting connections
   
+  void setTransportAlias(const std::string& alias);
+  
+  const std::string& getTransportAlias() const;
+  
+  bool isV4() const;
+  
+  bool isV6() const;
+   
 protected:
   SIPListener(const SIPListener&);
   SIPListener& operator = (const SIPListener&);
@@ -102,10 +126,14 @@ protected:
   std::string _externalAddress;
   SubNets _subNets;
 
+  std::string _alias;
   std::string _address;
   std::string _port;
   bool _isVirtual;
   bool _hasStarted;
+  bool _isEndpoint;
+  bool _isRunning;
+  OSS::Net::IPAddress _netAddress;
 };
 
 //
@@ -160,6 +188,41 @@ inline void SIPListener::setVirtual(bool isVirtual)
 inline bool SIPListener::hasStarted() const
 {
   return _hasStarted;
+}
+
+inline bool SIPListener::isEndpoint() const
+{
+  return _isEndpoint;
+}
+
+inline void SIPListener::setAddress(const std::string& address)
+{
+  _address = address;
+}
+
+inline void SIPListener::setPort(const std::string& port)
+{
+  _port = port;
+}
+
+inline void SIPListener::setTransportAlias(const std::string& alias)
+{
+  _alias = alias;
+}
+  
+inline const std::string& SIPListener::getTransportAlias() const
+{
+  return _alias;
+}
+
+inline bool SIPListener::isV4() const
+{
+  return _netAddress.address().is_v4();
+}
+  
+inline bool SIPListener::isV6() const
+{
+  return _netAddress.address().is_v6();
 }
 
 } } // OSS::SIP

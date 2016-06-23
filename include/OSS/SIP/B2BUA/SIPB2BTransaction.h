@@ -21,6 +21,8 @@
 #ifndef SIP_SIPStackB2BTransaction_INCLUDED
 #define SIP_SIPStackB2BTransaction_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_B2BUA
 
 #include <queue>
 
@@ -219,6 +221,8 @@ protected:
   OSS::dns_srv_record_list _tlsSrvTargets;
   OSS::Net::IPAddress _localInterface;
   SIPB2BDialogData _dialogData;
+  bool _isChallenged;
+  std::string _pendingSubscriptionId;
   friend class SIPB2BTransactionManager;
 };
 
@@ -319,6 +323,8 @@ inline const SIPB2BTransaction::CustomProperties& SIPB2BTransaction::properties(
 }
   
 } } } // OSS::SIP::B2BUA
+
+#endif // ENABLE_FEATURE_B2BUA
 
 #endif
 

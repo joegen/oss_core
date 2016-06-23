@@ -27,9 +27,11 @@
 #include <boost/array.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <queue>
 #include "OSS/SIP/SIP.h"
 #include "OSS/SIP/SIPMessage.h"
 #include "OSS/SIP/SIPTransportSession.h"
+#include "OSS/UTL/Thread.h"
 
 
 namespace OSS {
@@ -44,24 +46,36 @@ class SIPFSMDispatch;
 
 class OSS_API SIPStreamedConnection: 
   public SIPTransportSession,
-  public boost::enable_shared_from_this<SIPStreamedConnection>,
-  private boost::noncopyable
+  public boost::enable_shared_from_this<SIPStreamedConnection>
 {
 public:
 
   typedef boost::asio::ip::tcp::socket::endpoint_type EndPoint;
   typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
   typedef boost::asio::ip::tcp::socket tcp_socket;
+  typedef std::queue<SIPMessage::Ptr> Pending;
+  
+  enum ConnectionError
+  {
+    CONNECTION_ERROR_READ,
+    CONNECTION_ERROR_WRITE,
+    CONNECTION_ERROR_CONNECT,
+    CONNECTION_ERROR_CLIENT_HANDSHAKE,
+    CONNECTION_ERROR_SERVER_HANDSHAKE,
+    CONNECTION_ERROR_MAX        
+  };
   
   explicit SIPStreamedConnection(
       boost::asio::io_service& ioService,
-      SIPStreamedConnectionManager& manager);
+      SIPStreamedConnectionManager& manager,
+      SIPListener* pListener);
     /// Creates a TCP connection using the given I/O service
   
   explicit SIPStreamedConnection(
       boost::asio::io_service& ioService,
       boost::asio::ssl::context* pTlsContext,
-      SIPStreamedConnectionManager& manager);
+      SIPStreamedConnectionManager& manager,
+      SIPListener* pListener);
     /// Creates a TLS connection using the given I/O service and TLS context
   
   virtual ~SIPStreamedConnection();
@@ -98,13 +112,13 @@ private:
   void handleWrite(const boost::system::error_code& e);
     /// Handle completion of a write operation.
 
-  void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter);
+  void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter, boost::system::error_code* out_ec, Semaphore* pSem);
     /// Handle completion of async connect
 
   void handleClientHandshake(const boost::system::error_code& error);
   
   void handleServerHandshake(const boost::system::error_code& error);
-
+  
   OSS::Net::IPAddress getLocalAddress()const;
     /// Returns the local address binding for this transport
 
@@ -114,7 +128,8 @@ private:
   void clientBind(const OSS::Net::IPAddress& listener, unsigned short portBase, unsigned short portMax);
     /// Bind the local client
 
-  void clientConnect(const OSS::Net::IPAddress& target);
+  bool clientConnect(const OSS::Net::IPAddress& target);
+  bool clientConnect(const OSS::Net::IPAddress& target, boost::posix_time::time_duration timeout);
     /// Connect to a remote host
 
   void readSome();
@@ -122,12 +137,19 @@ private:
   
   
 protected:
+  void handleConnectTimeout(const boost::system::error_code& e);
 
+  boost::asio::io_service& _ioService;
+    /// The IO Service
+  
   tcp_socket* _pTcpSocket;
     /// Socket for the connection.
   
   boost::asio::ssl::context* _pTlsContext;
     /// The TLS context
+  
+  boost::asio::deadline_timer _deadline;
+    /// Deadline timer
 
   ssl_socket* _pTlsStream;
     /// SSL Socket for the connection.
@@ -150,6 +172,10 @@ protected:
   mutable OSS::Net::IPAddress _lastReadAddress;
   
   int _readExceptionCount;
+  bool _isClientStarted;
+  Pending _pending;
+  OSS::mutex_critic_sec _pendingMutex;
+  bool _isStopping;
 };
 
 

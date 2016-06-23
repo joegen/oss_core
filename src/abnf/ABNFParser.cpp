@@ -35,7 +35,7 @@ ABNFOctet::ABNFOctet()
 char* ABNFOctet::parse(const char* _t)
 {
   char* t = const_cast<char*>(_t);
-  if (*t >= 0x00 && *t <= 0xFF)
+  if (*t >= 0x00)
     t++;
   return t;
 }

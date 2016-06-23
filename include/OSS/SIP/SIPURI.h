@@ -105,6 +105,12 @@ public:
   static bool getPort(const std::string& uri, std::string& port);
     /// Returns the port
 
+  bool setHost(const char* hostPort);
+    /// Set the host but preserve the port if set previously
+  
+  bool setPort(const char* port);
+    /// Set the port
+  
   bool setHostPort(const char* hostPort);
     /// Sets the value of the uri hostport.
     ///
@@ -246,6 +252,28 @@ public:
 
   static bool setHeaders(std::string& uri, const std::string& headers);
     /// Replace the headers of a uri with a new one
+  
+  static bool setHeaderEx(std::string& params, const char* headerName, const char* headerValue);
+    /// Set the value of the URI header.
+    /// 
+    /// This is basically the same as setHeader except that it requires
+    /// that the first parameter is already the parsed parameter list
+    /// usually coming from the return value of a previous call to getHeaders()
+    ///
+    /// This is the recommended function to use when setting multiple uri headers
+    /// because setParam() function would always parse the headers list
+    /// which requires it to traverse the entire uri string every time.
+    ///
+    /// Usage:
+    ///
+    ///   std::string headers = uri.getHeaders();
+    ///   SIPURI::setHeaderEx(params, "param-name", "param-value");
+    ///   uri.setParams(params);
+    ///
+    /// Take note that this function may throw SIPABNFSyntaxException
+    /// if there are invalid characters in the parameter.
+    ///
+    /// Use SIPURI::escapeParam() function to escape the invalid characters.
 
   bool verify() const;
     /// Verifies the validity of a SIP URI based on RFC 3261 ABNF grammar.
@@ -253,11 +281,14 @@ public:
   static bool verify(const char* uri);
     /// Verifies the validity of a SIP URI based on RFC 3261 ABNF grammar.
 
-  std::string getIdentity() const;
+  std::string getIdentity(bool includeScheme = true) const;
     /// Returns scheme + user + hostport
 
-  static bool getIdentity(const std::string& uri, std::string& identity);
+  static bool getIdentity(const std::string& uri, std::string& identity, bool includeScheme = true);
     /// Returns scheme + user + hostport
+  
+public:
+  static const char* EMPTY_URI;
 };
 
 //

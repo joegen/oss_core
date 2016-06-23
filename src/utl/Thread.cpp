@@ -22,6 +22,7 @@
 #include "OSS/UTL/Thread.h"
 #include "Poco/ThreadPool.h"
 #include "Poco/Semaphore.h"
+#include "OSS/Net/Net.h"
 
 
 namespace OSS {
@@ -84,6 +85,34 @@ bool semaphore::tryWait(long milliseconds)
 // Threadpool
 //
 
+typedef boost::function<void()> thread_task;
+typedef boost::function<int(thread_task)> thread_schedule_func;
+
+class thread_pool_timed_task
+{
+public:
+  thread_pool_timed_task(
+    const thread_task& task,
+    const thread_schedule_func& schedule,
+    int millis) :
+    _task(task),
+    _schedule(schedule)
+  {
+    _timer = net_io_timer_create(millis, boost::bind(&thread_pool_timed_task::run, this));
+  }
+  
+  void run()
+  {
+    _schedule(_task);
+    delete this;
+  }
+  
+private:
+  NET_TIMER_HANDLE _timer;
+  thread_task _task;
+  thread_schedule_func _schedule;
+};
+
 class thread_pool_runnable : public Poco::Runnable
 {
 public:
@@ -140,6 +169,11 @@ int thread_pool::schedule(boost::function<void()> task)
   return 0;
 }
 
+void thread_pool::schedule(boost::function<void()> task, int millis)
+{
+  new thread_pool_timed_task(task, boost::bind(&thread_pool::schedule, this, _1), millis);
+}
+
 int thread_pool::schedule_with_arg(boost::function<void(argument_place_holder)> task, argument_place_holder arg)
 {
   thread_pool_runnable* runnable = new thread_pool_runnable();
@@ -158,6 +192,11 @@ int thread_pool::schedule_with_arg(boost::function<void(argument_place_holder)> 
   return 0;
 }
 
+
+void thread_pool::static_schedule(boost::function<void()> task, int millis)
+{
+  new thread_pool_timed_task(task, boost::bind(thread_pool::static_schedule, _1), millis);
+}
 
 int thread_pool::static_schedule(boost::function<void()> task)
 {
@@ -266,15 +305,13 @@ void Thread::stop()
     _terminateFlag = true;
   }
   
-  {
-    onTerminate();
-    
-    mutex_critic_sec_lock lock(_threadMutex);
-    assert(_pThread);
-    _pThread->join();
-    delete _pThread;
-    _pThread = 0;
-  }
+
+  onTerminate();
+
+  waitForTermination();
+  delete _pThread;
+  _pThread = 0;
+  
 }
 
 void Thread::setTask(const Task& task)
@@ -299,6 +336,15 @@ void Thread::runTask()
 
 void Thread::onTerminate()
 {
+}
+
+void Thread::waitForTermination()
+{  
+  mutex_critic_sec_lock lock(_threadMutex);
+  if (_pThread)
+  {
+    _pThread->join();
+  }
 }
 
 

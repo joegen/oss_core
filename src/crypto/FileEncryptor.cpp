@@ -21,6 +21,8 @@
 #include "OSS/Crypto/FileEncryptor.h"
 
 
+#if OSS_HAVE_MCRYPT
+
 namespace OSS {
 namespace Crypto {
 
@@ -316,7 +318,7 @@ void FileEncryptor::decrypt(const boost::filesystem::path& src, const boost::fil
 
 } } // OSS::Crypto
 
-
+#endif // OSS_HAVE_MCRYPT
 
 
 

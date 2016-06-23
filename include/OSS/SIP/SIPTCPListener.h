@@ -58,6 +58,9 @@ public:
   virtual void handleAccept(const boost::system::error_code& e, OSS_HANDLE userData = 0);
     /// Handle completion of an asynchronous accept operation.
 
+  virtual void handleStart();
+    /// Handle a request to start the server.
+  
   virtual void handleStop();
     /// Handle a request to stop the server.
   

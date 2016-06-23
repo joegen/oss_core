@@ -2,8 +2,10 @@
 #define udp_h
 
 
+#if 0
 #ifdef __MACH__
 typedef int socklen_t;
+#endif
 #endif
 
 #include <errno.h>

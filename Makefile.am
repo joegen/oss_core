@@ -2,14 +2,10 @@ include config/utility.am
 include config/project.am
 
 @PACKAGE@_EXTRA_DIST = \
-	README \
-	oss_core.spec.in \
-	src/js/scripts \
-	src/ua/core
+	README
 
-
-SUBDIRS = \
-	. \
-	src/ua \
-	src \
-        include
+SUBDIRS = .
+if ENABLE_FEATURE_LIBRE
+    SUBDIRS += src/ua/core
+endif
+SUBDIRS += src include

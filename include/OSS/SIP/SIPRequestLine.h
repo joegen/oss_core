@@ -53,6 +53,9 @@ public:
   void swap(SIPRequestLine& rline);
     /// Exchange the values of two request lines
 
+  std::string getMethod() const;
+    /// Get the method token
+  
   bool getMethod(std::string& method) const; 
     /// Get the method token
 
@@ -60,6 +63,9 @@ public:
     /// Get the mthod token from a string
 
   bool getURI(std::string& uri) const;
+    /// Get the URI token
+  
+  std::string getURI() const;
     /// Get the URI token
 
   bool getURI(SIPURI& uri);
@@ -69,6 +75,9 @@ public:
     /// Get the URI token from a string
 
   bool getVersion(std::string& version) const;
+    /// Get the version token
+  
+  std::string getVersion() const;
     /// Get the version token
 
   static bool getVersion(const std::string& rline, std::string& version);
@@ -80,6 +89,9 @@ public:
   static bool setMethod(std::string& rline, const char* method);
     /// Set the method token of a valid startline string
 
+  bool setURI(const SIPURI& uri);
+    /// Set the URI token
+  
   bool setURI(const char* uri);
     /// Set the URI token
 
@@ -91,41 +103,13 @@ public:
 
   static bool setVersion(std::string& rline, const char* version);
     /// Set the version of a valid startline string
+  
+  static const char* EMPTY_REQUEST_LINE; 
 };
 
 //
 // Inlines
 //
-
-inline bool SIPRequestLine::getMethod(std::string& method) const
-{
-  return SIPRequestLine::getMethod(_data, method);
-}
-
-inline bool SIPRequestLine::getURI(std::string& uri) const
-{
-  return SIPRequestLine::getURI(_data, uri);
-}
-
-inline bool SIPRequestLine::getVersion(std::string& version) const
-{
-  return SIPRequestLine::getVersion(_data, version);
-}
-
-inline bool SIPRequestLine::setMethod(const char* method)
-{
-  return SIPRequestLine::setMethod(_data, method);
-}
-
-inline bool SIPRequestLine::setURI(const char* uri)
-{
-  return SIPRequestLine::setURI(_data, uri);
-}
-
-inline bool SIPRequestLine::setVersion(const char* version)
-{
-  return SIPRequestLine::setVersion(_data, version);
-}
 
 } } // OSS::SIP
 #endif // SIPRequestLine_INCLUDED

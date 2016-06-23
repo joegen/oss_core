@@ -102,25 +102,49 @@ void net_init()
 	struct ifaddrs *list;
 	getifaddrs(&list);
 	{
+    char buff[INET6_ADDRSTRLEN];
     struct ifaddrs *cur;
     for(cur = list; cur != 0; cur = cur->ifa_next)
     {
-      if(!cur || !cur->ifa_addr || cur->ifa_addr->sa_family != AF_INET)
+      if(!cur->ifa_addr)
         continue;
 
-      struct sockaddr_in *addrStruct = (struct sockaddr_in *)cur->ifa_addr;
-      struct sockaddr_in *netmaskStruct = (struct sockaddr_in *)cur->ifa_netmask;
-      struct sockaddr_in *broadcastStruct = (struct sockaddr_in *)cur->ifa_broadaddr;
-      struct sockaddr_in *destAddrStruct = (struct sockaddr_in *)cur->ifa_dstaddr;
-      
-      network_interface iface;
-      iface._ipAddress = inet_ntoa(addrStruct->sin_addr);
-      iface._netMask = inet_ntoa(netmaskStruct->sin_addr);
-      iface._broadcastAddress = inet_ntoa(broadcastStruct->sin_addr);
-      iface._destAddr = inet_ntoa(destAddrStruct->sin_addr);
-      iface._flags = cur->ifa_flags;
-      iface._ifName = cur->ifa_name;
-      network_interface::_table.push_back(iface);
+      if (cur->ifa_addr->sa_family == AF_INET || cur->ifa_addr->sa_family == AF_INET6)
+      {
+        network_interface iface;
+
+        if (cur->ifa_addr->sa_family == AF_INET)
+        {
+          iface._ipAddress = inet_ntop(AF_INET, &((struct sockaddr_in *)cur->ifa_addr)->sin_addr, buff, sizeof(buff));
+          iface._netMask = inet_ntop(AF_INET, &((struct sockaddr_in *)cur->ifa_netmask)->sin_addr, buff, sizeof(buff));
+          iface._flags = cur->ifa_flags;
+          iface._ifName = cur->ifa_name;
+          if (cur->ifa_broadaddr)
+          {
+            iface._broadcastAddress = inet_ntop(AF_INET, &((struct sockaddr_in *)cur->ifa_broadaddr)->sin_addr, buff, sizeof(buff));
+          }
+          if (cur->ifa_dstaddr)
+          {
+            iface._destAddr = inet_ntop(AF_INET, &((struct sockaddr_in *)cur->ifa_dstaddr)->sin_addr, buff, sizeof(buff));
+          }
+        }
+        else
+        {
+          iface._ipAddress = inet_ntop(AF_INET6, &((struct sockaddr_in6 *)cur->ifa_addr)->sin6_addr, buff, sizeof(buff));
+          iface._netMask = inet_ntop(AF_INET6, &((struct sockaddr_in6 *)cur->ifa_netmask)->sin6_addr, buff, sizeof(buff));
+          iface._flags = cur->ifa_flags;
+          iface._ifName = cur->ifa_name;
+          if (cur->ifa_broadaddr)
+          {
+            iface._broadcastAddress = inet_ntop(AF_INET6, &((struct sockaddr_in6 *)cur->ifa_broadaddr)->sin6_addr, buff, sizeof(buff));
+          }
+          if (cur->ifa_dstaddr)
+          {
+            iface._destAddr = inet_ntop(AF_INET6, &((struct sockaddr_in6 *)cur->ifa_dstaddr)->sin6_addr, buff, sizeof(buff));
+          }
+        }
+        network_interface::_table.push_back(iface);
+      }
     }
 	}
   freeifaddrs(list);
@@ -1013,6 +1037,15 @@ bool socket_udp_get_broadcast(socket_handle handle)
   }
 }
 
+bool socket_ip_tos_set(int fd, int family, int tos)
+{
+    if (family != AF_INET6) {
+        return (setsockopt(fd, IPPROTO_IP, IP_TOS, (const void*)&tos, sizeof(tos)) < 0) ? false : true;
+    } else {
+        return (setsockopt(fd, IPPROTO_IPV6, IPV6_TCLASS, &tos, sizeof(tos)) < 0) ? false : true;
+    }
+}
+
 //
 // Net Timer functions
 //
@@ -1066,6 +1099,84 @@ void net_io_timer_cancel(NET_TIMER_HANDLE timerHandle)
   boost::asio::deadline_timer* pTimer = 
     reinterpret_cast<boost::asio::deadline_timer*>(timerHandle->_timerHandle);
   pTimer->cancel();
+}
+
+bool net_get_default_interface_name(std::string& iface)
+{
+  FILE *f;
+  char line[100] , *p , *c;
+  f = fopen("/proc/net/route" , "r");
+
+  while(fgets(line , 100 , f))
+  {
+    p = strtok(line , " \t");
+    c = strtok(NULL , " \t");
+
+    if(p!=NULL && c!=NULL)
+    {
+      if(strcmp(c , "00000000") == 0)
+      {
+        iface = p;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool net_get_interface_address(const std::string iface, std::string& address, int fm)
+{
+  struct ifaddrs *ifaddr, *ifa;
+  int family , s;
+  char host[NI_MAXHOST];
+
+  if (getifaddrs(&ifaddr) == -1) 
+  {
+    return false;
+  }
+
+  //Walk through linked list, maintaining head pointer so we can free list later
+  for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) 
+  {
+    if (ifa->ifa_addr == NULL)
+    {
+      continue;
+    }
+
+    family = ifa->ifa_addr->sa_family;
+
+    if(strcmp( ifa->ifa_name , iface.c_str()) == 0)
+    {
+      if (family == fm) 
+      {
+        s = getnameinfo( ifa->ifa_addr, (family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6) , host , NI_MAXHOST , NULL , 0 , NI_NUMERICHOST);
+
+        if (s != 0) 
+        {
+          freeifaddrs(ifaddr);
+          return false;
+        }
+        else
+        {
+          address = host;
+          break;
+        }
+      }
+    }
+  }
+
+  freeifaddrs(ifaddr);
+  return true;
+}
+
+bool net_get_default_interface_address(std::string& address, int fm)
+{
+  std::string iface;
+  if (!net_get_default_interface_name(iface))
+  {
+    return false;
+  }
+  return net_get_interface_address(iface, address, fm);
 }
 
 } // OSS

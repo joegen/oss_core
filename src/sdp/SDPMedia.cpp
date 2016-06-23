@@ -18,6 +18,9 @@
 //
 
 
+#include <vector>
+#include <string>
+
 #include "OSS/SDP/SDPMedia.h"
 
 
@@ -56,7 +59,8 @@ SDPMedia::SDPMedia(const char* rawHeader) :
   _payloads(),
   _type(TYPE_NONE),
   _ptime(0),
-  _direction(MEDIA_UNSET)
+  _direction(MEDIA_UNSET),
+  _profile(PROFILE_NONE)
 {
   _exitName = 'm';
 }
@@ -73,6 +77,7 @@ SDPMedia::SDPMedia(const SDPMedia& header) :
   _type = header._type;
   _ptime = header._ptime;
   _direction = header._direction;
+  _profile = header._profile;
 }
 
 SDPMedia::~SDPMedia()
@@ -97,6 +102,7 @@ void SDPMedia::swap(SDPMedia& media)
   std::swap(_type, media._type);
   std::swap(_ptime, media._ptime);
   std::swap(_direction, media._direction);
+  std::swap(_profile, media._profile);
   SDPHeaderList::swap(media);
 }
 
@@ -117,6 +123,126 @@ void SDPMedia::reset()
   _type = TYPE_NONE;
   _ptime = 0;
   _direction = MEDIA_UNSET;
+  _profile = PROFILE_NONE;
+}
+
+SDPMedia::Profile SDPMedia::getRTPProfile() const
+{
+  ReadLock lock(_rwMutex);
+  if (_profile != PROFILE_NONE)
+  {
+    return _profile;
+  }
+  
+  SDPMedia::iterator iter = const_cast<SDPMedia*>(this)->begin();
+  if (iter != end())
+  {
+    if (iter->name() == 'm')
+    {
+      //
+      // Check if DTLS is enabled
+      //
+      bool dtls = iter->value().find("UDP/TLS") != std::string::npos;
+      
+      if (iter->value().find("RTP/AVPF") != std::string::npos)
+      {
+        const_cast<SDPMedia*>(this)->_profile = PROFILE_AVPF;
+      }
+      else if (iter->value().find("RTP/AVP") != std::string::npos)
+      {
+        const_cast<SDPMedia*>(this)->_profile = PROFILE_AVP;
+      }
+      else if (iter->value().find("RTP/SAVPF") != std::string::npos)
+      {
+        if (!dtls)
+        {
+          const_cast<SDPMedia*>(this)->_profile = PROFILE_SAVPF;
+        }
+        else
+        {
+          const_cast<SDPMedia*>(this)->_profile = PROFILE_DTLS_SAVPF;
+        }
+      }
+      else if (iter->value().find("RTP/SAVP") != std::string::npos)
+      {
+        if (!dtls)
+        {
+          const_cast<SDPMedia*>(this)->_profile = PROFILE_SAVP;
+        }
+        else
+        {
+          const_cast<SDPMedia*>(this)->_profile = PROFILE_DTLS_SAVP;
+        }
+      }
+    }
+  }
+  
+  return _profile;
+}
+  
+void SDPMedia::setRTPProfile(Profile prof)
+{
+  WriteLock lock(_rwMutex);
+  
+  if (prof == _profile)
+  {
+    return;
+  }
+
+  std::string profile;
+  switch (prof)
+  {
+  case PROFILE_AVP:
+    profile = "RTP/AVP";
+    break;
+  case PROFILE_AVPF:
+    profile = "RTP/AVPF";
+    break;
+  case PROFILE_SAVP:
+    profile = "RTP/SAVP";
+    break;
+  case PROFILE_SAVPF:
+    profile = "RTP/SAVPF";
+    break;
+  case PROFILE_DTLS_SAVP:
+    profile = "UDP/TLS/RTP/SAVP";
+    break;
+  case PROFILE_DTLS_SAVPF:
+    profile = "UDP/TLS/RTP/SAVPF";
+    break;
+  default:
+    OSS_VERIFY(false);
+    break;
+  }
+  
+  _profile = prof;
+  
+  SDPMedia::iterator iter = const_cast<SDPMedia*>(this)->begin();
+  if (iter != end())
+  {
+    if (iter->name() == 'm')
+    {
+      std::vector<std::string> tokens;
+      tokens = OSS::string_tokenize(iter->value(), " ");
+      std::ostringstream strm;
+      for (std::size_t i = 0; i < tokens.size(); i++)
+      {
+        if (i == 2)
+        {
+          strm << profile << " ";
+        }
+        else
+        {
+          strm << tokens[1];
+          if (i != tokens.size() - 1)
+          {
+            strm << " ";
+          }
+        }
+      }
+      iter->value() = strm.str();
+    }
+  }
 }
 
 SDPMedia::Type SDPMedia::getMediaType() const
@@ -457,6 +583,95 @@ void SDPMedia::setDataPort(unsigned short port)
     _dataPort = port;
   }
 }
+
+bool SDPMedia::getVectorAttributes(const std::string& label, std::vector<std::string>& attributeVector) const
+{
+  attributeVector.clear();
+  std::string match(label);
+  match += ":";
+  for (SDPMedia::iterator iter = const_cast<SDPMedia*>(this)->begin(); iter != const_cast<SDPMedia*>(this)->end(); iter++)
+  {
+    if (iter->name() == 'a' && OSS::string_caseless_starts_with(iter->value(), match.c_str()))
+    {
+      std::string candidate(iter->value().c_str() + match.size());
+      attributeVector.push_back(candidate);
+    }     
+  } 
+  return !attributeVector.empty();
+}
+
+void SDPMedia::setVectorAttributes(const std::string& label, const std::vector<std::string>& attributeVector)
+{
+  SDPMedia::iterator iter = begin();
+  std::string match(label);
+  match += ":";
+  while (iter != end())
+  {
+    if (iter->name() == 'a' && OSS::string_caseless_starts_with(iter->value(), match.c_str()))
+    {
+      iter = erase(iter);
+    }
+    else
+    {
+      iter++;
+    }
+  }
+  
+  //
+  // append each item as a new candidate attribute
+  //
+  for (std::vector<std::string>::const_iterator iter = attributeVector.begin(); iter != attributeVector.end(); iter++)
+  {
+    SDPHeader a;
+    a.name() = 'a';
+    a.value() = match;
+    a.value() += *iter;
+    push_back(a);
+  }
+}
+
+bool SDPMedia::getUniqueAttribute(const std::string& label, std::string& attribute) const
+{
+  attribute.clear();
+  std::string match(label);
+  match += ":";
+  for (SDPMedia::iterator iter = const_cast<SDPMedia*>(this)->begin(); iter != const_cast<SDPMedia*>(this)->end(); iter++)
+  {
+    if (iter->name() == 'a' && OSS::string_caseless_starts_with(iter->value(), match.c_str()))
+    {
+      attribute = std::string(iter->value().c_str() + match.size());
+    }     
+  } 
+  return !attribute.empty();
+}
+
+  
+void SDPMedia::setUniqueAttribute(const std::string& label, const std::string& attribute)
+{
+  SDPMedia::iterator iter = begin();
+  std::string match(label);
+  match += ":";
+  while (iter != end())
+  {
+    if (iter->name() == 'a' && OSS::string_caseless_starts_with(iter->value(), match.c_str()))
+    {
+      iter->value() = match;
+      iter->value() += attribute;
+      return;
+    }
+    else
+    {
+      iter++;
+    }
+  }
+  
+  SDPHeader a;
+  a.name() = 'a';
+  a.value() = match;
+  a.value() += attribute;
+  push_back(a);
+}
+
 
 SDPMedia::iterator SDPMedia::findAttributeIterator(int payload, const char* attributeName)
 {

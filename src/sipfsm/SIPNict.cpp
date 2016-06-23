@@ -31,7 +31,7 @@ namespace SIP {
 SIPNict::SIPNict(
   boost::asio::io_service& ioService,
   const SIPTransactionTimers& timerProps) :
-  SIPFsm(ioService, timerProps),
+  SIPFsm(SIPFsm::NonInviteClientTransaction, ioService, timerProps),
   _timerEValue(0),
   _timerEMultiplier(0)
 {
@@ -67,7 +67,9 @@ bool SIPNict::onSendMessage(SIPMessage::Ptr pMsg)
       _timerEValue = _timerProps.timerE();
     }
 
-    if (!pTransaction->transport()->isReliableTransport())
+    //
+    // Start timerE for both reliable and unreliable transports
+    //if (!pTransaction->transport()->isReliableTransport())
       startTimerE(_timerEValue);
 
     startTimerF(_timerEValue*64);

@@ -20,6 +20,9 @@
 #ifndef RTP_RTPProxyTuple_INCLUDED
 #define RTP_RTPProxyTuple_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_RTP
+
 #include "OSS/RTP/RTPProxy.h"
 
 
@@ -105,5 +108,8 @@ inline void RTPProxyTuple::setResizerSamples(int leg1, int leg2)
 }
 
 } } // OSS::RTP
+
+#endif // ENABLE_FEATURE_RTP
+
 #endif // RTP_RTPProxyTuple_INCLUDED
 

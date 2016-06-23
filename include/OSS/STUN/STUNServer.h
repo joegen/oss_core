@@ -22,6 +22,9 @@
 #ifndef OSS_STUNSERVER_H
 #define	OSS_STUNSERVER_H
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_STUN
+
 
 #include "OSS/OSS.h"
 #include "OSS/Net/IPAddress.h"
@@ -56,6 +59,8 @@ private:
 
 } } // OSS::STUN
 
+
+#endif // ENABLE_FEATURE_STUN
 
 #endif //OSS_STUNCLIENT_H
 

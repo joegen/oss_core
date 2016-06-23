@@ -34,11 +34,6 @@ SIPParser::~SIPParser()
 {
 }
 
-const std::string & SIPParser::data() const
-{
-  return _data;
-}
-
 void SIPParser::escape(std::string& result, const char* _str, const char* validChars)
 {
   static const char * safeChars = "abcdefghijklmnopqrstuvwxyz"

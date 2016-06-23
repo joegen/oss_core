@@ -21,6 +21,7 @@
 #include "OSS/SIP/SIPIct.h"
 #include "OSS/SIP/SIPTransaction.h"
 #include "OSS/SIP/SIPCSeq.h"
+#include "OSS/SIP/SIPRequestLine.h"
 #include "OSS/SIP/SIPFSMDispatch.h"
 #include "OSS/UTL/Logger.h"
 
@@ -31,13 +32,14 @@ namespace SIP {
 SIPIct::SIPIct(
   boost::asio::io_service& ioService,
   const SIPTransactionTimers& timerProps) :
-  SIPFsm(ioService, timerProps),
+  SIPFsm(SIPFsm::InviteClientTransaction, ioService, timerProps),
   _timerAValue(0),
   _pAck()
 {
   _timerAFunc = boost::bind(&SIPIct::handleRetransmitInvite, this);
   _timerBFunc = boost::bind(&SIPIct::handleInviteTimeout, this);
   _timerDFunc = boost::bind(&SIPIct::handleDelayedTerminate, this);
+  _timerClientExpiresFunc = boost::bind(&SIPIct::handleExpiresTimeout, this);
   _timerMaxLifetimeFunc = boost::bind(&SIPIct::handleDelayedTerminate, this);
 }
 
@@ -70,6 +72,16 @@ bool SIPIct::onSendMessage(SIPMessage::Ptr pMsg)
       startTimerA(_timerAValue);
 
     startTimerB(_timerAValue*64);
+    
+    //
+    // Check if the request has an expires header
+    //
+    std::string expires(pMsg->hdrGet(OSS::SIP::HDR_EXPIRES));
+    if (!expires.empty())
+    {
+      unsigned long expiresValue = OSS::string_to_number<unsigned long>(expires.c_str()) * 1000;
+      startTimerClientExpires(expiresValue);
+    }
   }
 
   return true;
@@ -109,6 +121,11 @@ void SIPIct::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
     }
     else if (pMsg->is2xx())
     {
+      cancelTimerClientExpires();
+      if (pParent)
+      {
+        pParent->fsm()->cancelTimerClientExpires();
+      }
       pTransaction->informTU(pMsg, pTransport);
       pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
       //
@@ -119,6 +136,11 @@ void SIPIct::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
     }
     else if (pMsg->isErrorResponse())
     {
+      cancelTimerClientExpires();
+      if (pParent)
+      {
+        pParent->fsm()->cancelTimerClientExpires();
+      }
       pTransaction->setState(COMPLETED);
       pTransaction->informTU(pMsg, pTransport);
       handleSendAck(pMsg, pTransport);
@@ -131,6 +153,11 @@ void SIPIct::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
     }
     else if (pMsg->is2xx())
     {
+      cancelTimerClientExpires();
+      if (pParent)
+      {
+        pParent->fsm()->cancelTimerClientExpires();
+      }
       pTransaction->informTU(pMsg, pTransport);
       pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
       //
@@ -141,6 +168,11 @@ void SIPIct::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
     }
     else if (pMsg->isErrorResponse())
     {
+      cancelTimerClientExpires();
+      if (pParent)
+      {
+        pParent->fsm()->cancelTimerClientExpires();
+      }
       pTransaction->setState(COMPLETED);
       pTransaction->informTU(pMsg, pTransport);
       handleSendAck(pMsg, pTransport);
@@ -196,8 +228,52 @@ void SIPIct::handleInviteTimeout()
     return;
 
   cancelTimerA();
+  cancelTimerClientExpires();
   pTransaction->handleTimeoutICT();
   pTransaction->terminate();
+}
+
+void SIPIct::handleExpiresTimeout()
+{
+  //
+  // This does not change the state.  Instead we must trigger an event to send CANCEL
+  // for this transaction
+  //
+  
+  SIPTransaction::Ptr pTransaction = static_cast<SIPTransaction::WeakPtr*>(_owner)->lock();
+  if (!pTransaction || !_pDispatch)
+    return;
+
+  //
+  // Clone the original request
+  //
+  SIPMessage::Ptr pCancel = SIPMessage::Ptr(new SIPMessage(*_pRequest.get()));
+  //
+  // Change the method to cancel
+  //
+  SIPRequestLine rline(pCancel->startLine());
+  rline.setMethod("CANCEL");
+  pCancel->startLine() = rline.data();
+  
+  //
+  // Remove body and set content length to zero
+  //
+  pCancel->setBody("");
+  pCancel->hdrSet(OSS::SIP::HDR_CONTENT_LENGTH, "0");
+  //
+  // Set the CSeq method to CANCEL
+  //
+  SIPCSeq hdrCSeq(pCancel->hdrGet(OSS::SIP::HDR_CSEQ));
+  hdrCSeq.setMethod("CANCEL");
+  pCancel->hdrSet(OSS::SIP::HDR_CSEQ, hdrCSeq.data());  
+  
+  //
+  // Send the cancel without caring for the response
+  //
+  pCancel->commitData();
+  SIPTransaction::Callback dummyResponseCallback;
+  SIPTransaction::TerminateCallback dummyTerminateCallback;
+  _pDispatch->sendRequest(pCancel, pTransaction->localAddress(), pTransaction->remoteAddress(), dummyResponseCallback, dummyTerminateCallback);
 }
 
 void SIPIct::handleSendAck(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport, bool startTimer)

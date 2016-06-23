@@ -63,10 +63,19 @@ class OSS_API SIPFsm:
 /// well as transaction timeouts.
 {
 public:
+  enum TransactionType
+  {
+    InviteClientTransaction,
+    InviteServerTransaction,
+    NonInviteServerTransaction,
+    NonInviteClientTransaction
+  };
+  
   typedef boost::shared_ptr<SIPFsm> Ptr;
   typedef boost::function<void()> TimerCallback;
 
   SIPFsm(
+    TransactionType type,      
     boost::asio::io_service& ioService,
     const SIPTransactionTimers& timerProps);
     /// Creates a new FSM object
@@ -95,10 +104,6 @@ public:
 
   void setOwner(OSS_HANDLE owner);
     /// Set the transaction owner.  This must be a pointer to a newly create SIPTransaction::WeakPtr
-
-  OSS_HANDLE _owner;  /// The transaction attached to the FSM.
-                                 /// Take note that this can't be a share_ptr since it will 
-                                 /// result to a cyclic reference between the transaction and the FSM
 
   SIPTransactionTimers& timerProps();
     /// Return the SIP Transaction Timer expire property object
@@ -157,6 +162,11 @@ public:
     /// Starts timer K.  
     ///
     /// The default interval is set from RFC 3261 recommended value if not specified explicitly.
+  
+  void startTimerClientExpires(unsigned long expire);
+    /// Starts the ICT expiration timer extracted from the Expires header.  
+    ///
+
 
   void startTimerMaxLifetime(unsigned long expire);
     /// Starts the max lifetime timer.
@@ -196,6 +206,9 @@ public:
 
   void cancelTimerK();
     /// Cancels Timer K execution.
+  
+  void cancelTimerClientExpires();
+    /// Cancels Timer K execution.
 
   void cancelAllTimers();
     /// Cancels all existing timers
@@ -214,7 +227,12 @@ public:
   virtual void handleDelayedTerminate();
     /// Callback for timers that requires termination of transactions
 
+  TransactionType getType() const;
 protected:
+  TransactionType _type;
+  OSS_HANDLE _owner;  /// The transaction attached to the FSM.
+                                 /// Take note that this can't be a share_ptr since it will 
+                                 /// result to a cyclic reference between the transaction and the FSM
   SIPMessage::Ptr _pRequest;
   boost::asio::io_service& _ioService;
   SIPFSMDispatch* _pDispatch;
@@ -230,6 +248,7 @@ protected:
   boost::asio::deadline_timer _timerI;
   boost::asio::deadline_timer _timerJ;
   boost::asio::deadline_timer _timerK;
+  boost::asio::deadline_timer _timerClientExpires;
   boost::asio::deadline_timer _timerMaxLifetime;
 
   TimerCallback _timerAFunc;
@@ -243,6 +262,7 @@ protected:
   TimerCallback _timerIFunc;
   TimerCallback _timerJFunc;
   TimerCallback _timerKFunc;
+  TimerCallback _timerClientExpiresFunc;
   TimerCallback _timerMaxLifetimeFunc;
 
 private:
@@ -278,6 +298,9 @@ private:
 
   void handleTimerK(const boost::system::error_code& e);
     /// Handler for Timer K expiration
+  
+  void handleTimerClientExpires(const boost::system::error_code& e);
+    /// Handler for Timer ICT expiration extracted from the Expires header
 
   void handleTimerMaxLifetime(const boost::system::error_code& e);
     /// Handler for Timer MaxLifetime expiration
@@ -345,6 +368,11 @@ inline void SIPFsm::cancelTimerK()
   _timerK.cancel();
 }
 
+inline void SIPFsm::cancelTimerClientExpires()
+{
+  _timerClientExpires.cancel();
+}
+
 inline SIPTransactionTimers& SIPFsm::timerProps()
 {
   return _timerProps;
@@ -363,6 +391,11 @@ inline SIPMessage::Ptr SIPFsm::getRequest() const
 inline void SIPFsm::setRequest(const SIPMessage::Ptr& pRequest)
 {
   _pRequest = pRequest;
+}
+
+inline SIPFsm::TransactionType SIPFsm::getType() const
+{
+  return _type;
 }
 
 } } // OSS::SIP

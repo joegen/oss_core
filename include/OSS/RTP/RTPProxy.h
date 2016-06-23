@@ -20,6 +20,9 @@
 #ifndef RTP_RTPProxy_INCLUDED
 #define RTP_RTPProxy_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_RTP
+
 #include <boost/asio.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/noncopyable.hpp>
@@ -318,5 +321,8 @@ inline const std::string& RTPProxy::logId() const
 }
 
 } } // OSS::RTP
+
+#endif // ENABLE_FEATURE_RTP
+
 #endif // RTP_RTPProxy_INCLUDED
 

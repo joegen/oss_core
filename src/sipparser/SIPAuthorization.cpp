@@ -20,12 +20,17 @@
 
 #include "OSS/SIP/SIPAuthorization.h"
 #include "OSS/ABNF/ABNFSIPRules.h"
+#include "OSS/ABNF/ABNFSIPQuotedString.h"
+#include "OSS/ABNF/ABNFSIPToken.h"
 
 using namespace OSS::ABNF;
-static ABNF_SIP_pvalue pvalueParser;
+
+typedef ABNFAnyOf<ABNFSIPQuotedString, ABNFSIPToken>  ABNF_AUTH_PARAM;  
+
+static ABNF_AUTH_PARAM pvalueParser;
 static ABNF_SIP_pname pnameParser;
 static ABNFEvaluate<ABNF_SIP_pname> pnameVerify;
-static ABNFEvaluate<ABNF_SIP_pvalue> pvalueVerify;
+static ABNFEvaluate<ABNF_AUTH_PARAM> pvalueVerify;
 
 
 /*
@@ -69,7 +74,7 @@ namespace SIP {
 
 SIPAuthorization::SIPAuthorization()
 {
-  _data = "Digest username=\"unset\"";
+   _data = "Digest nonce=\"unset\"";
 }
 
 SIPAuthorization::SIPAuthorization(const std::string& authorization)
@@ -84,7 +89,6 @@ SIPAuthorization::SIPAuthorization(const SIPAuthorization& authorization)
 
 SIPAuthorization::~SIPAuthorization()
 {
-
 }
 
 SIPAuthorization& SIPAuthorization::operator = (const std::string& authorization)
@@ -153,7 +157,10 @@ bool SIPAuthorization::setQuotedAuthParam(const char* paramName, const char* par
 bool SIPAuthorization::setAuthParam(std::string& authorization, const char* paramName, const char* paramValue)
 {
   if (!pnameVerify(paramName) || !pvalueVerify(paramValue))
+  {
+    std::cout << paramName << "=" << paramValue << " did not pass syntax check" << std::endl;
     throw OSS::SIP::SIPParserException("ABNF Syntax Error");
+  }
 
   std::string key = paramName;
   boost::to_lower(key);

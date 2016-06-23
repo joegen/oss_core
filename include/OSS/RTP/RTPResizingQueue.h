@@ -20,6 +20,8 @@
 #ifndef RTPRESIZINGQUEUE_H_
 #define RTPRESIZINGQUEUE_H_
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_RTP
 
 #include <queue>
 #include <boost/noncopyable.hpp>
@@ -176,5 +178,6 @@ inline bool& RTPResizingQueue::verbose()
 } } // OSS::RTP
 
 
+#endif // ENABLE_FEATURE_RTP
 
 #endif /* RTPRESIZINGQUEUE_H_ */

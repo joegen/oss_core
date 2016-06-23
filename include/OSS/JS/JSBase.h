@@ -21,6 +21,9 @@
 #ifndef JSBase_H_INCLUDED
 #define JSBase_H_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_V8
+
 #include "OSS/OSS.h"
 #include <boost/filesystem.hpp>
 #include <boost/noncopyable.hpp>
@@ -52,14 +55,6 @@ public:
     void(*extensionGlobals)(OSS_HANDLE) = 0);
     /// Initialize the javascript context and the object template.
     /// The function indicated by funtionName must exist in the script
-  
-  bool initialize(const std::string& entryPoint,
-    const std::string& helperScript,
-    const std::string& mainScript,
-    void(*extensionGlobals)(OSS_HANDLE) = 0);
-    /// Latest prototype of initialize where helper and main script are passed
-    /// as raw strings.   Global scripts are loaded internally.
-    /// This should be used instead of the old initialize that specifies filenames 
 
   bool recompile();
     /// Recompile the current active java script.
@@ -84,21 +79,17 @@ public:
 
   void setHelperScriptsDirectory(const std::string& helperScriptsDirectory);
     /// Set the helper scripts export. If not set, it will default to {scriptname}.detail
+  
+  bool callFunction(const std::string& funcName);
+    /// Call a JS funciton with zero arguments
 
 protected:
   bool internalInitialize(const boost::filesystem::path& script,
     const std::string& functionName,
     void(*extensionGlobals)(OSS_HANDLE));
-  
-  bool internalInitialize(
-    const std::string& entryPoint,
-    const v8::Handle<v8::String>& globals,
-    const v8::Handle<v8::String>& helperScript,
-    const v8::Handle<v8::String>& mainScript,
-    void(*extensionGlobals)(OSS_HANDLE));
     /// Initialize the javascript context and the object template.
-    /// The function indicated by funtionName must exist in the main script
-  
+    /// The function indicated by funtionName must exist in the scri
+
   bool internalProcessRequest(OSS_HANDLE request);
     /// Process the request
 
@@ -116,9 +107,6 @@ protected:
   bool _isInitialized;
   static OSS::mutex _mutex;
   std::string _functionName;
-  std::string _helperScript;
-  std::string _mainScript;
-  
   void(*_extensionGlobals)(OSS_HANDLE);
   friend class JSWorker;
 };
@@ -157,6 +145,8 @@ inline void JSBase::setHelperScriptsDirectory(const std::string& helperScriptsDi
 
 } } // OSS::JS
 
+
+#endif // ENABLE_FEATURE_V8
 
 #endif // JSBase_H_INCLUDED
 

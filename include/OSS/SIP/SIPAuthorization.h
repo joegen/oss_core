@@ -35,7 +35,7 @@ class OSS_API SIPAuthorization: public SIPParser
 {
 public:
   SIPAuthorization();
-    /// Create a new SIPAuthorization vector
+    /// Create a new SIPAuthorization header
 
   SIPAuthorization(const std::string& authorization);
     /// Create a authorization from a string.
@@ -98,8 +98,8 @@ public:
     ///		; equal to request-uri as specified by HTTP/1.1
     ///
 
-  void setMessageQop(const char* qop);
-  std::string getMessageQop() const;
+  void setQop(const char* qop);
+  std::string getQop() const;
     ///
     /// message-qop	= 	"qop" EQUAL qop-value
     ///
@@ -140,7 +140,14 @@ public:
   void setOpaque(const char* opaque);
   std::string getOpaque() const;
     /// opaque	=  	"opaque" EQUAL  quoted-string
+  
+  void setAlgorithm(const char* algorithm);
+  std::string getAlgorithm() const;
+    /// algorithm = "algorithm" "=" ( "MD5" | "MD5-sess" | token )
 
+  void setRealm(const char* realm);
+  std::string getRealm() const;
+    /// realm = "realm" EQUAL  quoted-string
 };
 
 //
@@ -167,12 +174,12 @@ inline std::string SIPAuthorization::getDigestUri() const
   return getQuotedAuthParam("uri");
 }
 
-inline void SIPAuthorization::setMessageQop(const char* qop)
+inline void SIPAuthorization::setQop(const char* qop)
 {
   setQuotedAuthParam("qop", qop);
 }
 
-inline std::string SIPAuthorization::getMessageQop() const
+inline std::string SIPAuthorization::getQop() const
 {
   return getQuotedAuthParam("qop");
 }
@@ -235,6 +242,26 @@ inline void SIPAuthorization::setOpaque(const char* opaque)
 inline std::string SIPAuthorization::getOpaque() const
 {
   return getQuotedAuthParam("opaque");
+}
+
+inline void  SIPAuthorization::setAlgorithm(const char* algorithm)
+{
+  setAuthParam("algorithm", algorithm);
+}
+
+inline  std::string SIPAuthorization::getAlgorithm() const
+{
+  return getAuthParam("algorithm");
+}
+
+inline void SIPAuthorization::setRealm(const char* realm)
+{
+  setQuotedAuthParam("realm", realm);
+}
+
+inline std::string SIPAuthorization::getRealm() const
+{
+  return getQuotedAuthParam("realm");
 }
 
 } } // OSS::SIP

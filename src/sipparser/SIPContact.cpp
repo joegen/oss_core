@@ -48,14 +48,28 @@ SIPContact::SIPContact(const SIPContact& contact)
 SIPContact::SIPContact(const std::vector<std::string>& contacts)
 {
   std::ostringstream strm;
-  
   for (std::size_t i = 0; i < contacts.size(); i++)
   {
     strm << contacts[i];
     if (i < contacts.size() - 1)
+    {
       strm << ", ";
+    }
   }
-  
+  _data = strm.str();;
+}
+
+SIPContact::SIPContact(const ContactList& contacts)
+{
+  std::ostringstream strm;
+  for (std::size_t i = 0; i < contacts.size(); i++)
+  {
+    strm << contacts[i].data();
+    if (i < contacts.size() - 1)
+    {
+      strm << ", ";
+    }
+  }
   _data = strm.str();;
 }
 
@@ -84,6 +98,22 @@ SIPContact& SIPContact::operator = (const std::vector<std::string>& contacts)
   for (std::size_t i = 0; i < contacts.size(); i++)
   {
     strm << contacts[i];
+    if (i < contacts.size() - 1)
+      strm << ", ";
+  }
+  
+  _data = strm.str();
+  
+  return *this;
+}
+
+SIPContact& SIPContact::operator = (const ContactList& contacts)
+{
+  std::ostringstream strm;
+  
+  for (std::size_t i = 0; i < contacts.size(); i++)
+  {
+    strm << contacts[i].data();
     if (i < contacts.size() - 1)
       strm << ", ";
   }
@@ -246,22 +276,33 @@ bool SIPContact::popTopURI(std::string& contact, ContactURI& topURI)
 
 int SIPContact::msgGetContacts(SIPMessage* pMsg, std::vector<std::string>& contacts)
 {
-  int headerCount = pMsg->hdrGetSize(OSS::SIP::HDR_CONTACT);
-  for (int i = 0; i < headerCount; i++)
+  ContactList contactList;
+  msgGetContacts(pMsg, contactList);
+  for (ContactList::iterator iter = contactList.begin(); iter != contactList.end(); iter++)
   {
-    std::string contact = pMsg->hdrGet(OSS::SIP::HDR_CONTACT, i);
-    int sz = getSize(contact);
-    for (int j = 0; j < sz; j++)
-    {
-      ContactURI curi;
-      if (getAt(contact,curi, i))
-      {
-        contacts.push_back(curi.data());
-      }
-    }
+    contacts.push_back(iter->data());
   }
   return contacts.size();
 }
+
+ int SIPContact::msgGetContacts(SIPMessage* pMsg, ContactList& contacts)
+ {
+    int headerCount = pMsg->hdrGetSize(OSS::SIP::HDR_CONTACT);
+    for (int i = 0; i < headerCount; i++)
+    {
+      std::string contact = pMsg->hdrGet(OSS::SIP::HDR_CONTACT, i);
+      int sz = getSize(contact);
+      for (int j = 0; j < sz; j++)
+      {
+        ContactURI curi;
+        if (getAt(contact,curi, i))
+        {
+          contacts.push_back(curi);
+        }
+      }
+    }
+    return contacts.size();
+ }
 
 } } // OSS::SIP
 

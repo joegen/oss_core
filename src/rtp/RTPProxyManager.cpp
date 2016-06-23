@@ -39,7 +39,8 @@ RTPProxyManager::RTPProxyManager(int houseKeepingInterval) :
   _hasRtpDb(false),
   _persistStateFiles(false),
   _enabled(true),
-  _alwaysProxyMedia(false)
+  _alwaysProxyMedia(false),
+  _enableHairpins(false)
 {
 }
 
@@ -77,14 +78,16 @@ void RTPProxyManager::run(int threadCount, int readTimeout)
   }
 }
 
-bool RTPProxyManager::redisConnect(const std::vector<RedisClient::ConnectionInfo>& connections)
+#if ENABLE_FEATURE_REDIS
+
+bool RTPProxyManager::redisConnect(const std::vector<Persistent::RedisClient::ConnectionInfo>& connections, int workspace)
 {
 	//TODO: What if _redisClient is already connected?
 
-  for (std::vector<RedisClient::ConnectionInfo>::const_iterator iter = connections.begin(); iter != connections.end(); iter++)
+  for (std::vector<Persistent::RedisClient::ConnectionInfo>::const_iterator iter = connections.begin(); iter != connections.end(); iter++)
   {
 	  //TODO: This needs to be disconnected on destructor or stop
-    if (!_redisClient.connect(iter->host, iter->port, iter->password, RedisClient::SBC_RTPDB))
+    if (!_redisClient.connect(iter->host, iter->port, iter->password, workspace))
     {
       OSS_LOG_ERROR("Unable to add rtp proxy database - " << iter->host << ":" << iter->port);
       _hasRtpDb = false;
@@ -98,6 +101,7 @@ bool RTPProxyManager::redisConnect(const std::vector<RedisClient::ConnectionInfo
   return _hasRtpDb;
 }
     /// Connect to redis database for state persistence
+#endif
 
 void RTPProxyManager::recycleState()
 {
@@ -129,6 +133,7 @@ void RTPProxyManager::recycleState()
           boost::filesystem::path currentFile = operator/(_rtpStateDirectory, OSS::boost_file_name(itr->path()));
           if (boost::filesystem::is_regular(currentFile))
           {
+#if ENABLE_FEATURE_CONFIG 
             _sessionListMutex.lock();
             RTPProxySession::Ptr session = RTPProxySession::reconstructFromStateFile(this, currentFile);
             if (session)
@@ -137,6 +142,7 @@ void RTPProxyManager::recycleState()
             }
             
             _sessionListMutex.unlock();
+#endif
           }
         }
       }
@@ -149,6 +155,7 @@ void RTPProxyManager::recycleState()
       OSS::log_warning(logMsg.str());
     }
   }
+#if ENABLE_FEATURE_REDIS
   else
   {
     std::vector<std::string> keys;
@@ -164,6 +171,7 @@ void RTPProxyManager::recycleState()
       _sessionListMutex.unlock();
     }
   }
+#endif
 }
 
 void RTPProxyManager::stop()
@@ -308,8 +316,10 @@ void RTPProxyManager::handleSDP(const std::string& /*method*/,
     json::String sentBy = args["sentBy"];
     json::String packetSourceIP = args["packetSourceIP"];
     json::String packetLocalInterface = args["packetLocalInterface"];
+    json::String packetLocalInterfaceExternal = args["packetLocalInterfaceExternal"];
     json::String route = args["route"];
     json::String routeLocalInterface = args["routeLocalInterface"];
+    json::String routeLocalInterfaceExternal = args["routeLocalInterfaceExternal"];
     json::Number requestType = args["requestType"];
     json::String sdp = args["sdp"];
     json::Boolean attr_verbose = args["attr.verbose"];
@@ -325,9 +335,14 @@ void RTPProxyManager::handleSDP(const std::string& /*method*/,
     std::string sessionId_(sessionId.Value());
     OSS::Net::IPAddress sentBy_ = OSS::Net::IPAddress::fromV4IPPort(sentBy.Value().c_str());
     OSS::Net::IPAddress packetSourceIP_ = OSS::Net::IPAddress::fromV4IPPort(packetSourceIP.Value().c_str());
+    
     OSS::Net::IPAddress packetLocalInterface_ = OSS::Net::IPAddress::fromV4IPPort(packetLocalInterface.Value().c_str());
+    packetLocalInterface_.externalAddress() = packetLocalInterfaceExternal.Value().c_str();
+    
     OSS::Net::IPAddress route_ = OSS::Net::IPAddress::fromV4IPPort(route.Value().c_str());
     OSS::Net::IPAddress routeLocalInterface_ = OSS::Net::IPAddress::fromV4IPPort(routeLocalInterface.Value().c_str());
+    routeLocalInterface_.externalAddress() = routeLocalInterfaceExternal.Value().c_str();
+    
     RTPProxySession::RequestType requestType_((RTPProxySession::RequestType)requestType.Value());
     std::string sdp_(sdp.Value());
 

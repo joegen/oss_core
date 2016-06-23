@@ -28,6 +28,7 @@
 #include "OSS/SIP/SIPException.h"
 #include "OSS/SIP/SIPXOR.h"
 #include "OSS/SIP/SIPFrom.h"
+#include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 
 
 namespace OSS {
@@ -67,6 +68,7 @@ SIPTransaction::SIPTransaction(SIPTransaction::Ptr pParent) :
   _id = pParent->getId();
   _logId = pParent->getLogId();
   _pInitialRequest = pParent->getInitialRequest();
+  _responseCallback = pParent->_responseCallback;
   std::ostringstream logMsg;
   logMsg << _logId << getTypeString() << " " << _id << " CREATED";
   OSS::log_debug(logMsg.str());
@@ -124,7 +126,7 @@ void SIPTransaction::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
 {
   OSS::mutex_lock lock(_mutex);
 
-  bool isAck = pMsg->isAck();
+  bool isAck = pMsg->isRequest("ACK");
 
   if (pMsg->isRequest() && !_pInitialRequest && !isAck)
     _pInitialRequest = pMsg;
@@ -133,7 +135,10 @@ void SIPTransaction::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
     _logId = pMsg->createContextId(true);
 
   if (!_transport)
+  {
     _transport = pTransport;
+    _transport->setTransactionPool(_owner);
+  }
 
   if (!_localAddress.isValid())
     _localAddress = pTransport->getLocalAddress();
@@ -141,11 +146,13 @@ void SIPTransaction::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
   if (!_remoteAddress.isValid())
     _remoteAddress = pTransport->getRemoteAddress();
 
+#if ENABLE_FEATURE_XOR  
   if (SIPXOR::isEnabled() && !_isXOREncrypted)
   {
     std::string isXOR;
     _isXOREncrypted = pMsg->getProperty(OSS::PropertyMap::PROP_XOR, isXOR) && isXOR == "1";
   }
+#endif
 
   if (isParent())
   {
@@ -210,12 +217,13 @@ void SIPTransaction::sendRequest(
     _pInitialRequest = pRequest;
     if (_logId.empty())
       _logId = pRequest->createContextId(true);
-    
+#if ENABLE_FEATURE_XOR    
     if (SIPXOR::isEnabled() && !_isXOREncrypted)
     {
       std::string isXOR;
       _isXOREncrypted = pRequest->getProperty(OSS::PropertyMap::PROP_XOR, isXOR) && isXOR == "1";
     }
+#endif
   }
 
   if (!_responseTU)
@@ -243,12 +251,49 @@ void SIPTransaction::sendRequest(
       std::string transportId;
       pRequest->getProperty(OSS::PropertyMap::PROP_TransportId, transportId);
       _transport = _transportService->createClientTransport(pRequest, localAddress, remoteAddress, transport, transportId);
+      if (_transport)
+      {
+        _transport->setTransactionPool(_owner);
+      }
     }else if (SIPVia::msgGetTopViaTransport(pRequest.get(), transport))
     {
       _transport = _transportService->createClientTransport(pRequest, localAddress, remoteAddress, transport);
+      if (_transport)
+      {
+        _transport->setTransactionPool(_owner);
+      }
     }
+    
     if (!_transport)
-      throw OSS::SIP::SIPException("Unable to create transport!");
+    {
+      OSS_LOG_ERROR(_logId << "SIPTransaction::sendRequest - Unable to create transport");
+      terminate();
+      return;
+    }
+    
+    //
+    // Note.  Connect function is async.  We cannot guaranty that
+    // the socket is already connected.  Instead, if the transport
+    // is reliable, writeMessage() will simply queue the request
+    // and send it as soon as the transport is started
+    //
+#if 0        
+    if (_transport->isReliableTransport() && !_transport->isConnected() && !_transport->isEndpoint())
+    {
+      //
+      // typedef boost::function<void(const SIPTransaction::Error&, const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> Callback
+      //
+      if (_responseTU)
+      {
+        SIPMessage::Ptr pResponse = pRequest->createResponse(OSS::SIP::SIPMessage::CODE_408_RequestTimeout, "Transport Creation Error");
+        _responseTU(SIPTransaction::Error(new OSS::SIP::SIPException("Transport Creation Error")), pResponse, _transport, shared_from_this());
+      }
+      terminate();
+      return;
+      
+      //throw OSS::SIP::SIPException("Unable to create transport!");
+    }
+#endif
   }
 
   if (_transport->isReliableTransport())
@@ -271,10 +316,12 @@ void SIPTransaction::sendAckFor2xx(
   if (!_dialogTarget.isValid())
     _dialogTarget = dialogTarget;
 
+#if ENABLE_FEATURE_XOR
   if (SIPXOR::isEnabled() && _isXOREncrypted)
   {
     pAck->setProperty(OSS::PropertyMap::PROP_XOR, "1");
   }
+#endif
 
   if (_transport->isReliableTransport())
   {
@@ -313,6 +360,14 @@ void SIPTransaction::sendResponse(
   else
   {
     //
+    // Check if a response callback is present
+    //
+    if (_responseCallback)
+    {
+      _responseCallback(pResponse, _transport, shared_from_this());
+    }
+    
+    //
     // No branch is found.  This instance will handle the response
     //
     if (_transport && _transport->isReliableTransport())
@@ -336,7 +391,10 @@ void SIPTransaction::sendResponse(
           if (SIPVia::msgGetTopViaTransport(pResponse.get(), transport))
           {
             _transport = _transportService->createClientTransport(pResponse, _localAddress, _sendAddress, transport);
-            writeMessage(pResponse);
+            if (_transport)
+            {
+              writeMessage(pResponse);
+            }
           }
         }
         else
@@ -370,11 +428,18 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg)
     OSS_LOG_ERROR("SIPTransaction::writeMessage - Transport is NULL while attempting to send a request.");
     return;
   }
+  
+  if (!_transport->isEndpoint() && _transport->isReliableTransport() && _transport->getCurrentTransactionId().empty())
+  {
+    _transport->setCurrentTransactionId(_id);
+  }
 
+#if ENABLE_FEATURE_XOR
   if (SIPXOR::isEnabled() && _isXOREncrypted)
   {
     pMsg->setProperty(OSS::PropertyMap::PROP_XOR, "1");
   }
+#endif
 
   std::ostringstream logMsg;
   logMsg << _logId << ">>> " << pMsg->startLine()
@@ -392,6 +457,10 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg)
   {
     _transport->writeMessage(pMsg);
   }
+  else
+  {
+    OSS_LOG_WARNING(_logId << "SIPTransaction::writeMessage - _fsm->onSendMessage() returned false.  Message will be discarded.");
+  }
 }
 
 void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg, const OSS::Net::IPAddress& remoteAddress)
@@ -403,12 +472,14 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg, const OSS::Net::IPAddres
     OSS_LOG_ERROR("SIPTransaction::writeMessage does not have a transport to use");
     return;
   }
-
+  
+#if ENABLE_FEATURE_XOR
   if (SIPXOR::isEnabled() && _isXOREncrypted)
   {
     pMsg->setProperty(OSS::PropertyMap::PROP_XOR, "1");
   }
-
+#endif
+  
   if (_fsm->onSendMessage(pMsg))
   {
     std::ostringstream logMsg;
@@ -451,7 +522,9 @@ void SIPTransaction::terminate()
     }
     
     if (_terminateCallback)
-      _terminateCallback();
+    {
+      _terminateCallback(shared_from_this());
+    }
 
     _owner->removeTransaction(_id);
   }
@@ -487,17 +560,67 @@ int SIPTransaction::getState() const
 
 void SIPTransaction::handleTimeoutICT()
 {
-  OSS::mutex_lock lock(_stateMutex);
-  if (_responseTU && TRN_STATE_TERMINATED != _state)
-    _responseTU(SIPTransaction::Error(new OSS::SIP::SIPException("ICT Timeout")), SIPMessage::Ptr(), SIPTransportSession::Ptr(), shared_from_this());
+  OSS_LOG_DEBUG(_logId << getTypeString() << " Transaction Timeout");
+  if (_transport && _pInitialRequest)
+  {
+    SIPMessage::Ptr pResponse = _pInitialRequest->createResponse(OSS::SIP::SIPMessage::CODE_408_RequestTimeout);
+    OSS::mutex_lock lock(_stateMutex);
+    if (_responseTU && TRN_STATE_TERMINATED != _state)
+    {
+      _responseTU(SIPTransaction::Error(new OSS::SIP::SIPException("ICT Timeout")), pResponse, _transport, shared_from_this());
+    }
+  }
+  else
+  {
+    OSS::mutex_lock lock(_stateMutex);
+    if (_responseTU && TRN_STATE_TERMINATED != _state)
+      _responseTU(SIPTransaction::Error(new OSS::SIP::SIPException("ICT Timeout")), SIPMessage::Ptr(), SIPTransportSession::Ptr(), shared_from_this());
+  }
 }
 
 void SIPTransaction::handleTimeoutNICT()
 {
-  OSS::mutex_lock lock(_stateMutex);
-  if (_responseTU && TRN_STATE_TERMINATED != _state)
-    _responseTU(SIPTransaction::Error(new OSS::SIP::SIPException("NICT Timeout")), SIPMessage::Ptr(), SIPTransportSession::Ptr(), shared_from_this());
+  OSS_LOG_DEBUG(_logId << getTypeString() << " Transaction Timeout");
+  if (_transport && _pInitialRequest)
+  {
+    SIPMessage::Ptr pResponse = _pInitialRequest->createResponse(OSS::SIP::SIPMessage::CODE_408_RequestTimeout);
+    OSS::mutex_lock lock(_stateMutex);
+    if (_responseTU && TRN_STATE_TERMINATED != _state)
+    {
+      _responseTU(SIPTransaction::Error(new OSS::SIP::SIPException("NICT Timeout")), pResponse, _transport, shared_from_this());
+    }
+  }
+  else
+  {
+    OSS::mutex_lock lock(_stateMutex);
+    if (_responseTU && TRN_STATE_TERMINATED != _state)
+      _responseTU(SIPTransaction::Error(new OSS::SIP::SIPException("NICT Timeout")), SIPMessage::Ptr(), SIPTransportSession::Ptr(), shared_from_this());
+  }
 }
+
+void SIPTransaction::handleConnectionError(SIPStreamedConnection::ConnectionError errorType, const boost::system::error_code& e)
+{
+  switch (errorType)
+  {
+    case SIPStreamedConnection::CONNECTION_ERROR_READ:
+      break;
+    case SIPStreamedConnection::CONNECTION_ERROR_WRITE:
+    case SIPStreamedConnection::CONNECTION_ERROR_CONNECT:
+      if (_transport && _pInitialRequest)
+      {
+        SIPMessage::Ptr pResponse = _pInitialRequest->createResponse(OSS::SIP::SIPMessage::CODE_480_TemporarilyNotAvailable, e.message());
+        _fsm->onReceivedMessage(pResponse, _transport);
+      }
+      
+      break;
+    case SIPStreamedConnection::CONNECTION_ERROR_CLIENT_HANDSHAKE:
+    case SIPStreamedConnection::CONNECTION_ERROR_SERVER_HANDSHAKE:
+      break;
+    default:
+      break;
+  };
+}
+
 
 void SIPTransaction::informTU(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport)
 {
@@ -591,6 +714,16 @@ bool SIPTransaction::allBranchesTerminated() const
     if (iter->second->getState() != SIPTransaction::TRN_STATE_TERMINATED)
       return false;
   return true;
+}
+
+void SIPTransaction::attachB2BTransaction(const B2BTransactionSharedPtr& pB2BTransaction)
+{
+  _pB2BTransaction = pB2BTransaction;
+}
+
+SIPTransaction::B2BTransactionSharedPtr  SIPTransaction::getB2BTransaction()
+{
+  return _pB2BTransaction.lock();
 }
 
 

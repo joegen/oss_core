@@ -21,6 +21,9 @@
 #define	SIPB2BDIALOGDATA_H
 
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_B2BUA
+
 #include <string>
 #include <vector>
 #include <list>
@@ -593,9 +596,10 @@ typedef SIPB2BRegData RegData;
 typedef std::vector<RegData> RegList;
 
 
-
-
 } } }// OSS::SIP::B2BUA
+
+
+#endif // ENABLE_FEATURE_B2BUA
 
 #endif	/* SIPB2BDIALOGDATA_H */
 

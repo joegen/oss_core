@@ -52,6 +52,9 @@
 #ifndef OSS_SIPWEBSOCKETCONNECTION_H_INCLUDED
 #define	OSS_SIPWEBSOCKETCONNECTION_H_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_WEBSOCKETS
+
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
 #include <boost/shared_ptr.hpp>
@@ -72,9 +75,7 @@ class SIPFSMDispatch;
 
 class SIPWebSocketConnection :
 		public SIPTransportSession,
-		public boost::enable_shared_from_this<SIPWebSocketConnection>,
-		private boost::noncopyable
-
+		public boost::enable_shared_from_this<SIPWebSocketConnection>
 {
 protected:
   class ServerReadWriteHandler : public websocketpp::server::handler
@@ -98,9 +99,10 @@ protected:
 public:
   typedef boost::asio::ip::tcp::socket::endpoint_type EndPoint;
 
-  SIPWebSocketConnection(SIPWebSocketConnectionManager& manager);
+  SIPWebSocketConnection(SIPWebSocketConnectionManager& manager, SIPListener* pListener);
 
-  SIPWebSocketConnection(const websocketpp::server::connection_ptr& pConnection, SIPWebSocketConnectionManager& manager);
+  SIPWebSocketConnection(const websocketpp::server::connection_ptr& pConnection, SIPWebSocketConnectionManager& manager,
+      SIPListener* pListener);
 
   virtual ~SIPWebSocketConnection();
 
@@ -136,7 +138,7 @@ public:
   void handleWrite(const boost::system::error_code& e);
     /// Handle completion of a write operation.
 
-  void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter);
+  void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter, boost::system::error_code* out_ec, Semaphore* pSem);
     /// Handle completion of async connect
 
   void handleClientHandshake(const boost::system::error_code& error);
@@ -153,7 +155,7 @@ public:
   void clientBind(const OSS::Net::IPAddress& ip, unsigned short portBase, unsigned short portMax);
     /// Bind the local client
 
-  void clientConnect(const OSS::Net::IPAddress& target);
+  bool clientConnect(const OSS::Net::IPAddress& target);
     /// Connect to a remote host
 
   websocketpp::server::connection_ptr _pServerConnection;
@@ -177,6 +179,7 @@ private:
 
 } } /// OSS::SIP
 
+#endif // ENABLE_FEATURE_WEBSOCKETS
 
 #endif	// OSS_SIPWEBSOCKETCONNECTION_H_INCLUDED
 

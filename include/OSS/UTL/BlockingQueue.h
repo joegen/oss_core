@@ -23,7 +23,10 @@
 
 #include <queue>
 #include <boost/noncopyable.hpp>
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
 #include "OSS/UTL/Thread.h"
+#include <unistd.h>
 
 namespace OSS {
 
@@ -31,24 +34,60 @@ template <class T>
 class BlockingQueue : boost::noncopyable
 {
 public:
-  BlockingQueue(): _sem(0, 0xFFFF)
+  typedef boost::function<bool(BlockingQueue<T>&, const T&)> QueueObserver;
+  
+  BlockingQueue(bool usePipe = false) :
+    _sem(0, 0xFFFF),
+    _usePipe(usePipe)
   {
+    if (_usePipe)
+    {
+      pipe(_pipe);
+    }
+  }
+  
+  ~BlockingQueue()
+  {
+    if (_usePipe)
+    {
+      close(_pipe[0]);
+      close(_pipe[1]);
+    }
   }
 
-  void enqueue(T data)
+  bool enqueue(T data)
   {
     _cs.lock();
+    if (_enqueueObserver && !_enqueueObserver(*this, data))
+    {
+      _cs.unlock();
+      return false;
+    }
     _queue.push(data);
+    if (_usePipe)
+    {
+      write(_pipe[1], " ", 1);
+    }
     _cs.unlock();
     _sem.set();
+    return true;
   }
 
   void dequeue(T& data)
   {
     _sem.wait();
     _cs.lock();
+    if (_usePipe)
+    {
+      char buf[1];
+      read(_pipe[0], buf, 1);
+    }
     data = _queue.front();
     _queue.pop();
+    if (_dequeueObserver)
+    {
+      _dequeueObserver(*this, data);
+    }
     _cs.unlock();
   }
 
@@ -58,16 +97,53 @@ public:
       return false;
 
     _cs.lock();
+    if (_usePipe)
+    {
+      char buf[1];
+      read(_pipe[0], buf, 1);
+    }
     data = _queue.front();
     _queue.pop();
+    if (_dequeueObserver)
+    {
+      _dequeueObserver(*this, data);
+    }
     _cs.unlock();
 
     return true;
   }
+  
+  std::size_t size() const
+  {
+    std::size_t ret = 0;
+    _cs.lock();
+    ret = _queue.size();
+    _cs.unlock();
+    return ret;
+  }
+  
+  int getFd() const
+  {
+    return _usePipe ? _pipe[0] : 0;
+  }
+  
+  void setEnqueueObserver(const QueueObserver& observer)
+  {
+    _enqueueObserver = observer;
+  }
+  
+  void setDequeueObserver(const QueueObserver& observer)
+  {
+    _dequeueObserver = observer;
+  }
 private:
   OSS::semaphore _sem;
-  OSS::mutex_critic_sec _cs;
+  mutable OSS::mutex_critic_sec _cs;
   std::queue<T> _queue;
+  int _pipe[2];
+  bool _usePipe;
+  QueueObserver _enqueueObserver;
+  QueueObserver _dequeueObserver;
 };
 
 } // OSS

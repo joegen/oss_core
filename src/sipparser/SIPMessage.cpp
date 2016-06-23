@@ -23,6 +23,7 @@
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
 #include "OSS/UTL/CoreUtils.h"
+#include "OSS/UTL/Logger.h"
 #include "OSS/SIP/SIPMessage.h"
 #include "OSS/ABNF/ABNFParser.h"
 #include "OSS/ABNF/ABNFSIPRules.h"
@@ -33,7 +34,7 @@
 #include "OSS/SIP/SIPVia.h"
 #include "OSS/SIP/SIPCSeq.h"
 #include "OSS/SIP/SIPFrom.h"
-#include "OSS/UTL/Logger.h"
+#include "OSS/SIP/SIPRequestLine.h"
 
 namespace OSS {
 namespace SIP {
@@ -238,7 +239,7 @@ static std::string hdrGetExpandedForm(const std::string & header)
   else if( h == "s" )//s
     return "Subject";
   else if( h == "t" )//t
-    return "to";
+    return "To";
   else if( h == "u" )//u
     return "Allow-Events";
   else if( h == "v" )//v
@@ -429,12 +430,16 @@ size_t SIPMessage::hdrPresent(const char * headerName) const
   ReadLock lock(_rwlock);
 
   if (!_finalized)
-    throw OSS::SIP::SIPParserException("Invalid Parser State Exception");
+  {
+    return 0;
+  }
 
   std::string key = headerName;
   boost::to_lower(key);
   if (_headers.find(key)==_headers.end())
+  {
     return 0;
+  }
   return const_cast<SIPMessage*>(this)->_headers[key].size();
 }
 
@@ -443,16 +448,24 @@ const std::string& SIPMessage::hdrGet(const char * headerName, size_t index) con
   ReadLock lock(_rwlock);
 
   if (!_finalized)
-    throw OSS::SIP::SIPParserException("Invalid Parser State Exception");
+  {
+    return _headerEmptyRet;
+  }
 
   std::string key = headerName;
   boost::to_lower(key);
   if (_headers.find(key)==_headers.end())
+  {
     return _headerEmptyRet;
+  }
   if (const_cast<SIPMessage*>(this)->_headers[key].size() == 0)
+  {
     return _headerEmptyRet;
+  }
   if (index >= const_cast<SIPMessage*>(this)->_headers[key].size())
-    throw OSS::SIP::SIPParserException("Invalid Index Exception");
+  {
+    return _headerEmptyRet;
+  }
   return const_cast<SIPMessage*>(this)->_headers[key][index];
 }
 
@@ -460,11 +473,10 @@ bool SIPMessage::hdrSet(const char * headerName, const std::string& headerValue)
 {
   WriteLock lock(_rwlock);
 
-  if (!_finalized)
-    throw OSS::SIP::SIPParserException("Invalid Parser State Exception");
-
-  if (headerValue.empty())
-    throw OSS::SIP::SIPParserException("Header Value is empty while calling SIPMessage::hdrSet()");
+  if (!_finalized || headerValue.empty())
+  {
+    return false;
+  }
 
   std::string key = headerName;
   boost::to_lower(key);
@@ -488,15 +500,14 @@ bool SIPMessage::hdrSet(const char* headerName, const std::string& headerValue, 
   WriteLock lock(_rwlock);
 
 
-  if (!_finalized)
-    throw OSS::SIP::SIPParserException("Invalid Parser State Exception");
-
-  if (headerValue.empty())
-    throw OSS::SIP::SIPParserException("Header Value is empty while calling SIPMessage::hdrSet()");
+  if (!_finalized || headerValue.empty())
+  {
+    return false;
+  }
 
   std::string key = headerName;
   boost::to_lower(key);
-  if (_headers.find(key)==_headers.end())
+  if (_headers.find(key)==_headers.end() && index == 0)
   {
     SIPHeaderTokens tokens;
     tokens.push_back(headerValue);
@@ -507,7 +518,9 @@ bool SIPMessage::hdrSet(const char* headerName, const std::string& headerValue, 
   }
 
   if (_headers[key].size() == 0 || index >= _headers[key].size())
-    throw OSS::SIP::SIPParserException("Invalid Index Exception");
+  {
+    return false;
+  }
 
   _headers[key][index]=headerValue;
   return true;
@@ -517,11 +530,15 @@ bool SIPMessage::hdrRemove(const char* headerName)
 {
   WriteLock lock(_rwlock);
   if (!_finalized)
-    throw OSS::SIP::SIPParserException("Invalid Parser State Exception");
+  {
+    return false;
+  }
   std::string key = headerName;
   boost::to_lower(key);
   if (_headers.find(key)==_headers.end())
+  {
     return false;
+  }
   if (_headers[key].size() > 1)
   {
     OSS_LOG_WARNING("SIPMessage::hdrRemove - Attempt to remove a header with more than one element! HeaderName: " << headerName);
@@ -536,11 +553,10 @@ bool SIPMessage::hdrListAppend(const char* name, const std::string & value)
 {
   WriteLock lock(_rwlock);
 
-  if (!_finalized)
-    throw OSS::SIP::SIPParserException("Invalid Parser State Exception");
-
-  if (value.empty())
-    throw OSS::SIP::SIPParserException("Header Value is empty while calling SIPMessage::hdrListAppend()");
+  if (!_finalized || value.empty())
+  {
+    return false;
+  }
 
   std::string key = name;
   boost::to_lower(key);
@@ -563,11 +579,10 @@ bool SIPMessage::hdrListPrepend(const char* name, const std::string& value)
 {
   WriteLock lock(_rwlock);
 
-  if (!_finalized)
-    throw OSS::SIP::SIPParserException("Invalid Parser State Exception");
-
-  if (value.empty())
-    throw OSS::SIP::SIPParserException("Header Value is empty while calling SIPMessage::hdrListAppend()");
+  if (!_finalized || value.empty())
+  {
+    return false;
+  }
 
   std::string key = name;
   boost::to_lower(key);
@@ -590,7 +605,9 @@ std::string SIPMessage::hdrListPopFront(const char* headerName)
 {
   WriteLock lock(_rwlock);
   if (!_finalized)
-    throw OSS::SIP::SIPParserException("Invalid Parser State Exception");
+  {
+    return _headerEmptyRet;
+  }
   std::string key = headerName;
   boost::to_lower(key);
   if (_headers.find(key)==_headers.end())
@@ -603,7 +620,7 @@ std::string SIPMessage::hdrListPopFront(const char* headerName)
     // This should never happen but handle it just in case
     //
     _headers.erase(key);
-    return "";
+    return _headerEmptyRet;
   }
   else if (tokens.size() == 1)
   {
@@ -624,13 +641,28 @@ bool SIPMessage::hdrListRemove(const char* headerName)
 {
   WriteLock lock(_rwlock);
   if (!_finalized)
-    throw OSS::SIP::SIPParserException("Invalid Parser State Exception");
+  {
+    return false;
+  }
   std::string key = headerName;
   boost::to_lower(key);
   if (_headers.find(key)==_headers.end())
     return false;
   _headers.erase(key);
   return true;
+}
+
+const std::string& SIPMessage::hdrListBottom(const char* headerName) const
+{
+  size_t count = hdrGetSize(headerName);
+  if (count)
+  {
+    return hdrGet(headerName, count - 1);
+  }
+  else
+  {
+    return _headerEmptyRet;
+  }
 }
 
 bool SIPMessage::commitData()
@@ -717,7 +749,9 @@ boost::tribool SIPMessage::isRequest(const char* method) const
     return _isRequest;
 
   if (_startLine.empty())
-    throw OSS::SIP::SIPParserException("ABNF Syntax Exception");
+  {
+    return false;
+  }
 
   if (requestLineVerify(_startLine.c_str()))
   {
@@ -735,7 +769,9 @@ boost::tribool SIPMessage::isRequest(const char* method) const
 boost::tribool SIPMessage::isResponseTo(const char* meth) const
 {
   if (_startLine.empty())
-    throw OSS::SIP::SIPParserException("ABNF Syntax Exception");
+  {
+    return false;
+  }
 
   if (!_isResponse)
     _isResponse = statusLineVerify(_startLine.c_str());
@@ -816,6 +852,27 @@ boost::tribool SIPMessage::isErrorResponse() const
     return true;
   return false;
 }
+
+boost::tribool SIPMessage::isFinalResponse() const
+{
+  boost::tribool checkReponse = isResponse();
+  if (!checkReponse)
+    return checkReponse;
+
+  if (_startLine[8] == '2')
+     return true;
+  else if (_startLine[8] == '3')
+    return true;
+  else if (_startLine[8] == '4')
+    return true;
+  else if (_startLine[8] == '5')
+    return true;
+  else if (_startLine[8] == '6')
+    return true;
+  
+  return false;
+}
+
 
 std::string SIPMessage::getMethod() const
 {
@@ -953,11 +1010,54 @@ bool SIPMessage::read(std::istream& strm, std::size_t& totalRead)
 boost::tuple<boost::tribool, const char*> SIPMessage::consume(const char* begin, const char* end)
 {
   _finalized = false;
+  int index = 0;
   while (begin != end)
   {
-    boost::tribool result = consumeOne(*begin++);
+    char input = *begin++;
+    boost::tribool result = consumeOne(input);
     if (result || !result)
+    {
+      if (!result)
+      {
+        std::string state;
+        switch (_consumeState)
+        {
+          case IDLE:
+            state = "IDLE";
+            break;
+          case START_LINE_PARSE:
+            state = "START_LINE_PARSE";
+            break;
+          case EXPECTING_NEW_LINE_1:
+            state = "EXPECTING_NEW_LINE_1";
+            break;
+          case HEADER_LINE_START:
+            state = "HEADER_LINE_START";
+            break;
+          case HEADER_LWS:
+            state = "HEADER_LWS";
+            break;
+          case HEADER_NAME:
+            state = "HEADER_NAME";
+            break;
+          case HEADER_VALUE:
+            state = "HEADER_VALUE";
+            break;
+          case EXPECTING_NEW_LINE_2:
+            state = "EXPECTING_NEW_LINE_2";
+            break;
+          case EXPECTING_NEW_LINE_3:
+            state = "EXPECTING_NEW_LINE_3";
+            break;
+          case EXPECTING_BODY:
+            state = "EXPECTING_BODY";
+            break;
+        }
+        OSS_LOG_ERROR("SIPMessage::consume - Invalid char 0x" << std::setfill('0') << std::hex << std::setw(2) << (int)input << std::dec << " at index " << index << " state==" << state);
+      }
       return boost::make_tuple(result, begin);
+    }
+    index++;
   }
   boost::tribool result = boost::indeterminate;
   return boost::make_tuple(result, begin);
@@ -1213,6 +1313,119 @@ SIPMessage::Ptr SIPMessage::reformatResponse(const SIPMessage::Ptr& pResponse)
   pFormatedResponse->commitData();
 
   return pFormatedResponse;
+}
+
+SIPMessage::Ptr SIPMessage::createRequest(
+      SIPMessage::RequestTypes type,
+      const SIPURI& requestUri,
+      const std::string& callId,
+      unsigned int cseq,
+      const SIPURI& fromUri,
+      const std::string& fromDisplayName,
+      const std::string& fromTag,
+      const SIPURI& toUri,
+      const std::string& toDisplayName,
+      const std::string& toTag,
+      const SIPURI& contactUri,
+      const std::string& contactDisplayName, 
+      const OSS::Net::IPAddress& viaTransport,
+      const std::string& viaBranch,
+      const std::string& contentType,
+      const std::string& body)
+{
+  SIPMessage::Ptr pMsg;
+  
+  const char* method = SIPMessage::requestTypeToString(type);
+  
+  if (!method ||
+    requestUri.data().empty() ||
+    callId.empty() ||
+    !cseq ||
+    fromUri.data().empty() ||
+    fromTag.empty() ||
+    toUri.data().empty() ||
+    contactUri.data().empty() ||
+    !viaTransport.isValid() ||
+    viaBranch.empty())
+  {
+    OSS_LOG_ERROR("SIPMessage::createRequest - Required parameter is missing");
+    return pMsg;
+  }
+  
+  std::ostringstream strm;
+  
+  strm << method << " " << requestUri.data() << " SIP/2.0" << "\r\n";
+  strm << "Call-Id: " << callId << "\r\n";
+  strm << "CSeq: " << cseq << " " << method << "\r\n";
+  
+  strm << "From: ";
+  if (fromDisplayName.empty())
+  {
+    strm << fromUri.data() << ";tag=" << fromTag << "\r\n";
+  }
+  else
+  {
+    strm << "\"" << fromDisplayName << "\" <" << fromUri.data() << ">;tag=" << fromTag << "\r\n";
+  }
+  
+  strm << "To: ";
+  if (toDisplayName.empty())
+  {
+    if (!toTag.empty())
+    {
+      strm << toUri.data() << ";tag=" << toTag << "\r\n";
+    }
+    else
+    {
+      strm << toUri.data() << "\r\n";
+    }
+  }
+  else
+  {
+    if (!toTag.empty())
+    {
+      strm << "\"" << toDisplayName << "\" <" << toUri.data() << ">;tag=" << toTag << "\r\n";
+    }
+    else
+    {
+      strm << "\"" << toDisplayName << "\"<" << toUri.data() << ">" << "\r\n";
+    }
+  }
+  
+  strm << "Contact: ";
+  if (contactDisplayName.empty())
+  {
+    strm << contactUri.data() <<  "\r\n";
+  }
+  else
+  {
+    strm << "\"" << contactDisplayName << "\" <" << contactUri.data() << ">" << "\r\n";
+  }
+  
+  std::string viaProto("UDP");
+  if (viaTransport.getProtocol() == OSS::Net::IPAddress::TCP)
+  {
+    viaProto = "TCP";
+  }
+  else if (viaTransport.getProtocol() == OSS::Net::IPAddress::TLS)
+  {
+    viaProto = "TLS";
+  }
+  
+  strm << "Via: " << "SIP/2.0/" << viaProto << " " << viaTransport.toIpPortString() << ";branch=" << viaBranch << "\r\n";
+  
+  if (!contentType.empty())
+  {
+    if (!body.empty())
+    {
+      strm << "Content-Type: " << contentType << "\r\n";
+      strm << "Content-Length: " << body.size() <<  "\r\n\r\n";
+      strm << body;
+    }
+  }
+  pMsg = SIPMessage::Ptr(new SIPMessage(strm.str()));
+  pMsg->commitData();
+  return pMsg;
 }
 
 SIPMessage::Ptr SIPMessage::createResponse(
@@ -1534,6 +1747,29 @@ std::string SIPMessage::createLoggerData(SIPMessage* pMsg)
   return strm.str();
 }
 
+
+ bool SIPMessage::getRequestUri(SIPURI& ruri) const
+ {
+   if (_startLine.empty() || isResponse())
+   {
+     return false;
+   }
+   SIPRequestLine rline(_startLine);
+   return rline.getURI(ruri);
+ }
+ 
+ bool SIPMessage::setRequestUri(SIPURI& ruri)
+ {
+   if (_startLine.empty() || isResponse())
+   {
+     return false;
+   }
+   SIPRequestLine rline(_startLine);
+   rline.setURI(ruri);
+   _startLine = rline.data();
+   return true;
+ }
+ 
 std::string SIPMessage::getFromTag() const
 {
   std::string tag;

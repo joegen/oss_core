@@ -26,6 +26,8 @@
 
 namespace OSS {
 namespace SIP {
+  
+#define MIN_DATAGRAM_SIZE 10
 
 
 SIPFSMDispatch::SIPFSMDispatch() :
@@ -55,11 +57,14 @@ void SIPFSMDispatch::deinitialize()
 
 void SIPFSMDispatch::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport)
 {
-  if (pTransport->getLastReadCount() < 10)
+  if (!pTransport->isEndpoint() && pTransport->getLastReadCount() < MIN_DATAGRAM_SIZE && !pTransport->isReliableTransport())
   {
     //
-    // message is too short to be a SIP Message
-    // Bailing out
+    // datagram is too short to be a SIP Message
+    // Bailing out.  Take note that streamed connection
+    // can split SIP messages to smaller frames
+    // and the last frame can be smaller than MIN_DATAGRAM_SIZE
+    // so we do not impose a limit for streams
     //
     return;
   }
@@ -148,19 +153,19 @@ void SIPFSMDispatch::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
     //
     // We did not get a transaction, check if this is an ack and find the IST ACK transaction
     //
-    if (transactionType == SIPTransaction::TYPE_IST && pMsg->isAck())
+    if (transactionType == SIPTransaction::TYPE_IST && pMsg->isRequest("ACK"))
     {
         //
         // No IST is existing in the ackable Pool.
         // Report this ACK as orphaned to the UA CORE
         //
-        if (_ackFor2xxTransactionHandler)
-          _ackFor2xxTransactionHandler(pMsg, pTransport);
+        if (_ackOr2xxTransactionHandler)
+          _ackOr2xxTransactionHandler(pMsg, pTransport);
     }
     else if (transactionType == SIPTransaction::TYPE_ICT && pMsg->is2xx())
     {
-      if (_ackFor2xxTransactionHandler)
-        _ackFor2xxTransactionHandler(pMsg, pTransport);
+      if (_ackOr2xxTransactionHandler)
+        _ackOr2xxTransactionHandler(pMsg, pTransport);
     }
     else
     {
@@ -184,12 +189,7 @@ void SIPFSMDispatch::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
   }
 }
 
-void SIPFSMDispatch::sendRequest(
-  const SIPMessage::Ptr& pRequest,
-  const OSS::Net::IPAddress& localAddress,
-  const OSS::Net::IPAddress& remoteAddress,
-  SIPTransaction::Callback& callback,
-  SIPTransaction::TerminateCallback& terminateCallback)
+SIPTransaction::Ptr SIPFSMDispatch::createClientTransaction(const SIPMessage::Ptr& pRequest)
 {
   if (!pRequest->isRequest())
     throw OSS::SIP::SIPException("Sending a response using sendRequest() method is illegal");
@@ -200,6 +200,7 @@ void SIPFSMDispatch::sendRequest(
 
   SIPTransaction::Ptr trn;
   SIPTransportSession::Ptr nullTransport;
+  bool isAck = false;
   if (OSS::string_caseless_starts_with(pRequest->startLine(), "invite"))
   {
     //
@@ -212,9 +213,25 @@ void SIPFSMDispatch::sendRequest(
     //
     // This is an NICT
     //
-    trn = _nict.findTransaction(pRequest, nullTransport);
+    isAck = pRequest->isRequest(OSS::SIP::REQ_ACK);
+    if (!isAck)
+    {
+      trn = _nict.findTransaction(pRequest, nullTransport);
+    }
   }
+  
+  return trn;
+}
 
+void SIPFSMDispatch::sendRequest(
+  const SIPMessage::Ptr& pRequest,
+  const OSS::Net::IPAddress& localAddress,
+  const OSS::Net::IPAddress& remoteAddress,
+  SIPTransaction::Callback& callback,
+  SIPTransaction::TerminateCallback& terminateCallback)
+{
+  SIPTransaction::Ptr trn = createClientTransaction(pRequest);
+ 
   if (trn)
   {
     if (!trn->transportService())

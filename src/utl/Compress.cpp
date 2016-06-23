@@ -17,6 +17,11 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+#include "OSS/build.h"
+#if OSS_HAVE_BOOST_IOSTREAMS
+
+#include "OSS/OSS.h"
+
 #ifndef NO_BZIP2
 #define NO_BZIP2 1
 #endif
@@ -87,5 +92,5 @@ void compress_bzip_deflate(const std::vector<char>& in, std::vector<char>& out)
 
 } // OSS
 
-
+#endif // HAVE_BOOST_IOSTREAM
 

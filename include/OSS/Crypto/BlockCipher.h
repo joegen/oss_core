@@ -21,14 +21,21 @@
 #ifndef OSS_CRYPTO_BlockCipher_H_INCLUDED
 #define OSS_CRYPTO_BlockCipher_H_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_MCRYPT
+
 #include <vector>
 #include <string>
 
 #include <boost/noncopyable.hpp>
 
+#include "OSS/OSS.h"
 #include "OSS/Crypto/OSSCrypto.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/Exception.h"
+#include "OSS/build.h"
+
+#if OSS_HAVE_MCRYPT
 
 #include <mcrypt.h>
 
@@ -115,6 +122,9 @@ protected:
 
 } } // OSS::Crypto
 
+#endif // OSS_HAVE_MCRYPT
+
+#endif // ENABLE_FEATURE_MCRYPT
 
 #endif // OSS_CRYPTO_BlockCipher_H_INCLUDED
 

@@ -20,6 +20,9 @@
 #ifndef RTP_RTPProxyManager_INCLUDED
 #define RTP_RTPProxyManager_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_RTP
+
 #include "OSS/OSS.h"
 
 #include <map>
@@ -157,13 +160,16 @@ public:
     /// return the active session lists.  Muts be used together with sessionListMutex
     /// for thread safety
 
-  RedisBroadcastClient& redisClient();
+#if ENABLE_FEATURE_REDIS
+  Persistent::RedisBroadcastClient& redisClient();
     /// return a reference to the redis client for the rtp proxy db
 
-  bool redisConnect(const std::vector<RedisClient::ConnectionInfo>& connections);
+  bool redisConnect(const std::vector<Persistent::RedisClient::ConnectionInfo>& connections, int workspace);
     /// Connect to redis database for state persistence
-
+#endif
+  
   bool hasRtpDb() const;
+
     /// returns true if redis client is connected to the rtp proxy db
 
   void incrementSessionCount(const std::string& address);
@@ -174,6 +180,9 @@ public:
   
   std::size_t getSessionCount(const std::string& address) const;
     /// Return the number of sessions terminating to a particular address
+  
+  std::size_t getSessionCount() const;
+    /// Return the total number of active session sessions
 
   bool persistStateFiles() const;
     /// If this flag is true, state files for RTP will be stored in the diretory
@@ -185,6 +194,9 @@ public:
   
   void alwaysProxyMedia(bool alwaysProxyMedia = true);
     /// Global flag to always enable media proxying regardless of the handler option parameter
+  
+  bool enableHairpins() const;
+  bool& enableHairpins();
 private:
   boost::asio::io_service _ioService;
   mutable OSS::mutex_critic_sec _sessionListMutex;
@@ -201,13 +213,16 @@ private:
   int _readTimeout;
   unsigned _rtpSessionMax;
   bool _canRecycleState;
-  RedisBroadcastClient _redisClient;
+#if ENABLE_FEATURE_REDIS
+  Persistent::RedisBroadcastClient _redisClient;
+#endif
   bool _hasRtpDb;
   mutable OSS::mutex_critic_sec _sessionCounterMutex;
   mutable RTPProxyCounter _sessionCounter;
   bool _persistStateFiles;
   bool _enabled;
   bool _alwaysProxyMedia;
+  bool _enableHairpins;
 
   friend class RTPProxy;
   friend class RTPProxySession;
@@ -218,16 +233,18 @@ private:
 // Inlines
 //
 
-
-inline RedisBroadcastClient& RTPProxyManager::redisClient()
+#if ENABLE_FEATURE_REDIS
+inline Persistent::RedisBroadcastClient& RTPProxyManager::redisClient()
 {
   return _redisClient;
 }
+#endif
 
 inline bool RTPProxyManager::hasRtpDb() const
 {
   return _hasRtpDb;
 }
+
 
 inline int& RTPProxyManager::houseKeepingInterval()
 {
@@ -282,6 +299,13 @@ inline RTPProxySessionList& RTPProxyManager::sessionList()
   return _sessionList;
 }
 
+
+inline std::size_t RTPProxyManager::getSessionCount() const
+{
+  OSS::mutex_critic_sec_lock lock(_sessionListMutex);
+  return _sessionList.size();
+}
+
 inline bool RTPProxyManager::persistStateFiles() const
 {
   return _persistStateFiles;
@@ -297,5 +321,17 @@ inline void RTPProxyManager::alwaysProxyMedia(bool alwaysProxyMedia)
   _alwaysProxyMedia = alwaysProxyMedia;
 }
 
+inline bool RTPProxyManager::enableHairpins() const
+{
+  return _enableHairpins;
+}
+inline bool& RTPProxyManager::enableHairpins()
+{
+  return _enableHairpins;
+}
+
 } } //OSS::RTP
+
+#endif // ENABLE_FEATURE_RTP
+
 #endif //RTP_RTPProxyManager_INCLUDED

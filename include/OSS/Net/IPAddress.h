@@ -33,11 +33,14 @@ class OSS_API IPAddress
   /// This is a helper class on top of the asio address_v4 and address_v6 objects
 {
 public:
-  union SockAddr 
+  enum Protocol
   {
-    struct sockaddr_storage ss;
-    struct sockaddr_in s4;
-    struct sockaddr_in6 s6;
+    UDP,
+    TCP,
+    TLS,
+    WS,
+    WSS,
+    UnknownTransport
   };
   
   IPAddress();
@@ -120,9 +123,6 @@ public:
 
   std::string toIpPortString() const;
     /// Get the address in ip:port format
-  
-  bool toSockAddr(SockAddr& socketaddr_) const;
-    /// Convert to a sockaddr union
 
   bool isValid() const;
     /// Return true if the address is valid
@@ -142,6 +142,18 @@ public:
     /// Return the external address.  This is a custom property used
     /// by applications that would want to retain a map between an internal
     /// and external addresses in cases of servers deplyed within NAT
+  
+  std::string& alias();
+    /// alternative name for this address
+  
+  const std::string& alias() const;
+    /// alternative name for this address
+  
+  Protocol getProtocol() const;
+    /// Returns the protocol.  Default is UnknownTransport.
+  
+  void setProtocol(Protocol protocol);
+    /// Set the transport
 
   bool isPrivate();
     /// Returns true if the IP address is of private type.  eg 192.168.x.x
@@ -160,16 +172,9 @@ public:
 
   static IPAddress fromV4IPPort(const char* ipPortTuple);
     /// Returns an IP Address from IP:PORT tupple
-  
-  static IPAddress fromSockAddr(const char* ipPortTuple);
-    /// Returns an IP Address from IP:PORT tupple
 
   static IPAddress fromV4DWORD(OSS::UInt32 ip4);
-    /// Returns an IP Address from a DWORD
-  
-  static IPAddress fromSockAddr4(sockaddr_in& in);
-  static IPAddress fromSockAddr6(sockaddr_in6& in6);
-    /// Returns IP Address from sockaddr
+    /// Returns an IP Addres from a DWORD
 
   static bool isV4Address(const std::string& address);
     /// Returns true if address is a valid IPV4 address
@@ -185,6 +190,8 @@ protected:
   unsigned short _port;
   unsigned short _cidr;
   bool _isVirtual;
+  Protocol _protocol;
+  std::string _alias;
 };
 
 //
@@ -217,6 +224,16 @@ inline std::string& IPAddress::externalAddress()
 inline const std::string& IPAddress::externalAddress() const
 {
   return _externalAddress;
+}
+
+inline std::string& IPAddress::alias()
+{
+  return _alias;
+}
+
+inline const std::string& IPAddress::alias() const
+{
+  return _alias;
 }
 
 
@@ -377,7 +394,16 @@ inline void IPAddress::setVirtual(bool isVirtual)
 {
   _isVirtual = isVirtual;
 }
-    /// Flag this IP address as virtual
+
+inline IPAddress::Protocol IPAddress::getProtocol() const\
+{
+  return _protocol;
+}
+  
+inline void IPAddress::setProtocol(Protocol protocol)
+{
+  _protocol = protocol;
+}
 
 } } // OSS::Net
 

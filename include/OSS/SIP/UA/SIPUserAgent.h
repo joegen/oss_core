@@ -20,6 +20,8 @@
 #ifndef OSS_SIPUSERAGENT_H_INCLUDED
 #define	OSS_SIPUSERAGENT_H_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_LIBRE
 
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/Net/Net.h"
@@ -140,6 +142,7 @@ inline OSS::socket_address_list& SIPUserAgent::tlsListeners()
 }
 
 } } } // OSS::SIP::UA
-  
+
+#endif // ENABLE_FEATURE_LIBRE
 #endif	// OSS_SIPUSERAGENT_H_INCLUDED
 

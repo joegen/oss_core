@@ -19,6 +19,7 @@
 
 
 #include "OSS/SIP/SIPFrom.h"
+#include "OSS/SIP/SIPURI.h"
 #include "OSS/ABNF/ABNFSIPFromSpec.h"
 #include "OSS/ABNF/ABNFSIPNameAddr.h"
 #include "OSS/ABNF/ABNFSIPURIParameters.h"
@@ -44,8 +45,22 @@ namespace OSS {
 namespace SIP {
 
 
+static void check_empty(SIPFrom* header)
+{
+  if (header->data().empty())
+  {
+    header->data() = SIPURI::EMPTY_URI;
+  }
+}
+
+static bool is_empty(const char* str)
+{
+  return (!str || strlen(str) == 0);
+}
+
 SIPFrom::SIPFrom()
 {
+  check_empty(this);
 }
 
 SIPFrom::SIPFrom(const std::string& from)
@@ -98,7 +113,32 @@ bool SIPFrom::getDisplayName(const std::string& from, std::string& displayName)
 
 bool SIPFrom::setDisplayName(const char* displayName)
 {
+  check_empty(this);
   return setDisplayName(_data, displayName);
+}
+
+static bool display_name_needs_quote(const char* displayName)
+{
+  size_t len = strlen(displayName);
+  if (!len)
+  {
+    return false;
+  }
+  
+  if (displayName[0] == '"')
+  {
+    return false;
+  }
+  
+  for (size_t i = 0; i < len; i++)
+  {
+    if (isspace(displayName[i]) != 0)
+    {
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 bool SIPFrom::setDisplayName(std::string& from, const char* displayName)
@@ -108,12 +148,31 @@ bool SIPFrom::setDisplayName(std::string& from, const char* displayName)
   if (fsTokens.size() != 2) 
     return false;
   
+  bool empty = (strlen(displayName) == 0);
+  
   ABNFTokens naTokens;
   char* offSet = nameAddrParser.parseTokens(fsTokens[0].c_str(), naTokens);
   if (offSet == fsTokens[0].c_str() || naTokens.size() != 4)
   {
-    from = displayName;
-    from += " <";
+    if (!display_name_needs_quote(displayName))
+    {
+      from = displayName;
+    }
+    else
+    {
+      std::ostringstream quoted;
+      quoted << "\"" << displayName << "\"";
+      from = quoted.str();
+    }
+    
+    if (!empty)
+    {
+      from += " <";
+    }
+    else
+    {
+      from += "<";
+    }
     
     char* paramsOffSet = uriParamsFinder.parse(fsTokens[0].c_str());
     if (paramsOffSet == fsTokens[0].c_str())
@@ -131,8 +190,25 @@ bool SIPFrom::setDisplayName(std::string& from, const char* displayName)
     return true;
   }
 
-  from = displayName;
-  from += " <";
+  if (!display_name_needs_quote(displayName))
+  {
+    from = displayName;
+  }
+  else
+  {
+    std::ostringstream quoted;
+    quoted << "\"" << displayName << "\"";
+    from = quoted.str();
+  }
+  
+  if (!empty)
+  {
+    from += " <";
+  }
+  else
+  {
+    from += "<";
+  }
   from += naTokens[2];
   from += ">";
   from += fsTokens[1];
@@ -188,11 +264,22 @@ bool SIPFrom::getURI(const std::string& from, std::string& uri)
 
 bool SIPFrom::setURI(const char* uri)
 {
+  check_empty(this);
   return setURI(_data, uri);
 }
 
 bool SIPFrom::setURI(std::string& from, const char* uri)
 {
+  if (is_empty(uri))
+  {
+    return false;
+  }
+  
+  if (!SIPURI::verify(uri))
+  {
+    return false;
+  }
+  
   char* laQuotOffSet = laquotFinder_1.parse(from.c_str());
   if (laQuotOffSet == from.c_str())
   {
@@ -255,6 +342,7 @@ bool SIPFrom::setURI(std::string& from, const char* uri)
 
 bool SIPFrom::setUser(const char* user)
 {
+  check_empty(this);
   return setUser(_data, user);
 }
 
@@ -286,11 +374,17 @@ bool SIPFrom::getUser(const std::string& from, std::string& user)
 
 bool SIPFrom::setHostPort(const char* hostPort)
 {
-  return setUser(_data, hostPort);
+  check_empty(this);
+  return setHostPort(_data, hostPort);
 }
 
 bool SIPFrom::setHostPort(std::string& from, const char* hostPort)
 {
+  if (is_empty(hostPort))
+  {
+    return false;
+  }
+  
   std::string uri;
   if (!getURI(from, uri))
     return false;
@@ -330,13 +424,13 @@ bool SIPFrom::getHost(const std::string& from, std::string& host)
   return SIPURI::getHost(uri, host);
 }
 
-std::string SIPFrom::getAor()
+std::string SIPFrom::getAor(bool includeScheme) const
 {
   std::string uri;
-  if (getURI(_data, uri))
+  if (!getURI(_data, uri))
     return "";
   std::string aor;
-  SIPURI::getIdentity(uri, aor);
+  SIPURI::getIdentity(uri, aor, includeScheme);
   return aor;
 }
 
@@ -377,6 +471,7 @@ bool SIPFrom::getHeaderParams(const std::string& from, std::string& headerParams
 
 bool SIPFrom::setHeaderParams(const char* headerParams)
 {
+  check_empty(this);
   return setHeaderParams(_data, headerParams);
 }
 
@@ -448,6 +543,7 @@ bool SIPFrom::getHeaderParamEx(const std::string& headerParams, const char* para
 
 bool SIPFrom::setHeaderParam(const char* paramName, const char* paramValue)
 {
+  check_empty(this);
   return setHeaderParam(_data, paramName, paramValue);
 }
 

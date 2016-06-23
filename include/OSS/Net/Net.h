@@ -394,6 +394,8 @@ void OSS_API socket_udp_set_broadcast(socket_handle handle, bool flag);
 bool OSS_API socket_udp_get_broadcast(socket_handle handle);
 	/// Returns the value of the SO_BROADCAST socket option.
 
+bool OSS_API socket_ip_tos_set(int fd, int family, int tos);
+  /// Set IP_TOS socket option 
 
 boost::asio::io_service& net_io_service();
     /// Return a raw reference to the io_service
@@ -428,6 +430,15 @@ NET_TIMER_HANDLE OSS_API net_io_timer_create(int millis, net_timer_func handler)
 
 void OSS_API net_io_timer_cancel(NET_TIMER_HANDLE timerHandle);
   /// Cancel execution of a timer.  
+
+bool net_get_default_interface_name(std::string& iface);
+  /// Return the name of the default interface
+
+bool net_get_interface_address(const std::string iface, std::string& address, int family = AF_INET);
+  /// Return the IP address of a given interface
+
+bool net_get_default_interface_address(std::string& address, int family = AF_INET);
+  /// Return the IP address of a given interface
 
 //
 // Inlines

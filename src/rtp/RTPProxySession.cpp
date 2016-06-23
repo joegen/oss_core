@@ -32,7 +32,11 @@ namespace RTP {
 
 
 using namespace OSS::SDP;
+
+#if ENABLE_FEATURE_CONFIG
 using namespace OSS::Persistent;
+#endif
+
 using namespace OSS::Net;
 
 
@@ -62,10 +66,19 @@ RTPProxySession::RTPProxySession(RTPProxyManager* pManager, const std::string& i
 RTPProxySession::~RTPProxySession()
 {
   stop();
+
+#if ENABLE_FEATURE_CONFIG
   if (!_pManager->hasRtpDb() && _pManager->persistStateFiles())
+  {
     ClassType::remove(_stateFile);
+  }
+#endif
+#if ENABLE_FEATURE_REDIS
   else if (_pManager->hasRtpDb())
+  {
     _pManager->redisClient().del(_identifier);
+  }
+#endif
 }
 
 void RTPProxySession::stop()
@@ -495,7 +508,7 @@ void RTPProxySession::handleInitialSDPOffer(
       throw SDPException("Unable to parse media address from SDP offer.");
 
     bool createProxy = false;
-    if (mediaAddress.compare(routeLocalInterface, false /*don't include port*/))
+    if (!_pManager->enableHairpins() && mediaAddress.compare(routeLocalInterface, false /*don't include port*/))
       createProxy = false;
     else if (!forceCreateProxy && mediaAddress.isValid()
       && mediaAddress.isPrivate() && mediaAddress != packetSourceIP)
@@ -590,7 +603,7 @@ void RTPProxySession::handleInitialSDPOffer(
       throw SDPException("Unable to parse media address from SDP offer.");
 
     bool createProxy = false;
-    if (mediaAddress.compare(routeLocalInterface, false /*don't include port*/))
+    if (!_pManager->enableHairpins() && mediaAddress.compare(routeLocalInterface, false /*don't include port*/))
       createProxy = false;
     else if (!forceCreateProxy && mediaAddress.isValid()
       && mediaAddress.isPrivate() && mediaAddress != packetSourceIP)
@@ -687,7 +700,7 @@ void RTPProxySession::handleInitialSDPOffer(
       throw SDPException("Unable to parse media address from SDP offer.");
 
     bool createProxy = false;
-    if (mediaAddress.compare(routeLocalInterface, false /*don't include port*/))
+    if (!_pManager->enableHairpins() && mediaAddress.compare(routeLocalInterface, false /*don't include port*/))
       createProxy = false;
     else if (!forceCreateProxy && mediaAddress.isValid()
       && mediaAddress.isPrivate() && mediaAddress != packetSourceIP)
@@ -1028,7 +1041,9 @@ void RTPProxySession::handleInitialSDPAnswer(
   if (_hasOfferedAudioProxy || _hasOfferedVideoProxy || _hasOfferedFaxProxy)
   {
     sdp = offer.toString();
+#if ENABLE_FEATURE_CONFIG
     dumpStateFile();
+#endif
   }
   else
   {
@@ -1762,10 +1777,13 @@ void RTPProxySession::handleSDPAnswer(
   if (_hasOfferedAudioProxy || _hasOfferedVideoProxy || _hasOfferedFaxProxy)
   {
     sdp = offer.toString();
+#if ENABLE_FEATURE_CONFIG 
     dumpStateFile();
+#endif
   }
 }
 
+#if ENABLE_FEATURE_REDIS
 void RTPProxySession::dumpStateToRedis()
 {
   RTPProxyRecord record;
@@ -2018,18 +2036,21 @@ void RTPProxySession::dumpStateToRedis()
   
   record.writeToRedis(_pManager->redisClient(), _identifier);
 }
+#endif
 
+#if ENABLE_FEATURE_CONFIG
 void RTPProxySession::dumpStateFile()
 {
   //
   // Check if we will be using redis
   //
+#if ENABLE_FEATURE_REDIS
   if (_pManager->hasRtpDb())
   {
     dumpStateToRedis();
     return;
   }
-
+#endif
   //
   // Check if the manager allows persistence of state files to the disc
   //
@@ -2338,6 +2359,9 @@ void RTPProxySession::dumpStateFile()
   persistent.persist(_stateFile);
 
 }
+#endif
+
+#if ENABLE_FEATURE_REDIS
 
 RTPProxySession::Ptr RTPProxySession::reconstructFromRedis(RTPProxyManager* pManager, const std::string& identifier)
 {
@@ -2585,8 +2609,9 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromRedis(RTPProxyManager* pMan
   }
   return RTPProxySession::Ptr(pSession);
 }
+#endif
 
-
+#if ENABLE_FEATURE_CONFIG
 RTPProxySession::Ptr RTPProxySession::reconstructFromStateFile(
   RTPProxyManager* pManager, const boost::filesystem::path& stateFile)
 {
@@ -2788,6 +2813,7 @@ RTPProxySession::Ptr RTPProxySession::reconstructFromStateFile(
 
   return RTPProxySession::Ptr(pSession);
 }
+#endif
 
 void RTPProxySession::handleAuthStateTimeout(const boost::system::error_code& e)
 {

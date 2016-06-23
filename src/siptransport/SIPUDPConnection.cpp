@@ -17,6 +17,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+#include "OSS/OSS.h"
 #include <iostream>
 #include <vector>
 #include <sstream>
@@ -31,6 +32,8 @@
 #include "OSS/SIP/SIPXOR.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/UTL/PropertyMap.h"
+#include "OSS/SIP/SIPListener.h"
+
 
 namespace OSS {
 namespace SIP {
@@ -38,7 +41,9 @@ namespace SIP {
 
 SIPUDPConnection::SIPUDPConnection(
   boost::asio::io_service& ioService,
-  boost::asio::ip::udp::socket& socket): 
+  boost::asio::ip::udp::socket& socket,
+  SIPListener* pListener) :
+    SIPTransportSession(pListener),
     _socket(socket),
     _resolver(ioService),
     _pRequest()
@@ -55,16 +60,20 @@ void SIPUDPConnection::start(const SIPTransportSession::Dispatch& dispatch)
 {
   setMessageDispatch(dispatch);
   
+#if OSS_OS == OSS_OS_LINUX
   boost::asio::socket_base::receive_buffer_size recBuffSize(25165824);
   boost::asio::socket_base::send_buffer_size sendBuffSize(25165824);
   _socket.set_option(recBuffSize);
   _socket.set_option(sendBuffSize);
+#endif
+  
   _socket.async_receive_from(boost::asio::buffer(_buffer), _senderEndPoint,
       boost::bind(&SIPUDPConnection::handleRead, shared_from_this(),
         boost::asio::placeholders::error,
           boost::asio::placeholders::bytes_transferred, (void*)0));
 }
 
+#if ENABLE_FEATURE_XOR
 static bool isSIPPacket(const char* p)
 {
   if (p[0]=='A' && p[1]=='C' && p[2]=='K' && p[3]==' ') /* ACK */
@@ -100,6 +109,7 @@ static bool isSIPPacket(const char* p)
 
   return false;
 }
+#endif
 
 void SIPUDPConnection::handleRead(const boost::system::error_code& e, std::size_t bytes_transferred, OSS_HANDLE userData)
 {
@@ -142,7 +152,8 @@ void SIPUDPConnection::handleRead(const boost::system::error_code& e, std::size_
       }
 
       std::string buffer(_buffer.data(), _buffer.data() + bytes_transferred);
-
+      
+#if ENABLE_FEATURE_XOR
       if (!SIPXOR::isEnabled())
       {
         _pRequest->setData(buffer);
@@ -170,6 +181,9 @@ void SIPUDPConnection::handleRead(const boost::system::error_code& e, std::size_
         _pRequest->setData(buffer);
         _pRequest->setProperty(OSS::PropertyMap::PROP_XOR, "1");
       }
+#else
+      _pRequest->setData(buffer);
+#endif
 
       //
       // Clone the current connection so that the dispatcher gets a static snapshot
@@ -223,6 +237,7 @@ void SIPUDPConnection::writeMessage(SIPMessage::Ptr msg, const std::string& ip, 
       addr.to_string(), port == "0" || port.empty() ? "5060" : port);
     ep = _resolver.resolve(query);
 
+#if ENABLE_FEATURE_XOR
     if (!SIPXOR::isEnabled())
     {
       _socket.async_send_to(boost::asio::buffer(msg->data(), msg->data().size()), *ep,
@@ -252,9 +267,19 @@ void SIPUDPConnection::writeMessage(SIPMessage::Ptr msg, const std::string& ip, 
 #else
         boost::system::error_code ec;
         _socket.send_to(boost::asio::buffer(newBuff, len), *ep, 0, ec);
+        
+        if (ec)
+        {
+          OSS_LOG_DEBUG("SIPUDPConnection::writeMessage Exception " << ec.message());
+        }
 #endif
       }
     }
+#else
+    _socket.async_send_to(boost::asio::buffer(msg->data(), msg->data().size()), *ep,
+        boost::bind(&SIPUDPConnection::handleWrite, shared_from_this(),
+                boost::asio::placeholders::error));
+#endif
   }
 }
 
@@ -284,6 +309,10 @@ bool SIPUDPConnection::writeKeepAlive(const std::string& ip, const std::string& 
 void SIPUDPConnection::handleWrite(const boost::system::error_code& e)
 {
   // This is only significant for stream based connections (TCP/TLS)
+  if (e)
+  {
+    OSS_LOG_ERROR("SIPUDPConnection::handleWrite Exception " << e.message());
+  }
 }
 
 void SIPUDPConnection::stop()
@@ -297,7 +326,7 @@ void SIPUDPConnection::writeMessage(SIPMessage::Ptr msg)
   throw OSS::SIP::SIPException("Invalid UDP Transport Operation");
 }
 
-void SIPUDPConnection::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter)
+void SIPUDPConnection::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter, boost::system::error_code* out_ec, Semaphore* pSem)
 {
   // This is only significant for stream based connections (TCP/TLS)
 }
@@ -318,9 +347,10 @@ void SIPUDPConnection::clientBind(const OSS::Net::IPAddress& listener, unsigned 
  // This is only significant for stream based connections (TCP/TLS)
 }
 
-void SIPUDPConnection::clientConnect(const OSS::Net::IPAddress& target)
+bool SIPUDPConnection::clientConnect(const OSS::Net::IPAddress& target)
 {
  // This is only significant for stream based connections (TCP/TLS)
+  return false;
 }
 
 OSS::Net::IPAddress SIPUDPConnection::getLocalAddress() const

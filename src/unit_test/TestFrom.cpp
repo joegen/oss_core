@@ -55,8 +55,8 @@ TEST(ParserTest, test_from_parser)
   ASSERT_TRUE(from_7.setHeaderParam("tag", "6789"));
   ASSERT_TRUE(from_7.getHeaderParam("tag") == "6789");
 
-  std::string from_8 = "\"8429001\"<sip:8429001@192.168.1.100:85>;tag=9d603601";
-  ASSERT_TRUE(OSS::SIP::SIPFrom::setHostPort(from_8, "registrar.atlanta.com"));
+  std::string from_8 = "\"8429001\"<sip:8429001@79.99.194.18:85>;tag=9d603601";
+  ASSERT_TRUE(OSS::SIP::SIPFrom::setHostPort(from_8, "registrar.vobb.star-comm.co.uk"));
 
   OSS::SIP::SIPReferTo referTo("<sip:alice2atlanta.com?replaces=calid-001;to-tag=totag-001;from-tag=fromtag-001>");
   OSS::SIP::SIPURI referToUri = referTo.getURI();

@@ -51,7 +51,7 @@ TEST(UATest, test_ua_register)
   //
   // Wait until event loop terminates
   //
-  gpEventLoop->waitForTermination();
+  OSS::thread_sleep(5000);
   
   delete gpUA;
   delete gpEventLoop;

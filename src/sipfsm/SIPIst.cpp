@@ -34,7 +34,7 @@ namespace SIP {
 SIPIst::SIPIst(
   boost::asio::io_service& ioService,
   const SIPTransactionTimers& timerProps) :
-  SIPFsm(ioService, timerProps),
+  SIPFsm(SIPFsm::InviteServerTransaction, ioService, timerProps),
   _timerGValue(0),
   _istPool(0)
 {
@@ -81,7 +81,7 @@ void SIPIst::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
       dispatch()->requestHandler()(pMsg, pTransport, pTransaction->shared_from_this());
     }
   }
-  else if (pTransaction->getState() == COMPLETED && pMsg->isAck())
+  else if (pTransaction->getState() == COMPLETED && pMsg->isRequest("ACK"))
   {
     cancelTimerH();
     if (!pTransaction->transport()->isReliableTransport())

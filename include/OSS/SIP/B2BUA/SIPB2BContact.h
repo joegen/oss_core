@@ -21,6 +21,8 @@
 #ifndef B2BCONTACT_H_INCLUDED
 #define	B2BCONTACT_H_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_B2BUA
 
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransactionManager.h"
@@ -120,6 +122,8 @@ public:
 };
 
 } } } // OSS::SIP::B2BUA
+
+#endif // ENABLE_FEATURE_B2BUA
 
 #endif	// SBCCONTACT_H_INCLUDED
 

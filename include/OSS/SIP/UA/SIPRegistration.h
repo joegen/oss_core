@@ -21,6 +21,9 @@
 #ifndef OSS_SIPREGISTRATION_H_INCLUDED
 #define	OSS_SIPREGISTRATION_H_INCLUDED
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_LIBRE
+
 #include <boost/shared_ptr.hpp>
 #include "OSS/Net/Net.h"
 #include "OSS/UTL/Thread.h"
@@ -321,6 +324,8 @@ inline void SIPRegistration::setCallId(const std::string& callId)
 }
   
 } } } // OSS::SIP::UA
+
+#endif // ENABLE_FEATURE_LIBRE
 
 #endif	// OSS_SIPREGISTRATION_H_INCLUDED
 

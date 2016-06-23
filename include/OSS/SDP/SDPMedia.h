@@ -54,6 +54,17 @@ public:
     MEDIA_RECEIVE_ONLY,
     MEDIA_INACTIVE
   };
+  
+  enum Profile
+  {
+    PROFILE_NONE,
+    PROFILE_AVP,
+    PROFILE_AVPF,
+    PROFILE_SAVP,
+    PROFILE_SAVPF,
+    PROFILE_DTLS_SAVP,
+    PROFILE_DTLS_SAVPF
+  };
 
   typedef boost::shared_ptr<SDPMedia> Ptr;
   typedef std::list<int> Payloads;
@@ -87,6 +98,12 @@ public:
 
   void setMediaType(Type type);
     /// Set the media type;
+  
+  Profile getRTPProfile() const;
+    /// Return the RTP profile (AVP, AVPF, SAVP, SAVPF)
+  
+  void setRTPProfile(Profile profile);
+    /// Set the RTP profile (AVP, AVPF, SAVP, SAVPF)
 
   const Payloads& getPayloads() const;
     /// Return the list of payload formats.
@@ -190,7 +207,54 @@ public:
 
   void setDirection(Direction direction);
     /// Set the direciton of media
-
+  
+  bool getVectorAttributes(const std::string& label, std::vector<std::string>& attributeVector) const;
+    /// returns an attribute vector
+  
+  void setVectorAttributes(const std::string& label, const std::vector<std::string>& attributeVector);
+    /// Set the vector attribute value
+  
+  bool getICECandidates(std::vector<std::string>& attributeVector) const;
+    /// Returns the vector of ice candidates
+  
+  void setIceCandidates(const std::vector<std::string>& candidates);
+    /// Set the vector of ice candidates
+  
+  bool getDTLSFingerPrints(std::vector<std::string>& attributeVector) const;
+    /// Return the vector of fingerprints
+  
+  void setDTLSFingerPrints(const std::vector<std::string>& candidates);
+    /// Set the vector of DTLS finger prints
+  
+  bool getSSRC(std::vector<std::string>& attributeVector) const;
+    /// Return the vector of ssrc
+  
+  void setSSRC(const std::vector<std::string>& candidates);
+    /// Set the vector of ssrc
+  
+  bool getUniqueAttribute(const std::string& label, std::string& attribute) const;
+    /// Get an attribute that can appear only once in a media block
+  
+  void setUniqueAttribute(const std::string& label, const std::string& attribute);
+    /// Set a unique attribute.  If it does not exist, it will be appended
+  
+  bool getICESetup(std::string& iceSetup) const;
+    /// Return the ICE setup (values: actpass, passive, active)
+  
+  void setICESetup(const std::string& iceSetup);
+    /// Set the ICE setup
+  
+  bool getICEPassword(std::string& icePwd) const;
+    /// Return the ICE pwd 
+  
+  void setICEPassword(const std::string& icePwd);
+    /// Set the ICE user fragment
+  
+  bool getICEUFrag(std::string& iceUfrag) const;
+    /// Return the ICE pwd 
+  
+  void setICEUFrag(const std::string& iceUfrag);
+    /// Set the ICE user fragment
 protected:
   void internalSetAddress(const std::string& address, bool isV4);
   SDPMedia::iterator findAttributeIterator(int payload, const char* attributeName);
@@ -202,6 +266,7 @@ protected:
   Type _type;
   unsigned short _ptime;
   Direction _direction;
+  Profile _profile;
 };
 
 //
@@ -247,6 +312,67 @@ inline void SDPMedia::removeFMTP(int payload)
 {
   removeAttribute(payload, "fmtp");
 }
+
+inline bool SDPMedia::getICECandidates(std::vector<std::string>& attributeVector) const
+{
+  return getVectorAttributes("candidate", attributeVector);
+}
+  
+inline void SDPMedia::setIceCandidates(const std::vector<std::string>& candidates)
+{
+  setVectorAttributes("candidate", candidates);
+}
+  
+inline bool SDPMedia::getDTLSFingerPrints(std::vector<std::string>& attributeVector) const
+{
+  return getVectorAttributes("fingerprint", attributeVector);
+}
+  
+inline void SDPMedia::setDTLSFingerPrints(const std::vector<std::string>& candidates)
+{
+  setVectorAttributes("fingerprint", candidates);
+}
+
+inline bool SDPMedia::getSSRC(std::vector<std::string>& attributeVector) const
+{
+  return getVectorAttributes("ssrc", attributeVector);
+}
+  
+inline void SDPMedia::setSSRC(const std::vector<std::string>& candidates)
+{
+  setVectorAttributes("ssrc", candidates);
+}
+
+inline bool SDPMedia::getICESetup(std::string& iceSetup) const
+{
+  return getUniqueAttribute("setup", iceSetup);
+}
+
+inline void SDPMedia::setICESetup(const std::string& iceSetup)
+{
+  setUniqueAttribute("setup", iceSetup);
+}
+
+inline bool SDPMedia::getICEPassword(std::string& icePassword) const
+{
+  return getUniqueAttribute("ice-pwd", icePassword);
+}
+
+inline void SDPMedia::setICEPassword(const std::string& icePassword)
+{
+  setUniqueAttribute("ice-pwd", icePassword);
+}
+
+inline bool SDPMedia::getICEUFrag(std::string& iceUfrag) const
+{
+  return getUniqueAttribute("ice-ufrag", iceUfrag);
+}
+  
+inline void SDPMedia::setICEUFrag(const std::string& iceUfrag)
+{
+  setUniqueAttribute("ice-ufrag", iceUfrag);
+}
+
 
 } } // OSS::SDP
 #endif // SIP_SDPMedia_H_INCLUDED

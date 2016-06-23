@@ -31,9 +31,11 @@
 #include <boost/asio/ssl.hpp>
 
 
+#if ENABLE_FEATURE_CONFIG
 using OSS::Persistent::ClassType;
 using OSS::Persistent::DataType;
 using OSS::Persistent::PersistenceException;
+#endif
 
 namespace OSS {
 namespace SIP {
@@ -43,14 +45,15 @@ SIPStack::SIPStack() :
   _fsmDispatch(),
   _enableUDP(true),
   _enableTCP(true),
+#if ENABLE_FEATURE_WEBSOCKETS 
   _enableWS(true),
+#endif
   _enableTLS(true),
   _udpListeners(),
   _tcpListeners(),
   _wsListeners(),
   _tlsListeners(),
-  _tlsCertPassword(),
-  _pKeyStore(0)
+  _tlsCertPassword()
 {
 }
 
@@ -90,7 +93,7 @@ void SIPStack::transportInit()
       if (subnetIter != _udpSubnets.end())
         subnets = subnetIter->second;
       
-      _fsmDispatch.transport().addUDPTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual());
+      _fsmDispatch.transport().addUDPTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual(), iface.alias());
     }
   }
 
@@ -110,10 +113,11 @@ void SIPStack::transportInit()
       if (subnetIter != _tcpSubnets.end())
         subnets = subnetIter->second;
       
-      _fsmDispatch.transport().addTCPTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual());
+      _fsmDispatch.transport().addTCPTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual(), iface.alias());
     }
   }
 
+#if ENABLE_FEATURE_WEBSOCKETS  
   //
   // Prepare the WebSocket Transport
   //
@@ -130,9 +134,10 @@ void SIPStack::transportInit()
       if (subnetIter != _wsSubnets.end())
         subnets = subnetIter->second;
       
-      _fsmDispatch.transport().addWSTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual());
+      _fsmDispatch.transport().addWSTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual(), iface.alias());
     }
   }
+#endif
 
   //
   // Prepare the TLS Transport
@@ -150,7 +155,7 @@ void SIPStack::transportInit()
       if (subnetIter != _tlsSubnets.end())
         subnets = subnetIter->second;
       
-      _fsmDispatch.transport().addTLSTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual());
+      _fsmDispatch.transport().addTLSTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual(), iface.alias());
     }
   }
 }
@@ -200,7 +205,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
         try
         {
           std::string port = OSS::string_from_number<unsigned short>(p);
-          _fsmDispatch.transport().addUDPTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual());
+          _fsmDispatch.transport().addUDPTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual(), iface.alias());
           iface.setPort(p);
           hasUDP = true;
           break;
@@ -233,7 +238,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
         try
         {
           std::string port = OSS::string_from_number<unsigned short>(p);
-          _fsmDispatch.transport().addTCPTransport(ip, port,iface.externalAddress(), subnets, iface.isVirtual());
+          _fsmDispatch.transport().addTCPTransport(ip, port,iface.externalAddress(), subnets, iface.isVirtual(), iface.alias());
           iface.setPort(p);
           hasTCP = true;
           break;
@@ -246,6 +251,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
     }
   }
 
+#if ENABLE_FEATURE_WEBSOCKETS
   //
   // Prepare the WebSocket Transport
   //
@@ -266,7 +272,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
         try
         {
           std::string port = OSS::string_from_number<unsigned short>(p);
-          _fsmDispatch.transport().addWSTransport(ip, port,iface.externalAddress(), subnets, iface.isVirtual());
+          _fsmDispatch.transport().addWSTransport(ip, port,iface.externalAddress(), subnets, iface.isVirtual(), iface.alias());
           iface.setPort(p);
           hasWS = true;
           break;
@@ -278,6 +284,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
       }
     }
   }
+#endif
 
   //
   // Prepare the TLS Transport
@@ -299,7 +306,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
         try
         {
           std::string port = OSS::string_from_number<unsigned short>(p);
-          _fsmDispatch.transport().addTLSTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual());
+          _fsmDispatch.transport().addTLSTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual(), iface.alias());
           iface.setPort(p);
           hasTLS = true;
           break;
@@ -316,6 +323,8 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
     throw OSS::SIP::SIPException("No Listener Address Configured");
 }
 
+
+#if ENABLE_FEATURE_CONFIG
 bool SIPStack::initVirtualTransportFromConfig(const boost::filesystem::path& cfgFile)
 {
   ClassType configFile;
@@ -556,6 +565,28 @@ bool SIPStack::initTlsContextFromConfig(const boost::filesystem::path& cfgFile)
   return initializeTlsContext(tls_certificate_file, tls_private_key_file, tls_cert_password, tls_ca_file, tls_ca_path, tls_verify_peer);
 }
 
+#endif // ENABLE_FEATURE_CONFIG
+
+void SIPStack::setTransportThreshold(
+  unsigned long packetsPerSecondThreshold, // The total packets per second threshold
+  unsigned long thresholdViolationRate, // Per IP threshold
+  int banLifeTime // violator jail lifetime
+)
+{
+  if (packetsPerSecondThreshold > thresholdViolationRate)
+  {
+    SIPTransportSession::rateLimit().enabled() = true;
+    SIPTransportSession::rateLimit().autoBanThresholdViolators() = true;
+    SIPTransportSession::rateLimit().setPacketsPerSecondThreshold(packetsPerSecondThreshold);
+    SIPTransportSession::rateLimit().setThresholdViolationRate(thresholdViolationRate);
+    SIPTransportSession::rateLimit().setBanLifeTime(banLifeTime);    
+    OSS_LOG_INFO("Enforcing packet rate limit = " << thresholdViolationRate);
+  }
+}
+
+
+#if ENABLE_FEATURE_CONFIG
+
 void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 {
   ClassType config;
@@ -581,6 +612,9 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
   DataType interfaces = listeners["interfaces"];
   int ifaceCount = interfaces.getElementCount();
   bool hasFoundDefault = false;
+  std::string defaultAddress;
+  OSS::net_get_default_interface_address(defaultAddress);
+  
   for (int i = 0; i < ifaceCount; i++)
   {
     DataType iface = interfaces[i];
@@ -591,6 +625,17 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       external = (const char*)iface["external-address"];
     }
 
+    if ((ip == "auto" || ip == "AUTO") && defaultAddress.empty())
+    {
+      OSS_LOG_ERROR("SIPStack::initTransportFromConfig - unable to determine default interface address");
+      return;
+    }
+    else if (ip == "auto" || ip == "AUTO")
+    {
+      ip = defaultAddress;
+      OSS_LOG_NOTICE("SIPStack::initTransportFromConfig - using default address " << defaultAddress);
+    }
+    
     bool tlsEnabled = iface.exists("tls-enabled") && (bool)iface["tls-enabled"];
     bool tcpEnabled = iface.exists("tcp-enabled") && (bool)iface["tcp-enabled"];
     bool wsEnabled = iface.exists("ws-enabled") && (bool)iface["ws-enabled"];
@@ -680,7 +725,20 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       hasFoundDefault = true;
       DataType defaultIface = listeners["default-interface-address"];
       DataType defaultPort = listeners["default-interface-port"];
-      OSS::Net::IPAddress defaultInterface((const char*)defaultIface);
+      
+      std::string ip = (const char*)defaultIface;
+      
+      if ((ip == "auto" || ip == "AUTO") && defaultAddress.empty())
+      {
+        OSS_LOG_ERROR("SIPStack::initTransportFromConfig - unable to determine default interface address");
+        return;
+      }
+      else if (ip == "auto" || ip == "AUTO")
+      {
+        ip = defaultAddress;
+      }
+      
+      OSS::Net::IPAddress defaultInterface(ip);
       defaultInterface.setPort((int)defaultPort);
       _fsmDispatch.transport().defaultListenerAddress() = defaultInterface;
     }
@@ -692,7 +750,17 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
     // We don't have the defualt interface yet.  Lets use the first configured listener
     //
     DataType iface = interfaces[0];
-    std::string ip = iface["ip-address"];
+    std::string ip = (const char*)iface["ip-address"];
+    if ((ip == "auto" || ip == "AUTO") && defaultAddress.empty())
+    {
+      OSS_LOG_ERROR("SIPStack::initTransportFromConfig - unable to determine default interface address");
+      return;
+    }
+    else if (ip == "auto" || ip == "AUTO")
+    {
+      ip = defaultAddress;
+    }
+    
     if (iface.exists("udp-enabled") && (bool)iface["udp-enabled"])
     {
       int port = iface.exists("sip-port") ? (int)iface["sip-port"] : 5060;
@@ -746,8 +814,9 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
   }
 
   //
-  // Set the TCP port range
+  // Set the WS port range
   //
+#if ENABLE_FEATURE_WEBSOCKETS
   if (listeners.exists("sip-ws-port-base") && listeners.exists("sip-ws-port-max"))
   {
     unsigned int wsPortBase = listeners["sip-ws-port-base"];
@@ -762,7 +831,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       OSS_LOG_ERROR("Unable to set WebSocket port base " << wsPortBase << "-" << wsPortMax << " Using default values.");
     }
   }
-
+#endif
 
   if (listeners.exists("packet-rate-ratio"))
   {
@@ -777,23 +846,8 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       packetsPerSecondThreshold = OSS::string_to_number<unsigned long>(tokens[1].c_str());
       banLifeTime = OSS::string_to_number<int>(tokens[2].c_str());
 
-      if (packetsPerSecondThreshold > thresholdViolationRate)
-      {
-        SIPTransportSession::rateLimit().enabled() = true;
-        SIPTransportSession::rateLimit().autoBanThresholdViolators() = true;
-        SIPTransportSession::rateLimit().setPacketsPerSecondThreshold(packetsPerSecondThreshold);
-        SIPTransportSession::rateLimit().setThresholdViolationRate(thresholdViolationRate);
-        SIPTransportSession::rateLimit().setBanLifeTime(banLifeTime);
-        
-        if (_pKeyStore)
-        {
-          OSS::Persistent::KeyValueStore* pAccessControl = _pKeyStore->getStore("/root/access-control", true);
-          SIPTransportSession::rateLimit().setPersistentStore(pAccessControl);
-        }
-        
-        OSS_LOG_INFO("Enforcing packet rate limit = " << packetRateRatio);
-      }
-
+      setTransportThreshold(packetsPerSecondThreshold, thresholdViolationRate, banLifeTime);
+    
       if (listeners.exists("packet-rate-white-list"))
       {
         DataType whiteList = listeners["packet-rate-white-list"];
@@ -823,9 +877,20 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       }
     }
   }
+  
+  if (listeners.exists("auto-null-route-on-ban"))
+  {
+    bool autoNullRouteOnBan = (bool)listeners["auto-null-route-on-ban"];
+    if (autoNullRouteOnBan)
+    {
+      SIPTransportSession::rateLimit().setAutoNullRoute(true);
+    }
+  }
 
   transportInit();
 }
+
+#endif // ENABLE_FEATURE_CONFIG
 
 bool SIPStack::initializeTlsContext(
     const std::string& tlsCertFile, // Certificate to be used by this server.  File should be in PEM format
@@ -932,6 +997,7 @@ void SIPStack::sendRequestDirect(const SIPMessage::Ptr& pRequest,
   const OSS::Net::IPAddress& remoteAddress)
 {
 
+  std::string logId = pRequest->createContextId(true);
   std::string transport;
   if (SIPVia::msgGetTopViaTransport(pRequest.get(), transport))
   {
@@ -939,10 +1005,24 @@ void SIPStack::sendRequestDirect(const SIPMessage::Ptr& pRequest,
     pRequest->getProperty(OSS::PropertyMap::PROP_TransportId, transportId);
     if (transportId.empty())
       transportId="0";
-    OSS_LOG_DEBUG("Sending request directly protocol=" << transport << " id=" << transportId);
+    OSS_LOG_DEBUG(logId << "Sending request directly protocol=" << transport << " id=" << transportId);
     SIPTransportSession::Ptr client = _fsmDispatch.transport().createClientTransport(pRequest, localAddress, remoteAddress, transport, transportId);
-    if (client)
+    if (client) 
+    {
+      std::string isXOREncrypted = "0";
+      pRequest->getProperty("xor", isXOREncrypted);
+
+      std::ostringstream logMsg;
+      logMsg << logId << ">>> " << pRequest->startLine()
+      << " LEN: " << pRequest->data().size()
+      << " SRC: " << localAddress.toIpPortString()
+      << " DST: " << remoteAddress.toIpPortString()
+      << " ENC: " << isXOREncrypted;
+      OSS::log_information(logMsg.str());
+      if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
+        OSS::log_debug(pRequest->createLoggerData());
       client->writeMessage(pRequest, remoteAddress.toString(), OSS::string_from_number(remoteAddress.getPort()));
+    }
     else
       OSS_LOG_ERROR("SIPStack::sendRequestDirect failed - Unable to create client transport");
   }

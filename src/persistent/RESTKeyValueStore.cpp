@@ -17,6 +17,10 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+#include "OSS/OSS.h"
+#include "OSS/build.h"
+
+#if OSS_HAVE_LEVELDB
 
 #include "OSS/UTL/Logger.h"
 #include "OSS/Persistent/RESTKeyValueStore.h"
@@ -639,6 +643,6 @@ bool RESTKeyValueStore::Client::restDELETE(const std::string& path, int& status)
     
 } }
 
-
+#endif // OSS_HAVE_LEVELDB
 
 

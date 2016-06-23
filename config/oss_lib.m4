@@ -103,8 +103,8 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     CXXFLAGS="-I${prefix}/include $CXXFLAGS"
 
     OSS_CORE_VERSION_CURRENT="2"
-    OSS_CORE_VERSION_REVISION="0"
     OSS_CORE_VERSION_AGE="0"
+    OSS_CORE_VERSION_REVISION="3"
     OSS_CORE_VERSION_FULL="$OSS_CORE_VERSION_CURRENT.$OSS_CORE_VERSION_REVISION.$OSS_CORE_VERSION_AGE"
     OSS_CORE_VERSION_INFO="$OSS_CORE_VERSION_CURRENT:$OSS_CORE_VERSION_REVISION:$OSS_CORE_VERSION_AGE"
     AC_SUBST(OSS_CORE_VERSION_CURRENT)
@@ -169,7 +169,7 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     AC_CHECK_LIB(xmlrpc, main, [], [SF_MISSING_DEP("XML RPC C Foundation classes not found")])
     AC_CHECK_LIB(xmlrpc_client++, main, [], [SF_MISSING_DEP("XML RPC C++ client classes not found")])
     AC_CHECK_LIB(xmlrpc_server_abyss++, main, [], [SF_MISSING_DEP("XML RPC C++ server classes not found")])
-
+    AC_CHECK_LIB(zmq, main, [], [SF_MISSING_DEP("ZeroMQ Libary not found")])
 
     OSS_CORE_DEP_LIBS=""
     OSS_CORE_DEP_LIBS+=" -lgtest "
@@ -192,6 +192,7 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     OSS_CORE_DEP_LIBS+=" -lxmlrpc "
     OSS_CORE_DEP_LIBS+=" -lxmlrpc_client++  "
     OSS_CORE_DEP_LIBS+=" -lxmlrpc_server_abyss++ "
+    OSS_CORE_DEP_LIBS+=" -lzmq "
 
     #
     # Check for TURN dependencies
@@ -202,7 +203,6 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     AC_CHECK_LIB([event_pthreads], [main], [], libevent_thread_found=no)
 
     AM_CONDITIONAL([ENABLE_TURN], false)
-
     AC_ARG_ENABLE(turn,
       AC_HELP_STRING([--enable-turn], [Build TURN Server]),
       enable_turn=yes)
@@ -298,6 +298,11 @@ AC_DEFUN([SFAC_LIB_CORE],
         fi
         AC_SUBST(LIB_OSS_TURN_LA, "$foundpath/liboss_turn.la")
     fi
+
+    #
+    # Generate inline javascript exports
+    #
+    cd $srcdir/src/js/scripts; ./generate.sh
 
     AC_REQUIRE([SFAC_LIB_CORE_FLAGS])
 

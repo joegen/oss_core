@@ -69,6 +69,9 @@ public:
     /// transport proactor thread and should therefore
     /// not block and result to a transport sleep.
 
+  SIPTransaction::Ptr createClientTransaction(const SIPMessage::Ptr& pRequest);
+    /// Create a new transaction for a new non-ACK outgoing request
+  
   void sendRequest(
     const SIPMessage::Ptr& pRequest,
     const OSS::Net::IPAddress& localAddress,
@@ -103,7 +106,7 @@ public:
   SIPTransaction::RequestCallback& requestHandler();
     /// Handler for incoming server transaction requests
 
-  UnknownTransactionCallback& ackFor2xxTransactionHandler();
+  UnknownTransactionCallback& ackOr2xxTransactionHandler();
     /// Handler for SIP messages not linked to a transaction
 
   void stop();
@@ -132,7 +135,7 @@ private:
   SIPIstPool _ist;
   SIPNistPool _nist;
   SIPTransaction::RequestCallback _requestHandler;
-  UnknownTransactionCallback _ackFor2xxTransactionHandler;
+  UnknownTransactionCallback _ackOr2xxTransactionHandler;
   StringPairCache _istBlocker;
   bool _enableIctForking;
 };
@@ -162,9 +165,9 @@ inline SIPTransaction::RequestCallback& SIPFSMDispatch::requestHandler()
   return _requestHandler;
 }
 
-inline SIPFSMDispatch::UnknownTransactionCallback& SIPFSMDispatch::ackFor2xxTransactionHandler()
+inline SIPFSMDispatch::UnknownTransactionCallback& SIPFSMDispatch::ackOr2xxTransactionHandler()
 {
-  return _ackFor2xxTransactionHandler;
+  return _ackOr2xxTransactionHandler;
 }
 
 inline void SIPFSMDispatch::blockIst(const std::string& id)

@@ -30,213 +30,7 @@ namespace OSS {
 namespace JS {
 
   
- 
-#define ENABLE_V8_PREEMPTION 1
-#if ENABLE_V8_PREEMPTION
-#define V8LOCK v8::Locker __v8Locker__
-#define V8_START_PREEMPTION(ms) v8::Locker::StartPreemption(ms)
-#define V8_STOP_PREEMPTION v8::Locker::StopPreemption()
-#else
-#define V8LOCK
-#define V8_START_PREEMPTION 
-#define V8_STOP_PREEMPTION 
-#endif
-
-//
-// JSWorker
-//
-class OSS_API JSWorker : boost::noncopyable
-{
-public:
-  enum RequestType
-  {
-    TYPE_INIT,
-    TYPE_REQUEST,
-    TYPE_RECOMPILE,
-    TYPE_INIT_NODE
-  };
-
-  static bool initialize(JSBase* pJS, const boost::filesystem::path& script,
-    const std::string& functionName,
-    void(*extensionGlobals)(OSS_HANDLE));
-    /// Initialize the javascript context and the object template.
-    /// The function indicated by funtionName must exist in the script
-
-  static bool recompile(JSBase* pJS);
-    /// recompile the current active script
-
-  static bool processRequest(JSBase* pJS, OSS_HANDLE request);
-    /// Process the request
-
-  static void run();
-
-  static void stop();
-
-  static boost::tuples::tuple<
-    JSBase*,
-    boost::filesystem::path,
-    std::string,
-    void(*)(OSS_HANDLE) > _initData;
-  static JSBase* _pJSBase;
-  static boost::tuples::tuple<JSBase*, OSS_HANDLE> _requestData;
-  static OSS::semaphore* _semEvent;
-  static OSS::semaphore* _semComplete;
-  static boost::thread* _thread;
-  static RequestType _requestType;
-  static bool _exit;
-  static bool _retVal;
-};
-
-//
-// Global statics
-//
-OSS::mutex JSBase::_mutex;
-boost::tuples::tuple<
-    JSBase*,
-    boost::filesystem::path,
-    std::string,
-    void(*)(OSS_HANDLE) > JSWorker::_initData;
-JSBase* JSWorker::_pJSBase = 0;
-boost::tuples::tuple<JSBase*, OSS_HANDLE> JSWorker::_requestData;
-OSS::semaphore* JSWorker::_semEvent = 0;
-OSS::semaphore* JSWorker::_semComplete = 0;
-boost::thread* JSWorker::_thread = 0;
-JSWorker::RequestType JSWorker::_requestType;
-bool JSWorker::_exit = false;
-bool JSWorker::_retVal = false;
-
-bool JSWorker::initialize(JSBase* pJS, const boost::filesystem::path& script,
-  const std::string& functionName,
-  void(*extensionGlobals)(OSS_HANDLE))
-{
-
-  V8LOCK;
-
-#if ENABLE_V8_PREEMPTION
-  //OSS_LOG_INFO("Google V8 Preemption ENABLED");
-  return pJS->internalInitialize(script, functionName, extensionGlobals);
-#else
-  JSWorker::_pJSBase = pJS;
-  if (JSWorker::_thread == 0)
-  {
-     JSWorker::_semEvent = new OSS::semaphore(0, 0xFFFF);
-     JSWorker::_semComplete = new OSS::semaphore(0, 0xFFFF);
-     JSWorker::_thread = new boost::thread(boost::bind(JSWorker::run));
-  }
-
-  bool retVal = false;
-  JSBase::_mutex.lock();
-  JSWorker::_requestType = TYPE_INIT;
-
-  JSWorker::_initData = boost::tuples::tuple<JSBase*,
-    boost::filesystem::path,
-    std::string,
-    void(*)(OSS_HANDLE) >(pJS, script, functionName, extensionGlobals);
-
-  JSWorker::_semEvent->set();
-  JSWorker::_semComplete->wait();
-  retVal = JSWorker::_retVal;
-  JSBase::_mutex.unlock();
-  return retVal;
-#endif
-}
-
-bool JSWorker::recompile(JSBase* pJS)
-{
-  V8LOCK;
-
-#if ENABLE_V8_PREEMPTION
-  return pJS->internalRecompile();
-#else
-  JSWorker::_pJSBase = pJS;
-  bool retVal = false;
-  JSBase::_mutex.lock();
-  JSWorker::_requestType = TYPE_RECOMPILE;
-  JSWorker::_semEvent->set();
-  JSWorker::_semComplete->wait();
-  retVal = JSWorker::_retVal;
-  JSBase::_mutex.unlock();
-  return retVal;
-#endif
-}
-
-bool JSWorker::processRequest(JSBase* pJS, OSS_HANDLE request)
-{
-  V8LOCK;
-
-#if ENABLE_V8_PREEMPTION
-  return pJS->internalProcessRequest(request);
-#else
-  JSWorker::_pJSBase = pJS;
-  bool retVal = false;
-
-  JSBase::_mutex.lock();
-  JSWorker::_requestType = TYPE_REQUEST;
-  JSWorker::_requestData = boost::tuples::tuple<JSBase*, OSS_HANDLE>(pJS, request);
-  JSWorker::_semEvent->set();
-  JSWorker::_semComplete->wait();
-  retVal = JSWorker::_retVal;
-  JSBase::_mutex.unlock();
-  return retVal;
-#endif
-}
-
-void JSWorker::stop()
-{
-#if ENABLE_V8_PREEMPTION
-  V8_STOP_PREEMPTION;
-#else
-  if (JSWorker::_thread == 0)
-    return;
-  
-  JSBase::_mutex.lock();
-  JSWorker::_exit = true;
-  _semEvent->set();
-  JSBase::_mutex.unlock();
-  _thread->join();
-
-
-  delete JSWorker::_semEvent;
-  delete JSWorker::_semComplete;
-  delete JSWorker::_thread;
-#endif
-
-}
-void JSWorker::run()
-{
-  OSS::OSS_register_deinit(boost::bind(JSWorker::stop));
-
-#if !ENABLE_V8_PREEMPTION
-
-  for(;;)
-  {
-    _semEvent->wait();
-    if (_exit)
-      return;
-    if (_requestType == TYPE_INIT)
-    {
-      _retVal = _pJSBase->internalInitialize(_initData.get<1>(), _initData.get<2>(), _initData.get<3>());
-    }
-    else if (_requestType == TYPE_REQUEST)
-    {
-      _retVal = _pJSBase->internalProcessRequest(_requestData.get<1>());
-    }
-    else if (_requestType == TYPE_RECOMPILE)
-    {
-      _retVal = _pJSBase->internalRecompile();
-    }
-    _semComplete->set();
-  }
-#endif
-}
-
-
-//
-// Global Callbacks = boost::function<void(OSS_HANDLE)>()
-//
-
-
-static std::string toString(v8::Handle<v8::Value> str)
+ static std::string toString(v8::Handle<v8::Value> str)
 {
   if (!str->IsString())
     return "";
@@ -329,9 +123,11 @@ static void reportException(v8::TryCatch &try_catch, bool show_line)
     {
       errorMsg << *trace;
     }
-    
-    std::cerr << errorMsg.str() << std::endl;
     OSS_LOG_ERROR("\t[CID=00000000] JS: " << *error << std::endl << "{" << std::endl << errorMsg.str() << std::endl << "}");
+  }
+  else
+  {
+    OSS_LOG_ERROR("\t[CID=00000000] JS: Unknown Exception");
   }
 }
 
@@ -427,13 +223,9 @@ static v8::Handle<v8::Value> log_error_callback(const v8::Arguments& args)
 }
 
 // Reads a file into a v8 string.
-static std::string read_file(const std::string& name) {
-  std::string data;
+static v8::Handle<v8::String> read_file(const std::string& name) {
   FILE* file = fopen(name.c_str(), "rb");
-  if (file == NULL)
-  {
-    return std::string();
-  }
+  if (file == NULL) return v8::Handle<v8::String>();
 
   fseek(file, 0, SEEK_END);
   int size = ftell(file);
@@ -446,9 +238,9 @@ static std::string read_file(const std::string& name) {
     i += read;
   }
   fclose(file);
-  data = std::string(chars, size);
+  v8::Handle<v8::String> result = v8::String::New(chars, size);
   delete[] chars;
-  return data;
+  return result;
 }
 
 static v8::Handle<v8::String> read_global_scripts()
@@ -488,7 +280,7 @@ static v8::Handle<v8::String> read_global_scripts()
   return  v8::String::New(data.str().c_str(), data.str().size());
 }
 
-static std::string read_directory(const boost::filesystem::path& directory)
+v8::Handle<v8::String> load_scripts_from_directory(const boost::filesystem::path& directory)
 {
   std::string data;
 
@@ -516,7 +308,7 @@ static std::string read_directory(const boost::filesystem::path& directory)
               if (file == NULL)
               {
                 OSS_LOG_ERROR("Google V8 failed to open file " << currentFile);
-                return std::string();
+                return v8::Handle<v8::String>();
               }
 
               fseek(file, 0, SEEK_END);
@@ -534,76 +326,25 @@ static std::string read_directory(const boost::filesystem::path& directory)
               //OSS_LOG_INFO("Google V8 " << currentFile << " LOADED");
               delete[] chars;
             }
+
           }
         }
       }
     }
     catch(std::exception& e)
     {
-      OSS_LOG_WARNING("Google V8 exception: " << e.what());
+      OSS_LOG_WARNING("Googe V8 exception: " << e.what());
     }
     catch(...)
     {
-      OSS_LOG_WARNING("Unknown Google V8 exception.");
+      OSS_LOG_WARNING("Unknown Googe V8 exception.");
     }
+
   }
-  
-  return data;
+  return  v8::String::New(data.c_str(), data.size());
 }
 
-static bool compile_and_run(const v8::Handle<v8::String>& javaScript)
-{
-  //
-  // We're just about to compile the script; set up an error handler to
-  // catch any exceptions the script might throw.
-  v8::TryCatch try_catch;
-  try_catch.SetVerbose(true);
 
-  //
-  // Compile global helpers
-  // 
-  try
-  {
-    //
-    // Compile it!
-    //
-    
-    if (javaScript.IsEmpty())
-    {
-      OSS_LOG_ERROR("Failed to compile script");
-      // The script failed to compile; bail out.
-      return false;
-    }
-
-    //OSS_LOG_INFO("Google V8 is compiling global.detail for " << _script);
-    v8::Handle<v8::Script> compiledScript = v8::Script::Compile(javaScript);
-    if (compiledScript.IsEmpty())
-    {
-      reportException(try_catch, true);
-      return false;
-    }
-
-   // OSS_LOG_INFO("Google V8 is running global.detail for " << _script);
-     // Run the script!
-    v8::Handle<v8::Value> result = compiledScript->Run();
-    if (result.IsEmpty())
-    {
-      // The TryCatch above is still in effect and will have caught the error.
-      reportException(try_catch, true);
-      return false;
-    }
-   // OSS_LOG_INFO("Google V8 global.detail for " << _script << " EXECUTED");
-  }
-  catch(OSS::Exception e)
-  {
-    std::ostringstream logMsg;
-    logMsg << "Filesystem error while compiling script global helpers - " << e.message();
-    OSS::log_warning(logMsg.str());
-    return false;
-  }
-  
-  return true;
-}
 
 static std::string V8ErrorReport;
 static bool _hasSetErrorCB = false;
@@ -626,8 +367,6 @@ JSBase::JSBase(const std::string& contextName) :
   _isInitialized(false),
   _extensionGlobals(0)
 {
-  
-
 }
 
 JSBase::~JSBase()
@@ -650,178 +389,23 @@ JSBase::~JSBase()
 bool JSBase::initialize(const boost::filesystem::path& scriptFile, const std::string& functionName,
   void(*extensionGlobals)(OSS_HANDLE) )
 {
-  return JSWorker::initialize(this, scriptFile, functionName, extensionGlobals);
-}
-
-bool JSBase::initialize(const std::string& entryPoint,
-    const std::string& helper,
-    const std::string& main,
-    void(*extensionGlobals)(OSS_HANDLE))
-{
-  if (entryPoint.empty() || main.empty())
-  {
-    OSS_LOG_ERROR("JSBase::initialize - entryPoint or main script is empty");
-    return false;
-  }
-  
-  //
-  // Make sure that entryPoint is found in the script
-  //
-  if (main.find(entryPoint) == std::string::npos)
-  {
-    OSS_LOG_ERROR("JSBase::initialize - entryPoint not found in main script");
-    return false;
-  }
-  
-  _functionName = entryPoint;
-  _helperScript = helper;
-  _mainScript = main;
-  
-  // Create a handle scope to hold the temporary references.
-  v8::HandleScope handle_scope;
-  
-  v8::Handle<v8::String> globalScript;
-  v8::Handle<v8::String> helperScript;
-  v8::Handle<v8::String> mainScript;
-  
-  globalScript = read_global_scripts();
-  
-  if (!helper.empty())
-  {
-    helperScript = v8::String::New(helper.c_str(), helper.size()); 
-  }
-  
-  mainScript = v8::String::New(main.c_str(), main.size());
-  
-  return internalInitialize(entryPoint, globalScript, helperScript, mainScript, extensionGlobals);
+  return internalInitialize(scriptFile, functionName, extensionGlobals);
 }
 
 bool JSBase::internalInitialize(
   const boost::filesystem::path& scriptFile, const std::string& functionName,
   void(*extensionGlobals)(OSS_HANDLE) )
 {
+  v8::Locker __v8Locker__;
+  
   if (!boost::filesystem::exists(scriptFile))
   {
     OSS_LOG_ERROR("Google V8 is unable to locate file " << scriptFile);
     return false;
   }
 
-  //
-  // Compile global helpers
-  //
-  
-  boost::filesystem::path globalsDir;
-  if (!_globalScriptsDirectory.empty())
-    globalsDir = boost::filesystem::path(_globalScriptsDirectory);
-  else
-    globalsDir = operator/(scriptFile.branch_path(), "global.detail");
+  //OSS_LOG_INFO("Google V8 JSBase::internalInitialize INVOKED");
 
-  // Create a handle scope to hold the temporary references.
-  v8::HandleScope handle_scope;
-  
-  v8::Handle<v8::String> globalScript;
-  v8::Handle<v8::String> helperScript;
-  v8::Handle<v8::String> mainScript;
-  
-  try
-  {
-    if (!boost::filesystem::exists(globalsDir))
-    {
-      globalScript = read_global_scripts();
-    }
-    else
-    {
-      std::string globalData = read_directory(globalsDir);
-      globalScript = v8::String::New(globalData.c_str(), globalData.size());
-    }
-
-    if (globalScript.IsEmpty())
-    {
-      OSS_LOG_ERROR("Failed to compile global exports for " << _script);
-      // The script failed to compile; bail out.
-      return false;
-    }
-  }
-  catch(OSS::Exception e)
-  {
-    std::ostringstream logMsg;
-    logMsg << "Filesystem error while compiling script global helpers - " << e.message();
-    OSS::log_warning(logMsg.str());
-  }
-
-  //
-  // Compile the helpers
-  //
-  boost::filesystem::path helpersDir;
-  if (!_helperScriptsDirectory.empty())
-  {
-    helpersDir = boost::filesystem::path(_helperScriptsDirectory);
-  }
-  else
-  {
-    helpersDir = OSS::boost_path(_script) + ".detail";
-  }
-  
-  if (boost::filesystem::exists(helpersDir))
-  {
-    //
-    // This script has a heper directory
-    //
-    try
-    {
-      boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
-      for (boost::filesystem::directory_iterator itr(helpersDir); itr != end_itr; ++itr)
-      {
-        if (boost::filesystem::is_directory(itr->status()))
-        {
-          continue;
-        }
-        else
-        {
-          std::string fileName = OSS::boost_file_name(itr->path());
-          boost::filesystem::path currentFile = itr->path();
-          
-          if (boost::filesystem::is_regular(currentFile))
-          {
-            if (OSS::string_ends_with(fileName, ".js"))
-            {
-              //
-              // Compile it!
-              //
-              //OSS_LOG_INFO("Google V8 is compiling helper script " << currentFile);
-              
-              std::string helperScriptData;
-              helperScriptData = read_file(OSS::boost_path(currentFile));
-              helperScript = v8::String::New(helperScriptData.c_str(), helperScriptData.size());
-            }
-          }
-        }
-      }
-    }
-    catch(OSS::Exception e)
-    {
-      std::ostringstream logMsg;
-      logMsg << "Filesystem error while compiling script helpers - " << e.message();
-      OSS::log_warning(logMsg.str());
-    }
-  }
-
-  //
-  // Compile the main script
-  //
-  std::string mainScriptData = read_file(OSS::boost_path(_script));
-  mainScript = v8::String::New(mainScriptData.c_str(), mainScriptData.size());
-
-  return internalInitialize(functionName, globalScript, helperScript, mainScript, extensionGlobals);
-}
-
-bool JSBase::internalInitialize(
-    const std::string& entryPoint,
-    const v8::Handle<v8::String>& globals, 
-    const v8::Handle<v8::String>& helperScript,
-    const v8::Handle<v8::String>& mainScript,
-    void(*extensionGlobals)(OSS_HANDLE))
-{
   // Create a handle scope to hold the temporary references.
   v8::HandleScope handle_scope;
   
@@ -868,15 +452,18 @@ bool JSBase::internalInitialize(
   _processFunc = processFunc_;
   _requestTemplate = requestTemplate_;
   _globalTemplate = globalTemplate_;
-  _functionName = entryPoint;
+  _functionName = functionName;
+  _script = scriptFile;
   _extensionGlobals = extensionGlobals;
-  
+
   if (!_hasSetErrorCB)
   {
     if (!_hasSetErrorCB)
       v8::V8::AddMessageListener(V8ErrorMessageCallback);
   }
   
+  
+
   //OSS_LOG_INFO("Google V8 is loading context for " << _script);
   // Create a template for the global object where we set the
   // built-in global functions.
@@ -911,42 +498,168 @@ bool JSBase::internalInitialize(
   // Enter the new context so all the following operations take place
   // within it.
   v8::Context::Scope context_scope(context);
-  
-  //const v8::Handle<v8::String>& mainScript,
-  //  const v8::Handle<v8::String>& helperScript,
-  //  const v8::Handle<v8::String>& globals,
-    
-  if (!compile_and_run(globals))
-  {
-    OSS_LOG_ERROR("JSBase::internalInitialize - Unable to compile globals");
-    return false;
-  }
-  
+
+  //OSS_LOG_INFO("Google V8 context for " << _script << " CREATED");
+
   //
-  // Helpers can be absent
+  // We're just about to compile the script; set up an error handler to
+  // catch any exceptions the script might throw.
+  v8::TryCatch try_catch;
+  try_catch.SetVerbose(true);
+
+ 
+  try
+  {
+    //
+    // Compile it!
+    //
+    v8::Handle<v8::String> helperScript;
+    helperScript = read_global_scripts();
+
+
+
+    if (helperScript.IsEmpty())
+    {
+      OSS_LOG_ERROR("Failed to compile global exports for " << _script);
+      // The script failed to compile; bail out.
+      return false;
+    }
+
+    //OSS_LOG_INFO("Google V8 is compiling global.detail for " << _script);
+    v8::Handle<v8::Script> compiledHelper = v8::Script::Compile(helperScript);
+    if (compiledHelper.IsEmpty())
+    {
+      reportException(try_catch, true);
+      return false;
+    }
+
+   // OSS_LOG_INFO("Google V8 is running global.detail for " << _script);
+     // Run the script!
+    v8::Handle<v8::Value> result = compiledHelper->Run();
+    if (result.IsEmpty())
+    {
+      // The TryCatch above is still in effect and will have caught the error.
+      reportException(try_catch, true);
+      return false;
+    }
+   // OSS_LOG_INFO("Google V8 global.detail for " << _script << " EXECUTED");
+  }
+  catch(OSS::Exception e)
+  {
+    std::ostringstream logMsg;
+    logMsg << "Filesystem error while compiling script global helpers - " << e.message();
+    OSS::log_warning(logMsg.str());
+  }
+
   //
-  if (!helperScript.IsEmpty() && !compile_and_run(helperScript))
+  // Compile the helpers
+  //
+  boost::filesystem::path helpers;
+  if (!_helperScriptsDirectory.empty())
+    helpers = boost::filesystem::path(_helperScriptsDirectory);
+  else
+    helpers = OSS::boost_path(_script) + ".detail";
+  if (boost::filesystem::exists(helpers))
   {
-    OSS_LOG_ERROR("JSBase::internalInitialize - Unable to compile helper scripts");
+    //
+    // This script has a heper directory
+    //
+    try
+    {
+      boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
+      for (boost::filesystem::directory_iterator itr(helpers); itr != end_itr; ++itr)
+      {
+        if (boost::filesystem::is_directory(itr->status()))
+        {
+          continue;
+        }
+        else
+        {
+          std::string fileName = OSS::boost_file_name(itr->path());
+          boost::filesystem::path currentFile = itr->path();
+          
+          if (boost::filesystem::is_regular(currentFile))
+          {
+            if (OSS::string_ends_with(fileName, ".js"))
+            {
+              //
+              // Compile it!
+              //
+              //OSS_LOG_INFO("Google V8 is compiling helper script " << currentFile);
+              v8::Handle<v8::String> helperScript;
+              helperScript = read_file(OSS::boost_path(currentFile));
+              if (helperScript.IsEmpty())
+              {
+                reportException(try_catch, true);
+                return false;
+              }
+
+              v8::Handle<v8::Script> compiledHelper = v8::Script::Compile(helperScript);
+
+              if (compiledHelper.IsEmpty())
+              {
+                reportException(try_catch, true);
+                return false;
+              }
+
+               // Run the script!
+              v8::Handle<v8::Value> result = compiledHelper->Run();
+              if (result.IsEmpty())
+              {
+                // The TryCatch above is still in effect and will have caught the error.
+                reportException(try_catch, true);
+                return false;
+              }
+            }
+          }
+        }
+      }
+    }
+    catch(OSS::Exception e)
+    {
+      std::ostringstream logMsg;
+      logMsg << "Filesystem error while compiling script helpers - " << e.message();
+      OSS::log_warning(logMsg.str());
+    }
+  }
+
+  //
+  // Compile the main script script
+  //
+  //OSS_LOG_INFO("Google V8 is compiling main script " << _script);
+  v8::Handle<v8::String> script;
+  script = read_file(OSS::boost_path(_script));
+
+  v8::Handle<v8::Script> compiled_script = v8::Script::Compile(script);
+
+  if (compiled_script.IsEmpty())
+  {
+    reportException(try_catch, true);
     return false;
   }
-  
-  if (!compile_and_run(mainScript))
+
+  //OSS_LOG_INFO("Google V8 is running main script " << _script);
+  // Run the script!
+  v8::Handle<v8::Value> result = compiled_script->Run();
+  if (result.IsEmpty())
   {
-    OSS_LOG_ERROR("JSBase::internalInitialize - Unable to compile main script");
+    // The TryCatch above is still in effect and will have caught the error.
+    reportException(try_catch, true);
     return false;
   }
-  
+
+
+
   // The script compiled and ran correctly.  Now we fetch out the
   // Process function from the global object.
-  v8::Handle<v8::String> process_name = v8::String::New(entryPoint.c_str());
+  v8::Handle<v8::String> process_name = v8::String::New(functionName.c_str());
   v8::Handle<v8::Value> process_val = context->Global()->Get(process_name);
 
   // If there is no Process function, or if it is not a function,
   // bail out
   if (!process_val->IsFunction())
   {
-    OSS_LOG_ERROR("Google V8 is unable to load function " << entryPoint);
+    OSS_LOG_ERROR("Google V8 is unable to load function " << functionName);
     return false;
   }
 
@@ -969,34 +682,31 @@ bool JSBase::internalInitialize(
 
 bool JSBase::recompile()
 {
-  return JSWorker::recompile(this);
+  return internalRecompile();
 }
 
 bool JSBase::internalRecompile()
 {
-  if (_mainScript.empty())
+  
+  if (!internalInitialize(_script, _functionName, _extensionGlobals))
   {
-    //
-    // Use the old prototype
-    //
-    return internalInitialize(_script, _functionName, _extensionGlobals);
+    return false;
   }
-  else
-  {
-    return initialize(_functionName, _helperScript, _mainScript, _extensionGlobals);
-  }
+  return true;
 }
 
 
 bool JSBase::processRequest(OSS_HANDLE request)
 {
-  return JSWorker::processRequest(this, request);
+  return internalProcessRequest(request);
 }
 
 bool JSBase::internalProcessRequest(OSS_HANDLE request)
 {
   if (!_isInitialized)
     return false;
+  
+  v8::Locker __v8Locker__;
   
   v8::HandleScope handle_scope;
 
@@ -1042,6 +752,46 @@ bool JSBase::internalProcessRequest(OSS_HANDLE request)
 
   return true;
 }
+
+bool JSBase::callFunction(const std::string& funcName)
+{
+  if (!_isInitialized || !_context)
+    return false;
+  
+  v8::Locker __v8Locker__;
+  
+  v8::HandleScope handle_scope;
+
+  v8::Persistent<v8::Context>& context = *(static_cast<v8::Persistent<v8::Context>*>(_context));
+  // Enter this processor's context so all the remaining operations
+  // take place there
+  v8::Context::Scope context_scope(context);
+   
+  // The script compiled and ran correctly.  Now we fetch out the
+  // Process function from the global object.
+  v8::Handle<v8::String> func_name = v8::String::New(funcName.c_str());
+  v8::Handle<v8::Value> func_val = context->Global()->Get(func_name);
+
+  // If there is no Process function, or if it is not a function,
+  // bail out
+  if (!func_val->IsFunction())
+  {
+    OSS_LOG_ERROR("JSBase::callFunction - Google V8 is unable to load function " << funcName);
+    return false;
+  }
+
+  // It is a function; cast it to a Function
+  v8::Handle<v8::Function> process_fun = v8::Handle<v8::Function>::Cast(func_val);
+  
+  // call it without any arguments
+  
+  process_fun->Call(context->Global(), 0, 0);
+  
+  return true;
+
+}
+
+
 
 
 } } // OSS::JS

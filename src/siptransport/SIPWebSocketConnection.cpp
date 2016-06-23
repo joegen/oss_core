@@ -22,6 +22,7 @@
 #include "OSS/SIP/SIPWebSocketConnectionManager.h"
 #include "OSS/SIP/SIPFSMDispatch.h"
 #include "OSS/UTL/Logger.h"
+#include "OSS/SIP/SIPListener.h"
 
 
 namespace OSS {
@@ -68,14 +69,16 @@ void SIPWebSocketConnection::ServerReadWriteHandler::on_pong_timeout(websocketpp
 }
 
 
-SIPWebSocketConnection::SIPWebSocketConnection(SIPWebSocketConnectionManager& manager):
+SIPWebSocketConnection::SIPWebSocketConnection(SIPWebSocketConnectionManager& manager, SIPListener* pListener) :
+    SIPTransportSession(pListener),
 		_connectionManager(manager),
     _readExceptionCount(0)
 {
 	_transportScheme = "ws";
 }
 
-SIPWebSocketConnection::SIPWebSocketConnection(const websocketpp::server::connection_ptr& pConnection, SIPWebSocketConnectionManager& manager) :
+SIPWebSocketConnection::SIPWebSocketConnection(const websocketpp::server::connection_ptr& pConnection, SIPWebSocketConnectionManager& manager, SIPListener* pListener) :
+  SIPTransportSession(pListener),
   _pServerConnection(pConnection),
   _connectionManager(manager),
   _readExceptionCount(0)
@@ -246,7 +249,7 @@ void SIPWebSocketConnection::writeMessage(SIPMessage::Ptr msg, const std::string
 	  writeMessage(msg);
 }
 
-void SIPWebSocketConnection::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter)
+void SIPWebSocketConnection::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter, boost::system::error_code* out_ec, Semaphore* pSem)
 {
 	// Client side not implemented yet
 	OSS_ASSERT(false);
@@ -322,10 +325,10 @@ void SIPWebSocketConnection::clientBind(const OSS::Net::IPAddress& ip, unsigned 
 	OSS_ASSERT(false);
 }
 
-void SIPWebSocketConnection::clientConnect(const OSS::Net::IPAddress& target)
+bool SIPWebSocketConnection::clientConnect(const OSS::Net::IPAddress& target)
     /// Connect to a remote host
 {
-	OSS_ASSERT(false);
+	return false;
 }
 
 

@@ -78,7 +78,7 @@ public:
   static bool setDisplayName(std::string& from, const char* uri);
     /// Set the value of the display name.
 
-  std::string getAor();
+  std::string getAor(bool includeScheme = true) const;
     /// Returns the address of record (exluding port and params)
 
   std::string getURI() const;
@@ -157,6 +157,8 @@ public:
     /// Return the tag parameter
 
   static std::string getTag(const std::string& from);
+  
+  bool setTag(const std::string& tag);
 };
 
 typedef SIPFrom SIPTo;
@@ -177,6 +179,11 @@ inline std::string SIPFrom::getTag(const std::string& from)
   std::string tag;
   getHeaderParam(from, "tag", tag);
   return tag;
+}
+
+inline bool SIPFrom::setTag(const std::string& tag)
+{
+  return setHeaderParam("tag", tag.c_str());
 }
 
 } } // OSS::SIP

@@ -30,6 +30,7 @@ struct PropertyMap
     "target-port", \
     "target-transport", \
     "target-host", \
+    "target-identity", \
     "local-address", \
     "transport-id", \
     "session-id", \
@@ -69,6 +70,11 @@ struct PropertyMap
     "is-out-of-dialog-refer", \
     "subnets", \
     "x-local-reg", \
+    "is-locally-authenticated", \
+    "endpoint-name", \
+    "transport-alias", \
+    "reg-id", \
+    "require-persistent-connection", \
     "property-undefined" \
   };
 
@@ -78,6 +84,7 @@ struct PropertyMap
     PROP_TargetPort,
     PROP_TargetTransport,
     PROP_TargetHost,
+    PROP_TargetIdentity,
     PROP_LocalAddress,
     PROP_TransportId,
     PROP_SessionId,
@@ -117,6 +124,11 @@ struct PropertyMap
     PROP_IsOutOfDialogRefer,
     PROP_Subnets,
     PROP_LocalReg,
+    PROP_IsLocallyAuthenticated,
+    PROP_EndpointName,
+    PROP_TransportAlias,
+    PROP_RegId,
+    PROP_RequirePersistentConnection,
     PROP_Max
   };
   

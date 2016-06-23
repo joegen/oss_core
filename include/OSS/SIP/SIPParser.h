@@ -47,6 +47,7 @@ public:
     /// Destroys the Parser object
 
   const std::string& data() const;
+  std::string& data();
     /// Returns the raw bytes representing the parser string.
     ///
     /// If the parser object has been modified using the external object setters,
@@ -100,6 +101,15 @@ protected:
 // inlines
 //
 
+inline const std::string & SIPParser::data() const
+{
+  return _data;
+}
+
+inline std::string & SIPParser::data()
+{
+  return _data;
+}
 
 }} //OSS::SIP
 #endif //SIP_SIPParser_INCLUDED

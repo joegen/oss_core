@@ -27,14 +27,14 @@
 #include "OSS/SIP/SIPUDPConnectionClone.h"
 #include "OSS/SIP/SIPFSMDispatch.h"
 #include "OSS/SIP/SIPException.h"
-
+#include "OSS/SIP/SIPListener.h"
 
 namespace OSS {
 namespace SIP {
 
 
 SIPUDPConnectionClone::SIPUDPConnectionClone(SIPUDPConnection::Ptr clonable):
-  
+  SIPTransportSession(dynamic_cast<SIPUDPConnection*>(clonable.get())->_pListener),
   _socket(dynamic_cast<SIPUDPConnection*>(clonable.get())->_socket),
   _senderEndPoint(dynamic_cast<SIPUDPConnection*>(clonable.get())->_senderEndPoint)
 {
@@ -83,7 +83,7 @@ void SIPUDPConnectionClone::writeMessage(SIPMessage::Ptr msg)
 }
 
 
-void SIPUDPConnectionClone::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter)
+void SIPUDPConnectionClone::handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter, boost::system::error_code* out_ec, Semaphore* pSem)
 {
   // This is only significant for stream based connections (TCP/TLS)
 }
@@ -105,9 +105,10 @@ void SIPUDPConnectionClone::clientBind(const OSS::Net::IPAddress& listener, unsi
   // This is only significant for stream based connections (TCP/TLS)
 }
 
-void SIPUDPConnectionClone::clientConnect(const OSS::Net::IPAddress& target)
+bool SIPUDPConnectionClone::clientConnect(const OSS::Net::IPAddress& target)
 {
   // This is only significant for stream based connections (TCP/TLS)
+  return false;
 }
 
 OSS::Net::IPAddress SIPUDPConnectionClone::getLocalAddress() const

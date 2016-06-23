@@ -34,8 +34,7 @@ class SIPFSMDispatch;
 
 class OSS_API SIPUDPConnectionClone: 
   public SIPTransportSession,
-  public boost::enable_shared_from_this<SIPUDPConnectionClone>,
-  private boost::noncopyable
+  public boost::enable_shared_from_this<SIPUDPConnectionClone>
 {
 public:
 
@@ -59,7 +58,7 @@ public:
   void clientBind(const OSS::Net::IPAddress& listener, unsigned short portBase, unsigned short portMax);
     /// Bind the local client.  Take note that this is not implemented at all for UDP.
 
-  void clientConnect(const OSS::Net::IPAddress& target);
+  bool clientConnect(const OSS::Net::IPAddress& target);
     /// Connect to a remote host.  Take note taht this is not implemented at all for UDP.
 
   OSS::Net::IPAddress getLocalAddress() const;
@@ -78,7 +77,7 @@ private:
   void handleWrite(const boost::system::error_code& e);
     /// Handle completion of a write operation.
 
-  void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter);
+  void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter, boost::system::error_code* out_ec, Semaphore* pSem);
     /// Handle completion of async connect
 
   void handleClientHandshake(const boost::system::error_code& error);
