@@ -100,6 +100,20 @@ AC_ARG_ENABLE([all-features],
     ],
     [
         #
+        # Disable B2BUA compilation
+        #
+        AC_ARG_ENABLE([b2bua],
+            AC_HELP_STRING([--disable-b2bua], [Disable B2BUA Feature]),
+            [DISABLE_FEATURE(B2BUA)],
+            [ENABLE_FEATURE(B2BUA)])
+        #
+        # Disable RTP Proxy compilation
+        #
+        AC_ARG_ENABLE([rtp],
+            AC_HELP_STRING([--disable-rtp], [Disable RTP Proxy Feature]),
+            [DISABLE_FEATURE(RTP)],
+            [ENABLE_FEATURE(RTP)])
+        #
         # Enable TURN compilation
         #
         AC_ARG_ENABLE([turn],
@@ -149,13 +163,6 @@ AC_ARG_ENABLE([all-features],
             [ENABLE_FEATURE(REDIS)],
             [DISABLE_FEATURE(REDIS)])
         #
-        # Enable B2BUA compilation
-        #
-        AC_ARG_ENABLE([b2bua],
-            AC_HELP_STRING([--enable-b2bua], [Enable B2BUA Feature]),
-            [ENABLE_FEATURE(B2BUA)],
-            [DISABLE_FEATURE(B2BUA)])
-        #
         # Enable Websocket compilation
         #
         AC_ARG_ENABLE([websockets],
@@ -183,13 +190,6 @@ AC_ARG_ENABLE([all-features],
             AC_HELP_STRING([--enable-config], [Enable Configuration File Feature]),
             [ENABLE_FEATURE(CONFIG)],
             [DISABLE_FEATURE(CONFIG)])
-        #
-        # Enable RTP Proxy compilation
-        #
-        AC_ARG_ENABLE([rtp],
-            AC_HELP_STRING([--enable-rtp], [Enable RTP Proxy Feature]),
-            [ENABLE_FEATURE(RTP)],
-            [DISABLE_FEATURE(RTP)])
         #
         # Enable STUN compilation
         #
