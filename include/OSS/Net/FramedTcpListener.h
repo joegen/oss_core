@@ -2,6 +2,11 @@
 #ifndef OSS_STATEQUEUELISTENER_H
 #define	OSS_STATEQUEUELISTENER_H
 
+#include "OSS/build.h"
+
+#if ENABLE_FEATURE_NET_EXTRA
+
+
 #include <boost/asio.hpp>
 #include <boost/noncopyable.hpp>
 #include "OSS/Net/FramedTcpConnection.h"
@@ -52,5 +57,7 @@ inline int FramedTcpListener::getInactivityThreshold() const
 
 } // OSS
 
+
+#endif // ENABLE_FEATURE_NET_EXTRA
 #endif	/* STATEQUEUELISTENER_H */
 

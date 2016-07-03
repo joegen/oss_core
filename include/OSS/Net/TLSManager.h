@@ -19,6 +19,10 @@
 #ifndef TLSMANAGER_H_INCLUDED
 #define	TLSMANAGER_H_INCLUDED
 
+#include "OSS/build.h"
+
+#if ENABLE_FEATURE_NET_EXTRA
+
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/Net/Net.h"
 
@@ -166,5 +170,6 @@ inline void TLSManager::initializeClient(
 } }
 
 
+#endif // ENABLE_FEATURE_NET_EXTRA
 #endif	// TLSMANAGER_H_INCLUDED 
 

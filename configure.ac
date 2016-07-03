@@ -97,6 +97,7 @@ AC_ARG_ENABLE([all-features],
         ENABLE_FEATURE(REDIS)
         ENABLE_FEATURE(MCRYPT)
         ENABLE_FEATURE(CONFIG)
+        ENABLE_FEATURE(NET_EXTRA)
     ],
     [
         #
@@ -197,6 +198,14 @@ AC_ARG_ENABLE([all-features],
             AC_HELP_STRING([--enable-stun], [Enable STUN Feature]),
             [ENABLE_FEATURE(STUN)],
             [DISABLE_FEATURE(STUN)])
+
+        #
+        # Enable NET compilation
+        #
+        AC_ARG_ENABLE([net-extra],
+            AC_HELP_STRING([--enable-net-extra], [Enable NET Extra Feature]),
+            [ENABLE_FEATURE(NET_EXTRA)],
+            [DISABLE_FEATURE(NET_EXTRA)])
     ])
 #
 # Search for mandatory packages

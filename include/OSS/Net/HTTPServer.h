@@ -20,6 +20,10 @@
 #define	OSS_HTTPSERVER_H_INCLUDED
 
 
+#include "OSS/build.h"
+
+#if ENABLE_FEATURE_NET_EXTRA
+
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 
@@ -108,6 +112,6 @@ inline AccessControl& HTTPServer::accessControl()
 
 
 
-
+#endif // ENABLE_FEATURE_NET_EXTRA
 #endif	// OSS_HTTPSERVER_H_INCLUDED
 

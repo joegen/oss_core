@@ -164,7 +164,9 @@ bool HTTPServer::start(const std::string& address, unsigned short port, bool sec
     }
     else
     {
+#if 0
       Poco::Net::initializeSSL();
+#endif
       if (_address.empty())
       {
         pSecureSocket = new SecureServerSocket(port);
@@ -220,10 +222,12 @@ void HTTPServer::stop()
   _serverHandle = 0;
   _secureSocketHandle = 0;
   
+#if 0
   if (_isSecure)
   {
     Poco::Net::uninitializeSSL();
   }
+#endif
 }
 
 bool HTTPServer::isAuthorizedAddress(const std::string& host)

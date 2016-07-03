@@ -2,6 +2,10 @@
 #ifndef FramedTcpClient_H
 #define	FramedTcpClient_H
 
+#include "OSS/build.h"
+
+#if ENABLE_FEATURE_NET_EXTRA
+
 #include <cassert>
 #include <boost/noncopyable.hpp>
 #include <boost/asio.hpp>
@@ -36,5 +40,6 @@ private:
 } // OSS
 
 
+#endif // ENABLE_FEATURE_NET_EXTRA
 #endif	/* FramedTcpClient_H */
 

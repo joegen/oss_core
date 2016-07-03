@@ -71,7 +71,9 @@ TLSManager& TLSManager::instance()
   
   if (!_gInitialized)
   {
-    Poco::Net::initializeSSL();
+#if 0
+    Poco::Net::initializeSSL(
+#endif
     _gInitialized = true;
   }
   

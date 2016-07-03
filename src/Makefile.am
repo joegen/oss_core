@@ -314,17 +314,10 @@ liboss_core_la_SOURCES =  \
     sipfsm/SIPTransaction.cpp \
     sipep/SIPEndpoint.cpp \
     sipep/SIPEndpointRetransmitter.cpp \
-    net/FirewallRule.cpp \
-    net/Firewall.cpp \
-    net/HTTPServer.cpp \
     net/AccessControl.cpp \
-    net/TLSManager.cpp \
     net/IPAddress.cpp \
     net/DNS.cpp \
     net/Net.cpp \
-    net/FramedTcpClient.cpp \
-    net/FramedTcpConnection.cpp \
-    net/FramedTcpListener.cpp \
     utl/AdaptiveDelay.cpp \
     utl/CoreUtils.cpp \
     utl/Logger.cpp \
@@ -476,6 +469,17 @@ liboss_core_la_SOURCES += \
     persistent/ClassType.cpp \
     persistent/DataType.cpp \
     persistent/Reference.cpp
+endif
+
+if ENABLE_FEATURE_NET_EXTRA
+liboss_core_la_SOURCES += \
+    net/FirewallRule.cpp \
+    net/Firewall.cpp \
+    net/FramedTcpClient.cpp \
+    net/FramedTcpConnection.cpp \
+    net/FramedTcpListener.cpp \
+    net/HTTPServer.cpp \
+    net/TLSManager.cpp
 endif
 
 TESTS = oss_core-unit-test

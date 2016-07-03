@@ -2,6 +2,10 @@
 #ifndef FramedTcpCONNECTION_H
 #define	FramedTcpCONNECTION_H
 
+#include "OSS/build.h"
+
+#if ENABLE_FEATURE_NET_EXTRA
+
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
@@ -110,5 +114,8 @@ inline void FramedTcpConnection::setApplicationId(const std::string& id)
 }
 
 } // OSS
+
+
+#endif // ENABLE_FEATURE_NET_EXTRA
 #endif	/* FramedTcpCONNECTION_H */
 
