@@ -283,7 +283,8 @@ void Thread::run()
   if (!isTerminated())
     stop();
   
-  mutex_critic_sec_lock lock(_threadMutex);
+  mutex_critic_sec_lock thread_lock(_threadMutex);
+  mutex_critic_sec_lock terminate_lock(_terminateFlagMutex);
   assert(!_pThread);
   _terminateFlag = false;
   _pThread = new boost::thread(boost::bind(&Thread::runTask, this));
@@ -298,20 +299,9 @@ void Thread::stop()
       assert(!_pThread);
       return; // we are already terminated
     }
-  }
-    
-  {
-    mutex_critic_sec_lock lock(_terminateFlagMutex);
     _terminateFlag = true;
   }
-  
-
-  onTerminate();
-
-  waitForTermination();
-  delete _pThread;
-  _pThread = 0;
-  
+  waitForTermination();  
 }
 
 void Thread::setTask(const Task& task)
@@ -339,12 +329,17 @@ void Thread::onTerminate()
 }
 
 void Thread::waitForTermination()
-{  
-  mutex_critic_sec_lock lock(_threadMutex);
+{
+  mutex_critic_sec_lock thread_lock(_threadMutex);
+  mutex_critic_sec_lock terminate_lock(_terminateFlagMutex);
   if (_pThread)
   {
     _pThread->join();
+    delete _pThread;
+    _pThread = 0;
   }
+  onTerminate();
+   _terminateFlag = true;
 }
 
 
