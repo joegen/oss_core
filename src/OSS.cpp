@@ -23,9 +23,14 @@
 #include "OSS/UTL/Logger.h"
 #include "Poco/Stopwatch.h"
 #include "Poco/Timestamp.h"
+#include "OSS/UTL/Thread.h"
 
 
 namespace OSS {
+
+static OSS::mutex_critic_sec gInitMutex;  
+static bool gCalledInit = false;
+static bool gCalledDeinit = false;
 
 namespace Private {
 
@@ -73,6 +78,13 @@ void OSS_API OSS_register_deinit(boost::function<void()> func)
 
 void OSS_init()
 {
+  OSS::mutex_critic_sec_lock lock(gInitMutex);
+  if (gCalledInit)
+  {
+    return;
+  }
+  
+  gCalledInit = true;
   OSS::Private::net_init();
 
   for (static std::vector<boost::function<void()> >::iterator iter = _initFuncs.begin();
@@ -81,6 +93,13 @@ void OSS_init()
 
 void OSS_deinit()
 {
+  OSS::mutex_critic_sec_lock lock(gInitMutex);
+  if (gCalledDeinit)
+  {
+    return;
+  }
+  
+  gCalledDeinit = true;
   for (static std::vector<boost::function<void()> >::iterator iter = _deinitFuncs.begin();
     iter != _deinitFuncs.end(); iter++) (*iter)();
 
