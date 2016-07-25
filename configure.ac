@@ -475,7 +475,7 @@ cd ${CURRENT_DIR}
 OSS_CXX_C_FLAGS="-fmessage-length=0"
 OSS_CXX_WARNINGS="-Wall -Wformat -Wwrite-strings -Wpointer-arith"
 CXXFLAGS="$CXXFLAGS -O0 -fno-implement-inlines $OSS_CXX_C_FLAGS $OSS_CXX_WARNINGS"
-CFLAGS="$CFLAGS $OSS_CXX_C_FLAGS -Wnested-externs"
+CFLAGS="$CFLAGS $OSS_CXX_C_FLAGS -Wnested-externs -Wno-shift-negative-value"
 
 AC_SUBST(CXXFLAGS)
 AC_SUBST(CFLAGS)
