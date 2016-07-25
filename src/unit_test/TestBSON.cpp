@@ -1,3 +1,5 @@
+
+
 /*
 Basic Assertions
 
@@ -56,71 +58,10 @@ See also: For more string comparison tricks (substring, prefix, suffix, and regu
 */
 
 #include "gtest/gtest.h"
-
-#include "OSS/build.h"
-#if ENABLE_FEATURE_REDIS
-#if OSS_HAVE_HIREDIS
-
-#include "OSS/UTL/Thread.h"
-#include "OSS/Persistent/RedisClient.h"
+#include "OSS/BSON/BSONObject.h"
 
 
-using OSS::Persistent::RedisClient;
-
-TEST(TestRedisPubSub, EventHandling)
+TEST(BSONTest, BSONObject)
 {
-  RedisClient subscriber("127.0.0.1", 6379);
-  RedisClient publisher("127.0.0.1", 6379);
-  ASSERT_TRUE(subscriber.connect());
-  ASSERT_TRUE(publisher.connect());
   
-  std::vector<std::string> result;
-  ASSERT_TRUE(subscriber.subscribe("TestChannel", result));
-  
-  std::cout << "result -> | ";
-  for (std::vector<std::string>::iterator iter = result.begin(); iter != result.end(); iter++)
-  {
-    std::cout << *iter << " |";
-  }
-  std::cout << std::endl;
-  
-  ASSERT_TRUE(publisher.publish("TestChannel", "hello world"));
-  ASSERT_TRUE(publisher.publish("TestChannel", "exit"));
-
-  
-  while (true)
-  {
-    std::vector<std::string> eventData;
-    subscriber.receive(eventData);
-    std::cout << "event -> | ";
-    for (std::vector<std::string>::iterator iter = eventData.begin(); iter != eventData.end(); iter++)
-    {
-      std::cout << *iter << " |";
-    }
-    std::cout << std::endl;
-    if (eventData.size() == 3 && (eventData[2] == "exit"))
-    {
-      break;
-    }
-    
-    if (eventData.size() >= 1  && eventData[0] == "connection-error")
-    {
-      //
-      // Attempt to reconnect
-      //
-      OSS::thread_sleep(1000);
-      if (subscriber.connect())
-      {
-        std::vector<std::string> reconResult;
-        subscriber.subscribe("TestChannel", reconResult);
-      }
-    }
-  }
 }
-
-#else
-
-TEST(NullTest, null_test_redis_pubsub){}
-
-#endif
-#endif

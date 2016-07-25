@@ -2,7 +2,6 @@
 #include "OSS/Net/AccessControl.h"
 #include "OSS/UTL/AdaptiveDelay.h"
 
-static OSS::Persistent::KeyValueStore store;
 static const std::string DB_PATH = "access-control";
 static const std::string DOCUMENT_ROOT = "/root/" + DB_PATH;
 

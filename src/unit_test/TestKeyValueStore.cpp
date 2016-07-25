@@ -1,5 +1,10 @@
 
 #include "gtest/gtest.h"
+
+#include "OSS/build.h"
+#if ENABLE_FEATURE_RESTKV
+#if OSS_HAVE_LEVELDB
+
 #include <boost/filesystem.hpp>
 #include <Poco/StreamCopier.h>
 #include "OSS/Persistent/KeyValueStore.h"
@@ -286,5 +291,8 @@ TEST(KeyValueStoreTest, test_rest_tls_put_get)
   ASSERT_TRUE(restkv_client.restGET("/root/secure/", result2, status));
 }
 
-
+#else
+TEST(NullTest, null_test_kv){}
+#endif
+#endif
 

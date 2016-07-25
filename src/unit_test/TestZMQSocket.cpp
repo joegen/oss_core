@@ -1,4 +1,8 @@
 #include "gtest/gtest.h"
+
+#include "OSS/build.h"
+#if ENABLE_FEATURE_ZMQ
+
 #include "OSS/ZMQ/ZMQSocket.h"
 #include "OSS/SIP/SIPTransportService.h" 
 
@@ -51,3 +55,9 @@ TEST(ZMQ, test_zmq_send_and_receive_timeout)
     ASSERT_TRUE(req.receiveReply(response, 1000));
 
 }
+
+#else
+
+TEST(NullTest, null_test_zmq_pub_sub){}
+
+#endif

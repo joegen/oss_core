@@ -59,6 +59,11 @@ See also: For more string comparison tricks (substring, prefix, suffix, and regu
 */
 
 #include "gtest/gtest.h"
+
+#include "OSS/build.h"
+#if ENABLE_FEATURE_CONFIG
+#if OSS_HAVE_CONFIGPP
+
 #include "OSS/Persistent/DataType.h"
 #include "OSS/Persistent/ClassType.h"
 #include "OSS/SIP/SIPStack.h"
@@ -111,3 +116,10 @@ TEST(PersistentTest, createSafeFileName)
 {
   ClassType::createSafeFileName("z9hG4bK-d87543-419889160-1--d87543");
 }
+
+#else
+
+TEST(NullTest, null_test_persistent){}
+
+#endif 
+#endif

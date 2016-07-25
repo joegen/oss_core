@@ -1,4 +1,9 @@
 #include "gtest/gtest.h"
+
+#include "OSS/build.h"
+#if ENABLE_FEATURE_LIBRE
+
+
 #include "OSS/SIP/UA/SIPRegistration.h"
 #include "OSS/SIP/UA/SIPEventLoop.h"
 #include "OSS/SIP/UA/SIPUserAgent.h"
@@ -59,3 +64,9 @@ TEST(UATest, test_ua_register)
   ASSERT_TRUE(gResponseHandled);
   ASSERT_TRUE(gExitHandled);
 }
+
+#else
+
+TEST(NullTest, null_test_ua_register){}
+
+#endif
