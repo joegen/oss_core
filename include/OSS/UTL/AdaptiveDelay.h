@@ -20,6 +20,8 @@
 #ifndef OSS_ADAPTIVEDELAY_H_INCLUDED
 #define	OSS_ADAPTIVEDELAY_H_INCLUDED
 
+#include "OSS/OSS.h"
+
 
 namespace OSS {
 namespace UTL {

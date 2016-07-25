@@ -332,7 +332,9 @@ liboss_core_la_SOURCES =  \
     utl/StackTrace.cpp \
     utl/LogFile.cpp \
     ep/EndpointConnection.cpp \
-    ep/EndpointListener.cpp
+    ep/EndpointListener.cpp \
+    bson/bson.c \
+    bson/BSONObject.cpp
 
 if ENABLE_FEATURE_RESTKV
 liboss_core_la_SOURCES += \
@@ -510,7 +512,8 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestUaRegister.cpp \
 	unit_test/TestDigestAuth.cpp \
 	unit_test/TestRedisPubSub.cpp \
-	unit_test/TestZMQSocket.cpp
+	unit_test/TestZMQSocket.cpp \
+	unit_test/TestBSON.cpp
 
 
 SIP_TEST = \
