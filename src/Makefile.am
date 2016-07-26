@@ -334,6 +334,7 @@ liboss_core_la_SOURCES =  \
     ep/EndpointConnection.cpp \
     ep/EndpointListener.cpp \
     bson/bson.c \
+    bson/BSONValue.cpp \
     bson/BSONObject.cpp
 
 if ENABLE_FEATURE_RESTKV
