@@ -333,8 +333,15 @@ liboss_core_la_SOURCES =  \
     utl/LogFile.cpp \
     ep/EndpointConnection.cpp \
     ep/EndpointListener.cpp \
-    bson/bson.c \
+    bson/libbson.c \
     bson/BSONValue.cpp \
+    bson/BSONString.cpp \
+    bson/BSONBool.cpp \
+    bson/BSONInt32.cpp \
+    bson/BSONInt64.cpp \
+    bson/BSONDouble.cpp \
+    bson/BSONDocument.cpp \
+    bson/BSONArray.cpp \
     bson/BSONObject.cpp
 
 if ENABLE_FEATURE_RESTKV

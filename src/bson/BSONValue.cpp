@@ -18,7 +18,7 @@
 //
 
 
-#include "OSS/BSON/bson.h"
+#include "OSS/BSON/libbson.h"
 #include "OSS/BSON/BSONValue.h"
 
 
@@ -40,111 +40,27 @@ BSONValue::BSONValue()
   _type = TYPE_UNDEFINED;
 }
 
-BSONValue::BSONValue(int type)
-{
-  _type = type;
-  if (_type == TYPE_ARRAY)
-  {
-    _value = Array();
-  }
-  else if (_type == TYPE_DOCUMENT)
-  {
-    _value = Document();
-  }
-  else if (_type == TYPE_STRING)
-  {
-    _value = std::string();
-  }
-  else if (_type == TYPE_BOOL)
-  {
-    _value = false;
-  }
-  else if (_type == TYPE_DOUBLE)
-  {
-    _value = double(0.00);
-  }
-  else if (_type == TYPE_INT32)
-  {
-    _value = int32_t(0);
-  }
-  else if (_type == TYPE_INT64)
-  {
-    _value = int64_t(0);
-  }
-  else
-  {
-    _type = TYPE_UNDEFINED;
-  }
-}
-
 BSONValue::BSONValue(const BSONValue& value)
 {
   _type = value._type;
   _value = value._value;
 }
 
-BSONValue::BSONValue(int type, boost::any value)
-{
-  _type = TYPE_STRING;
-  _value = value;
-}
-
-BSONValue::BSONValue(int type, const char* value)
-{
-  _type = TYPE_STRING;
-  _value = std::string(value);
-}
-
-BSONValue::BSONValue(int type, bool value)
-{
-  _type = TYPE_BOOL;
-  _value = value;
-}
-
-BSONValue::BSONValue(int type, int32_t value)
-{
-  _type = TYPE_INT32;
-  _value = value;
-}
-
-BSONValue::BSONValue(int type, int64_t value)
-{
-  _type = TYPE_INT64;
-  _value = value;
-}
-
-BSONValue::BSONValue(int type, double value)
-{
-  _type = TYPE_DOUBLE;
-  _value = value;
-}
-
-BSONValue::BSONValue(const Document& value)
-{
-  _type = TYPE_DOCUMENT;
-  _value = value;
-}
-
-BSONValue::BSONValue(const Array& value)
-{
-  _type = TYPE_ARRAY;
-  _value = value;
-}
-
 BSONValue::~BSONValue()
 {
 }
 
-void BSONValue::setValue(const Document& value)
+void BSONValue::swap(BSONValue& value)
 {
-  _type = TYPE_DOCUMENT;
-  _value = value;
+  std::swap(_type, value._type);
+  std::swap(_value, value._value);
 }
-
-void BSONValue::setValue(const Array& value)
+  
+BSONValue& BSONValue::operator=(const BSONValue& value)
 {
-  _type = TYPE_ARRAY;
-  _value = value;
+  BSONValue clone(value);
+  swap(clone);
+  return *this;
 }
 
 void BSONValue::setValue(const BSONValue& value)
@@ -152,44 +68,6 @@ void BSONValue::setValue(const BSONValue& value)
   _type = value._type;
   _value = value._value;
 }
-
-void BSONValue::setValue(const std::string& value)
-{
-  _type = TYPE_STRING;
-  _value = value;
-}
-
-void BSONValue::setValue(const char* value)
-{
-  _type = TYPE_STRING;
-  _value = std::string(value);
-}
-
-void BSONValue::setValue(bool value)
-{
-  _type = TYPE_BOOL;
-  _value = value;
-}
-
-void BSONValue::setValue(int32_t value)
-{
-  _type = TYPE_INT32;
-  _value = value;
-}
-
-void BSONValue::setValue(int64_t value)
-{
-  _type = TYPE_INT64;
-  _value = value;
-}
-
-void BSONValue::setValue(double value)
-{
-  _type = TYPE_DOUBLE;
-  _value = value;
-}
-
-#if 0
 
 const BSONValue& BSONValue::operator[] (const std::string& key) const
 {
@@ -206,7 +84,45 @@ const BSONValue& BSONValue::operator[] (const std::string& key) const
   return undefined;
 }
 
-#endif
+BSONValue& BSONValue::operator[] (const std::string& key)
+{
+  static BSONValue undefined;
+  if (_type == TYPE_DOCUMENT)
+  {
+    Document& document = boost::any_cast<Document&>(_value);
+    Document::iterator iter = document.find(key);
+    if (iter != document.end())
+    {
+      return iter->second;
+    }
+  }
+  return undefined;
+}
+
+const BSONValue& BSONValue::operator[] (std::size_t index) const
+{
+  static BSONValue undefined;
+  
+  if (_type == TYPE_ARRAY)
+  {
+    Array& array = boost::any_cast<Array&>(_value);
+    
+    if (index < array.size())
+    {
+      return array[index];
+    }
+    else
+    {
+      array.push_back(undefined);
+      while(index >= array.size())
+      {
+        array.push_back(undefined);
+      }
+      return array[index];
+    }
+  }
+  return undefined;
+}
 
 BSONValue& BSONValue::operator[] (std::size_t index)
 {
@@ -237,11 +153,11 @@ std::size_t BSONValue::size() const
 {
   if (_type == TYPE_ARRAY)
   {
-     return boost::any_cast<const Array&>(const_cast<BSONValue*>(this)->_value).size();
+     return boost::any_cast<const Array&>(_value).size();
   }
   else if (_type == TYPE_DOCUMENT)
   {
-     return boost::any_cast<const Document&>(const_cast<BSONValue*>(this)->_value).size();
+     return boost::any_cast<const Document&>(_value).size();
   }
   return 0;
 }

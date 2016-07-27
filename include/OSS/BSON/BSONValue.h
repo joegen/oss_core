@@ -47,30 +47,16 @@ public:
   typedef std::map<std::string, BSONValue> Document;
   
   BSONValue();
-  explicit BSONValue(int type);
   explicit BSONValue(const BSONValue& value);
-  explicit BSONValue(int type, const char* value);
-  explicit BSONValue(int type, const std::string& value);
-  explicit BSONValue(int type, bool value);
-  explicit BSONValue(int type, int32_t value);
-  explicit BSONValue(int type, int64_t value);
-  explicit BSONValue(int type, double value);
-  explicit BSONValue(int type, const Document& value);
-  explicit BSONValue(int type, const Array& value);
   ~BSONValue();
   
   //
   // Setters
   //
   void setValue(const BSONValue& value);
-  void setValue(const char* value);
-  void setValue(const std::string& value);
-  void setValue(bool value);
-  void setValue(int32_t value);
-  void setValue(int64_t value);
-  void setValue(double value);
-  void setValue(const Document& value);
-  void setValue(const Array& value);
+  void swap(BSONValue& value);
+  BSONValue& operator=(const BSONValue& value);
+
   
   //
   // Plain Object Getters
@@ -94,7 +80,6 @@ public:
   //
   // Const Cast operators
   //
-#if 0
   operator const std::string&() const { return boost::any_cast<const std::string&>(_value); };
   operator const bool&() const { return boost::any_cast<const bool&>(_value); };
   operator const int32_t&() const { return boost::any_cast<const int32_t&>(_value); };
@@ -102,7 +87,6 @@ public:
   operator const double&() const { return boost::any_cast<const double&>(_value); };
   operator const Array&() const { return boost::any_cast<const Array&>(_value); };
   operator const Document&() const { return boost::any_cast<const Document&>(_value); };
-#endif
   
   //
   // Reference Cast operators
@@ -118,20 +102,23 @@ public:
   //
   // Operator [] for documents
   //
-  //const BSONValue& operator[] (const std::string& key) const;
+  const BSONValue& operator[] (const std::string& key) const;
+  BSONValue& operator[] (const std::string& key);
   
   //
   // Operator [] for arrays
   //
+  const BSONValue& operator[] (std::size_t index) const;
   BSONValue& operator[] (std::size_t index);
   
   
   int getType() const;
   bool isType(int type) const;
   std::size_t size() const;
-private:
+  
+protected:
   int _type;
-  boost::any _value;
+  mutable boost::any _value;
 };
 
 

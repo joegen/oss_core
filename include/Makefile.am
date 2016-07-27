@@ -195,9 +195,16 @@ nobase_include_HEADERS = \
     OSS/JSON/Readme.txt \
     OSS/JSON/writer.h \
     OSS/JSON/reader.h \
-    OSS/BSON/bson.h \
+    OSS/BSON/libbson.h \
     OSS/BSON/BSONValue.h \
     OSS/BSON/BSONObject.h \
+    OSS/BSON/BSONString.h \
+    OSS/BSON/BSONBool.h \
+    OSS/BSON/BSONInt32.h \
+    OSS/BSON/BSONInt64.h \
+    OSS/BSON/BSONDouble.h \
+    OSS/BSON/BSONDocument.h \
+    OSS/BSON/BSONArray.h \
     OSS/RTP/RTPPacket.h \
     OSS/RTP/RTPPCAPReader.h \
     OSS/RTP/RTPProxy.h \
