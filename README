@@ -10,6 +10,7 @@
     * CARP High Availability
     * Session Border Controller Implementation
     * REST Persistence Store
+    * BSON/JSON Parser
 
 ## Minimal Prerequisites (Mac or Linux)
 ### Mac build is tested using homebrew installed packages
