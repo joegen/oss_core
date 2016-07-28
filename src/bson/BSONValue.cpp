@@ -36,15 +36,17 @@ const int BSONValue::TYPE_DOUBLE = BSON_TYPE_DOUBLE;
 const int BSONValue::TYPE_DOCUMENT = BSON_TYPE_DOCUMENT;
 const int BSONValue::TYPE_ARRAY = BSON_TYPE_ARRAY;
 const int BSONValue::TYPE_UNDEFINED = BSON_TYPE_UNDEFINED;
- 
+
  
 BSONValue::BSONValue()
 {
+  _mutable = true;
   _type = TYPE_UNDEFINED;
 }
 
 BSONValue::BSONValue(const BSONValue& value)
 {
+  _mutable = true;
   _type = value._type;
   _value = value._value;
 }
@@ -53,28 +55,50 @@ BSONValue::~BSONValue()
 {
 }
 
+BSONValue& BSONValue::undefinedValue()
+{
+  static BSONValue undefinedType;
+  undefinedType.setMutable(false);
+  return undefinedType;
+}
+
+const BSONValue& BSONValue::undefinedValue() const
+{
+  static BSONValue undefinedType;
+  undefinedType.setMutable(false);
+  return undefinedType;
+}
+
 void BSONValue::swap(BSONValue& value)
 {
-  std::swap(_type, value._type);
-  std::swap(_value, value._value);
+  if (_mutable)
+  {
+    std::swap(_type, value._type);
+    std::swap(_value, value._value);
+  }
 }
   
 BSONValue& BSONValue::operator=(const BSONValue& value)
 {
-  BSONValue clone(value);
-  swap(clone);
+  if (_mutable)
+  {
+    BSONValue clone(value);
+    swap(clone);
+  }
   return *this;
 }
 
 void BSONValue::setValue(const BSONValue& value)
 {
-  _type = value._type;
-  _value = value._value;
+  if (_mutable)
+  {
+    _type = value._type;
+    _value = value._value;
+  }
 }
 
 const BSONValue& BSONValue::operator[] (const std::string& key) const
 {
-  static BSONValue undefined;
   if (_type == TYPE_DOCUMENT)
   {
     const Document& document = boost::any_cast<const Document&>(const_cast<BSONValue*>(this)->_value);
@@ -84,12 +108,18 @@ const BSONValue& BSONValue::operator[] (const std::string& key) const
       return iter->second;
     }
   }
-  return undefined;
+  
+  return undefinedValue();
 }
 
 BSONValue& BSONValue::operator[] (const std::string& key)
 {
-  static BSONValue undefined;
+  if (_type == TYPE_UNDEFINED && _mutable)
+  {
+    _type = TYPE_DOCUMENT;
+    _value = Document();
+  }
+  
   if (_type == TYPE_DOCUMENT)
   {
     Document& document = boost::any_cast<Document&>(_value);
@@ -100,11 +130,11 @@ BSONValue& BSONValue::operator[] (const std::string& key)
     }
     else
     {
-      document[key] = undefined;
+      document[key] = undefinedValue();
       return document[key];
     }
   }
-  return undefined;
+  return undefinedValue();
 }
 
 const BSONValue& BSONValue::operator[] (const char* key) const
@@ -119,10 +149,96 @@ BSONValue& BSONValue::operator[] (const char* key)
   return operator[](key_);
 }
 
+BSONValue& BSONValue::get(const std::string& key)
+{
+  if (_type == TYPE_DOCUMENT)
+  {
+    if (key.find(".") != std::string::npos)
+    {
+      Tokens tokens = OSS::string_tokenize(key, ".");
+      return get(tokens);
+    }
+    
+    Document& document = boost::any_cast<Document&>(_value);
+    Document::iterator iter = document.find(key);
+    if (iter != document.end())
+    {
+      return iter->second;
+    }
+  }
+  return undefinedValue();
+}
+  
+const BSONValue& BSONValue::get(const std::string& key) const
+{
+  if (_type == TYPE_DOCUMENT)
+  {
+    if (key.find(".") != std::string::npos)
+    {
+      Tokens tokens = OSS::string_tokenize(key, ".");
+      return const_cast<BSONValue*>(this)->get(tokens);
+    }
+    
+    const Document& document = boost::any_cast<const Document&>(_value);
+    Document::const_iterator iter = document.find(key);
+    if (iter != document.end())
+    {
+      return iter->second;
+    }
+  }
+  return undefinedValue();
+}
+
+BSONValue& BSONValue::get(const Tokens& keys)
+{
+  BSONValue* currentObject = this;
+  for (Tokens::const_iterator key = keys.begin(); key != keys.end(); key++)
+  {
+    if (currentObject->getType() == TYPE_DOCUMENT)
+    {
+      currentObject = &currentObject->get(*key);
+      if (currentObject->getType() == TYPE_UNDEFINED)
+      {
+        return undefinedValue();
+      }
+    }
+    else if (currentObject->getType() == TYPE_ARRAY)
+    {
+      int index = OSS::string_to_number(*key, -1);
+      if (index == -1 || (unsigned)index >= currentObject->size())
+      {
+        return undefinedValue();
+      }
+      currentObject = &(*currentObject)[index];
+      if (currentObject->getType() == TYPE_UNDEFINED)
+      {
+        return undefinedValue();
+      }
+    }
+  }
+  
+  if (currentObject == this)
+  {
+    return undefinedValue();
+  }
+  
+  return *currentObject;
+}
+
+BSONValue& BSONValue::get(const char* key)
+{
+  std::string key_(key);
+  return get(key_);
+}
+
+const BSONValue& BSONValue::get(const char* key) const
+{
+  std::string key_(key);
+  return get(key_);
+}
+
 const BSONValue& BSONValue::operator[] (std::size_t index) const
 {
-  static BSONValue undefined;
-  
   if (_type == TYPE_ARRAY)
   {
     Array& array = boost::any_cast<Array&>(_value);
@@ -133,20 +249,24 @@ const BSONValue& BSONValue::operator[] (std::size_t index) const
     }
     else
     {
-      array.push_back(undefined);
+      array.push_back(undefinedValue());
       while(index >= array.size())
       {
-        array.push_back(undefined);
+        array.push_back(undefinedValue());
       }
       return array[index];
     }
   }
-  return undefined;
+  return undefinedValue();
 }
 
 BSONValue& BSONValue::operator[] (std::size_t index)
-{
-  static BSONValue undefined;
+{ 
+  if (_type == TYPE_UNDEFINED && _mutable)
+  {
+    _type = TYPE_ARRAY;
+    _value = Array();
+  }
   
   if (_type == TYPE_ARRAY)
   {
@@ -158,15 +278,15 @@ BSONValue& BSONValue::operator[] (std::size_t index)
     }
     else
     {
-      array.push_back(undefined);
+      array.push_back(undefinedValue());
       while(index >= array.size())
       {
-        array.push_back(undefined);
+        array.push_back(undefinedValue());
       }
       return array[index];
     }
   }
-  return undefined;
+  return undefinedValue();
 }
 
 const BSONValue& BSONValue::operator[] (int index) const
@@ -227,7 +347,7 @@ void BSONValue::serializeDocument(const Document& document, std::ostream& strm) 
         strm << "\"" << iter->first << "\" : "  << iter->second.asInt64();
         break;
       default:
-        strm << "\"" << iter->first << "\": undefined";
+        strm << "\"" << iter->first << "\": UndefinedType";
     }
     
     if (++index < size)
@@ -269,7 +389,7 @@ void BSONValue::serializeArray(const Array& array, std::ostream& strm) const
         strm << iter->asInt64();
         break;
       default:
-        strm << "undefined";
+        strm << "UndefinedType";
     }
     
     if (++index < size)

@@ -84,17 +84,14 @@ TEST(BSONTest, BSONDoc)
   doc["int32"] = BSONInt32(123456);
   doc["int64"] = BSONInt64(123456);
   
-  doc["array"] = BSONArray();
   doc["array"][0] = BSONString("Element 1");
   doc["array"][1] = BSONString("Element 2");
   doc["array"][2] = BSONString("Element 3");
   
-  doc["document"] = BSONDocument();
   doc["document"]["key1"] = BSONString("Element 1");
   doc["document"]["key2"] = BSONString("Element 2");
   doc["document"]["key3"] = BSONString("Element 3");
   
-  doc["document"]["key4"] = BSONArray();
   doc["document"]["key4"][0] = BSONString("Element 1");
   doc["document"]["key4"][1] = BSONString("Element 2");
   doc["document"]["key4"][2] = BSONString("Element 3");
@@ -127,6 +124,14 @@ TEST(BSONTest, BSONDoc)
   ASSERT_TRUE(doc["document"]["key4"][0].asString() == "Element 1");
   ASSERT_TRUE(doc["document"]["key4"][1].asString() == "Element 2");
   ASSERT_TRUE(doc["document"]["key4"][2].asString() == "Element 3");
+  
+  ASSERT_TRUE(doc.get("document.key4.0").isType(BSONValue::TYPE_STRING));
+  ASSERT_TRUE(doc.get("document.key4.0").asString() == "Element 1");
+  ASSERT_TRUE(doc.get("document.key5.0").isType(BSONValue::TYPE_UNDEFINED));
+  ASSERT_TRUE(doc.get("document.key4.5").isType(BSONValue::TYPE_UNDEFINED));
+  
+  doc.get("document.key4.0") = BSONString("Test get() function");
+  ASSERT_TRUE(doc.get("document.key4.0").asString() == "Test get() function");
   
   ASSERT_EQ(doc.size(), 7);
   ASSERT_EQ(doc["document"].size(), 4);

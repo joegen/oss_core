@@ -46,6 +46,7 @@ public:
   
   typedef std::vector<BSONValue> Array;
   typedef std::map<std::string, BSONValue> Document;
+  typedef std::vector<std::string> Tokens;
   
   BSONValue();
   BSONValue(const BSONValue& value);
@@ -117,6 +118,11 @@ public:
   BSONValue& operator[] (std::size_t index);
   
   
+  BSONValue& get(const std::string& key);
+  const BSONValue& get(const std::string& key) const;
+  BSONValue& get(const char* key);
+  const BSONValue& get(const char* key) const;
+  
   int getType() const;
   bool isType(int type) const;
   std::size_t size() const;
@@ -139,6 +145,10 @@ public:
   void fromBSON(const BSONObject& bson);
   
 protected:
+  BSONValue& get(const Tokens& keys);
+  void setMutable(bool value);
+  BSONValue& undefinedValue();
+  const BSONValue& undefinedValue() const;
   void serializeDocument(const Document& document, std::ostream& strm) const;
   void serializeArray(const Array& array, std::ostream& strm) const;
   void serializeDocument(const std::string& key, const Document& document, BSONObject& bson) const;
@@ -146,12 +156,17 @@ protected:
   
   int _type;
   mutable boost::any _value;
+  bool _mutable;
 };
 
 
 //
 // Inlines
 //
+inline void BSONValue::setMutable(bool value)
+{
+  _mutable = value;
+}
 
 inline int BSONValue::getType() const
 {  
