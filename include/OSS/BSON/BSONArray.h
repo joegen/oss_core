@@ -32,8 +32,8 @@ class BSONArray : public BSONValue
 {
 public:
   BSONArray();
+  BSONArray(const BSONArray& value);
   explicit BSONArray(const Array& value);
-  explicit BSONArray(const BSONArray& value);
   void swap(BSONArray& value);
   BSONArray& operator=(const Array& value);
   BSONArray& operator=(const BSONArray& value);

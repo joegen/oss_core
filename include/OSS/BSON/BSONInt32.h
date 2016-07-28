@@ -32,8 +32,8 @@ class BSONInt32 : public BSONValue
 {
 public:
   BSONInt32();
+  BSONInt32(const BSONInt32& value);
   explicit BSONInt32(int32_t value);
-  explicit BSONInt32(const BSONInt32& value);
   void swap(BSONInt32& value);
   BSONInt32& operator=(int32_t value);
   BSONInt32& operator=(const BSONInt32& value);

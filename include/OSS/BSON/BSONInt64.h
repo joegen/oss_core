@@ -32,8 +32,8 @@ class BSONInt64 : public BSONValue
 {
 public:
   BSONInt64();
+  BSONInt64(const BSONInt64& value);
   explicit BSONInt64(int64_t value);
-  explicit BSONInt64(const BSONInt64& value);
   void swap(BSONInt64& value);
   BSONInt64& operator=(int64_t value);
   BSONInt64& operator=(const BSONInt64& value);

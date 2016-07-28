@@ -32,8 +32,8 @@ class BSONDocument : public BSONValue
 {
 public:
   BSONDocument();
+  BSONDocument(const BSONDocument& value);
   explicit BSONDocument(const Document& value);
-  explicit BSONDocument(const BSONDocument& value);
   void swap(BSONDocument& value);
   BSONDocument& operator=(const Document& value);
   BSONDocument& operator=(const BSONDocument& value);

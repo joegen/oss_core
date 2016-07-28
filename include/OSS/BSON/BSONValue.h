@@ -21,6 +21,7 @@
 #define OSS_BASONVALUE_H_INCLUDED
 
 #include "OSS/OSS.h"
+#include "OSS/BSON/BSONObject.h"
 #include <string>
 #include <map>
 #include <vector>
@@ -47,7 +48,7 @@ public:
   typedef std::map<std::string, BSONValue> Document;
   
   BSONValue();
-  explicit BSONValue(const BSONValue& value);
+  BSONValue(const BSONValue& value);
   ~BSONValue();
   
   //
@@ -102,12 +103,16 @@ public:
   //
   // Operator [] for documents
   //
+  const BSONValue& operator[] (const char* key) const;
+  BSONValue& operator[] (const char* key);
   const BSONValue& operator[] (const std::string& key) const;
   BSONValue& operator[] (const std::string& key);
   
   //
   // Operator [] for arrays
   //
+  const BSONValue& operator[] (int index) const;
+  BSONValue& operator[] (int index);
   const BSONValue& operator[] (std::size_t index) const;
   BSONValue& operator[] (std::size_t index);
   
@@ -116,7 +121,29 @@ public:
   bool isType(int type) const;
   std::size_t size() const;
   
+  //
+  // Serializing to JSON
+  //
+  void toJSON(std::ostream& strm) const;
+  std::string toJSON() const;
+  
+  //
+  // Serializing to BSON
+  //
+  void toBSON(BSONObject& bson) const;
+  BSONObject toBSON() const;
+  
+  //
+  // serialize from BSON
+  //
+  void fromBSON(const BSONObject& bson);
+  
 protected:
+  void serializeDocument(const Document& document, std::ostream& strm) const;
+  void serializeArray(const Array& array, std::ostream& strm) const;
+  void serializeDocument(const std::string& key, const Document& document, BSONObject& bson) const;
+  void serializeArray(const std::string& key, const Array& array, BSONObject& bson) const;
+  
   int _type;
   mutable boost::any _value;
 };

@@ -70,21 +70,7 @@ public:
   bool hasKey(const std::string& key) const;
   std::string stringify();
 
-  BSONObject* clone();
-  
-  //
-  // Iterator
-  //
-  class iterator
-  {
-  public:
-    iterator();
-    iterator(const iterator& iter);
-    ~iterator();
-    iterator& operator ++();
-    bool operator !=(const iterator&);
-  };
-  
+  BSONObject* clone();  
 protected:
   void*  startSubDocument(const std::string& key);
   void*  endSubDocument(const std::string& key);

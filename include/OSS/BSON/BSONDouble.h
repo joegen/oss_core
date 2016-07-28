@@ -32,8 +32,8 @@ class BSONDouble : public BSONValue
 {
 public:
   BSONDouble();
+  BSONDouble(const BSONDouble& value);
   explicit BSONDouble(double value);
-  explicit BSONDouble(const BSONDouble& value);
   void swap(BSONDouble& value);
   BSONDouble& operator=(double value);
   BSONDouble& operator=(const BSONDouble& value);

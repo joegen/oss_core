@@ -32,8 +32,8 @@ class BSONBool : public BSONValue
 {
 public:
   BSONBool();
+  BSONBool(const BSONBool& value);
   explicit BSONBool(bool value);
-  explicit BSONBool(const BSONBool& value);
   void swap(BSONBool& value);
   BSONBool& operator=(bool value);
   BSONBool& operator=(const BSONBool& value);

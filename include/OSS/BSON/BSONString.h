@@ -32,9 +32,9 @@ class BSONString : public BSONValue
 {
 public:
   BSONString();
+  BSONString(const BSONString& value);
   explicit BSONString(const char* value);
   explicit BSONString(const std::string& value);
-  explicit BSONString(const BSONString& value);
   void swap(BSONString& value);
   BSONString& operator=(const char* value);
   BSONString& operator=(const std::string& value);

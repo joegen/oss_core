@@ -196,6 +196,7 @@ nobase_include_HEADERS = \
     OSS/JSON/writer.h \
     OSS/JSON/reader.h \
     OSS/BSON/libbson.h \
+    OSS/BSON/BSON.h \
     OSS/BSON/BSONValue.h \
     OSS/BSON/BSONObject.h \
     OSS/BSON/BSONString.h \
