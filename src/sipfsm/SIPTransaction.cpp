@@ -207,6 +207,7 @@ void SIPTransaction::sendRequest(
 
   if (!pRequest->isRequest())
   {
+    terminate();
     throw OSS::SIP::SIPException("Sending a RESPONSE using sendRequest() is illegal!");
   }
 
@@ -239,7 +240,10 @@ void SIPTransaction::sendRequest(
   if (!_transport)
   {
     if (!_transportService)
+    {
+      terminate();
       throw OSS::SIP::SIPException("Transport Not Ready!");
+    }
 
 
     std::string transport;
@@ -264,6 +268,11 @@ void SIPTransaction::sendRequest(
     if (!_transport)
     {
       OSS_LOG_ERROR(_logId << "SIPTransaction::sendRequest - Unable to create transport");
+      if (_responseTU)
+      {
+        SIPMessage::Ptr pResponse = pRequest->createResponse(OSS::SIP::SIPMessage::CODE_408_RequestTimeout, "Transport Creation Error");
+        _responseTU(SIPTransaction::Error(new OSS::SIP::SIPException("Transport Creation Error")), pResponse, _transport, shared_from_this());
+      }
       terminate();
       return;
     }
@@ -274,6 +283,7 @@ void SIPTransaction::sendRequest(
     // is reliable, writeMessage() will simply queue the request
     // and send it as soon as the transport is started
     //
+    
 #if 0        
     if (_transport->isReliableTransport() && !_transport->isConnected() && !_transport->isEndpoint())
     {
@@ -421,6 +431,7 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg)
   if (!_transport)
   {
     OSS_LOG_ERROR("SIPTransaction::writeMessage - Transport is NULL while attempting to send a request.");
+    terminate();
     return;
   }
   
@@ -453,6 +464,8 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg)
   else
   {
     OSS_LOG_WARNING(_logId << "SIPTransaction::writeMessage - _fsm->onSendMessage() returned false.  Message will be discarded.");
+    terminate();
+    return;
   }
 }
 
@@ -463,6 +476,7 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg, const OSS::Net::IPAddres
   if (!_transport)
   {
     OSS_LOG_ERROR("SIPTransaction::writeMessage does not have a transport to use");
+    terminate();
     return;
   }
 
@@ -487,6 +501,11 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg, const OSS::Net::IPAddres
     _transport->writeMessage(pMsg,
     remoteAddress.toString(),
     OSS::string_from_number<unsigned short>(remoteAddress.getPort()));
+  }
+  else
+  {
+    terminate();
+    return;
   }
 }
 
