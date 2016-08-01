@@ -28,6 +28,7 @@
 namespace OSS {
 namespace SIP {
 
+#define RELIABLE_TIMER_B_VALUE 5000 // default to 5 seconds timeout for TCP and TLS
 
 SIPIct::SIPIct(
   boost::asio::io_service& ioService,
@@ -69,9 +70,14 @@ bool SIPIct::onSendMessage(SIPMessage::Ptr pMsg)
       _timerAValue = _timerProps.timerA();
     }
     if (!pTransaction->transport()->isReliableTransport())
+    {
       startTimerA(_timerAValue);
-
-    startTimerB(_timerAValue*64);
+      startTimerB(_timerAValue*64);
+    }
+    else
+    {
+      startTimerB(RELIABLE_TIMER_B_VALUE);
+    }
     
     //
     // Check if the request has an expires header

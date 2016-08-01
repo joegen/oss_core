@@ -358,6 +358,7 @@ private:
   Branches _branches;
   SIPMessage::Ptr _pInitialRequest;
   bool _hasTerminated;
+  bool _reconnectOnResponse;
   friend class SIPTransactionPool;
   friend class SIPIstPool;
   friend class SIPNistPool;
