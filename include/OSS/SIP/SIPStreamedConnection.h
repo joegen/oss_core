@@ -102,6 +102,8 @@ public:
   bool writeKeepAlive();
     /// Sends a keep-alive packet to remote to check if transport is still alive
   
+  SIPStreamedConnectionManager& getConnectionManager();
+  
 private:
   void writeMessage(SIPMessage::Ptr msg, const std::string& ip, const std::string& port);
     /// Send a SIP message using this session.  This is used by the UDP tranport
@@ -134,7 +136,6 @@ private:
 
   void readSome();
     /// read some bytes into the buffer
-  
   
 protected:
   void handleConnectTimeout(const boost::system::error_code& e);
@@ -183,6 +184,11 @@ protected:
 // Inlines
 //
 
+
+inline SIPStreamedConnectionManager& SIPStreamedConnection::getConnectionManager()
+{
+  return _connectionManager;
+}
 
 } } // OSS::SIP
 #endif // SIP_SIPStreamedConnection_INCLUDED

@@ -47,7 +47,8 @@ SIPTransaction::SIPTransaction():
   _isXOREncrypted(false),
   _pParent(),
   _isParent(true),
-  _hasTerminated(false)
+  _hasTerminated(false),
+  _reconnectOnResponse(false)
 {
 }
 
@@ -63,7 +64,8 @@ SIPTransaction::SIPTransaction(SIPTransaction::Ptr pParent) :
   _isXOREncrypted(false),
   _pParent(pParent),
   _isParent(false),
-  _hasTerminated(false)
+  _hasTerminated(false),
+  _reconnectOnResponse(false)
 {
   _id = pParent->getId();
   _logId = pParent->getLogId();
@@ -93,7 +95,8 @@ SIPTransaction::SIPTransaction(const SIPTransaction&) :
   _isXOREncrypted(false),
   _pParent(),
   _isParent(false),
-  _hasTerminated(false)
+  _hasTerminated(false),
+  _reconnectOnResponse(false)
 {
 }
 
@@ -244,7 +247,6 @@ void SIPTransaction::sendRequest(
     if (!_transportService)
       throw OSS::SIP::SIPException("Transport Not Ready!");
 
-
     std::string transport;
     if (pRequest->getProperty(OSS::PropertyMap::PROP_TargetTransport, transport))
     {
@@ -263,41 +265,28 @@ void SIPTransaction::sendRequest(
         _transport->setTransactionPool(_owner);
       }
     }
-    
-    if (!_transport)
+  }
+  
+  if (!_transport)
+  {
+    OSS_LOG_ERROR(_logId << "SIPTransaction::sendRequest - Unable to create transport");
+    if (_responseTU)
     {
-      OSS_LOG_ERROR(_logId << "SIPTransaction::sendRequest - Unable to create transport");
-      terminate();
-      return;
+      SIPMessage::Ptr pResponse = pRequest->createResponse(OSS::SIP::SIPMessage::CODE_408_RequestTimeout, "Transport Creation Error");
+      _responseTU(SIPTransaction::Error(new OSS::SIP::SIPException("Transport Creation Error")), pResponse, _transport, shared_from_this());
     }
-    
+    terminate();
+    return;
+  }
+
+  if (_transport->isReliableTransport())
+  {
     //
     // Note.  Connect function is async.  We cannot guaranty that
     // the socket is already connected.  Instead, if the transport
     // is reliable, writeMessage() will simply queue the request
     // and send it as soon as the transport is started
     //
-#if 0        
-    if (_transport->isReliableTransport() && !_transport->isConnected() && !_transport->isEndpoint())
-    {
-      //
-      // typedef boost::function<void(const SIPTransaction::Error&, const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> Callback
-      //
-      if (_responseTU)
-      {
-        SIPMessage::Ptr pResponse = pRequest->createResponse(OSS::SIP::SIPMessage::CODE_408_RequestTimeout, "Transport Creation Error");
-        _responseTU(SIPTransaction::Error(new OSS::SIP::SIPException("Transport Creation Error")), pResponse, _transport, shared_from_this());
-      }
-      terminate();
-      return;
-      
-      //throw OSS::SIP::SIPException("Unable to create transport!");
-    }
-#endif
-  }
-
-  if (_transport->isReliableTransport())
-  {
     std::string newId = OSS::string_from_number<OSS::UInt64>(_transport->getIdentifier());
     pRequest->setProperty(OSS::PropertyMap::PROP_TransportId, newId);
     writeMessage(pRequest);
@@ -376,7 +365,7 @@ void SIPTransaction::sendResponse(
       {
         writeMessage(pResponse);
       }
-      else
+      else if (_reconnectOnResponse)
       {
         //
         // Keep-alive failed so create a new transport
@@ -394,6 +383,11 @@ void SIPTransaction::sendResponse(
             if (_transport)
             {
               writeMessage(pResponse);
+            }
+            else
+            {
+              terminate();
+              return;
             }
           }
         }
@@ -414,6 +408,8 @@ void SIPTransaction::sendResponse(
     else
     {
       OSS_LOG_ERROR("SIPTransaction::sendResponse - Transport is NULL.");
+      terminate();
+      return;
     }
   }
 }
@@ -576,6 +572,15 @@ void SIPTransaction::handleTimeoutICT()
     if (_responseTU && TRN_STATE_TERMINATED != _state)
       _responseTU(SIPTransaction::Error(new OSS::SIP::SIPException("ICT Timeout")), SIPMessage::Ptr(), SIPTransportSession::Ptr(), shared_from_this());
   }
+  
+  if (_transport && _transport->isReliableTransport())
+  {
+    SIPStreamedConnection* pTransport = dynamic_cast<SIPStreamedConnection*>(_transport.get());
+    if (pTransport)
+    {
+      pTransport->getConnectionManager().stop(_transport);
+    }
+  }
 }
 
 void SIPTransaction::handleTimeoutNICT()
@@ -595,6 +600,15 @@ void SIPTransaction::handleTimeoutNICT()
     OSS::mutex_lock lock(_stateMutex);
     if (_responseTU && TRN_STATE_TERMINATED != _state)
       _responseTU(SIPTransaction::Error(new OSS::SIP::SIPException("NICT Timeout")), SIPMessage::Ptr(), SIPTransportSession::Ptr(), shared_from_this());
+  }
+  
+  if (_transport && _transport->isReliableTransport())
+  {
+    SIPStreamedConnection* pTransport = dynamic_cast<SIPStreamedConnection*>(_transport.get());
+    if (pTransport)
+    {
+      pTransport->getConnectionManager().stop(_transport);
+    }
   }
 }
 

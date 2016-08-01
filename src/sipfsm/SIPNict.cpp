@@ -28,6 +28,8 @@ namespace OSS {
 namespace SIP {
 
 
+#define RELIABLE_TIMER_F_VALUE 5000 // default to 5 seconds timeout for TCP and TLS
+
 SIPNict::SIPNict(
   boost::asio::io_service& ioService,
   const SIPTransactionTimers& timerProps) :
@@ -67,12 +69,16 @@ bool SIPNict::onSendMessage(SIPMessage::Ptr pMsg)
       _timerEValue = _timerProps.timerE();
     }
 
-    //
-    // Start timerE for both reliable and unreliable transports
-    //if (!pTransaction->transport()->isReliableTransport())
+    if (!pTransaction->transport()->isReliableTransport())
+    {
       startTimerE(_timerEValue);
-
-    startTimerF(_timerEValue*64);
+      startTimerF(_timerEValue*64);
+    }
+    else
+    {
+      startTimerF(RELIABLE_TIMER_F_VALUE);
+    }
+    
     return true;
   }
   return false;
