@@ -20,6 +20,9 @@
 #ifndef OSS_FAST_RANDOM
 #define	OSS_FAST_RANDOM
 
+#include "OSS/build.h"
+
+#if OSS_HAVE_BOOST_RANDOM
 
 #include <ctime>
 #include <cstdlib>
@@ -106,5 +109,7 @@ typedef FastRandomBase<int32_t, FastRandomNullLockStrategy> FastRandom;
 typedef FastRandomBase<int32_t, boost::mutex > FastRandomMt;
 
 } } // OSS::UTL
+
+#endif // OSS_HAVE_BOOST_RANDOM
 
 #endif // OSS_FAST_RANDOM

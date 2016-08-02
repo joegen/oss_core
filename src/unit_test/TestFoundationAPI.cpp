@@ -124,6 +124,8 @@ TEST(TestFoundation, socket_address_range_verify)
   ASSERT_FALSE(OSS::socket_address_range_verify("garbage", "192.168.1.50", "192.168.1.150"));
 }
 
+#if OSS_HAVE_BOOST_RANDOM
+
 TEST(TestFoundation, random_number_generator)
 {
   //
@@ -222,3 +224,5 @@ TEST(TestFoundation, random_number_generator)
 
 
 }
+
+#endif // OSS_HAVE_BOOST_RANDOM
