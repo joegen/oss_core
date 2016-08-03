@@ -207,6 +207,15 @@ AC_ARG_ENABLE([all-features],
             [ENABLE_FEATURE(NET_EXTRA)],
             [DISABLE_FEATURE(NET_EXTRA)])
     ])
+
+#
+# Enable SIP Test compilation
+#
+AC_ARG_ENABLE([sip-test],
+    AC_HELP_STRING([--enable-sip-test], [Enable Compilation of SIP Tests]),
+    [ENABLE_FEATURE(COMPILE_SIPTEST)],
+    [DISABLE_FEATURE(COMPILE_SIPTEST)])
+
 #
 # Search for mandatory packages
 #

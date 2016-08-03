@@ -524,13 +524,11 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestBSON.cpp
 
 
+if ENABLE_FEATURE_COMPILE_SIPTEST
 SIP_TEST = \
     oss_test_sip_invite_simple
-
-#
-# test_forked_100rel
-#
 oss_test_sip_invite_simple_SOURCES = siptest/TestInviteSimple.cpp
+endif
 
 bin_PROGRAMS = \
     $(SIP_TEST)
