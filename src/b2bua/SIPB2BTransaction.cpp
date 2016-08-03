@@ -462,16 +462,7 @@ void SIPB2BTransaction::runResponseTask()
   try
   {
     OSS::mutex_lock reponseLock(_resposeMutex);
-    if (_pTransactionError)
-    {
-      OSS::Net::IPAddress localInterface;
-      OSS::Net::IPAddress target;
-      //
-      // Signal the error and delete this transaction if a failover is not possible
-      //
-      _pManager->onTransactionError(_pTransactionError, SIPMessage::Ptr(), shared_from_this());
-      return;
-    }
+    
 
     SIPMessage::Ptr response;
     {//localize
@@ -481,8 +472,20 @@ void SIPB2BTransaction::runResponseTask()
       _responseQueueMutex.unlock();
     }//localize
 
-    if (!response)
+    if (!response && !_pTransactionError)
       throw OSS::SIP::SIPException("Response is NULL while calling SIPB2BTransaction::runResponseTask()");
+    
+    if (_pTransactionError && !response)
+    {
+      OSS::Net::IPAddress localInterface;
+      OSS::Net::IPAddress target;
+      _pManager->onTransactionError(_pTransactionError, response, shared_from_this());
+      return;
+    }
+    
+    //
+    // Response is not null.  Process it for routing
+    //
 
     _pManager->onProcessResponseInbound(response, shared_from_this());
 

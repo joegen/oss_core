@@ -285,15 +285,6 @@ AC_CHECK_LIB(boost_regex-mt, main,
     [AC_CHECK_LIB(boost_regex, main,
     	[FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_REGEX, -lboost_regex)],
     	[ERROR_MISSING_DEP(OSS_HAVE_BOOST_REGEX, "Boost Regex Library is not installed")])])
-
-AC_CHECK_HEADER(boost/random.hpp, [], [ERROR_MISSING_DEP(OSS_HAVE_BOOST_RANDOM, 
-    "Boost Random Library Headers are not installed")])
-AC_CHECK_LIB(boost_random-mt, main,
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_RANDOM, -lboost_random-mt)],
-    [AC_CHECK_LIB(boost_random, main,
-    	[FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_RANDOM, -lboost_random)],
-    	[ERROR_MISSING_DEP(OSS_HAVE_BOOST_RANDOM, "Boost Random Library is not installed")])])
-
 AC_LANG_POP([C++])
 
 #
@@ -460,6 +451,16 @@ AC_CHECK_LIB(dl, main,
 AC_CHECK_LIB(rt, main,     
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_RT, -lrt)], 
     [FLAG_MISSING_DEP(OSS_HAVE_RT)])
+
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADER(boost/random.hpp, [], [ERROR_MISSING_DEP(OSS_HAVE_BOOST_RANDOM, 
+    "Boost Random Library Headers are not installed")])
+AC_CHECK_LIB(boost_random-mt, main,
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_RANDOM, -lboost_random-mt)],
+    [AC_CHECK_LIB(boost_random, main,
+    	[FLAG_EXISTING_CXX_DEP(OSS_HAVE_BOOST_RANDOM, -lboost_random)],
+    	[FLAG_MISSING_DEP(OSS_HAVE_BOOST_RANDOM, "Boost Random Library is not installed")])])
+AC_LANG_POP([C++])
 
 CURRENT_DIR=`pwd`
 cd ${srcdir}
