@@ -28,7 +28,8 @@
 
 
 #if OSS_HAVE_ZMQ
-#include <zmq.hpp>
+
+#include "OSS/ZMQ/zmq.hpp"
 
 namespace OSS {
 namespace ZMQ {

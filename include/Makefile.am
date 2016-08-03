@@ -269,7 +269,8 @@ nobase_include_HEADERS = \
     OSS/SIP/SIPWebSocketListener.h \
     OSS/EP/EndpointConnection.h \
     OSS/EP/EndpointListener.h \
-    OSS/ZMQ/ZMQSocket.h
+    OSS/ZMQ/ZMQSocket.h \
+    OSS/ZMQ/zmq.hpp
 
 
 DISTCLEANFILES = Makefile.in

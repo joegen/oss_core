@@ -355,11 +355,9 @@ fi
 # ZeroMQ
 #
 if test "x$FEATURE_ZMQ" == "xenabled"; then
-    AC_LANG_PUSH([C++])
-    AC_CHECK_HEADER(zmq.hpp, 
+    AC_CHECK_HEADER(zmq.h, 
         [FLAG_EXISTING_CXX_DEP(OSS_HAVE_ZMQ, -lzmq)], 
         [ERROR_MISSING_DEP(OSS_HAVE_ZMQ, "ZeroMQ Library is not installed")])
-    AC_LANG_POP([C++])
 else
     AM_CONDITIONAL(OSS_HAVE_ZMQ, false)
     AC_SUBST(OSS_HAVE_ZMQ, 0)
