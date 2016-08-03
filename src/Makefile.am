@@ -334,7 +334,6 @@ liboss_core_la_SOURCES =  \
     ep/EndpointConnection.cpp \
     ep/EndpointListener.cpp \
     bson/libbson.c \
-    bson/libnanomsg.c \
     bson/BSONValue.cpp \
     bson/BSONString.cpp \
     bson/BSONBool.cpp \
