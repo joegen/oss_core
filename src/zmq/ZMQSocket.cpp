@@ -133,9 +133,12 @@ bool ZMQSocket::bind(const std::string& bindAddress)
   switch(_type)
   {
   case REP:
-     _socket = zeromq_create_socket(_context, ZMQ_REP);
+      _socket = zeromq_create_socket(_context, ZMQ_REP);
     break;
-  case REQ:
+  case PULL:
+     _socket = zeromq_create_socket(_context, ZMQ_PULL);
+    break;
+  default:
     return false;
   }
   
@@ -190,7 +193,10 @@ bool ZMQSocket::internal_connect(const std::string& peerAddress)
   case REQ:
      _socket = zeromq_create_socket(_context, ZMQ_REQ);
     break;
-  case REP:
+  case PUSH:
+     _socket = zeromq_create_socket(_context, ZMQ_PUSH);
+    break;
+  default:
     return false;
   }
   

@@ -46,7 +46,9 @@ public:
   enum SocketType
   {
     REQ,
-    REP
+    REP,
+    PUSH,
+    PULL
   };
   
   ZMQSocket(SocketType type);
