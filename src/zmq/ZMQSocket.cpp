@@ -42,7 +42,7 @@ static void zeromq_free (void *data, void *hint)
 static bool zeromq_send (zmq::socket_t & socket, const std::string & data)
 {
   char * buff = (char*)malloc(data.size());
-  memcpy(buff, data.c_str(), data.size());
+  memcpy(buff, data.data(), data.size());
   zmq::message_t message((void*)buff, data.size(), zeromq_free, 0);
   bool rc = socket.send(message);
   return (rc);
@@ -52,7 +52,7 @@ static bool zeromq_send (zmq::socket_t & socket, const std::string & data)
 static bool zeromq_sendmore (zmq::socket_t & socket, const std::string & data)
 {
   char * buff = (char*)malloc(data.size());
-  memcpy(buff, data.c_str(), data.size());
+  memcpy(buff, data.data(), data.size());
   zmq::message_t message((void*)buff, data.size(), zeromq_free, 0);
   bool rc = socket.send(message, ZMQ_SNDMORE);
   return (rc);

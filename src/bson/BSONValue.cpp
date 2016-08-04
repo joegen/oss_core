@@ -489,7 +489,7 @@ void BSONValue::serializeArray(const std::string& key, const Array& array, BSONO
   {
     bson.appendArrayBegin(key);
   }
-  std::size_t index;
+  std::size_t index = 0;
   for (Array::const_iterator iter = array.begin(); iter != array.end(); iter++)
   {
     switch (iter->getType())

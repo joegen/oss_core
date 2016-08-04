@@ -361,6 +361,24 @@ BSONObject* BSONObject::clone()
 {
   return new BSONObject(*this);
 }
+
+const uint8_t* BSONObject::getData()
+{
+  if (!_parent)
+  {
+    return 0;
+  }
+  return bson_get_data((bson_t*)_parent);
+}
+
+std::size_t BSONObject::getDataLength()
+{
+  if (!_parent)
+  {
+    return 0;
+  }
+  return ((bson_t*)_parent)->len;
+}
  
   
 } } //OSS::BSON

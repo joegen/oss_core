@@ -70,6 +70,9 @@ public:
   bool hasKey(const std::string& key) const;
   std::string stringify();
 
+  const uint8_t* getData();
+  std::size_t getDataLength();
+  
   BSONObject* clone();  
 protected:
   void*  startSubDocument(const std::string& key);

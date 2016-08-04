@@ -342,8 +342,7 @@ liboss_core_la_SOURCES =  \
     bson/BSONDouble.cpp \
     bson/BSONDocument.cpp \
     bson/BSONArray.cpp \
-    bson/BSONObject.cpp \
-    bson/BSONQueue.cpp
+    bson/BSONObject.cpp
 
 if ENABLE_FEATURE_RESTKV
 liboss_core_la_SOURCES += \
@@ -462,7 +461,9 @@ liboss_core_la_SOURCES +=  \
 endif
 
 if ENABLE_FEATURE_ZMQ
-liboss_core_la_SOURCES +=  zmq/ZMQSocket.cpp
+liboss_core_la_SOURCES +=  \
+    zmq/ZMQSocket.cpp \
+    bson/BSONQueue.cpp
 endif
 
 if ENABLE_FEATURE_REDIS

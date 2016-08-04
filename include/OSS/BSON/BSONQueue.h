@@ -30,13 +30,33 @@ namespace OSS {
 namespace BSON {
 
 
-class BSONQueue : protected ZMQ::ZMQSocket
+class BSONQueue : boost::noncopyable
 {
 public:
-    BSONQueue(SocketType type);
-    ~BSONQueue();
-};
+  static const int REQ;
+  static const int REP;
+  static const int PUSH;
+  static const int PULL;
+  typedef OSS::ZMQ::ZMQSocket::SocketType Role;
+  
+  BSONQueue(int role, const std::string& name);
+  ~BSONQueue();
+  bool enqueue(BSONObject& msg);
+  bool dequeue(BSONObject& msg);
+  const std::string& getName() const;
     
+protected:
+  virtual bool initSocket();
+  Role _role;
+  std::string _name;
+  std::string _address;
+  ZMQ::ZMQSocket* _pSocket;
+};
+
+
+//
+// Inlines
+//
     
 } } // OSS::BSON
 
