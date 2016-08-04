@@ -85,6 +85,8 @@ protected:
   std::string _bindAddress;
   OSS::mutex_critic_sec _mutex;
   bool _canReconnect;
+  bool _isInproc;
+  static OSS_HANDLE _inproc_context;
 };
     
 } } // OSS::ZMQ

@@ -34,6 +34,8 @@
 namespace OSS {
 namespace ZMQ {
   
+OSS_HANDLE ZMQSocket::_inproc_context = new zmq::context_t(1);
+  
 static void zeromq_free (void *data, void *hint)
 {
   free (data);
@@ -87,9 +89,16 @@ static zmq::socket_t* zeromq_create_socket(OSS_HANDLE context, int type)
 
 static bool zeromq_poll_read(zmq::socket_t* sock, int timeoutms)
 {
-  int timeoutnano = timeoutms * 1000; // convert to nanoseconds
+  
   zmq::pollitem_t items[] = { { *sock, 0, ZMQ_POLLIN, 0 } };
+ #if ZMQ_VERSION_MAJOR < 4
+  int timeoutnano = timeoutms * 1000; // convert to nanoseconds
   int rc = zmq::poll (&items[0], 1, timeoutnano);
+#else
+  int rc = zmq::poll (&items[0], 1, timeoutms);
+#endif  
+  
+  
   switch (rc)
   {
     case ETERM:
@@ -110,7 +119,8 @@ ZMQSocket::ZMQSocket(SocketType type) :
   _type(type),
   _context(0),
   _socket(0),
-  _canReconnect(false)
+  _canReconnect(false),
+  _isInproc(false)
 {
   _context = new zmq::context_t(1);
 }
@@ -130,13 +140,32 @@ bool ZMQSocket::bind(const std::string& bindAddress)
     return false;
   }
   
+  //
+  // inproc transport is not pollable
+  //
+  _isInproc = OSS::string_starts_with(bindAddress, "inproc");
+  
   switch(_type)
   {
   case REP:
+    if (_isInproc)
+    {
+      _socket = zeromq_create_socket(_inproc_context, ZMQ_REP);
+    }
+    else
+    {
       _socket = zeromq_create_socket(_context, ZMQ_REP);
+    }
     break;
   case PULL:
-     _socket = zeromq_create_socket(_context, ZMQ_PULL);
+    if (_isInproc)
+    {
+      _socket = zeromq_create_socket(_inproc_context, ZMQ_PULL);
+    }
+    else
+    {
+      _socket = zeromq_create_socket(_context, ZMQ_PULL);
+    }
     break;
   default:
     return false;
@@ -188,13 +217,32 @@ bool ZMQSocket::internal_connect(const std::string& peerAddress)
     return false;
   }
   
+  //
+  // inproc transport is not pollable
+  //
+  _isInproc = OSS::string_starts_with(peerAddress, "inproc");
+  
   switch(_type)
   {
   case REQ:
-     _socket = zeromq_create_socket(_context, ZMQ_REQ);
+    if (_isInproc)
+    {
+      _socket = zeromq_create_socket(_inproc_context, ZMQ_REQ);
+    }
+    else
+    {
+      _socket = zeromq_create_socket(_context, ZMQ_REQ);
+    }
     break;
   case PUSH:
-     _socket = zeromq_create_socket(_context, ZMQ_PUSH);
+    if (_isInproc)
+    {
+      _socket = zeromq_create_socket(_inproc_context, ZMQ_PUSH);
+    }
+    else
+    {
+      _socket = zeromq_create_socket(_context, ZMQ_PUSH);
+    }
     break;
   default:
     return false;
@@ -330,8 +378,8 @@ bool ZMQSocket::internal_receive_reply(std::string& response, unsigned int timeo
   {
     return false;
   }
-  
-  if (!zeromq_poll_read(zeromq_socket(_socket), timeoutms))
+
+  if (!_isInproc && !zeromq_poll_read(zeromq_socket(_socket), timeoutms))
   {
     OSS_LOG_ERROR("ZMQSocket::internal_receive() - Exception: zeromq_poll_read() failed");
     _canReconnect = true;
