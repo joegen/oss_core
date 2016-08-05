@@ -36,8 +36,10 @@ class BSONObject
 public:  
   BSONObject();
   BSONObject(const BSONObject& bson);
+  BSONObject(const uint8_t* bson, std::size_t len);
   ~BSONObject();
   
+  void reset(const uint8_t* bson, std::size_t len);
   BSONObject& operator=(const BSONObject& bson);
   
   bool appendString(const std::string& key, const std::string& value);

@@ -60,14 +60,17 @@ public:
   bool bind(const std::string& bindAddress);
   
   bool sendAndReceive(const std::string& cmd, const std::string& data, std::string& response, unsigned int timeoutms);
+  bool sendAndReceive(const std::string& cmd, const std::string& data, std::string& response);
 
   bool sendRequest(const std::string& cmd, const std::string& data);
   
   bool sendReply(const std::string& data);
   
-  bool receiveReply(std::string& response, unsigned int timeoutms);
+  bool receiveReply(std::string& reply, unsigned int timeoutms);
+  bool receiveReply(std::string& reply);
   
   bool receiveRequest(std::string& cmd, std::string& data, unsigned int timeoutms);
+  bool receiveRequest(std::string& cmd, std::string& data);
   
   void close();
   
@@ -76,7 +79,7 @@ protected:
   bool internal_connect(const std::string& peerAddress);
   bool internal_send_reply(const std::string& data);
   bool internal_send_request(const std::string& cmd, const std::string& data);
-  bool internal_receive_reply(std::string& response, unsigned int timeoutms);
+  bool internal_receive_reply(std::string& reply, unsigned int timeoutms);
   bool internal_receive_request(std::string& cmd, std::string& data, unsigned int timeoutms);
   SocketType _type;
   OSS_HANDLE _context;
@@ -88,6 +91,25 @@ protected:
   bool _isInproc;
   static OSS_HANDLE _inproc_context;
 };
+
+//
+// Inlines
+//
+
+inline bool ZMQSocket::sendAndReceive(const std::string& cmd, const std::string& data, std::string& response)
+{
+  return sendAndReceive(cmd, data, response, 0);
+}
+
+inline bool ZMQSocket::receiveRequest(std::string& cmd, std::string& data)
+{
+  return receiveRequest(cmd, data, 0);
+}
+
+inline bool ZMQSocket::receiveReply(std::string& reply)
+{
+  return receiveReply(reply, 0);
+}
     
 } } // OSS::ZMQ
 

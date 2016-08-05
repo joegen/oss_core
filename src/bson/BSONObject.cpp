@@ -46,23 +46,37 @@ BSONObject::BSONObject(const BSONObject& bson)
   _parent = _bson;
 }
 
+BSONObject::BSONObject(const uint8_t* bson, std::size_t len)
+{
+  _bson = bson_new_from_data(bson, len);
+  _parent = _bson;
+}
+
 BSONObject::~BSONObject()
 {
   bson_destroy((bson_t*)_bson);
   delete (bson_t*)_bson;
 }
 
- BSONObject& BSONObject::operator=(const BSONObject& bson)
- {
-   if (&bson == this)
-   {
-     return *this;
-   }
-   bson_destroy((bson_t*)_bson);
-   _bson = bson_copy((bson_t*)bson._bson);
-   _parent = _bson;
-   return *this;
- }
+void BSONObject::reset(const uint8_t* bson, std::size_t len)
+{
+  bson_destroy((bson_t*)_bson);
+  delete (bson_t*)_bson;
+  _bson = bson_new_from_data(bson, len);
+  _parent = _bson;
+}
+
+BSONObject& BSONObject::operator=(const BSONObject& bson)
+{
+  if (&bson == this)
+  {
+    return *this;
+  }
+  bson_destroy((bson_t*)_bson);
+  _bson = bson_copy((bson_t*)bson._bson);
+  _parent = _bson;
+  return *this;
+}
 
 bool BSONObject::appendString(const std::string& key, const std::string& value)
 {

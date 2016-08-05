@@ -299,6 +299,11 @@ void ZMQSocket::internal_close()
 
 bool ZMQSocket::sendAndReceive(const std::string& cmd, const std::string& data, std::string& response, unsigned int timeoutms)
 {
+  if (_type == PUSH)
+  {
+    return false;
+  }
+  
   OSS::mutex_critic_sec_lock lock(_mutex);
   
   if (!internal_send_request(cmd, data))
@@ -350,6 +355,11 @@ bool ZMQSocket::internal_send_request(const std::string& cmd, const std::string&
 
 bool ZMQSocket::sendReply(const std::string& data)
 {
+  if (_type == PUSH || _type == REP)
+  {
+    return false;
+  }
+  
   OSS::mutex_critic_sec_lock lock(_mutex);
   return internal_send_reply(data);
 }
@@ -367,6 +377,11 @@ bool ZMQSocket::internal_send_reply(const std::string& data)
 
 bool ZMQSocket::receiveReply(std::string& data, unsigned int timeoutms)
 {
+  if (_type == PUSH)
+  {
+    return false;
+  }
+  
   OSS::mutex_critic_sec_lock lock(_mutex);
   return internal_receive_reply(data, timeoutms);
 }
@@ -379,7 +394,7 @@ bool ZMQSocket::internal_receive_reply(std::string& response, unsigned int timeo
     return false;
   }
 
-  if (!_isInproc && !zeromq_poll_read(zeromq_socket(_socket), timeoutms))
+  if (timeoutms && !_isInproc && !zeromq_poll_read(zeromq_socket(_socket), timeoutms))
   {
     OSS_LOG_ERROR("ZMQSocket::internal_receive() - Exception: zeromq_poll_read() failed");
     _canReconnect = true;
@@ -393,6 +408,11 @@ bool ZMQSocket::internal_receive_reply(std::string& response, unsigned int timeo
 
 bool ZMQSocket::receiveRequest(std::string& cmd, std::string& data, unsigned int timeoutms)
 {
+  if (_type == PUSH)
+  {
+    return false;
+  }
+  
   OSS::mutex_critic_sec_lock lock(_mutex);
   return internal_receive_request(cmd, data, timeoutms);
 }
@@ -404,7 +424,7 @@ bool ZMQSocket::internal_receive_request(std::string& cmd, std::string& data, un
     return false;
   }
   
-  if (!zeromq_poll_read(zeromq_socket(_socket), timeoutms))
+  if (timeoutms && !zeromq_poll_read(zeromq_socket(_socket), timeoutms))
   {
     OSS_LOG_ERROR("ZMQSocket::internal_receive() - Exception: zeromq_poll_read() failed");
     return false;

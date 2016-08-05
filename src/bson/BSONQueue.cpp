@@ -28,18 +28,15 @@ namespace BSON {
   
 using OSS::ZMQ::ZMQSocket; 
 
-const int BSONQueue::REQ = ZMQSocket::REQ;
-const int BSONQueue::REP = ZMQSocket::REP;
-const int BSONQueue::PUSH = ZMQSocket::PUSH;
-const int BSONQueue::PULL = ZMQSocket::PULL;
     
-BSONQueue::BSONQueue(int role, const std::string& name) :
+BSONQueue::BSONQueue(Role role, const std::string& name) :
+  _role(role),
   _name(name),
   _pSocket(0)
 {
-  _role = (Role)role,
   _address = "inproc://";
   _address += _name;
+  initSocket();
 }
     
 BSONQueue::~BSONQueue()
@@ -49,16 +46,11 @@ BSONQueue::~BSONQueue()
 
 bool BSONQueue::enqueue(BSONObject& msg)
 {
-  if (!initSocket())
+  if (_role != PRODUCER)
   {
     return false;
   }
-  
-  if (_role == PULL)
-  {
-    return false;
-  }
-  
+    
   if (msg.getDataLength() == 0)
   {
     return false;
@@ -67,14 +59,46 @@ bool BSONQueue::enqueue(BSONObject& msg)
   std::string data((const char*)msg.getData(), msg.getDataLength());
   return _pSocket->sendRequest("BSONQueue::enqueue", data);
 }
+
 bool BSONQueue::dequeue(BSONObject& msg)
 {
-  if (!initSocket())
+  if (_role != CONSUMER)
   {
     return false;
   }
   
-  return false;
+  std::string cmd;
+  std::string bson;
+  if (!_pSocket->receiveRequest(cmd, bson))
+  {
+    return false;
+  }
+  
+  if (cmd != "BSONQueue::enqueue" || bson.empty())
+  {
+    return false;
+  }
+  
+  msg.reset((uint8_t*)bson.data(), bson.size());
+  return true;
+}
+
+bool BSONQueue::enqueue(BSONDocument& msg)
+{
+  BSONObject bson;
+  msg.toBSON(bson);
+  return enqueue(bson);
+}
+
+bool BSONQueue::dequeue(BSONDocument& msg)
+{
+  BSONObject bson;
+  if (!dequeue(bson))
+  {
+    return false;
+  }
+  msg.fromBSON(bson);
+  return true;
 }
 
 bool BSONQueue::initSocket()
@@ -83,20 +107,25 @@ bool BSONQueue::initSocket()
   {
     return true;
   }
-  _pSocket = new ZMQSocket(_role);
-  
-  if ((_role == REQ || _role == PUSH) && _pSocket->connect(_address))
+  if (_role == PRODUCER)
   {
-    return true;
+    _pSocket = new ZMQSocket(ZMQSocket::PUSH);
+    if (_pSocket->connect(_address))
+    {
+      return true;
+    }
   }
-  else if ((_role == REP || _role == PULL) && _pSocket->bind(_address))
+  else
   {
-     return true;
+    _pSocket = new ZMQSocket(ZMQSocket::PULL);
+    if (_pSocket->bind(_address))
+    {
+      return true;
+    }
   }
-  
+ 
   delete _pSocket;
   _pSocket = 0;
-  
   return false;
 }
 

@@ -24,6 +24,7 @@
 #if ENABLE_FEATURE_ZMQ
 
 #include "OSS/BSON/BSONObject.h"
+#include "OSS/BSON/BSONDocument.h"
 #include "OSS/ZMQ/ZMQSocket.h"
 
 namespace OSS {
@@ -33,16 +34,18 @@ namespace BSON {
 class BSONQueue : boost::noncopyable
 {
 public:
-  static const int REQ;
-  static const int REP;
-  static const int PUSH;
-  static const int PULL;
-  typedef OSS::ZMQ::ZMQSocket::SocketType Role;
+  enum Role
+  {
+    PRODUCER,
+    CONSUMER
+  };
   
-  BSONQueue(int role, const std::string& name);
+  BSONQueue(Role role, const std::string& name);
   ~BSONQueue();
   bool enqueue(BSONObject& msg);
   bool dequeue(BSONObject& msg);
+  bool enqueue(BSONDocument& msg);
+  bool dequeue(BSONDocument& msg);
   const std::string& getName() const;
     
 protected:

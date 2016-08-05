@@ -61,6 +61,7 @@ See also: For more string comparison tricks (substring, prefix, suffix, and regu
 #include <memory>
 
 #include "gtest/gtest.h"
+#include "OSS/build.h"
 #include "OSS/BSON/BSON.h"
 
 
@@ -74,6 +75,8 @@ using OSS::BSON::BSONInt32;
 using OSS::BSON::BSONInt64;
 using OSS::BSON::BSONArray;
 using OSS::BSON::BSONDocument;
+using OSS::BSON::BSONQueue;
+
 
 TEST(BSONTest, BSONDoc)
 {
@@ -141,5 +144,68 @@ TEST(BSONTest, BSONDoc)
   doc.toBSON(bson);
   ASSERT_TRUE(doc.toJSON() == bson.stringify()); 
 }
+
+#if ENABLE_FEATURE_ZMQ
+
+TEST(BSONTest, BSONBSONQueue)
+{
+  BSONQueue producer(BSONQueue::PRODUCER, "q1");
+  BSONQueue consumer(BSONQueue::CONSUMER, "q1");
+  
+  BSONDocument work;
+  work["string"] = BSONString("This is a UTF8 string");
+  work["bool"] = BSONBool(false);
+  work["double"] = BSONDouble(123.456);
+  work["int32"] = BSONInt32(123456);
+  work["int64"] = BSONInt64(123456);
+  
+  work["array"][0] = BSONString("Element 1");
+  work["array"][1] = BSONString("Element 2");
+  work["array"][2] = BSONString("Element 3");
+  
+  work["document"]["key1"] = BSONString("Element 1");
+  work["document"]["key2"] = BSONString("Element 2");
+  work["document"]["key3"] = BSONString("Element 3");
+  
+  work["document"]["key4"][0] = BSONString("Element 1");
+  work["document"]["key4"][1] = BSONString("Element 2");
+  work["document"]["key4"][2] = BSONString("Element 3");
+  
+  ASSERT_TRUE(producer.enqueue(work));
+  
+  BSONDocument doc;
+  ASSERT_TRUE(consumer.dequeue(doc));
+  
+  BSONValue item;
+  item = doc["string"];
+  ASSERT_TRUE(item.isType(BSONValue::TYPE_STRING));
+  ASSERT_TRUE(item.asString() == "This is a UTF8 string");
+  item = doc["bool"];
+  ASSERT_TRUE(item.isType(BSONValue::TYPE_BOOL));
+  ASSERT_TRUE(item.asBoolean() == false);
+  item = doc["double"];
+  ASSERT_TRUE(item.isType(BSONValue::TYPE_DOUBLE));
+  ASSERT_TRUE(item.asDouble() == 123.456);
+  item  =doc["int32"];
+  ASSERT_TRUE(item.isType(BSONValue::TYPE_INT32));
+  ASSERT_TRUE(item.asInt32() == 123456);
+  item = doc["int64"];
+  ASSERT_TRUE(item.isType(BSONValue::TYPE_INT64));
+  ASSERT_TRUE(item.asInt64() == 123456);
+  
+  ASSERT_TRUE(doc["array"][0].asString() == "Element 1");
+  ASSERT_TRUE(doc["array"][1].asString() == "Element 2");
+  ASSERT_TRUE(doc["array"][2].asString() == "Element 3");
+  
+  ASSERT_TRUE(doc["document"]["key1"].asString() == "Element 1");
+  ASSERT_TRUE(doc["document"]["key2"].asString() == "Element 2");
+  ASSERT_TRUE(doc["document"]["key3"].asString() == "Element 3");
+  
+  ASSERT_TRUE(doc["document"]["key4"][0].asString() == "Element 1");
+  ASSERT_TRUE(doc["document"]["key4"][1].asString() == "Element 2");
+  ASSERT_TRUE(doc["document"]["key4"][2].asString() == "Element 3");
+}
+
+#endif
 
 

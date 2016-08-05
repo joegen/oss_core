@@ -31,6 +31,11 @@
 #include "OSS/BSON/BSONArray.h"
 #include "OSS/BSON/BSONDocument.h"
 
+#include "OSS/build.h"
+#if ENABLE_FEATURE_ZMQ
+#include "OSS/BSON/BSONQueue.h"
+#endif
+
 
 #endif //OSS_BSON_H_INCLUDED
 
