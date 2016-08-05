@@ -24,6 +24,7 @@
 #include <vector>
 #include <map>
 #include <boost/any.hpp>
+#include <stdint.h>
 #include "OSS/OSS.h"
 
 
