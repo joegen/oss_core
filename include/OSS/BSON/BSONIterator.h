@@ -22,6 +22,7 @@
 #define OSS_BSONITERATOR_H_INCLUDED
 
 
+#include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 #include "OSS/OSS.h"
 
