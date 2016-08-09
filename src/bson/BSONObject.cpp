@@ -35,7 +35,7 @@ static bool bson_find_element(bson_t* bson, const std::string& key, bson_iter_t&
  
 BSONObject::BSONObject()
 {
-  _bson = new bson_t();
+  _bson = malloc(sizeof(bson_t));
   _parent = _bson;
   bson_init((bson_t*)_parent);
 }
@@ -55,13 +55,13 @@ BSONObject::BSONObject(const uint8_t* bson, std::size_t len)
 BSONObject::~BSONObject()
 {
   bson_destroy((bson_t*)_bson);
-  delete (bson_t*)_bson;
+  free((bson_t*)_bson);
 }
 
 void BSONObject::reset(const uint8_t* bson, std::size_t len)
 {
   bson_destroy((bson_t*)_bson);
-  delete (bson_t*)_bson;
+  free ((bson_t*)_bson);
   _bson = bson_new_from_data(bson, len);
   _parent = _bson;
 }
