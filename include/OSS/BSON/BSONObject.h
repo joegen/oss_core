@@ -26,6 +26,7 @@
 #include <boost/any.hpp>
 #include <stdint.h>
 #include "OSS/OSS.h"
+#include "OSS/BSON/BSONIterator.h"
 
 
 namespace OSS {
@@ -35,6 +36,7 @@ namespace BSON {
 class BSONObject
 {
 public:  
+  typedef BSONIterator::Ptr iterator;
   BSONObject();
   BSONObject(const BSONObject& bson);
   BSONObject(const uint8_t* bson, std::size_t len);
@@ -77,6 +79,9 @@ public:
   std::size_t getDataLength();
   
   BSONObject* clone();  
+  
+  BSONObject::iterator begin();
+  BSONObject::iterator find(const std::string& key);
 protected:
   void*  startSubDocument(const std::string& key);
   void*  endSubDocument(const std::string& key);

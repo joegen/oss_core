@@ -207,6 +207,7 @@ nobase_include_HEADERS = \
     OSS/BSON/BSONDocument.h \
     OSS/BSON/BSONArray.h \
     OSS/BSON/BSONQueue.h \
+    OSS/BSON/BSONIterator.h \
     OSS/RTP/RTPPacket.h \
     OSS/RTP/RTPPCAPReader.h \
     OSS/RTP/RTPProxy.h \
