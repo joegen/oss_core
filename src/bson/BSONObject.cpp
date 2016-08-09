@@ -393,6 +393,37 @@ std::size_t BSONObject::getDataLength()
   }
   return ((bson_t*)_parent)->len;
 }
+
+
+BSONObject::iterator BSONObject::begin()
+{
+  BSONIterator* pIter = new BSONIterator();
+  bson_iter_t* bson_iter = (bson_iter_t*)pIter->_iter;
+  if (bson_iter_init(bson_iter, (bson_t*)_parent))
+  {
+    return BSONObject::iterator(pIter);
+  }
+  else
+  {
+    delete pIter;
+    return BSONObject::iterator();
+  }
+}
+
+BSONObject::iterator BSONObject::find(const std::string& key)
+{
+  BSONIterator* pIter = new BSONIterator();
+  bson_iter_t* bson_iter = (bson_iter_t*)pIter->_iter;
+  if (bson_iter_init_find(bson_iter, (bson_t*)_parent, key.c_str()))
+  {
+    return BSONObject::iterator(pIter);
+  }
+  else
+  {
+    delete pIter;
+    return BSONObject::iterator();
+  }
+}
  
   
 } } //OSS::BSON
