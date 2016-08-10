@@ -35,7 +35,28 @@ class BSONIterator : boost::noncopyable
 {
 public:
   typedef boost::shared_ptr<BSONIterator> Ptr;
+  
+  static const int BSON_TYPE_DOUBLE;
+  static const int BSON_TYPE_STRING;
+  static const int BSON_TYPE_DOCUMENT;
+  static const int BSON_TYPE_ARRAY;
+  static const int BSON_TYPE_UNDEFINED;
+  static const int BSON_TYPE_BOOL;
+  static const int BSON_TYPE_INT32;
+  static const int BSON_TYPE_INT64;
+  
   ~BSONIterator();
+  
+  bool getString(std::string& value) const;
+  bool getBoolean(bool& value) const;
+  bool getInt32(int32_t& value) const;
+  bool getInt64(int64_t& value) const;
+  bool getIntptr(intptr_t& value) const;
+  bool getDouble(double& value) const;
+  
+  bool getKey(std::string& key) const;
+  int getType() const;
+  
   bool next();
   bool eof();
   

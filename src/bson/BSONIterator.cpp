@@ -25,6 +25,16 @@ namespace OSS {
 namespace BSON {
   
   
+const int BSONIterator::BSON_TYPE_DOUBLE = BSON_TYPE_DOUBLE;
+const int BSONIterator::BSON_TYPE_STRING = BSON_TYPE_UTF8;
+const int BSONIterator::BSON_TYPE_DOCUMENT = BSON_TYPE_DOCUMENT;
+const int BSONIterator::BSON_TYPE_ARRAY = BSON_TYPE_ARRAY;
+const int BSONIterator::BSON_TYPE_UNDEFINED = BSON_TYPE_UNDEFINED;
+const int BSONIterator::BSON_TYPE_BOOL = BSON_TYPE_BOOL;
+const int BSONIterator::BSON_TYPE_INT32 = BSON_TYPE_INT32;
+const int BSONIterator::BSON_TYPE_INT64 = BSON_TYPE_INT64;  
+  
+
 BSONIterator::BSONIterator() : 
   _eof(false)
 {
@@ -44,6 +54,96 @@ bool BSONIterator::next()
   }
   _eof = !bson_iter_next((bson_iter_t*)_iter);
   return !_eof;
+}
+
+bool BSONIterator::getKey(std::string& key) const
+{
+  const char* key_ = bson_iter_key((bson_iter_t*)_iter);
+  if (!key_)
+  {
+    return false;
+  }
+  key = key_;
+  return !key.empty();
+}
+
+int BSONIterator::getType() const
+{
+  return bson_iter_type((bson_iter_t*)_iter);
+}
+
+bool BSONIterator::getString(std::string& value) const
+{
+  if (getType() != BSON_TYPE_STRING)
+  {
+    return false;
+  }
+  const char* val = bson_iter_utf8((bson_iter_t*)_iter, 0);
+  if (!val)
+  {
+    return false;
+  }
+  
+  value = val;
+  return !value.empty();
+}
+
+bool BSONIterator::getBoolean(bool& value) const
+{
+  if (getType() != BSON_TYPE_BOOL)
+  {
+    return false;
+  }
+  value = bson_iter_bool((bson_iter_t*)_iter);
+  return true;
+}
+
+bool BSONIterator::getInt32(int32_t& value) const
+{
+  if (getType() != BSON_TYPE_INT32)
+  {
+    return false;
+  }
+  value = bson_iter_int32((bson_iter_t*)_iter);
+  return true;
+}
+
+bool BSONIterator::getInt64(int64_t& value) const
+{
+  if (getType() != BSON_TYPE_INT64)
+  {
+    return false;
+  }
+  value = bson_iter_int64((bson_iter_t*)_iter);
+  return true;
+}
+
+bool BSONIterator::getIntptr(intptr_t& value) const
+{
+  int type = getType();
+  if (type != BSON_TYPE_INT32 && type != BSON_TYPE_INT64)
+  {
+    return false;
+  }
+  if (type == BSON_TYPE_INT32)
+  {
+    value = bson_iter_int32((bson_iter_t*)_iter);
+  }
+  else
+  {
+    value = bson_iter_int64((bson_iter_t*)_iter);
+  }
+  return true;
+}
+
+bool BSONIterator::getDouble(double& value) const
+{
+  if (getType() != BSON_TYPE_DOUBLE)
+  {
+    return false;
+  }
+  value = bson_iter_double((bson_iter_t*)_iter);
+  return true;
 }
 
 
