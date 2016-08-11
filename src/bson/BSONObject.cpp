@@ -397,7 +397,7 @@ std::size_t BSONObject::getDataLength()
 
 BSONObject::iterator BSONObject::begin()
 {
-  BSONIterator* pIter = new BSONIterator();
+  BSONIterator* pIter = new BSONIterator(false);
   bson_iter_t* bson_iter = (bson_iter_t*)pIter->_iter;
   if (bson_iter_init(bson_iter, (bson_t*)_parent))
   {
@@ -412,7 +412,7 @@ BSONObject::iterator BSONObject::begin()
 
 BSONObject::iterator BSONObject::find(const std::string& key)
 {
-  BSONIterator* pIter = new BSONIterator();
+  BSONIterator* pIter = new BSONIterator(false);
   bson_iter_t* bson_iter = (bson_iter_t*)pIter->_iter;
   if (bson_iter_init_find(bson_iter, (bson_t*)_parent, key.c_str()))
   {

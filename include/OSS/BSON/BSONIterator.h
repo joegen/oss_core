@@ -60,11 +60,14 @@ public:
   bool next();
   bool eof();
   
+  Ptr recurse() const;
+  
 protected:
   friend class BSONObject;
-  BSONIterator();
+  BSONIterator(bool isChild);
   void* _iter;
   bool _eof;
+  bool _isChild;
 };
 
 

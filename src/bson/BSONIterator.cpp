@@ -35,15 +35,23 @@ const int BSONIterator::BSON_TYPE_INT32 = BSON_TYPE_INT32;
 const int BSONIterator::BSON_TYPE_INT64 = BSON_TYPE_INT64;  
   
 
-BSONIterator::BSONIterator() : 
-  _eof(false)
+BSONIterator::BSONIterator(bool isChild) : 
+  _iter(0),
+  _eof(false),
+  _isChild(isChild)
 {
-  _iter = malloc(sizeof(bson_iter_t));
+  if (!_isChild)
+  {
+    _iter = malloc(sizeof(bson_iter_t));
+  }
 }
 
 BSONIterator::~BSONIterator()
 {
-  free(_iter);
+  if (!_isChild)
+  {
+    free(_iter);
+  }
 }
 
 bool BSONIterator::next()
@@ -144,6 +152,21 @@ bool BSONIterator::getDouble(double& value) const
   }
   value = bson_iter_double((bson_iter_t*)_iter);
   return true;
+}
+
+BSONIterator::Ptr BSONIterator::recurse() const
+{
+  int type = getType();
+  if (type == BSON_TYPE_ARRAY || type == BSON_TYPE_DOCUMENT)
+  {
+    BSONIterator* pChild = new BSONIterator(true);
+    if (bson_iter_recurse((bson_iter_t*)_iter, (bson_iter_t*)(pChild->_iter)))
+    {
+      return BSONIterator::Ptr(pChild);
+    }
+    delete pChild;
+  }
+  return BSONIterator::Ptr();
 }
 
 
