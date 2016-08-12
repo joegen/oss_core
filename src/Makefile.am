@@ -583,4 +583,4 @@ DISTCLEANFILES = Makefile.in
 #
 BUILT_SOURCES = boost_pch.hpp.gch
 %.hpp.gch: %.hpp
-	$(CXX) -D_REENTRANT -D_FILE_OFFSET_BITS=64 -O0 -fno-implement-inlines -g -O2 -fmessage-length=0 -Wall -Wformat -Wwrite-strings -Wpointer-arith -fPIC -DPIC -c $<
+	$(CXX) -D_REENTRANT -D_FILE_OFFSET_BITS=64 -O0 -g -O2 -fmessage-length=0 -Wall -Wformat -Wwrite-strings -Wpointer-arith -fPIC -DPIC -c $<
