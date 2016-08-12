@@ -316,7 +316,7 @@ namespace zmq
                 throw error_t ();
         }
 
-#if ZMQ_VERSION_MAJOR < 4
+#if ZMQ_VERSION_MAJOR < 3
         inline bool send (message_t &msg_, int flags_ = 0)
         {
             int rc = zmq_send (ptr, &msg_, flags_);
@@ -336,6 +336,26 @@ namespace zmq
                 return false;
             throw error_t ();
         }
+#elif ZMQ_VERSION_MAJOR == 3
+        inline bool send (message_t &msg_, int flags_ = 0)
+        {
+            int nbytes = zmq_sendmsg (ptr, &(msg_), flags_);
+            if (nbytes >= 0)
+                return true;
+            if (zmq_errno () == EAGAIN)
+                return false;
+            throw error_t ();
+        }
+        
+        inline bool recv (message_t *msg_, int flags_ = 0)
+        {
+            int nbytes = zmq_recvmsg (ptr,(msg_), flags_);
+            if (nbytes >= 0)
+                return true;
+            if (zmq_errno () == EAGAIN)
+                return false;
+            throw error_t ();
+        }  
 #else
         inline bool send (message_t &msg_, int flags_ = 0)
         {
