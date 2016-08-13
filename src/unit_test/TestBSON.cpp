@@ -64,7 +64,7 @@ See also: For more string comparison tricks (substring, prefix, suffix, and regu
 
 
 
-using OSS::BSON::BSONObject;
+using OSS::BSON::BSONParser;
 using OSS::BSON::BSONValue;
 using OSS::BSON::BSONString;
 using OSS::BSON::BSONBool;
@@ -73,7 +73,10 @@ using OSS::BSON::BSONInt32;
 using OSS::BSON::BSONInt64;
 using OSS::BSON::BSONArray;
 using OSS::BSON::BSONDocument;
+#if ENABLE_FEATURE_ZMQ
 using OSS::BSON::BSONQueue;
+#endif
+using OSS::BSON::BSONIterator;
 
 
 TEST(BSONTest, BSONDoc)
@@ -138,9 +141,130 @@ TEST(BSONTest, BSONDoc)
   ASSERT_EQ(doc["document"].size(), 4);
   ASSERT_EQ(doc["document"]["key4"].size(), 3);
   
-  BSONObject bson;
+  BSONParser bson;
   doc.toBSON(bson);
   ASSERT_TRUE(doc.toJSON() == bson.stringify()); 
+  
+  //
+  // Test iterator
+  //
+  std::string string_value;
+  bool bool_value = true;
+  double double_value = 0.00;
+  int32_t int32_value = 0;
+  int64_t int64_value = 0;
+  bool found_document = false;
+  bool found_array = false;
+  bool found_inner_array = false;
+  
+  for (BSONParser::iterator iter = bson.begin(); iter && !iter->eof(); iter->next())
+  {
+    if (iter->getType() == BSONValue::TYPE_STRING)
+    {
+      ASSERT_TRUE(iter->getString(string_value));
+    }
+    else if (iter->getType() == BSONValue::TYPE_BOOL)
+    {
+      ASSERT_TRUE(iter->getBoolean(bool_value));
+    }
+    else if (iter->getType() == BSONValue::TYPE_DOUBLE)
+    {
+      ASSERT_TRUE(iter->getDouble(double_value));
+    }
+    else if (iter->getType() == BSONValue::TYPE_INT32)
+    {
+      ASSERT_TRUE(iter->getInt32(int32_value));
+    }
+    else if (iter->getType() == BSONValue::TYPE_INT64)
+    {
+      ASSERT_TRUE(iter->getInt64(int64_value));
+    }
+    else if (iter->getType() == BSONValue::TYPE_ARRAY)
+    {
+      found_array = true;
+      int index = 0;
+      for (BSONParser::iterator array_iter = iter->recurse(); array_iter && !array_iter->eof(); array_iter->next())
+      {
+        std::string value;
+        if (index == 0)
+        {
+          ASSERT_TRUE(array_iter->getString(value));
+          ASSERT_STREQ(value.c_str(), "Element 1");
+        }
+        else if (index == 1)
+        {
+          ASSERT_TRUE(array_iter->getString(value));
+          ASSERT_STREQ(value.c_str(), "Element 2");
+        }
+        else if (index == 2)
+        {
+          ASSERT_TRUE(array_iter->getString(value));
+          ASSERT_STREQ(value.c_str(), "Element 3");
+        }
+        index++;
+      }
+    }
+    else if (iter->getType() == BSONValue::TYPE_DOCUMENT)
+    {
+      found_document = true;
+      std::string key1, key2, key3;
+      for (BSONParser::iterator doc_iter = iter->recurse(); doc_iter && !doc_iter->eof(); doc_iter->next())
+      {
+        std::string key;
+        if (doc_iter->getKey(key) && key == "key1")
+        {
+          ASSERT_TRUE(doc_iter->getString(key1));
+        }
+        else if (doc_iter->getKey(key) && key == "key2")
+        {
+          ASSERT_TRUE(doc_iter->getString(key2));
+        }
+        else if (doc_iter->getKey(key) && key == "key3")
+        {
+          ASSERT_TRUE(doc_iter->getString(key3));
+        }
+        else if (doc_iter->getKey(key) && key == "key4")
+        {
+          ASSERT_TRUE(doc_iter->getType() == BSONValue::TYPE_ARRAY);
+          found_inner_array = true;
+          int index = 0;
+          for (BSONParser::iterator array_iter = doc_iter->recurse(); array_iter && !array_iter->eof(); array_iter->next())
+          {
+            std::string value;
+            if (index == 0)
+            {
+              ASSERT_TRUE(array_iter->getString(value));
+              ASSERT_STREQ(value.c_str(), "Test get() function");
+            }
+            else if (index == 1)
+            {
+              ASSERT_TRUE(array_iter->getString(value));
+              ASSERT_STREQ(value.c_str(), "Element 2");
+            }
+            else if (index == 2)
+            {
+              ASSERT_TRUE(array_iter->getString(value));
+              ASSERT_STREQ(value.c_str(), "Element 3");
+            }
+            index++;
+          }
+        }
+      }
+      ASSERT_STREQ(key1.c_str(), "Element 1");
+      ASSERT_STREQ(key2.c_str(), "Element 2");
+      ASSERT_STREQ(key3.c_str(), "Element 3");
+    }
+  }
+  
+  ASSERT_STREQ(string_value.c_str(), "This is a UTF8 string");
+  ASSERT_FALSE(bool_value);
+  ASSERT_EQ(double_value, 123.456);
+  ASSERT_EQ(int32_value, 123456);
+  ASSERT_EQ(int64_value, 123456);
+  ASSERT_TRUE(found_document);
+  ASSERT_TRUE(found_array);
+  ASSERT_TRUE(found_inner_array);
+  
 }
 
 #if ENABLE_FEATURE_ZMQ

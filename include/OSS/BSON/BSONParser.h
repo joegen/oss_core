@@ -17,8 +17,8 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#ifndef OSS_BSONOBJECT_H_INCLUDED
-#define OSS_BSONOBJECT_H_INCLUDED
+#ifndef OSS_BSONPARSER_H_INCLUDED
+#define OSS_BSONPARSER_H_INCLUDED
 
 #include <string>
 #include <vector>
@@ -33,17 +33,17 @@ namespace OSS {
 namespace BSON {
 
   
-class BSONObject
+class BSONParser
 {
 public:  
   typedef BSONIterator::Ptr iterator;
-  BSONObject();
-  BSONObject(const BSONObject& bson);
-  BSONObject(const uint8_t* bson, std::size_t len);
-  ~BSONObject();
+  BSONParser();
+  BSONParser(const BSONParser& bson);
+  BSONParser(const uint8_t* bson, std::size_t len);
+  ~BSONParser();
   
   void reset(const uint8_t* bson, std::size_t len);
-  BSONObject& operator=(const BSONObject& bson);
+  BSONParser& operator=(const BSONParser& bson);
   
   bool appendString(const std::string& key, const std::string& value);
   bool appendBoolean(const std::string& key, bool value);
@@ -78,10 +78,10 @@ public:
   const uint8_t* getData();
   std::size_t getDataLength();
   
-  BSONObject* clone();  
+  BSONParser* clone();  
   
-  BSONObject::iterator begin();
-  BSONObject::iterator find(const std::string& key);
+  BSONParser::iterator begin();
+  BSONParser::iterator find(const std::string& key);
 protected:
   void*  startSubDocument(const std::string& key);
   void*  endSubDocument(const std::string& key);
@@ -98,5 +98,5 @@ protected:
 
 
 
-#endif // OSS_BSONOBJECT_H_INCLUDED
+#endif // OSS_BSONPARSER_H_INCLUDED
 

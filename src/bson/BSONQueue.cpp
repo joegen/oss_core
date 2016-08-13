@@ -44,7 +44,7 @@ BSONQueue::~BSONQueue()
   delete _pSocket;
 }
 
-bool BSONQueue::enqueue(BSONObject& msg)
+bool BSONQueue::enqueue(BSONParser& msg)
 {
   if (_role != PRODUCER)
   {
@@ -60,7 +60,7 @@ bool BSONQueue::enqueue(BSONObject& msg)
   return _pSocket->sendRequest("BSONQueue::enqueue", data);
 }
 
-bool BSONQueue::dequeue(BSONObject& msg)
+bool BSONQueue::dequeue(BSONParser& msg)
 {
   if (_role != CONSUMER)
   {
@@ -85,14 +85,14 @@ bool BSONQueue::dequeue(BSONObject& msg)
 
 bool BSONQueue::enqueue(BSONDocument& msg)
 {
-  BSONObject bson;
+  BSONParser bson;
   msg.toBSON(bson);
   return enqueue(bson);
 }
 
 bool BSONQueue::dequeue(BSONDocument& msg)
 {
-  BSONObject bson;
+  BSONParser bson;
   if (!dequeue(bson))
   {
     return false;

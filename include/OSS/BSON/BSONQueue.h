@@ -23,7 +23,7 @@
 #include "OSS/build.h"
 #if ENABLE_FEATURE_ZMQ
 
-#include "OSS/BSON/BSONObject.h"
+#include "OSS/BSON/BSONParser.h"
 #include "OSS/BSON/BSONDocument.h"
 #include "OSS/ZMQ/ZMQSocket.h"
 
@@ -42,8 +42,8 @@ public:
   
   BSONQueue(Role role, const std::string& name);
   ~BSONQueue();
-  bool enqueue(BSONObject& msg);
-  bool dequeue(BSONObject& msg);
+  bool enqueue(BSONParser& msg);
+  bool dequeue(BSONParser& msg);
   bool enqueue(BSONDocument& msg);
   bool dequeue(BSONDocument& msg);
   const std::string& getName() const;

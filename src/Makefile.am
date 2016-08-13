@@ -342,7 +342,7 @@ liboss_core_la_SOURCES =  \
     bson/BSONDouble.cpp \
     bson/BSONDocument.cpp \
     bson/BSONArray.cpp \
-    bson/BSONObject.cpp \
+    bson/BSONParser.cpp \
     bson/BSONIterator.cpp
 
 if ENABLE_FEATURE_RESTKV

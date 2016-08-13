@@ -30,6 +30,8 @@
 #include "OSS/BSON/BSONInt64.h"
 #include "OSS/BSON/BSONArray.h"
 #include "OSS/BSON/BSONDocument.h"
+#include "OSS/BSON/BSONIterator.h"
+#include "OSS/BSON/BSONParser.h"
 
 #include "OSS/build.h"
 #if ENABLE_FEATURE_ZMQ

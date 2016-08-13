@@ -19,20 +19,11 @@
 
 
 #include "OSS/BSON/BSONIterator.h"
+#include "OSS/BSON/BSONValue.h"
 #include "OSS/BSON/libbson.h"
 
 namespace OSS {
 namespace BSON {
-  
-  
-const int BSONIterator::BSON_TYPE_DOUBLE = BSON_TYPE_DOUBLE;
-const int BSONIterator::BSON_TYPE_STRING = BSON_TYPE_UTF8;
-const int BSONIterator::BSON_TYPE_DOCUMENT = BSON_TYPE_DOCUMENT;
-const int BSONIterator::BSON_TYPE_ARRAY = BSON_TYPE_ARRAY;
-const int BSONIterator::BSON_TYPE_UNDEFINED = BSON_TYPE_UNDEFINED;
-const int BSONIterator::BSON_TYPE_BOOL = BSON_TYPE_BOOL;
-const int BSONIterator::BSON_TYPE_INT32 = BSON_TYPE_INT32;
-const int BSONIterator::BSON_TYPE_INT64 = BSON_TYPE_INT64;  
   
 
 BSONIterator::BSONIterator(bool isChild) : 
@@ -40,18 +31,12 @@ BSONIterator::BSONIterator(bool isChild) :
   _eof(false),
   _isChild(isChild)
 {
-  if (!_isChild)
-  {
-    _iter = malloc(sizeof(bson_iter_t));
-  }
+  _iter = malloc(sizeof(bson_iter_t));
 }
 
 BSONIterator::~BSONIterator()
 {
-  if (!_isChild)
-  {
-    free(_iter);
-  }
+  free(_iter);
 }
 
 bool BSONIterator::next()
@@ -82,7 +67,7 @@ int BSONIterator::getType() const
 
 bool BSONIterator::getString(std::string& value) const
 {
-  if (getType() != BSON_TYPE_STRING)
+  if (getType() != BSONValue::TYPE_STRING)
   {
     return false;
   }
@@ -98,7 +83,7 @@ bool BSONIterator::getString(std::string& value) const
 
 bool BSONIterator::getBoolean(bool& value) const
 {
-  if (getType() != BSON_TYPE_BOOL)
+  if (getType() != BSONValue::TYPE_BOOL)
   {
     return false;
   }
@@ -108,7 +93,7 @@ bool BSONIterator::getBoolean(bool& value) const
 
 bool BSONIterator::getInt32(int32_t& value) const
 {
-  if (getType() != BSON_TYPE_INT32)
+  if (getType() != BSONValue::TYPE_INT32)
   {
     return false;
   }
@@ -118,7 +103,7 @@ bool BSONIterator::getInt32(int32_t& value) const
 
 bool BSONIterator::getInt64(int64_t& value) const
 {
-  if (getType() != BSON_TYPE_INT64)
+  if (getType() != BSONValue::TYPE_INT64)
   {
     return false;
   }
@@ -129,11 +114,11 @@ bool BSONIterator::getInt64(int64_t& value) const
 bool BSONIterator::getIntptr(intptr_t& value) const
 {
   int type = getType();
-  if (type != BSON_TYPE_INT32 && type != BSON_TYPE_INT64)
+  if (type != BSONValue::TYPE_INT32 && type != BSONValue::TYPE_INT64)
   {
     return false;
   }
-  if (type == BSON_TYPE_INT32)
+  if (type == BSONValue::TYPE_INT32)
   {
     value = bson_iter_int32((bson_iter_t*)_iter);
   }
@@ -146,7 +131,7 @@ bool BSONIterator::getIntptr(intptr_t& value) const
 
 bool BSONIterator::getDouble(double& value) const
 {
-  if (getType() != BSON_TYPE_DOUBLE)
+  if (getType() != BSONValue::TYPE_DOUBLE)
   {
     return false;
   }
@@ -157,11 +142,12 @@ bool BSONIterator::getDouble(double& value) const
 BSONIterator::Ptr BSONIterator::recurse() const
 {
   int type = getType();
-  if (type == BSON_TYPE_ARRAY || type == BSON_TYPE_DOCUMENT)
+  if (type == BSONValue::TYPE_ARRAY || type == BSONValue::TYPE_DOCUMENT)
   {
     BSONIterator* pChild = new BSONIterator(true);
     if (bson_iter_recurse((bson_iter_t*)_iter, (bson_iter_t*)(pChild->_iter)))
     {
+      pChild->next();
       return BSONIterator::Ptr(pChild);
     }
     delete pChild;

@@ -21,7 +21,7 @@
 #define OSS_BASONVALUE_H_INCLUDED
 
 #include "OSS/OSS.h"
-#include "OSS/BSON/BSONObject.h"
+#include "OSS/BSON/BSONParser.h"
 #include <string>
 #include <map>
 #include <vector>
@@ -136,13 +136,13 @@ public:
   //
   // Serializing to BSON
   //
-  void toBSON(BSONObject& bson) const;
-  BSONObject toBSON() const;
+  void toBSON(BSONParser& bson) const;
+  BSONParser toBSON() const;
   
   //
   // serialize from BSON
   //
-  void fromBSON(const BSONObject& bson);
+  void fromBSON(const BSONParser& bson);
   
 protected:
   BSONValue& get(const Tokens& keys);
@@ -151,8 +151,8 @@ protected:
   const BSONValue& undefinedValue() const;
   void serializeDocument(const Document& document, std::ostream& strm) const;
   void serializeArray(const Array& array, std::ostream& strm) const;
-  void serializeDocument(const std::string& key, const Document& document, BSONObject& bson) const;
-  void serializeArray(const std::string& key, const Array& array, BSONObject& bson) const;
+  void serializeDocument(const std::string& key, const Document& document, BSONParser& bson) const;
+  void serializeArray(const std::string& key, const Array& array, BSONParser& bson) const;
   
   int _type;
   mutable boost::any _value;

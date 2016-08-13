@@ -437,7 +437,7 @@ std::string BSONValue::toJSON() const
 
 
 
-void BSONValue::serializeDocument(const std::string& key, const Document& document, BSONObject& bson) const
+void BSONValue::serializeDocument(const std::string& key, const Document& document, BSONParser& bson) const
 { 
   //
   // The root document doesn't have a key
@@ -483,7 +483,7 @@ void BSONValue::serializeDocument(const std::string& key, const Document& docume
   }
 }
 
-void BSONValue::serializeArray(const std::string& key, const Array& array, BSONObject& bson) const
+void BSONValue::serializeArray(const std::string& key, const Array& array, BSONParser& bson) const
 {
   if (!key.empty())
   {
@@ -529,7 +529,7 @@ void BSONValue::serializeArray(const std::string& key, const Array& array, BSONO
   }
 }
   
-void BSONValue::toBSON(BSONObject& bson) const
+void BSONValue::toBSON(BSONParser& bson) const
 {
   switch(_type)
   {
@@ -557,14 +557,14 @@ void BSONValue::toBSON(BSONObject& bson) const
   }
 }
   
-BSONObject BSONValue::toBSON() const
+BSONParser BSONValue::toBSON() const
 {
-  BSONObject bson;
+  BSONParser bson;
   toBSON(bson);
   return bson;
 }
 
-void BSONValue::fromBSON(const BSONObject& bson)
+void BSONValue::fromBSON(const BSONParser& bson)
 {
   
 }

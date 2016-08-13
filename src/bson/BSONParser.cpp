@@ -18,7 +18,7 @@
 //
 
 
-#include "OSS/BSON/BSONObject.h"
+#include "OSS/BSON/BSONParser.h"
 #include "OSS/BSON/libbson.h"
 #include <sstream>
 
@@ -33,32 +33,32 @@ static bool bson_find_element(bson_t* bson, const std::string& key, bson_iter_t&
   return bson_iter_init (&inner_iter, bson) && bson_iter_find_descendant(&inner_iter, key.c_str(), &iter);
 }
  
-BSONObject::BSONObject()
+BSONParser::BSONParser()
 {
   _bson = malloc(sizeof(bson_t));
   _parent = _bson;
   bson_init((bson_t*)_parent);
 }
 
-BSONObject::BSONObject(const BSONObject& bson)
+BSONParser::BSONParser(const BSONParser& bson)
 {
   _bson = bson_copy((bson_t*)bson._bson);
   _parent = _bson;
 }
 
-BSONObject::BSONObject(const uint8_t* bson, std::size_t len)
+BSONParser::BSONParser(const uint8_t* bson, std::size_t len)
 {
   _bson = bson_new_from_data(bson, len);
   _parent = _bson;
 }
 
-BSONObject::~BSONObject()
+BSONParser::~BSONParser()
 {
   bson_destroy((bson_t*)_bson);
   free((bson_t*)_bson);
 }
 
-void BSONObject::reset(const uint8_t* bson, std::size_t len)
+void BSONParser::reset(const uint8_t* bson, std::size_t len)
 {
   bson_destroy((bson_t*)_bson);
   free ((bson_t*)_bson);
@@ -66,7 +66,7 @@ void BSONObject::reset(const uint8_t* bson, std::size_t len)
   _parent = _bson;
 }
 
-BSONObject& BSONObject::operator=(const BSONObject& bson)
+BSONParser& BSONParser::operator=(const BSONParser& bson)
 {
   if (&bson == this)
   {
@@ -78,27 +78,27 @@ BSONObject& BSONObject::operator=(const BSONObject& bson)
   return *this;
 }
 
-bool BSONObject::appendString(const std::string& key, const std::string& value)
+bool BSONParser::appendString(const std::string& key, const std::string& value)
 {
   return bson_append_utf8 ((bson_t*)_parent, key.data(), key.length(), value.data(), value.length());
 }
 
-bool BSONObject::appendBoolean(const std::string& key, bool value)
+bool BSONParser::appendBoolean(const std::string& key, bool value)
 {
    return bson_append_bool((bson_t*)_parent, key.data(), key.length(), value);
 }
 
-bool BSONObject::appendInt32(const std::string& key, int32_t value)
+bool BSONParser::appendInt32(const std::string& key, int32_t value)
 {
   return bson_append_int32((bson_t*)_parent, key.data(), key.length(), value);
 }
 
-bool BSONObject::appendInt64(const std::string& key, int64_t value)
+bool BSONParser::appendInt64(const std::string& key, int64_t value)
 {
   return bson_append_int64((bson_t*)_parent, key.data(), key.length(), value);
 }
 
-bool BSONObject::appendIntptr(const std::string& key, intptr_t value)
+bool BSONParser::appendIntptr(const std::string& key, intptr_t value)
 {
   if (sizeof(intptr_t) == sizeof(int32_t))
   {
@@ -110,17 +110,17 @@ bool BSONObject::appendIntptr(const std::string& key, intptr_t value)
   }
 }
 
-bool BSONObject::appendDouble(const std::string& key, double value)
+bool BSONParser::appendDouble(const std::string& key, double value)
 {
   return bson_append_double((bson_t*)_parent, key.data(), key.length(), value);
 }
 
-bool BSONObject::appendUndefined(const std::string& key)
+bool BSONParser::appendUndefined(const std::string& key)
 {
   return bson_append_undefined((bson_t*)_parent, key.data(), key.length());
 }
 
-bool BSONObject::updateBoolean(const std::string& key, bool value)
+bool BSONParser::updateBoolean(const std::string& key, bool value)
 {
   bson_iter_t iter;
   if (bson_find_element((bson_t*)_parent, key, iter) && BSON_ITER_HOLDS_BOOL(&iter))
@@ -131,7 +131,7 @@ bool BSONObject::updateBoolean(const std::string& key, bool value)
   return false;
 }
 
-bool BSONObject::updateInt32(const std::string& key, int32_t value)
+bool BSONParser::updateInt32(const std::string& key, int32_t value)
 {
   bson_iter_t iter;
   if (bson_find_element((bson_t*)_parent, key, iter) && BSON_ITER_HOLDS_INT32(&iter))
@@ -142,7 +142,7 @@ bool BSONObject::updateInt32(const std::string& key, int32_t value)
   return false;
 }
 
-bool BSONObject::updateInt64(const std::string& key, int64_t value)
+bool BSONParser::updateInt64(const std::string& key, int64_t value)
 {
   bson_iter_t iter;
   if (bson_find_element((bson_t*)_parent, key, iter) && BSON_ITER_HOLDS_INT64(&iter))
@@ -153,7 +153,7 @@ bool BSONObject::updateInt64(const std::string& key, int64_t value)
   return false;
 }
 
-bool BSONObject::updateIntptr(const std::string& key, intptr_t value)
+bool BSONParser::updateIntptr(const std::string& key, intptr_t value)
 {
   if (sizeof(intptr_t) == sizeof(int32_t))
   {
@@ -165,7 +165,7 @@ bool BSONObject::updateIntptr(const std::string& key, intptr_t value)
   }
 }
 
-bool BSONObject::updateDouble(const std::string& key, double value)
+bool BSONParser::updateDouble(const std::string& key, double value)
 {
   bson_iter_t iter;
   if (bson_find_element((bson_t*)_parent, key, iter) && BSON_ITER_HOLDS_DOUBLE(&iter))
@@ -176,7 +176,7 @@ bool BSONObject::updateDouble(const std::string& key, double value)
   return false;
 }
 
-void* BSONObject::startSubDocument(const std::string& key)
+void* BSONParser::startSubDocument(const std::string& key)
 {
   _subKey.push_back(key);
   std::ostringstream strm;
@@ -190,7 +190,7 @@ void* BSONObject::startSubDocument(const std::string& key)
   return current;
 }
 
-void* BSONObject::endSubDocument(const std::string& key)
+void* BSONParser::endSubDocument(const std::string& key)
 {
   if (key != _subKey.back())
   {
@@ -216,7 +216,7 @@ void* BSONObject::endSubDocument(const std::string& key)
   return _subDocuments[_currentKey];
 }
   
-bool BSONObject::appendDocumentBegin(const std::string& key)
+bool BSONParser::appendDocumentBegin(const std::string& key)
 {
   bson_t* child = (bson_t*)startSubDocument(key);
   if (!child)
@@ -231,7 +231,7 @@ bool BSONObject::appendDocumentBegin(const std::string& key)
   return true;
 }
 
-bool BSONObject::appendDocumentEnd(const std::string& key)
+bool BSONParser::appendDocumentEnd(const std::string& key)
 {
   bson_t* parent = (bson_t*)endSubDocument(key);
   if (!parent)
@@ -245,7 +245,7 @@ bool BSONObject::appendDocumentEnd(const std::string& key)
   return true;
 }
 
-bool BSONObject::appendArrayBegin(const std::string& key)
+bool BSONParser::appendArrayBegin(const std::string& key)
 {
   bson_t* child = (bson_t*)startSubDocument(key);
   if (!child)
@@ -260,7 +260,7 @@ bool BSONObject::appendArrayBegin(const std::string& key)
   return true;
 }
 
-bool BSONObject::appendArrayEnd(const std::string& key)
+bool BSONParser::appendArrayEnd(const std::string& key)
 {
   bson_t* parent = (bson_t*)endSubDocument(key);
   if (!parent)
@@ -274,7 +274,7 @@ bool BSONObject::appendArrayEnd(const std::string& key)
   return true;
 }
 
-bool BSONObject::getString(const std::string& key, std::string& value) const
+bool BSONParser::getString(const std::string& key, std::string& value) const
 {
   bson_iter_t iter;
   if (!(bson_find_element((bson_t*)_parent, key, iter) && BSON_ITER_HOLDS_UTF8(&iter)))
@@ -285,7 +285,7 @@ bool BSONObject::getString(const std::string& key, std::string& value) const
   return true;
 }
 
-bool BSONObject::getBoolean(const std::string& key, bool& value) const
+bool BSONParser::getBoolean(const std::string& key, bool& value) const
 {
   bson_iter_t iter;
   if (!(bson_find_element((bson_t*)_parent, key, iter) && BSON_ITER_HOLDS_BOOL(&iter)))
@@ -296,7 +296,7 @@ bool BSONObject::getBoolean(const std::string& key, bool& value) const
   return true;
 }
 
-bool BSONObject::getInt32(const std::string& key, int32_t& value) const
+bool BSONParser::getInt32(const std::string& key, int32_t& value) const
 {
   bson_iter_t iter;
   if (!(bson_find_element((bson_t*)_parent, key, iter) && BSON_ITER_HOLDS_INT32(&iter)))
@@ -307,7 +307,7 @@ bool BSONObject::getInt32(const std::string& key, int32_t& value) const
   return true;
 }
 
-bool BSONObject::getInt64(const std::string& key, int64_t& value) const
+bool BSONParser::getInt64(const std::string& key, int64_t& value) const
 {
   bson_iter_t iter;
   if (!(bson_find_element((bson_t*)_parent, key, iter) && BSON_ITER_HOLDS_INT64(&iter)))
@@ -318,7 +318,7 @@ bool BSONObject::getInt64(const std::string& key, int64_t& value) const
   return true;
 }
 
-bool BSONObject::getIntptr(const std::string& key, intptr_t& value) const
+bool BSONParser::getIntptr(const std::string& key, intptr_t& value) const
 {
   bool ret = false;
   if (sizeof(intptr_t) == sizeof(int32_t))
@@ -342,7 +342,7 @@ bool BSONObject::getIntptr(const std::string& key, intptr_t& value) const
   return ret;
 }
 
-bool BSONObject::getDouble(const std::string& key, double& value) const
+bool BSONParser::getDouble(const std::string& key, double& value) const
 {
   bson_iter_t iter;
   if (!(bson_find_element((bson_t*)_parent, key, iter) && BSON_ITER_HOLDS_DOUBLE(&iter)))
@@ -353,12 +353,12 @@ bool BSONObject::getDouble(const std::string& key, double& value) const
   return true;
 }
 
-bool BSONObject::hasKey(const std::string& key) const
+bool BSONParser::hasKey(const std::string& key) const
 {
   return bson_has_field((bson_t*)_parent, key.c_str());
 }
 
-std::string BSONObject::stringify()
+std::string BSONParser::stringify()
 {
   std::string ret;
   size_t len;
@@ -371,12 +371,12 @@ std::string BSONObject::stringify()
   return ret;
 }
 
-BSONObject* BSONObject::clone()
+BSONParser* BSONParser::clone()
 {
-  return new BSONObject(*this);
+  return new BSONParser(*this);
 }
 
-const uint8_t* BSONObject::getData()
+const uint8_t* BSONParser::getData()
 {
   if (!_parent)
   {
@@ -385,7 +385,7 @@ const uint8_t* BSONObject::getData()
   return bson_get_data((bson_t*)_parent);
 }
 
-std::size_t BSONObject::getDataLength()
+std::size_t BSONParser::getDataLength()
 {
   if (!_parent)
   {
@@ -395,33 +395,34 @@ std::size_t BSONObject::getDataLength()
 }
 
 
-BSONObject::iterator BSONObject::begin()
+BSONParser::iterator BSONParser::begin()
 {
   BSONIterator* pIter = new BSONIterator(false);
   bson_iter_t* bson_iter = (bson_iter_t*)pIter->_iter;
   if (bson_iter_init(bson_iter, (bson_t*)_parent))
   {
-    return BSONObject::iterator(pIter);
+    pIter->next();
+    return BSONParser::iterator(pIter);
   }
   else
   {
     delete pIter;
-    return BSONObject::iterator();
+    return BSONParser::iterator();
   }
 }
 
-BSONObject::iterator BSONObject::find(const std::string& key)
+BSONParser::iterator BSONParser::find(const std::string& key)
 {
   BSONIterator* pIter = new BSONIterator(false);
   bson_iter_t* bson_iter = (bson_iter_t*)pIter->_iter;
   if (bson_iter_init_find(bson_iter, (bson_t*)_parent, key.c_str()))
   {
-    return BSONObject::iterator(pIter);
+    return BSONParser::iterator(pIter);
   }
   else
   {
     delete pIter;
-    return BSONObject::iterator();
+    return BSONParser::iterator();
   }
 }
  

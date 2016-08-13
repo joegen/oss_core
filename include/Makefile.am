@@ -198,7 +198,7 @@ nobase_include_HEADERS = \
     OSS/BSON/libbson.h \
     OSS/BSON/BSON.h \
     OSS/BSON/BSONValue.h \
-    OSS/BSON/BSONObject.h \
+    OSS/BSON/BSONParser.h \
     OSS/BSON/BSONString.h \
     OSS/BSON/BSONBool.h \
     OSS/BSON/BSONInt32.h \
