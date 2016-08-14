@@ -272,7 +272,9 @@ nobase_include_HEADERS = \
     OSS/EP/EndpointConnection.h \
     OSS/EP/EndpointListener.h \
     OSS/ZMQ/ZMQSocket.h \
-    OSS/ZMQ/zmq.hpp
+    OSS/ZMQ/zmq.hpp \
+    OSS/RAFT/libraft.h \
+    OSS/RAFT/RaftServer.h
 
 
 DISTCLEANFILES = Makefile.in

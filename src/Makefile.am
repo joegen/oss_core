@@ -56,7 +56,8 @@ endif
 
 AM_CFLAGS = \
     DHAVE_INET_PTON_NTOP \
-    -I@OSS_CORE_SRCDIR@/src/utl/linux/pidfile
+    -I@OSS_CORE_SRCDIR@/src/utl/linux/pidfile \
+    -I$(top_builddir)/include
 
 version_Current=@OSS_CORE_VERSION_CURRENT@
 version_Revision=@OSS_CORE_VERSION_REVISION@
@@ -343,7 +344,9 @@ liboss_core_la_SOURCES =  \
     bson/BSONDocument.cpp \
     bson/BSONArray.cpp \
     bson/BSONParser.cpp \
-    bson/BSONIterator.cpp
+    bson/BSONIterator.cpp \
+    raft/libraft.c \
+    raft/RaftServer.cpp
 
 if ENABLE_FEATURE_RESTKV
 liboss_core_la_SOURCES += \
