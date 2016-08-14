@@ -54,6 +54,8 @@ public:
   virtual bool initialize(const Options& options);
   bool addNode(int node_id);
   
+  const Options& opt() const;
+  Options& opt();
 protected:
   virtual void runTask();
   virtual void onTerminate();
@@ -64,10 +66,24 @@ protected:
 private:
   OSS::mutex_critic_sec _raftMutex;
   OSS::semaphore _sem;
-  void* _raft;
+  void** _raft;
   Options _opt;
 };
 
+
+//
+// Inlines
+//
+
+inline const RaftServer::Options& RaftServer::opt() const
+{
+  return _opt;
+}
+
+inline RaftServer::Options& RaftServer::opt()
+{
+  return _opt;
+}
 
 } } // OSS::RAFT
 

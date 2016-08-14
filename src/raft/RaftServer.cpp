@@ -29,6 +29,8 @@ extern "C" {
 namespace OSS {
 namespace RAFT {
   
+static raft_cbs_t raft_server_funcs;
+
 static void raft_server_seed_random()
 {
   static bool seeded = false;
@@ -47,7 +49,7 @@ static int raft_server_send_requestvote(
   raft_node_t* node,
   msg_requestvote_t* m)
 {
-  std::cout << "----> raft_server_send_requestvote" << std::endl;
+  std::cout << ((RaftServer*)user_data)->opt().node_id <<  "----> raft_server_send_requestvote" << std::endl;
   return 0;
 }
 
@@ -60,7 +62,7 @@ static int raft_server_send_appendentries(
   raft_node_t* node,
   msg_appendentries_t* m )
 {
-  std::cout << "----> raft_server_send_appendentries" << std::endl;
+  std::cout << ((RaftServer*)user_data)->opt().node_id << "----> raft_server_send_appendentries" << std::endl;
   return 0;
 }
 
@@ -69,10 +71,10 @@ static int raft_server_send_appendentries(
 //
 static int raft_server_applylog(
   raft_server_t* raft,
-  void* udata,
+  void* user_data,
   raft_entry_t* ety)
 {
-  std::cout << "----> raft_server_applylog" << std::endl;
+  std::cout << ((RaftServer*)user_data)->opt().node_id << "----> raft_server_applylog" << std::endl;
   return 0;
 }
 
@@ -82,10 +84,10 @@ static int raft_server_applylog(
 //
 static int raft_server_persist_vote(
     raft_server_t* raft,
-    void *udata,
+    void *user_data,
     const int voted_for )
 {
-  std::cout << "----> raft_server_persist_vote" << std::endl;
+  std::cout << ((RaftServer*)user_data)->opt().node_id << "----> raft_server_persist_vote" << std::endl;
   return 0;
 }
 
@@ -95,10 +97,10 @@ static int raft_server_persist_vote(
 //
 static int raft_server_persist_term(
   raft_server_t* raft,
-  void *udata,
+  void* user_data,
   const int current_term )
 {
-  std::cout << "----> raft_server_persist_term" << std::endl;
+  std::cout << ((RaftServer*)user_data)->opt().node_id << "----> raft_server_persist_term" << std::endl;
   return 0;
 }
 
@@ -107,11 +109,11 @@ static int raft_server_persist_term(
 //
 static int raft_server_log_offer(
     raft_server_t* raft,
-    void* udata,
+    void* user_data,
     raft_entry_t* ety,
     int ety_idx )
 {
-  std::cout << "----> raft_server_log_offer" << std::endl;
+  std::cout << ((RaftServer*)user_data)->opt().node_id << "----> raft_server_log_offer" << std::endl;
   return 0;
 }
 
@@ -121,11 +123,11 @@ static int raft_server_log_offer(
 //
 static int raft_server_log_poll(
     raft_server_t* raft,
-    void* udata,
+    void* user_data,
     raft_entry_t* entry,
     int ety_idx )
 {
-  std::cout << "----> raft_server_log_poll" << std::endl;
+  std::cout << ((RaftServer*)user_data)->opt().node_id <<  "----> raft_server_log_poll" << std::endl;
   return 0;
 }
 
@@ -136,11 +138,11 @@ static int raft_server_log_poll(
 //
 static int raft_server_log_try_pop(
   raft_server_t* raft,
-  void* udata,
+  void* user_data,
   raft_entry_t* entry,
   int ety_idx)
 {
-  std::cout << "----> raft_server_log_try_pop" << std::endl;
+  std::cout << ((RaftServer*)user_data)->opt().node_id << "----> raft_server_log_try_pop" << std::endl;
   return 0;
 }
 
@@ -152,31 +154,40 @@ static void raft_server_node_has_sufficient_logs(
     raft_server_t* raft,
     void *user_data,
     raft_node_t* node)
-{
-  std::cout << "----> raft_server_node_has_sufficient_logs" << std::endl;
+{ 
+  std::cout << ((RaftServer*)user_data)->opt().node_id << "----> raft_server_node_has_sufficient_logs" << std::endl;
 }
 
 //
 // Raft callback for displaying debugging information
 //
-void raft_server_log(raft_server_t* raft, raft_node_t* node, void *udata,
-                const char *buf)
+static void raft_server_log(
+  raft_server_t* raft, 
+  raft_node_t* node, 
+  void *user_data,
+  const char *buf)
 {
-  std::cout << "----> raft_server_log " << buf << std::endl;
+  std::cout << ((RaftServer*)user_data)->opt().node_id <<  "----> raft_server_log " << buf << std::endl;
 }
   
-raft_cbs_t raft_server_funcs = {
-    .send_requestvote            = raft_server_send_requestvote,
-    .send_appendentries          = raft_server_send_appendentries,
-    .applylog                    = raft_server_applylog,
-    .persist_vote                = raft_server_persist_vote,
-    .persist_term                = raft_server_persist_term,
-    .log_offer                   = raft_server_log_offer,
-    .log_poll                    = raft_server_log_poll,
-    .log_pop                     = raft_server_log_try_pop,
-    .node_has_sufficient_logs    = raft_server_node_has_sufficient_logs,
-    .log                         = raft_server_log,
-};  
+void raft_server_init_func()
+{
+  static bool init_func = false;
+  if (!init_func)
+  {
+     raft_server_funcs.send_requestvote = raft_server_send_requestvote;
+     raft_server_funcs.send_appendentries = raft_server_send_appendentries;
+     raft_server_funcs.applylog = raft_server_applylog;
+     raft_server_funcs.persist_vote = raft_server_persist_vote;
+     raft_server_funcs.persist_term = raft_server_persist_term;
+     raft_server_funcs.log_offer = raft_server_log_offer;
+     raft_server_funcs.log_poll = raft_server_log_poll;
+     raft_server_funcs.log_pop = raft_server_log_try_pop;
+     raft_server_funcs.node_has_sufficient_logs = raft_server_node_has_sufficient_logs;
+     raft_server_funcs.log = raft_server_log;
+  }
+}
+
 
 RaftServer::RaftServer() :
   _raft(0)
@@ -187,7 +198,7 @@ RaftServer::~RaftServer()
 {
   if (_raft)
   {
-    raft_free(&_raft);
+    raft_free(_raft);
   }
 }
 
@@ -209,13 +220,17 @@ bool RaftServer::initialize(const Options& options)
   //
   raft_server_seed_random();
   
-  raft_set_callbacks(&_raft, &raft_server_funcs, this);
+  //
+  // Initialize callbacks
+  //
+  raft_server_init_func();
+  raft_set_callbacks(_raft, &raft_server_funcs, this);
   
   //
   // add self
   //
   _opt = options;
-  if (!addNode(_opt.node_id));
+  if (!addNode(_opt.node_id))
   {
     return false;
   }
@@ -231,7 +246,7 @@ bool RaftServer::initialize(const Options& options)
   //
   // Set the election timeout
   //
-  raft_set_election_timeout(&_raft, _opt.election_timeout_ms);
+  raft_set_election_timeout(_raft, _opt.election_timeout_ms);
    
   return true;
 }
@@ -239,13 +254,14 @@ bool RaftServer::initialize(const Options& options)
 bool RaftServer::addNode(int node_id)
 {
   OSS::mutex_critic_sec_lock lock(_raftMutex);
-  return !!raft_add_node(&_raft, this, node_id, node_id == _opt.node_id);
+  raft_node_t* node = raft_add_node(_raft, this, node_id, node_id == _opt.node_id);
+  return !!(*node);
 }
 
 void RaftServer::callPeriodicTimer()
 {
   OSS::mutex_critic_sec_lock lock(_raftMutex);
-  raft_periodic(&_raft, _opt.periodic_timer_ms);
+  raft_periodic(_raft, _opt.periodic_timer_ms);
 }
 
 void RaftServer::onTerminate()
@@ -264,7 +280,7 @@ void RaftServer::runTask()
 void RaftServer::becomeMaster()
 {
   OSS::mutex_critic_sec_lock lock(_raftMutex);
-  raft_become_leader(&_raft);
+  raft_become_leader(_raft);
 }
 
 } } // OSS::RAFT
