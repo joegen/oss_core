@@ -478,12 +478,19 @@ AC_SUBST(OSS_CORE_SRCDIR)
 cd ${CURRENT_DIR}
 
 #
-# Additional CXX and C Flags
+# Common CXX and C Flags
 #
 OSS_CXX_C_FLAGS="-fmessage-length=0"
+#
+# Compiler warnings
+#
 OSS_CXX_WARNINGS="-Wall -Wformat -Wwrite-strings -Wpointer-arith"
-CXXFLAGS="$CXXFLAGS -O0 -fno-implement-inlines $OSS_CXX_C_FLAGS $OSS_CXX_WARNINGS"
-CFLAGS="$CFLAGS $OSS_CXX_C_FLAGS -Wnested-externs -Wno-shift-negative-value"
+OSS_C_WARNINGS="-Wall -Wunused-variable -Wnested-externs -Wno-shift-negative-value -Werror -Werror=return-type -Werror=uninitialized -Wcast-align -Wno-pointer-sign"
+#
+# Additional CXX and C Flags
+#
+CXXFLAGS="$CXXFLAGS $OSS_CXX_C_FLAGS $OSS_CXX_WARNINGS"
+CFLAGS="$CFLAGS $OSS_CXX_C_FLAGS $OSS_C_WARNINGS -fno-omit-frame-pointer -fno-common -fsigned-char -fPIC"
 
 AC_SUBST(CXXFLAGS)
 AC_SUBST(CFLAGS)

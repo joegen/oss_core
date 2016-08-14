@@ -21,18 +21,51 @@
 #define	OSS_RAFTSERVER_H_INCLUDED
 
 
+#include "OSS/UTL/Thread.h"
+
+
 namespace OSS {
 namespace RAFT {
   
+#define RAFT_ELECTION_TIMEOUT_MS 2000;
+#define RAFT_PERIODIC_TIMER_MS 1000;
   
-class RaftServer
+class RaftServer : public OSS::Thread
 {
 public:
-  RaftServer();
-  ~RaftServer();
+  struct Options
+  {
+    Options()
+    {
+      node_id = 0;
+      election_timeout_ms = RAFT_ELECTION_TIMEOUT_MS;
+      periodic_timer_ms = RAFT_PERIODIC_TIMER_MS;
+      is_master = false;
+    }
+    int node_id;
+    int election_timeout_ms;
+    int periodic_timer_ms;
+    bool is_master;
+  };
   
+  RaftServer();
+  virtual ~RaftServer();
+
+  virtual bool initialize(const Options& options);
+  bool addNode(int node_id);
+  
+protected:
+  virtual void runTask();
+  virtual void onTerminate();
+  
+  void callPeriodicTimer();
+  void becomeMaster();
+
 private:
+  OSS::mutex_critic_sec _raftMutex;
+  OSS::semaphore _sem;
   void* _raft;
+  Options _opt;
 };
 
 

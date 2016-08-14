@@ -200,9 +200,6 @@ liboss_core_la_LDFLAGS = \
 
 liboss_core_la_LIBADD = @OSS_CORE_DEP_LIBS@
 
-# this is helpful if you're debugging something with lots of inlines
-liboss_core_la_CXXFLAGS = -O0 -fno-implement-inlines 
-
 liboss_core_la_CFLAGS = \
     -DHAVE_INET_PTON_NTOP
 
@@ -527,7 +524,8 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestDigestAuth.cpp \
 	unit_test/TestRedisPubSub.cpp \
 	unit_test/TestZMQSocket.cpp \
-	unit_test/TestBSON.cpp
+	unit_test/TestBSON.cpp \
+	unit_test/TestRaftConcensus.cpp
 
 
 if ENABLE_FEATURE_COMPILE_SIPTEST
