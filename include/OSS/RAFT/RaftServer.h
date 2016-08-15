@@ -55,7 +55,6 @@ public:
   bool addNode(int node_id);
   
   const Options& opt() const;
-  Options& opt();
 protected:
   virtual void runTask();
   virtual void onTerminate();
@@ -76,11 +75,6 @@ private:
 //
 
 inline const RaftServer::Options& RaftServer::opt() const
-{
-  return _opt;
-}
-
-inline RaftServer::Options& RaftServer::opt()
 {
   return _opt;
 }

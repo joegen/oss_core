@@ -343,7 +343,9 @@ liboss_core_la_SOURCES =  \
     bson/BSONParser.cpp \
     bson/BSONIterator.cpp \
     raft/libraft.c \
-    raft/RaftServer.cpp
+    raft/RaftServer.cpp \
+    lmdb/liblmdb.c \
+    lmdb/LMDatabase.cpp
 
 if ENABLE_FEATURE_RESTKV
 liboss_core_la_SOURCES += \
@@ -525,7 +527,8 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestRedisPubSub.cpp \
 	unit_test/TestZMQSocket.cpp \
 	unit_test/TestBSON.cpp \
-	unit_test/TestRaftConcensus.cpp
+	unit_test/TestRaftConcensus.cpp \
+	unit_test/TestLMDB.cpp
 
 
 if ENABLE_FEATURE_COMPILE_SIPTEST

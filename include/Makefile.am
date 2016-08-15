@@ -274,7 +274,9 @@ nobase_include_HEADERS = \
     OSS/ZMQ/ZMQSocket.h \
     OSS/ZMQ/zmq.hpp \
     OSS/RAFT/libraft.h \
-    OSS/RAFT/RaftServer.h
+    OSS/RAFT/RaftServer.h \
+    OSS/LMDB/liblmdb.h \
+    OSS/LMDB/LMDatabase.h
 
 
 DISTCLEANFILES = Makefile.in
