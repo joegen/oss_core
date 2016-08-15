@@ -76,12 +76,13 @@ public:
     Transaction& _transaction;
   };
   
-  class CursorImpl : boost::noncopyable
+  class Cursor : boost::noncopyable
   {
   public:
-    typedef boost::shared_ptr<CursorImpl> Ptr;
+    typedef boost::shared_ptr<Cursor> Ptr;
     
-    ~CursorImpl();
+    Cursor();
+    ~Cursor();
     
     bool top();
     bool find(const std::string& key);
@@ -93,16 +94,13 @@ public:
     
   protected:
     friend class LMDatabase;
-    CursorImpl(LMDatabase& db, LMDatabase::Transaction& transaction);
+    bool create(LMDatabase* db, LMDatabase::Transaction* transaction);
     void* _cursor;
-    LMDatabase& _db;
-    Transaction& _transaction;
+    LMDatabase* _db;
+    Transaction* _transaction;
     std::string _key;
     std::string _value;    
   };
-  
-  typedef CursorImpl::Ptr Cursor;
-  
   
   LMDatabase();
   ~LMDatabase();
@@ -130,13 +128,13 @@ public:
   std::size_t count(Transaction& transaction);
   
   void stop();
-  
-  Cursor createCursor(Transaction& transaction);
+
+  bool createCursor(Transaction& transaction, Cursor& cursor);
   
 protected:
   friend class Transaction;
   friend class TransactionLock;
-  friend class CursorImpl;
+  friend class Cursor;
   void* _env;
   void* _db;
   Options _opt;

@@ -82,24 +82,30 @@ LMDatabase::TransactionLock::~TransactionLock()
   }
 }
 
-LMDatabase::CursorImpl::CursorImpl(LMDatabase& db, LMDatabase::Transaction& transaction) :
+LMDatabase::Cursor::Cursor() :
   _cursor(0),
-  _db(db),
-  _transaction(transaction)
+  _db(0),
+  _transaction(0)
 {
-  assert(_transaction.transaction());
-  if (mdb_cursor_open((MDB_txn*)_transaction.transaction(), *((MDB_dbi*)db._db), (MDB_cursor**)&_cursor) != 0)
-  {
-    destroy();
-  }
 }
 
-LMDatabase::CursorImpl::~CursorImpl()
+LMDatabase::Cursor::~Cursor()
 {
   destroy();
 }
 
-void LMDatabase::CursorImpl::destroy()
+bool LMDatabase::Cursor::create(LMDatabase* db, LMDatabase::Transaction* transaction)
+{
+  assert(_transaction->transaction());
+  if (mdb_cursor_open((MDB_txn*)_transaction->transaction(), *((MDB_dbi*)db->_db), (MDB_cursor**)&_cursor) != 0)
+  {
+    destroy();
+    return false;
+  }
+  
+  return true;
+}
+void LMDatabase::Cursor::destroy()
 {
   mdb_cursor_close((MDB_cursor*)_cursor);
   _cursor = 0;
@@ -122,7 +128,7 @@ static bool lmdb_cursor_get(MDB_cursor* cursor, MDB_cursor_op op, std::string& k
   return false;
 }
 
-bool LMDatabase::CursorImpl::top()
+bool LMDatabase::Cursor::top()
 {
   if (!_cursor)
   {
@@ -131,7 +137,7 @@ bool LMDatabase::CursorImpl::top()
   return lmdb_cursor_get((MDB_cursor*)_cursor, MDB_FIRST, _key, _value);
 }
 
-bool LMDatabase::CursorImpl::find(const std::string& key)
+bool LMDatabase::Cursor::find(const std::string& key)
 {
   if (!_cursor)
   {
@@ -155,7 +161,7 @@ bool LMDatabase::CursorImpl::find(const std::string& key)
   return false;
 }
 
-bool LMDatabase::CursorImpl::next()
+bool LMDatabase::Cursor::next()
 {
   if (!_cursor)
   {
@@ -164,7 +170,7 @@ bool LMDatabase::CursorImpl::next()
   return lmdb_cursor_get((MDB_cursor*)_cursor, MDB_NEXT, _key, _value);
 }
 
-bool LMDatabase::CursorImpl::bottom()
+bool LMDatabase::Cursor::bottom()
 {
   if (!_cursor)
   {
@@ -173,7 +179,7 @@ bool LMDatabase::CursorImpl::bottom()
   return lmdb_cursor_get((MDB_cursor*)_cursor, MDB_LAST, _key, _value);
 }
 
-std::string LMDatabase::CursorImpl::value() const
+std::string LMDatabase::Cursor::value() const
 {
   if (!_cursor)
   {
@@ -182,7 +188,7 @@ std::string LMDatabase::CursorImpl::value() const
   return _value;
 }
 
-std::string LMDatabase::CursorImpl::key() const
+std::string LMDatabase::Cursor::key() const
 {
   if (!_cursor)
   {
@@ -398,10 +404,9 @@ std::size_t LMDatabase::count(Transaction& transaction)
   return 0;
 }
 
-LMDatabase::Cursor LMDatabase::createCursor(Transaction& transaction)
+bool LMDatabase::createCursor(Transaction& transaction, Cursor& cursor)
 {
-  assert(transaction.transaction());
-  return Cursor(new CursorImpl(*this, transaction));
+  return cursor.create(this, &transaction);
 }
 
   
