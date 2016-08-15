@@ -46,11 +46,8 @@ LMDatabase::Transaction::~Transaction()
 
 bool LMDatabase::Transaction::begin()
 {
-  if (_transaction)
-  {
-    return false;
-  }
   _db->_mutex.lock();
+  assert(!_transaction);
   return mdb_txn_begin((MDB_env*)_db->_env, 0, 0, (MDB_txn**)&_transaction) == 0;
 }
 
