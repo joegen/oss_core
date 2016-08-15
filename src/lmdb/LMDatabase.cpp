@@ -232,14 +232,13 @@ bool LMDatabase::initialize(const Options& opt)
   }
   
   
-  boost::system::error_code ec;
   boost::filesystem::path dir(opt.path.empty()? "./" : opt.path.c_str());
   std::string resolvedPath = OSS::boost_path(dir);
   
   if (!boost::filesystem::exists(dir))
   {
-    boost::filesystem::create_directories(dir, ec);
-    if (ec)
+    boost::filesystem::create_directories(dir);
+    if (!boost::filesystem::exists(dir))
     {
       return false;
     }
