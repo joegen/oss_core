@@ -101,6 +101,9 @@ public:
   bool del(Transaction& transaction, const std::string& key);
   
   std::size_t count(Transaction& transaction);
+  
+  void stop();
+  
 protected:
   friend class Transaction;
   friend class TransactionLock;
@@ -108,6 +111,7 @@ protected:
   void* _db;
   Options _opt;
   OSS::mutex _mutex;
+  bool _stopped;
 };
   
 //

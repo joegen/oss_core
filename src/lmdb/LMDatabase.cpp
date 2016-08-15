@@ -47,6 +47,11 @@ LMDatabase::Transaction::~Transaction()
 bool LMDatabase::Transaction::begin()
 {
   _db->_mutex.lock();
+  if (_db->_stopped)
+  {
+    _db->_mutex.unlock();
+    return false;
+  }
   assert(!_transaction);
   return mdb_txn_begin((MDB_env*)_db->_env, 0, 0, (MDB_txn**)&_transaction) == 0;
 }
@@ -80,14 +85,23 @@ LMDatabase::TransactionLock::~TransactionLock()
   
 LMDatabase::LMDatabase() :
   _env(0),
-  _db(0)
+  _db(0),
+  _stopped(false)
 {
   _db = malloc(sizeof(MDB_dbi));
 }
 
 LMDatabase::~LMDatabase()
 {
+  stop();
   free(_db);
+}
+
+void LMDatabase::stop()
+{
+  _mutex.lock();
+  _stopped = true;
+  _mutex.unlock();
 }
 
 bool LMDatabase::initialize(const Options& opt)
@@ -150,7 +164,6 @@ bool LMDatabase::initialize(const Options& opt)
   {
     return false;
   }
-  
   return true;
 }
 
