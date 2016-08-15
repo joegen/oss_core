@@ -81,6 +81,120 @@ LMDatabase::TransactionLock::~TransactionLock()
     throw OSS::Exception("TransactionLock - end transaction failed");
   }
 }
+
+LMDatabase::CursorImpl::CursorImpl(LMDatabase& db, LMDatabase::Transaction& transaction) :
+  _cursor(0),
+  _db(db),
+  _transaction(transaction)
+{
+  assert(_transaction.transaction());
+  if (mdb_cursor_open((MDB_txn*)_transaction.transaction(), *((MDB_dbi*)db._db), (MDB_cursor**)&_cursor) != 0)
+  {
+    destroy();
+  }
+}
+
+LMDatabase::CursorImpl::~CursorImpl()
+{
+  destroy();
+}
+
+void LMDatabase::CursorImpl::destroy()
+{
+  mdb_cursor_close((MDB_cursor*)_cursor);
+  _cursor = 0;
+}
+
+static bool lmdb_cursor_get(MDB_cursor* cursor, MDB_cursor_op op, std::string& key, std::string& value)
+{
+  MDB_val k, v;
+  
+  if (mdb_cursor_get(cursor, &k, &v, op) == 0 && 
+    k.mv_data && k.mv_size && v.mv_data && v.mv_size)
+  {
+    key = std::string((char*)k.mv_data, k.mv_size);
+    value = std::string((char*)v.mv_data, v.mv_size);
+    return true;
+  }
+  
+  key = std::string();
+  value = std::string();
+  return false;
+}
+
+bool LMDatabase::CursorImpl::top()
+{
+  if (!_cursor)
+  {
+    return false;
+  }
+  return lmdb_cursor_get((MDB_cursor*)_cursor, MDB_FIRST, _key, _value);
+}
+
+bool LMDatabase::CursorImpl::find(const std::string& key)
+{
+  if (!_cursor)
+  {
+    return false;
+  }
+  
+  MDB_val k, v;
+  k.mv_data = (void*)key.data();
+  k.mv_size = key.size();
+  
+  if (mdb_cursor_get((MDB_cursor*)_cursor, &k, &v, MDB_SET) == 0 && 
+    k.mv_data && k.mv_size && v.mv_data && v.mv_size)
+  {
+    _key = std::string((char*)k.mv_data, k.mv_size);
+    _value = std::string((char*)v.mv_data, v.mv_size);
+    return true;
+  }
+  
+  _key = std::string();
+  _value = std::string();
+  return false;
+}
+
+bool LMDatabase::CursorImpl::next()
+{
+  if (!_cursor)
+  {
+    return false;
+  }
+  return lmdb_cursor_get((MDB_cursor*)_cursor, MDB_NEXT, _key, _value);
+}
+
+bool LMDatabase::CursorImpl::bottom()
+{
+  if (!_cursor)
+  {
+    return false;
+  }
+  return lmdb_cursor_get((MDB_cursor*)_cursor, MDB_LAST, _key, _value);
+}
+
+std::string LMDatabase::CursorImpl::value() const
+{
+  if (!_cursor)
+  {
+    return std::string();
+  }
+  return _value;
+}
+
+std::string LMDatabase::CursorImpl::key() const
+{
+  if (!_cursor)
+  {
+    return std::string();
+  }
+  return _key;
+}
+
+
+    
+
+    
   
   
 LMDatabase::LMDatabase() :
@@ -283,6 +397,12 @@ std::size_t LMDatabase::count(Transaction& transaction)
     return stat.ms_entries;
   }
   return 0;
+}
+
+LMDatabase::Cursor LMDatabase::createCursor(Transaction& transaction)
+{
+  assert(transaction.transaction());
+  return Cursor(new CursorImpl(*this, transaction));
 }
 
   
