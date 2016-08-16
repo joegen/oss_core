@@ -62,6 +62,7 @@ See also: For more string comparison tricks (substring, prefix, suffix, and regu
 #include "gtest/gtest.h"
 #include "OSS/build.h"
 
+#include "OSS/UTL/Thread.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/LMDB/LMDatabase.h"
 
@@ -175,5 +176,105 @@ TEST(LMDBTest, TestLMDBGetSet)
     ASSERT_EQ(lmdb.count(transaction), 0);
   } while (false);
   
+}
+
+
+class Inserter : public OSS::Thread
+{
+public:
+  Inserter(LMDatabase& db) :
+    _db(db),
+    _trn(&_db),
+    _index(0)
+  {
+  }
+  
+  void insert()
+  {
+    LMDatabase::TransactionLock lock(_trn);
+    for (int i = 0; i < 100; i++)
+    {
+      std::string key = OSS::string_from_number<std::size_t>(_index++);
+      ASSERT_TRUE(_db.set(_trn, key, "Inserted Value"));
+    }
+  }
+  
+  void main()
+  {
+    while (_index < 1000)
+    {
+      insert();
+      OSS::thread_sleep(10);
+    }
+  }
+  
+  LMDatabase& _db;
+  LMDatabase::Transaction _trn;
+  std::size_t _index;
+};
+
+
+class Deleter : public OSS::Thread
+{
+public:
+  Deleter(LMDatabase& db) :
+    _db(db),
+    _trn(&_db),
+    _index(0)
+  {
+  }
+  
+  void pop()
+  {
+    LMDatabase::TransactionLock lock(_trn);
+    LMDatabase::Cursor cursor;
+    ASSERT_TRUE(_db.createCursor(_trn, cursor));
+    while(cursor.next())
+    {
+      ASSERT_FALSE(cursor.key().empty());
+      ASSERT_TRUE(_db.del(_trn, cursor.key()));
+      _index++;
+    }
+  }
+  
+  void main()
+  {
+    while (_index < 1000)
+    {
+      pop();
+      OSS::thread_sleep(10);
+    }
+  }
+  
+  LMDatabase& _db;
+  LMDatabase::Transaction _trn;
+  std::size_t _index;
+};
+
+
+TEST(LMDBTest, TestLMDBThreaded)
+{
+  LMDatabase lmdb;
+  LMDatabase::Options opt;
+  opt.name = "test_db";
+  opt.size_mb = 1;
+ 
+  ASSERT_TRUE(lmdb.initialize(opt));
+  
+  Inserter updater(lmdb);
+  Inserter inserter(lmdb);
+  Deleter deleter(lmdb);
+  
+  inserter.run();
+  updater.run();
+  deleter.run();
+  
+  inserter.waitForTermination();
+  updater.waitForTermination();
+  deleter.waitForTermination();
+  
+  LMDatabase::Transaction transaction(&lmdb);
+  LMDatabase::TransactionLock lock(transaction);
+  ASSERT_TRUE(lmdb.drop(transaction));
 }
 
