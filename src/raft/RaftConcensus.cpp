@@ -46,7 +46,8 @@ static int rc_send_requestvote(
   msg_requestvote_t* m)
 {
   std::cout << ((RaftConcensus*)user_data)->opt().node_id <<  "----> rc_send_requestvote" << std::endl;
-  return 0;
+  RaftNode raftNode(node);
+  return ((RaftConcensus*)user_data)->onSendRequestVote(raftNode, *m);
 }
 
 //
@@ -56,10 +57,11 @@ static int rc_send_appendentries(
   raft_server_t* raft,
   void* user_data,
   raft_node_t* node,
-  msg_appendentries_t* m )
+  msg_appendentries_t* m)
 {
   std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_send_appendentries" << std::endl;
-  return 0;
+  RaftNode raftNode(node);
+  return ((RaftConcensus*)user_data)->onSendAppendEntries(raftNode, *m);
 }
 
 //
@@ -71,7 +73,7 @@ static int rc_applylog(
   raft_entry_t* ety)
 {
   std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_applylog" << std::endl;
-  return 0;
+  return ((RaftConcensus*)user_data)->onApplyEntry(*ety);
 }
 
 //
@@ -84,7 +86,7 @@ static int rc_persist_vote(
     const int voted_for )
 {
   std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_persist_vote" << std::endl;
-  return 0;
+  return ((RaftConcensus*)user_data)->onPersistVote(voted_for);
 }
 
 //
@@ -97,7 +99,7 @@ static int rc_persist_term(
   const int current_term )
 {
   std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_persist_term" << std::endl;
-  return 0;
+  return ((RaftConcensus*)user_data)->onPersistTerm(current_term);
 }
 
 //
@@ -110,7 +112,21 @@ static int rc_log_offer(
     int ety_idx )
 {
   std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_log_offer" << std::endl;
-  return 0;
+  return ((RaftConcensus*)user_data)->onAppendEntry(*ety, ety_idx);
+}
+
+//
+// Non-voting node now has enough logs to be able to vote.
+// Append a finalization cfg log entry.
+//
+static void rc_node_has_sufficient_logs(
+    raft_server_t* raft,
+    void *user_data,
+    raft_node_t* node)
+{ 
+  std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_node_has_sufficient_logs" << std::endl;
+  RaftNode raftNode(node);
+  ((RaftConcensus*)user_data)->onSufficientLogs(raftNode);
 }
 
 //
@@ -140,18 +156,6 @@ static int rc_log_try_pop(
 {
   std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_log_try_pop" << std::endl;
   return 0;
-}
-
-//
-// Non-voting node now has enough logs to be able to vote.
-// Append a finalization cfg log entry.
-//
-static void rc_node_has_sufficient_logs(
-    raft_server_t* raft,
-    void *user_data,
-    raft_node_t* node)
-{ 
-  std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_node_has_sufficient_logs" << std::endl;
 }
 
 //

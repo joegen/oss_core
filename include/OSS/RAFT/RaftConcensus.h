@@ -21,18 +21,18 @@
 #define	OSS_RAFTSERVER_H_INCLUDED
 
 
+#include "OSS/OSS.h"
 #include "OSS/UTL/Thread.h"
+#include "OSS/RAFT/RaftNode.h"
 
-extern "C" 
-{ 
-  #include "OSS/RAFT/libraft.h" 
-}
 
 namespace OSS {
 namespace RAFT {
   
+  
 #define RAFT_ELECTION_TIMEOUT_MS 2000;
 #define RAFT_PERIODIC_TIMER_MS 1000;
+  
   
 class RaftConcensus : public OSS::Thread
 {
@@ -51,12 +51,23 @@ public:
     int periodic_timer_ms;
     bool is_master;
   };
-  
+    
   RaftConcensus();
   virtual ~RaftConcensus();
 
   virtual bool initialize(const Options& options);
   bool addNode(int node_id);
+  
+  //
+  // Callbacks.  All returns zero when successful
+  //
+  virtual int onSendRequestVote(const RaftNode& node, const msg_requestvote_t& data) = 0;
+  virtual int onSendAppendEntries(const RaftNode& node, const msg_appendentries_t& data) = 0;
+  virtual int onApplyEntry(const raft_entry_t& entry) = 0;
+  virtual int onAppendEntry(const raft_entry_t& entry, int index) = 0;
+  virtual int onPersistVote(int vote) = 0;
+  virtual int onPersistTerm(int vote) = 0;
+  virtual void onSufficientLogs(const RaftNode& node) = 0;
   
   const Options& opt() const;
 protected:
@@ -69,7 +80,7 @@ protected:
 private:
   OSS::mutex_critic_sec _raftMutex;
   OSS::semaphore _sem;
-  void** _raft;
+  raft_server_t* _raft;
   Options _opt;
 };
 
