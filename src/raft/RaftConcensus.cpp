@@ -18,20 +18,16 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-extern "C" { 
-  #include "OSS/RAFT/libraft.h" 
-}
-
 #include "OSS/UTL/CoreUtils.h"
-#include "OSS/RAFT/RaftServer.h"
+#include "OSS/RAFT/RaftConcensus.h"
 
 
 namespace OSS {
 namespace RAFT {
   
-static raft_cbs_t raft_server_funcs;
+static raft_cbs_t rc_funcs;
 
-static void raft_server_seed_random()
+static void rc_seed_random()
 {
   static bool seeded = false;
   if (!seeded)
@@ -43,38 +39,38 @@ static void raft_server_seed_random()
 //
 // Raft callback for sending request vote message
 //
-static int raft_server_send_requestvote(
+static int rc_send_requestvote(
   raft_server_t* raft,
   void* user_data,
   raft_node_t* node,
   msg_requestvote_t* m)
 {
-  std::cout << ((RaftServer*)user_data)->opt().node_id <<  "----> raft_server_send_requestvote" << std::endl;
+  std::cout << ((RaftConcensus*)user_data)->opt().node_id <<  "----> rc_send_requestvote" << std::endl;
   return 0;
 }
 
 //
 // Raft callback for sending append entries message
 //
-static int raft_server_send_appendentries(
+static int rc_send_appendentries(
   raft_server_t* raft,
   void* user_data,
   raft_node_t* node,
   msg_appendentries_t* m )
 {
-  std::cout << ((RaftServer*)user_data)->opt().node_id << "----> raft_server_send_appendentries" << std::endl;
+  std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_send_appendentries" << std::endl;
   return 0;
 }
 
 //
 // Raft callback for applying an entry to the finite state machine
 //
-static int raft_server_applylog(
+static int rc_applylog(
   raft_server_t* raft,
   void* user_data,
   raft_entry_t* ety)
 {
-  std::cout << ((RaftServer*)user_data)->opt().node_id << "----> raft_server_applylog" << std::endl;
+  std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_applylog" << std::endl;
   return 0;
 }
 
@@ -82,12 +78,12 @@ static int raft_server_applylog(
 // Raft callback for saving voted_for field to disk.
 // This only returns when change has been made to disk.
 //
-static int raft_server_persist_vote(
+static int rc_persist_vote(
     raft_server_t* raft,
     void *user_data,
     const int voted_for )
 {
-  std::cout << ((RaftServer*)user_data)->opt().node_id << "----> raft_server_persist_vote" << std::endl;
+  std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_persist_vote" << std::endl;
   return 0;
 }
 
@@ -95,25 +91,25 @@ static int raft_server_persist_vote(
 // Raft callback for saving term field to disk.
 // This only returns when change has been made to disk. 
 //
-static int raft_server_persist_term(
+static int rc_persist_term(
   raft_server_t* raft,
   void* user_data,
   const int current_term )
 {
-  std::cout << ((RaftServer*)user_data)->opt().node_id << "----> raft_server_persist_term" << std::endl;
+  std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_persist_term" << std::endl;
   return 0;
 }
 
 //
 // Raft callback for appending an item to the log
 //
-static int raft_server_log_offer(
+static int rc_log_offer(
     raft_server_t* raft,
     void* user_data,
     raft_entry_t* ety,
     int ety_idx )
 {
-  std::cout << ((RaftServer*)user_data)->opt().node_id << "----> raft_server_log_offer" << std::endl;
+  std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_log_offer" << std::endl;
   return 0;
 }
 
@@ -121,13 +117,13 @@ static int raft_server_log_offer(
 // Raft callback for removing the first entry from the log
 // note this is provided to support log compaction in the future
 //
-static int raft_server_log_poll(
+static int rc_log_poll(
     raft_server_t* raft,
     void* user_data,
     raft_entry_t* entry,
     int ety_idx )
 {
-  std::cout << ((RaftServer*)user_data)->opt().node_id <<  "----> raft_server_log_poll" << std::endl;
+  std::cout << ((RaftConcensus*)user_data)->opt().node_id <<  "----> rc_log_poll" << std::endl;
   return 0;
 }
 
@@ -136,13 +132,13 @@ static int raft_server_log_poll(
 // This happens when an invalid leader finds a valid leader and has to delete
 // superseded log entries. 
 //
-static int raft_server_log_try_pop(
+static int rc_log_try_pop(
   raft_server_t* raft,
   void* user_data,
   raft_entry_t* entry,
   int ety_idx)
 {
-  std::cout << ((RaftServer*)user_data)->opt().node_id << "----> raft_server_log_try_pop" << std::endl;
+  std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_log_try_pop" << std::endl;
   return 0;
 }
 
@@ -150,51 +146,51 @@ static int raft_server_log_try_pop(
 // Non-voting node now has enough logs to be able to vote.
 // Append a finalization cfg log entry.
 //
-static void raft_server_node_has_sufficient_logs(
+static void rc_node_has_sufficient_logs(
     raft_server_t* raft,
     void *user_data,
     raft_node_t* node)
 { 
-  std::cout << ((RaftServer*)user_data)->opt().node_id << "----> raft_server_node_has_sufficient_logs" << std::endl;
+  std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_node_has_sufficient_logs" << std::endl;
 }
 
 //
 // Raft callback for displaying debugging information
 //
-static void raft_server_log(
+static void rc_log(
   raft_server_t* raft, 
   raft_node_t* node, 
   void *user_data,
   const char *buf)
 {
-  std::cout << ((RaftServer*)user_data)->opt().node_id <<  "----> raft_server_log " << buf << std::endl;
+  std::cout << ((RaftConcensus*)user_data)->opt().node_id <<  "----> rc_log " << buf << std::endl;
 }
   
-void raft_server_init_func()
+void rc_init_func()
 {
   static bool init_func = false;
   if (!init_func)
   {
-     raft_server_funcs.send_requestvote = raft_server_send_requestvote;
-     raft_server_funcs.send_appendentries = raft_server_send_appendentries;
-     raft_server_funcs.applylog = raft_server_applylog;
-     raft_server_funcs.persist_vote = raft_server_persist_vote;
-     raft_server_funcs.persist_term = raft_server_persist_term;
-     raft_server_funcs.log_offer = raft_server_log_offer;
-     raft_server_funcs.log_poll = raft_server_log_poll;
-     raft_server_funcs.log_pop = raft_server_log_try_pop;
-     raft_server_funcs.node_has_sufficient_logs = raft_server_node_has_sufficient_logs;
-     raft_server_funcs.log = raft_server_log;
+     rc_funcs.send_requestvote = rc_send_requestvote;
+     rc_funcs.send_appendentries = rc_send_appendentries;
+     rc_funcs.applylog = rc_applylog;
+     rc_funcs.persist_vote = rc_persist_vote;
+     rc_funcs.persist_term = rc_persist_term;
+     rc_funcs.log_offer = rc_log_offer;
+     rc_funcs.log_poll = rc_log_poll;
+     rc_funcs.log_pop = rc_log_try_pop;
+     rc_funcs.node_has_sufficient_logs = rc_node_has_sufficient_logs;
+     rc_funcs.log = rc_log;
   }
 }
 
 
-RaftServer::RaftServer() :
+RaftConcensus::RaftConcensus() :
   _raft(0)
 {
 }
 
-RaftServer::~RaftServer()
+RaftConcensus::~RaftConcensus()
 {
   if (_raft)
   {
@@ -202,7 +198,7 @@ RaftServer::~RaftServer()
   }
 }
 
-bool RaftServer::initialize(const Options& options)
+bool RaftConcensus::initialize(const Options& options)
 {
   if (_raft)
   {
@@ -218,13 +214,13 @@ bool RaftServer::initialize(const Options& options)
   //
   // Seed the random number generator
   //
-  raft_server_seed_random();
+  rc_seed_random();
   
   //
   // Initialize callbacks
   //
-  raft_server_init_func();
-  raft_set_callbacks(_raft, &raft_server_funcs, this);
+  rc_init_func();
+  raft_set_callbacks(_raft, &rc_funcs, this);
   
   //
   // add self
@@ -251,25 +247,25 @@ bool RaftServer::initialize(const Options& options)
   return true;
 }
 
-bool RaftServer::addNode(int node_id)
+bool RaftConcensus::addNode(int node_id)
 {
   OSS::mutex_critic_sec_lock lock(_raftMutex);
   raft_node_t* node = raft_add_node(_raft, this, node_id, node_id == _opt.node_id);
   return !!(*node);
 }
 
-void RaftServer::callPeriodicTimer()
+void RaftConcensus::callPeriodicTimer()
 {
   OSS::mutex_critic_sec_lock lock(_raftMutex);
   raft_periodic(_raft, _opt.periodic_timer_ms);
 }
 
-void RaftServer::onTerminate()
+void RaftConcensus::onTerminate()
 {
   _sem.set();
 }
 
-void RaftServer::main()
+void RaftConcensus::main()
 {
   while (!_terminateFlag && !_sem.wait(_opt.periodic_timer_ms))
   {
@@ -277,7 +273,7 @@ void RaftServer::main()
   }
 }
 
-void RaftServer::becomeMaster()
+void RaftConcensus::becomeMaster()
 {
   OSS::mutex_critic_sec_lock lock(_raftMutex);
   raft_become_leader(_raft);

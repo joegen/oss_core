@@ -61,16 +61,16 @@ See also: For more string comparison tricks (substring, prefix, suffix, and regu
 #include "gtest/gtest.h"
 #include "OSS/build.h"
 
-#include "OSS/RAFT/RaftServer.h"
+#include "OSS/RAFT/RaftConcensus.h"
 
 
-using OSS::RAFT::RaftServer;
+using OSS::RAFT::RaftConcensus;
 
 
 TEST(RAFTTest, TestRaftConsensus)
 {
-  RaftServer server, member;
-  RaftServer::Options sopt, mopt;
+  RaftConcensus server, member;
+  RaftConcensus::Options sopt, mopt;
   
   sopt.is_master = true;
   sopt.node_id = 1;

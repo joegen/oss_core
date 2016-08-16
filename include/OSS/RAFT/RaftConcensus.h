@@ -23,6 +23,10 @@
 
 #include "OSS/UTL/Thread.h"
 
+extern "C" 
+{ 
+  #include "OSS/RAFT/libraft.h" 
+}
 
 namespace OSS {
 namespace RAFT {
@@ -30,7 +34,7 @@ namespace RAFT {
 #define RAFT_ELECTION_TIMEOUT_MS 2000;
 #define RAFT_PERIODIC_TIMER_MS 1000;
   
-class RaftServer : public OSS::Thread
+class RaftConcensus : public OSS::Thread
 {
 public:
   struct Options
@@ -48,8 +52,8 @@ public:
     bool is_master;
   };
   
-  RaftServer();
-  virtual ~RaftServer();
+  RaftConcensus();
+  virtual ~RaftConcensus();
 
   virtual bool initialize(const Options& options);
   bool addNode(int node_id);
@@ -74,7 +78,7 @@ private:
 // Inlines
 //
 
-inline const RaftServer::Options& RaftServer::opt() const
+inline const RaftConcensus::Options& RaftConcensus::opt() const
 {
   return _opt;
 }
