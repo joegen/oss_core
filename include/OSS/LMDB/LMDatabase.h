@@ -97,7 +97,7 @@ public:
     bool create(LMDatabase* db, LMDatabase::Transaction* transaction);
     void* _cursor;
     LMDatabase* _db;
-    Transaction* _transaction;
+
     std::string _key;
     std::string _value;    
   };
@@ -127,7 +127,11 @@ public:
   
   std::size_t count(Transaction& transaction);
   
-  void stop();
+  bool drop(Transaction& transaction);
+  
+  bool clear(Transaction& transaction);
+  
+  void close();
 
   bool createCursor(Transaction& transaction, Cursor& cursor);
   

@@ -62,6 +62,7 @@ See also: For more string comparison tricks (substring, prefix, suffix, and regu
 #include "gtest/gtest.h"
 #include "OSS/build.h"
 
+#include "OSS/UTL/CoreUtils.h"
 #include "OSS/LMDB/LMDatabase.h"
 
 
@@ -83,6 +84,13 @@ TEST(LMDBTest, TestLMDBGetSet)
   int64_t int64Data = 123456;
   
   LMDatabase::Transaction transaction(&lmdb);
+  
+  do {
+    LMDatabase::TransactionLock lock(transaction);
+    ASSERT_TRUE(lmdb.clear(transaction));
+    ASSERT_EQ(lmdb.count(transaction), 0);
+  } while (false);
+  
   do {
     LMDatabase::TransactionLock lock(transaction);
     ASSERT_TRUE(lmdb.set(transaction, "string", strData));
@@ -132,5 +140,40 @@ TEST(LMDBTest, TestLMDBGetSet)
     ASSERT_FALSE(lmdb.get(transaction, "int32", int32Data));
     ASSERT_FALSE(lmdb.get(transaction, "int64", int64Data));
   } while (false);
+  
+  do {
+    LMDatabase::TransactionLock lock(transaction);
+    for (int32_t i = 0; i < 1000; i++)
+    {
+      const std::string key = OSS::string_from_number<int32_t>(i);
+      ASSERT_TRUE(lmdb.set(transaction, key, i));
+    }
+    ASSERT_EQ(lmdb.count(transaction), 1000);
+  } while (false);
+  
+  do {
+    LMDatabase::TransactionLock lock(transaction);
+    LMDatabase::Cursor cursor;
+    ASSERT_TRUE(lmdb.createCursor(transaction, cursor));
+    while (cursor.next())
+    {
+      int32_t val = (int32_t) (*((int32_t*)cursor.value().data()));
+      ASSERT_EQ(val, OSS::string_to_number<int32_t>(cursor.key().c_str()));
+    }
+    
+    ASSERT_TRUE(cursor.find("888"));
+    ASSERT_EQ(888, (int32_t) (*((int32_t*)cursor.value().data())));
+    
+    ASSERT_FALSE(cursor.find("8888"));
+    ASSERT_TRUE(cursor.value().empty() && cursor.key().empty());
+    
+  } while (false);
+  
+  do {
+    LMDatabase::TransactionLock lock(transaction);
+    ASSERT_TRUE(lmdb.drop(transaction));
+    ASSERT_EQ(lmdb.count(transaction), 0);
+  } while (false);
+  
 }
 

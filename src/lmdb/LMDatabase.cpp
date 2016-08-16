@@ -84,8 +84,7 @@ LMDatabase::TransactionLock::~TransactionLock()
 
 LMDatabase::Cursor::Cursor() :
   _cursor(0),
-  _db(0),
-  _transaction(0)
+  _db(0)
 {
 }
 
@@ -96,8 +95,8 @@ LMDatabase::Cursor::~Cursor()
 
 bool LMDatabase::Cursor::create(LMDatabase* db, LMDatabase::Transaction* transaction)
 {
-  assert(_transaction->transaction());
-  if (mdb_cursor_open((MDB_txn*)_transaction->transaction(), *((MDB_dbi*)db->_db), (MDB_cursor**)&_cursor) != 0)
+  assert(transaction->transaction());
+  if (mdb_cursor_open((MDB_txn*)transaction->transaction(), *((MDB_dbi*)db->_db), (MDB_cursor**)&_cursor) != 0)
   {
     destroy();
     return false;
@@ -213,15 +212,37 @@ LMDatabase::LMDatabase() :
 
 LMDatabase::~LMDatabase()
 {
-  stop();
-  free(_db);
+  close();
 }
 
-void LMDatabase::stop()
+void LMDatabase::close()
 {
   _mutex.lock();
-  _stopped = true;
+  if (!_stopped)
+  {
+    _stopped = true;
+    if (_env)
+    {
+      mdb_dbi_close((MDB_env*)_env, *((MDB_dbi*)_db));
+      mdb_env_close((MDB_env*)_env);
+    }
+    _env = 0;
+    free(_db);
+    _db = 0;
+  }
   _mutex.unlock();
+}
+
+bool LMDatabase::drop(Transaction& transaction)
+{
+  assert(transaction.transaction());
+  return mdb_drop((MDB_txn*)transaction.transaction(), *((MDB_dbi*)_db), 1) == 0;
+}
+  
+bool LMDatabase::clear(Transaction& transaction)
+{
+  assert(transaction.transaction());
+  return mdb_drop((MDB_txn*)transaction.transaction(), *((MDB_dbi*)_db), 0) == 0;
 }
 
 bool LMDatabase::initialize(const Options& opt)
