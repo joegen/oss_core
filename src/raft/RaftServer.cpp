@@ -269,7 +269,7 @@ void RaftServer::onTerminate()
   _sem.set();
 }
 
-void RaftServer::runTask()
+void RaftServer::main()
 {
   while (!_terminateFlag && !_sem.wait(_opt.periodic_timer_ms))
   {

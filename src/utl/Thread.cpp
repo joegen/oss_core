@@ -287,7 +287,7 @@ void Thread::run()
   mutex_critic_sec_lock terminate_lock(_terminateFlagMutex);
   assert(!_pThread);
   _terminateFlag = false;
-  _pThread = new boost::thread(boost::bind(&Thread::runTask, this));
+  _pThread = new boost::thread(boost::bind(&Thread::main, this));
 }
 
 void Thread::stop()
@@ -316,7 +316,7 @@ bool Thread::isTerminated()
   return _terminateFlag;
 }
   
-void Thread::runTask()
+void Thread::main()
 {
   if (_task)
   {

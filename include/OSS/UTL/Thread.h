@@ -179,7 +179,7 @@ public:
   bool isTerminated();
   void waitForTermination();
 protected:
-  virtual void runTask();
+  virtual void main();
   virtual void onTerminate();
   Task _task;
   boost::thread* _pThread;

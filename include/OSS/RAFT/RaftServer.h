@@ -56,7 +56,7 @@ public:
   
   const Options& opt() const;
 protected:
-  virtual void runTask();
+  virtual void main();
   virtual void onTerminate();
   
   void callPeriodicTimer();
