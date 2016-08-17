@@ -167,10 +167,15 @@ public:
     /// on local and remote address tuples
 #endif
 
+#if 0
+	//
+	// Use DNS resolver instead
+	//
   std::list<std::string> resolve(
     const std::string& host,
     const std::string& service = "0" );
     /// Resolves hostnames using getaddrinfo emulation
+#endif
 
   OSS::Net::IPAddress& defaultListenerAddress();
     /// Get the configured default listener

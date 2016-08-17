@@ -785,6 +785,11 @@ void SIPTransportService::sendUDPKeepAlive(const OSS::Net::IPAddress& localAddre
   }
 }
 
+
+#if 0
+//
+// Use DNS resolver instead
+//
 std::list<std::string> SIPTransportService::resolve(
   const std::string& host,
   const std::string& service)
@@ -802,6 +807,7 @@ std::list<std::string> SIPTransportService::resolve(
   }
   return results;
 }
+#endif
 
 SIPUDPListener::Ptr SIPTransportService::findUDPListener(const std::string& key) const
 {
