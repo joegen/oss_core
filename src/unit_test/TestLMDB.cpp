@@ -152,6 +152,9 @@ TEST(LMDBTest, TestLMDBGetSet)
     ASSERT_EQ(lmdb.count(transaction), 1000);
   } while (false);
   
+  //
+  // Test cursor
+  //
   do {
     LMDatabase::TransactionLock lock(transaction);
     LMDatabase::Cursor cursor;
@@ -170,6 +173,36 @@ TEST(LMDBTest, TestLMDBGetSet)
     
   } while (false);
   
+  //
+  // Clear the DB
+  //
+  do {
+    LMDatabase::TransactionLock lock(transaction);
+    ASSERT_TRUE(lmdb.clear(transaction));
+    ASSERT_EQ(lmdb.count(transaction), 0);
+  } while (false);
+  
+  //
+  //  Test auto-cancel
+  //
+  do {
+    LMDatabase::TransactionLock lock(transaction);
+    ASSERT_TRUE(lmdb.set(transaction, "string", strData));
+    ASSERT_TRUE(lmdb.set(transaction, "double", doubleData));
+    ASSERT_TRUE(lmdb.set(transaction, "bool", boolData));
+    ASSERT_TRUE(lmdb.set(transaction, "int32", int32Data));
+    ASSERT_TRUE(lmdb.set(transaction, "int64", int64Data));
+    ASSERT_EQ(lmdb.count(transaction), 5);
+    transaction.cancelAdvised() = true;
+  } while (false);
+  // Must be zero size because we advised cancellation of the previous transaction
+  transaction.begin();
+  ASSERT_EQ(lmdb.count(transaction), 0);
+  transaction.end();
+  
+  //
+  // Drop the entire enchilada
+  //
   do {
     LMDatabase::TransactionLock lock(transaction);
     ASSERT_TRUE(lmdb.drop(transaction));

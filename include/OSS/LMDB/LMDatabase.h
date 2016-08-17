@@ -56,14 +56,22 @@ public:
   public:
     Transaction(LMDatabase* db);
     ~Transaction();
+    
     inline LMDatabase* db() { return _db; }
     inline void* transaction() { return _transaction; };
+    inline bool& cancelAdvised() { return _cancelAdvised; };
+    inline bool cancelAdvised() const { return _cancelAdvised; };
+    inline int& lastError() { return _lastError; };
+    inline int lastError() const { return _lastError; };
     
     bool begin();
     bool end();
+    void cancel();
   private:
     LMDatabase* _db;
     void* _transaction;
+    bool _cancelAdvised;
+    int _lastError;
   };
   
   class TransactionLock : boost::noncopyable

@@ -344,6 +344,7 @@ liboss_core_la_SOURCES =  \
     bson/BSONIterator.cpp \
     raft/libraft.c \
     raft/RaftConcensus.cpp \
+    raft/RaftNode.cpp \
     lmdb/liblmdb.c \
     lmdb/LMDatabase.cpp
 

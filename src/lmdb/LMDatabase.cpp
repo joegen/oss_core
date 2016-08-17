@@ -35,7 +35,9 @@ typedef LMDatabase::TransactionLock transaction_lock;
  
 LMDatabase::Transaction::Transaction(LMDatabase* db) :
   _db(db),
-  _transaction(0)
+  _transaction(0),
+  _cancelAdvised(false),
+  _lastError(0)
 {
   assert(_db && _db->_env);
 }
@@ -58,11 +60,25 @@ bool LMDatabase::Transaction::begin()
 
 bool LMDatabase::Transaction::end()
 {
+  assert(_transaction);
   int ret = 0;
   ret = mdb_txn_commit((MDB_txn*)_transaction);
   _transaction = 0;
+  //
+  // TODO:  Issue a warning if cancel was advised
+  //
+  _cancelAdvised = false;
   _db->_mutex.unlock();
   return ret == 0;
+}
+
+void LMDatabase::Transaction::cancel()
+{
+  assert(_transaction);
+  mdb_txn_abort((MDB_txn*)_transaction);
+  _transaction = 0;
+  _cancelAdvised = false;
+  _db->_mutex.unlock();
 }
 
 LMDatabase::TransactionLock::TransactionLock(Transaction& transaction) :
@@ -76,7 +92,11 @@ LMDatabase::TransactionLock::TransactionLock(Transaction& transaction) :
 
 LMDatabase::TransactionLock::~TransactionLock()
 {
-  if (!_transaction.end())
+  if (_transaction.cancelAdvised())
+  {
+    _transaction.cancel();
+  }
+  else if (!_transaction.end())
   {
     throw OSS::Exception("TransactionLock - end transaction failed");
   }
@@ -331,6 +351,7 @@ void LMDatabase::printStats(Transaction& transaction, std::ostream& strm)
 bool LMDatabase::set(Transaction& transaction, const std::string& key, void* value, std::size_t len)
 {
   MDB_dbi* dbi = (MDB_dbi*)_db;
+  int ret = 0;
   
   MDB_val k, v;
   k.mv_size = strlen(key.c_str());
@@ -339,7 +360,14 @@ bool LMDatabase::set(Transaction& transaction, const std::string& key, void* val
   v.mv_size = len;
   v.mv_data = value;
     
-  return mdb_put((MDB_txn*)transaction.transaction(), *dbi, &k, &v, 0) == 0;
+  ret = mdb_put((MDB_txn*)transaction.transaction(), *dbi, &k, &v, 0);
+  if (ret != 0)
+  {
+    transaction.lastError() = ret;
+    transaction.cancelAdvised() = true;
+  }
+  
+  return ret == 0;
 }
 
 bool LMDatabase::get(Transaction& transaction, const std::string& key, void** value, std::size_t& len)
@@ -408,9 +436,17 @@ bool LMDatabase::del(Transaction& transaction, const std::string& key)
 {
   assert(transaction.transaction());
   MDB_val k, v;
+  int ret = 0;
   k.mv_size = strlen(key.c_str());
   k.mv_data = (void*)key.data();
-  return mdb_del((MDB_txn*)transaction.transaction(), *((MDB_dbi*)_db), &k, &v) == 0;
+  ret = mdb_del((MDB_txn*)transaction.transaction(), *((MDB_dbi*)_db), &k, &v);
+  
+  if (ret != 0)
+  {
+    transaction.lastError() = ret;
+    transaction.cancelAdvised() = true;
+  }
+  return ret == 0;
 }
 
 std::size_t LMDatabase::count(Transaction& transaction)

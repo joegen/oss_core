@@ -65,11 +65,25 @@ See also: For more string comparison tricks (substring, prefix, suffix, and regu
 
 
 using OSS::RAFT::RaftConcensus;
+using OSS::RAFT::RaftNode;
+
+class RaftServer : public RaftConcensus
+{
+public:
+  RaftServer() {}
+  virtual int onSendRequestVote(const RaftNode& node, const msg_requestvote_t& data) { return 0; }
+  virtual int onSendAppendEntries(const RaftNode& node, const msg_appendentries_t& data) { return 0; }
+  virtual int onApplyEntry(const raft_entry_t& entry) { return 0; }
+  virtual int onAppendEntry(const raft_entry_t& entry, int index) { return 0; }
+  virtual int onPersistVote(int vote) { return 0; }
+  virtual int onPersistTerm(int vote) { return 0; }
+  virtual void onSufficientLogs(const RaftNode& node) {}
+};
 
 
 TEST(RAFTTest, TestRaftConsensus)
 {
-  RaftConcensus server, member;
+  RaftServer server, member;
   RaftConcensus::Options sopt, mopt;
   
   sopt.is_master = true;
