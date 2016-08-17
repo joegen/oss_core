@@ -11,6 +11,7 @@
     * Session Border Controller Implementation
     * REST Persistence Store
     * BSON/JSON Parser
+    * RAFT Concensus
 
 ## Minimal Prerequisites (Mac or Linux)
 ### Mac build is tested using homebrew installed packages
