@@ -485,7 +485,7 @@ OSS_CXX_C_FLAGS="-fmessage-length=0"
 # Compiler warnings
 #
 OSS_CXX_WARNINGS="-Wall -Wformat -Wwrite-strings -Wpointer-arith"
-OSS_C_WARNINGS="-Wall -Wunused-variable -Wnested-externs -Wno-shift-negative-value -Werror -Werror=return-type -Werror=uninitialized -Wcast-align -Wno-pointer-sign"
+OSS_C_WARNINGS="-Wall -Wunused-variable -Wnested-externs -Wno-shift-negative-value -Werror -Werror=return-type -Werror=uninitialized -Wno-pointer-sign"
 #
 # Additional CXX and C Flags
 #
