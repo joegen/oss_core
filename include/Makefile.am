@@ -276,6 +276,7 @@ nobase_include_HEADERS = \
     OSS/RAFT/libraft.h \
     OSS/RAFT/RaftConcensus.h \
     OSS/RAFT/RaftNode.h \
+    OSS/RAFT/RaftConnection.h \
     OSS/LMDB/liblmdb.h \
     OSS/LMDB/LMDatabase.h
 

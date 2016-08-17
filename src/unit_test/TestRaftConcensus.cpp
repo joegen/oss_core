@@ -66,24 +66,44 @@ See also: For more string comparison tricks (substring, prefix, suffix, and regu
 
 using OSS::RAFT::RaftConcensus;
 using OSS::RAFT::RaftNode;
+using OSS::RAFT::RaftConnection;
 
-class RaftServer : public RaftConcensus
+class Server;
+
+class MyConnection : public RaftConnection
 {
 public:
-  RaftServer() {}
-  virtual int onSendRequestVote(const RaftNode& node, const msg_requestvote_t& data) { return 0; }
-  virtual int onSendAppendEntries(const RaftNode& node, const msg_appendentries_t& data) { return 0; }
-  virtual int onApplyEntry(const raft_entry_t& entry) { return 0; }
-  virtual int onAppendEntry(const raft_entry_t& entry, int index) { return 0; }
-  virtual int onPersistVote(int vote) { return 0; }
-  virtual int onPersistTerm(int vote) { return 0; }
-  virtual void onSufficientLogs(const RaftNode& node) {}
+  MyConnection(Server* server, RaftNode& node) :
+    RaftConnection((RaftConcensus*)server, node)
+  { 
+  }
+  virtual void shutdown() {};
+  virtual int onSendRequestVote(const msg_requestvote_t& data) 
+  { 
+    std::cout << "MyConnection::onSendRequestVote node.id=" << _node.getId() << std::endl;
+    return 0; 
+  }
+  
+  virtual int onSendAppendEntries( const msg_appendentries_t& data) 
+  { 
+    std::cout << "MyConnection::onSendAppendEntries node.id=" << _node.getId() << std::endl;
+    return 0; 
+  }
 };
 
+class Server : public RaftConcensus
+{
+public:
+  Server() {}
+  Connection::Ptr createConnection(Node& node)
+  {
+    return Connection::Ptr(new MyConnection(this, node));
+  }
+};
 
 TEST(RAFTTest, TestRaftConsensus)
 {
-  RaftServer server, member;
+  Server server, member;
   RaftConcensus::Options sopt, mopt;
   
   sopt.is_master = true;

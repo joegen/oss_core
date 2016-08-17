@@ -24,6 +24,8 @@
 #include "OSS/OSS.h"
 #include "OSS/UTL/Thread.h"
 #include "OSS/RAFT/RaftNode.h"
+#include "OSS/RAFT/RaftConnection.h"
+#include <map>
 
 
 namespace OSS {
@@ -37,6 +39,11 @@ namespace RAFT {
 class RaftConcensus : public OSS::Thread
 {
 public:
+
+  typedef RaftConnection Connection;
+  typedef RaftNode Node;
+  typedef std::map<int, Connection::Ptr> Connections;
+
   struct Options
   {
     Options()
@@ -59,16 +66,21 @@ public:
   bool addNode(int node_id);
   
   //
-  // Callbacks.  All returns zero when successful
+  // RAFT Protocol Handlers.  All returns zero when successful
   //
-  virtual int onSendRequestVote(const RaftNode& node, const msg_requestvote_t& data) = 0;
-  virtual int onSendAppendEntries(const RaftNode& node, const msg_appendentries_t& data) = 0;
-  virtual int onApplyEntry(const raft_entry_t& entry) = 0;
-  virtual int onAppendEntry(const raft_entry_t& entry, int index) = 0;
-  virtual int onPersistVote(int vote) = 0;
-  virtual int onPersistTerm(int vote) = 0;
-  virtual void onSufficientLogs(const RaftNode& node) = 0;
-  
+  virtual int onSendRequestVote(Node& node, const msg_requestvote_t& data);
+  virtual int onSendAppendEntries(Node& node, const msg_appendentries_t& data);
+  virtual int onApplyEntry(const raft_entry_t& entry);
+  virtual int onAppendEntry(const raft_entry_t& entry, int index);
+  virtual int onPersistVote(int vote);
+  virtual int onPersistTerm(int vote);
+  virtual void onSufficientLogs(Node& node);
+
+  //
+  // Connection related handlers
+  //
+  virtual Connection::Ptr createConnection(Node& node) = 0;
+
   const Options& opt() const;
 protected:
   virtual void main();
@@ -77,11 +89,19 @@ protected:
   void callPeriodicTimer();
   void becomeMaster();
 
+  Connection::Ptr findConnection(const Node& node);
+  Connection::Ptr findConnection(int id);
+  Connection::Ptr findOrCreateConnection(Node& node);
+  void storeConnection(int id, const Connection::Ptr& pConnection);
+  void removeConnection(int id);
+
 private:
   OSS::mutex_critic_sec _raftMutex;
+  OSS::mutex_critic_sec _connectionMutex;
   OSS::semaphore _sem;
   raft_server_t* _raft;
   Options _opt;
+  Connections _connections;
 };
 
 
@@ -93,6 +113,12 @@ inline const RaftConcensus::Options& RaftConcensus::opt() const
 {
   return _opt;
 }
+
+inline RaftConcensus::Connection::Ptr RaftConcensus::findConnection(const Node& node)
+{
+  return findConnection(node.getId());
+}
+
 
 } } // OSS::RAFT
 

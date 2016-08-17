@@ -17,56 +17,61 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#ifndef OSS_RAFTNODE_H_INCLUDED
-#define	OSS_RAFTNODE_H_INCLUDED
+
+#ifndef OSS_RAFTCONNECTION_H_INCLUDED
+#define OSS_RAFTCONNECTION_H_INCLUDED
 
 
 #include "OSS/OSS.h"
 #include <boost/noncopyable.hpp>
+#include <boost/shared_ptr.hpp>
 
-extern "C" 
-{ 
-  #include "OSS/RAFT/libraft.h" 
+extern "C"
+{
+  #include "OSS/RAFT/libraft.h"
 };
 
 
 namespace OSS {
 namespace RAFT {
 
-  
-class RaftNode
+class RaftConcensus;
+
+class RaftConnection
 {
 public:
-  RaftNode();
-  RaftNode(const RaftNode& node);
-  RaftNode(raft_node_t* node);
-  ~RaftNode();
+  typedef boost::shared_ptr<RaftConnection> Ptr;
+  
+  RaftConnection(RaftConcensus* pRaft, RaftNode& node);
+  virtual ~RaftConnection();
 
-  RaftNode& operator=(const RaftNode& node);
-  RaftNode& operator=(raft_node_t* node);
+  virtual void shutdown() = 0;
+  virtual int onSendRequestVote(const msg_requestvote_t& data) = 0;
+  virtual int onSendAppendEntries(const msg_appendentries_t& data) = 0;
 
-  int getId() const;
-  int getNextIndex() const;
-  int getMatchIndex() const;
-  void* getUserData() const;
-  void setUserData(void* userData);
-  raft_node_t* node();
-
-private:
-  raft_node_t* _node;
+  RaftNode& getNode();
+  const RaftNode& getNode() const;
+protected:
+  RaftConcensus* _pRaft;
+  RaftNode _node;
 };
+
 
 //
 // Inlines
 //
-
-inline raft_node_t* RaftNode::node()
+inline RaftNode& RaftConnection::getNode()
 {
   return _node;
 }
 
+inline const RaftNode& RaftConnection::getNode() const
+{
+  return _node;
+}
 
 } } // OSS::RAFT
 
-#endif	// OSS_RAFTNODE_H_INCLUDED
+
+#endif // OSS_RAFTCONNECTION_H_INCLUDED
 

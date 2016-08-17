@@ -17,56 +17,26 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#ifndef OSS_RAFTNODE_H_INCLUDED
-#define	OSS_RAFTNODE_H_INCLUDED
 
-
-#include "OSS/OSS.h"
-#include <boost/noncopyable.hpp>
-
-extern "C" 
-{ 
-  #include "OSS/RAFT/libraft.h" 
-};
+#include "OSS/RAFT/RaftConcensus.h"
 
 
 namespace OSS {
 namespace RAFT {
 
-  
-class RaftNode
+
+RaftConnection::RaftConnection(RaftConcensus* pRaft, RaftNode& node) :
+  _pRaft(pRaft),
+  _node(node)
 {
-public:
-  RaftNode();
-  RaftNode(const RaftNode& node);
-  RaftNode(raft_node_t* node);
-  ~RaftNode();
+}
 
-  RaftNode& operator=(const RaftNode& node);
-  RaftNode& operator=(raft_node_t* node);
-
-  int getId() const;
-  int getNextIndex() const;
-  int getMatchIndex() const;
-  void* getUserData() const;
-  void setUserData(void* userData);
-  raft_node_t* node();
-
-private:
-  raft_node_t* _node;
-};
-
-//
-// Inlines
-//
-
-inline raft_node_t* RaftNode::node()
+RaftConnection::~RaftConnection()
 {
-  return _node;
 }
 
 
 } } // OSS::RAFT
 
-#endif	// OSS_RAFTNODE_H_INCLUDED
+
 
