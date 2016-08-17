@@ -1,3 +1,4 @@
+
 // Library: OSS_CORE - Foundation API for SIP B2BUA
 // Copyright (c) OSS Software Solutions
 // Contributor: Joegen Baclor - mailto:joegen@ossapp.com
@@ -17,67 +18,23 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#ifndef OSS_RAFTNODE_H_INCLUDED
-#define	OSS_RAFTNODE_H_INCLUDED
-
-
-#include "OSS/OSS.h"
-#include <boost/noncopyable.hpp>
-
-extern "C" 
-{ 
-  #include "OSS/RAFT/libraft.h" 
-};
+#include "OSS/RAFT/RaftNode.h"
 
 
 namespace OSS {
 namespace RAFT {
 
+
+RaftNode::RaftNode(raft_node_t* node) :
+  _node(node)
+{
+}
+
+RaftNode::~RaftNode()
+{
+}
   
-class RaftNode : boost::noncopyable {
-public:
-  RaftNode(raft_node_t* node);
-  ~RaftNode();
-  
-  bool isLeader() const;
-  int getNextIndex() const;
-  int getMatchIndex() const;
-  void* getUserData() const;
-  void setUserData(void* userData);
-private:
-  raft_node_t* _node;
-};
-
-//
-// Inlines
-//
-
-inline bool RaftNode::isLeader() const
-{
-  return raft_node_is_leader(_node) == 1;
-}
-
-inline int RaftNode::getNextIndex() const
-{
-  return raft_node_get_next_idx(_node);
-}
-
-inline int RaftNode::getMatchIndex() const
-{
-  return raft_node_get_match_idx(_node);
-}
-
-inline void* RaftNode::getUserData() const
-{
-  return raft_node_get_udata(_node);
-}
-
-inline void RaftNode::setUserData(void* userData)
-{
-  return raft_node_set_udata(_node, userData);
-}
 
 } } // OSS::RAFT
 
-#endif	// OSS_RAFTNODE_H_INCLUDED
 
