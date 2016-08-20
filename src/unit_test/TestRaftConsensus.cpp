@@ -61,10 +61,10 @@ See also: For more string comparison tricks (substring, prefix, suffix, and regu
 #include "gtest/gtest.h"
 #include "OSS/build.h"
 
-#include "OSS/RAFT/RaftConcensus.h"
+#include "OSS/RAFT/RaftConsensus.h"
 
 
-using OSS::RAFT::RaftConcensus;
+using OSS::RAFT::RaftConsensus;
 using OSS::RAFT::RaftNode;
 using OSS::RAFT::RaftConnection;
 
@@ -73,38 +73,80 @@ class Server;
 class MyConnection : public RaftConnection
 {
 public:
-  MyConnection(Server* server, RaftNode& node) :
-    RaftConnection((RaftConcensus*)server, node)
-  { 
-  }
-  virtual void shutdown() {};
-  virtual int onSendRequestVote(const msg_requestvote_t& data) 
-  { 
-    std::cout << "MyConnection::onSendRequestVote node.id=" << _node.getId() << std::endl;
-    return 0; 
-  }
+  Server* _pServer;
   
-  virtual int onSendAppendEntries( const msg_appendentries_t& data) 
-  { 
-    std::cout << "MyConnection::onSendAppendEntries node.id=" << _node.getId() << std::endl;
-    return 0; 
-  }
+  MyConnection(Server* server, RaftNode& node);
+  void shutdown();
+  int onSendRequestVote(msg_requestvote_t& data);
+  int onSendAppendEntries( msg_appendentries_t& data);
+  int onSendRequestVoteResponse(msg_requestvote_response_t& data);
+  int onSendAppendEntriesResponse(msg_appendentries_response_t& data);
 };
 
-class Server : public RaftConcensus
+class Server : public RaftConsensus
 {
 public:
-  Server() {}
-  Connection::Ptr createConnection(Node& node)
-  {
-    return Connection::Ptr(new MyConnection(this, node));
-  }
+  Server();
+  Connection::Ptr createConnection(Node& node);
+  Connection::Ptr _pConnection;
+  Server* _peer;
 };
+
+
+Server::Server() :
+  _peer(0)
+{
+}
+
+RaftConsensus::Connection::Ptr Server::createConnection(Node& node)
+{
+  return _pConnection;
+}
+
+  
+MyConnection::MyConnection(Server* server, RaftNode& node) :
+  RaftConnection((RaftConsensus*)server, node),
+  _pServer(server)
+{ 
+}
+void MyConnection::shutdown() 
+{
+}
+
+int MyConnection::onSendRequestVote(msg_requestvote_t& data) 
+{ 
+  std::cout << "MyConnection::onSendRequestVote node.id=" << _node.getId() << std::endl;
+  _pServer->_peer->onReceivedRequestVote(_pServer->_pConnection, data);
+  return 0; 
+}
+
+int MyConnection::onSendAppendEntries( msg_appendentries_t& data) 
+{ 
+  std::cout << "MyConnection::onSendAppendEntries node.id=" << _node.getId() << std::endl;
+  _pServer->_peer->onReceivedAppendEntries(_pServer->_pConnection, data);
+  return 0; 
+}
+
+int MyConnection::onSendRequestVoteResponse(msg_requestvote_response_t& data) 
+{ 
+  std::cout << "MyConnection::onSendRequestVoteResponse node.id=" << _node.getId() << std::endl;
+  _pServer->_peer->onReceivedRequestVoteResponse(_pServer->_peer->_pConnection, data);
+  return 0; 
+}
+
+int MyConnection::onSendAppendEntriesResponse(msg_appendentries_response_t& data) 
+{ 
+  std::cout << "MyConnection::onSendAppendEntriesResponse node.id=" << _node.getId() << std::endl;
+  _pServer->_peer->onReceivedAppendEntriesResponse(_pServer->_peer->_pConnection, data);
+  return 0; 
+}
+
 
 TEST(RAFTTest, TestRaftConsensus)
 {
-  Server server, member;
-  RaftConcensus::Options sopt, mopt;
+  Server server; 
+  Server member;
+  RaftConsensus::Options sopt, mopt;
   
   sopt.is_master = true;
   sopt.node_id = 1;
@@ -112,18 +154,28 @@ TEST(RAFTTest, TestRaftConsensus)
   mopt.is_master = false;
   mopt.node_id = 2;
   
+  server._peer = &member;
+  member._peer = &server;
+  
   ASSERT_TRUE(server.initialize(sopt));
   ASSERT_TRUE(member.initialize(mopt));
   
-  server.addNode(mopt.node_id);
-  member.addNode(sopt.node_id);
+  ASSERT_TRUE(server.addNode(mopt.node_id));
+  RaftNode node;
+  ASSERT_TRUE(server.findNode(mopt.node_id, node));
+  server._pConnection = RaftConsensus::Connection::Ptr(new MyConnection(&server, node));
   
-  server.run();
+  ASSERT_TRUE(member.addNode(sopt.node_id));
+  ASSERT_TRUE(member.findNode(sopt.node_id, node));
+  member._pConnection = RaftConsensus::Connection::Ptr(new MyConnection(&member, node));
+  
+  
   member.run();
+  server.run();
   
   OSS::thread_sleep(5000);
-  
-  member.stop();
   server.stop();
+  member.stop();
+  
 }
 

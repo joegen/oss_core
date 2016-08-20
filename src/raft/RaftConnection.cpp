@@ -18,14 +18,14 @@
 //
 
 
-#include "OSS/RAFT/RaftConcensus.h"
+#include "OSS/RAFT/RaftConsensus.h"
 
 
 namespace OSS {
 namespace RAFT {
 
 
-RaftConnection::RaftConnection(RaftConcensus* pRaft, RaftNode& node) :
+RaftConnection::RaftConnection(RaftConsensus* pRaft, RaftNode& node) :
   _pRaft(pRaft),
   _node(node)
 {

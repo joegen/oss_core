@@ -35,24 +35,27 @@ extern "C"
 namespace OSS {
 namespace RAFT {
 
-class RaftConcensus;
+class RaftConsensus;
 
 class RaftConnection
 {
 public:
   typedef boost::shared_ptr<RaftConnection> Ptr;
   
-  RaftConnection(RaftConcensus* pRaft, RaftNode& node);
+  RaftConnection(RaftConsensus* pRaft, RaftNode& node);
   virtual ~RaftConnection();
 
   virtual void shutdown() = 0;
-  virtual int onSendRequestVote(const msg_requestvote_t& data) = 0;
-  virtual int onSendAppendEntries(const msg_appendentries_t& data) = 0;
+  virtual int onSendRequestVote(msg_requestvote_t& data) = 0;
+  virtual int onSendAppendEntries(msg_appendentries_t& data) = 0;
+  virtual int onSendRequestVoteResponse(msg_requestvote_response_t& data) = 0;
+  virtual int onSendAppendEntriesResponse(msg_appendentries_response_t& data) = 0;
 
   RaftNode& getNode();
   const RaftNode& getNode() const;
+
 protected:
-  RaftConcensus* _pRaft;
+  RaftConsensus* _pRaft;
   RaftNode _node;
 };
 

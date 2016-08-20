@@ -274,7 +274,7 @@ nobase_include_HEADERS = \
     OSS/ZMQ/ZMQSocket.h \
     OSS/ZMQ/zmq.hpp \
     OSS/RAFT/libraft.h \
-    OSS/RAFT/RaftConcensus.h \
+    OSS/RAFT/RaftConsensus.h \
     OSS/RAFT/RaftNode.h \
     OSS/RAFT/RaftConnection.h \
     OSS/LMDB/liblmdb.h \

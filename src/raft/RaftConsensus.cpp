@@ -19,7 +19,7 @@
 //
 
 #include "OSS/UTL/CoreUtils.h"
-#include "OSS/RAFT/RaftConcensus.h"
+#include "OSS/RAFT/RaftConsensus.h"
 
 
 namespace OSS {
@@ -27,7 +27,7 @@ namespace RAFT {
   
 static raft_cbs_t rc_funcs;
 
-typedef RaftConcensus::Node Node;
+typedef RaftConsensus::Node Node;
 
 static void rc_seed_random()
 {
@@ -47,9 +47,9 @@ static int rc_send_requestvote(
   raft_node_t* node,
   msg_requestvote_t* m)
 {
-  std::cout << ((RaftConcensus*)user_data)->opt().node_id <<  "----> rc_send_requestvote" << std::endl;
+  std::cout << ((RaftConsensus*)user_data)->opt().node_id <<  "----> rc_send_requestvote" << std::endl;
   Node raftNode(node);
-  return ((RaftConcensus*)user_data)->onSendRequestVote(raftNode, *m);
+  return ((RaftConsensus*)user_data)->onSendRequestVote(raftNode, *m);
 }
 
 //
@@ -61,9 +61,9 @@ static int rc_send_appendentries(
   raft_node_t* node,
   msg_appendentries_t* m)
 {
-  std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_send_appendentries" << std::endl;
+  std::cout << ((RaftConsensus*)user_data)->opt().node_id << "----> rc_send_appendentries" << std::endl;
   Node raftNode(node);
-  return ((RaftConcensus*)user_data)->onSendAppendEntries(raftNode, *m);
+  return ((RaftConsensus*)user_data)->onSendAppendEntries(raftNode, *m);
 }
 
 //
@@ -74,8 +74,8 @@ static int rc_applylog(
   void* user_data,
   raft_entry_t* ety)
 {
-  std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_applylog" << std::endl;
-  return ((RaftConcensus*)user_data)->onApplyEntry(*ety);
+  std::cout << ((RaftConsensus*)user_data)->opt().node_id << "----> rc_applylog" << std::endl;
+  return ((RaftConsensus*)user_data)->onApplyEntry(*ety);
 }
 
 //
@@ -87,8 +87,8 @@ static int rc_persist_vote(
     void *user_data,
     const int voted_for )
 {
-  std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_persist_vote" << std::endl;
-  return ((RaftConcensus*)user_data)->onPersistVote(voted_for);
+  std::cout << ((RaftConsensus*)user_data)->opt().node_id << "----> rc_persist_vote" << std::endl;
+  return ((RaftConsensus*)user_data)->onPersistVote(voted_for);
 }
 
 //
@@ -100,8 +100,8 @@ static int rc_persist_term(
   void* user_data,
   const int current_term )
 {
-  std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_persist_term" << std::endl;
-  return ((RaftConcensus*)user_data)->onPersistTerm(current_term);
+  std::cout << ((RaftConsensus*)user_data)->opt().node_id << "----> rc_persist_term" << std::endl;
+  return ((RaftConsensus*)user_data)->onPersistTerm(current_term);
 }
 
 //
@@ -113,8 +113,8 @@ static int rc_log_offer(
     raft_entry_t* ety,
     int ety_idx )
 {
-  std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_log_offer" << std::endl;
-  return ((RaftConcensus*)user_data)->onAppendEntry(*ety, ety_idx);
+  std::cout << ((RaftConsensus*)user_data)->opt().node_id << "----> rc_log_offer" << std::endl;
+  return ((RaftConsensus*)user_data)->onAppendEntry(*ety, ety_idx);
 }
 
 //
@@ -126,9 +126,9 @@ static void rc_node_has_sufficient_logs(
     void *user_data,
     raft_node_t* node)
 { 
-  std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_node_has_sufficient_logs" << std::endl;
+  std::cout << ((RaftConsensus*)user_data)->opt().node_id << "----> rc_node_has_sufficient_logs" << std::endl;
   Node raftNode(node);
-  ((RaftConcensus*)user_data)->onSufficientLogs(raftNode);
+  ((RaftConsensus*)user_data)->onSufficientLogs(raftNode);
 }
 
 //
@@ -141,7 +141,7 @@ static int rc_log_poll(
     raft_entry_t* entry,
     int ety_idx )
 {
-  std::cout << ((RaftConcensus*)user_data)->opt().node_id <<  "----> rc_log_poll" << std::endl;
+  std::cout << ((RaftConsensus*)user_data)->opt().node_id <<  "----> rc_log_poll" << std::endl;
   return 0;
 }
 
@@ -156,7 +156,7 @@ static int rc_log_try_pop(
   raft_entry_t* entry,
   int ety_idx)
 {
-  std::cout << ((RaftConcensus*)user_data)->opt().node_id << "----> rc_log_try_pop" << std::endl;
+  std::cout << ((RaftConsensus*)user_data)->opt().node_id << "----> rc_log_try_pop" << std::endl;
   return 0;
 }
 
@@ -169,7 +169,7 @@ static void rc_log(
   void *user_data,
   const char *buf)
 {
-  std::cout << ((RaftConcensus*)user_data)->opt().node_id <<  "----> rc_log " << buf << std::endl;
+  std::cout << ((RaftConsensus*)user_data)->opt().node_id <<  "----> rc_log " << buf << std::endl;
 }
   
 void rc_init_func()
@@ -191,12 +191,12 @@ void rc_init_func()
 }
 
 
-RaftConcensus::RaftConcensus() :
+RaftConsensus::RaftConsensus() :
   _raft(0)
 {
 }
 
-RaftConcensus::~RaftConcensus()
+RaftConsensus::~RaftConsensus()
 {
   if (_raft)
   {
@@ -204,7 +204,7 @@ RaftConcensus::~RaftConcensus()
   }
 }
 
-bool RaftConcensus::initialize(const Options& options)
+bool RaftConsensus::initialize(const Options& options)
 {
   if (_raft)
   {
@@ -253,25 +253,63 @@ bool RaftConcensus::initialize(const Options& options)
   return true;
 }
 
-bool RaftConcensus::addNode(int node_id)
+bool RaftConsensus::addNode(int node_id)
 {
-  OSS::mutex_critic_sec_lock lock(_raftMutex);
+  OSS::mutex_lock lock(_raftMutex);
   raft_node_t* node = raft_add_node(_raft, this, node_id, node_id == _opt.node_id);
+  if (node)
+  {
+    _nodes[node_id] = Node(node);
+  }
   return !!(*node);
 }
 
-void RaftConcensus::callPeriodicTimer()
+bool RaftConsensus::addNoneVotingNode(int node_id)
 {
-  OSS::mutex_critic_sec_lock lock(_raftMutex);
+  OSS::mutex_lock lock(_raftMutex);
+  raft_node_t* node = raft_add_non_voting_node(_raft, this, node_id, node_id == _opt.node_id);
+  if (node)
+  {
+    _nodes[node_id] = Node(node);
+  }
+  return !!(*node);
+}
+
+void RaftConsensus::removeNode(int node_id)
+{
+  OSS::mutex_lock lock(_raftMutex);
+  Nodes::iterator iter = _nodes.find(node_id);
+  if (iter != _nodes.end())
+  {
+    raft_remove_node(_raft, iter->second.node());
+    _nodes.erase(node_id);
+  }
+}
+
+bool RaftConsensus::findNode(int node_id, Node& node)
+{
+  OSS::mutex_lock lock(_raftMutex);
+  Nodes::iterator iter = _nodes.find(node_id);
+  if (iter != _nodes.end())
+  {
+    node = iter->second;
+    return true;
+  }
+  return false;
+}
+  
+void RaftConsensus::callPeriodicTimer()
+{
+  OSS::mutex_lock lock(_raftMutex);
   raft_periodic(_raft, _opt.periodic_timer_ms);
 }
 
-void RaftConcensus::onTerminate()
+void RaftConsensus::onTerminate()
 {
   _sem.set();
 }
 
-void RaftConcensus::main()
+void RaftConsensus::main()
 {
   while (!_terminateFlag && !_sem.wait(_opt.periodic_timer_ms))
   {
@@ -279,13 +317,13 @@ void RaftConcensus::main()
   }
 }
 
-void RaftConcensus::becomeMaster()
+void RaftConsensus::becomeMaster()
 {
-  OSS::mutex_critic_sec_lock lock(_raftMutex);
+  OSS::mutex_lock lock(_raftMutex);
   raft_become_leader(_raft);
 }
 
-int RaftConcensus::onSendRequestVote(Node& node, const msg_requestvote_t& data)
+int RaftConsensus::onSendRequestVote(Node& node, msg_requestvote_t& data)
 {
   Connection::Ptr pConnection = findOrCreateConnection(node);
   if (pConnection)
@@ -295,7 +333,7 @@ int RaftConcensus::onSendRequestVote(Node& node, const msg_requestvote_t& data)
   return -1;
 }
 
-int RaftConcensus::onSendAppendEntries(Node& node, const msg_appendentries_t& data)
+int RaftConsensus::onSendAppendEntries(Node& node, msg_appendentries_t& data)
 {
   Connection::Ptr pConnection = findOrCreateConnection(node);
   if (pConnection)
@@ -305,32 +343,70 @@ int RaftConcensus::onSendAppendEntries(Node& node, const msg_appendentries_t& da
   return -1;
 }
 
-int RaftConcensus::onApplyEntry(const raft_entry_t& entry)
+int RaftConsensus::onReceivedRequestVote(const Connection::Ptr& pConnection, msg_requestvote_t& data)
+{
+  OSS::mutex_lock lock(_raftMutex);
+  int ret = 0;
+  msg_requestvote_response_t response;
+  ret = raft_recv_requestvote(_raft, pConnection->getNode().node(), &data, &response);
+  if (ret != 0)
+  {
+    return ret;
+  }
+  return pConnection->onSendRequestVoteResponse(response);
+}
+
+int RaftConsensus::onReceivedAppendEntries(const Connection::Ptr& pConnection, msg_appendentries_t& data)
+{
+  OSS::mutex_lock lock(_raftMutex);
+  
+  int ret = 0;
+  msg_appendentries_response_t response;
+  ret = raft_recv_appendentries(_raft, pConnection->getNode().node(), &data, &response);
+  if (ret != 0)
+  {
+    return ret;
+  }
+  return pConnection->onSendAppendEntriesResponse(response);
+}
+
+int RaftConsensus::onReceivedRequestVoteResponse(const Connection::Ptr& pConnection, msg_requestvote_response_t& data)
+{
+  OSS::mutex_lock lock(_raftMutex);
+  return raft_recv_requestvote_response(_raft, pConnection->getNode().node(), &data);
+}
+int RaftConsensus::onReceivedAppendEntriesResponse(const Connection::Ptr& pConnection, msg_appendentries_response_t& data)
+{
+  OSS::mutex_lock lock(_raftMutex);
+  return raft_recv_appendentries_response(_raft, pConnection->getNode().node(), &data);
+}
+
+int RaftConsensus::onApplyEntry(const raft_entry_t& entry)
 {
   return 0;
 }
 
-int RaftConcensus::onAppendEntry(const raft_entry_t& entry, int index)
+int RaftConsensus::onAppendEntry(const raft_entry_t& entry, int index)
 {
   return 0;
 }
 
-int RaftConcensus::onPersistVote(int vote)
+int RaftConsensus::onPersistVote(int vote)
 {
   return 0;
 }
 
-int RaftConcensus::onPersistTerm(int vote)
+int RaftConsensus::onPersistTerm(int vote)
 {
   return 0;
 }
 
-void RaftConcensus::onSufficientLogs(Node& node)
+void RaftConsensus::onSufficientLogs(Node& node)
 {
 }
 
 
-RaftConcensus::Connection::Ptr RaftConcensus::findConnection(int id)
+RaftConsensus::Connection::Ptr RaftConsensus::findConnection(int id)
 {
   OSS::mutex_critic_sec_lock lock(_connectionMutex);
   Connection::Ptr pConnection;
@@ -342,7 +418,7 @@ RaftConcensus::Connection::Ptr RaftConcensus::findConnection(int id)
   return pConnection;
 }
 
-RaftConcensus::Connection::Ptr RaftConcensus::findOrCreateConnection(Node& node)
+RaftConsensus::Connection::Ptr RaftConsensus::findOrCreateConnection(Node& node)
 {
   Connection::Ptr pConnection;
   pConnection = findConnection(node.getId());
@@ -357,13 +433,13 @@ RaftConcensus::Connection::Ptr RaftConcensus::findOrCreateConnection(Node& node)
   return pConnection;
 }
 
-void RaftConcensus::storeConnection(int id, const Connection::Ptr& pConnection)
+void RaftConsensus::storeConnection(int id, const Connection::Ptr& pConnection)
 {
   OSS::mutex_critic_sec_lock lock(_connectionMutex);
   _connections[id] = pConnection;
 }
 
-void RaftConcensus::removeConnection(int id)
+void RaftConsensus::removeConnection(int id)
 {
   Connection::Ptr pConnection;
   pConnection = findConnection(id);

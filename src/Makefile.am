@@ -343,7 +343,7 @@ liboss_core_la_SOURCES =  \
     bson/BSONParser.cpp \
     bson/BSONIterator.cpp \
     raft/libraft.c \
-    raft/RaftConcensus.cpp \
+    raft/RaftConsensus.cpp \
     raft/RaftNode.cpp \
     raft/RaftConnection.cpp \
     lmdb/liblmdb.c \
@@ -529,7 +529,7 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestRedisPubSub.cpp \
 	unit_test/TestZMQSocket.cpp \
 	unit_test/TestBSON.cpp \
-	unit_test/TestRaftConcensus.cpp \
+	unit_test/TestRaftConsensus.cpp \
 	unit_test/TestLMDB.cpp
 
 
