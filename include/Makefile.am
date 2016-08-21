@@ -186,6 +186,22 @@ nobase_include_HEADERS = \
     OSS/JS/JS.h \
     OSS/JS/JSBase.h \
     OSS/JS/JSSIPMessage.h \
+    OSS/JS/DUK/duk_config.h \
+    OSS/JS/DUK/duktape.h \
+    OSS/JS/DUK/dukglue.h \
+    OSS/JS/DUK/detail_class_proto.h \
+    OSS/JS/DUK/detail_constructor.h \
+    OSS/JS/DUK/detail_function.h \
+    OSS/JS/DUK/detail_method.h \
+    OSS/JS/DUK/detail_primitive_types.h \
+    OSS/JS/DUK/detail_refs.h \
+    OSS/JS/DUK/detail_stack.h \
+    OSS/JS/DUK/detail_traits.h \
+    OSS/JS/DUK/detail_typeinfo.h \
+    OSS/JS/DUK/detail_types.h \
+    OSS/JS/DUK/register_class.h \
+    OSS/JS/DUK/register_function.h \
+    OSS/JS/DUK/DuktapeContext.h \
     OSS/JSON/visitor.h \
     OSS/JSON/writer.inl \
     OSS/JSON/elements.h \

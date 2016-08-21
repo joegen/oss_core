@@ -347,7 +347,9 @@ liboss_core_la_SOURCES =  \
     raft/RaftNode.cpp \
     raft/RaftConnection.cpp \
     lmdb/liblmdb.c \
-    lmdb/LMDatabase.cpp
+    lmdb/LMDatabase.cpp \
+    js/duk/duktape.c \
+    js/duk/DuktapeContext.cpp
 
 if ENABLE_FEATURE_RESTKV
 liboss_core_la_SOURCES += \
@@ -530,7 +532,8 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestZMQSocket.cpp \
 	unit_test/TestBSON.cpp \
 	unit_test/TestRaftConsensus.cpp \
-	unit_test/TestLMDB.cpp
+	unit_test/TestLMDB.cpp \
+	unit_test/TestDuktape.cpp
 
 
 if ENABLE_FEATURE_COMPILE_SIPTEST
