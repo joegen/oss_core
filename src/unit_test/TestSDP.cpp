@@ -158,7 +158,7 @@ TEST(ParserTest, test_sdp_parser)
 
   SDPSession faxSession(faxSDP.str().c_str());
   SDPMedia::Ptr fax = faxSession.getMedia(SDPMedia::TYPE_FAX);
-  ASSERT_TRUE(fax);
+  ASSERT_TRUE(!!fax);
 
   std::string sessionAddress = faxSession.getAddress();
   std::string address = fax->getAddress();
@@ -215,7 +215,7 @@ TEST(ParserTest, test_sdp_parser)
 
   SDPSession iceSession(iceSDP.str().c_str());
   SDPMedia::Ptr ice = iceSession.getMedia(SDPMedia::TYPE_AUDIO);
-  ASSERT_TRUE(ice);
+  ASSERT_TRUE(!!ice);
   
   //
   // Check RTP Profile

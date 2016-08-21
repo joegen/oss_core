@@ -74,13 +74,13 @@ TEST(APITest, ExpireCache )
   cache.add("123", obj);
   ASSERT_TRUE(cache.has("123"));
   OSS::Cacheable::Ptr data = cache.get("123");
-  ASSERT_TRUE(data);
+  ASSERT_TRUE(!!data);
   MyCacheObj& cacheData = boost::any_cast<MyCacheObj&>(data->data());
   ASSERT_STREQ(cacheData.value.c_str(), "This is a test");
   cacheData.value = "This is a new value";
   data.reset();
   data = cache.get("123");
-  ASSERT_TRUE(data);
+  ASSERT_TRUE(!!data);
   ASSERT_STREQ(boost::any_cast<MyCacheObj&>(data->data()).value.c_str(), "This is a new value");
   cache.remove("123");
   ASSERT_FALSE(cache.has("123"));

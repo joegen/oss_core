@@ -356,8 +356,7 @@ bool SIPB2BContact::transformRegister(
   {
     if (hContactList == "*")
     {
-      SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_400_BadRequest);
-      return serverError;
+      return false;
     }
     if (!hContactList.empty())
     {

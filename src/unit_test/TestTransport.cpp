@@ -74,7 +74,7 @@ TEST(TransportTest, test_tls_transport)
 
     SIPTransportSession::Ptr pClient = tlsServer.createClientTlsTransport(localAddress, remoteAddress);
 
-    ASSERT_TRUE(pClient);
+    ASSERT_TRUE(!!pClient);
 
     OSS::thread_sleep(100);
 

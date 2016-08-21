@@ -50,7 +50,7 @@ namespace dukglue
 				{
 					// ArgStorage has some static_asserts in it that validate value types,
 					// so we typedef it to force ArgStorage<RetType> to compile and run the asserts
-					typedef typename dukglue::types::ArgStorage<RetType>::type ValidateReturnType;
+					//typedef typename dukglue::types::ArgStorage<RetType>::type ValidateReturnType;
 
 					RetType return_val = dukglue::detail::apply_method<Cls, RetType, Ts...>(methodToCall, obj, args);
 
@@ -118,7 +118,7 @@ namespace dukglue
 				{
 					// ArgStorage has some static_asserts in it that validate value types,
 					// so we typedef it to force ArgStorage<RetType> to compile and run the asserts
-					typedef typename dukglue::types::ArgStorage<RetType>::type ValidateReturnType;
+					//typedef typename dukglue::types::ArgStorage<RetType>::type ValidateReturnType;
 
 					RetType return_val = dukglue::detail::apply_method<Cls, RetType, Ts...>(method, obj, args);
 
