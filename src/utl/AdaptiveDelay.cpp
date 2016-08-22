@@ -95,7 +95,11 @@ void AdaptiveDelay::wait()
 
   if (nextWait)
   {
+#if OSS_OS == OSS_OS_MAC_OS_X
+    timeval sTimeout = { (int)(nextWait / 1000000), (int)( nextWait % 1000000 ) };
+#else
     timeval sTimeout = { (long int)(nextWait / 1000000), (long int)( nextWait % 1000000 ) };
+#endif
     select( 0, 0, 0, 0, &sTimeout );
   }
 }
