@@ -202,6 +202,7 @@ nobase_include_HEADERS = \
     OSS/JS/DUK/register_class.h \
     OSS/JS/DUK/register_function.h \
     OSS/JS/DUK/DuktapeContext.h \
+    OSS/JS/DUK/DuktapeModule.h \
     OSS/JSON/visitor.h \
     OSS/JSON/writer.inl \
     OSS/JSON/elements.h \

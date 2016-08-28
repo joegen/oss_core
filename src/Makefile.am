@@ -349,7 +349,8 @@ liboss_core_la_SOURCES =  \
     lmdb/liblmdb.c \
     lmdb/LMDatabase.cpp \
     js/duk/duktape.c \
-    js/duk/DuktapeContext.cpp
+    js/duk/DuktapeContext.cpp \
+    js/duk/DuktapeModule.cpp
 
 if ENABLE_FEATURE_RESTKV
 liboss_core_la_SOURCES += \
