@@ -35,20 +35,26 @@ namespace DUK {
 
 class DuktapeModule : boost::noncopyable
 {
-public:
+public: 
+  
   DuktapeModule(DuktapeContext& context);
   ~DuktapeModule();
   
   bool loadLibrary(const std::string& path);
   bool loadJS(const std::string& path);
+  bool loadCode(const std::string& coce);
+  
   void unload();
   
   const std::string& getPath() const;
   bool isLoaded() const;
+  
 protected:
   DuktapeContext& _context;
   std::string _path;
   bool _isLoaded;
+  void* _library;
+  void* _mod_init_func;
 };
   
 

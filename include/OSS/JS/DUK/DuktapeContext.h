@@ -35,17 +35,25 @@ namespace DUK {
 class DuktapeContext : public boost::noncopyable
 {
 public:
+  typedef std::map<intptr_t, DuktapeContext*> ContextMap;
+  
   DuktapeContext(const std::string& name);
   ~DuktapeContext();
-
-  const std::string& getName() const;
   
+  const std::string& getName() const;
   duk_context& context();
   const duk_context& context() const;
+  
+  void initCommonJS();
+  bool resolveModule(const std::string& parentId, const std::string& moduleId, std::string& resolvedResults);
+  
 private:  
   std::string _name;
   duk_context* _pContext;
+  
+public:
   static OSS::mutex_critic_sec _duk_mutex;
+  static ContextMap _contextMap;
 };
 
 
