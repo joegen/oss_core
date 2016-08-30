@@ -21,6 +21,7 @@
 #include <dlfcn.h>
 #include <fstream>
 #include <streambuf>
+#include "OSS/JS/DUK/DuktapeContext.h"
 #include "OSS/JS/DUK/DuktapeModule.h"
 
 
@@ -32,8 +33,8 @@ namespace DUK {
 #define DUK_MOD_INIT_FUNC "duk_mod_init"  
 typedef duk_ret_t (*duk_mod_init_func)(duk_context*); 
 
-DuktapeModule::DuktapeModule(DuktapeContext& context) :
-  _context(context),
+DuktapeModule::DuktapeModule(DuktapeContext* pContext) :
+  _pContext(pContext),
   _isLoaded(false),
   _library(0),
   _mod_init_func(0)
@@ -69,12 +70,12 @@ bool DuktapeModule::loadLibrary(const std::string& path)
   }
   
   // duk_c_function
-  duk_push_c_function(&_context.context(), *((duk_c_function*)_mod_init_func), 1 /* Number of arguments */);
-  duk_call(&_context.context(), 0);
+  duk_push_c_function(&_pContext->context(), *((duk_c_function*)_mod_init_func), 1 /* Number of arguments */);
+  duk_call(&_pContext->context(), 0);
   //
   // the top of the stack has the exports object
   //
-  duk_put_prop_string(&_context.context(), 2 /*idx of 'module'*/, "exports");
+  duk_put_prop_string(&_pContext->context(), 2 /*idx of 'module'*/, "exports");
   
   _isLoaded = true;
   return _isLoaded;
@@ -112,7 +113,7 @@ bool DuktapeModule::loadCode(const std::string& code)
   {
     code_final = code;
   }
-  return !!duk_push_lstring(&_context.context(), code_final.c_str(), code_final.length());
+  return !!duk_push_lstring(&_pContext->context(), code_final.c_str(), code_final.length());
 }
 
 void DuktapeModule::unload()

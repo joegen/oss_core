@@ -25,7 +25,8 @@
 #include "OSS/OSS.h"
 #include "OSS/JS/DUK/duktape.h"
 #include "OSS/UTL/Thread.h"
-#include <boost/noncopyable.hpp>
+#include "OSS/JS/DUK/DuktapeModule.h"
+
 
 namespace OSS {
 namespace JS {
@@ -36,6 +37,7 @@ class DuktapeContext : public boost::noncopyable
 {
 public:
   typedef std::map<intptr_t, DuktapeContext*> ContextMap;
+  typedef std::map<std::string, DuktapeModule*> ModuleMap;
   
   DuktapeContext(const std::string& name);
   ~DuktapeContext();
@@ -46,14 +48,20 @@ public:
   
   void initCommonJS();
   bool resolveModule(const std::string& parentId, const std::string& moduleId, std::string& resolvedResults);
+  bool loadModule(const std::string& moduleId);
+  
   
 private:  
   std::string _name;
   duk_context* _pContext;
   
 public:
+  static DuktapeContext* getContext(duk_context* ctx);
+  static DuktapeModule* getModule(DuktapeContext* pContext, const std::string& moduleId);
   static OSS::mutex_critic_sec _duk_mutex;
   static ContextMap _contextMap;
+  static ModuleMap _moduleMap;
+  
 };
 
 

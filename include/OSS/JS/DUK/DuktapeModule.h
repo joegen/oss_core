@@ -23,7 +23,7 @@
 
 
 #include "OSS/OSS.h"
-#include "OSS/JS/DUK/DuktapeContext.h"
+
 #include "OSS/UTL/Thread.h"
 #include <boost/noncopyable.hpp>
 
@@ -33,11 +33,13 @@ namespace JS {
 namespace DUK {
 
 
+class DuktapeContext;
+
 class DuktapeModule : boost::noncopyable
 {
 public: 
   
-  DuktapeModule(DuktapeContext& context);
+  DuktapeModule(DuktapeContext* pContext);
   ~DuktapeModule();
   
   bool loadLibrary(const std::string& path);
@@ -50,7 +52,7 @@ public:
   bool isLoaded() const;
   
 protected:
-  DuktapeContext& _context;
+  DuktapeContext* _pContext;
   std::string _path;
   bool _isLoaded;
   void* _library;

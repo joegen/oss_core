@@ -23,6 +23,7 @@
 
 #include "OSS/JS/DUK/DuktapeContext.h"
 #include "OSS/UTL/Logger.h"
+#include "OSS/UTL/CoreUtils.h"
 
 
 namespace OSS {
@@ -33,6 +34,7 @@ namespace DUK {
 
 OSS::mutex_critic_sec DuktapeContext::_duk_mutex;
 DuktapeContext::ContextMap DuktapeContext::_contextMap;
+DuktapeContext::ModuleMap DuktapeContext::_moduleMap;
 
 
 static void duktape_fatal_handler(duk_context *ctx, duk_errcode_t code, const char *msg) 
@@ -47,17 +49,22 @@ static duk_ret_t duktape_resolve_module(duk_context* ctx)
   std::string parentId = duk_get_string(ctx, 1);
   std::string resolvedId;
   
-  DuktapeContext::ContextMap::iterator iter = DuktapeContext::_contextMap.find((intptr_t)ctx);
-  if (iter != DuktapeContext::_contextMap.end())
+  DuktapeContext* pContext = DuktapeContext::getContext(ctx);
+  if (pContext)
   {
-    iter->second->resolveModule(parentId, moduleId, resolvedId);
-  }
-  
+    pContext->resolveModule(parentId, moduleId, resolvedId);
+  } 
   return 0;
 }
 
 static duk_ret_t duktape_load_module(duk_context* ctx)
 {
+  std::string resolvedId = duk_require_string(ctx, 0);
+  DuktapeContext* pContext = DuktapeContext::getContext(ctx);
+  if (pContext)
+  {
+    pContext->loadModule(resolvedId);
+  }
   return 0;
 }
 
@@ -65,27 +72,27 @@ DuktapeContext::DuktapeContext(const std::string& name) :
   _name(name),
   _pContext(0)
 {
-  _duk_mutex.lock();
+  OSS::mutex_critic_sec_lock lock(DuktapeContext::_duk_mutex);
   _pContext = duk_create_heap(NULL, // alloc function
       NULL, // realloc function
       NULL, // free function
       this, // user data
       duktape_fatal_handler); // fatal error handler
-  
+  DuktapeContext::_contextMap[(intptr_t)_pContext] = this;
   initCommonJS();
-  
-  _duk_mutex.unlock();
 }
 
 DuktapeContext::~DuktapeContext()
 {
-  _duk_mutex.lock();
+  OSS::mutex_critic_sec_lock lock(DuktapeContext::_duk_mutex);
+  DuktapeContext::_contextMap.erase((intptr_t)_pContext);
   duk_destroy_heap(_pContext);
-  _duk_mutex.unlock();
+  _pContext = 0;
 }
 
 void DuktapeContext::initCommonJS()
 {
+  OSS::mutex_critic_sec_lock lock(DuktapeContext::_duk_mutex);
   duk_push_object(_pContext);
   duk_push_c_function(_pContext, duktape_resolve_module, DUK_VARARGS);
   duk_put_prop_string(_pContext, -2, "resolve");
@@ -93,8 +100,52 @@ void DuktapeContext::initCommonJS()
   duk_put_prop_string(_pContext, -2, "load");
 }
 
+DuktapeContext* DuktapeContext::getContext(duk_context* ctx)
+{
+  OSS::mutex_critic_sec_lock lock(DuktapeContext::_duk_mutex);
+  DuktapeContext::ContextMap::iterator iter = DuktapeContext::_contextMap.find((intptr_t)ctx);
+  if (iter != DuktapeContext::_contextMap.end())
+  {
+    return iter->second;
+  }
+  return 0;
+}
+
+DuktapeModule* DuktapeContext::getModule(DuktapeContext* pContext, const std::string& moduleId)
+{
+  OSS::mutex_critic_sec_lock lock(DuktapeContext::_duk_mutex);
+  DuktapeContext::ModuleMap::iterator iter = DuktapeContext::_moduleMap.find(moduleId);
+  if (iter != DuktapeContext::_moduleMap.end())
+  {
+    return iter->second;
+  }
+  DuktapeModule* pModule = new DuktapeModule(pContext);
+  DuktapeContext::_moduleMap[moduleId] = pModule;
+  return pModule;
+}
+
+
 bool DuktapeContext::resolveModule(const std::string& parentId, const std::string& moduleId, std::string& resolvedResults)
 {
+  return false;
+}
+
+bool DuktapeContext::loadModule(const std::string& moduleId)
+{
+  DuktapeModule* pModule = DuktapeContext::getModule(this, moduleId);
+  if (!pModule)
+  {
+    return false;
+  }
+
+  if (OSS::string_ends_with(moduleId, ".so"))
+  {
+    return pModule->loadLibrary(moduleId);
+  }
+  else if (OSS::string_ends_with(moduleId, ".js"))
+  {
+    return pModule->loadJS(moduleId);
+  }
   return false;
 }
 
