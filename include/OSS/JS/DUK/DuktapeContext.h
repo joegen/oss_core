@@ -22,6 +22,10 @@
 #define	OSS_DUKTAPECONTEXT_H_INCLUDED
 
 
+#include <map>
+#include <vector>
+#include <boost/filesystem.hpp>
+
 #include "OSS/OSS.h"
 #include "OSS/JS/DUK/duktape.h"
 #include "OSS/UTL/Thread.h"
@@ -38,6 +42,7 @@ class DuktapeContext : public boost::noncopyable
 public:
   typedef std::map<intptr_t, DuktapeContext*> ContextMap;
   typedef std::map<std::string, DuktapeModule*> ModuleMap;
+  typedef std::vector<boost::filesystem::path> ModuleDirectories;
   
   DuktapeContext(const std::string& name);
   ~DuktapeContext();
@@ -51,6 +56,8 @@ public:
   bool loadModule(const std::string& moduleId);
   
   
+  
+  
 private:  
   std::string _name;
   duk_context* _pContext;
@@ -58,9 +65,13 @@ private:
 public:
   static DuktapeContext* getContext(duk_context* ctx);
   static DuktapeModule* getModule(DuktapeContext* pContext, const std::string& moduleId);
+  static void deleteModule(const std::string& moduleId);
+  static bool addModuleDirectory(const std::string& path);
+  static bool resolvePath(const std::string& file, std::string& absolutePath);
   static OSS::mutex_critic_sec _duk_mutex;
   static ContextMap _contextMap;
   static ModuleMap _moduleMap;
+  static ModuleDirectories _moduleDirectories;
   
 };
 

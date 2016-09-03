@@ -35,6 +35,7 @@ namespace DUK {
 OSS::mutex_critic_sec DuktapeContext::_duk_mutex;
 DuktapeContext::ContextMap DuktapeContext::_contextMap;
 DuktapeContext::ModuleMap DuktapeContext::_moduleMap;
+DuktapeContext::ModuleDirectories DuktapeContext::_moduleDirectories;
 
 
 static void duktape_fatal_handler(duk_context *ctx, duk_errcode_t code, const char *msg) 
@@ -74,8 +75,8 @@ DuktapeContext::DuktapeContext(const std::string& name) :
 {
   OSS::mutex_critic_sec_lock lock(DuktapeContext::_duk_mutex);
   _pContext = duk_create_heap(NULL, // alloc function
-      NULL, // realloc function
-      NULL, // free function
+      0, // realloc function
+      0, // free function
       this, // user data
       duktape_fatal_handler); // fatal error handler
   DuktapeContext::_contextMap[(intptr_t)_pContext] = this;
@@ -111,6 +112,19 @@ DuktapeContext* DuktapeContext::getContext(duk_context* ctx)
   return 0;
 }
 
+bool DuktapeContext::addModuleDirectory(const std::string& path)
+{
+  boost::filesystem::path moduleDirectory(path.c_str());
+  if (!boost::filesystem::exists(moduleDirectory))
+  {
+    OSS_LOG_ERROR("DuktapeContext::addModuleDirectory - " << OSS::boost_path(moduleDirectory) << "does not exists");
+    return false;
+  }
+  OSS_LOG_INFO("DuktapeContext::addModuleDirectory - " << OSS::boost_path(moduleDirectory) << " REGISTERED");
+  _moduleDirectories.push_back(moduleDirectory);
+  return true;
+}
+
 DuktapeModule* DuktapeContext::getModule(DuktapeContext* pContext, const std::string& moduleId)
 {
   OSS::mutex_critic_sec_lock lock(DuktapeContext::_duk_mutex);
@@ -124,10 +138,71 @@ DuktapeModule* DuktapeContext::getModule(DuktapeContext* pContext, const std::st
   return pModule;
 }
 
-
-bool DuktapeContext::resolveModule(const std::string& parentId, const std::string& moduleId, std::string& resolvedResults)
+void DuktapeContext::deleteModule(const std::string& moduleId)
 {
+  OSS::mutex_critic_sec_lock lock(DuktapeContext::_duk_mutex);
+  DuktapeContext::_moduleMap.erase(moduleId);
+}
+
+bool DuktapeContext::resolvePath(const std::string& file, std::string& absolutePath)
+{
+  boost::filesystem::path relativePath(file.c_str());
+  if (boost::filesystem::exists(relativePath))
+  {
+    absolutePath = OSS::boost_path(relativePath);
+    return true;
+  }
+  else
+  {
+    for (DuktapeContext::ModuleDirectories::iterator iter = DuktapeContext::_moduleDirectories.begin(); 
+      iter != DuktapeContext::_moduleDirectories.end(); iter++)
+    {
+      boost::filesystem::path path = OSS::boost_path_concatenate(*iter, file);
+      if (boost::filesystem::exists(path))
+      {
+        absolutePath = OSS::boost_path(path);
+        return true;
+      }
+    }
+  }
   return false;
+}
+
+bool DuktapeContext::resolveModule(const std::string& parentId, const std::string& moduleId, std::string& resolvedResult)
+{
+  OSS_LOG_DEBUG("DuktapeContext::resolveModule - resolving " << parentId << "::" << moduleId);
+  bool isSharedLib = false;
+  bool isJs = false;
+  bool resolved = false;
+  if (!(isSharedLib = OSS::string_ends_with(moduleId, ".so")))
+  {
+    isJs = OSS::string_ends_with(moduleId, ".js");
+  }
+  
+  if (isSharedLib || isJs)
+  {
+    resolved = DuktapeContext::resolvePath(moduleId, resolvedResult);
+  }
+  else
+  {
+    std::string soFile = moduleId + ".so";
+    if (!(resolved = DuktapeContext::resolvePath(soFile, resolvedResult)))
+    {
+      std::string jsFile = moduleId + ".js";
+      resolved = DuktapeContext::resolvePath(jsFile, resolvedResult);
+    }
+  }
+  
+  if (resolved)
+  {
+    OSS_LOG_INFO("DuktapeContext::resolveModule - module resolved " << parentId << "::" << moduleId << " -> " << resolvedResult);
+  }
+  else
+  {
+    OSS_LOG_ERROR("DuktapeContext::resolveModule - Unable to resolve " << parentId << "::" << moduleId);
+  }
+  
+  return resolved;
 }
 
 bool DuktapeContext::loadModule(const std::string& moduleId)
@@ -137,16 +212,25 @@ bool DuktapeContext::loadModule(const std::string& moduleId)
   {
     return false;
   }
-
   if (OSS::string_ends_with(moduleId, ".so"))
   {
-    return pModule->loadLibrary(moduleId);
+    if (!pModule->loadLibrary(moduleId))
+    {
+      OSS_LOG_ERROR("DuktapeContext::loadModule - " << "Unable to load module " << moduleId);
+      deleteModule(moduleId);
+      return false;
+    }
   }
   else if (OSS::string_ends_with(moduleId, ".js"))
   {
-    return pModule->loadJS(moduleId);
+    if (!pModule->loadJS(moduleId))
+    {
+      OSS_LOG_ERROR("DuktapeContext::loadModule - " << "Unable to load module " << moduleId);
+      deleteModule(moduleId);
+      return false;
+    }
   }
-  return false;
+  return true;
 }
 
 

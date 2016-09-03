@@ -101,6 +101,11 @@ bool DuktapeModule::loadJS(const std::string& path)
 
 bool DuktapeModule::loadCode(const std::string& code)
 {
+  if (_library)
+  {
+    return false;
+  }
+  
   std::string code_final;
   if (code.at(0) == '#' && code.at(1) == 'i')
   {
@@ -113,7 +118,8 @@ bool DuktapeModule::loadCode(const std::string& code)
   {
     code_final = code;
   }
-  return !!duk_push_lstring(&_pContext->context(), code_final.c_str(), code_final.length());
+  _isLoaded = !!duk_push_lstring(&_pContext->context(), code_final.c_str(), code_final.length());
+  return _isLoaded;
 }
 
 void DuktapeModule::unload()
