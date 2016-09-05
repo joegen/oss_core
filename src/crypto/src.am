@@ -1,0 +1,8 @@
+liboss_core_la_SOURCES +=  \
+    crypto/Crypto.cpp
+
+if ENABLE_FEATURE_MCRYPT
+liboss_core_la_SOURCES += \
+    crypto/BlockCipher.cpp \
+    crypto/FileEncryptor.cpp
+endif
