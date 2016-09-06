@@ -189,6 +189,7 @@ nobase_include_HEADERS = \
     OSS/JS/DUK/duk_config.h \
     OSS/JS/DUK/duktape.h \
     OSS/JS/DUK/dukglue.h \
+    OSS/JS/DUK/duk_module_node.h \
     OSS/JS/DUK/detail_class_proto.h \
     OSS/JS/DUK/detail_constructor.h \
     OSS/JS/DUK/detail_function.h \

@@ -13,3 +13,4 @@ src/boost_pch.hpp.gch
 *.a
 *.la
 *.so
+/build/

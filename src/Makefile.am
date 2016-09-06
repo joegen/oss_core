@@ -100,6 +100,7 @@ include ua/src.am
 include rtp/src.am
 include zmq/src.am
 include b2bua/src.am
+include js/src.am
 
 DISTCLEANFILES = Makefile.in
 

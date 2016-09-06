@@ -69,6 +69,16 @@ static duk_ret_t duktape_load_module(duk_context* ctx)
   return 0;
 }
 
+DuktapeContext* DuktapeContext::rootInstance()
+{
+  static DuktapeContext* pInstance = 0;
+  if (!pInstance)
+  {
+    pInstance = new DuktapeContext("root-instance");
+  }
+  return pInstance;
+}
+
 DuktapeContext::DuktapeContext(const std::string& name) :
   _name(name),
   _pContext(0)
@@ -77,7 +87,7 @@ DuktapeContext::DuktapeContext(const std::string& name) :
   _pContext = duk_create_heap(NULL, // alloc function
       0, // realloc function
       0, // free function
-      this, // user data
+      0, // user data
       duktape_fatal_handler); // fatal error handler
   DuktapeContext::_contextMap[(intptr_t)_pContext] = this;
   initCommonJS();
@@ -93,7 +103,6 @@ DuktapeContext::~DuktapeContext()
 
 void DuktapeContext::initCommonJS()
 {
-  OSS::mutex_critic_sec_lock lock(DuktapeContext::_duk_mutex);
   duk_push_object(_pContext);
   duk_push_c_function(_pContext, duktape_resolve_module, DUK_VARARGS);
   duk_put_prop_string(_pContext, -2, "resolve");
@@ -117,7 +126,7 @@ bool DuktapeContext::addModuleDirectory(const std::string& path)
   boost::filesystem::path moduleDirectory(path.c_str());
   if (!boost::filesystem::exists(moduleDirectory))
   {
-    OSS_LOG_ERROR("DuktapeContext::addModuleDirectory - " << OSS::boost_path(moduleDirectory) << "does not exists");
+    OSS_LOG_DEBUG("DuktapeContext::addModuleDirectory - " << OSS::boost_path(moduleDirectory) << " does not exists");
     return false;
   }
   OSS_LOG_INFO("DuktapeContext::addModuleDirectory - " << OSS::boost_path(moduleDirectory) << " REGISTERED");
@@ -231,6 +240,16 @@ bool DuktapeContext::loadModule(const std::string& moduleId)
     }
   }
   return true;
+}
+
+bool DuktapeContext::evalFile(const std::string& file)
+{
+  if (!boost::filesystem::exists(file.c_str()))
+  {
+    OSS_LOG_ERROR("DuktapeContext::evalFile - " << "Unable to locate file " << file);
+    return false;
+  }
+  return duk_module_node_peval_file(_pContext, file.c_str(), 1) == 0;
 }
 
 

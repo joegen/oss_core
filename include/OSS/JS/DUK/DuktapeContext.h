@@ -28,6 +28,7 @@
 
 #include "OSS/OSS.h"
 #include "OSS/JS/DUK/duktape.h"
+#include "OSS/JS/DUK/duk_module_node.h"
 #include "OSS/UTL/Thread.h"
 #include "OSS/JS/DUK/DuktapeModule.h"
 
@@ -54,15 +55,14 @@ public:
   void initCommonJS();
   bool resolveModule(const std::string& parentId, const std::string& moduleId, std::string& resolvedResults);
   bool loadModule(const std::string& moduleId);
-  
-  
-  
+  bool evalFile(const std::string& file);
   
 private:  
   std::string _name;
   duk_context* _pContext;
   
 public:
+  static DuktapeContext* rootInstance();
   static DuktapeContext* getContext(duk_context* ctx);
   static DuktapeModule* getModule(DuktapeContext* pContext, const std::string& moduleId);
   static void deleteModule(const std::string& moduleId);

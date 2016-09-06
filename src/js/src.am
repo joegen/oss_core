@@ -1,5 +1,6 @@
 liboss_core_la_SOURCES +=  \
     js/duk/duktape.c \
+    js/duk/duk_module_node.c \
     js/duk/DuktapeContext.cpp \
     js/duk/DuktapeModule.cpp
 
