@@ -3,6 +3,7 @@
 #include "OSS/JS/DUK/DuktapeContext.h"
 
 using OSS::JS::DUK::DuktapeContext;
+using OSS::JS::DUK::DuktapeModule;
 
 #define LOHIKA_DAEMON_NAME "Lohika"
 #define LOHIKA_MAJOR_VERSION "0"
@@ -39,6 +40,12 @@ static bool init_module_directories()
     }
   }
   return true;
+}
+
+duk_ret_t printHello(duk_context* ctx) 
+{
+  std::cout << "Hello Internal Module!" << std::endl;
+  return 0;
 }
 
 int main(int argc, char** argv)
@@ -80,7 +87,7 @@ int main(int argc, char** argv)
   
   if (!inputFile.empty())
   {
-    gInstance->evalFile(inputFile);
+    gInstance->evalFile(inputFile, 0, 0);
   }
   
 exit:  

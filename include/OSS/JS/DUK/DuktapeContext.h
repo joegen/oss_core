@@ -44,7 +44,7 @@ public:
   typedef std::map<intptr_t, DuktapeContext*> ContextMap;
   typedef std::map<std::string, DuktapeModule*> ModuleMap;
   typedef std::vector<boost::filesystem::path> ModuleDirectories;
-  
+  typedef std::set<std::string> InternalModules;
   DuktapeContext(const std::string& name);
   ~DuktapeContext();
   
@@ -55,7 +55,9 @@ public:
   void initCommonJS();
   bool resolveModule(const std::string& parentId, const std::string& moduleId, std::string& resolvedResults);
   bool loadModule(const std::string& moduleId);
-  bool evalFile(const std::string& file);
+  bool evalFile(const std::string& file, FILE* foutput, FILE* ferror);
+  DuktapeModule* getModule(const std::string& moduleId);
+  void createInternalModule(const std::string& moduleId, DuktapeModule::duk_mod_init_func initFunc);
   
 private:  
   std::string _name;
@@ -64,14 +66,15 @@ private:
 public:
   static DuktapeContext* rootInstance();
   static DuktapeContext* getContext(duk_context* ctx);
+  static void createInternalModule(DuktapeContext* pContext, const std::string& moduleId, DuktapeModule::duk_mod_init_func initFunc);
   static DuktapeModule* getModule(DuktapeContext* pContext, const std::string& moduleId);
   static void deleteModule(const std::string& moduleId);
   static bool addModuleDirectory(const std::string& path);
   static bool resolvePath(const std::string& file, std::string& absolutePath);
   static OSS::mutex_critic_sec _duk_mutex;
-  static ContextMap _contextMap;
   static ModuleMap _moduleMap;
   static ModuleDirectories _moduleDirectories;
+  static InternalModules _internalModules;
   
 };
 
@@ -92,6 +95,16 @@ inline duk_context& DuktapeContext::context()
 inline const duk_context& DuktapeContext::context() const
 {
   return *_pContext;
+}
+
+inline DuktapeModule* DuktapeContext::getModule(const std::string& moduleId)
+{
+  return DuktapeContext::getModule(this, moduleId);
+}
+
+inline void DuktapeContext::createInternalModule(const std::string& moduleId, DuktapeModule::duk_mod_init_func initFunc)
+{
+  DuktapeContext::createInternalModule(this, moduleId, initFunc);
 }
 
 } } } // OSS::JS::DUK

@@ -31,7 +31,7 @@ namespace DUK {
 
  
 #define DUK_MOD_INIT_FUNC "duk_mod_init"  
-typedef duk_ret_t (*duk_mod_init_func)(duk_context*); 
+
 
 DuktapeModule::DuktapeModule(DuktapeContext* pContext) :
   _pContext(pContext),
@@ -43,6 +43,17 @@ DuktapeModule::DuktapeModule(DuktapeContext* pContext) :
 
 DuktapeModule::~DuktapeModule()
 {
+}
+
+void DuktapeModule::callModuleInit(duk_mod_init_func initFunc)
+{
+  // duk_c_function
+  duk_push_c_function(&_pContext->context(), initFunc, 1 /* Number of arguments */);
+  duk_call(&_pContext->context(), 0);
+  //
+  // the top of the stack has the exports object
+  //
+  duk_put_prop_string(&_pContext->context(), 2 /*idx of 'module'*/, "exports");
 }
   
 bool DuktapeModule::loadLibrary(const std::string& path)
@@ -62,20 +73,14 @@ bool DuktapeModule::loadLibrary(const std::string& path)
   //
   // Get the mod_init function pointer
   //
-  _mod_init_func = dlsym(_library, DUK_MOD_INIT_FUNC);
+  *(void**)(&_mod_init_func) = dlsym(_library, DUK_MOD_INIT_FUNC);
   if (!_mod_init_func)
   {
     unload();
     return false;
   }
   
-  // duk_c_function
-  duk_push_c_function(&_pContext->context(), *((duk_c_function*)_mod_init_func), 1 /* Number of arguments */);
-  duk_call(&_pContext->context(), 0);
-  //
-  // the top of the stack has the exports object
-  //
-  duk_put_prop_string(&_pContext->context(), 2 /*idx of 'module'*/, "exports");
+  callModuleInit(_mod_init_func);
   
   _isLoaded = true;
   return _isLoaded;

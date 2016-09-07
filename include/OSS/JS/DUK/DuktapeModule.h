@@ -38,6 +38,7 @@ class DuktapeContext;
 class DuktapeModule : boost::noncopyable
 {
 public: 
+  typedef duk_ret_t (*duk_mod_init_func)(duk_context*); 
   
   DuktapeModule(DuktapeContext* pContext);
   ~DuktapeModule();
@@ -45,7 +46,7 @@ public:
   bool loadLibrary(const std::string& path);
   bool loadJS(const std::string& path);
   bool loadCode(const std::string& coce);
-  
+  void callModuleInit(duk_mod_init_func initFunc);
   void unload();
   
   const std::string& getPath() const;
@@ -56,7 +57,7 @@ protected:
   std::string _path;
   bool _isLoaded;
   void* _library;
-  void* _mod_init_func;
+  duk_mod_init_func _mod_init_func;
 };
   
 
