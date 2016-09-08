@@ -69,12 +69,9 @@ static duk_ret_t duktape_load_module(duk_context* ctx)
   DuktapeContext* pContext = DuktapeContext::getContext(ctx);
   if (pContext)
   {
-    if (pContext->loadModule(resolvedId))
-    {
-      return 1;
-    }
+    return pContext->loadModule(resolvedId);
   }
-  return 0;
+  return -1;
 }
 
 static int duktape_get_error_stack(duk_context *ctx) 
@@ -190,19 +187,14 @@ bool DuktapeContext::addModuleDirectory(const std::string& path)
     OSS_LOG_DEBUG("DuktapeContext::addModuleDirectory - " << OSS::boost_path(moduleDirectory) << " does not exists");
     return false;
   }
-  OSS_LOG_INFO("DuktapeContext::addModuleDirectory - " << OSS::boost_path(moduleDirectory) << " REGISTERED");
-  _moduleDirectories.push_back(moduleDirectory);
+  OSS_LOG_DEBUG("DuktapeContext::addModuleDirectory - " << OSS::boost_path(moduleDirectory) << " REGISTERED");
+  DuktapeContext::_moduleDirectories.push_back(moduleDirectory);
   return true;
 }
 
-void DuktapeContext::createInternalModule(DuktapeContext* pContext, const std::string& moduleId, DuktapeModule::duk_mod_init_func initFunc)
+void DuktapeContext::createInternalModule(DuktapeContext* pContext, const std::string& moduleId, ModuleInit initFunc)
 {
-  DuktapeModule* pModule = DuktapeContext::getModule(pContext, moduleId);
-  if (pModule)
-  {
-    DuktapeContext::_internalModules.insert(moduleId);
-    pModule->callModuleInit(initFunc);
-  }
+  DuktapeContext::_internalModules[moduleId] = initFunc;
 }
 
 DuktapeModule* DuktapeContext::getModule(DuktapeContext* pContext, const std::string& moduleId)
@@ -282,7 +274,7 @@ bool DuktapeContext::resolveModule(const std::string& parentId, const std::strin
   
   if (resolved)
   {
-    OSS_LOG_INFO("DuktapeContext::resolveModule - module resolved " << parentId << "::" << moduleId << " -> " << resolvedResult);
+    OSS_LOG_DEBUG("DuktapeContext::resolveModule - module resolved " << parentId << "::" << moduleId << " -> " << resolvedResult);
   }
   else
   {
@@ -292,21 +284,27 @@ bool DuktapeContext::resolveModule(const std::string& parentId, const std::strin
   return resolved;
 }
 
-bool DuktapeContext::loadModule(const std::string& moduleId)
+int DuktapeContext::loadModule(const std::string& moduleId)
 {
   DuktapeModule* pModule = DuktapeContext::getModule(this, moduleId);
   if (!pModule)
   {
-    return false;
+    return -1;
   }
-  if (OSS::string_ends_with(moduleId, ".so"))
+  if (DuktapeContext::_internalModules.find(moduleId) != DuktapeContext::_internalModules.end())
+  {
+    pModule->callModuleInit(DuktapeContext::_internalModules[moduleId]);
+    return 0;
+  }
+  else if (OSS::string_ends_with(moduleId, ".so"))
   {
     if (!pModule->loadLibrary(moduleId))
     {
       OSS_LOG_ERROR("DuktapeContext::loadModule - " << "Unable to load module " << moduleId);
       deleteModule(moduleId);
-      return false;
+      return -1;
     }
+    return 0;
   }
   else if (OSS::string_ends_with(moduleId, ".js"))
   {
@@ -314,10 +312,11 @@ bool DuktapeContext::loadModule(const std::string& moduleId)
     {
       OSS_LOG_ERROR("DuktapeContext::loadModule - " << "Unable to load module " << moduleId);
       deleteModule(moduleId);
-      return false;
+      return -1;
     }
+    return 1;
   }
-  return true;
+  return -1;
 }
 
 bool DuktapeContext::evalFile(const std::string& file, FILE* foutput, FILE* ferror)

@@ -25,10 +25,12 @@ static bool init_program_options(int argc, char** argv)
 
 static bool init_module_directories()
 {
-  assert(gInstance);
-  gInstance->addModuleDirectory("mod");
-  gInstance->addModuleDirectory("/usr/local/lib/lohika/mod");
-  gInstance->addModuleDirectory("/usr/lib/lohika/mod");
+  std::ostringstream home;
+  home << getenv("HOME") << "/mod";
+  DuktapeContext::addModuleDirectory(home.str());
+  DuktapeContext::addModuleDirectory("~/mod");
+  DuktapeContext::addModuleDirectory("/usr/local/lib/lohika/mod");
+  DuktapeContext::addModuleDirectory("/usr/lib/lohika/mod");
   
   if (gOptions->hasOption("module-dir"))
   {
@@ -36,17 +38,12 @@ static bool init_module_directories()
     gOptions->getOption("module-dir", modules);
     for (std::vector<std::string>::const_iterator iter = modules.begin(); iter != modules.end(); iter++)
     {
-      gInstance->addModuleDirectory(*iter);
+      DuktapeContext::addModuleDirectory(*iter);
     }
   }
   return true;
 }
 
-duk_ret_t printHello(duk_context* ctx) 
-{
-  std::cout << "Hello Internal Module!" << std::endl;
-  return 0;
-}
 
 int main(int argc, char** argv)
 {

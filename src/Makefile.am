@@ -121,6 +121,6 @@ include unit_test/Makefile.am
 #
 bin_PROGRAMS =
 include apps/Makefile.am
-include Lohika/Makefile.am
+include lohika_js/Makefile.am
 
 

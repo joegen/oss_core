@@ -41,10 +41,12 @@ namespace DUK {
 class DuktapeContext : public boost::noncopyable
 {
 public:
+  typedef DuktapeModule::duk_mod_init_func ModuleInit;
   typedef std::map<intptr_t, DuktapeContext*> ContextMap;
   typedef std::map<std::string, DuktapeModule*> ModuleMap;
   typedef std::vector<boost::filesystem::path> ModuleDirectories;
-  typedef std::set<std::string> InternalModules;
+  typedef std::map<std::string, ModuleInit> InternalModules;
+  
   DuktapeContext(const std::string& name);
   ~DuktapeContext();
   
@@ -54,10 +56,10 @@ public:
   
   void initCommonJS();
   bool resolveModule(const std::string& parentId, const std::string& moduleId, std::string& resolvedResults);
-  bool loadModule(const std::string& moduleId);
+  int loadModule(const std::string& moduleId);
   bool evalFile(const std::string& file, FILE* foutput, FILE* ferror);
   DuktapeModule* getModule(const std::string& moduleId);
-  void createInternalModule(const std::string& moduleId, DuktapeModule::duk_mod_init_func initFunc);
+  void createInternalModule(const std::string& moduleId, ModuleInit initFunc);
   
 private:  
   std::string _name;
@@ -66,7 +68,7 @@ private:
 public:
   static DuktapeContext* rootInstance();
   static DuktapeContext* getContext(duk_context* ctx);
-  static void createInternalModule(DuktapeContext* pContext, const std::string& moduleId, DuktapeModule::duk_mod_init_func initFunc);
+  static void createInternalModule(DuktapeContext* pContext, const std::string& moduleId, ModuleInit initFunc);
   static DuktapeModule* getModule(DuktapeContext* pContext, const std::string& moduleId);
   static void deleteModule(const std::string& moduleId);
   static bool addModuleDirectory(const std::string& path);

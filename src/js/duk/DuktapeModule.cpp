@@ -54,6 +54,11 @@ void DuktapeModule::callModuleInit(duk_mod_init_func initFunc)
   // the top of the stack has the exports object
   //
   duk_put_prop_string(&_pContext->context(), 2 /*idx of 'module'*/, "exports");
+  if (!_mod_init_func)
+  {
+    _mod_init_func = initFunc;
+  }
+  _isLoaded = true;
 }
   
 bool DuktapeModule::loadLibrary(const std::string& path)
@@ -81,8 +86,6 @@ bool DuktapeModule::loadLibrary(const std::string& path)
   }
   
   callModuleInit(_mod_init_func);
-  
-  _isLoaded = true;
   return _isLoaded;
 }
 
@@ -133,8 +136,8 @@ void DuktapeModule::unload()
   {
     dlclose(_library);
     _library = 0;
-    _mod_init_func = 0;
   }
+  _mod_init_func = 0;
   _isLoaded = false;
 }
   
