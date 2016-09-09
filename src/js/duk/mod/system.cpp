@@ -40,6 +40,7 @@ duk_ret_t system_mod_init(duk_context* ctx)
 {
   gFunctions.push_back({ "getenv", system_getnenv, 1 });
   gFunctions.push_back({ 0, 0, 0 });
+
   duk_push_object(ctx);
   duk_export_functions(ctx, gFunctions);
   return 1;
