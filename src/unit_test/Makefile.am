@@ -29,5 +29,4 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestZMQSocket.cpp \
 	unit_test/TestBSON.cpp \
 	unit_test/TestRaftConsensus.cpp \
-	unit_test/TestLMDB.cpp \
-	unit_test/TestDuktape.cpp
+	unit_test/TestLMDB.cpp

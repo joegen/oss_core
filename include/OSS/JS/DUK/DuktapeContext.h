@@ -46,6 +46,7 @@ public:
   typedef std::map<std::string, DuktapeModule*> ModuleMap;
   typedef std::vector<boost::filesystem::path> ModuleDirectories;
   typedef std::map<std::string, ModuleInit> InternalModules;
+  typedef std::map<std::string, std::string> InternalJSModules;
   
   DuktapeContext(const std::string& name);
   ~DuktapeContext();
@@ -54,12 +55,16 @@ public:
   duk_context& context();
   const duk_context& context() const;
   
-  void initCommonJS();
   bool resolveModule(const std::string& parentId, const std::string& moduleId, std::string& resolvedResults);
   int loadModule(const std::string& moduleId);
   bool evalFile(const std::string& file, FILE* foutput, FILE* ferror);
   DuktapeModule* getModule(const std::string& moduleId);
+  
+
+protected:
   void createInternalModule(const std::string& moduleId, ModuleInit initFunc);
+  void createInternalModule(const std::string& moduleId, const std::string& code);
+  void loadInternalModules();
   
 private:  
   std::string _name;
@@ -69,6 +74,7 @@ public:
   static DuktapeContext* rootInstance();
   static DuktapeContext* getContext(duk_context* ctx);
   static void createInternalModule(DuktapeContext* pContext, const std::string& moduleId, ModuleInit initFunc);
+  static void createInternalModule(DuktapeContext* pContext, const std::string& moduleId, const std::string& code);
   static DuktapeModule* getModule(DuktapeContext* pContext, const std::string& moduleId);
   static void deleteModule(const std::string& moduleId);
   static bool addModuleDirectory(const std::string& path);
@@ -77,6 +83,7 @@ public:
   static ModuleMap _moduleMap;
   static ModuleDirectories _moduleDirectories;
   static InternalModules _internalModules;
+  static InternalJSModules _internalJSModules;
   
 };
 
@@ -107,6 +114,11 @@ inline DuktapeModule* DuktapeContext::getModule(const std::string& moduleId)
 inline void DuktapeContext::createInternalModule(const std::string& moduleId, DuktapeModule::duk_mod_init_func initFunc)
 {
   DuktapeContext::createInternalModule(this, moduleId, initFunc);
+}
+
+inline void DuktapeContext::createInternalModule(const std::string& moduleId, const std::string& code)
+{
+  DuktapeContext::createInternalModule(this, moduleId, code);
 }
 
 } } } // OSS::JS::DUK
