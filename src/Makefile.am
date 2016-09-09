@@ -34,6 +34,7 @@ localedir = $(datadir)/locale
 AM_CPPFLAGS = \
     -I/usr/include \
     -I$(top_builddir)/include \
+    -I$(top_builddir)/src \
     -I@OSS_CORE_SRCDIR@/include \
     -I@OSS_CORE_SRCDIR@/src/utl/linux/pidfile \
     -I@OSS_CORE_SRCDIR@/src/udns/include
@@ -77,6 +78,9 @@ liboss_core_la_LDFLAGS = -version-info @OSS_CORE_VERSION_INFO@
 liboss_core_la_LIBADD = @OSS_CORE_DEP_LIBS@
 liboss_core_la_CFLAGS = -DHAVE_INET_PTON_NTOP
 
+BUILT_SOURCES = boost_pch.hpp.gch
+CLEANFILES = boost_pch.hpp.gch
+
 liboss_core_la_SOURCES = boost_pch.hpp OSS.cpp
 include udns.am
 include ws.am
@@ -107,7 +111,7 @@ DISTCLEANFILES = Makefile.in
 #
 # Build rule for Boost precompiled header
 #
-BUILT_SOURCES = boost_pch.hpp.gch
+
 %.hpp.gch: %.hpp
 	$(CXX) -D_REENTRANT -D_FILE_OFFSET_BITS=64 -O0 -g -O2 -fmessage-length=0 -Wall -Wformat -Wwrite-strings -Wpointer-arith -fPIC -DPIC -c $<
 

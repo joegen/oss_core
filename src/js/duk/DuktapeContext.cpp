@@ -22,8 +22,11 @@
 #include <boost/thread/pthread/mutex.hpp>
 
 #include "OSS/JS/DUK/DuktapeContext.h"
+#include "OSS/JS/DUK/duk_context_helper.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/UTL/CoreUtils.h"
+
+#include "OSS/JS/DUK/InternalModules.h"
 
 
 namespace OSS {
@@ -31,103 +34,11 @@ namespace JS {
 namespace DUK {
 
 
-
-OSS::mutex_critic_sec DuktapeContext::_duk_mutex;
 DuktapeContext::ModuleMap DuktapeContext::_moduleMap;
 DuktapeContext::ModuleDirectories DuktapeContext::_moduleDirectories;
 DuktapeContext::InternalModules DuktapeContext::_internalModules;
+DuktapeContext::InternalJSModules DuktapeContext::_internalJSModules;
 
-
-static void duktape_fatal_handler(duk_context *ctx, duk_errcode_t code, const char *msg) 
-{ 
-  OSS_LOG_FATAL("Duktape Fatal Error!  "  << "Code: " << code << " Msg:" << (const char *) (msg ? msg : "null"));
-  abort();
-}
-
-static duk_ret_t duktape_resolve_module(duk_context* ctx) 
-{
-  std::string moduleId = duk_get_string(ctx, 0);
-  std::string parentId = duk_get_string(ctx, 1);
-  std::string resolvedId;
-  
-  DuktapeContext* pContext = DuktapeContext::getContext(ctx);
-  if (pContext)
-  {
-    if (pContext->resolveModule(parentId, moduleId, resolvedId))
-    {
-      duk_push_string(ctx, resolvedId.c_str());
-      return 1;
-    }
-  }
-  duk_error(ctx, DUK_ERR_ERROR, "Module not found");
-  return -42;
-}
-
-static duk_ret_t duktape_load_module(duk_context* ctx)
-{
-  std::string resolvedId = duk_require_string(ctx, 0);
-  DuktapeContext* pContext = DuktapeContext::getContext(ctx);
-  if (pContext)
-  {
-    return pContext->loadModule(resolvedId);
-  }
-  return -1;
-}
-
-static int duktape_get_error_stack(duk_context *ctx) 
-{
-    if (!duk_is_object(ctx, -1)) {
-        return 1;
-    }
-
-    if (!duk_has_prop_string(ctx, -1, "stack")) {
-        return 1;
-    }
-
-    if (!duk_is_error(ctx, -1)) {
-        /* Not an Error instance, don't read "stack" */
-        return 1;
-    }
-
-    duk_get_prop_string(ctx, -1, "stack");  /* caller coerces */
-    duk_remove(ctx, -2);
-    return 1;
-}
-
-
-static void duktape_dump_result(duk_context* ctx, int r, FILE* foutput, FILE* ferror) 
-{
-    if (r != DUK_EXEC_SUCCESS) 
-    {
-      if (ferror) 
-      {
-        duk_safe_call(ctx, duktape_get_error_stack, 1 /*nargs*/, 1 /*nrets*/);
-        fprintf(ferror, "%s\n", duk_safe_to_string(ctx, -1));
-        fflush(ferror);
-      }
-    } 
-    else 
-    {
-      if (foutput) 
-      {
-        /* TODO: make this optional with a parameter? */
-        /* beautify output */
-        duk_eval_string(ctx, "(function (v) {\n"
-                             "    try {\n"
-                             "        return Duktape.enc('jx', v, null, 4);\n"
-                             "    } catch (e) {\n"
-                             "        return ''+v;\n"
-                             "    }\n"
-                             "})");
-        duk_insert(ctx, -2);
-        duk_call(ctx, 1);
-
-        fprintf(foutput, "= %s\n", duk_safe_to_string(ctx, -1));
-        fflush(foutput);
-      }
-    }
-    duk_pop(ctx);
-}
 
 DuktapeContext* DuktapeContext::rootInstance()
 {
@@ -143,7 +54,6 @@ DuktapeContext::DuktapeContext(const std::string& name) :
   _name(name),
   _pContext(0)
 {
-  OSS::mutex_critic_sec_lock lock(DuktapeContext::_duk_mutex);
   _pContext = duk_create_heap(NULL, // alloc function
       0, // realloc function
       0, // free function
@@ -151,24 +61,37 @@ DuktapeContext::DuktapeContext(const std::string& name) :
       duktape_fatal_handler); // fatal error handler
   
   assert(DuktapeContext::getContext(_pContext) == this);
-  initCommonJS();
+  
+  loadInternalModules();
 }
 
 DuktapeContext::~DuktapeContext()
 {
-  OSS::mutex_critic_sec_lock lock(DuktapeContext::_duk_mutex);
   duk_destroy_heap(_pContext);
   _pContext = 0;
 }
 
-void DuktapeContext::initCommonJS()
+void DuktapeContext::loadInternalModules()
 {
-  duk_push_object(_pContext);
-  duk_push_c_function(_pContext, duktape_resolve_module, DUK_VARARGS);
-  duk_put_prop_string(_pContext, -2, "resolve");
-  duk_push_c_function(_pContext, duktape_load_module, DUK_VARARGS);
-  duk_put_prop_string(_pContext, -2, "load");
-  duk_module_node_init(_pContext);
+  duk_init_common_js(_pContext);
+  //
+  // Initialize internal modules
+  //
+  createInternalModule("system", MOD::system_mod_init);
+  createInternalModule("bson", MOD::bson_mod_init);
+  
+  //
+  // Inline JS modules
+  //
+  std::string object_js(
+    #include "js/duk/mod/object.js.inl"
+  );
+  createInternalModule("utils/object", object_js);
+  
+  std::string assert_js(
+    #include "js/duk/mod/assert.js.inl"
+  );
+  createInternalModule("assert", assert_js);
 }
 
 DuktapeContext* DuktapeContext::getContext(duk_context* ctx)
@@ -197,9 +120,13 @@ void DuktapeContext::createInternalModule(DuktapeContext* pContext, const std::s
   DuktapeContext::_internalModules[moduleId] = initFunc;
 }
 
+void DuktapeContext::createInternalModule(DuktapeContext* pContext, const std::string& moduleId, const std::string& code)
+{
+  DuktapeContext::_internalJSModules[moduleId] = code;
+}
+
 DuktapeModule* DuktapeContext::getModule(DuktapeContext* pContext, const std::string& moduleId)
 {
-  OSS::mutex_critic_sec_lock lock(DuktapeContext::_duk_mutex);
   DuktapeContext::ModuleMap::iterator iter = DuktapeContext::_moduleMap.find(moduleId);
   if (iter != DuktapeContext::_moduleMap.end())
   {
@@ -212,7 +139,6 @@ DuktapeModule* DuktapeContext::getModule(DuktapeContext* pContext, const std::st
 
 void DuktapeContext::deleteModule(const std::string& moduleId)
 {
-  OSS::mutex_critic_sec_lock lock(DuktapeContext::_duk_mutex);
   DuktapeContext::_moduleMap.erase(moduleId);
 }
 
@@ -247,7 +173,8 @@ bool DuktapeContext::resolveModule(const std::string& parentId, const std::strin
   bool isJs = false;
   bool resolved = false;
   
-  if (DuktapeContext::_internalModules.find(moduleId) != DuktapeContext::_internalModules.end())
+  if (DuktapeContext::_internalModules.find(moduleId) != DuktapeContext::_internalModules.end() ||
+    DuktapeContext::_internalJSModules.find(moduleId) != DuktapeContext::_internalJSModules.end())
   {
     resolvedResult = moduleId;
     return true;
@@ -295,6 +222,16 @@ int DuktapeContext::loadModule(const std::string& moduleId)
   {
     pModule->callModuleInit(DuktapeContext::_internalModules[moduleId]);
     return 0;
+  }
+  else if (DuktapeContext::_internalJSModules.find(moduleId) != DuktapeContext::_internalJSModules.end())
+  {
+    if (!pModule->loadCode(DuktapeContext::_internalJSModules[moduleId]))
+    {
+      OSS_LOG_ERROR("DuktapeContext::loadModule - " << "Unable to load module " << moduleId);
+      deleteModule(moduleId);
+      return -1;
+    }
+    return 1;
   }
   else if (OSS::string_ends_with(moduleId, ".so"))
   {

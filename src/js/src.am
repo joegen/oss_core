@@ -2,7 +2,24 @@ liboss_core_la_SOURCES +=  \
     js/duk/duktape.c \
     js/duk/duk_module_node.c \
     js/duk/DuktapeContext.cpp \
-    js/duk/DuktapeModule.cpp
+    js/duk/DuktapeModule.cpp \
+    js/duk/duk_context_helper.cpp
+
+liboss_core_la_SOURCES +=  \
+    js/duk/mod/system.cpp \
+    js/duk/mod/bson.cpp
+
+liboss_core_la_SOURCES += \
+     js/duk/mod/object.js js/duk/mod/object.js.inl \
+     js/duk/mod/assert.js js/duk/mod/assert.js.inl
+
+BUILT_SOURCES += \
+     js/duk/mod/object.js.inl \
+     js/duk/mod/assert.js.inl
+
+CLEANFILES += \
+     js/duk/mod/object.js.inl \
+     js/duk/mod/assert.js.inl
 
 if ENABLE_FEATURE_V8
 liboss_core_la_SOURCES +=  \
@@ -10,3 +27,10 @@ liboss_core_la_SOURCES +=  \
     js/JSBase.cpp \
     js/JSSIPMessage.cpp
 endif
+
+
+js/duk/mod/object.js.inl: Makefile
+	$(top_srcdir)/src/js/scripts/doublequoteme $(top_srcdir)/src/js/duk/mod/object.js js/duk/mod/object.js.inl
+
+js/duk/mod/assert.js.inl: Makefile
+	$(top_srcdir)/src/js/scripts/doublequoteme $(top_srcdir)/src/js/duk/mod/assert.js js/duk/mod/assert.js.inl
