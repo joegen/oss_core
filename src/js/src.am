@@ -11,11 +11,13 @@ liboss_core_la_SOURCES +=  \
 
 liboss_core_la_SOURCES += \
      js/duk/mod/object.js js/duk/mod/object.js.inl \
-     js/duk/mod/assert.js js/duk/mod/assert.js.inl
+     js/duk/mod/assert.js js/duk/mod/assert.js.inl \
+     js/duk/mod/bson.js js/duk/mod/bson.js.inl
 
 BUILT_SOURCES += \
      js/duk/mod/object.js.inl \
-     js/duk/mod/assert.js.inl
+     js/duk/mod/assert.js.inl \
+     js/duk/mod/bson.js.inl
 
 CLEANFILES += \
      js/duk/mod/object.js.inl \
@@ -34,3 +36,6 @@ js/duk/mod/object.js.inl: Makefile
 
 js/duk/mod/assert.js.inl: Makefile
 	$(top_srcdir)/src/js/scripts/doublequoteme $(top_srcdir)/src/js/duk/mod/assert.js js/duk/mod/assert.js.inl
+
+js/duk/mod/bson.js.inl: Makefile
+	$(top_srcdir)/src/js/scripts/doublequoteme $(top_srcdir)/src/js/duk/mod/bson.js js/duk/mod/bson.js.inl

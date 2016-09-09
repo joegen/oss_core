@@ -78,7 +78,7 @@ void DuktapeContext::loadInternalModules()
   // Initialize internal modules
   //
   createInternalModule("system", MOD::system_mod_init);
-  createInternalModule("bson", MOD::bson_mod_init);
+  createInternalModule("_bson", MOD::bson_mod_init);
   
   //
   // Inline JS modules
@@ -92,6 +92,11 @@ void DuktapeContext::loadInternalModules()
     #include "js/duk/mod/assert.js.inl"
   );
   createInternalModule("assert", assert_js);
+  
+  std::string bson_js(
+    #include "js/duk/mod/bson.js.inl"
+  );
+  createInternalModule("bson", bson_js);
 }
 
 DuktapeContext* DuktapeContext::getContext(duk_context* ctx)

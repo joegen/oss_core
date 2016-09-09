@@ -17,7 +17,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-
+#include <unistd.h>
 #include "OSS/JS/DUK/InternalModules.h"
 #include "OSS/JS/DUK/duk_context_helper.h"
 
@@ -36,9 +36,17 @@ duk_ret_t system_getnenv(duk_context* ctx)
   return 1;
 }
 
+duk_ret_t system_exit(duk_context* ctx)
+{
+  int val = duk_require_int(ctx, 0);
+  _exit(val);
+  return 0;
+}
+
 duk_ret_t system_mod_init(duk_context* ctx)
 {
   gFunctions.push_back({ "getenv", system_getnenv, 1 });
+  gFunctions.push_back({ "exit", system_exit, 1 });
   gFunctions.push_back({ 0, 0, 0 });
 
   duk_push_object(ctx);
