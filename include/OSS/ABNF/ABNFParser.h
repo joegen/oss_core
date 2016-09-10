@@ -133,7 +133,7 @@ public:
   /// Returns the next off-set if the rule is satisfied
 };
 
-template </*unsigned*/ char minValue, /*unsigned*/ char maxValue>
+template </*unsigned*/ int minValue, /*unsigned*/ int maxValue>
 class ABNFRange : public ABNFBaseRule
 /// This teplate rule would satisfy any character between minValue and maxValue
 {

@@ -14,8 +14,8 @@ else
   $dst = $_;
 }
 
-open (SRC, "<$src");
-open (DST, ">$dst");
+open(SRC, "<$src");
+open(DST, ">$dst");
 
 while (<SRC>)
 {

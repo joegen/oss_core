@@ -254,7 +254,12 @@ void thread_sleep( unsigned long milliseconds )
 #if defined ( WIN32 )
 	::Sleep( milliseconds );
 #else
-	timeval sTimeout = { (long int)(milliseconds / 1000), (long int)(( milliseconds % 1000 ) * 1000) };
+	
+#if OSS_OS == OSS_OS_MAC_OS_X
+    timeval sTimeout = { (int)(milliseconds / 1000), (int)(( milliseconds % 1000 ) * 1000) };
+#else
+    timeval sTimeout = { (long int)(milliseconds / 1000), (long int)(( milliseconds % 1000 ) * 1000) };
+#endif
 	select( 0, 0, 0, 0, &sTimeout );
 #endif
 }

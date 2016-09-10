@@ -178,6 +178,8 @@ std::string OSS_API boost_file_name(const boost::filesystem::path& path);
 
 std::string OSS_API boost_path(const boost::filesystem::path& path);
 
+boost::filesystem::path OSS_API boost_path_concatenate(const boost::filesystem::path& path, const std::string& file);
+
 bool OSS_API boost_temp_file(std::string& tempfile);
 
 std::string boost_format_time(boost::posix_time::ptime time, const std::string& format = "%Y-%m-%d %H:%M:%S");

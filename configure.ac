@@ -484,12 +484,12 @@ OSS_CXX_C_FLAGS="-fmessage-length=0"
 #
 # Compiler warnings
 #
-OSS_CXX_WARNINGS="-Wall -Wformat -Wwrite-strings -Wpointer-arith"
-OSS_C_WARNINGS="-Wall -Wunused-variable -Wnested-externs -Wno-shift-negative-value -Werror -Werror=return-type -Werror=uninitialized -Wno-pointer-sign"
+OSS_CXX_WARNINGS="-Wall -Wformat -Wwrite-strings -Wpointer-arith -Wno-unused-result -Wno-strict-aliasing"
+OSS_C_WARNINGS="-Wall -Wnested-externs -Werror -Werror=return-type -Werror=uninitialized -Wno-pointer-sign -Wno-unused-function -Wno-shift-negative-value -Wno-format-extra-args"
 #
 # Additional CXX and C Flags
 #
-CXXFLAGS="$CXXFLAGS $OSS_CXX_C_FLAGS $OSS_CXX_WARNINGS"
+CXXFLAGS="-std=c++11 $CXXFLAGS $OSS_CXX_C_FLAGS $OSS_CXX_WARNINGS"
 CFLAGS="$CFLAGS $OSS_CXX_C_FLAGS $OSS_C_WARNINGS -fno-omit-frame-pointer -fno-common -fsigned-char -fPIC"
 
 AC_SUBST(CXXFLAGS)

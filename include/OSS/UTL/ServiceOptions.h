@@ -69,6 +69,7 @@ public:
   };
   
   ServiceOptions(int argc, char** argv, const std::string& daemonName, const std::string& version = "1.0", const std::string& copyright = "All Rights Reserved.", ProcType procType = Daemon);
+  ServiceOptions(int argc, char** argv, const char* daemonName, const char* version = "1.0", const char* copyright = "All Rights Reserved.", ProcType procType = Daemon);
   ServiceOptions(const std::string& configFile);
   virtual ~ServiceOptions();
   //
@@ -166,6 +167,27 @@ inline ServiceOptions::ServiceOptions(int argc, char** argv,
 {
 }
 
+inline ServiceOptions::ServiceOptions(int argc, char** argv,
+  const char* daemonName,
+  const char* version,
+  const char* copyright,
+  ProcType procType) :
+  _argc(argc),
+  _argv(argv),
+  _daemonName(daemonName),
+  _version(version),
+  _copyright(copyright),
+  _daemonOptions("Daemon"),
+  _GeneralOptions("General"),
+  _configOptions("Configuration"),
+  _optionItems(_daemonName  + " Options"),
+  _isDaemon(false),
+  _hasConfig(false),
+  _isConfigOnly(false),
+  _procType(procType)
+{
+}
+
 inline ServiceOptions::ServiceOptions(const std::string& configFile) :
   _argc(0),
   _argv(0),
@@ -214,9 +236,6 @@ inline bool ServiceOptions::parseOptions(bool verbose)
     return true;
   }
 
-  if (_procType == Daemon)
-    displayVersion(std::cout);
-
   try
   {
     addOptionFlag('h', "help", ": Display help information.", GeneralOption);
@@ -245,6 +264,11 @@ inline bool ServiceOptions::parseOptions(bool verbose)
     
     _optionItems.add(_configOptions);
 
+    // Hidden options, will be allowed both on command line and
+    // in config file, but will not be shown to the user.
+    //boost::program_options::options_description hidden("Hidden options");
+    //hidden.add_options()("input-file", boost::program_options::value< std::vector<std::string> >(), "input-file");
+    //_optionItems.add(hidden);
 
     boost::program_options::store(boost::program_options::parse_command_line(_argc, _argv, _optionItems), _options);
     boost::program_options::notify(_options);
@@ -538,7 +562,7 @@ inline void ServiceOptions::displayUsage(std::ostream& strm) const
 
 inline void ServiceOptions::displayVersion(std::ostream& strm) const
 {
-  strm << std::endl << _daemonName << " version " << _version << " - " << _copyright << std::endl << std::endl;
+  strm << std::endl << _daemonName << " version " << _version << std::endl << "Copyright: " << _copyright << std::endl << std::endl;
   strm.flush();
 }
 

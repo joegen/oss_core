@@ -390,6 +390,11 @@ std::string boost_path(const boost::filesystem::path& path)
 #endif
 }
 
+boost::filesystem::path boost_path_concatenate(const boost::filesystem::path& path, const std::string& file)
+{
+  return operator/(path, file.c_str());
+}
+
 #if 0
 bool boost_temp_file(std::string& tempfile)
 {

@@ -1,0 +1,6 @@
+liboss_core_la_SOURCES +=  \
+    sdp/SDPHeader.cpp \
+    sdp/SDPHeaderList.cpp \
+    sdp/SDPMedia.cpp \
+    sdp/SDPSession.cpp \
+    sdp/ICECandidate.cpp

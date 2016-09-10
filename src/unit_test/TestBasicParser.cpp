@@ -549,7 +549,7 @@ TEST(ParserTest, test_message_response_construction)
 
   SIPMessage::Ptr r2(new SIPMessage(rMsg.str()));
   SIPMessage::Ptr r3 = invite.reformatResponse(r2);
-  ASSERT_TRUE(r3);
+  ASSERT_TRUE(!!r3);
   //std::cout << r3->data() << std::endl;
 }
 

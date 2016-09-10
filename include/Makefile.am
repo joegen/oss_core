@@ -186,6 +186,13 @@ nobase_include_HEADERS = \
     OSS/JS/JS.h \
     OSS/JS/JSBase.h \
     OSS/JS/JSSIPMessage.h \
+    OSS/JS/DUK/duk_config.h \
+    OSS/JS/DUK/duktape.h \
+    OSS/JS/DUK/duk_module_node.h \
+    OSS/JS/DUK/duk_context_helper.h \
+    OSS/JS/DUK/DuktapeContext.h \
+    OSS/JS/DUK/DuktapeModule.h \
+    OSS/JS/DUK/InternalModules.h \
     OSS/JSON/visitor.h \
     OSS/JSON/writer.inl \
     OSS/JSON/elements.h \
