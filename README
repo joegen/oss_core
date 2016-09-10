@@ -4,11 +4,11 @@
     * SIP Finite State Machines
     * SIP B2B User Agent
     * Java Script Engine using Google V8
+    * CommonJS support using Duktape
     * SIP Over Websockets
     * STUN/TURN server
     * RTP Proxy
     * CARP High Availability
-    * Session Border Controller Implementation
     * REST Persistence Store
     * BSON/JSON Parser
     * RAFT Concensus
