@@ -1,0 +1,10 @@
+nobase_include_HEADERS += \
+    OSS/STUN/VovidaSTUN.inl \
+    OSS/STUN/VovidaUDP.h \
+    OSS/STUN/STUNMappedAddress.h \
+    OSS/STUN/STUN.h \
+    OSS/STUN/STUNClient.h \
+    OSS/STUN/VovidaUDP.inl \
+    OSS/STUN/STUNProto.h \
+    OSS/STUN/VovidaSTUN.h \
+    OSS/STUN/STUNServer.h

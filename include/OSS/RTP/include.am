@@ -1,0 +1,10 @@
+nobase_include_HEADERS += \
+    OSS/RTP/RTPPacket.h \
+    OSS/RTP/RTPPCAPReader.h \
+    OSS/RTP/RTPProxy.h \
+    OSS/RTP/RTPProxyManager.h \
+    OSS/RTP/RTPProxyRecord.h \
+    OSS/RTP/RTPProxySession.h \
+    OSS/RTP/RTPProxyTuple.h \
+    OSS/RTP/RTPResizer.h \
+    OSS/RTP/RTPResizingQueue.h

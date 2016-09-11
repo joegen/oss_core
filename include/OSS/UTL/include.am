@@ -1,0 +1,21 @@
+nobase_include_HEADERS += \
+    OSS/UTL/Semaphore.h \
+    OSS/UTL/StackTrace.h \
+    OSS/UTL/DynamicHashTable.h \
+    OSS/UTL/Compress.h \
+    OSS/UTL/BlockingQueue.h \
+    OSS/UTL/Exception.h \
+    OSS/UTL/ServiceDaemon.h \
+    OSS/UTL/ServiceOptions.h \
+    OSS/UTL/Thread.h \
+    OSS/UTL/Endian.h \
+    OSS/UTL/PropertyMap.h \
+    OSS/UTL/Cache.h \
+    OSS/UTL/TimedQueue.h \
+    OSS/UTL/Application.h \
+    OSS/UTL/IPCQueue.h \
+    OSS/UTL/AdaptiveDelay.h \
+    OSS/UTL/CoreUtils.h \
+    OSS/UTL/Logger.h \
+    OSS/UTL/FastRandom.h \
+    OSS/UTL/LogFile.h
