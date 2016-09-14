@@ -14,7 +14,7 @@ include OSS/JSON/include.am
 include OSS/LMDB/include.am
 include OSS/Net/include.am
 include OSS/Persistent/include.am
-include OSS/Raft/include.am
+include OSS/RAFT/include.am
 include OSS/RTP/include.am
 include OSS/SDP/include.am
 include OSS/SIP/include.am

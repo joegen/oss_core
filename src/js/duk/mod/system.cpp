@@ -44,14 +44,16 @@ duk_ret_t system_exit(duk_context* ctx)
 }
 
 duk_ret_t system_mod_init(duk_context* ctx)
-{
-  gFunctions.push_back({ "getenv", system_getnenv, 1 });
-  gFunctions.push_back({ "exit", system_exit, 1 });
-  gFunctions.push_back({ 0, 0, 0 });
+{  
+  gFunctions.push_back(duktape_function("getenv", system_getnenv, 1));
+  gFunctions.push_back(duktape_function("exit", system_exit, 1));
+  gFunctions.push_back(duktape_function(0, 0, 0));
 
   duk_push_object(ctx);
   duk_export_functions(ctx, gFunctions);
+
   return 1;
 }
+
 
 } } } }

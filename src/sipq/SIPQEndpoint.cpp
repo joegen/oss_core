@@ -24,11 +24,10 @@ namespace OSS {
 namespace SIP {
 namespace EP {
 
-SIPQEndpoint::SIPQEndpoint(sipq_context_t* pContext)
+SIPQEndpoint::SIPQEndpoint(sipq_context_t* pContext) :
+  _pContext(pContext)
 {
-#ifndef SIPQ_INTERNAL
-  assert(false);
-#endif
+
 }
   
 SIPQEndpoint::~SIPQEndpoint()
@@ -38,7 +37,6 @@ SIPQEndpoint::~SIPQEndpoint()
 bool SIPQEndpoint::bindToAddress(const char* local_address)
 {
   OSS::SIP::SIPURI address(local_address);
-  
   return true;
 }
 
