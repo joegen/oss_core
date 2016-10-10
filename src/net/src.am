@@ -2,7 +2,8 @@ liboss_core_la_SOURCES +=  \
     net/AccessControl.cpp \
     net/IPAddress.cpp \
     net/DNS.cpp \
-    net/Net.cpp
+    net/Net.cpp \
+    net/linux/rtnl_get_route.cpp
 
 if ENABLE_FEATURE_TURN
     liboss_core_la_SOURCES += net/TurnServer.cpp

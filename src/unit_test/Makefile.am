@@ -3,7 +3,7 @@ check_PROGRAMS = oss_core-unit-test
 
 oss_core_unit_test_SOURCES = \
 	unit_test/TestSuite.cpp \
-        unit_test/TestSemaphore.cpp \
+	unit_test/TestSemaphore.cpp \
 	unit_test/TestRequestLine.cpp \
 	unit_test/TestBasicParser.cpp \
 	unit_test/TestSDP.cpp \
@@ -29,4 +29,6 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestZMQSocket.cpp \
 	unit_test/TestBSON.cpp \
 	unit_test/TestRaftConsensus.cpp \
-	unit_test/TestLMDB.cpp
+	unit_test/TestLMDB.cpp \
+	unit_test/TestRTNLRoute.cpp
+
