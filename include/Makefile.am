@@ -17,7 +17,6 @@ nobase_include_HEADERS = \
     OSS/UTL/Endian.h \
     OSS/UTL/PropertyMap.h \
     OSS/OSS.h \
-    OSS/build.h \
     OSS/Persistent/BerkeleyDb.h \
     OSS/Persistent/RedisClient.h \
     OSS/UTL/Cache.h \
@@ -238,6 +237,7 @@ nobase_include_HEADERS = \
     OSS/Net/FramedTcpListener.h \
     OSS/Net/FramedTcpClient.h \
     OSS/Net/FramedTcpConnection.h \
+    OSS/Net/Linux/rtnl_get_route.h \
     OSS/UTL/AdaptiveDelay.h \
     OSS/UTL/CoreUtils.h \
     OSS/UTL/Logger.h \
