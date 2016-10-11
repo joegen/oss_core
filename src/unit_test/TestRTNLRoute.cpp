@@ -62,12 +62,14 @@ See also: For more string comparison tricks (substring, prefix, suffix, and regu
 
 #include "gtest/gtest.h"
 #include "OSS/build.h"
+#include "OSS/OSS.h"
 
-#include "OSS/Net/Linux/rtnl_get_route.h"
+#include "OSS/Net/rtnl_get_route.h"
 
 
 TEST(Net, RTNLRoute)
 {
+#if OS_PLATFORM_LINUX
   OSS::Net::RTNLRoutes routes;
   ASSERT_TRUE(OSS::Net::rtnl_get_route(routes, true));
   ASSERT_TRUE(!routes.empty());
@@ -97,5 +99,6 @@ TEST(Net, RTNLRoute)
   
   ASSERT_TRUE(OSS::Net::rtnl_get_source(routes, source, "127.0.0.1", true));
   std::cout << "Source: " << source << " Target: 127.0.0.1" << std::endl;
+#endif
 }
 

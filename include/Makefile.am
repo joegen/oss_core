@@ -237,7 +237,7 @@ nobase_include_HEADERS = \
     OSS/Net/FramedTcpListener.h \
     OSS/Net/FramedTcpClient.h \
     OSS/Net/FramedTcpConnection.h \
-    OSS/Net/Linux/rtnl_get_route.h \
+    OSS/Net/rtnl_get_route.h \
     OSS/UTL/AdaptiveDelay.h \
     OSS/UTL/CoreUtils.h \
     OSS/UTL/Logger.h \

@@ -7,6 +7,10 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "OSS/OSS.h"
+
+#if OSS_PLATFORM_LINUX
+
 #include <asm/types.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
@@ -18,7 +22,7 @@
 #include <sstream>
 
 #include "OSS/Net/Net.h"
-#include "OSS/Net/Linux/rtnl_get_route.h"
+#include "OSS/Net/rtnl_get_route.h"
 
 namespace OSS {
 namespace Net {
@@ -250,5 +254,25 @@ bool rtnl_get_source(const RTNLRoutes& routes, std::string& source, const std::s
   return false;
 }
 
-
 } } // OSS::Net
+
+#elif OS_PLATFORM_MAC_OS_X
+
+#pragma message "rtnetlink not available for Mac OSX"
+
+bool rtnl_get_route(RTNLRoutes& routes, bool includeLoopBack)
+{
+  return false;
+}
+bool rtnl_get_route(RTNLRoutes& routes, const std::string& target, bool includeLoopBack)
+{
+  return false
+}
+bool rtnl_get_source(const RTNLRoutes& routes, std::string& source, const std::string& target, bool includeLoopBack)
+{
+  return false;
+}
+#endif // OSS_PLATFORM_LINUX
+
+
+
