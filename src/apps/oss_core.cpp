@@ -592,7 +592,7 @@ bool ipRouteGet(const std::string& destination, std::string& source, std::string
   
   std::ostringstream cmd;
   
-  cmd << OSS_IP_ROUTE_2 << " route get " << destination;
+  cmd << "/sbin/ip route get " << destination;
   
   Command command;
   command.execute(cmd.str());

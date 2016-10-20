@@ -31,6 +31,11 @@ lib_LTLIBRARIES = $(corelibs)
 
 localedir = $(datadir)/locale
 
+AM_CFLAGS = \
+    -DHAVE_INET_PTON_NTOP \
+    -I@OSS_CORE_SRCDIR@/src/utl/linux/pidfile \
+    -I$(top_builddir)/include
+
 AM_CPPFLAGS = \
     -I/usr/include \
     -I$(top_builddir)/include \
@@ -53,12 +58,15 @@ AM_CPPFLAGS += \
     -I@OSS_CORE_SRCDIR@/src/net/turn/server \
     -I@OSS_CORE_SRCDIR@/src/net/turn/apps/common \
     -I@OSS_CORE_SRCDIR@/src/net/turn/apps/relay
-endif
 
-AM_CFLAGS = \
-    DHAVE_INET_PTON_NTOP \
-    -I@OSS_CORE_SRCDIR@/src/utl/linux/pidfile \
-    -I$(top_builddir)/include
+AM_CFLAGS += \
+    -I@OSS_CORE_SRCDIR@/src/net/turn \
+    -I@OSS_CORE_SRCDIR@/src/net/turn/client \
+    -I@OSS_CORE_SRCDIR@/src/net/turn/client++ \
+    -I@OSS_CORE_SRCDIR@/src/net/turn/server \
+    -I@OSS_CORE_SRCDIR@/src/net/turn/apps/common \
+    -I@OSS_CORE_SRCDIR@/src/net/turn/apps/relay
+endif
 
 version_Current=@OSS_CORE_VERSION_CURRENT@
 version_Revision=@OSS_CORE_VERSION_REVISION@

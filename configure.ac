@@ -84,7 +84,7 @@ AC_ARG_ENABLE([all-features],
     AC_HELP_STRING([--enable-all-features], [Enable ALL features]),
     [
         ENABLE_FEATURE(RESTKV)
-        ENABLE_FEATURE(TURN)
+        AC_CHECK_HEADER(event2/event.h, [ENABLE_FEATURE(TURN)], [DISABLE_FEATURE(TURN)])
         ENABLE_FEATURE(LIBRE)
         ENABLE_FEATURE(CARP)
         ENABLE_FEATURE(V8)
@@ -489,7 +489,7 @@ OSS_C_WARNINGS="-Wall -Wnested-externs -Werror -Werror=return-type -Werror=unini
 #
 # Additional CXX and C Flags
 #
-CXXFLAGS="-std=c++11 $CXXFLAGS $OSS_CXX_C_FLAGS $OSS_CXX_WARNINGS"
+CXXFLAGS="$CXXFLAGS $OSS_CXX_C_FLAGS $OSS_CXX_WARNINGS"
 CFLAGS="$CFLAGS $OSS_CXX_C_FLAGS $OSS_C_WARNINGS -fno-omit-frame-pointer -fno-common -fsigned-char -fPIC"
 
 AC_SUBST(CXXFLAGS)

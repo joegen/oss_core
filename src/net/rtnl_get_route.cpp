@@ -12,9 +12,9 @@
 #if OSS_PLATFORM_LINUX
 
 #include <asm/types.h>
+#include <sys/socket.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
-#include <sys/socket.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -186,7 +186,7 @@ bool rtnl_get_route(RTNLRoutes& routes, const std::string& target, bool includeL
     }
 
     nlh = (struct nlmsghdr *)recvbuff;
-    for( ; NLMSG_OK(nlh, recvlen); nlh=NLMSG_NEXT(nlh, recvlen) )
+    for( ; NLMSG_OK(nlh, (unsigned)recvlen); nlh=NLMSG_NEXT(nlh, recvlen) )
     {
       if( NLMSG_DONE==nlh->nlmsg_type )
       {
