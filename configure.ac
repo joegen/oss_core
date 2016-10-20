@@ -90,7 +90,7 @@ AC_ARG_ENABLE([all-features],
     AC_HELP_STRING([--enable-all-features], [Enable ALL features]),
     [
         ENABLE_FEATURE(RESTKV)
-        ENABLE_FEATURE(TURN)
+        AC_CHECK_HEADER(event2/event.h, [ENABLE_FEATURE(TURN)], [DISABLE_FEATURE(TURN)])
         ENABLE_FEATURE(LIBRE)
         ENABLE_FEATURE(CARP)
         ENABLE_FEATURE(V8)

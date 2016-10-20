@@ -124,10 +124,12 @@
 #elif defined(linux) || defined(__linux) || defined(__linux__) || defined(__TOS_LINUX__)
 	#define OSS_OS_FAMILY_UNIX 1
 	#define OSS_OS OSS_OS_LINUX
+	#define OSS_PLATFORM_LINUX 1
 #elif defined(__APPLE__) || defined(__TOS_MACOS__)
 	#define OSS_OS_FAMILY_UNIX 1
 	#define OSS_OS_FAMILY_BSD 1
 	#define OSS_OS OSS_OS_MAC_OS_X
+	#define OSS_PLATFORM_MAC_OS_X 1
 #elif defined(__NetBSD__)
 	#define OSS_OS_FAMILY_UNIX 1
 	#define OSS_OS_FAMILY_BSD 1

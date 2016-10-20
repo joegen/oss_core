@@ -13,7 +13,7 @@
     * BSON/JSON Parser
     * RAFT Concensus
 
-## Minimal Prerequisites (Mac or Linux)
+## Minimal Prerequisites (Mac and Linux)
 ### Mac build is tested using homebrew installed packages
     * openssl-devel
     * boost-devel
@@ -37,7 +37,7 @@ To install build dependencies
   
   sudo yum install -y `grep '^BuildRequires' oss_core/oss_core.spec.in | awk '{print $2}'`
   
-## Building From Source (CentOS or Fedora)
+## Building From Source (Mac and Linux)
 ------------------------------------------
 ### Download the source code from https://github.com/joegen/oss_core and build it
     git clone https://github.com/joegen/oss_core.git

@@ -82,7 +82,7 @@
 #else
 # include <sha1.h>
 #endif
-#include "ip_carp.h"
+//#include "ip_carp.h"
 
 #ifndef errno
 extern int errno;
@@ -201,7 +201,7 @@ struct carp_softc {
     
     /* authentication */
 #define CARP_HMAC_PAD   64
-    unsigned char sc_key[CARP_KEY_LEN];
+    unsigned char sc_key[20];
     unsigned char sc_pad[CARP_HMAC_PAD];
     SHA1_CTX sc_sha1;
     
@@ -216,6 +216,8 @@ struct carp_softc {
 #define SECONDS_TO_WAIT_AFTER_INTERFACE_IS_DOWN 10U
 
 #define DEFAULT_FACILITY LOG_DAEMON
+
+typedef struct carp_header carp_header;
 
 int docarp(void);
 void carp_hmac_prepare(struct carp_softc *sc);

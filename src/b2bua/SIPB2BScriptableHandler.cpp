@@ -32,7 +32,7 @@
 
 
 using OSS::Net::IPAddress;
-
+using namespace OSS::RTP;
 
 namespace OSS {
 namespace SIP {

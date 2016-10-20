@@ -95,9 +95,11 @@ int oss_carp_run(int argc, char *argv[])
 #ifdef HAVE_SETLOCALE
     setlocale(LC_ALL, "");
 #endif
+
+#if ENABLE_NLS
     bindtextdomain(PACKAGE, LOCALEDIR);
     textdomain(PACKAGE);
-    
+#endif    
      
     while ((fodder = getopt_long(argc, argv, GETOPT_OPTIONS, long_options,
                                  &option_index)) != -1) {
