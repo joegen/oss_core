@@ -1,0 +1,3 @@
+nobase_include_HEADERS += \
+    OSS/ZMQ/ZMQSocket.h \
+    OSS/ZMQ/zmq.hpp

@@ -1,0 +1,8 @@
+nobase_include_HEADERS += \
+    OSS/SDP/rfc4566.txt \
+    OSS/SDP/SDP.h \
+    OSS/SDP/SDPHeader.h \
+    OSS/SDP/SDPHeaderList.h \
+    OSS/SDP/SDPMedia.h \
+    OSS/SDP/SDPSession.h \
+    OSS/SDP/ICECandidate.h

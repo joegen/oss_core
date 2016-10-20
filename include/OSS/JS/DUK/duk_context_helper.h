@@ -25,7 +25,17 @@
 #include "OSS/JS/DUK/duktape.h"
 
 
-typedef std::vector<duk_function_list_entry> duk_functions_t;
+struct duktape_function : public duk_function_list_entry
+{
+  duktape_function(const char *key, duk_c_function value,	duk_idx_t nargs)
+  {
+    this->key = key;
+    this->value = value;
+    this->nargs = nargs;
+  }
+};
+
+typedef std::vector<duktape_function> duk_functions_t;
 typedef std::vector<duk_number_list_entry> duk_numeric_constants_t;
 
 void duktape_fatal_handler(duk_context *ctx, duk_errcode_t code, const char *msg);

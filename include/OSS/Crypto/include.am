@@ -1,0 +1,5 @@
+nobase_include_HEADERS += \
+    OSS/Crypto/Crypto.h \
+    OSS/Crypto/BlockCipher.h \
+    OSS/Crypto/FileEncryptor.h \
+    OSS/Crypto/OSSCrypto.h

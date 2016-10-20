@@ -100,6 +100,7 @@ include sipparser/src.am
 include siptransport/src.am
 include sipfsm/src.am
 include sipep/src.am
+include sipq/src.am
 include net/src.am
 include utl/src.am
 include ep/src.am

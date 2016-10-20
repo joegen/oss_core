@@ -1,0 +1,3 @@
+nobase_include_HEADERS += \
+    OSS/EP/EndpointConnection.h \
+    OSS/EP/EndpointListener.h

@@ -21,6 +21,12 @@ AC_PROG_CC
 AC_CANONICAL_HOST
 
 #
+# Check if C++0x/11/14 is supported by the compiler
+#
+m4_include([config/ax_cxx_compile_stdcxx.m4])
+
+
+#
 # Export version variables
 #
 OSS_CORE_VERSION_INFO="$OSS_CORE_VERSION_CURRENT:$OSS_CORE_VERSION_REVISION:$OSS_CORE_VERSION_AGE"
@@ -491,6 +497,13 @@ OSS_C_WARNINGS="-Wall -Wnested-externs -Werror -Werror=return-type -Werror=unini
 #
 CXXFLAGS="$CXXFLAGS $OSS_CXX_C_FLAGS $OSS_CXX_WARNINGS"
 CFLAGS="$CFLAGS $OSS_CXX_C_FLAGS $OSS_C_WARNINGS -fno-omit-frame-pointer -fno-common -fsigned-char -fPIC"
+
+#
+# Set C++ 11 flag if supported by compiler
+#
+AX_CXX_COMPILE_STDCXX([11], [], [optional])
+
+
 
 AC_SUBST(CXXFLAGS)
 AC_SUBST(CFLAGS)

@@ -1,0 +1,10 @@
+nobase_include_HEADERS += \
+    OSS/JSON/visitor.h \
+    OSS/JSON/writer.inl \
+    OSS/JSON/elements.h \
+    OSS/JSON/test.cpp \
+    OSS/JSON/reader.inl \
+    OSS/JSON/elements.inl \
+    OSS/JSON/Readme.txt \
+    OSS/JSON/writer.h \
+    OSS/JSON/reader.h

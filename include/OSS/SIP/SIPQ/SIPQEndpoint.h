@@ -17,43 +17,35 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#include <unistd.h>
-#include "OSS/JS/DUK/InternalModules.h"
-#include "OSS/JS/DUK/duk_context_helper.h"
+#ifndef OSS_SIPQENDPOINT_H_INCLUDED
+#define	OSS_SIPQENDPOINT_H_INCLUDED
 
+#include "OSS/SIP/EP/SIPEndpoint.h"
+#include "OSS/SIP/SIPQ/sipq.h"
 
 namespace OSS {
-namespace JS {
-namespace DUK {
-namespace MOD {
+namespace SIP {
+namespace EP {
 
-static duk_functions_t gFunctions;
 
-duk_ret_t system_getnenv(duk_context* ctx)
+class SIPQEndpoint : protected SIPEndpoint
 {
-  const char* arg = duk_require_string(ctx, 0);
-  duk_push_string(ctx, getenv(arg));
-  return 1;
-}
-
-duk_ret_t system_exit(duk_context* ctx)
-{
-  int val = duk_require_int(ctx, 0);
-  _exit(val);
-  return 0;
-}
-
-duk_ret_t system_mod_init(duk_context* ctx)
-{  
-  gFunctions.push_back(duktape_function("getenv", system_getnenv, 1));
-  gFunctions.push_back(duktape_function("exit", system_exit, 1));
-  gFunctions.push_back(duktape_function(0, 0, 0));
-
-  duk_push_object(ctx);
-  duk_export_functions(ctx, gFunctions);
-
-  return 1;
-}
+public:
+  SIPQEndpoint(sipq_context_t* pContext);
+  virtual ~SIPQEndpoint();
+  bool bindToAddress(const char* local_address);
+  
+  int q_connect(sipq_context_t* ctx, const char* remote_uri);
+  std::size_t q_write(void* buff, std::size_t buff_len);
+  std::size_t q_read(void* buff);
+  
+protected:
+  sipq_context_t* _pContext;
+};
 
 
-} } } }
+
+} } }
+
+#endif	// OSS_SIPQENDPOINT_H_INCLUDED
+

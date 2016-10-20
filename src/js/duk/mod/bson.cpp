@@ -199,19 +199,20 @@ duk_ret_t bson_get_double(duk_context* ctx)
   return 0;
 }
 
+
 duk_ret_t bson_mod_init(duk_context* ctx)
 {
-  gFunctions.push_back({ "bson_create", bson_create, 0 });
-  gFunctions.push_back({ "bson_destroy", bson_destroy, 1 });
-  gFunctions.push_back({ "bson_append_string", bson_append_string, 3 });
-  gFunctions.push_back({ "bson_append_boolean", bson_append_boolean, 3 });
-  gFunctions.push_back({ "bson_append_int", bson_append_int, 3 });
-  gFunctions.push_back({ "bson_append_double", bson_append_double, 3 });
-  gFunctions.push_back({ "bson_get_string", bson_get_string, 2 });
-  gFunctions.push_back({ "bson_get_boolean", bson_get_boolean, 2 });
-  gFunctions.push_back({ "bson_get_int", bson_get_int, 2 });
-  gFunctions.push_back({ "bson_get_double", bson_get_double, 2 });
-  gFunctions.push_back({ 0, 0, 0 });
+  gFunctions.push_back( duktape_function( "bson_create", bson_create, 0 ));
+  gFunctions.push_back( duktape_function( "bson_destroy", bson_destroy, 1 ));
+  gFunctions.push_back( duktape_function( "bson_append_string", bson_append_string, 3 ));
+  gFunctions.push_back( duktape_function( "bson_append_boolean", bson_append_boolean, 3 ));
+  gFunctions.push_back( duktape_function( "bson_append_int", bson_append_int, 3 ));
+  gFunctions.push_back( duktape_function( "bson_append_double", bson_append_double, 3 ));
+  gFunctions.push_back( duktape_function( "bson_get_string", bson_get_string, 2 ));
+  gFunctions.push_back( duktape_function( "bson_get_boolean", bson_get_boolean, 2 ));
+  gFunctions.push_back( duktape_function( "bson_get_int", bson_get_int, 2 ));
+  gFunctions.push_back( duktape_function( "bson_get_double", bson_get_double, 2 ));
+  gFunctions.push_back( duktape_function( 0, 0, 0 ));
   duk_push_object(ctx);
   duk_export_functions(ctx, gFunctions);
   return 1;
