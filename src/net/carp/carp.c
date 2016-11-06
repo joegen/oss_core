@@ -447,8 +447,10 @@ static void packethandler(unsigned char *dummy,
 {
     struct ether_header etherhead;
     struct ip iphead;
+#ifdef DEBUG
     unsigned int source;
     unsigned int dest;
+#endif
     unsigned char proto;
     unsigned int caplen;
     unsigned int ip_len;
@@ -483,8 +485,10 @@ static void packethandler(unsigned char *dummy,
         return;
     }
     ip_len = iphead.ip_hl << 2;
+#ifdef DEBUG
     source = ntohl(iphead.ip_src.s_addr);
     dest = ntohl(iphead.ip_dst.s_addr);
+#endif   
     proto = iphead.ip_p;
     switch (proto) {
     case IPPROTO_CARP: {
