@@ -9,12 +9,10 @@ bin_PROGRAMS += \
 
 if ENABLE_FEATURE_B2BUA
 if ENABLE_FEATURE_CARP 
-if ENABLE_FEATURE_LIBRE 
 if ENABLE_FEATURE_V8
 bin_PROGRAMS += \
     oss_core \
     oss_rest
-endif
 endif
 endif
 endif

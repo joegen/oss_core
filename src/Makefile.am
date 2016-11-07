@@ -16,11 +16,6 @@ if ENABLE_FEATURE_CARP
     corelibldadd += liboss_carp.la
 endif
 
-if ENABLE_FEATURE_LIBRE
-    corelibldadd += ua/core/re/libre.a \
-		    ua/core/rem/librem.a
-endif
-
 if ENABLE_FEATURE_TURN
     corelibs += liboss_turn.la
     corelibldadd += liboss_turn.la
@@ -43,12 +38,6 @@ AM_CPPFLAGS = \
     -I@OSS_CORE_SRCDIR@/include \
     -I@OSS_CORE_SRCDIR@/src/utl/linux/pidfile \
     -I@OSS_CORE_SRCDIR@/src/udns/include
-
-if ENABLE_FEATURE_LIBRE
-AM_CPPFLAGS +=	\
-    -I@OSS_CORE_SRCDIR@/src/ua/core/re/include \
-    -I@OSS_CORE_SRCDIR@/src/ua/core/rem/include
-endif
 
 if ENABLE_FEATURE_TURN
 AM_CPPFLAGS += \
@@ -109,7 +98,6 @@ include raft/src.am
 include lmdb/src.am
 include persistent/src.am
 include stun/src.am
-include ua/src.am
 include rtp/src.am
 include zmq/src.am
 include b2bua/src.am

@@ -91,9 +91,6 @@ struct Config
   std::string tlsPeerCa;
   std::string tlsPeerCaDirectory;
   std::string tlsCertPassword;
-  std::string regUri;
-  std::string regUser;
-  std::string regPassword;
   std::string carpVirtualIp;
   std::string carpInterface;
   std::string carpUpScript;
@@ -114,14 +111,6 @@ struct Config
     {
     }
 };
-
-static OSS::SIP::UA::SIPEventLoop* gpEventLoop = 0;
-
-void local_reg_exit_handler()
-{
-  gpEventLoop->stop(false, false, false);
-}
-
 
 class OSSB2BUA :
   public SIPB2BTransactionManager,
@@ -255,15 +244,7 @@ public:
         OSS_LOG_INFO("TLS Transport initialized");
       }
     }
-    
-
-    //
-    // Initialize the local registration agent
-    //
-    std::ostringstream regRoute;
-    regRoute << "sip:" << _config.address << ":" << _config.port;
-    startLocalRegistrationAgent("oss-core", regRoute.str(), local_reg_exit_handler);
-    
+        
     //
     // Initialize the transport facing the PBX
     //
@@ -298,23 +279,6 @@ public:
       //
       OSS::Net::Carp::setStateChangeHandler(boost::bind(&OSSB2BUA::handleCarpState, this, _1));
       OSS::Net::Carp::instance()->run();
-    }
-    
-    if (!_config.regUri.empty())
-    {
-      //
-      // sleep to make sure all the the threads have started running
-      //
-      OSS::thread_sleep(1000);
-      OSS::SIP::SIPURI regTarget(_config.regUri);
-      sendLocalRegister(
-        regTarget.getUser(),
-        _config.regUser,
-        _config.regPassword,
-        regTarget.getHost(),
-        3600,
-        ""
-      );
     }
     
     return true;
@@ -771,10 +735,6 @@ void prepareTargetInfo(Config& config, ServiceOptions& options)
   
   options.getOption("route-script", config.routeScript);
   
-  options.getOption("reg-uri", config.regUri);
-  options.getOption("reg-user", config.regUser);
-  options.getOption("reg-pass", config.regPassword);
-  
   //
   // Check if we need to rewrite the call-id.
   // The default is to reuse the call-id
@@ -823,9 +783,6 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionString("tls-peer-ca", "Peer CA File. If the remote peer this server is connecting to uses a self signed certificate, this file is used to verify authenticity of the peer identity.");
   options.addOptionString("tls-peer-ca-directory", "Additional CA file directory. The files must be named with the CA subject name hash value.");
   options.addOptionString("tls-password", "TLS Certificate Key Password");
-  options.addOptionString("reg-uri", "SIP URI representing an ITSP account.  Example:  sip:1234@mydomain.com");
-  options.addOptionString("reg-user", "User credential to be used for registration");
-  options.addOptionString("reg-pass", "Password credential to be used for registration");
   options.addOptionString("carp-virtual-ip", "Virtual IP assigned for CARP. Take note that this requires root permissions to work.");
   options.addOptionString("carp-interface", "Interface where the virtual IP will be registered.  Example: eth0");
   options.addOptionString("carp-up-script", "Script called to bring up the virtual interface");
@@ -869,13 +826,6 @@ int main(int argc, char** argv)
     SIPB2BContact::_dialogStateInParams = true;
     SIPB2BContact::_registerStateInParams = false;
 
-    //
-    // Run the UA event loop
-    //
-    OSS::SIP::UA::SIPEventLoop eventLoop;
-    gpEventLoop = &eventLoop;
-    eventLoop.run(true);
-    
     OSSB2BUA ua(config);
     ua.run();
 
@@ -933,11 +883,6 @@ int main(int argc, char** argv)
     //
     ua.stop();
     
-    //
-    // Stop the registration agent
-    //
-    ua.stopLocalRegistrationAgent();
-   
     
     //
     // Force exit.  We have freed whatever we need to free at this point

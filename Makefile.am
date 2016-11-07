@@ -5,7 +5,5 @@ include config/project.am
 	README
 
 SUBDIRS = .
-if ENABLE_FEATURE_LIBRE
-    SUBDIRS += src/ua/core
-endif
-SUBDIRS += src include
+SUBDIRS += src 
+SUBDIRS += include

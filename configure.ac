@@ -91,7 +91,6 @@ AC_ARG_ENABLE([all-features],
     [
         ENABLE_FEATURE(RESTKV)
         AC_CHECK_HEADER(event2/event.h, [ENABLE_FEATURE(TURN)], [DISABLE_FEATURE(TURN)])
-        ENABLE_FEATURE(LIBRE)
         ENABLE_FEATURE(CARP)
         ENABLE_FEATURE(V8)
         ENABLE_FEATURE(B2BUA)
@@ -127,13 +126,7 @@ AC_ARG_ENABLE([all-features],
             AC_HELP_STRING([--enable-turn], [Enable TURN Server Feature]),
             [ENABLE_FEATURE(TURN)],
             [DISABLE_FEATURE(TURN)])
-        #
-        # Enable libre UA wrapper compilation
-        #
-        AC_ARG_ENABLE([libre],
-            AC_HELP_STRING([--enable-libre], [Enable libre UA Feature]),
-            [ENABLE_FEATURE(LIBRE)],
-            [DISABLE_FEATURE(LIBRE)])
+
         #
         # Enable UCARP compilation
         #
@@ -333,15 +326,6 @@ if test "x$FEATURE_CARP" == "xenabled"; then
     m4_include([config/carp.m4])
 fi
 
-#
-# LIBRE
-#
-if test "x$FEATURE_LIBRE" == "xenabled"; then
-    m4_include([config/libre.m4])
-    SFAC_LIBRE_CONFIGURE()
-    SFAC_LIBREM_CONFIGURE()
-fi
-
 
 #
 # Google V8
@@ -422,7 +406,7 @@ fi
 #
 
 AC_LANG_PUSH([C++])
-AC_CHECK_HEADER(gtest/gtest.h, 
+AC_CHECK_LIB(gtest, main,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_GTEST, -lgtest)],
     [FLAG_MISSING_DEP(OSS_HAVE_GTEST)])
 AC_LANG_POP([C++])
@@ -514,7 +498,6 @@ AC_CONFIG_FILES([
     Makefile
     src/Makefile
     include/Makefile
-    src/ua/core/Makefile
 ])
 
 AC_OUTPUT

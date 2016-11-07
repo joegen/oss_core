@@ -42,7 +42,6 @@
 #include "OSS/SIP/B2BUA/SIPB2BHandler.h"
 #include "OSS/SIP/B2BUA/SIPB2BUserAgentHandlerList.h"
 #include "OSS/Persistent/RESTKeyValueStore.h"
-#include "OSS/SIP/B2BUA/SIPB2BRegisterAgent.h"
 
 
 namespace OSS {
@@ -315,43 +314,7 @@ public:
     /// If a handler "handled" the transaction, the scripting layer
     /// will no longer process the transaction and instead, let the handler
     /// respond to the transaction.
-  
-#if ENABLE_FEATURE_LIBRE
-  bool startLocalRegistrationAgent(
-    const std::string& agentName,
-    const std::string& route,
-    const OSS::SIP::UA::SIPUserAgent::ExitHandler& exitHandler);
-    /// Starts the local registration user agent.  This method
-    /// must be called prior to calling sendLocalRegister.
-    /// The exitHandler is a callback function that is notified
-    /// when all transactions has ended after calling stopLocalRegistrationAgent
-  
-  void stopLocalRegistrationAgent();
-    /// Stops the local registration agent.  Notifies the exit handler
-    /// after all transactions have ended
-  
-  bool sendLocalRegister(
-    const std::string& user,
-    const std::string& authUser,
-    const std::string& authPassword,
-    const std::string& domain,
-    OSS::UInt32 expires,
-    const std::string& registrarAddress
-  );
-    /// Register with a remote domain
-  
-  bool isForLocalRegistration(const std::string& contact);
-    /// Returns true if the SIPMessage request-uri is for a locally
-    /// registered account
-  
-  void onLocalRegisterResponse(
-    OSS::SIP::UA::SIPRegistration* pReg, 
-    const SIPMessage::Ptr& pMsg, 
-    const std::string& error);
-    /// Notified when a response is received for a local register
-
-#endif
-   
+     
 protected:
   void handleRequest(
     const OSS::SIP::SIPMessage::Ptr& pMsg, 
@@ -435,16 +398,7 @@ private:
   // Plugins
   //
   SIPB2BUserAgentHandlerList _userAgentHandler;
-  SIPB2BUserAgentHandlerLoader _pluginLoader;
-   
-#if ENABLE_FEATURE_LIBRE
-  //
-  // Local registration agent
-  //
-  SIPB2BRegisterAgent _registerAgent;
-  std::string _registerAgentRoute;
-#endif
-  
+  SIPB2BUserAgentHandlerLoader _pluginLoader;  
 };
 
 //
