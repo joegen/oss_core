@@ -37,6 +37,85 @@ liboss_core_la_SOURCES += net/Carp.cpp \
     net/carp/syslognames.h
 endif
 
+if ENABLE_FEATURE_WEBSOCKETS
+liboss_core_la_SOURCES +=  \
+    net/ws/src/base64/base64.cpp \
+    net/ws/src/md5/md5.c \
+    net/ws/src/messages/data.cpp \
+    net/ws/src/network_utilities.cpp \
+    net/ws/src/processors/hybi_header.cpp \
+    net/ws/src/processors/hybi_util.cpp \
+    net/ws/src/sha1/sha1.cpp \
+    net/ws/src/uri.cpp \
+    net/ws/src/common.hpp \
+    net/ws/src/connection.hpp \
+    net/ws/src/endpoint.hpp \
+    net/ws/src/network_utilities.hpp \
+    net/ws/src/shared_const_buffer.hpp \
+    net/ws/src/uri.hpp \
+    net/ws/src/websocket_frame.hpp \
+    net/ws/src/websocketpp.hpp \
+    net/ws/src/base64/base64.h \
+    net/ws/src/http/parser.hpp \
+    net/ws/src/http/constants.hpp \
+    net/ws/src/logger/logger.hpp \
+    net/ws/src/md5/md5.h \
+    net/ws/src/md5/md5.hpp \
+    net/ws/src/messages/control.hpp \
+    net/ws/src/messages/data.hpp \
+    net/ws/src/processors/hybi.hpp \
+    net/ws/src/processors/hybi_header.hpp \
+    net/ws/src/processors/hybi_legacy.hpp \
+    net/ws/src/processors/hybi_util.hpp \
+    net/ws/src/processors/processor.hpp \
+    net/ws/src/rng/blank_rng.hpp \
+    net/ws/src/rng/boost_rng.hpp \
+    net/ws/src/roles/client.hpp \
+    net/ws/src/roles/server.hpp \
+    net/ws/src/sha1/sha1.h \
+    net/ws/src/sockets/plain.hpp \
+    net/ws/src/sockets/socket_base.hpp \
+    net/ws/src/sockets/tls.hpp \
+    net/ws/src/utf8_validator/utf8_validator.hpp
+endif
+
+liboss_core_la_SOURCES +=  \
+	net/udns/include/udns.h \
+	net/udns/include/udnspp/dnsarecord.h  \
+	net/udns/include/udnspp/dnscache.h  \
+	net/udns/include/udnspp/dnscontext.h  \
+	net/udns/include/udnspp/dnsmxrecord.h  \
+	net/udns/include/udnspp/dnsnaptrrecord.h  \
+	net/udns/include/udnspp/dnsptrrecord.h  \
+	net/udns/include/udnspp/dnsresolver.h  \
+	net/udns/include/udnspp/dnsrrcommon.h  \
+	net/udns/include/udnspp/dnssrvrecord.h  \
+	net/udns/include/udnspp/dnstxtrecord.h \
+	net/udns/src/udns_bl.c \
+	net/udns/src/udns_dn.c \
+	net/udns/src/udns_init.c  \
+	net/udns/src/udns_misc.c   \
+	net/udns/src/udns_resolver.c  \
+	net/udns/src/udns_rr_mx.c     \
+	net/udns/src/udns_rr_ptr.c  \
+	net/udns/src/udns_rr_txt.c \
+	net/udns/src/udns_codes.c  \
+	net/udns/src/udns_dntosp.c  \
+	net/udns/src/udns_jran.c  \
+	net/udns/src/udns_parse.c  \
+	net/udns/src/udns_rr_a.c      \
+	net/udns/src/udns_rr_naptr.c  \
+	net/udns/src/udns_rr_srv.c  \
+	net/udns/src/udns_XtoX.c \
+	net/udns/src/udnspp/dnsarecord.cpp  \
+	net/udns/src/udnspp/dnscontext.cpp  \
+	net/udns/src/udnspp/dnsmxrecord.cpp  \
+	net/udns/src/udnspp/dnsnaptrrecord.cpp  \
+	net/udns/src/udnspp/dnsptrrecord.cpp  \
+	net/udns/src/udnspp/dnsresolver.cpp  \
+	net/udns/src/udnspp/dnssrvrecord.cpp  \
+	net/udns/src/udnspp/dnstxtrecord.cpp
+
 if ENABLE_FEATURE_NET_EXTRA
 liboss_core_la_SOURCES += \
     net/FirewallRule.cpp \

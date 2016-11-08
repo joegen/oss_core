@@ -25,7 +25,7 @@ AM_CPPFLAGS = \
     -I$(top_builddir)/src \
     -I@OSS_CORE_SRCDIR@/include \
     -I@OSS_CORE_SRCDIR@/src/utl/linux/pidfile \
-    -I@OSS_CORE_SRCDIR@/src/udns/include
+    -I@OSS_CORE_SRCDIR@/src/net/udns/include
 
 
 
@@ -45,8 +45,6 @@ BUILT_SOURCES = boost_pch.hpp.gch
 CLEANFILES = boost_pch.hpp.gch
 
 liboss_core_la_SOURCES = boost_pch.hpp OSS.cpp
-include udns.am
-include ws.am
 include abnf/src.am
 include exec/src.am
 include crypto/src.am

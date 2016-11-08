@@ -1,6 +1,0 @@
-[submodule "src/ws"]
-	path = src/ws
-	url = https://github.com/zaphoyd/websocketpp/
-[submodule "src/udns"]
-	path = src/udns
-	url = https://github.com/joegen/libudnspp
