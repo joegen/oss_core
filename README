@@ -6,7 +6,7 @@
     * Java Script Engine using Google V8
     * CommonJS support using Duktape
     * SIP Over Websockets
-    * STUN/TURN server
+    * STUN server
     * RTP Proxy
     * CARP High Availability
     * REST Persistence Store
