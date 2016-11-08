@@ -99,6 +99,10 @@ TEST(Net, RTNLRoute)
   
   ASSERT_TRUE(OSS::Net::rtnl_get_source(routes, source, "127.0.0.1", true));
   std::cout << "Source: " << source << " Target: 127.0.0.1" << std::endl;
+  
+#else
+  OSS::Net::RTNLRoutes routes;
+  ASSERT_TRUE(OSS::Net::rtnl_get_route(routes, true));
 #endif
 }
 
