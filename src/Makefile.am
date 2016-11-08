@@ -4,17 +4,9 @@ EXTRA_DIST = js/scripts
 
 corelibs =
 
-if ENABLE_FEATURE_CARP
-corelibs += liboss_carp.la
-endif
-
 corelibldadd = \
     @OSS_CORE_DEP_LIBS@ \
     liboss_core.la
-
-if ENABLE_FEATURE_CARP
-    corelibldadd += liboss_carp.la
-endif
 
 corelibs += liboss_core.la
 
@@ -44,11 +36,6 @@ version_Age=@OSS_CORE_VERSION_AGE@
 LDADD = $(corelibldadd)
 
 LDFLAGS = -rdynamic
-
-#
-# Libraries for CARP
-#
-include net/carp/Makefile.am
 
 liboss_core_la_LDFLAGS = -version-info @OSS_CORE_VERSION_INFO@
 liboss_core_la_LIBADD = @OSS_CORE_DEP_LIBS@
