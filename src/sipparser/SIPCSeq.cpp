@@ -33,6 +33,7 @@ static ABNFWhileNot<ABNF_SIP_LWS, true> lwsFinder_2;
 
 SIPCSeq::SIPCSeq()
 {
+  _data = "UNKNOWN 0";
 }
 
 SIPCSeq::SIPCSeq(const std::string& cseq)
