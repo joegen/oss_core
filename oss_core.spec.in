@@ -1,11 +1,5 @@
 #!BuildIgnore: post-build-checks
 
-%if 0%{?fedora} >= 16
-%define build_turn 1
-%else
-%define build_turn 0
-%endif
-
 Name: @PACKAGE@
 Version: @VERSION@
 Release: @PACKAGE_REVISION@
@@ -53,9 +47,6 @@ Requires: xmlrpc-c-client
 Requires: xmlrpc-c-client++
 Requires: xmlrpc-c-c++
 
-BuildRequires: libevent-devel
-Requires: libevent
-
 
 BuildRequires: poco-devel
 Requires: poco-crypto
@@ -96,7 +87,7 @@ encapsulate functions and operations for:
     * SIP B2B User Agent
     * Java Script Engine using Google V8
     * SIP Over Websockets
-    * STUN/TURN server
+    * STUN server
     * RTP Proxy
     * CARP High Availability
 
@@ -123,7 +114,29 @@ encapsulate functions and operations for:
     * B2BUA
     * Java Script Engine using Google V8
     * SIP Over Websockets
-    * STUN/TURN server
+    * STUN server
+    * RTP Proxy
+    * CARP High Availability
+
+# Install header files
+%package app
+Requires: %name
+Group: Applications/Networking
+Vendor: OSS Software Solutions
+Summary: Group: Applications bundled with %name
+
+
+%description app
+oss_core is a high level library implementation of a SIP B2BUA
+The library currently provides classes that
+encapsulate functions and operations for:
+
+    * SIP ABNF Parser
+    * SIP Finite State Machines
+    * B2BUA
+    * Java Script Engine using Google V8
+    * SIP Over Websockets
+    * STUN server
     * RTP Proxy
     * CARP High Availability
 
@@ -132,15 +145,8 @@ encapsulate functions and operations for:
 
 %build
 autoreconf -if
-%if %{build_turn}
-%configure @OSSLIBS_RPM_CONFIGURE_OPTIONS@
-%else
-%configure @OSSLIBS_RPM_CONFIGURE_OPTIONS@ --enable-turn
-%endif
-cp config.log %name.configlog
 
-# Wercker docker image does not seem to like smp flags
-# make %{_smp_mflags} all
+%configure --enable-all-features
 make all
 
 %install
@@ -152,14 +158,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc CONTRIBUTORS README NEWS TODO ChangeLog %name.configlog
-%attr(755,root,root) %{_bindir}/oss_*
+%doc CONTRIBUTORS README NEWS TODO ChangeLog
 %attr(755,root,root) %{_libdir}/liboss_core.so*
 %attr(755,root,root) %{_libdir}/liboss_carp.so*
-
-%if %{build_turn}
-%attr(755,root,root) %{_libdir}/liboss_turn.so*
-%endif
 
 %files devel
 %defattr(644,root,root,755)
@@ -167,27 +168,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/liboss_core.a
 %{_libdir}/liboss_carp.la
 %{_libdir}/liboss_carp.a
-%{_prefix}/opt/ossapp/libre/lib/libre.a
-%{_prefix}/opt/ossapp/libre/lib/libre.so
-%{_prefix}/opt/ossapp/librem/lib/librem.a
-%{_prefix}/opt/ossapp/librem/lib/librem.so
 
-%if %{build_turn}
-%attr(755,root,root) %{_libdir}/liboss_turn.la
-%attr(755,root,root) %{_libdir}/liboss_turn.a
-%endif
+%files app
+%attr(755,root,root) %{_bindir}/oss_*
+%attr(755,root,root) %{_bindir}/lohika
 
 %dir %attr(755,root,root) %{_includedir}/OSS
 %{_includedir}/OSS/*
 
-%dir %attr(755,root,root) %{_prefix}/opt/ossapp/libre/include
-%{_prefix}/opt/ossapp/libre/include/*
-
-%dir %attr(755,root,root) %{_prefix}/opt/ossapp/libre/share
-%{_prefix}/opt/ossapp/libre/share/*
-
-%dir %attr(755,root,root) %{_prefix}/opt/ossapp/librem/include
-%{_prefix}/opt/ossapp/librem/include/*
 
 %post
 
