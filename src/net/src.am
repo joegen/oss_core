@@ -5,10 +5,6 @@ liboss_core_la_SOURCES +=  \
     net/Net.cpp \
     net/rtnl_get_route.cpp
 
-if ENABLE_FEATURE_TURN
-    liboss_core_la_SOURCES += net/TurnServer.cpp
-endif
-
 if ENABLE_FEATURE_CARP
 liboss_core_la_SOURCES += net/Carp.cpp
 endif

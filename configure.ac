@@ -36,6 +36,13 @@ AC_SUBST(OSS_CORE_VERSION_AGE)
 AC_SUBST(OSS_CORE_VERSION_INFO)
 
 #
+# Configure package revision number
+#
+PACKAGE_REVISION=`date +%s`.`cd ${srcdir} && git rev-parse --short HEAD`
+AC_SUBST(PACKAGE_REVISION)
+AC_DEFINE_UNQUOTED([PACKAGE_REVISION], "${PACKAGE_REVISION}", [Revion number including git SHA])
+
+#
 # --disable-dep-check will simply display missing 
 # dependencies as warnings.  This is useful when you
 # simply need to generate the makefile for tasks that
@@ -90,7 +97,6 @@ AC_ARG_ENABLE([all-features],
     AC_HELP_STRING([--enable-all-features], [Enable ALL features]),
     [
         ENABLE_FEATURE(RESTKV)
-        AC_CHECK_HEADER(event2/event.h, [ENABLE_FEATURE(TURN)], [DISABLE_FEATURE(TURN)])
         ENABLE_FEATURE(CARP)
         ENABLE_FEATURE(V8)
         ENABLE_FEATURE(B2BUA)
@@ -119,13 +125,6 @@ AC_ARG_ENABLE([all-features],
             AC_HELP_STRING([--disable-rtp], [Disable RTP Proxy Feature]),
             [DISABLE_FEATURE(RTP)],
             [ENABLE_FEATURE(RTP)])
-        #
-        # Enable TURN compilation
-        #
-        AC_ARG_ENABLE([turn],
-            AC_HELP_STRING([--enable-turn], [Enable TURN Server Feature]),
-            [ENABLE_FEATURE(TURN)],
-            [DISABLE_FEATURE(TURN)])
 
         #
         # Enable UCARP compilation
@@ -145,7 +144,7 @@ AC_ARG_ENABLE([all-features],
         # Enable REST KV compilation
         #
         AC_ARG_ENABLE([restkv],
-            AC_HELP_STRING([--enable-turn], [Enable REST Key Value Store Feature]),
+            AC_HELP_STRING([--enable-rest], [Enable REST Key Value Store Feature]),
             [ENABLE_FEATURE(RESTKV)],
             [DISABLE_FEATURE(RESTKV)])
         #
@@ -427,18 +426,6 @@ AC_CHECK_HEADER(zlib.h,
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_ZLIB, -lz)], 
     [FLAG_MISSING_DEP(OSS_HAVE_ZLIB)])
 
-AC_CHECK_HEADER(event2/event.h,    
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_LIBEVENT, -levent)], 
-    [FLAG_MISSING_DEP(OSS_HAVE_LIBEVENT)])
-
-AC_CHECK_LIB([event_openssl], [main], 
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_LIBEVENT_SSL, -levent_openssl)], 
-    [FLAG_MISSING_DEP(OSS_HAVE_LIBEVENT_SSL)])
-
-AC_CHECK_LIB([event_pthreads], [main], 
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_LIBEVENT_PTHREADS, -levent_pthreads)], 
-    [FLAG_MISSING_DEP(OSS_HAVE_LIBEVENT_PTHREADS)])
-
 AC_CHECK_LIB(ltdl, main, 
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_LTDL, -lltdl)],
     [FLAG_MISSING_DEP(OSS_HAVE_LTDL)])
@@ -475,7 +462,7 @@ OSS_CXX_C_FLAGS="-fmessage-length=0"
 # Compiler warnings
 #
 OSS_CXX_WARNINGS="-Wall -Wformat -Wwrite-strings -Wpointer-arith -Wno-unused-result -Wno-strict-aliasing"
-OSS_C_WARNINGS="-Wall -Wnested-externs -Werror -Werror=return-type -Werror=uninitialized -Wno-pointer-sign -Wno-unused-function -Wno-shift-negative-value -Wno-format-extra-args"
+OSS_C_WARNINGS="-Wall -Wnested-externs -Werror=return-type -Werror=uninitialized -Wno-pointer-sign -Wno-unused-function -Wno-shift-negative-value -Wno-format-extra-args"
 #
 # Additional CXX and C Flags
 #

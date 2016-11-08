@@ -16,10 +16,6 @@ if ENABLE_FEATURE_CARP
     corelibldadd += liboss_carp.la
 endif
 
-if ENABLE_FEATURE_TURN
-    corelibs += liboss_turn.la
-    corelibldadd += liboss_turn.la
-endif
 corelibs += liboss_core.la
 
 lib_LTLIBRARIES = $(corelibs)
@@ -39,23 +35,7 @@ AM_CPPFLAGS = \
     -I@OSS_CORE_SRCDIR@/src/utl/linux/pidfile \
     -I@OSS_CORE_SRCDIR@/src/udns/include
 
-if ENABLE_FEATURE_TURN
-AM_CPPFLAGS += \
-    -I@OSS_CORE_SRCDIR@/src/net/turn \
-    -I@OSS_CORE_SRCDIR@/src/net/turn/client \
-    -I@OSS_CORE_SRCDIR@/src/net/turn/client++ \
-    -I@OSS_CORE_SRCDIR@/src/net/turn/server \
-    -I@OSS_CORE_SRCDIR@/src/net/turn/apps/common \
-    -I@OSS_CORE_SRCDIR@/src/net/turn/apps/relay
 
-AM_CFLAGS += \
-    -I@OSS_CORE_SRCDIR@/src/net/turn \
-    -I@OSS_CORE_SRCDIR@/src/net/turn/client \
-    -I@OSS_CORE_SRCDIR@/src/net/turn/client++ \
-    -I@OSS_CORE_SRCDIR@/src/net/turn/server \
-    -I@OSS_CORE_SRCDIR@/src/net/turn/apps/common \
-    -I@OSS_CORE_SRCDIR@/src/net/turn/apps/relay
-endif
 
 version_Current=@OSS_CORE_VERSION_CURRENT@
 version_Revision=@OSS_CORE_VERSION_REVISION@
@@ -66,10 +46,9 @@ LDADD = $(corelibldadd)
 LDFLAGS = -rdynamic
 
 #
-# Libraries for CARP and TURN
+# Libraries for CARP
 #
 include net/carp/Makefile.am
-include net/turn/Makefile.am
 
 liboss_core_la_LDFLAGS = -version-info @OSS_CORE_VERSION_INFO@
 liboss_core_la_LIBADD = @OSS_CORE_DEP_LIBS@

@@ -3,7 +3,6 @@ nobase_include_HEADERS += \
     OSS/Net/Firewall.h \
     OSS/Net/oss_carp.h \
     OSS/Net/Carp.h \
-    OSS/Net/TurnServer.h \
     OSS/Net/HTTPServer.h \
     OSS/Net/AccessControl.h \
     OSS/Net/IPAddress.h \
@@ -12,4 +11,5 @@ nobase_include_HEADERS += \
     OSS/Net/Net.h \
     OSS/Net/FramedTcpListener.h \
     OSS/Net/FramedTcpClient.h \
-    OSS/Net/FramedTcpConnection.h
+    OSS/Net/FramedTcpConnection.h \
+    OSS/Net/rtnl_get_route.h
