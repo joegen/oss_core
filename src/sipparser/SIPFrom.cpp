@@ -430,7 +430,7 @@ std::string SIPFrom::getAor(bool includeScheme) const
   if (!getURI(_data, uri))
     return "";
   std::string aor;
-  SIPURI::getIdentity(uri, aor, includeScheme);
+  SIPURI::getIdentity(uri, aor, includeScheme, false);
   return aor;
 }
 
