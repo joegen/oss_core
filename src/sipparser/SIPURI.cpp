@@ -306,14 +306,24 @@ bool SIPURI::setHostPort(const OSS::Net::IPAddress& hostPort)
   return setHostPort(_data, host.c_str());
 }
 
-std::string SIPURI::getIdentity(bool includeScheme) const
+std::string SIPURI::getBasicIdentity() const
+{
+  return getIdentity(false, false);
+}
+
+bool SIPURI::getBasicIdentity(const std::string& uri, std::string& identity)
+{
+  return SIPURI::getIdentity(uri, identity, false, false);
+}
+
+std::string SIPURI::getIdentity(bool includeScheme, bool includePort) const
 {
   std::string identity;
-  getIdentity(_data, identity, includeScheme);
+  getIdentity(_data, identity, includeScheme, includePort);
   return identity;
 }
 
-bool SIPURI::getIdentity(const std::string& uri, std::string& identity, bool includeScheme)
+bool SIPURI::getIdentity(const std::string& uri, std::string& identity, bool includeScheme, bool includePort)
 {
   std::string scheme, user, hostPort;
   SIPURI::getUser(uri, user);
@@ -321,7 +331,9 @@ bool SIPURI::getIdentity(const std::string& uri, std::string& identity, bool inc
   if (!SIPURI::getScheme(uri, scheme))
     return false;
 
-  if (!SIPURI::getHostPort(uri, hostPort))
+  if (includePort && !SIPURI::getHostPort(uri, hostPort))
+    return false;
+  else if (!includePort && !SIPURI::getHost(uri, hostPort))
     return false;
 
   if (includeScheme)
