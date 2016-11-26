@@ -43,6 +43,8 @@ public:
     UnknownTransport
   };
   
+  typedef boost::asio::ip::address_v6::bytes_type v6_byte_type;
+  
   IPAddress();
     /// Default constructor
 
@@ -51,6 +53,9 @@ public:
 
   explicit IPAddress(unsigned long address);
     /// Create an address from an unsigned long
+  
+  explicit IPAddress(v6_byte_type bytes);
+    /// Create an address from an array of bytes 
 
   explicit IPAddress(const boost::asio::ip::address_v4& address);
     /// Create and IP address from an asio address_v4
@@ -155,8 +160,11 @@ public:
   void setProtocol(Protocol protocol);
     /// Set the transport
 
-  bool isPrivate();
+  bool isPrivate() const;
     /// Returns true if the IP address is of private type.  eg 192.168.x.x
+  
+  bool isInaddrAny() const;
+  /// Returns true if the IP address is 0.0.0.0 or "::"
   
   bool isVirtual() const;
     /// Returns true if the IP address is a virtual address.  This is used for CARP address identification
@@ -184,6 +192,13 @@ public:
   
   static bool isIPAddress(const std::string& address);
     /// Returns true if the address is either IPV4 or IPV6 address
+  
+  static const std::vector<IPAddress>& getLocalAddresses();
+    /// Returns all available local IP address
+  
+public:
+  static std::vector<IPAddress> _localAddresses;
+  
 protected:
   boost::asio::ip::address _address;
   std::string _externalAddress;
@@ -353,19 +368,28 @@ inline std::string IPAddress::toIpPortString() const
   if (e)
     return "";
   std::stringstream strm;
-  strm << ipString;
+  
   if (_port != 0)
-    strm << ":" << _port;
+  {
+    if (_address.is_v6())
+    {
+      strm << "[" << ipString << "]:" << _port;
+    }
+    else
+    {
+      strm << ipString << ":" << _port;
+    }
+  }
+  else
+  {
+    strm << ipString;
+  }
   return strm.str();
 }
 
 inline bool IPAddress::isValid() const
 {
-  if (_address.is_v4())
-    return _address.to_v4().to_ulong() != 0;
-  else if(_address.is_v6())
-    return true;
-  return false;
+  return !isInaddrAny();
 }
 
 inline std::string IPAddress::toString() const
@@ -403,6 +427,11 @@ inline IPAddress::Protocol IPAddress::getProtocol() const\
 inline void IPAddress::setProtocol(Protocol protocol)
 {
   _protocol = protocol;
+}
+
+inline const std::vector<IPAddress>& IPAddress::getLocalAddresses()
+{
+  return IPAddress::_localAddresses;
 }
 
 } } // OSS::Net

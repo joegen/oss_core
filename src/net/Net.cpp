@@ -35,6 +35,7 @@
 #include "OSS/UTL/Thread.h"
 #include "OSS/UTL/Application.h"
 #include "OSS/UTL/Logger.h"
+#include "OSS/Net/IPAddress.h"
 
 #if !defined(OSS_OS_FAMILY_WINDOWS)
 #include <ifaddrs.h>
@@ -143,6 +144,8 @@ void net_init()
             iface._destAddr = inet_ntop(AF_INET6, &((struct sockaddr_in6 *)cur->ifa_dstaddr)->sin6_addr, buff, sizeof(buff));
           }
         }
+        OSS::Net::IPAddress ipaddr(iface._ipAddress);
+        OSS::Net::IPAddress::_localAddresses.push_back(ipaddr);
         network_interface::_table.push_back(iface);
       }
     }

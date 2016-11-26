@@ -32,6 +32,8 @@ using boost::asio::ip::address_v4;
 using boost::asio::ip::address_v6;
 using boost::system::error_code;
 
+std::vector<IPAddress> OSS::Net::IPAddress::_localAddresses;
+
 IPAddress::IPAddress() :
   _address(),
   _port(0),
@@ -59,6 +61,15 @@ IPAddress::IPAddress(const std::string& address) :
 
 IPAddress::IPAddress(unsigned long address) :
   _address(address_v4(address)),
+  _port(0),
+  _cidr(0),
+  _isVirtual(false),
+  _protocol(UnknownTransport)
+{
+}
+
+IPAddress::IPAddress(v6_byte_type bytes) :
+  _address(address_v6(bytes)),
   _port(0),
   _cidr(0),
   _isVirtual(false),
@@ -124,7 +135,7 @@ void IPAddress::swap(IPAddress& address)
   std::swap(_alias, address._alias);
 }
 
-bool IPAddress::isPrivate()
+bool IPAddress::isPrivate() const
 {
   if (_address.is_v6())
     return false;
@@ -140,6 +151,27 @@ bool IPAddress::isPrivate()
 	if ( address >= 0xc0a80000 && address <= 0xc0a8ffff )
 		return true;
 
+  return false;
+}
+
+bool IPAddress::isInaddrAny() const
+{
+  if (_address.is_v4())
+  {
+    return _address.to_v4().to_ulong() == 0;
+  }
+  else if (_address.is_v6())
+  {
+    v6_byte_type bytes = _address.to_v6().to_bytes();
+    for (v6_byte_type::iterator iter = bytes.begin(); iter != bytes.end(); iter++)
+    {
+      if (*iter != 0)
+      {
+        return false;
+      }
+    }
+    return true;
+  }
   return false;
 }
 
