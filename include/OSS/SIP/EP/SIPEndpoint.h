@@ -78,7 +78,12 @@ public:
   bool addTransport(const OSS::Net::IPAddress& address);
   /// Add transport to the endpoint.  This must be done
   /// prior to calling run();)
-  ///  
+  ///
+  
+  bool addTransport(OSS::Net::IPAddress::Protocol proto, unsigned short port);
+  /// Add transport to the endpoint binding to all available interfaces.  This must be done
+  /// prior to calling run();)
+  ///
   
   virtual bool runEndpoint();
   /// Initialize the endpoint and start processing incoming SIP messages.

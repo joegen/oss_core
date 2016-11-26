@@ -58,6 +58,11 @@ SIPEndpoint::~SIPEndpoint()
 
 bool SIPEndpoint::addTransport(const OSS::Net::IPAddress& address)
 {
+  if (!address.isValid())
+  {
+    return false;
+  }
+  
   switch (address.getProtocol())
   {
     case OSS::Net::IPAddress::UnknownTransport:
@@ -79,6 +84,24 @@ bool SIPEndpoint::addTransport(const OSS::Net::IPAddress& address)
       break;
   }
   return true;
+}
+
+bool SIPEndpoint::addTransport(OSS::Net::IPAddress::Protocol proto, unsigned short port)
+{
+  bool addedOne = false;
+  std::vector<OSS::Net::IPAddress> localIps = OSS::Net::IPAddress::getLocalAddresses();
+  for(std::vector<OSS::Net::IPAddress>::iterator iter = localIps.begin(); iter != localIps.end(); iter++)
+  {
+    if (iter->isValid())
+    {
+      bool added = false;
+      iter->setPort(port);
+      iter->setProtocol(proto);
+      added = addTransport(*iter);
+      addedOne = addedOne || added;
+    }
+  }
+  return addedOne;
 }
 
 bool SIPEndpoint::runEndpoint()
