@@ -549,53 +549,6 @@ void saveProcessId(ServiceOptions& options)
   }
 }
 
-bool ipRouteGet(const std::string& destination, std::string& source, std::string& gateway)
-{
-  if (destination.empty())
-    return false;
-  
-  std::ostringstream cmd;
-  
-  cmd << "/sbin/ip route get " << destination;
-  
-  Command command;
-  command.execute(cmd.str());
-  if (!command.isGood())
-    return false;
-  
-  std::string result;
-  while (command.isGood() && !command.isEOF())
-  {
-    result.push_back(command.readChar());
-  }
-  
-  std::vector<std::string> tokens = OSS::string_tokenize(result, " ");
-  bool foundSrc = false;
-  for (std::vector<std::string>::iterator iter = tokens.begin(); iter != tokens.end(); iter++)
-  {
-    if (foundSrc)
-    {
-      source = *iter;
-      break;
-    }
-    foundSrc = (*iter == "src"); 
-  }
-  
-  bool foundGw = false;
-  for (std::vector<std::string>::iterator iter = tokens.begin(); iter != tokens.end(); iter++)
-  {
-    if (foundGw)
-    {
-      gateway = *iter;
-      break;
-    }
-    foundGw = (*iter == "via"); 
-  }
-  
-  return !source.empty() && !gateway.empty();
-}
-
-
 std::string getExternalIp(const std::string& stunServer, const std::string& localAddress)
 {
   OSS::Net::IPAddress localIp(localAddress);
@@ -613,44 +566,8 @@ void prepareListenerInfo(Config& config, ServiceOptions& options)
 {
   if (!options.getOption("interface-address", config.address))
   {
-    //
-    // Try to find the default route to the internet
-    //
-    try
-    {
-      dns_host_record_list hosts = dns_lookup_host("ossapp.com");
-      if (hosts.empty())
-      {
-        OSS_LOG_ERROR("You must provide value for interface-address.  Unable to get a connection to the internet.");
-        options.displayUsage(std::cout);
-        _exit(-1);
-      }
-      std::string address;
-      std::string gateway;
-      if (!ipRouteGet(*hosts.begin(), address, gateway))
-      {
-        OSS_LOG_ERROR("You must provide value for interface-address.  Unable to get default interface.");
-        options.displayUsage(std::cout);
-        _exit(-1);
-      }
-      else
-      {
-        OSS_LOG_INFO("Using default address " << address << "." );
-        config.address = address;
-      }
-    }
-    catch(std::exception& e)
-    {
-      OSS_LOG_ERROR("Exception occured while preparing listener information: " << e.what());
-      options.displayUsage(std::cout);
-      _exit(-1);
-    }
-    catch(...)
-    {
-      OSS_LOG_ERROR("Exception occured while preparing listener information: Unknown exception.");
-      options.displayUsage(std::cout);
-      _exit(-1);
-    }
+    config.address = OSS::Net::IPAddress::getDefaultAddress().toString();
+    OSS_LOG_INFO("Using default address " << config.address);
   }
   
   if (!options.getOption("port", config.port))
@@ -788,13 +705,6 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionString("carp-up-script", "Script called to bring up the virtual interface");
   options.addOptionString("carp-down-script", "Script called to bring up the virtual interface");
   
-
-#if ENABLE_TURN
-  options.addOptionFlag('T', "enable-turn-relay", "Run the built in turn server.");
-  options.addOptionString('c', "turn-cert-file", "The certificate file to be used for TLS and DTLS.");
-  options.addOptionString('k', "turn-pkey-file", "The private key file to be used for TLS and DTLS.");
-#endif
-
   return options.parseOptions();
 }
 
