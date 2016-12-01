@@ -584,8 +584,36 @@ void SIPStack::setTransportThreshold(
   }
 }
 
-
 #if ENABLE_FEATURE_CONFIG
+
+static void registerConfiguredTransport(OSS::socket_address_list& listeners,
+  SIPStack::SubNets& subnetMap,
+  const std::string ip, 
+  int port, 
+  const std::string& external, 
+  const std::vector<std::string>& subnets)
+{
+  const std::vector<OSS::Net::IPAddress>& localAddresses = OSS::Net::IPAddress::getLocalAddresses();
+  OSS::Net::IPAddress listener;
+  listener = ip;
+
+  if (!listener.isInaddrAny())
+  {
+    listener.externalAddress() = external;
+    listener.setPort(port);
+    listeners.push_back(listener);
+    subnetMap[listener.toIpPortString()] = subnets;
+  }
+  else
+  {
+    for(std::vector<OSS::Net::IPAddress>::const_iterator iter = localAddresses.begin(); iter != localAddresses.end(); iter++)
+    {
+      OSS::Net::IPAddress localAddr(*iter);
+      localAddr.setPort(port);
+      listeners.push_back(localAddr);
+    }
+  }
+}
 
 void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 {
@@ -613,7 +641,10 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
   int ifaceCount = interfaces.getElementCount();
   bool hasFoundDefault = false;
   std::string defaultAddress;
-  OSS::net_get_default_interface_address(defaultAddress);
+  if (OSS::Net::IPAddress::getDefaultAddress().isValid())
+  {
+    defaultAddress = OSS::Net::IPAddress::getDefaultAddress().toString();
+  }
   
   for (int i = 0; i < ifaceCount; i++)
   {
@@ -666,51 +697,38 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
         {
           OSS::Net::IPAddress listener;
           listener = ip;
-          listener.externalAddress() = external;
-          listener.setPort(sipPort);
-          _fsmDispatch.transport().defaultListenerAddress() = listener;
+          if (listener.isInaddrAny())
+          {
+            hasFoundDefault = false;
+          }
+          else
+          {
+            listener.externalAddress() = external;
+            listener.setPort(sipPort);
+            _fsmDispatch.transport().defaultListenerAddress() = listener;
+          }
         }
       }
     }
 
     if (udpEnabled)
     {
-      OSS::Net::IPAddress listener;
-      listener = ip;
-      listener.externalAddress() = external;
-      listener.setPort(sipPort);
-      _udpListeners.push_back(listener);
-      _udpSubnets[listener.toIpPortString()] = subnets;
+      registerConfiguredTransport(_udpListeners, _udpSubnets, ip, sipPort, external, subnets);
     }
 
     if (tcpEnabled)
     {
-      OSS::Net::IPAddress listener;
-      listener = ip;
-      listener.externalAddress() = external;
-      listener.setPort(sipPort);
-      _tcpListeners.push_back(listener);
-      _tcpSubnets[listener.toIpPortString()] = subnets;
+      registerConfiguredTransport(_tcpListeners, _tcpSubnets, ip, sipPort, external, subnets);
     }
 
     if (wsEnabled)
     {
-      OSS::Net::IPAddress listener;
-      listener = ip;
-      listener.externalAddress() = external;
-      listener.setPort(wsPort);
-      _wsListeners.push_back(listener);
-      _wsSubnets[listener.toIpPortString()] = subnets;
+      registerConfiguredTransport(_wsListeners, _wsSubnets, ip, wsPort, external, subnets);
     }
 
     if (tlsEnabled && hasInitializedTLS)
     {      
-      OSS::Net::IPAddress listener;
-      listener = ip;
-      listener.externalAddress() = external;
-      listener.setPort(tlsPort);
-      _tlsListeners.push_back(listener);
-      _tlsSubnets[listener.toIpPortString()] = subnets;
+      registerConfiguredTransport(_tlsListeners, _tlsSubnets, ip, tlsPort, external, subnets);
     }
   }
 
@@ -739,6 +757,11 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       }
       
       OSS::Net::IPAddress defaultInterface(ip);
+      if (!defaultInterface.isValid())
+      {
+        OSS_LOG_ERROR("SIPStack::initTransportFromConfig - unable to determine default interface address");
+        return;
+      }
       defaultInterface.setPort((int)defaultPort);
       _fsmDispatch.transport().defaultListenerAddress() = defaultInterface;
     }
