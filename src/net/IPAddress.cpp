@@ -33,6 +33,7 @@ using boost::asio::ip::address_v6;
 using boost::system::error_code;
 
 std::vector<IPAddress> OSS::Net::IPAddress::_localAddresses;
+OSS::Net::IPAddress OSS::Net::IPAddress::_defaultAddress;
 
 IPAddress::IPAddress() :
   _address(),

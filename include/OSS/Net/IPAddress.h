@@ -196,8 +196,12 @@ public:
   static const std::vector<IPAddress>& getLocalAddresses();
     /// Returns all available local IP address
   
+  static const IPAddress& getDefaultAddress();
+    /// Returns the address of the default interface
+  
 public:
   static std::vector<IPAddress> _localAddresses;
+  static IPAddress _defaultAddress;
   
 protected:
   boost::asio::ip::address _address;
@@ -432,6 +436,11 @@ inline void IPAddress::setProtocol(Protocol protocol)
 inline const std::vector<IPAddress>& IPAddress::getLocalAddresses()
 {
   return IPAddress::_localAddresses;
+}
+
+inline const IPAddress& IPAddress::getDefaultAddress()
+{
+  return IPAddress::_defaultAddress;
 }
 
 } } // OSS::Net

@@ -36,6 +36,7 @@
 #include "OSS/UTL/Application.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/Net/IPAddress.h"
+#include "OSS/Net/rtnl_get_route.h"
 
 #if !defined(OSS_OS_FAMILY_WINDOWS)
 #include <ifaddrs.h>
@@ -152,6 +153,21 @@ void net_init()
 	}
   freeifaddrs(list);
 
+  //
+  // Determine the default address using rtnl first.  This is more reliable than traversing the interface table
+  //
+  OSS::Net::RTNLRoutes routes;
+  std::string routeTarget("8.8.8.8");
+  bool includeLoopback = false;
+  std::string sourceAddress;
+  if (OSS::Net::rtnl_get_route(routes, includeLoopback) && OSS::Net::rtnl_get_source(routes, sourceAddress, routeTarget, includeLoopback))
+  {
+     OSS::Net::IPAddress::_defaultAddress = OSS::Net::IPAddress(sourceAddress);
+  }
+  else if (net_get_default_interface_address(sourceAddress))
+  {
+    OSS::Net::IPAddress::_defaultAddress = OSS::Net::IPAddress(sourceAddress);
+  }
 
 #endif
 }
