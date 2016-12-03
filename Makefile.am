@@ -7,3 +7,8 @@ include config/project.am
 SUBDIRS = .
 SUBDIRS += src 
 SUBDIRS += include
+
+rpm: dist
+	rm -rf `pwd`/RPMBUILD; \
+	mkdir -p `pwd`/RPMBUILD/{BUILD,SOURCES,RPMS,SRPMS,SPECS}; \
+	rpmbuild -ta --define "%_topdir `pwd`/RPMBUILD" oss_core*.gz
