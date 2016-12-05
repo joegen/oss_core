@@ -608,9 +608,15 @@ static void registerConfiguredTransport(OSS::socket_address_list& listeners,
   {
     for(std::vector<OSS::Net::IPAddress>::const_iterator iter = localAddresses.begin(); iter != localAddresses.end(); iter++)
     {
+      //
+      // We only support V4 for now
+      //
       OSS::Net::IPAddress localAddr(*iter);
-      localAddr.setPort(port);
-      listeners.push_back(localAddr);
+      if (localAddr.address().is_v4())
+      {
+        localAddr.setPort(port);
+        listeners.push_back(localAddr);
+      }
     }
   }
 }

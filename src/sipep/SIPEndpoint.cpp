@@ -92,7 +92,10 @@ bool SIPEndpoint::addTransport(OSS::Net::IPAddress::Protocol proto, unsigned sho
   std::vector<OSS::Net::IPAddress> localIps = OSS::Net::IPAddress::getLocalAddresses();
   for(std::vector<OSS::Net::IPAddress>::iterator iter = localIps.begin(); iter != localIps.end(); iter++)
   {
-    if (iter->isValid())
+    //
+    // We only support V4 for now
+    //
+    if (iter->isValid() && iter->address().is_v4())
     {
       bool added = false;
       iter->setPort(port);
