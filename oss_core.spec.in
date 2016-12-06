@@ -156,15 +156,14 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(644,root,root,755)
+%dir %attr(755,root,root) %{_includedir}/OSS
+%{_includedir}/OSS/*
 %{_libdir}/liboss_core.la
 %{_libdir}/liboss_core.a
 
 %files app
 %attr(755,root,root) %{_bindir}/oss_*
 %attr(755,root,root) %{_bindir}/lohika
-
-%dir %attr(755,root,root) %{_includedir}/OSS
-%{_includedir}/OSS/*
 
 
 %post
