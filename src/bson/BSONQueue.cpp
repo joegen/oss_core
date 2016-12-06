@@ -46,6 +46,11 @@ BSONQueue::~BSONQueue()
 
 bool BSONQueue::enqueue(BSONParser& msg)
 {
+  if (!_pSocket)
+  {
+    return false;
+  }
+  
   if (_role != PRODUCER)
   {
     return false;

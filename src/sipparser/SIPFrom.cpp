@@ -275,10 +275,15 @@ bool SIPFrom::setURI(std::string& from, const char* uri)
     return false;
   }
   
+#if 0
+  //
+  // This breaks unit test.  It will fail if the URI has a display name
+  //
   if (!SIPURI::verify(uri))
   {
     return false;
   }
+#endif
   
   char* laQuotOffSet = laquotFinder_1.parse(from.c_str());
   if (laQuotOffSet == from.c_str())

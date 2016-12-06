@@ -192,15 +192,7 @@ TEST(ParserTest, test_message_construction)
   ASSERT_TRUE(message.hdrGetSize(OSS::SIP::HDR_ROUTE) == 4);
   ASSERT_TRUE(message.hdrGet(OSS::SIP::HDR_ROUTE, 3) == "<sip:10.0.0.4;lr>");
 
-  bool thrown = false;
-  try
-  {
-    message.hdrGet(OSS::SIP::HDR_ROUTE, 4);
-  }catch(const std::exception & e)
-  {
-    thrown = true;
-  }
-  ASSERT_TRUE(thrown);
+  ASSERT_TRUE(message.hdrGet(OSS::SIP::HDR_ROUTE, 4).empty());
 
   /// Test copy operator
   SIPMessage message_2;

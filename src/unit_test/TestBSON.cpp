@@ -271,8 +271,8 @@ TEST(BSONTest, BSONDoc)
 
 TEST(BSONTest, BSONBSONQueue)
 {
-  BSONQueue producer(BSONQueue::PRODUCER, "q1");
   BSONQueue consumer(BSONQueue::CONSUMER, "q1");
+  BSONQueue producer(BSONQueue::PRODUCER, "q1");
   
   BSONDocument work;
   work["string"] = BSONString("This is a UTF8 string");

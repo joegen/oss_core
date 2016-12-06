@@ -42,6 +42,13 @@ TEST(ParserTest, test_requestline_parser)
 
   SIP::SIPRequestLine rLine;
   rLine = message.startLine();
+  
+  std::string requestURI;
+  std::string hostPort;
+  ASSERT_TRUE(SIP::SIPRequestLine::getURI(message.startLine(), requestURI));
+  ASSERT_STREQ(requestURI.c_str(), "sip:9001@192.168.0.152");
+  ASSERT_TRUE(SIP::SIPURI::getHostPort(requestURI, hostPort));
+  ASSERT_STREQ(hostPort.c_str(), "192.168.0.152");
 
   std::string method;
   ASSERT_TRUE(rLine.getMethod(method));

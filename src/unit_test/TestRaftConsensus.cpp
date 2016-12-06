@@ -144,6 +144,7 @@ int MyConnection::onSendAppendEntriesResponse(msg_appendentries_response_t& data
 
 TEST(RAFTTest, TestRaftConsensus)
 {
+#if RAFT_TEST_ENABLED
   Server server; 
   Server member;
   RaftConsensus::Options sopt, mopt;
@@ -176,6 +177,6 @@ TEST(RAFTTest, TestRaftConsensus)
   OSS::thread_sleep(5000);
   server.stop();
   member.stop();
-  
+#endif
 }
 

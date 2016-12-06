@@ -1,6 +1,8 @@
 TESTS = oss_core-unit-test
 check_PROGRAMS = oss_core-unit-test
 
+LDADD += -lgtest
+
 oss_core_unit_test_SOURCES = \
 	unit_test/TestSuite.cpp \
 	unit_test/TestSemaphore.cpp \

@@ -596,18 +596,22 @@ bool SIPURI::setParamEx(std::string& params, const char* paramName, const char* 
   char* offSet = ABNF::findNextIterFromString(key, params.c_str());
   if (offSet == params.c_str())
   {
-    if (params.find(";lr") != std::string::npos)
-    {
-      //
-      // lr parameter already exists
-      //
-      return true;
-    }
     std::ostringstream strm; 
     if (::strcasecmp(paramName, "lr") != 0)
+    {
       strm << ";" << paramName << "=" << paramValue;
+    }
     else
+    {
+      if (params.find(";lr") != std::string::npos)
+      {
+        //
+        // lr parameter already exists
+        //
+        return false;
+      }
       strm << ";lr";
+    }
     params += strm.str();
     return true;
   }

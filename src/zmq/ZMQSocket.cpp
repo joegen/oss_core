@@ -355,11 +355,6 @@ bool ZMQSocket::internal_send_request(const std::string& cmd, const std::string&
 
 bool ZMQSocket::sendReply(const std::string& data)
 {
-  if (_type == PUSH || _type == REP)
-  {
-    return false;
-  }
-  
   OSS::mutex_critic_sec_lock lock(_mutex);
   return internal_send_reply(data);
 }

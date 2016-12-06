@@ -26,7 +26,7 @@ TEST(ParserTest, test_contact_parser)
   ASSERT_TRUE(uri_0.data() == "<sip:localhost;user=phone>;method=\"INVITE, ACK, BYE\"");
   ASSERT_TRUE(uri_1.data() == "sip:user1@host1:5060;user=phone");
   ASSERT_TRUE(uri_2.data() == "sip:user2@host2:5060;user=phone");
-  ASSERT_TRUE(uri_3.data().empty());
+  ASSERT_STREQ(uri_3.data().c_str(), OSS::SIP::SIPURI::EMPTY_URI);
 
   ASSERT_TRUE(contact_1.setAt("sip:user3@host3:5060;user=phone", 1));
   ASSERT_TRUE(contact_1.getAt(uri_1, 1));

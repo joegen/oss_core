@@ -55,13 +55,15 @@ BSONParser::BSONParser(const uint8_t* bson, std::size_t len)
 BSONParser::~BSONParser()
 {
   bson_destroy((bson_t*)_bson);
-  free((bson_t*)_bson);
+  // TODO: check if this is really a double free.  It causes a segfault  
+  //free((bson_t*)_bson);
 }
 
 void BSONParser::reset(const uint8_t* bson, std::size_t len)
 {
   bson_destroy((bson_t*)_bson);
-  free ((bson_t*)_bson);
+  // TODO: check if this is really a double free.  It causes a segfault 
+  //free ((bson_t*)_bson);
   _bson = bson_new_from_data(bson, len);
   _parent = _bson;
 }

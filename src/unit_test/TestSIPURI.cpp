@@ -83,15 +83,7 @@ TEST(ParserTest, test_sip_uri_parser)
   ASSERT_TRUE(uri_4.getUser() == user);
   SIP::SIPURI::unescape(user, user.c_str());
 
-  bool hasThrown = false;
-  try
-  {
-    uri_4.setUserInfo(user.c_str());
-  }catch (...)
-  {
-    hasThrown = true;
-  }
-  ASSERT_TRUE(hasThrown);
+  ASSERT_FALSE(uri_4.setUserInfo(user.c_str()));
   ASSERT_TRUE(uri_4.getUser() == "John%20Smith");
   ASSERT_TRUE(uri_4.setHeaders("?header_1=value1&header2=value2"));
   ASSERT_TRUE(uri_4.getHeaders() == "?header_1=value1&header2=value2");
@@ -100,27 +92,18 @@ TEST(ParserTest, test_sip_uri_parser)
   ASSERT_TRUE(uri_4.getHeaders(headers));
   ASSERT_STREQ(headers["header_1"].c_str(), "value1"); 
   ASSERT_STREQ(headers["header2"].c_str(), "value2");
-
-  hasThrown = false;
-  try
-  {
-    ASSERT_TRUE(uri_4.setHeaders("?header_1=val ue1&header2=value2"));
-  }catch (...)
-  {
-    hasThrown = true;
-  }
-  ASSERT_TRUE(hasThrown);
+  ASSERT_FALSE(uri_4.setHeaders("?header_1=val ue1&header2=value2"));
 
   ASSERT_TRUE(!SIP::SIPURI::verify("sip:alice:mypassword@invalid_hostpart.com:5070;param=xxx"));
   ASSERT_TRUE(SIP::SIPURI::verify("sip:alice:mypassword@validhostpart.com:5070;param=xxx"));
 
 
   SIP::SIPURI uri_5("sip:10.0.0.10");
-  uri_5.setParam("lr", "");
-  uri_5.setParam("ftag", "001");
+  ASSERT_TRUE(uri_5.setParam("lr", ""));
+  ASSERT_TRUE(uri_5.setParam("ftag", "001"));
   ASSERT_TRUE(uri_5.hasParam("lr"));
-  ASSERT_TRUE(uri_5.getParam("ftag") == "001");
-  ASSERT_TRUE(uri_5.data() == "sip:10.0.0.10;lr;ftag=001");
+  ASSERT_STREQ(uri_5.data().c_str(), "sip:10.0.0.10;lr;ftag=001");
+  ASSERT_STREQ(uri_5.getParam("ftag").c_str(), "001");
 
   {
   SIP::SIPURI uri_6("sip:user@10.0.0.1:5060;transport=udp");
