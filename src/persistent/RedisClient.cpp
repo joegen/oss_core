@@ -86,15 +86,15 @@ bool RedisClient::connect(const std::string& password_, int db)
   _db = db;
 
   mutex_lock lock(_mutex);
-  if (_type == TCP)
-  {
-    OSS_LOG_INFO("[REDIS] Connecting to tcp:" << _tcpHost << ":" << _tcpPort);
-    _context = redisConnect(_tcpHost.c_str(), _tcpPort);
-  }else if (_type == UNIX)
-  {
-    OSS_LOG_INFO("[REDIS] Connecting to unix:" << _unixSocketPath);
-    _context = redisConnectUnix(_unixSocketPath.c_str());
-  }
+  //if (_type == TCP)
+  //{
+  //  OSS_LOG_INFO("[REDIS] Connecting to tcp:" << _tcpHost << ":" << _tcpPort);
+  //  _context = redisConnect(_tcpHost.c_str(), _tcpPort);
+  //}else if (_type == UNIX)
+  //{
+  //  OSS_LOG_INFO("[REDIS] Connecting to unix:" << _unixSocketPath);
+  //  _context = redisConnectUnix(_unixSocketPath.c_str());
+  //}
 
   if (!_context)
   {
@@ -111,10 +111,10 @@ bool RedisClient::connect(const std::string& password_, int db)
   {
     if (_type == TCP)
     {
-      OSS_LOG_INFO("[REDIS] Connected to tcp:" << _tcpHost << ":" << _tcpPort);
+      OSS_LOG_DEBUG("[REDIS] Connected to tcp:" << _tcpHost << ":" << _tcpPort);
     }else if (_type == UNIX)
     {
-      OSS_LOG_INFO("[REDIS] Connected to unix:" << _unixSocketPath);
+      OSS_LOG_DEBUG("[REDIS] Connected to unix:" << _unixSocketPath);
     }
   }
 
@@ -234,13 +234,13 @@ void RedisClient::disconnect()
   mutex_lock lock(_mutex);
   if (_context)
   {
-    if (_type == TCP)
-    {
-      OSS_LOG_INFO("[REDIS] Disconnecting from " << _tcpHost << ":" << _tcpPort << " - " << _lastError);
-    }else if (_type == UNIX)
-    {
-      OSS_LOG_ERROR("[REDIS] Disconnecting from " << _unixSocketPath << " - " << _lastError);
-    }
+    //if (_type == TCP)
+    //{
+    //  OSS_LOG_INFO("[REDIS] Disconnecting from " << _tcpHost << ":" << _tcpPort << " - " << _lastError);
+    //}else if (_type == UNIX)
+    //{
+    //  OSS_LOG_ERROR("[REDIS] Disconnecting from " << _unixSocketPath << " - " << _lastError);
+    //}
      
     redisReply* reply = (redisReply*)redisCommand(_context, "QUIT");
     freeReply(reply);
@@ -323,7 +323,7 @@ redisReply* RedisClient::execute(int argc, char** argv)
     freeReply(reply);
     reply = 0;
 
-    OSS_LOG_ERROR("[REDIS] Execute FAILED.  - " << _lastError);
+    //OSS_LOG_ERROR("[REDIS] Execute FAILED.  - " << _lastError);
 
     if (_context->err == REDIS_ERR_EOF || _context->err == REDIS_ERR_IO)
     {
