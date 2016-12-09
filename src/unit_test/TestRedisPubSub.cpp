@@ -71,8 +71,14 @@ TEST(TestRedisPubSub, EventHandling)
 {
   RedisClient subscriber("127.0.0.1", 6379);
   RedisClient publisher("127.0.0.1", 6379);
-  ASSERT_TRUE(subscriber.connect());
-  ASSERT_TRUE(publisher.connect());
+  if (!subscriber.connect())
+  {
+    return;
+  }
+  if(!publisher.connect())
+  {
+    return;
+  }
   
   std::vector<std::string> result;
   ASSERT_TRUE(subscriber.subscribe("TestChannel", result));

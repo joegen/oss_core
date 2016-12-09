@@ -267,7 +267,7 @@ TEST(BSONTest, BSONDoc)
   
 }
 
-#if ENABLE_FEATURE_ZMQ
+#if 0
 
 TEST(BSONTest, BSONBSONQueue)
 {

@@ -61,6 +61,7 @@ See also: For more string comparison tricks (substring, prefix, suffix, and regu
 #include "OSS/OSS.h"
 #include "OSS/Net/DNS.h"
 
+#if 0
 TEST(APITest, dns_lookup_host)
 {
   OSS::dns_host_record_list hosts = OSS::dns_lookup_host("bridge.ossapp.com");
@@ -73,4 +74,5 @@ TEST(APITest, dns_lookup_srv)
   OSS::dns_srv_record_list srvRecords = OSS::dns_lookup_srv("_sip._udp.ossapp.com");
   ASSERT_FALSE(srvRecords.empty());
 }
+#endif
 
