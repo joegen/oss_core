@@ -159,6 +159,9 @@ public:
   static std::string getTag(const std::string& from);
   
   bool setTag(const std::string& tag);
+  
+  bool isEmpty() const;
+    /// return true if URI is unset or has SIP_URI::EMPTY_URI content
 };
 
 typedef SIPFrom SIPTo;
@@ -184,6 +187,11 @@ inline std::string SIPFrom::getTag(const std::string& from)
 inline bool SIPFrom::setTag(const std::string& tag)
 {
   return setHeaderParam("tag", tag.c_str());
+}
+
+inline bool SIPFrom::isEmpty() const
+{
+  return _data.empty() || _data == SIPURI::EMPTY_URI;
 }
 
 } } // OSS::SIP

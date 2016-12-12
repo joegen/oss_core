@@ -1338,13 +1338,13 @@ SIPMessage::Ptr SIPMessage::createRequest(
   const char* method = SIPMessage::requestTypeToString(type);
   
   if (!method ||
-    requestUri.data().empty() ||
+    requestUri.isEmpty() ||
     callId.empty() ||
     !cseq ||
-    fromUri.data().empty() ||
+    fromUri.isEmpty() ||
     fromTag.empty() ||
-    toUri.data().empty() ||
-    contactUri.data().empty() ||
+    toUri.isEmpty() ||
+    contactUri.isEmpty() ||
     !viaTransport.isValid() ||
     viaBranch.empty())
   {

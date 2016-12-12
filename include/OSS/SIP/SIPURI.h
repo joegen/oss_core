@@ -293,6 +293,11 @@ public:
   static bool getBasicIdentity(const std::string& uri, std::string& identity);
     /// Returns user@host
   
+  bool isEmpty() const;
+    /// return true if URI is unset or has SIP_URI::EMPTY_URI content
+  
+  static bool isEmpty(const std::string& data);
+    /// return true if URI is unset or has SIP_URI::EMPTY_URI content
 public:
   static const char* EMPTY_URI;
 };
@@ -329,6 +334,18 @@ inline std::string SIPURI::getEscapedParam(const char* paramName) const
   getEscapedParam(paramName, value);
   return value;
 }
+
+inline bool SIPURI::isEmpty() const
+{
+  return SIPURI::isEmpty(_data);
+}
+
+inline bool SIPURI::isEmpty(const std::string& data)
+{
+  return data.empty() || data == SIPURI::EMPTY_URI;
+}
+
+
 
 
 }} // OSS::SIP
