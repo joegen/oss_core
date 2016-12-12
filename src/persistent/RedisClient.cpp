@@ -86,15 +86,15 @@ bool RedisClient::connect(const std::string& password_, int db)
   _db = db;
 
   mutex_lock lock(_mutex);
-  //if (_type == TCP)
-  //{
+  if (_type == TCP)
+  {
   //  OSS_LOG_INFO("[REDIS] Connecting to tcp:" << _tcpHost << ":" << _tcpPort);
-  //  _context = redisConnect(_tcpHost.c_str(), _tcpPort);
-  //}else if (_type == UNIX)
-  //{
+    _context = redisConnect(_tcpHost.c_str(), _tcpPort);
+  }else if (_type == UNIX)
+  {
   //  OSS_LOG_INFO("[REDIS] Connecting to unix:" << _unixSocketPath);
-  //  _context = redisConnectUnix(_unixSocketPath.c_str());
-  //}
+    _context = redisConnectUnix(_unixSocketPath.c_str());
+  }
 
   if (!_context)
   {
