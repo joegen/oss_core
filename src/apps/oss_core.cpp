@@ -28,6 +28,7 @@
 #include "OSS/UTL/Application.h"
 #include "OSS/UTL/ServiceDaemon.h"
 #include "OSS/UTL/Thread.h"
+#include "OSS/UTL/Console.h"
 #include "OSS/Net/DNS.h"
 #include "OSS/Net/Net.h"
 #include "OSS/Net/Carp.h"
@@ -781,7 +782,22 @@ int main(int argc, char** argv)
     }
 #endif
 
-    OSS::app_wait_for_termination_request();
+    if (isDaemon)
+    {
+      OSS::app_wait_for_termination_request();
+    }
+    else
+    {
+      OSS::UTL::Console::registerCompletion("/q", "/quit");
+      while(true)
+      {
+        std::string line = OSS::UTL::Console::prompt("oss_core> ");
+        if (line == "/quit")
+        {
+          break;
+        }
+      }
+    }
     
     //
     // Deinit
