@@ -46,6 +46,36 @@ TEST(ZMQ, test_zmq_send_and_receive)
     ASSERT_TRUE(rep.sendReply("reply"));
     ASSERT_TRUE(req.receiveReply(response, 2));
   }
+  
+  //
+  // Test Poll
+  //
+  {
+    std::string response;
+    std::string cmd;
+    std::string data;
+    
+    ZMQSocket::PollItem reqItem, repItem;
+    ZMQSocket::PollItems reqItems, repItems;
+    
+    reqItem.events = ZMQ_POLLIN;
+    reqItem.socket = *req.socket();
+    reqItems.push_back(reqItem);
+    
+    repItem.events = ZMQ_POLLIN;
+    repItem.socket = *rep.socket();
+    repItems.push_back(repItem);
+    
+    ASSERT_TRUE(req.sendRequest("test", "data"));
+    ASSERT_TRUE(ZMQSocket::poll(repItems, 2) > 0);
+    ASSERT_TRUE(repItems[0].revents & ZMQ_POLLIN);
+    ASSERT_TRUE(rep.receiveRequest(cmd, data, 0));
+    
+    ASSERT_TRUE(rep.sendReply("reply"));
+    ASSERT_TRUE(ZMQSocket::poll(reqItems, 2) > 0);
+    ASSERT_TRUE(reqItems[0].revents & ZMQ_POLLIN);
+    ASSERT_TRUE(req.receiveReply(response, 0));
+  }
 }
 
 

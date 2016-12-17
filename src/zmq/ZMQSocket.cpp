@@ -29,12 +29,11 @@
 
 #if OSS_HAVE_ZMQ
 
-#include "OSS/ZMQ/zmq.hpp"
 
 namespace OSS {
 namespace ZMQ {
   
-OSS_HANDLE ZMQSocket::_inproc_context = new zmq::context_t(1);
+zmq::context_t* ZMQSocket::_inproc_context = new zmq::context_t(1);
   
 static void zeromq_free (void *data, void *hint)
 {
@@ -69,19 +68,9 @@ static void zeromq_receive (zmq::socket_t& socket, std::string& value)
   value = std::string(static_cast<char*>(message.data()), message.size());
 } 
 
-static zmq::context_t* zeromq_context(OSS_HANDLE context)
+static zmq::socket_t* zeromq_create_socket(zmq::context_t* context, int type)
 {
-  return reinterpret_cast<zmq::context_t*>(context);
-}
-
-static zmq::socket_t* zeromq_socket(OSS_HANDLE sock)
-{
-  return reinterpret_cast<zmq::socket_t*>(sock);
-}
-
-static zmq::socket_t* zeromq_create_socket(OSS_HANDLE context, int type)
-{
-  zmq::socket_t* socket = new zmq::socket_t(*zeromq_context(context), type);
+  zmq::socket_t* socket = new zmq::socket_t(*context, type);
   int linger = 0;
   socket->setsockopt (ZMQ_LINGER, &linger, sizeof (linger));
   return socket;
@@ -128,7 +117,7 @@ ZMQSocket::ZMQSocket(SocketType type) :
 ZMQSocket::~ZMQSocket()
 {
   close();
-  delete zeromq_context(_context);
+  delete _context;
 }
 
 bool ZMQSocket::bind(const std::string& bindAddress)
@@ -178,7 +167,7 @@ bool ZMQSocket::bind(const std::string& bindAddress)
   
   try
   {
-    zeromq_socket(_socket)->bind(bindAddress.c_str());
+    _socket->bind(bindAddress.c_str());
   }
   catch(zmq::error_t& error_)
   {
@@ -255,7 +244,7 @@ bool ZMQSocket::internal_connect(const std::string& peerAddress)
   
   try
   {
-    zeromq_socket(_socket)->connect(peerAddress.c_str());
+    _socket->connect(peerAddress.c_str());
   }
   catch(zmq::error_t& error_)
   {
@@ -288,7 +277,7 @@ void ZMQSocket::close()
 
 void ZMQSocket::internal_close()
 {
-  delete zeromq_socket(_socket);
+  delete _socket;
   _socket = 0;
   
   if (!_canReconnect)
@@ -334,7 +323,7 @@ bool ZMQSocket::internal_send_request(const std::string& cmd, const std::string&
     return false;
   }
   
-  if (!zeromq_sendmore(*zeromq_socket(_socket), cmd))
+  if (!zeromq_sendmore(*_socket, cmd))
   {
     OSS_LOG_ERROR("ZMQSocket::send() - Exception: zeromq_sendmore(cmd) failed");
     _canReconnect = true;
@@ -342,7 +331,7 @@ bool ZMQSocket::internal_send_request(const std::string& cmd, const std::string&
     return false;
   }
   
-  if (!zeromq_send(*zeromq_socket(_socket), data))
+  if (!zeromq_send(*_socket, data))
   {
     OSS_LOG_ERROR("ZMQSocket::send() - Exception: zeromq_send(data) failed");
     _canReconnect = true;
@@ -362,7 +351,7 @@ bool ZMQSocket::sendReply(const std::string& data)
 
 bool ZMQSocket::internal_send_reply(const std::string& data)
 {  
-  if (!_socket || !zeromq_send(*zeromq_socket(_socket), data))
+  if (!_socket || !zeromq_send(*_socket, data))
   {
     OSS_LOG_ERROR("ZMQSocket::send() - Exception: zeromq_send(data) failed");
     return false;
@@ -389,7 +378,7 @@ bool ZMQSocket::internal_receive_reply(std::string& response, unsigned int timeo
     return false;
   }
 
-  if (timeoutms && !_isInproc && !zeromq_poll_read(zeromq_socket(_socket), timeoutms))
+  if (timeoutms && !_isInproc && !zeromq_poll_read(_socket, timeoutms))
   {
     OSS_LOG_ERROR("ZMQSocket::internal_receive() - Exception: zeromq_poll_read() failed");
     _canReconnect = true;
@@ -397,7 +386,7 @@ bool ZMQSocket::internal_receive_reply(std::string& response, unsigned int timeo
     return false;
   }
   
-  zeromq_receive(*zeromq_socket(_socket), response);  
+  zeromq_receive(*_socket, response);  
   return true;
 }
 
@@ -419,15 +408,28 @@ bool ZMQSocket::internal_receive_request(std::string& cmd, std::string& data, un
     return false;
   }
   
-  if (timeoutms && !zeromq_poll_read(zeromq_socket(_socket), timeoutms))
+  if (timeoutms && !zeromq_poll_read(_socket, timeoutms))
   {
     OSS_LOG_ERROR("ZMQSocket::internal_receive() - Exception: zeromq_poll_read() failed");
     return false;
   }
   
-  zeromq_receive(*zeromq_socket(_socket), cmd); 
-  zeromq_receive(*zeromq_socket(_socket), data);  
+  zeromq_receive(*_socket, cmd); 
+  zeromq_receive(*_socket, data);  
   return true;
+}
+
+int ZMQSocket::poll(ZMQSocket::PollItems& pollItems, long timeoutms)
+{
+  zmq::pollitem_t* items = pollItems.data();
+  int timeout = timeoutms;
+#if ZMQ_VERSION_MAJOR < 4
+  if (timeoutms > 0)
+  {
+    timeout = timeoutms * 1000; // convert to nanoseconds
+  }
+#endif  
+  return zmq::poll(items, pollItems.size(), timeout);
 }
 
 
