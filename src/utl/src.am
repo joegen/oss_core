@@ -1,4 +1,5 @@
 liboss_core_la_SOURCES +=  \
+    utl/linenoise.c \
     utl/AdaptiveDelay.cpp \
     utl/CoreUtils.cpp \
     utl/Logger.cpp \
@@ -11,4 +12,5 @@ liboss_core_la_SOURCES +=  \
     utl/DynamicHashTable.cpp \
     utl/Thread.cpp \
     utl/StackTrace.cpp \
-    utl/LogFile.cpp
+    utl/LogFile.cpp \
+    utl/Console.cpp

@@ -1,4 +1,5 @@
 nobase_include_HEADERS += \
+    OSS/UTL/linenoise.h \
     OSS/UTL/Semaphore.h \
     OSS/UTL/StackTrace.h \
     OSS/UTL/DynamicHashTable.h \
@@ -18,4 +19,5 @@ nobase_include_HEADERS += \
     OSS/UTL/CoreUtils.h \
     OSS/UTL/Logger.h \
     OSS/UTL/FastRandom.h \
-    OSS/UTL/LogFile.h
+    OSS/UTL/LogFile.h \
+    OSS/UTL/Console.h
