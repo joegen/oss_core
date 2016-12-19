@@ -136,8 +136,29 @@ void Console::setMultiLine(bool multiLine)
 {
   linenoiseSetMultiLine(multiLine);
 }
-  
 
+void Console::clearScreen()
+{
+  linenoiseClearScreen();
+}
+void Console::printKeyCodes()
+{
+  linenoisePrintKeyCodes();
+}
+
+bool Console::loadHistory(const std::string& fileName)
+{
+  return linenoiseHistoryLoad(fileName.c_str()) == 0;
+}
+bool Console::saveHistory(const std::string& fileName)
+{
+  return linenoiseHistorySave(fileName.c_str()) == 0;
+}
+
+void Console::setHistoryMaxLen(int maxLen)
+{
+  linenoiseHistorySetMaxLen(maxLen);
+}
 
 
 } } // OSS::UTL

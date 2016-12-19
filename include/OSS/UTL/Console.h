@@ -37,6 +37,11 @@ public:
   static void setHintProperties(int color, bool bold);
   static void setMultiLine(bool multiLine);
   static void disableSigInt(const std::string& message);
+  static void clearScreen();
+  static void printKeyCodes();
+  static bool loadHistory(const std::string& fileName);
+  static bool saveHistory(const std::string& fileName);
+  static void setHistoryMaxLen(int maxLen);
 };
 
 
