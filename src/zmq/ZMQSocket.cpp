@@ -80,24 +80,31 @@ static bool zeromq_poll_read(zmq::socket_t* sock, int timeoutms)
 {
   
   zmq::pollitem_t items[] = { { *sock, 0, ZMQ_POLLIN, 0 } };
- #if ZMQ_VERSION_MAJOR < 4
+
+#if ZMQ_VERSION_MAJOR < 4
   int timeoutnano = timeoutms * 1000; // convert to nanoseconds
   int rc = zmq::poll (&items[0], 1, timeoutnano);
 #else
   int rc = zmq::poll (&items[0], 1, timeoutms);
-#endif  
+#endif
+
+  
+  if (rc < 0)
+  {
+    return false;
+  }
   
   
   switch (rc)
   {
     case ETERM:
-      OSS_LOG_ERROR("zeromq_poll_read - At least one of the members of the items array refers to a socket whose associated ØMQ context was terminated.");
+      //OSS_LOG_ERROR("zeromq_poll_read - At least one of the members of the items array refers to a socket whose associated ØMQ context was terminated.");
       return false;
     case EFAULT:
-      OSS_LOG_ERROR("zeromq_poll_read - The provided items was not valid (NULL).");
+      //OSS_LOG_ERROR("zeromq_poll_read - The provided items was not valid (NULL).");
       return false;
     case EINTR:
-      OSS_LOG_ERROR("zeromq_poll_read - The operation was interrupted by delivery of a signal before any events were available.");
+      //OSS_LOG_ERROR("zeromq_poll_read - The operation was interrupted by delivery of a signal before any events were available.");
       return false;
   }
   
@@ -380,7 +387,7 @@ bool ZMQSocket::internal_receive_reply(std::string& response, unsigned int timeo
 
   if (timeoutms && !_isInproc && !zeromq_poll_read(_socket, timeoutms))
   {
-    OSS_LOG_ERROR("ZMQSocket::internal_receive() - Exception: zeromq_poll_read() failed");
+    //OSS_LOG_ERROR("ZMQSocket::internal_receive() - Exception: zeromq_poll_read() failed");
     _canReconnect = true;
     internal_close();
     return false;
@@ -410,7 +417,7 @@ bool ZMQSocket::internal_receive_request(std::string& cmd, std::string& data, un
   
   if (timeoutms && !zeromq_poll_read(_socket, timeoutms))
   {
-    OSS_LOG_ERROR("ZMQSocket::internal_receive() - Exception: zeromq_poll_read() failed");
+    // OSS_LOG_ERROR("ZMQSocket::internal_receive() - Exception: zeromq_poll_read() failed");
     return false;
   }
   
