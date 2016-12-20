@@ -153,14 +153,14 @@ bool ZMQSocket::bind(const std::string& bindAddress)
       _socket = zeromq_create_socket(_context, ZMQ_REP);
     }
     break;
-  case PULL:
+  case PUSH:
     if (_isInproc)
     {
-      _socket = zeromq_create_socket(_inproc_context, ZMQ_PULL);
+      _socket = zeromq_create_socket(_inproc_context, ZMQ_PUSH);
     }
     else
     {
-      _socket = zeromq_create_socket(_context, ZMQ_PULL);
+      _socket = zeromq_create_socket(_context, ZMQ_PUSH);
     }
     break;
   default:
@@ -230,14 +230,14 @@ bool ZMQSocket::internal_connect(const std::string& peerAddress)
       _socket = zeromq_create_socket(_context, ZMQ_REQ);
     }
     break;
-  case PUSH:
+  case PULL:
     if (_isInproc)
     {
-      _socket = zeromq_create_socket(_inproc_context, ZMQ_PUSH);
+      _socket = zeromq_create_socket(_inproc_context, ZMQ_PULL);
     }
     else
     {
-      _socket = zeromq_create_socket(_context, ZMQ_PUSH);
+      _socket = zeromq_create_socket(_context, ZMQ_PULL);
     }
     break;
   default:
