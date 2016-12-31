@@ -98,7 +98,7 @@ TEST(ZMQ, test_zmq_send_and_receive)
     ASSERT_TRUE(subscriber1.receiveReply(event, 0));
     ASSERT_STREQ(event.c_str(), "test-event event-data");
     event = "";
-    ASSERT_TRUE(subscriber2.receiveReply(event, 0));
+    ASSERT_TRUE(subscriber2.receiveReply(event, 100));
     ASSERT_STREQ(event.c_str(), "test-event event-data");
   }
 }
