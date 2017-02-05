@@ -79,7 +79,7 @@ static inline bool append_route_entry(struct nlmsghdr *nlh, RTNLRoutes& routes, 
 
   RTNLRouteEntry route;
   
-  if( rt_attrs[RTA_GATEWAY] )
+  if( rt_attrs[RTA_GATEWAY] && RTA_PAYLOAD(rt_attrs[RTA_GATEWAY]) <= sizeof(inaddr))
   {
     memset(&inaddr, 0, sizeof(inaddr));
     memcpy(&inaddr, RTA_DATA(rt_attrs[RTA_GATEWAY]), RTA_PAYLOAD(rt_attrs[RTA_GATEWAY]));
@@ -88,7 +88,7 @@ static inline bool append_route_entry(struct nlmsghdr *nlh, RTNLRoutes& routes, 
   }
 
   
-  if( rt_attrs[RTA_DST] )
+  if( rt_attrs[RTA_DST] && RTA_PAYLOAD(rt_attrs[RTA_DST]) <= sizeof(inaddr))
   {
     memset(&inaddr, 0, sizeof(inaddr));
     memcpy(&inaddr, RTA_DATA(rt_attrs[RTA_DST]), RTA_PAYLOAD(rt_attrs[RTA_DST]));
@@ -126,7 +126,7 @@ static inline bool append_route_entry(struct nlmsghdr *nlh, RTNLRoutes& routes, 
     return false;
   }
   
-  if( rt_attrs[RTA_PREFSRC] )
+  if( rt_attrs[RTA_PREFSRC] && RTA_PAYLOAD(rt_attrs[RTA_PREFSRC]) <= sizeof(inaddr))
   {
     memset(&inaddr, 0, sizeof(inaddr));
     memcpy(&inaddr, RTA_DATA(rt_attrs[RTA_PREFSRC]), RTA_PAYLOAD(rt_attrs[RTA_PREFSRC]));
@@ -189,12 +189,19 @@ bool rtnl_get_route(RTNLRoutes& routes, const std::string& target, bool includeL
     nlh = (struct nlmsghdr *)recvbuff;
     for( ; NLMSG_OK(nlh, (unsigned)recvlen); nlh=NLMSG_NEXT(nlh, recvlen) )
     {
-      if( NLMSG_DONE==nlh->nlmsg_type )
+      if( NLMSG_DONE == nlh->nlmsg_type )
       {
         done = 1;
         break;
       }
-      append_route_entry(nlh, routes, target, includeLoopBack);
+      else if (NLMSG_ERROR == nlh->nlmsg_type)
+      {
+          return false;
+      }
+      else
+      {
+        append_route_entry(nlh, routes, target, includeLoopBack);
+      }
     }
   }
 
