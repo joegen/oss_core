@@ -42,7 +42,7 @@ public:
   {
     if (_usePipe)
     {
-      pipe(_pipe);
+      assert(pipe(_pipe) == 0);
     }
   }
   
@@ -63,10 +63,12 @@ public:
       _cs.unlock();
       return false;
     }
-    _queue.push(data);
+    _queue.push_back(data);
     if (_usePipe)
     {
-      write(_pipe[1], " ", 1);
+      std::size_t w = 0;
+      w = write(_pipe[1], " ", 1);
+      (void)w;
     }
     _cs.unlock();
     _sem.set();
@@ -79,14 +81,19 @@ public:
     _cs.lock();
     if (_usePipe)
     {
+      std::size_t r = 0;
       char buf[1];
-      read(_pipe[0], buf, 1);
+      r = read(_pipe[0], buf, 1);
+      (void)r;
     }
-    data = _queue.front();
-    _queue.pop();
-    if (_dequeueObserver)
+    if (!_queue.empty())
     {
-      _dequeueObserver(*this, data);
+      data = _queue.front();
+      _queue.pop_front();
+      if (_dequeueObserver)
+      {
+        _dequeueObserver(*this, data);
+      }
     }
     _cs.unlock();
   }
@@ -99,14 +106,24 @@ public:
     _cs.lock();
     if (_usePipe)
     {
+      std::size_t r = 0;
       char buf[1];
-      read(_pipe[0], buf, 1);
+      r = read(_pipe[0], buf, 1);
+      (void)r;
     }
-    data = _queue.front();
-    _queue.pop();
-    if (_dequeueObserver)
+    if (!_queue.empty())
     {
-      _dequeueObserver(*this, data);
+      data = _queue.front();
+      _queue.pop_front();
+      if (_dequeueObserver)
+      {
+        _dequeueObserver(*this, data);
+      }
+    }
+    else
+    {
+      _cs.unlock();
+      return false;
     }
     _cs.unlock();
 
@@ -136,10 +153,26 @@ public:
   {
     _dequeueObserver = observer;
   }
+  
+  void copy(std::deque<T>& content)
+  {
+    _cs.lock();
+    std::copy(_queue.begin(), _queue.end(),  std::back_inserter(content));
+    _cs.unlock();
+  }
+  
+  void clear()
+  {
+    while(size() != 0)
+    {
+      T data;
+      dequeue(data);
+    }
+  }
 private:
   OSS::semaphore _sem;
   mutable OSS::mutex_critic_sec _cs;
-  std::queue<T> _queue;
+  std::deque<T> _queue;
   int _pipe[2];
   bool _usePipe;
   QueueObserver _enqueueObserver;
