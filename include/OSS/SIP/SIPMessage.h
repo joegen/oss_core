@@ -731,6 +731,9 @@ public:
   std::string getTopViaBranch() const;
     /// Return the top via branhc parameter
   
+  void getHeaderNames(std::set<std::string>& headers) const;
+    /// Return all the available header names
+  
 protected:
   boost::tribool consumeOne(char input);
   enum ConsumeState

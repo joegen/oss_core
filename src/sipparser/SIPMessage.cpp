@@ -1835,6 +1835,16 @@ std::string SIPMessage::getTopViaBranch() const
   return branch;
 }
 
+void SIPMessage::getHeaderNames(std::set<std::string>& headers) const
+{
+  for (SIPHeaderList::const_iterator iter = _headers.begin(); iter != _headers.end(); iter++)
+  {
+    headers.insert(iter->first);
+  }
+}
+
+
+
 
 }} //OSS::SIP
 
