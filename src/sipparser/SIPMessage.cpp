@@ -151,16 +151,7 @@ SIPMessage & SIPMessage::operator=(const SIPMessage & copy)
 
 SIPMessage& SIPMessage::operator = (const std::string& data)
 {
-  _finalized = false;
   _data = data;
-  _startLine = "";
-  _body = "";
-  _badHeaders.clear();
-  _headers.clear();
-  _headerOffSet = 0;
-  _expectedBodyLen = 0;
-  _isResponse = boost::indeterminate;
-  _isRequest = boost::indeterminate;
   parse();
   return *this;
 }
@@ -252,12 +243,19 @@ void SIPMessage::parse()
 {
   WriteLock lock(_rwlock);
 
-  if (_finalized)
-    return;
-
   SIPHeaderTokens headers;
   if (_data.empty())
     return;
+  
+  _finalized = false;
+  _startLine = "";
+  _body = "";
+  _badHeaders.clear();
+  _headers.clear();
+  _headerOffSet = 0;
+  _expectedBodyLen = 0;
+  _isResponse = boost::indeterminate;
+  _isRequest = boost::indeterminate;
 
   _logContext = std::string();
   
@@ -1191,11 +1189,11 @@ boost::tribool SIPMessage::consumeOne(char input)
           _finalized = false;
           return boost::indeterminate;
         }
-        return true;
+        return _finalized;
       }
       else
       {
-        return true;
+        return _finalized;
       }
     }
     else
@@ -1210,6 +1208,9 @@ boost::tribool SIPMessage::consumeOne(char input)
     }
     else
     {
+        //
+        // commitData will rewrite the _data member together with a body
+        //
       _finalized = commitData();
       return _finalized;
     }
