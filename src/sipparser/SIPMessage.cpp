@@ -239,12 +239,12 @@ static std::string hdrGetExpandedForm(const std::string & header)
   return header;
 }
 
-void SIPMessage::parse()
+void SIPMessage::parse(std::string& data)
 {
   WriteLock lock(_rwlock);
 
   SIPHeaderTokens headers;
-  if (_data.empty())
+  if (data.empty())
     return;
   
   _finalized = false;
@@ -259,15 +259,15 @@ void SIPMessage::parse()
 
   _logContext = std::string();
   
-  for (std::string::iterator iter = _data.begin(); iter != _data.end();)
+  for (std::string::iterator iter = data.begin(); iter != data.end();)
   {
     if (!isChar(*iter) || *iter == '\r' || *iter == '\n')
-      iter = _data.erase(iter);
+      iter = data.erase(iter);
     else
       break;
   }
 
-  if ( messageSplit(_data, headers, _body) )
+  if ( messageSplit(data, headers, _body) )
   {
     if (headers.empty())
       return;
@@ -663,7 +663,7 @@ const std::string& SIPMessage::hdrListBottom(const char* headerName) const
   }
 }
 
-bool SIPMessage::commitData()
+bool SIPMessage::commitData(std::string& data)
 {
   WriteLock lock(_rwlock);
 
@@ -692,7 +692,7 @@ bool SIPMessage::commitData()
   strm << CRLF;
   if (!_body.empty())
     strm << _body;
-  _data = strm.str();
+  data = strm.str();
   return true;
 }
 

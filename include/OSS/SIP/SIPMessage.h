@@ -236,6 +236,7 @@ public:
     /// Destroys the SIP Message
 
   void parse();
+  void parse(std::string& data);
     /// Parse the SIP message headers.
     ///
     /// This method should be called before actual call to any function
@@ -274,6 +275,7 @@ public:
     /// This function was inspired by the asio http request parser.
 
   bool commitData();
+  bool commitData(std::string& data);
     /// This method updates the _data member variable from the current state of
     /// the header vectors.
     ///
@@ -771,6 +773,16 @@ protected:
 //
 // Inlines
 //
+
+inline void SIPMessage::parse()
+{
+  parse(_data);
+}
+
+inline bool SIPMessage::commitData()
+{
+  return commitData(_data);
+}
 
 inline size_t SIPMessage::hdrGetSize(
   const char* headerName)const
