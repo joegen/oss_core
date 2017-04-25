@@ -141,7 +141,7 @@ bool SIPURI::setScheme(const char* scheme)
 
 bool SIPURI::setScheme(std::string& uri, const char* scheme)
 {
-  if (is_empty(scheme))
+  if (is_empty(scheme) || uri.empty())
   {
     return false;
   }
