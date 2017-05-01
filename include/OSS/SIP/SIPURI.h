@@ -143,6 +143,12 @@ public:
 
   static bool hasParam(const std::string& uri, const char* paraName);
     /// Returns true if the parameter is found
+  
+  bool removeParam(const char* name);
+    /// Remove a URI parameter.  Returns false if the parameter does not exists
+  
+  static bool removeParam(std::string& uri, const char* name);
+    /// Remove a URI parameter.  Returns false if the parameter does not exists
 
   std::string getParam(const char* paramName) const;
     /// Returns the value of any uri parameter if present.

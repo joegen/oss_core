@@ -475,7 +475,7 @@ bool SIPURI::setParams(std::string& uri, const std::string& params)
 {
   static ABNFSIPURIHeaders headersParser;
   
-  if (uriParametersValidator.parse(params.c_str()) == params.c_str())
+  if (!params.empty() && uriParametersValidator.parse(params.c_str()) == params.c_str())
   {
     return false;
   }
@@ -554,6 +554,49 @@ bool SIPURI::hasParam(const std::string& uri, const char* paramName)
 {
   std::string param;
   return SIPURI::getParam(uri, paramName, param);
+}
+
+bool SIPURI::removeParam(const char* name)
+{
+  return removeParam(_data, name);
+}
+  
+bool SIPURI::removeParam(std::string& uri, const char* name)
+{
+  std::string params;
+  getParams(uri, params);
+  if (params.empty())
+    return false;
+  
+  std::string k = name;
+  std::string key = ";" + k + "=";
+
+  char* startIter = ABNF::findNextIterFromString(key, params.c_str());
+  if (startIter == params.c_str())
+  {
+    return false;
+  }
+  
+  bool isFirstParam = (startIter == params.c_str() + key.length()); 
+
+  char* newIter = pvalueParser.parse(startIter);
+  if (newIter == startIter)
+  {
+    return false;
+  }
+  
+  std::ostringstream newParams;
+  if (isFirstParam)
+  {
+    newParams << newIter;
+  }
+  else
+  {
+    std::string head(params.c_str(), (const char*)(startIter - key.length()));
+    newParams << head << newIter;
+  }
+  
+  return setParams(uri, newParams.str());
 }
 
 bool SIPURI::setParam(const char* paramName, const char* paramValue)
