@@ -153,7 +153,6 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     AC_CHECK_LIB(config++, main, [], [SF_MISSING_DEP("libconfig C++ library not found")])
     AC_CHECK_LIB(v8, main, [], [SF_MISSING_DEP("Google V8 Javascript engine not found")])
     AC_CHECK_LIB(srtp, main, [], [SF_MISSING_DEP("libSRTP library not found")])
-    AC_CHECK_LIB(gtest, main, [], [SF_MISSING_DEP("Google Test Framework not found")])
     AC_CHECK_LIB(ltdl, main, [], [SF_MISSING_DEP("libltdl not found")])
     AC_CHECK_LIB(mcrypt, main, [], [SF_MISSING_DEP("Mcrypt Encryption Library not found")])
     AC_CHECK_LIB(ssl, main, [], [SF_MISSING_DEP("SSL Development Library not found")])
@@ -165,14 +164,13 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     AC_CHECK_LIB(crypt, main, [], [SF_MISSING_DEP("libcrypt not found")])
     AC_CHECK_LIB(resolv, main, [], [SF_MISSING_DEP("libresolv not found")])
     AC_CHECK_LIB(pcap, main, [], [SF_MISSING_DEP("libpcap not found")])
-    AC_CHECK_LIB(gtest, main, [], [SF_MISSING_DEP("Google Test Framework not found")])
-    AC_CHECK_LIB(xmlrpc, main, [], [SF_MISSING_DEP("XML RPC C Foundation classes not found")])
-    AC_CHECK_LIB(xmlrpc_client++, main, [], [SF_MISSING_DEP("XML RPC C++ client classes not found")])
-    AC_CHECK_LIB(xmlrpc_server_abyss++, main, [], [SF_MISSING_DEP("XML RPC C++ server classes not found")])
-    AC_CHECK_LIB(zmq, main, [], [SF_MISSING_DEP("ZeroMQ Libary not found")])
+    #AC_CHECK_LIB(gtest, main, [], [SF_MISSING_DEP("Google Test Framework not found")])
+    #AC_CHECK_LIB(xmlrpc, main, [], [SF_MISSING_DEP("XML RPC C Foundation classes not found")])
+    #AC_CHECK_LIB(xmlrpc_client++, main, [], [SF_MISSING_DEP("XML RPC C++ client classes not found")])
+    #AC_CHECK_LIB(xmlrpc_server_abyss++, main, [], [SF_MISSING_DEP("XML RPC C++ server classes not found")])
 
     OSS_CORE_DEP_LIBS=""
-    OSS_CORE_DEP_LIBS+=" -lgtest "
+    #OSS_CORE_DEP_LIBS+=" -lgtest "
     OSS_CORE_DEP_LIBS+=" -lhiredis "
     OSS_CORE_DEP_LIBS+=" -lleveldb "
     OSS_CORE_DEP_LIBS+=" -lsrtp "
@@ -189,10 +187,9 @@ AC_DEFUN([SFAC_LIB_CORE_FLAGS],
     OSS_CORE_DEP_LIBS+=" -lcrypt  "
     OSS_CORE_DEP_LIBS+=" -lresolv  "
     OSS_CORE_DEP_LIBS+=" -lpcap  "
-    OSS_CORE_DEP_LIBS+=" -lxmlrpc "
-    OSS_CORE_DEP_LIBS+=" -lxmlrpc_client++  "
-    OSS_CORE_DEP_LIBS+=" -lxmlrpc_server_abyss++ "
-    OSS_CORE_DEP_LIBS+=" -lzmq "
+    #OSS_CORE_DEP_LIBS+=" -lxmlrpc "
+    #OSS_CORE_DEP_LIBS+=" -lxmlrpc_client++  "
+    #OSS_CORE_DEP_LIBS+=" -lxmlrpc_server_abyss++ "
 
     #
     # Check for TURN dependencies

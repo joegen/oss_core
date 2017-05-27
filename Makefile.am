@@ -16,4 +16,4 @@ rpm: dist
 	
 install-rpm: rpm
 	yum localinstall -y RPMS/x86_64/*.rpm
-	
+

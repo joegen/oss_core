@@ -270,6 +270,11 @@ void SIPStreamedConnection::writeMessage(SIPMessage::Ptr msg)
     OSS::mutex_critic_sec_lock lock(_pendingMutex);
     if (_isClient && !_isClientStarted)
     {
+      if (!_pending.empty())
+      {
+        OSS_LOG_WARNING("SIPStreamedConnection::writeMessage - discarding message because there is a pending message in queue");
+        return;
+      }
       OSS_LOG_INFO("SIPStreamedConnection::writeMessage - delaying sending of SIP Request " << msg->startLine());
       _pending.push(msg);
       return;

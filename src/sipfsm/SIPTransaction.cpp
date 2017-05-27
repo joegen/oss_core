@@ -212,6 +212,7 @@ void SIPTransaction::sendRequest(
 
   if (!pRequest->isRequest())
   {
+    terminate();
     throw OSS::SIP::SIPException("Sending a RESPONSE using sendRequest() is illegal!");
   }
 
@@ -245,7 +246,10 @@ void SIPTransaction::sendRequest(
   if (!_transport)
   {
     if (!_transportService)
+    {
+      terminate();
       throw OSS::SIP::SIPException("Transport Not Ready!");
+    }
 
     std::string transport;
     if (pRequest->getProperty(OSS::PropertyMap::PROP_TargetTransport, transport))
@@ -422,6 +426,7 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg)
   if (!_transport)
   {
     OSS_LOG_ERROR("SIPTransaction::writeMessage - Transport is NULL while attempting to send a request.");
+    terminate();
     return;
   }
   
@@ -456,6 +461,8 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg)
   else
   {
     OSS_LOG_WARNING(_logId << "SIPTransaction::writeMessage - _fsm->onSendMessage() returned false.  Message will be discarded.");
+    terminate();
+    return;
   }
 }
 
@@ -466,6 +473,7 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg, const OSS::Net::IPAddres
   if (!_transport)
   {
     OSS_LOG_ERROR("SIPTransaction::writeMessage does not have a transport to use");
+    terminate();
     return;
   }
   
@@ -492,6 +500,11 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg, const OSS::Net::IPAddres
     _transport->writeMessage(pMsg,
     remoteAddress.toString(),
     OSS::string_from_number<unsigned short>(remoteAddress.getPort()));
+  }
+  else
+  {
+    terminate();
+    return;
   }
 }
 

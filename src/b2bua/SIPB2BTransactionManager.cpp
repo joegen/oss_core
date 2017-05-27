@@ -54,7 +54,7 @@ void SIPB2BTransactionManager::initialize(const boost::filesystem::path& cfgDire
 }
 
 void SIPB2BTransactionManager::deinitialize()
-{  
+{
   //
   // Deinitialize all registed handlers
   //
