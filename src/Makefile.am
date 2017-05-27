@@ -6,9 +6,7 @@ corelibs = liboss_carp.la
 corelibldadd = \
     @OSS_CORE_DEP_LIBS@ \
     liboss_core.la \
-    liboss_carp.la \
-    ua/core/re/libre.a \
-    ua/core/rem/librem.a
+    liboss_carp.la
 
 if ENABLE_TURN
     corelibs += liboss_turn.la
@@ -30,9 +28,7 @@ AM_CPPFLAGS = \
     -I@OSS_CORE_SRCDIR@/src/net/turn/server \
     -I@OSS_CORE_SRCDIR@/src/net/turn/apps/common \
     -I@OSS_CORE_SRCDIR@/src/net/turn/apps/relay \
-    -I@OSS_CORE_SRCDIR@/src/udns/include \
-    -I@OSS_CORE_SRCDIR@/src/ua/core/re/include \
-    -I@OSS_CORE_SRCDIR@/src/ua/core/rem/include
+    -I@OSS_CORE_SRCDIR@/src/udns/include
 
 AM_CFLAGS = \
     DHAVE_INET_PTON_NTOP \
@@ -258,7 +254,6 @@ liboss_core_la_SOURCES =  \
     persistent/DataType.cpp \
     persistent/Reference.cpp \
     persistent/KVLevelDB.cpp \
-    persistent/RESTKeyValueStore.cpp \
     persistent/RedisClient.cpp \
     sdp/SDPHeader.cpp \
     sdp/SDPHeaderList.cpp \
@@ -313,9 +308,6 @@ liboss_core_la_SOURCES =  \
     stun/STUNMappedAddress.cpp \
     stun/STUNServer.cpp \
     stun/STUNClient.cpp \
-    ua/SIPUserAgent.cpp \
-    ua/SIPRegistration.cpp \
-    ua/SIPEventLoop.cpp \
     b2bua/SIPB2BClientTransaction.cpp \
     b2bua/SIPB2BTransaction.cpp \
     b2bua/SIPB2BScriptableHandler.cpp \
@@ -323,13 +315,11 @@ liboss_core_la_SOURCES =  \
     b2bua/SIPB2BDialogStateManager.cpp \
     b2bua/SIPB2BContact.cpp \
     b2bua/SIPB2BUserAgentHandlerList.cpp \
-    b2bua/SIPB2BRegisterAgent.cpp \
     js/JSBase.cpp \
     js/JSSIPMessage.cpp \
     rtp/RTPPacket.cpp \
     rtp/RTPPCAPReader.cpp \
     rtp/RTPProxy.cpp \
-    rtp/RTPProxyClient.cpp \
     rtp/RTPProxyManager.cpp \
     rtp/RTPProxyRecord.cpp \
     rtp/RTPProxySession.cpp \
@@ -339,9 +329,7 @@ liboss_core_la_SOURCES =  \
     net/FirewallRule.cpp \
     net/Firewall.cpp \
     net/Carp.cpp \
-    net/HTTPServer.cpp \
     net/AccessControl.cpp \
-    net/TLSManager.cpp \
     net/IPAddress.cpp \
     net/DNS.cpp \
     net/Net.cpp \
@@ -438,7 +426,6 @@ oss_core_unit_test_SOURCES = \
 	unit_test/TestAccessControl.cpp \
 	unit_test/TestReplaces.cpp \
 	unit_test/TestTransport.cpp \
-	unit_test/TestUaRegister.cpp \
 	unit_test/TestDigestAuth.cpp \
 	unit_test/TestRedisPubSub.cpp
 
@@ -456,8 +443,7 @@ bin_PROGRAMS = \
     $(SIP_TEST) \
     oss_garp \
     oss_carp \
-    oss_core \
-    oss_rest
+    oss_core
 
 #
 # oss_core - A simple back-to-back user agent
@@ -477,13 +463,6 @@ oss_garp_SOURCES = apps/oss_garp.cpp
 oss_carp_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
 #oss_carp_LDFLAGS = -rdynamic
 oss_carp_SOURCES = apps/oss_carp.cpp
-
-#
-# oss_rest - REST Server implementation
-#
-oss_rest_CXXFLAGS = ${common_cxx_flags} -fno-gcse -O0 -fno-implement-inlines -fno-default-inline
-oss_rest_SOURCES = apps/oss_rest.cpp
-
 
 DISTCLEANFILES = Makefile.in
 

@@ -36,9 +36,7 @@ SIPB2BTransactionManager::SIPB2BTransactionManager(int minThreadcount, int maxTh
   _threadPool(minThreadcount, maxThreadCount),
   _useSourceAddressForResponses(false),
   _pDefaultHandler(0),
-  _maxThreadCount(maxThreadCount),
-  _pKeyStore(0)
-  
+  _maxThreadCount(maxThreadCount)
 {
 }
 
@@ -55,7 +53,6 @@ void SIPB2BTransactionManager::initialize(const boost::filesystem::path& cfgDire
 
 void SIPB2BTransactionManager::deinitialize()
 {
-  stopLocalRegistrationAgent();
   //
   // Deinitialize all registed handlers
   //
@@ -647,78 +644,6 @@ bool SIPB2BTransactionManager::registerPlugin(const std::string& name, const std
   }
 
   return true;
-}
-
-void SIPB2BTransactionManager::setKeyValueStore(OSS::Persistent::RESTKeyValueStore* pKeyStore)
-{
-  _pKeyStore = pKeyStore;
-  _stack.setKeyValueStore(_pKeyStore);
-}
-
-bool SIPB2BTransactionManager::startLocalRegistrationAgent(
-  const std::string& agentName,
-  const std::string& route,
-  const OSS::SIP::UA::SIPUserAgent::ExitHandler& exitHandler)
-{
-  _registerAgentRoute = route;
-  
-  if (!_registerAgent.initialize(agentName))
-    return false;
-  return _registerAgent.run(exitHandler);
-}
-
-void SIPB2BTransactionManager::stopLocalRegistrationAgent()
-{
-  _registerAgent.stop();
-}
-
-bool SIPB2BTransactionManager::sendLocalRegister(
-  const std::string& user,
-  const std::string& authUser,
-  const std::string& authPass,
-  const std::string& domain,
-  OSS::UInt32 expires,
-  const std::string& registrarAddress
-)
-{ 
-  std::ostringstream regParam;
-  
-
-  regParam << PropertyMap::propertyString(PropertyMap::PROP_LocalReg) << "=true";
-  
-  return _registerAgent.sendRegister(
-    domain, 
-    user, 
-    authUser, 
-    authPass,
-    regParam.str(),
-    "",
-    _registerAgentRoute,
-    expires,
-    boost::bind(&SIPB2BTransactionManager::onLocalRegisterResponse, this, _1, _2, _3));
-}
-
-
-void SIPB2BTransactionManager::onLocalRegisterResponse(
-  OSS::SIP::UA::SIPRegistration* pReg, 
-  const SIPMessage::Ptr& pMsg, 
-  const std::string& error)
-{
-  //
-  // This is where you get a glimpse of responses received by the local registration agent
-  //
-}
-
-bool SIPB2BTransactionManager::isForLocalRegistration(const std::string& contact)
-{
-  if (_registerAgent.isLocalRegistration(contact))
-  {
-    OSS_LOG_INFO("SIPB2BTransactionManager::isForLocalRegistration - " << 
-      contact << " is locally registered.");
-    return true;
-  }
-  
-  return false;
 }
 
 void SIPB2BTransactionManager::addPendingSubscription(const std::string& callId)

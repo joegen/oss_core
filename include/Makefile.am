@@ -105,7 +105,6 @@ nobase_include_HEADERS = \
     OSS/Persistent/KVLevelDB.h \
     OSS/Persistent/KeyValueStoreBase.h \
     OSS/Persistent/KeyValueStore.h \
-    OSS/Persistent/RESTKeyValueStore.h \
     OSS/SDP/rfc4566.txt \
     OSS/SDP/SDP.h \
     OSS/SDP/SDPHeader.h \
@@ -171,7 +170,6 @@ nobase_include_HEADERS = \
     OSS/SIP/B2BUA/SIPB2BDialogStateManager.h \
     OSS/SIP/B2BUA/SIPB2BUserAgentHandler.h \
     OSS/SIP/B2BUA/SIPB2BUserAgentHandlerList.h \
-    OSS/SIP/B2BUA/SIPB2BRegisterAgent.h \
     OSS/SIP/EP/SIPEndpoint.h \
     OSS/SIP/EP/SIPEndpointRetransmitter.h \
     OSS/STUN/VovidaSTUN.inl \
@@ -198,7 +196,6 @@ nobase_include_HEADERS = \
     OSS/RTP/RTPPacket.h \
     OSS/RTP/RTPPCAPReader.h \
     OSS/RTP/RTPProxy.h \
-    OSS/RTP/RTPProxyClient.h \
     OSS/RTP/RTPProxyManager.h \
     OSS/RTP/RTPProxyRecord.h \
     OSS/RTP/RTPProxySession.h \
@@ -210,10 +207,8 @@ nobase_include_HEADERS = \
     OSS/Net/oss_carp.h \
     OSS/Net/Carp.h \
     OSS/Net/TurnServer.h \
-    OSS/Net/HTTPServer.h \
     OSS/Net/AccessControl.h \
     OSS/Net/IPAddress.h \
-    OSS/Net/TLSManager.h \
     OSS/Net/DNS.h \
     OSS/Net/Net.h \
     OSS/Net/FramedTcpListener.h \

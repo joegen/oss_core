@@ -49,8 +49,7 @@ SIPStack::SIPStack() :
   _tcpListeners(),
   _wsListeners(),
   _tlsListeners(),
-  _tlsCertPassword(),
-  _pKeyStore(0)
+  _tlsCertPassword()
 {
 }
 

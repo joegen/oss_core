@@ -26,10 +26,6 @@
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
 
-#include <xmlrpc-c/girerr.hpp>
-#include <xmlrpc-c/base.hpp>
-#include <xmlrpc-c/client.hpp>
-
 #include "OSS/JSON/reader.h"
 #include "OSS/JSON/writer.h"
 #include "OSS/JSON/elements.h"

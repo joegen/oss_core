@@ -33,7 +33,6 @@ AC_CONFIG_FILES([
   Makefile
   include/Makefile
   src/Makefile
-  src/ua/core/Makefile
 ])
 
 AC_OUTPUT

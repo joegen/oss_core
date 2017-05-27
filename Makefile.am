@@ -6,6 +6,5 @@ include config/project.am
 
 SUBDIRS = \
 	. \
-	src/ua/core \
 	src \
         include
