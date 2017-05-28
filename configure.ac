@@ -483,6 +483,8 @@ AC_SUBST(OSS_CORE_DEP_LIBS)
 AC_CONFIG_FILES([
     include/OSS/build.h
     Makefile
+    oss_core.spec
+    debian.control
     src/Makefile
     include/Makefile
 ])

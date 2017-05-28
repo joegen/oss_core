@@ -1,0 +1,10 @@
+Package: libosscore-dev
+Version: @VERSION@-@PACKAGE_REVISION@
+Section: libs
+Priority: optional
+Architecture: any
+Depends: libboost-all-dev, libpoco-dev, libssh-dev
+Maintainer: Joegen Baclor <joegen@ossapp.com>
+Description: OSS Core Library
+ OS Abstraction and OS Utilities library for OSS modules
+
