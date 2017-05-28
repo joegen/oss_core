@@ -654,7 +654,7 @@ void prepareTargetInfo(Config& config, ServiceOptions& options)
   }
   
   options.getOption("route-script", config.routeScript);
-  
+
   //
   // Check if we need to rewrite the call-id.
   // The default is to reuse the call-id
@@ -816,7 +816,6 @@ int main(int argc, char** argv)
     // Stop the SBC
     //
     ua.stop();
-    
     
     //
     // Force exit.  We have freed whatever we need to free at this point

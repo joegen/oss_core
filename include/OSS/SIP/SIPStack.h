@@ -46,7 +46,6 @@
 #include "OSS/SIP/SIPTransportSession.h"
 #include "OSS/SIP/SIPTransaction.h"
 #include "OSS/SIP/SIPTransportService.h"
-#include "OSS/Persistent/RESTKeyValueStore.h"
 
 
 namespace OSS {

@@ -313,6 +313,7 @@ public:
   
   static bool isEmpty(const std::string& data);
     /// return true if URI is unset or has SIP_URI::EMPTY_URI content
+  
 public:
   static const char* EMPTY_URI;
 };

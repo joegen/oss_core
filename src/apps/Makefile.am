@@ -11,8 +11,7 @@ if ENABLE_FEATURE_B2BUA
 if ENABLE_FEATURE_CARP 
 if ENABLE_FEATURE_V8
 bin_PROGRAMS += \
-    oss_core \
-    oss_rest
+    oss_core
 endif
 endif
 endif
@@ -38,8 +37,3 @@ oss_garp_SOURCES = apps/oss_garp.cpp
 #
 #oss_carp_LDFLAGS = -rdynamic
 oss_carp_SOURCES = apps/oss_carp.cpp
-
-#
-# oss_rest - REST Server implementation
-#
-oss_rest_SOURCES = apps/oss_rest.cpp

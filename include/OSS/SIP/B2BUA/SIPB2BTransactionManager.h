@@ -41,7 +41,6 @@
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 #include "OSS/SIP/B2BUA/SIPB2BHandler.h"
 #include "OSS/SIP/B2BUA/SIPB2BUserAgentHandlerList.h"
-#include "OSS/Persistent/RESTKeyValueStore.h"
 
 
 namespace OSS {

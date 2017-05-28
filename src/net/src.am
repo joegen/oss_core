@@ -122,7 +122,5 @@ liboss_core_la_SOURCES += \
     net/Firewall.cpp \
     net/FramedTcpClient.cpp \
     net/FramedTcpConnection.cpp \
-    net/FramedTcpListener.cpp \
-    net/HTTPServer.cpp \
-    net/TLSManager.cpp
+    net/FramedTcpListener.cpp
 endif

@@ -2137,7 +2137,7 @@ void SIPB2BScriptableHandler::runOptionsResponseThread()
 }
 
 void SIPB2BScriptableHandler::sendOptionsKeepAlive(RegData& regData)
-{  
+{
   try
   {
     static int cseqNo = 1;
