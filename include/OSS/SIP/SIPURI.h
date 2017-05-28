@@ -240,7 +240,16 @@ public:
   static void escapeParam(std::string& result, const char* param);
     /// Escape none valid param characters in a string using RFC 2396 procedure.
 
-  std::string getHeader(const char* header);
+  std::string getHeader(const char* header) const;
+    /// Return the value of the uri header if present
+  
+  bool getHeader(const char* headerName, std::string& value) const;
+    /// Return the value of the uri header if present
+  
+  static bool getHeader(const std::string& uri, const char* headerName, std::string& headerValue);
+    /// Return the value of the uri header if present
+  
+  static bool setHeader(const std::string& uri, const char* headerName, const char* headerValue);
     /// Return the value of the uri header if present
 
   std::string getHeaders() const;

@@ -698,14 +698,28 @@ void SIPURI::escapeParam(std::string& result, const char* param)
   SIPParser::escape(result, param, safeChars);
 }
 
-std::string SIPURI::getHeader(const char* h)
+bool SIPURI::getHeader(const char* headerName, std::string& value) const
 {
-  std::string header = h;
+  return getHeader(_data, headerName, value);
+}
+
+std::string SIPURI::getHeader(const char* h) const
+{
+  std::string header;
+  if (getHeader(h, header))
+  {
+    return header;
+  }
+  return std::string();
+}
+
+bool SIPURI::getHeader(const std::string& uri, const char* headerName, std::string& value)
+{
+  std::string header = headerName;
   OSS::string_to_lower(header);
   std::string headers;
-  std::string value;
-  getHeaders(_data, headers);
-  if (!headers.empty())
+  
+  if (getHeaders(uri, headers) && !headers.empty())
   {
     if (headers.at(0) == '?')
       headers = headers.substr(1);
@@ -728,8 +742,16 @@ std::string SIPURI::getHeader(const char* h)
   }
   size_t offSet = header.size() + 1;
   if (value.size() > offSet)
-    return value.substr(offSet);
-  return std::string();
+  {
+    value = value.substr(offSet);
+    return true;
+  }
+  return false;
+}
+
+bool SIPURI::setHeader(const std::string& uri, const char* headerName, const char* headerValue)
+{
+  return true;
 }
 
 bool SIPURI::getHeaders(SIPURI::header_tokens& tokens) const
