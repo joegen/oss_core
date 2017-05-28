@@ -17,3 +17,9 @@ rpm: dist
 install-rpm: rpm
 	yum localinstall -y RPMS/x86_64/*.rpm
 
+deb:
+	rm -rf `pwd`/DEBBUILD
+	mkdir -p `pwd`/DEBBUILD/libosscore-@VERSION@/DEBIAN
+	DESTDIR=`pwd`/DEBBUILD/libosscore-@VERSION@ make install 
+	cp debian.control `pwd`/DEBBUILD/libosscore-@VERSION@/DEBIAN/control
+	cd DEBBUILD && dpkg-deb --build libosscore-@VERSION@

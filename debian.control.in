@@ -1,10 +1,11 @@
-Package: libosscore-dev
+Package: libosscore
 Version: @VERSION@-@PACKAGE_REVISION@
 Section: libs
 Priority: optional
-Architecture: any
+Architecture: amd64
+License: lgpl
 Depends: libboost-all-dev, libpoco-dev, libssh-dev
 Maintainer: Joegen Baclor <joegen@ossapp.com>
 Description: OSS Core Library
- OS Abstraction and OS Utilities library for OSS modules
+ OS Abstraction, Utilities and Protocol library for OSS modules
 

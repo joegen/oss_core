@@ -3,12 +3,17 @@ dist: trusty
 language: cpp
 compiler:
   - gcc
+addons:
+  artifacts:
+    debug: true
+    paths:
+    - $(ls DEBBUILD/*.deb | tr "\n" ":")
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libpoco-dev
   - sudo apt-get install -y libboost-all-dev
   - sudo apt-get install -y libzmq3-dev
-script: autoreconf -if && ./configure --enable-zmq && make
+script: autoreconf -if && ./configure --enable-zmq && make deb
 notifications:
   email:
     recipients:
