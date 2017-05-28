@@ -3,10 +3,8 @@ nobase_include_HEADERS += \
     OSS/Net/Firewall.h \
     OSS/Net/oss_carp.h \
     OSS/Net/Carp.h \
-    OSS/Net/HTTPServer.h \
     OSS/Net/AccessControl.h \
     OSS/Net/IPAddress.h \
-    OSS/Net/TLSManager.h \
     OSS/Net/DNS.h \
     OSS/Net/Net.h \
     OSS/Net/FramedTcpListener.h \

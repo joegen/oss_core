@@ -7,5 +7,4 @@ nobase_include_HEADERS += \
     OSS/Persistent/Reference.h \
     OSS/Persistent/KVLevelDB.h \
     OSS/Persistent/KeyValueStoreBase.h \
-    OSS/Persistent/KeyValueStore.h \
-    OSS/Persistent/RESTKeyValueStore.h
+    OSS/Persistent/KeyValueStore.h
