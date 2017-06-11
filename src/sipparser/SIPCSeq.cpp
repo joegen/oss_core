@@ -110,6 +110,24 @@ std::string SIPCSeq::getNumber() const
   return number;
 }
 
+int SIPCSeq::getNumberAsUint() const
+{
+  int number;
+  getNumber(_data, number);
+  return number;
+}
+
+bool SIPCSeq::getNumber(const std::string& cseq, int& number)
+{
+  std::string cseqNumber;
+  if (!getNumber(cseq, cseqNumber))
+  {
+    return false;
+  }
+  number = OSS::string_to_number<int>(cseqNumber.c_str());
+  return true;
+}
+
 bool SIPCSeq::getNumber(const std::string& cseq, std::string& number)
 {
   char* offSet = lwsFinder_1.parse(cseq.c_str());
@@ -124,14 +142,14 @@ bool SIPCSeq::setNumber(const std::string& number)
   return setNumber(_data, number);
 }
 
-bool SIPCSeq::setNumber(unsigned int number)
+bool SIPCSeq::setNumber(int number)
 {
   return setNumber(_data, number);
 }
 
-bool SIPCSeq::setNumber(std::string& cseq, unsigned int number)
+bool SIPCSeq::setNumber(std::string& cseq, int number)
 {
-  return setNumber(cseq, OSS::string_from_number<unsigned int>(number));
+  return setNumber(cseq, OSS::string_from_number<int>(number));
 }
 
 bool SIPCSeq::setNumber(std::string& cseq, const std::string& number)
