@@ -78,16 +78,18 @@ public:
     /// Sets the value of the CSeq Method
 
   std::string getNumber() const;
+  int getNumberAsUint() const;
     /// Returns the value of the CSeq Number
 
   static bool getNumber(const std::string& cseq, std::string& number);
+  static bool getNumber(const std::string& cseq, int& number);
     /// Returns the value of the CSeq Number
 
-  bool setNumber(unsigned int number);
+  bool setNumber(int number);
   bool setNumber(const std::string& number);
     /// Sets the value of the CSeq Number
 
-  static bool setNumber(std::string& cseq, unsigned int number);
+  static bool setNumber(std::string& cseq, int number);
   static bool setNumber(std::string& cseq, const std::string& number);
     /// Sets the value of the CSeq Number
 
