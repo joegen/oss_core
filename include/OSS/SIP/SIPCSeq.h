@@ -83,10 +83,12 @@ public:
   static bool getNumber(const std::string& cseq, std::string& number);
     /// Returns the value of the CSeq Number
 
-  bool setNumber(const char* number);
+  bool setNumber(unsigned int number);
+  bool setNumber(const std::string& number);
     /// Sets the value of the CSeq Number
 
-  static bool setNumber(std::string& cseq, const char* number);
+  static bool setNumber(std::string& cseq, unsigned int number);
+  static bool setNumber(std::string& cseq, const std::string& number);
     /// Sets the value of the CSeq Number
 
 };
