@@ -119,12 +119,22 @@ bool SIPCSeq::getNumber(const std::string& cseq, std::string& number)
   return true;
 }
 
-bool SIPCSeq::setNumber(const char* number)
+bool SIPCSeq::setNumber(const std::string& number)
 {
   return setNumber(_data, number);
 }
 
-bool SIPCSeq::setNumber(std::string& cseq, const char* number)
+bool SIPCSeq::setNumber(unsigned int number)
+{
+  return setNumber(_data, number);
+}
+
+bool SIPCSeq::setNumber(std::string& cseq, unsigned int number)
+{
+  return setNumber(cseq, OSS::string_from_number<unsigned int>(number));
+}
+
+bool SIPCSeq::setNumber(std::string& cseq, const std::string& number)
 {
   char* offSet = lwsFinder_1.parse(cseq.c_str());
   if( offSet == cseq.c_str())
