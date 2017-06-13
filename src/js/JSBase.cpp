@@ -25,6 +25,8 @@
 #include "OSS/UTL/Thread.h"
 
 
+#define ENABLE_GLOBAL_SCRIPTS_DIR 0
+
 
 namespace OSS {
 namespace JS {
@@ -525,7 +527,7 @@ bool JSBase::internalInitialize(
     //
     v8::Handle<v8::String> helperScript;
 
-    if (!boost::filesystem::exists(helpers))
+    if (!ENABLE_GLOBAL_SCRIPTS_DIR || !boost::filesystem::exists(helpers))
       helperScript = read_global_scripts();
     else
       helperScript = read_directory(helpers);

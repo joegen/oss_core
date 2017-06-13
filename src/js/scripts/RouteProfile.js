@@ -173,6 +173,11 @@ RouteProfile.prototype.routeAccept = function()
   this.sipMessage.setProperty("route-action", "continue");
 }
 
+RouteProfile.prototype.banSourceAddress = function()
+{
+  this.sipMessage.setProperty("route-action", "banned");
+}
+
 RouteProfile.prototype.setRejectReason = function(reason)
 {
   this.sipMessage.setProperty("reject-reason", reason);
@@ -187,50 +192,4 @@ RouteProfile.prototype.createA1Hash = function(userName, domain, password)
 {
   return md5Hash(userName + ":" + domain + ":" + password);
 }
-
-RouteProfile.prototype.bridgeToGateway = function(gatewayName)
-{
-    this.sipMessage.setProperty("action", "bridge-to-gateway");
-    this.sipMessage.setProperty("gateway", gatewayName);
-}
-
-RouteProfile.prototype.bridge = function(authUser, authPass)
-{
-    this.sipMessage.setProperty("action", "bridge-to-sbc");
-    if (typeof authUser != "undefined" && typeof authPass != "undefined")
-    {
-        this.sipMessage.setProperty("bridge-auth-user", authUser);
-        this.sipMessage.setProperty("bridge-auth-password", authPass);
-    }
-
-}
-
-RouteProfile.prototype.bridgeToConference = function(room, pin, flags)
-{
-    this.sipMessage.setProperty("action", "bridge-to-conference");
-    this.sipMessage.setProperty("conf-room", room);
-    if (typeof pin != "undefined")
-    {
-        this.sipMessage.setProperty("conf-pin", pin);
-    }
-    if (typeof flags != "undefined")
-    {
-        this.sipMessage.setProperty("conf-flags", flags);
-    }
-}
-
-RouteProfile.prototype.sendRegister = function(user, domain, password, registrar, expires, interfaceIndex)
-{
-    if (typeof interfaceIndex != "number" || typeof expires != "number")
-        return false;
-
-    if (typeof user != "string" || typeof domain != "string" || typeof password != "string" || typeof registrar != "string")
-        return false;
-
-    var localAddress = sip_interface_address[interfaceIndex];
-    var localPort = sip_interface_port[interfaceIndex];
-
-    bridge_add_gateway(user, domain, password, "", registrar, true, expires, localAddress, parseInt(localPort));
-}
-
 
