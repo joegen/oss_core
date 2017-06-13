@@ -371,6 +371,60 @@ void RTPProxyManager::handleSDP(const std::string& /*method*/,
   }
 }
 
+void RTPProxyManager::getSDP(const std::string& /*method*/,
+  const json::Object& args,
+  json::Object& response)
+{
+  try
+  {
+    std::string lastOffer;
+    std::string lastAnswer;
+    json::String sessionId = args["sessionId"];
+    std::string sessionId_(sessionId.Value());
+    getSDP(sessionId_, lastOffer, lastAnswer);
+    if (!lastOffer.empty() && !lastAnswer.empty())
+    {
+      response["last-offer"] = json::String(lastOffer);
+      response["last-answer"] = json::String(lastAnswer);
+    }
+    else
+    {
+      response["error"] = json::String("SDP is empty");
+      OSS_LOG_ERROR("RTP RTPProxy::getSDP Exception: SDP empty");
+    }
+  }
+  catch(json::Exception& e)
+  {
+    response["error"] = json::String(e.what());
+    OSS_LOG_ERROR("RTP RTPProxy::getSDP Exception: " << e.what());
+  }
+  catch(std::exception& e)
+  {
+    response["error"] = json::String(e.what());
+    OSS_LOG_ERROR("RTP RTPProxy::getSDP Exception: " << e.what());
+  }
+  catch(...)
+  {
+    response["error"] = json::String("unknown");
+    OSS_LOG_ERROR("RTP RTPProxy::getSDP Unknown Exception");
+  }
+}
+  
+void RTPProxyManager::getSDP(
+  const std::string& sessionId,
+  std::string& lastOffer,
+  std::string& lastAnswer)
+{
+   _sessionListMutex.lock();
+   RTPProxySessionList::iterator proxyIter = _sessionList.find(sessionId);
+   if (proxyIter != _sessionList.end())
+   {
+      lastOffer = proxyIter->second->getLastOffer();
+      lastAnswer = proxyIter->second->getLastAnswer();
+   }
+   _sessionListMutex.unlock();
+}
+
 void RTPProxyManager::removeSession(const std::string& method,
   const json::Object& args,
   json::Object& response)

@@ -91,6 +91,15 @@ public:
   void changeAddress(const std::string& address, const char* version = "IP4");
     /// Set the sessin wide IP Address binding for media.  Take note that
     /// a c lines must exist prior to calling this function
+  
+  bool getOrigin(
+    std::string& userName,
+    std::string& sessionId,
+    std::string& sessionVersion,
+    std::string& netType,
+    std::string& addressType,
+    std::string& unicastAddress
+  ) const;
 
 protected:
   

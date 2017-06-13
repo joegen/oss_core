@@ -35,6 +35,24 @@ using namespace OSS::SDP;
 using namespace OSS::Persistent;
 using namespace OSS::Net;
 
+class SDPLogger
+{
+public:
+  SDPLogger(std::string& sdp, std::string& target) :
+    _sdp(sdp),
+    _target(target)
+  {
+  }
+    
+  ~SDPLogger()
+  {
+    _target = _sdp;
+  }
+  
+  std::string& _sdp;
+  std::string& _target;
+};
+
 
 RTPProxySession::RTPProxySession(RTPProxyManager* pManager, const std::string& identifier) :
   _state(IDLE),
@@ -1051,6 +1069,10 @@ void RTPProxySession::handleSDPOffer(
   bool isBlackhole = (sessionAddress == "0.0.0.0");
   bool hasSessionAddress = (!sessionAddress.empty());
   bool hasChangedSessionAddress = false;
+  
+  _lastOffer = "";
+  _lastAnswer = "";
+  SDPLogger sdpLogger(sdp, _lastOffer);
   //
   // Determine the session ID of the offerer and preserve it as leg2
   // Take note that the concept of legs in the RTP proxy does not necessarily
@@ -1444,6 +1466,9 @@ void RTPProxySession::handleSDPAnswer(
   bool isBlackhole = (sessionAddress == "0.0.0.0");
   bool hasSessionAddress = (!sessionAddress.empty());
   bool hasChangedSessionAddress = false;
+  
+  SDPLogger sdpLogger(sdp, _lastAnswer);
+  
   //
   // Determine the session ID of the offerer and preserve it as leg2
   // Take note that the concept of legs in the RTP proxy does not necessarily
