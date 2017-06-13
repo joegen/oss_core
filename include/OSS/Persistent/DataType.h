@@ -306,6 +306,10 @@ public:
     /// This test if the setting has a child element with the given name. It will
     /// return true if the element exists, and false otherwise. These method does not throw
     /// exceptions.
+  
+  void remove(const std::string& name);
+  void remove(const char* name);
+    /// removes an existing element
 
 
 

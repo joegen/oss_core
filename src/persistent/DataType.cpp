@@ -655,6 +655,18 @@ bool DataType::exists(const char* name) const
    return const_cast<const libconfig::Setting&>(*static_cast<libconfig::Setting*>(_persistentvalue)).exists(name);
 }
 
+void DataType::remove(const std::string& name)
+{
+  remove(name.c_str());
+}
+
+void DataType::remove(const char* name)
+{
+  if (_isVolatile)
+    return;
+  static_cast<libconfig::Setting*>(_persistentvalue)->remove(name);
+}
+
 
 } }  // OSS::Persistent
 
