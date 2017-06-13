@@ -25,7 +25,6 @@
 #include "OSS/UTL/Thread.h"
 
 
-
 namespace OSS {
 namespace JS {
 
@@ -515,8 +514,6 @@ bool JSBase::internalInitialize(
     //
     v8::Handle<v8::String> helperScript;
     helperScript = read_global_scripts();
-
-
 
     if (helperScript.IsEmpty())
     {
