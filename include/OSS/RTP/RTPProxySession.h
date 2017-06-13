@@ -159,8 +159,10 @@ public:
   int getResizerSamplesLeg2() const;
 
   void setMonitoredRoute(const std::string& route);
-
   const std::string& getMonitoredRoute() const;
+  
+  const std::string& getLastOffer() const;
+  const std::string& getLastAnswer() const;
 protected:
   void handleStateIdle(
     const OSS::Net::IPAddress& sentBy,
@@ -284,8 +286,6 @@ protected:
     RTPProxy::Attributes& rtpAttribute);
 
   void setInactive();
-
-  
 private:
   void handleAuthStateTimeout(const boost::system::error_code& e);
     /// signals a timeout on leg-2 read operation
@@ -319,6 +319,8 @@ private:
   std::string _callId;
   std::string _from;
   std::string _to;
+  std::string _lastOffer;
+  std::string _lastAnswer;
 
   boost::asio::deadline_timer _authStateTimer;
   bool _isAuthTimeout;
@@ -426,6 +428,16 @@ inline void RTPProxySession::setMonitoredRoute(const std::string& route)
 inline const std::string& RTPProxySession::getMonitoredRoute() const
 {
   return _monitoredRoute;
+}
+
+inline const std::string& RTPProxySession::getLastOffer() const
+{
+  return _lastOffer;
+}
+
+inline const std::string& RTPProxySession::getLastAnswer() const
+{
+  return _lastAnswer;
 }
 
 

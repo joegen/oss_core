@@ -299,6 +299,36 @@ void SDPSession::changeAddress(const std::string& address, const char* version )
   }
 }
 
+bool SDPSession::getOrigin(
+  std::string& userName,
+  std::string& sessionId,
+  std::string& sessionVersion,
+  std::string& netType,
+  std::string& addressType,
+  std::string& unicastAddress
+) const
+{
+  std::string oLine = findHeader('o');
+  if (oLine.empty())
+  {
+    return false;
+  }
+  std::vector<std::string> oLineTokens = OSS::string_tokenize(oLine, " ");
+  if (oLineTokens.size() != 6)
+  {
+    return false;
+  }
+
+  userName = oLineTokens[0];
+  sessionId = oLineTokens[1];
+  sessionVersion = oLineTokens[2];
+  netType = oLineTokens[3];
+  addressType = oLineTokens[4];
+  unicastAddress = oLineTokens[5];
+  
+  return true;
+}
+
 } } // OSS::SDP
 
 

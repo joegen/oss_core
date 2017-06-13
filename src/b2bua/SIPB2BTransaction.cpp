@@ -25,6 +25,7 @@
 #include "OSS/ABNF/ABNFSIPIPV4Address.h"
 #include "OSS/ABNF/ABNFSIPIPV6Address.h"
 #include "OSS/SIP/SIPVia.h"
+#include "OSS/UTL/PropertyMap.h"
 
 #define THREADED_RESPONSE 0 /// Disable threadpool for response handling.  This is the desired default to avoid race conditions!
 
@@ -489,8 +490,11 @@ void SIPB2BTransaction::runResponseTask()
 
     _pManager->onProcessResponseInbound(response, shared_from_this());
 
-    if (_hasSentLocalResponse)
+    std::string disallowforwardResponse;
+    if (_hasSentLocalResponse || (response->getProperty(OSS::PropertyMap::PROP_DisallowForwardResponse, disallowforwardResponse) && disallowforwardResponse == "1"))
+    {
       return;
+    }
 
     if (response->isErrorResponse())
     {

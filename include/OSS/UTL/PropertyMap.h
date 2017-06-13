@@ -75,6 +75,7 @@ struct PropertyMap
     "transport-alias", \
     "reg-id", \
     "require-persistent-connection", \
+    "disallow-forward-response", \
     "property-undefined" \
   };
 
@@ -129,6 +130,7 @@ struct PropertyMap
     PROP_TransportAlias,
     PROP_RegId,
     PROP_RequirePersistentConnection,
+    PROP_DisallowForwardResponse,
     PROP_Max
   };
   

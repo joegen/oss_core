@@ -109,7 +109,16 @@ public:
     json::Object& response);
     /// Callback handler for RPC based operation.  Returns the processed
     /// SDP in the response
-
+  
+  void getSDP(const std::string& method,
+    const json::Object& args,
+    json::Object& response);
+  
+  void getSDP(
+    const std::string& sessionId,
+    std::string& lastOffer,
+    std::string& lastAnswer);
+  
   unsigned short getUDPPortBase() const;
     /// Return the UDP Port Base
 

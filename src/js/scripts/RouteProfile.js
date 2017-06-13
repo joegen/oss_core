@@ -78,27 +78,37 @@ RouteProfile.prototype.disallowFailover = function()
 
 RouteProfile.prototype.invokeLocalHandler = function()
 {
-	this.sipMessage.setTransactionProperty("invoke-local-handler", "1");
+  this.sipMessage.setTransactionProperty("invoke-local-handler", "1");
 }
 
 RouteProfile.prototype.allowRTPProxy = function()
 {
-	this.sipMessage.setTransactionProperty("no-rtp-proxy", "0");
+  this.sipMessage.setTransactionProperty("no-rtp-proxy", "0");
 }
 
 RouteProfile.prototype.disallowRTPProxy = function()
 {
-	this.sipMessage.setTransactionProperty("no-rtp-proxy", "1");
+  this.sipMessage.setTransactionProperty("no-rtp-proxy", "1");
 }
 
 RouteProfile.prototype.enableVerboseRTP = function()
 {
-	this.sipMessage.setTransactionProperty("enable-verbose-rtp", "1");
+  this.sipMessage.setTransactionProperty("enable-verbose-rtp", "1");
+}
+
+RouteProfile.prototype.enableLocal100Rel = function()
+{
+  this.sipMessage.setTransactionProperty("local-100-rel", "1");
+}
+
+RouteProfile.prototype.enableLocalUpdate = function()
+{
+  this.sipMessage.setTransactionProperty("local-update", "1");
 }
 
 RouteProfile.prototype.disbleVerboseRTP = function()
 {
-	this.sipMessage.setTransactionProperty("enable-verbose-rtp", "0");
+  this.sipMessage.setTransactionProperty("enable-verbose-rtp", "0");
 }
 
 RouteProfile.prototype.generateLocalResponse = function(yes)
