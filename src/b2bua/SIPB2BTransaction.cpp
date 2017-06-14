@@ -545,6 +545,10 @@ void SIPB2BTransaction::runResponseTask()
           response->setProperty(OSS::PropertyMap::PROP_PeerXOR, clientRequestPeerXor);
           pProvisionalResponse->setProperty(OSS::PropertyMap::PROP_PeerXOR, serverRequestPeerXor);
 
+          pProvisionalResponse->setProperty(OSS::PropertyMap::PROP_ResponseTarget, target.toIpPortString().c_str());
+          pProvisionalResponse->setProperty(OSS::PropertyMap::PROP_ResponseInterface,
+            _pServerTransport->getLocalAddress().toIpPortString().c_str());
+          
           if (!pProvisionalResponse->body().empty())
             _pManager->onProcessResponseBody(pProvisionalResponse, shared_from_this());
 
