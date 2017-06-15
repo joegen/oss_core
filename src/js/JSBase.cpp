@@ -28,8 +28,10 @@
 namespace OSS {
 namespace JS {
 
+
+static std::vector<std::string> _globalScripts; 
   
- static std::string toString(v8::Handle<v8::Value> str)
+static std::string toString(v8::Handle<v8::Value> str)
 {
   if (!str->IsString())
     return "";
@@ -269,11 +271,17 @@ static v8::Handle<v8::String> read_global_scripts()
   ); 
   
   std::ostringstream data;
-  data  << gAccessList 
-        << gAuthProfile
-        << gPropertyObject
-        << gRouteProfile
-        << gSIPMessage
+  
+  for (std::vector<std::string>::iterator iter = _globalScripts.begin(); iter != _globalScripts.end(); iter++)
+  {
+    data << *iter << std::endl;
+  }
+  
+  data  << gAccessList << std::endl
+        << gAuthProfile << std::endl
+        << gPropertyObject << std::endl
+        << gRouteProfile << std::endl
+        << gSIPMessage << std::endl
         << gTransactionProfile;
   
   return  v8::String::New(data.str().c_str(), data.str().size());
@@ -383,6 +391,11 @@ JSBase::~JSBase()
   delete static_cast<v8::Persistent<v8::Function>*>(_processFunc);
   delete static_cast<v8::Persistent<v8::Context>*>(_context);
 
+}
+
+void JSBase::addGlobalScript(const std::string& script)
+{
+  _globalScripts.push_back(script);
 }
 
 bool JSBase::initialize(const boost::filesystem::path& scriptFile, const std::string& functionName,

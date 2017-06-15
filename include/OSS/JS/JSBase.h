@@ -82,6 +82,9 @@ public:
   
   bool callFunction(const std::string& funcName);
     /// Call a JS funciton with zero arguments
+  
+  static void addGlobalScript(const std::string& script);
+    /// Prepend JS code the the compiled script
 
 protected:
   bool internalInitialize(const boost::filesystem::path& script,
