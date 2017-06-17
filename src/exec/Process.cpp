@@ -520,7 +520,7 @@ int Process::countProcessInstances(const std::string& process)
   {
     if (boost::filesystem::is_directory(iter->status()))
     {
-      if (OSS::boost_file_name(iter->path()) != "self")
+      if (OSS::boost_file_name(iter->path()) != "self" && OSS::boost_file_name(iter->path()) != "thread-self")
       {
         boost::filesystem::path statusFile = operator/(iter->path(), "status");
         std::string procName;
