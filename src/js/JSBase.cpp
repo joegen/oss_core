@@ -290,7 +290,7 @@ static v8::Handle<v8::String> read_global_scripts()
   return  v8::String::New(data.str().c_str(), data.str().size());
 }
 
-v8::Handle<v8::String> load_scripts_from_directory(const boost::filesystem::path& directory)
+static v8::Handle<v8::String> read_directory(const boost::filesystem::path& directory)
 {
   std::string data;
 
@@ -522,7 +522,17 @@ bool JSBase::internalInitialize(
   v8::TryCatch try_catch;
   try_catch.SetVerbose(true);
 
- 
+  //
+  // Compile global helpers
+  //
+  
+  boost::filesystem::path helpers;
+  if (!_globalScriptsDirectory.empty())
+    helpers = boost::filesystem::path(_globalScriptsDirectory);
+  else
+    helpers = operator/(scriptFile.branch_path(), "global.detail");
+
+  
   try
   {
     //
@@ -572,7 +582,6 @@ bool JSBase::internalInitialize(
   //
   // Compile the helpers
   //
-  boost::filesystem::path helpers;
   if (!_helperScriptsDirectory.empty())
     helpers = boost::filesystem::path(_helperScriptsDirectory);
   else
@@ -813,6 +822,7 @@ bool JSBase::callFunction(const std::string& funcName)
 
 
 } } // OSS::JS
+
 
 
 
