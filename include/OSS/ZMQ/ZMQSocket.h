@@ -50,7 +50,9 @@ public:
     REQ,
     REP,
     PUSH,
-    PULL
+    PULL,
+    PUB,
+    SUB
   };
   
   typedef zmq::pollitem_t PollItem;
@@ -63,6 +65,10 @@ public:
   bool connect(const std::string& peerAddress);
   
   bool bind(const std::string& bindAddress);
+  
+  bool subscribe(const std::string& event);
+  
+  bool publish(const std::string& event);
   
   bool sendAndReceive(const std::string& cmd, const std::string& data, std::string& response, unsigned int timeoutms);
   bool sendAndReceive(const std::string& cmd, const std::string& data, std::string& response);

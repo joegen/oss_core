@@ -76,6 +76,31 @@ TEST(ZMQ, test_zmq_send_and_receive)
     ASSERT_TRUE(reqItems[0].revents & ZMQ_POLLIN);
     ASSERT_TRUE(req.receiveReply(response, 0));
   }
+  
+  //
+  // TEst PUB/SUB
+  //
+  {
+    ZMQSocket publisher(ZMQSocket::PUB);
+    ZMQSocket subscriber1(ZMQSocket::SUB);
+    ZMQSocket subscriber2(ZMQSocket::SUB);
+    ASSERT_TRUE(publisher.bind("tcp://127.0.0.1:50001"));
+    OSS::thread_sleep(100);
+    ASSERT_TRUE(subscriber1.connect("tcp://127.0.0.1:50001"));
+    ASSERT_TRUE(subscriber2.connect("tcp://127.0.0.1:50001"));
+    OSS::thread_sleep(100);
+    ASSERT_TRUE(subscriber1.subscribe("test-event"));
+    ASSERT_TRUE(subscriber2.subscribe("test-event"));
+    OSS::thread_sleep(100);
+    ASSERT_TRUE(publisher.publish("test-event event-data"));
+    OSS::thread_sleep(100);
+    std::string event;
+    ASSERT_TRUE(subscriber1.receiveReply(event, 0));
+    ASSERT_STREQ(event.c_str(), "test-event event-data");
+    event = "";
+    ASSERT_TRUE(subscriber2.receiveReply(event, 100));
+    ASSERT_STREQ(event.c_str(), "test-event event-data");
+  }
 }
 
 

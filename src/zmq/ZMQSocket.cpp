@@ -153,14 +153,24 @@ bool ZMQSocket::bind(const std::string& bindAddress)
       _socket = zeromq_create_socket(_context, ZMQ_REP);
     }
     break;
-  case PULL:
+  case PUSH:
     if (_isInproc)
     {
-      _socket = zeromq_create_socket(_inproc_context, ZMQ_PULL);
+      _socket = zeromq_create_socket(_inproc_context, ZMQ_PUSH);
     }
     else
     {
-      _socket = zeromq_create_socket(_context, ZMQ_PULL);
+      _socket = zeromq_create_socket(_context, ZMQ_PUSH);
+    }
+    break;
+  case PUB:
+    if (_isInproc)
+    {
+      _socket = zeromq_create_socket(_inproc_context, ZMQ_PUB);
+    }
+    else
+    {
+      _socket = zeromq_create_socket(_context, ZMQ_PUB);
     }
     break;
   default:
@@ -208,7 +218,7 @@ bool ZMQSocket::connect(const std::string& peerAddress)
 
 bool ZMQSocket::internal_connect(const std::string& peerAddress)
 {
-  if (_socket)
+  if (_socket || peerAddress.empty())
   {
     return false;
   }
@@ -230,14 +240,24 @@ bool ZMQSocket::internal_connect(const std::string& peerAddress)
       _socket = zeromq_create_socket(_context, ZMQ_REQ);
     }
     break;
-  case PUSH:
+  case PULL:
     if (_isInproc)
     {
-      _socket = zeromq_create_socket(_inproc_context, ZMQ_PUSH);
+      _socket = zeromq_create_socket(_inproc_context, ZMQ_PULL);
     }
     else
     {
-      _socket = zeromq_create_socket(_context, ZMQ_PUSH);
+      _socket = zeromq_create_socket(_context, ZMQ_PULL);
+    }
+    break;
+  case SUB:
+    if (_isInproc)
+    {
+      _socket = zeromq_create_socket(_inproc_context, ZMQ_SUB);
+    }
+    else
+    {
+      _socket = zeromq_create_socket(_context, ZMQ_SUB);
     }
     break;
   default:
@@ -273,6 +293,25 @@ bool ZMQSocket::internal_connect(const std::string& peerAddress)
   }
   _peerAddress = peerAddress;
   return true;
+}
+
+bool ZMQSocket::subscribe(const std::string& event)
+{
+  if (_type != SUB || !_socket)
+  {
+    return false;
+  }
+  _socket->setsockopt(ZMQ_SUBSCRIBE, event.c_str(), event.length());
+  return true;
+}
+
+bool ZMQSocket::publish(const std::string& event)
+{
+  if (_type != PUB)
+  {
+    return false;
+  }
+  return sendRequest("", event);
 }
 
 void ZMQSocket::close()
@@ -330,7 +369,7 @@ bool ZMQSocket::internal_send_request(const std::string& cmd, const std::string&
     return false;
   }
   
-  if (!zeromq_sendmore(*_socket, cmd))
+  if (!cmd.empty() && !zeromq_sendmore(*_socket, cmd))
   {
     OSS_LOG_ERROR("ZMQSocket::send() - Exception: zeromq_sendmore(cmd) failed");
     _canReconnect = true;
@@ -367,12 +406,7 @@ bool ZMQSocket::internal_send_reply(const std::string& data)
 }
 
 bool ZMQSocket::receiveReply(std::string& data, unsigned int timeoutms)
-{
-  if (_type == PUSH)
-  {
-    return false;
-  }
-  
+{  
   OSS::mutex_critic_sec_lock lock(_mutex);
   return internal_receive_reply(data, timeoutms);
 }

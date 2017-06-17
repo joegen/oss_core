@@ -20,4 +20,5 @@ nobase_include_HEADERS += \
     OSS/UTL/Logger.h \
     OSS/UTL/FastRandom.h \
     OSS/UTL/LogFile.h \
-    OSS/UTL/Console.h
+    OSS/UTL/Console.h \
+    OSS/UTL/termcolor.h
