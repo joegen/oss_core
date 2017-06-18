@@ -220,6 +220,15 @@ bool rtnl_get_source(const RTNLRoutes& routes, std::string& source, const std::s
       {
         continue;
       }
+      
+      //
+      // Filter out routes that don't have specific gateways
+      //
+      if (iter->gateway.empty() || iter->gateway == "0.0.0.0")
+      {
+        continue;
+      }
+      
       //
       // Check if the destination matches
       //
