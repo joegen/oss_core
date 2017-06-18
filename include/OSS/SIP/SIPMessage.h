@@ -22,6 +22,7 @@
 #define SIP_SIPMessage_INCLUDED
 
 #include <map>
+#include <set>
 #include <iostream>
 #include <boost/thread.hpp>
 #include <boost/logic/tribool.hpp>
