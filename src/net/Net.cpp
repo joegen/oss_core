@@ -1122,24 +1122,32 @@ void net_io_timer_cancel(NET_TIMER_HANDLE timerHandle)
 
 bool net_get_default_interface_name(std::string& iface)
 {
+  /*
+   * Iface    Destination Gateway 	Flags	RefCnt	Use	Metric	Mask      MTU	Window	IRTT                                                       
+   * enp3s0   00000000    0101A8C0	0003	0       0   100     00000000	0   0       0                                                                           
+   * docker0	0000FEA9    00000000	0001	0       0   1000    0000FFFF	0   0       0                                                                         
+   * docker0	000011AC    00000000	0001	0       0   0       0000FFFF	0   0       0                                                                            
+   * enp3s0   0001A8C0    00000000	0001	0       0   100     00FFFFFF	0   0       0     
+   */
   FILE *f;
-  char line[100] , *p , *c;
+  char line[100];
   f = fopen("/proc/net/route" , "r");
 
-  while(fgets(line , 100 , f))
+  while(f && fgets(line , 100 , f))
   {
-    p = strtok(line , " \t");
-    c = strtok(NULL , " \t");
-
-    if(p!=NULL && c!=NULL)
+    std::vector<std::string> tokens = OSS::string_tokenize(line, " \t");
+    if (tokens.size() < 2)
     {
-      if(strcmp(c , "00000000") == 0)
-      {
-        iface = p;
-        return true;
-      }
+      continue;
+    }
+    if (tokens.size() > 2 && tokens[1] == "00000000")
+    {
+      iface = tokens[0];
+      fclose(f);
+      return true;
     }
   }
+  fclose(f);
   return false;
 }
 
