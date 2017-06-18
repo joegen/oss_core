@@ -106,6 +106,7 @@ void EndpointListener::dispatchMessage(const SIPMessage::Ptr& pRequest)
   {
     OSS_LOG_DEBUG(pRequest->createContextId(true) << "EndpointListener::dispatchMessage( " << pRequest->startLine() << " )");
     pRequest->setProperty(OSS::PropertyMap::PROP_EndpointName, _endpointName);
+    pRequest->commitData();
     _dispatch(pRequest, _pConnection);
   }
   else
