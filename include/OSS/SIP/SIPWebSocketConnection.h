@@ -61,9 +61,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include "OSS/SIP/SIP.h"
 #include "OSS/SIP/SIPMessage.h"
-#include "OSS/websocketpp/logger/logger.hpp"
-#include "OSS/websocketpp/roles/server.hpp"
-#include "OSS/websocketpp/websocketpp.hpp"
+#include "OSS/Net/WebSocket.h"
 #include "OSS/SIP/SIPTransportSession.h"
 
 
