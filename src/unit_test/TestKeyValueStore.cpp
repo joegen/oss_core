@@ -2,13 +2,11 @@
 #include "gtest/gtest.h"
 
 #include "OSS/build.h"
-#if ENABLE_FEATURE_RESTKV
 #if OSS_HAVE_LEVELDB
 
 #include <boost/filesystem.hpp>
 #include <Poco/StreamCopier.h>
 #include "OSS/Persistent/KeyValueStore.h"
-#include "OSS/Persistent/RESTKeyValueStore.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "Poco/Util/ServerApplication.h"
 
@@ -16,25 +14,13 @@
 #include "OSS/JSON/writer.h"
 #include "OSS/JSON/elements.h"
 
-#include "OSS/Net/TLSManager.h"
-
 using namespace OSS::Persistent;
-using namespace OSS::Net;
 
 #define kvfile "KeyValueStore.test"
-#define restkvfile "RESTKeyValueStore.test"
-#define restkvport 10111
-#define restkv_secure_port 10112
-#define restkvhost "127.0.0.1"
 #define data "The Quick Brown fox Jumps Over The Lazy Dog!"
 #define iterations 100
 
 static KeyValueStore kv;
-static RESTKeyValueStore restkv;
-static RESTKeyValueStore::Client restkv_client(restkvhost, restkvport);
-
-static RESTKeyValueStore restkv_secure(&restkv);
-static RESTKeyValueStore::Client restkv_client_secure(restkvhost, restkv_secure_port, true);
 static bool input_proc_put_invoked = false;
 static bool input_proc_del_invoked = false;
 
@@ -188,111 +174,7 @@ TEST(KeyValueStoreTest, test_filter_multiple)
 }
 
 
-TEST(KeyValueStoreTest, test_rest_init_auth)
-{
-  restkv.setCredentials("user", "password");
-  ASSERT_TRUE(restkv.start(restkvhost, restkvport, false));
-}
-
-
-
-TEST(KeyValueStoreTest, test_rest_put_get_auth)
-{ 
-  boost::filesystem::remove_all("people");
-
-  int status = 0;
-  
-  restkv_client.setCredentials("user", "password");
- 
-  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/fname", "Joegen", status));
-  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/sname", "Baclor", status));
-  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/addr/street/name", "San Pablo Street", status));
-  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/addr/street/number", "17", status));
-  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/addr/city", "Pasig", status));
-  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/country/province", "Metro Manila", status));
-  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp1/country/areaCode", "1603", status));
-  
-  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/fname", "Che", status));
-  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/sname", "Sto. Domingo", status));
-  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/addr/street/name", "San Pablo Street", status));
-  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/addr/street/number", "17", status));
-  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/addr/city", "Pasig", status));
-  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/country/province", "Bulacan", status));
-  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/country/areaCode", "1800", status));
-  ASSERT_TRUE(restkv_client.restPUT("/root/people/emp2/quotes", "\"\"''", status));
-  
-  std::ostringstream result;
-  ASSERT_TRUE(restkv_client.restGET("/root/people/", result, status));
-  
-  std::stringstream input;
-
-  input << result.str();
-  
-  std::cout << result.str() << std::endl;
-   
-  try 
-  {
-    json::Object jsonObject;
-    json::Reader::Read(jsonObject, input);
-    json::Writer::Write(jsonObject, std::cout);
-    
-    ASSERT_TRUE(((json::String&)jsonObject["people"]["emp1"]["fname"]).Value() == "Joegen");
-    ASSERT_TRUE(((json::String&)jsonObject["people"]["emp2"]["fname"]).Value() == "Che");
-    
-    ASSERT_TRUE(((json::String&)jsonObject["people"]["emp1"]["country"]["province"]).Value() == "Metro Manila");
-    ASSERT_TRUE(((json::String&)jsonObject["people"]["emp2"]["country"]["province"]).Value() == "Bulacan");
-    
-    ASSERT_TRUE(((json::String&)jsonObject["people"]["emp2"]["quotes"]).Value() == "\"\"''");
-  }
-  catch(json::Exception e)
-  {
-    std::cout << e.what() << std::endl;
-    ASSERT_TRUE(false);
-  }
-}
-
-TEST(KeyValueStoreTest, test_rest_tls)
-{
-  if (!boost::filesystem::exists("rootcert.pem"))
-    return;
-  
-  if (!boost::filesystem::exists("any.pem"))
-    return;
-  
-  OSS::Net::TLSManager::instance().initialize("any.pem", "any.pem", "rootcert.pem", "secret", true, OSS::Net::TLSManager::VERIFY_RELAXED);
-  
-  restkv_secure.setCredentials("user", "password");
-  ASSERT_TRUE(restkv_secure.start(restkvhost, restkv_secure_port, true));
-  
-}
-
-TEST(KeyValueStoreTest, test_rest_tls_put_get)
-{
-  if (!boost::filesystem::exists("rootcert.pem"))
-    return;
-  
-  if (!boost::filesystem::exists("any.pem"))
-    return;
-  
-  int status;
-  restkv_client_secure.setCredentials("user", "password");
-  ASSERT_TRUE(restkv_client_secure.restPUT("/root/secure/test/item", "Secure Test", status));
-   
-  std::ostringstream result;
-  ASSERT_TRUE(restkv_client_secure.restGET("/root/secure/", result, status));
-  
-  std::stringstream input;
-
-  input << result.str();
-  
-  std::cout << result.str() << std::endl;
-  
-  std::ostringstream result2;
-  ASSERT_TRUE(restkv_client.restGET("/root/secure/", result2, status));
-}
-
 #else
 TEST(NullTest, null_test_kv){}
-#endif
 #endif
 
