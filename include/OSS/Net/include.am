@@ -11,4 +11,5 @@ nobase_include_HEADERS += \
     OSS/Net/FramedTcpClient.h \
     OSS/Net/FramedTcpConnection.h \
     OSS/Net/rtnl_get_route.h \
-    OSS/Net/WebSocket.h
+    OSS/Net/WebSocket.h \
+    OSS/Net/WebSocketClient.h

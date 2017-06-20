@@ -76,7 +76,8 @@ liboss_core_la_SOURCES +=  \
     net/ws/src/sockets/plain.hpp \
     net/ws/src/sockets/socket_base.hpp \
     net/ws/src/sockets/tls.hpp \
-    net/ws/src/utf8_validator/utf8_validator.hpp
+    net/ws/src/utf8_validator/utf8_validator.hpp \
+    net/WebSocketClient.cpp
 endif
 
 liboss_core_la_SOURCES +=  \

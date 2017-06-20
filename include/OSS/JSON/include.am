@@ -7,4 +7,5 @@ nobase_include_HEADERS += \
     OSS/JSON/elements.inl \
     OSS/JSON/Readme.txt \
     OSS/JSON/writer.h \
-    OSS/JSON/reader.h
+    OSS/JSON/reader.h \
+    OSS/JSON/JsonRpcClient.h
