@@ -39,6 +39,7 @@ namespace websocketpp {
 namespace http {
 namespace parser {
 
+#if 0
     namespace state {
         enum value {
             METHOD,
@@ -47,11 +48,12 @@ namespace parser {
             HEADERS
         };
     }
-
+#endif
+    
 typedef std::map<std::string,std::string> header_list;
 
 
-class parser {
+class parser_base {
 public:
     // consumes bytes from the stream and returns true if enough bytes have
     // been read
@@ -135,7 +137,7 @@ private:
     header_list m_headers;
 };
 
-class request : public parser {
+class request : public parser_base {
 public: 
     // parse a complete header (ie \r\n\r\n MUST be in the input stream)
     bool parse_complete(std::istream& s) {
@@ -198,7 +200,7 @@ private:
     std::string m_uri;
 };
 
-class response : public parser {
+class response : public parser_base {
 public:
     // parse a complete header (ie \r\n\r\n MUST be in the input stream)
     bool parse_complete(std::istream& s) {
