@@ -101,6 +101,12 @@ RouteProfile.prototype.enableLocal100Rel = function()
   this.sipMessage.setTransactionProperty("local-100-rel", "1");
 }
 
+RouteProfile.prototype.disable181Relay = function()
+{
+  this.sipMessage.setTransactionProperty("disable-181-relay", "1");
+}
+
+
 RouteProfile.prototype.enableLocalUpdate = function()
 {
   this.sipMessage.setTransactionProperty("local-update", "1");
