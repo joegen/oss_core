@@ -249,43 +249,12 @@ static v8::Handle<v8::String> read_file(const std::string& name) {
 
 static v8::Handle<v8::String> read_global_scripts()
 {
-  static std::string gAccessList(
-    #include "./scripts/JS_AccessList.h"
-  );
-
-  static std::string gAuthProfile(
-    #include "./scripts/JS_AuthProfile.h"
-  );
-
-  static std::string gPropertyObject(
-    #include "./scripts/JS_PropertyObject.h"
-  ); 
-
-  static std::string gRouteProfile(
-    #include "./scripts/JS_RouteProfile.h"
-  ); 
-
-  static std::string gSIPMessage(
-    #include "./scripts/JS_SIPMessage.h"
-  ); 
-
-  static std::string gTransactionProfile(
-    #include "./scripts/JS_TransactionProfile.h"
-  ); 
-  
   std::ostringstream data;
   
   for (std::vector<std::string>::iterator iter = _globalScripts.begin(); iter != _globalScripts.end(); iter++)
   {
     data << *iter << std::endl;
   }
-  
-  data  << gAccessList << std::endl
-        << gAuthProfile << std::endl
-        << gPropertyObject << std::endl
-        << gRouteProfile << std::endl
-        << gSIPMessage << std::endl
-        << gTransactionProfile;
   
   return  v8::String::New(data.str().c_str(), data.str().size());
 }

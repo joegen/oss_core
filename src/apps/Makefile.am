@@ -22,10 +22,28 @@ bin_PROGRAMS += \
     oss_carp
 endif
 
+
+BUILT_SOURCES +=  \
+    apps/AccessList.js.h \
+    apps/AuthProfile.js.h \
+    apps/PropertyObject.js.h \
+    apps/RouteProfile.js.h \
+    apps/SIPMessage.js.h \
+    apps/TransactionProfile.js.h
+
+CLEANFILES +=   \
+    apps/AccessList.js.h \
+    apps/AuthProfile.js.h \
+    apps/PropertyObject.js.h \
+    apps/RouteProfile.js.h \
+    apps/SIPMessage.js.h \
+    apps/TransactionProfile.js.h
+
 #
 # oss_core - A simple back-to-back user agent
 #
 oss_core_SOURCES = apps/oss_core.cpp
+   
 
 #
 # oss_garp - tool for sending gratuitous ARP requests
@@ -37,3 +55,10 @@ oss_garp_SOURCES = apps/oss_garp.cpp
 #
 #oss_carp_LDFLAGS = -rdynamic
 oss_carp_SOURCES = apps/oss_carp.cpp
+
+
+#
+# Build rule for Scripts
+#
+apps/%.js.h: apps/scripts/%.js
+	$(top_srcdir)/config/doublequoteme $< $@

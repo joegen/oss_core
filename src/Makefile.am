@@ -1,6 +1,6 @@
 SUBDIRS = .
 
-EXTRA_DIST = js/scripts
+EXTRA_DIST = apps/scripts 
 
 corelibs =
 
@@ -23,7 +23,6 @@ AM_CPPFLAGS = \
     -I/usr/include \
     -I$(top_builddir)/include \
     -I$(top_builddir)/src \
-    -I$(top_builddir)/src/oss_core/include \
     -I@OSS_CORE_SRCDIR@/include \
     -I@OSS_CORE_SRCDIR@/src/utl/linux/pidfile \
     -I@OSS_CORE_SRCDIR@/src/net/udns/include
@@ -77,6 +76,7 @@ DISTCLEANFILES = Makefile.in
 %.hpp.gch: %.hpp
 	$(CXX) -D_REENTRANT -D_FILE_OFFSET_BITS=64 -O0 -g -O2 -fmessage-length=0 -Wall -Wformat -Wwrite-strings -Wpointer-arith -fPIC -DPIC -c $<
 
+	
 #
 # Unit Test
 #

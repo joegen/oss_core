@@ -50,6 +50,8 @@
 #include "OSS/Net/TurnServer.h"
 #endif
 
+#include "OSS/JS/JSBase.h"
+
 #define TCP_PORT_BASE 20000
 #define TCP_PORT_MAX  30000
 #define RTP_PROXY_THREAD_COUNT 10
@@ -734,6 +736,36 @@ int main(int argc, char** argv)
     options.displayUsage(std::cout);
     _exit(-1);
   }
+
+  static std::string gAccessList(
+  #include "apps/AccessList.js.h"
+  );
+  OSS::JS::JSBase::addGlobalScript(gAccessList);
+
+  static std::string gAuthProfile(
+    #include "apps/AuthProfile.js.h"
+  );
+  OSS::JS::JSBase::addGlobalScript(gAuthProfile);
+
+  static std::string gPropertyObject(
+    #include "apps/PropertyObject.js.h"
+  );
+  OSS::JS::JSBase::addGlobalScript(gPropertyObject);
+
+  static std::string gRouteProfile(
+    #include "apps/RouteProfile.js.h"
+  );
+  OSS::JS::JSBase::addGlobalScript(gRouteProfile);
+
+  static std::string gSIPMessage(
+    #include "apps/SIPMessage.js.h"
+  );
+  OSS::JS::JSBase::addGlobalScript(gSIPMessage);
+
+  static std::string gTransactionProfile(
+    #include "apps/TransactionProfile.js.h"
+  );
+  OSS::JS::JSBase::addGlobalScript(gTransactionProfile);
 
   saveProcessId(options);
   Config config;

@@ -32,10 +32,10 @@ endif
 
 
 js/duk/mod/object.js.inl: Makefile
-	$(srcdir)/js/scripts/doublequoteme $(srcdir)/js/duk/mod/object.js js/duk/mod/object.js.inl
+	$(top_srcdir)/config/doublequoteme $(srcdir)/js/duk/mod/object.js js/duk/mod/object.js.inl
 
 js/duk/mod/assert.js.inl: Makefile
-	$(srcdir)/js/scripts/doublequoteme $(srcdir)/js/duk/mod/assert.js js/duk/mod/assert.js.inl
+	$(top_srcdir)/config/doublequoteme $(srcdir)/js/duk/mod/assert.js js/duk/mod/assert.js.inl
 
 js/duk/mod/bson.js.inl: Makefile
-	$(srcdir)/js/scripts/doublequoteme $(srcdir)/js/duk/mod/bson.js js/duk/mod/bson.js.inl
+	$(top_srcdir)/config/doublequoteme $(srcdir)/js/duk/mod/bson.js js/duk/mod/bson.js.inl
