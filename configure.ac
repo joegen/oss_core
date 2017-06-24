@@ -474,6 +474,11 @@ CFLAGS="$CFLAGS $OSS_CXX_C_FLAGS $OSS_C_WARNINGS -fno-omit-frame-pointer -fno-co
 #
 AX_CXX_COMPILE_STDCXX([11], [], [optional])
 
+#
+# Used by applications building oss_core inline.  In our case, we set it to nothing
+#
+AC_SUBST([OSS_CORE_ADDITIONAL_INCLUDES], [''])
+
 
 
 AC_SUBST(CXXFLAGS)

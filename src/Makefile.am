@@ -25,7 +25,8 @@ AM_CPPFLAGS = \
     -I$(top_builddir)/src \
     -I@OSS_CORE_SRCDIR@/include \
     -I@OSS_CORE_SRCDIR@/src/utl/linux/pidfile \
-    -I@OSS_CORE_SRCDIR@/src/net/udns/include
+    -I@OSS_CORE_SRCDIR@/src/net/udns/include \
+    @OSS_CORE_ADDITIONAL_INCLUDES@
 
 
 
