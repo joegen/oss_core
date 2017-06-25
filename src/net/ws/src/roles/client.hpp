@@ -35,12 +35,13 @@
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/random.hpp>
-#include <boost/random/random_device.hpp>
+
 
 #include "../endpoint.hpp"
 #include "../uri.hpp"
 #include "../shared_const_buffer.hpp"
+
+#include "OSS/UTL/CoreUtils.h"
 
 #ifdef _MSC_VER
 // Disable "warning C4355: 'this' : used in base member initializer list".
@@ -206,12 +207,7 @@ public:
     
     client (boost::asio::io_service& m) 
      : m_endpoint(static_cast< endpoint_type& >(*this)),
-       m_io_service(m),
-       m_gen(m_rng,
-             boost::random::uniform_int_distribution<>(
-                (std::numeric_limits<int32_t>::min)(),
-                (std::numeric_limits<int32_t>::max)()
-             )) {}
+       m_io_service(m) {}
     
     connection_ptr get_connection(const std::string& u);
     
@@ -223,19 +219,12 @@ public:
     void reset();
 protected:
     bool is_server() const {return false;}
-    int32_t rand() {return m_gen();}
+    int32_t rand() {return OSS::getRandom();}
 private:
     void handle_connect(connection_ptr con, const boost::system::error_code& error);
     
     endpoint_type&              m_endpoint;
     boost::asio::io_service&    m_io_service;
-    
-    boost::random::random_device    m_rng;
-    boost::random::variate_generator<
-        boost::random::random_device&,
-        boost::random::uniform_int_distribution<>
-    > m_gen;
-    
     boost::shared_ptr<boost::asio::io_service::work> m_idle_worker;
 };
 
@@ -410,10 +399,9 @@ client<endpoint>::connect(connection_ptr con) {
     
     tcp::resolver::query query(con->get_host(),p.str());
     tcp::resolver::iterator iterator = resolver.resolve(query);
-    
-    boost::asio::async_connect(
-        con->get_raw_socket(),
-        iterator,
+
+    con->get_raw_socket().async_connect(
+        *iterator,
         boost::bind(
             &endpoint_type::handle_connect,
             this, // shared from this?
