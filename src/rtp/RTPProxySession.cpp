@@ -527,12 +527,18 @@ void RTPProxySession::handleInitialSDPOffer(
 
     bool createProxy = false;
     if (!_pManager->enableHairpins() && mediaAddress.compare(routeLocalInterface, false /*don't include port*/))
-      createProxy = false;
+    {
+      createProxy = rtpAttribute.allowHairPin;
+    }
     else if (!forceCreateProxy && mediaAddress.isValid()
       && mediaAddress.isPrivate() && mediaAddress != packetSourceIP)
+    {
       createProxy = true;
+    }
     else if(forceCreateProxy)
+    {
       createProxy = true;
+    }
 
     if (createProxy)
     {
@@ -622,12 +628,18 @@ void RTPProxySession::handleInitialSDPOffer(
 
     bool createProxy = false;
     if (!_pManager->enableHairpins() && mediaAddress.compare(routeLocalInterface, false /*don't include port*/))
-      createProxy = false;
+    {
+      createProxy = rtpAttribute.allowHairPin;
+    }
     else if (!forceCreateProxy && mediaAddress.isValid()
       && mediaAddress.isPrivate() && mediaAddress != packetSourceIP)
+    {
       createProxy = true;
+    }
     else if(forceCreateProxy)
+    {
       createProxy = true;
+    }
 
     if (createProxy)
     {
@@ -719,12 +731,18 @@ void RTPProxySession::handleInitialSDPOffer(
 
     bool createProxy = false;
     if (!_pManager->enableHairpins() && mediaAddress.compare(routeLocalInterface, false /*don't include port*/))
-      createProxy = false;
+    {
+      createProxy = rtpAttribute.allowHairPin;
+    }
     else if (!forceCreateProxy && mediaAddress.isValid()
       && mediaAddress.isPrivate() && mediaAddress != packetSourceIP)
+    {
       createProxy = true;
+    }
     else if(forceCreateProxy)
+    {
       createProxy = true;
+    }
 
     if (createProxy)
     {

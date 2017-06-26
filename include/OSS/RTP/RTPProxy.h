@@ -60,6 +60,7 @@ public:
     bool verbose;
     bool forceCreate;
     bool forcePEAEncryption;
+    bool allowHairPin;
     std::string callId;
     std::string from;
     std::string to;
@@ -77,6 +78,7 @@ public:
       resizerSamplesLeg2 = 0;
       countSessions = false;
       isRemoteRpc = false;
+      allowHairPin = false;
     }
   };
 

@@ -330,6 +330,7 @@ void RTPProxyManager::handleSDP(const std::string& /*method*/,
     json::String attr_to = args["attr.to"];
     json::Number attr_resizerSamplesLeg1 = args["attr.resizerSamplesLeg1"];
     json::Number attr_resizerSamplesLeg2 = args["attr.resizerSamplesLeg2"];
+    json::Boolean attr_allowHairPin = args["attr.allowHairPin"];
 
     std::string logId_(logId.Value());
     std::string sessionId_(sessionId.Value());
@@ -356,6 +357,7 @@ void RTPProxyManager::handleSDP(const std::string& /*method*/,
     attr.to = attr_to.Value();
     attr.verbose = attr_verbose.Value();
     attr.isRemoteRpc = true;
+    attr.allowHairPin = attr_allowHairPin.Value();
     
     handleSDP(logId_, sessionId_, sentBy_, packetSourceIP_, packetLocalInterface_, route_, routeLocalInterface_, requestType_, sdp_, attr);
 

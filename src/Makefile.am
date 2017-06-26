@@ -20,7 +20,6 @@ AM_CFLAGS = \
     -I$(top_builddir)/include
 
 AM_CPPFLAGS = \
-    -I/usr/include \
     -I$(top_builddir)/include \
     -I$(top_builddir)/src \
     -I@OSS_CORE_SRCDIR@/include \
