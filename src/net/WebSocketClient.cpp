@@ -19,6 +19,7 @@
 
 
 #include "OSS/Net/WebSocketClient.h"
+#include "OSS/Net/IPAddress.h"
 
 
 namespace OSS {
@@ -137,6 +138,44 @@ void WebSocketClient::Handler::on_pong_timeout(websocketpp::client::connection_p
   event.event = "on_pong_timeout";
   event.data = data;
   _pClient->_eventQueue.enqueue(event);
+}
+
+bool WebSocketClient::getRemoteAddress(IPAddress& address)
+{
+  if (!_pConnection)
+  {
+    return false;
+  }
+  
+  boost::system::error_code ec;
+  boost::asio::ip::tcp::endpoint ep = _pConnection->get_socket().remote_endpoint(ec);
+  if (ec)
+  {
+    return false;
+  }
+  
+  address = ep.address();
+  address.setPort(ep.port());
+  return true;
+}
+
+bool WebSocketClient::getLocalAddress(IPAddress& address)
+{
+  if (!_pConnection)
+  {
+    return false;
+  }
+  
+  boost::system::error_code ec;
+  boost::asio::ip::tcp::endpoint ep = _pConnection->get_socket().local_endpoint(ec);
+  if (ec)
+  {
+    return false;
+  }
+  
+  address = ep.address();
+  address.setPort(ep.port());
+  return true;
 }
 
 bool WebSocketClient::connect(const std::string& url)

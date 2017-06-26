@@ -275,6 +275,11 @@ public:
     }
     return ++_currentId;
   }
+  
+  Connection& connection()
+  {
+    return _connection;
+  }
 private:
   Connection _connection;
   TransactionMap _transactions;

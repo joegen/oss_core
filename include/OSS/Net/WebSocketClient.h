@@ -27,6 +27,7 @@
 #include "OSS/UTL/BlockingQueue.h"
 #include "OSS/UTL/Thread.h"
 #include "OSS/Net/WebSocket.h"
+#include "OSS/Net/IPAddress.h"
 
 
 namespace OSS {
@@ -54,6 +55,8 @@ public:
   void reset();
   void close();
   bool isOpen();
+  bool getRemoteAddress(IPAddress& address);
+  bool getLocalAddress(IPAddress& address);
 protected:
   class Handler : public websocketpp::client::handler
   {
