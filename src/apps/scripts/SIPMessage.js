@@ -284,6 +284,23 @@ SIPMessage.prototype.getRequestUriHostPort = function()
   return msgGetRequestUriHostPort(this._request);
 }
 
+SIPMessage.prototype.getRequestUriHost = function()
+  //
+  // This function returns the hostport portion of the request uri.
+  // Hostport refers to host:port tuple where port is optional.
+  //
+  // Parameters: void
+  //
+  // Return Type: String
+  //
+  // Usage:
+  //  var msg = new SIPMessage(request);
+  //  var host = msg.getRequestUriHost();
+  //
+{
+  return msgGetRequestUriHost(this._request);
+}
+
 SIPMessage.prototype.setRequestUriHostPort = function(hostPort)
   //
   // This function changes the hostport portion of the request uri.

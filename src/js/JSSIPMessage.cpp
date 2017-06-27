@@ -1332,6 +1332,26 @@ static jsval msgSetRequestUriHostPort(const jsargs& args)
   return jsbool::New(false);
 }
 
+static jsval msgGetRequestUriHost(const jsargs& args)
+{
+  if (args.Length() < 1)
+    return jsvoid();
+
+  jsscope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return jsvoid();
+
+  std::string requestURI;
+  if (SIPRequestLine::getURI(pMsg->startLine(), requestURI))
+  {
+    std::string host;
+    if (SIPURI::getHost(requestURI, host))
+      return jsstring::New(host.c_str());
+  }
+  return jsvoid();
+}
+
 jsval msgGetToUser(const jsargs& args)
 {
   if (args.Length() < 1)
@@ -1699,6 +1719,7 @@ void JSSIPMessage::initGlobalFuncs(OSS_HANDLE objectTemplate)
   global->Set(jsstring::New("msgSetRequestUriUser"), jsfunc::New(msgSetRequestUriUser));
   global->Set(jsstring::New("msgSetRequestUriHostPort"), jsfunc::New(msgSetRequestUriHostPort));
   global->Set(jsstring::New("msgGetRequestUriHostPort"), jsfunc::New(msgGetRequestUriHostPort));
+  global->Set(jsstring::New("msgGetRequestUriHost"), jsfunc::New(msgGetRequestUriHost));
   global->Set(jsstring::New("msgGetToUser"), jsfunc::New(msgGetToUser));
   global->Set(jsstring::New("msgSetToUser"), jsfunc::New(msgSetToUser));
   global->Set(jsstring::New("msgGetToHostPort"), jsfunc::New(msgGetToHostPort));
