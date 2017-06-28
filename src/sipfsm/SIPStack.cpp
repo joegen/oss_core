@@ -1036,7 +1036,7 @@ void SIPStack::sendRequestDirect(const SIPMessage::Ptr& pRequest,
       transportId="0";
     OSS_LOG_DEBUG(logId << "Sending request directly protocol=" << transport << " id=" << transportId);
     SIPTransportSession::Ptr client = _fsmDispatch.transport().createClientTransport(pRequest, localAddress, remoteAddress, transport, transportId);
-    if (client) 
+    if (client && !client->isEndpoint()) 
     {
       std::string isXOREncrypted = "0";
       pRequest->getProperty("xor", isXOREncrypted);
@@ -1048,6 +1048,7 @@ void SIPStack::sendRequestDirect(const SIPMessage::Ptr& pRequest,
       << " DST: " << remoteAddress.toIpPortString()
       << " ENC: " << isXOREncrypted;
       OSS::log_information(logMsg.str());
+      
       if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
         OSS::log_debug(pRequest->createLoggerData());
       client->writeMessage(pRequest, remoteAddress.toString(), OSS::string_from_number(remoteAddress.getPort()));

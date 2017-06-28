@@ -92,6 +92,7 @@ public:
   virtual bool clientConnect(const OSS::Net::IPAddress& target);
     /// Connect to a remote host
 
+  virtual bool isEndpointTransport(); 
 protected:
   EndpointListener* _pEndpoint;
 };
@@ -99,6 +100,11 @@ protected:
 //
 // Inlines
 //
+
+inline bool EndpointConnection::isEndpointTransport() 
+{
+  return false;
+} 
   
 } } 
 

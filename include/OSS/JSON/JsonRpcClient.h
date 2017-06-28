@@ -162,14 +162,20 @@ public:
       EventData event;
       _connection.receive(event);
       
-      if (event.event == "on_close" && closeHandler) 
+      if (event.event == "on_close") 
       {
-        closeHandler(identifier);
+        if (closeHandler)
+        {
+          closeHandler(identifier);
+        }
         break;
       }
-      else if (event.event == "on_fail" && failHandler) 
+      else if (event.event == "on_fail") 
       {
-        failHandler(identifier);
+        if (failHandler)
+        {
+          failHandler(identifier);
+        }
         break;
       }
       else if (event.event == "on_message" )

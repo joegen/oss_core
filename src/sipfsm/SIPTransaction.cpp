@@ -157,7 +157,7 @@ void SIPTransaction::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
   }
 #endif
 
-  if (isParent())
+  if (isParent() && !pTransport->isEndpoint())
   {
     std::ostringstream logMsg;
     logMsg << _logId << "<<< " << pMsg->startLine()
@@ -442,17 +442,20 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg)
   }
 #endif
 
-  std::ostringstream logMsg;
-  logMsg << _logId << ">>> " << pMsg->startLine()
-  << " LEN: " << pMsg->data().size()
-  << " SRC: " << _transport->getLocalAddress().toIpPortString()
-  << " DST: " << _transport->getRemoteAddress().toIpPortString()
-  << " ENC: " << _isXOREncrypted
-  << " PROT: " << _transport->getTransportScheme();
-  OSS::log_notice(logMsg.str());
+  if (!_transport->isEndpoint())
+  {
+    std::ostringstream logMsg;
+    logMsg << _logId << ">>> " << pMsg->startLine()
+    << " LEN: " << pMsg->data().size()
+    << " SRC: " << _transport->getLocalAddress().toIpPortString()
+    << " DST: " << _transport->getRemoteAddress().toIpPortString()
+    << " ENC: " << _isXOREncrypted
+    << " PROT: " << _transport->getTransportScheme();
+    OSS::log_notice(logMsg.str());
 
-  if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
-    OSS::log_debug(pMsg->createLoggerData());
+    if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
+      OSS::log_debug(pMsg->createLoggerData());
+  }
 
   if (_fsm->onSendMessage(pMsg))
   {
@@ -486,16 +489,19 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg, const OSS::Net::IPAddres
   
   if (_fsm->onSendMessage(pMsg))
   {
-    std::ostringstream logMsg;
-    logMsg << _logId << ">>> " << pMsg->startLine()
-    << " LEN: " << pMsg->data().size()
-    << " SRC: " << _transport->getLocalAddress().toIpPortString()
-    << " DST: " << remoteAddress.toIpPortString()
-    << " ENC: " << _isXOREncrypted
-    << " PROT: " << _transport->getTransportScheme();
-    OSS::log_notice(logMsg.str());
-    if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
-      OSS::log_debug(pMsg->createLoggerData());
+    if (!_transport->isEndpoint())
+    {
+      std::ostringstream logMsg;
+      logMsg << _logId << ">>> " << pMsg->startLine()
+      << " LEN: " << pMsg->data().size()
+      << " SRC: " << _transport->getLocalAddress().toIpPortString()
+      << " DST: " << remoteAddress.toIpPortString()
+      << " ENC: " << _isXOREncrypted
+      << " PROT: " << _transport->getTransportScheme();
+      OSS::log_notice(logMsg.str());
+      if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
+        OSS::log_debug(pMsg->createLoggerData());
+    }
 
     _transport->writeMessage(pMsg,
     remoteAddress.toString(),

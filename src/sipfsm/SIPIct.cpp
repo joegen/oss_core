@@ -317,18 +317,21 @@ void SIPIct::handleSendAck(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTrans
     _pAck->commitData();
   }
 
-  std::ostringstream logMsg;
-  logMsg << pTransaction->getLogId() << ">>> " << _pAck->startLine()
-  << " LEN: " << _pAck->data().size()
-  << " SRC: " << pTransport->getLocalAddress().toIpPortString()
-  << " DST: " << pTransaction->remoteAddress().toString()
-  << " ENC: " << pTransaction->isXOREncrypted()
-  << " PROT: " << pTransport->getTransportScheme();
+  if (!pTransport->isEndpoint())
+  {
+    std::ostringstream logMsg;
+    logMsg << pTransaction->getLogId() << ">>> " << _pAck->startLine()
+    << " LEN: " << _pAck->data().size()
+    << " SRC: " << pTransport->getLocalAddress().toIpPortString()
+    << " DST: " << pTransaction->remoteAddress().toString()
+    << " ENC: " << pTransaction->isXOREncrypted()
+    << " PROT: " << pTransport->getTransportScheme();
 
-  OSS::log_notice(logMsg.str());
-  
-  if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
-    OSS::log_debug(_pAck->createLoggerData());
+    OSS::log_notice(logMsg.str());
+
+    if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
+      OSS::log_debug(_pAck->createLoggerData());
+  }
 
   if (pTransport->isReliableTransport())
   {

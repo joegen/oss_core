@@ -53,6 +53,7 @@ public:
   bool receive(EventData& event, long timeout);
   int getPollfd();
   void close();
+  void signal_close();
   bool isOpen();
   bool getRemoteAddress(IPAddress& address);
   bool getLocalAddress(IPAddress& address);

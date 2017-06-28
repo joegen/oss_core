@@ -44,6 +44,13 @@ WebSocketClient::~WebSocketClient()
   delete _pClient;
 }
 
+void WebSocketClient::signal_close()
+{
+  WebSocketClient::EventData event;
+  event.event = "on_close";
+  event.data = "Connection closed";
+  _eventQueue.enqueue(event);
+}
 void WebSocketClient::close()
 {
   OSS::mutex_critic_sec_lock lock(_ioMutex);
@@ -126,10 +133,7 @@ void WebSocketClient::Handler::on_open(websocketpp::client::connection_ptr pConn
 void WebSocketClient::Handler::on_close(websocketpp::client::connection_ptr pConnection)
 {
   _pClient->_isOpen = false;
-  WebSocketClient::EventData event;
-  event.event = "on_close";
-  event.data = "Connection closed";
-  _pClient->_eventQueue.enqueue(event);
+  _pClient->signal_close();
 }
 
 void WebSocketClient::Handler::on_fail(websocketpp::client::connection_ptr pConnection)
