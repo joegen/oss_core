@@ -52,12 +52,13 @@ public:
   void receive(EventData& event);
   bool receive(EventData& event, long timeout);
   int getPollfd();
-  void reset();
   void close();
   bool isOpen();
   bool getRemoteAddress(IPAddress& address);
   bool getLocalAddress(IPAddress& address);
 protected:
+  void on_close();
+  void on_fail();
   class Handler : public websocketpp::client::handler
   {
   public:

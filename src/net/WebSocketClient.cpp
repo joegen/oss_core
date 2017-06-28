@@ -20,6 +20,7 @@
 
 #include "OSS/Net/WebSocketClient.h"
 #include "OSS/Net/IPAddress.h"
+#include "OSS/UTL/Logger.h"
 
 
 namespace OSS {
@@ -40,6 +41,7 @@ WebSocketClient::WebSocketClient() :
 WebSocketClient::~WebSocketClient()
 {
   close();
+  delete _pClient;
 }
 
 void WebSocketClient::close()
@@ -56,20 +58,43 @@ void WebSocketClient::close()
     delete _pClientThread;
     _pClientThread = 0;
   }
-  delete _pClient;
-  _pClient = 0;
   _isOpen = false;
+ 
 }
 
-void WebSocketClient::reset()
+bool WebSocketClient::connect(const std::string& url)
 {
-  close();
-  
   OSS::mutex_critic_sec_lock lock(_ioMutex);
-  _pHandler = Handler::ptr(new Handler(this));
-  _pClient = new websocketpp::client(_pHandler);
-  _pClient->alog().unset_level(websocketpp::log::alevel::ALL);
-  _pClient->elog().unset_level(websocketpp::log::elevel::ALL);
+  if (_pClientThread)
+  {
+    return false;
+  }
+  
+  try
+  {
+    try
+    {
+      _pConnection = _pClient->get_connection(url);
+    }
+    catch(...)
+    {
+      _pClient->reset();
+      _pConnection = _pClient->get_connection(url);
+    }
+    if (!_pConnection)
+    {
+      OSS_LOG_ERROR("Client connection is null while calling WebSocketClient::connect");
+      return false;
+    }
+    _pClient->connect(_pConnection);
+    _pClientThread = new boost::thread(boost::bind(&websocketpp::client::run, _pClient, false));
+  }
+  catch(std::exception& e)
+  {
+    OSS_LOG_ERROR("WebSocketClient::connect Exception: "  << e.what());
+    return false;
+  }
+  return true;
 }
   
 WebSocketClient::Handler::Handler(WebSocketClient* pClient) :
@@ -142,6 +167,7 @@ void WebSocketClient::Handler::on_pong_timeout(websocketpp::client::connection_p
 
 bool WebSocketClient::getRemoteAddress(IPAddress& address)
 {
+  OSS::mutex_critic_sec_lock lock(_ioMutex);
   if (!_pConnection)
   {
     return false;
@@ -161,6 +187,7 @@ bool WebSocketClient::getRemoteAddress(IPAddress& address)
 
 bool WebSocketClient::getLocalAddress(IPAddress& address)
 {
+  OSS::mutex_critic_sec_lock lock(_ioMutex);
   if (!_pConnection)
   {
     return false;
@@ -178,35 +205,10 @@ bool WebSocketClient::getLocalAddress(IPAddress& address)
   return true;
 }
 
-bool WebSocketClient::connect(const std::string& url)
-{
-  OSS::mutex_critic_sec_lock lock(_ioMutex);
-  if (_pClientThread || _pConnection)
-  {
-    return false;
-  }
-  
-  try
-  {
-    _pConnection = _pClient->get_connection(url);
-    if (!_pConnection)
-    {
-      return false;
-    }
-    _pClient->connect(_pConnection);
-    _pClientThread = new boost::thread(boost::bind(&websocketpp::client::run, _pClient, false));
-  }
-  catch(std::exception& e)
-  {
-    return false;
-  }
-  return true;
-}
-
 bool WebSocketClient::send(const std::string& data)
 {
   OSS::mutex_critic_sec_lock lock(_ioMutex);
-  if (!_pClientThread || !_pConnection)
+  if (!_pClient || !_pClientThread || !_pConnection)
   {
     return false;
   }

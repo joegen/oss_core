@@ -23,10 +23,13 @@
 
 
 #include <map>
+#include <boost/bind.hpp>
+#include <boost/function.hpp>
 #include "OSS/JSON/reader.h"
 #include "OSS/JSON/writer.h"
 #include "OSS/UTL/BlockingQueue.h"
 #include "OSS/UTL/Thread.h"
+#include "OSS/UTL/Logger.h"
 
 
 namespace OSS {
@@ -112,6 +115,13 @@ private:
   }
 
 public:
+  typedef boost::function<void (const std::string&)> CloseHandler;
+  typedef boost::function<void (const std::string&)> FailHandler;
+  
+  FailHandler failHandler;
+  CloseHandler closeHandler;
+  std::string identifier;
+  
   JsonRpcClient()
   {
     _currentId = 0;
@@ -136,6 +146,7 @@ public:
   
   bool connect(const std::string& url)
   {
+    close();
     if (_pEventThread || _connection.isOpen() || !_connection.connect(url))
     {
       return false;
@@ -151,8 +162,14 @@ public:
       EventData event;
       _connection.receive(event);
       
-      if (event.event == "on_close" || event.event == "on_fail")
+      if (event.event == "on_close" && closeHandler) 
       {
+        closeHandler(identifier);
+        break;
+      }
+      else if (event.event == "on_fail" && failHandler) 
+      {
+        failHandler(identifier);
         break;
       }
       else if (event.event == "on_message" )
@@ -259,11 +276,6 @@ public:
       return false;
     }
     return true;
-  }
-  
-  void reset()
-  {
-    _connection.reset();
   }
   
   int generateId()
