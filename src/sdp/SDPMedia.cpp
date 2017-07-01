@@ -560,8 +560,6 @@ unsigned short SDPMedia::getDataPort() const
 
 void SDPMedia::setDataPort(unsigned short port)
 {
-  OSS_VERIFY(port != 0);
-
   WriteLock lock(_rwMutex);
   SDPMedia::iterator iter = const_cast<SDPMedia*>(this)->begin();
   
