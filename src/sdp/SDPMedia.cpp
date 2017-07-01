@@ -233,7 +233,7 @@ void SDPMedia::setRTPProfile(Profile prof)
         }
         else
         {
-          strm << tokens[1];
+          strm << tokens[i];
           if (i != tokens.size() - 1)
           {
             strm << " ";
