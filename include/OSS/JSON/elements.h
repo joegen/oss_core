@@ -52,7 +52,14 @@ class Null;
 class Exception : public std::runtime_error
 {
 public:
+   Exception();
+   Exception(const Exception& e);
    Exception(const std::string& sMessage);
+   virtual ~Exception() _GLIBCXX_USE_NOEXCEPT;
+   virtual const char* what() const _GLIBCXX_USE_NOEXCEPT;
+   Exception& operator=(const Exception& e);
+private:
+  std::string msg;
 };
 
 

@@ -24,7 +24,41 @@ namespace json
 
 
 inline Exception::Exception(const std::string& sMessage) :
-   std::runtime_error(sMessage) {}
+  std::runtime_error(sMessage),
+  msg(sMessage)
+{
+}
+
+inline Exception::Exception() :
+  std::runtime_error("Unknown Exception")
+{
+  msg = std::runtime_error::what();
+}
+
+inline Exception::Exception(const Exception& e) :
+  std::runtime_error(e.msg)
+{
+  msg = e.msg;
+}
+
+inline Exception::~Exception() _GLIBCXX_USE_NOEXCEPT
+{
+}
+
+
+inline const char* Exception::what() const  _GLIBCXX_USE_NOEXCEPT
+{
+  if (!msg.empty())
+    return msg.c_str();
+  return std::runtime_error::what();
+}
+
+inline Exception& Exception::operator=(const Exception& e)
+{
+  std::runtime_error::operator =(dynamic_cast<const std::runtime_error&>(e));
+  msg = e.msg;
+  return *this;
+}
 
 
 /////////////////////////

@@ -395,7 +395,7 @@ inline void ServiceOptions::prepareLogger()
 
 inline void ServiceOptions::addOptionFlag(char shortForm, const std::string& optionName, const std::string description, OptionType type)
 {
-  boost::program_options::options_description* options;
+  boost::program_options::options_description* options = 0;
   if (type == GeneralOption)
     options = &_GeneralOptions;
   else if (type == DaemonOption)
@@ -405,9 +405,12 @@ inline void ServiceOptions::addOptionFlag(char shortForm, const std::string& opt
   else
     assert(false);
 
-  std::ostringstream strm;
-  strm << optionName << "," << shortForm;
-  options->add_options()(strm.str().c_str(), description.c_str());
+  if (options)
+  {
+    std::ostringstream strm;
+    strm << optionName << "," << shortForm;
+    options->add_options()(strm.str().c_str(), description.c_str());
+  }
 }
 
 inline void ServiceOptions::addOptionFlag(const std::string& optionName, const std::string description, OptionType type)

@@ -66,6 +66,7 @@ include rtp/src.am
 include zmq/src.am
 include b2bua/src.am
 include js/src.am
+include json/src.am
 
 DISTCLEANFILES = Makefile.in
 
