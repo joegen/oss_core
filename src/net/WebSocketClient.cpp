@@ -169,7 +169,7 @@ void WebSocketClient::Handler::on_pong_timeout(websocketpp::client::connection_p
   _pClient->_eventQueue.enqueue(event);
 }
 
-bool WebSocketClient::getRemoteAddress(IPAddress& address)
+bool WebSocketClient::getRemoteAddress(OSS::Net::IPAddress& address)
 {
   OSS::mutex_critic_sec_lock lock(_ioMutex);
   if (!_pConnection)
@@ -189,7 +189,7 @@ bool WebSocketClient::getRemoteAddress(IPAddress& address)
   return true;
 }
 
-bool WebSocketClient::getLocalAddress(IPAddress& address)
+bool WebSocketClient::getLocalAddress(OSS::Net::IPAddress& address)
 {
   OSS::mutex_critic_sec_lock lock(_ioMutex);
   if (!_pConnection)

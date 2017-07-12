@@ -236,17 +236,20 @@ public:
       json::Writer::Write(request, requestStrm);
       if (!_connection.send(requestStrm.str()))
       {
+        OSS_LOG_DEBUG("Unable to send JSON-RPC request " << method);
         destroyTransaction(pTransaction->id());
         return false;
       }
     }
     catch(json::Exception& e)
     {
+      OSS_LOG_DEBUG("Unable to send JSON-RPC request: " << e.what());
       destroyTransaction(pTransaction->id());
       return false;
     }
     catch(std::exception& e)
     {
+      OSS_LOG_DEBUG("Unable to send JSON-RPC request: " << e.what());
       destroyTransaction(pTransaction->id());
       return false;
     }
@@ -256,6 +259,10 @@ public:
     if (ret && !answer.empty() && pTransaction)
     {
       response = *(pTransaction->getJSON());
+    }
+    else if (!ret)
+    {
+      OSS_LOG_DEBUG("Unable to receive JSON-RPC response");
     }
     destroyTransaction(pTransaction->id());
     return ret;
