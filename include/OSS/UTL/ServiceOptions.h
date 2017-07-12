@@ -122,6 +122,8 @@ public:
   pid_t  writePidFile(const char* pidFile, bool exclusive);
   
 protected:
+  boost::program_options::options_description* options_description(OptionType type);
+  
   int _argc;
   char** _argv;
   std::string _daemonName;
@@ -393,7 +395,7 @@ inline void ServiceOptions::prepareLogger()
   }
 }
 
-inline void ServiceOptions::addOptionFlag(char shortForm, const std::string& optionName, const std::string description, OptionType type)
+inline boost::program_options::options_description* ServiceOptions::options_description(OptionType type)
 {
   boost::program_options::options_description* options = 0;
   if (type == GeneralOption)
@@ -404,42 +406,27 @@ inline void ServiceOptions::addOptionFlag(char shortForm, const std::string& opt
     options = &_configOptions;
   else
     assert(false);
+  return options;
+}
 
-  if (options)
-  {
-    std::ostringstream strm;
-    strm << optionName << "," << shortForm;
-    options->add_options()(strm.str().c_str(), description.c_str());
-  }
+inline void ServiceOptions::addOptionFlag(char shortForm, const std::string& optionName, const std::string description, OptionType type)
+{
+  boost::program_options::options_description* options = options_description(type);
+  std::ostringstream strm;
+  strm << optionName << "," << shortForm;
+  options->add_options()(strm.str().c_str(), description.c_str());
+
 }
 
 inline void ServiceOptions::addOptionFlag(const std::string& optionName, const std::string description, OptionType type)
 {
-  boost::program_options::options_description* options;
-  if (type == GeneralOption)
-    options = &_GeneralOptions;
-  else if (type == DaemonOption)
-    options = &_daemonOptions;
-  else if (type == ConfigOption)
-    options = &_configOptions;
-  else
-    assert(false);
-
+  boost::program_options::options_description* options = options_description(type);
   options->add_options()(optionName.c_str(), description.c_str());
 }
 
 inline void ServiceOptions::addOptionString(char shortForm, const std::string& optionName, const std::string description, OptionType type)
 {
-  boost::program_options::options_description* options;
-  if (type == GeneralOption)
-    options = &_GeneralOptions;
-  else if (type == DaemonOption)
-    options = &_daemonOptions;
-  else if (type == ConfigOption)
-    options = &_configOptions;
-  else
-    assert(false);
-
+  boost::program_options::options_description* options = options_description(type);
   std::ostringstream strm;
   strm << optionName << "," << shortForm;
   options->add_options()(strm.str().c_str(), boost::program_options::value<std::string>(), description.c_str());
@@ -447,31 +434,13 @@ inline void ServiceOptions::addOptionString(char shortForm, const std::string& o
 
 inline void ServiceOptions::addOptionString(const std::string& optionName, const std::string description, OptionType type)
 {
-  boost::program_options::options_description* options;
-  if (type == GeneralOption)
-    options = &_GeneralOptions;
-  else if (type == DaemonOption)
-    options = &_daemonOptions;
-  else if (type == ConfigOption)
-    options = &_configOptions;
-  else
-    assert(false);
-
+  boost::program_options::options_description* options = options_description(type);
   options->add_options()(optionName.c_str(), boost::program_options::value<std::string>(), description.c_str());
 }
 
 inline void ServiceOptions::addOptionStringVector(char shortForm, const std::string& optionName, const std::string description, OptionType type)
 {
-  boost::program_options::options_description* options;
-  if (type == GeneralOption)
-    options = &_GeneralOptions;
-  else if (type == DaemonOption)
-    options = &_daemonOptions;
-  else if (type == ConfigOption)
-    options = &_configOptions;
-  else
-    assert(false);
-
+  boost::program_options::options_description* options = options_description(type);
   std::ostringstream strm;
   strm << optionName << "," << shortForm;
   options->add_options()(strm.str().c_str(), boost::program_options::value<std::vector<std::string> >(), description.c_str());
@@ -479,31 +448,13 @@ inline void ServiceOptions::addOptionStringVector(char shortForm, const std::str
 
 inline void ServiceOptions::addOptionStringVector(const std::string& optionName, const std::string description, OptionType type)
 {
-  boost::program_options::options_description* options;
-  if (type == GeneralOption)
-    options = &_GeneralOptions;
-  else if (type == DaemonOption)
-    options = &_daemonOptions;
-  else if (type == ConfigOption)
-    options = &_configOptions;
-  else
-    assert(false);
-
+  boost::program_options::options_description* options = options_description(type);
   options->add_options()(optionName.c_str(), boost::program_options::value<std::vector<std::string> >(), description.c_str());
 }
 
 inline void ServiceOptions::addOptionInt(char shortForm, const std::string& optionName, const std::string description, OptionType type)
 {
-  boost::program_options::options_description* options;
-  if (type == GeneralOption)
-    options = &_GeneralOptions;
-  else if (type == DaemonOption)
-    options = &_daemonOptions;
-  else if (type == ConfigOption)
-    options = &_configOptions;
-  else
-    assert(false);
-
+  boost::program_options::options_description* options = options_description(type);
   std::ostringstream strm;
   strm << optionName << "," << shortForm;
   options->add_options()(strm.str().c_str(), boost::program_options::value<int>(), description.c_str());
@@ -511,31 +462,13 @@ inline void ServiceOptions::addOptionInt(char shortForm, const std::string& opti
 
 inline void ServiceOptions::addOptionInt(const std::string& optionName, const std::string description, OptionType type)
 {
-  boost::program_options::options_description* options;
-  if (type == GeneralOption)
-    options = &_GeneralOptions;
-  else if (type == DaemonOption)
-    options = &_daemonOptions;
-  else if (type == ConfigOption)
-    options = &_configOptions;
-  else
-    assert(false);
-
+  boost::program_options::options_description* options = options_description(type);
   options->add_options()(optionName.c_str(), boost::program_options::value<int>(), description.c_str());
 }
 
 inline void ServiceOptions::addOptionIntVector(char shortForm, const std::string& optionName, const std::string description, OptionType type)
 {
-  boost::program_options::options_description* options;
-  if (type == GeneralOption)
-    options = &_GeneralOptions;
-  else if (type == DaemonOption)
-    options = &_daemonOptions;
-  else if (type == ConfigOption)
-    options = &_configOptions;
-  else
-    assert(false);
-
+  boost::program_options::options_description* options = options_description(type);
   std::ostringstream strm;
   strm << optionName << "," << shortForm;
   options->add_options()(strm.str().c_str(), boost::program_options::value<std::vector<int> >(), description.c_str());
@@ -543,16 +476,7 @@ inline void ServiceOptions::addOptionIntVector(char shortForm, const std::string
 
 inline void ServiceOptions::addOptionIntVector(const std::string& optionName, const std::string description, OptionType type)
 {
-  boost::program_options::options_description* options;
-  if (type == GeneralOption)
-    options = &_GeneralOptions;
-  else if (type == DaemonOption)
-    options = &_daemonOptions;
-  else if (type == ConfigOption)
-    options = &_configOptions;
-  else
-    assert(false);
-
+  boost::program_options::options_description* options = options_description(type);
   options->add_options()(optionName.c_str(), boost::program_options::value<std::vector<int> >(), description.c_str());
 }
 
