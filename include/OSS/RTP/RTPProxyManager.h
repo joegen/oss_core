@@ -94,11 +94,11 @@ public:
   void handleSDP(
     const std::string& logId,
     const std::string& sessionId,
-    const OSS::Net::IPAddress& sentBy,
-    const OSS::Net::IPAddress& packetSourceIP,
-    const OSS::Net::IPAddress& packetLocalInterface,
-    const OSS::Net::IPAddress& route,
-    const OSS::Net::IPAddress& routeLocalInterface,
+    const OSS::Net::IPAddress& sentBy, // The top most Via sentby parameter
+    const OSS::Net::IPAddress& packetSourceIP, // The source address of the SIP request
+    const OSS::Net::IPAddress& packetLocalInterface, // The local transport address that received the request
+    const OSS::Net::IPAddress& route, // The address of the remote SIP target
+    const OSS::Net::IPAddress& routeLocalInterface, // The local address to be used to communicate to the remote SIP target
     RTPProxySession::RequestType requestType,
     std::string& sdp,
     RTPProxy::Attributes& rtpAttribute);
