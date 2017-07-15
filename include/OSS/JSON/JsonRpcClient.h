@@ -60,7 +60,7 @@ public:
     return _responseQueue.try_dequeue(response, timeout);
   }
 
-  void queueReponse(json::Object* json, const std::string& response)
+  void queueResponse(json::Object* json, const std::string& response)
   {
     delete _pResponse;
     _pResponse = json;
@@ -122,10 +122,26 @@ public:
   CloseHandler closeHandler;
   std::string identifier;
   
+  const std::string& getUrl() const
+  {
+    return _url;
+  }
+  
+  bool isConnected()
+  {
+    return _isConnected;
+  }
+protected:
+  int _connectTransactionId;
+  std::string _url;
+  bool _isConnected;
+ 
+public:
   JsonRpcClient()
   {
     _currentId = 0;
     _pEventThread = 0;
+    _connectTransactionId = -1;
   }
   
   ~JsonRpcClient()
@@ -144,15 +160,27 @@ public:
     }
   }
   
-  bool connect(const std::string& url)
+  bool connect(const std::string& url, long timeout = 5000)
   {
+    _url = url;
     close();
     if (_pEventThread || _connection.isOpen() || !_connection.connect(url))
     {
       return false;
     }
+    JsonRpcTransaction::Ptr pTransaction = createTransaction();
+    _connectTransactionId = pTransaction->id();
     _pEventThread = new boost::thread(boost::bind(&JsonRpcClient::processEvents, this));
-    return true;
+    
+    bool opened = false;
+    std::string answer;
+    if (pTransaction->read(answer, timeout))
+    {
+      opened = (answer == "on_open");
+    }
+    _connectTransactionId = -1;
+    destroyTransaction(pTransaction->id());
+    return opened;
   }
   
   void processEvents()
@@ -164,22 +192,45 @@ public:
       
       if (event.event == "on_close") 
       {
+        _isConnected = false;
         if (closeHandler)
         {
           closeHandler(identifier);
+        }
+        if (_connectTransactionId != -1)
+        {
+          JsonRpcTransaction::Ptr pTransaction = findTransaction(_connectTransactionId);
+          if (pTransaction)
+          {
+            pTransaction->queueResponse(0, "on_close");
+          }
         }
         break;
       }
       else if (event.event == "on_fail") 
       {
+        _isConnected = false;
         if (failHandler)
         {
           failHandler(identifier);
         }
         break;
       }
+      else if (event.event == "on_open") 
+      {
+        _isConnected = true;
+        if (_connectTransactionId != -1)
+        {
+          JsonRpcTransaction::Ptr pTransaction = findTransaction(_connectTransactionId);
+          if (pTransaction)
+          {
+            pTransaction->queueResponse(0, "on_open");
+          }
+        }
+      }
       else if (event.event == "on_message" )
       {
+        _isConnected = true;
         json::Object* pResponse = new json::Object();
         try
         {
@@ -193,7 +244,7 @@ public:
             JsonRpcTransaction::Ptr pTransaction = findTransaction(id.Value());
             if (pTransaction)
             {
-              pTransaction->queueReponse(pResponse, strm.str());
+              pTransaction->queueResponse(pResponse, strm.str());
             }
             else
             {
@@ -219,11 +270,12 @@ public:
   
   bool call(const std::string& method, const json::Object& params, json::Object& response, long timeout)
   {
-    JsonRpcTransaction::Ptr pTransaction = createTransaction();
-    if (!pTransaction)
+    if (!_isConnected)
     {
       return false;
     }
+    
+    JsonRpcTransaction::Ptr pTransaction = createTransaction();
 
     try
     {
@@ -270,6 +322,11 @@ public:
   
   void notify(const std::string& method, const json::Object& params)
   {
+    if (!_isConnected)
+    {
+      return false;
+    }
+    
     try
     {
       std::ostringstream requestStrm;
