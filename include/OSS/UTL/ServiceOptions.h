@@ -567,6 +567,10 @@ inline bool ServiceOptions::getOption(const std::string& optionName, int& value)
         return false;
       }
     }
+    else
+    {
+      return false;
+    }
   }
   else
   {
