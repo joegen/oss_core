@@ -77,7 +77,14 @@ liboss_core_la_SOURCES +=  \
     net/ws/src/sockets/socket_base.hpp \
     net/ws/src/sockets/tls.hpp \
     net/ws/src/utf8_validator/utf8_validator.hpp \
-    net/WebSocketClient.cpp
+    net/WebSocketClient.cpp \
+    net/WebSocketServer.cpp
+endif
+
+if ENABLE_FEATURE_ZMQ
+liboss_core_la_SOURCES +=  \
+    net/ZMQSocketClient.cpp \
+    net/ZMQSocketServer.cpp
 endif
 
 liboss_core_la_SOURCES +=  \

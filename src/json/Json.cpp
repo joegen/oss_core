@@ -26,13 +26,13 @@ bool json_parse_string(const std::string& jsonString, OSS::JSON::Object& object,
   return true;
 }
 
-bool jsong_object_to_string(const OSS::JSON::Object& object, std::string& jsonString)
+bool json_object_to_string(const OSS::JSON::Object& object, std::string& jsonString)
 {
   OSS::JSON::Exception e;
-  return jsong_object_to_string(object, jsonString, e);
+  return json_object_to_string(object, jsonString, e);
 }
 
-bool jsong_object_to_string(const OSS::JSON::Object& object, std::string& jsonString, OSS::JSON::Exception& e)
+bool json_object_to_string(const OSS::JSON::Object& object, std::string& jsonString, OSS::JSON::Exception& e)
 {
   try
   {

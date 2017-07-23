@@ -25,11 +25,11 @@
 #include <map>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
-#include "OSS/JSON/reader.h"
-#include "OSS/JSON/writer.h"
+#include "OSS/JSON/Json.h"
 #include "OSS/UTL/BlockingQueue.h"
 #include "OSS/UTL/Thread.h"
 #include "OSS/UTL/Logger.h"
+#include "OSS/Net/ClientTransport.h"
 
 
 namespace OSS {
@@ -79,7 +79,7 @@ private:
 
 typedef std::map<int, JsonRpcTransaction::Ptr> TransactionMap;  
 
-template <typename Connection, typename EventData>
+template <typename Connection>
 class JsonRpcClient
 {
 private:
@@ -117,6 +117,7 @@ private:
 public:
   typedef boost::function<void (const std::string&)> CloseHandler;
   typedef boost::function<void (const std::string&)> FailHandler;
+  typedef OSS::Net::ClientTransport Transport;
   
   FailHandler failHandler;
   CloseHandler closeHandler;
@@ -135,6 +136,7 @@ protected:
   int _connectTransactionId;
   std::string _url;
   bool _isConnected;
+  bool _isTerminated;
  
 public:
   JsonRpcClient()
@@ -142,6 +144,8 @@ public:
     _currentId = 0;
     _pEventThread = 0;
     _connectTransactionId = -1;
+    _isTerminated = false;
+    _isConnected = false;
   }
   
   ~JsonRpcClient()
@@ -151,13 +155,16 @@ public:
   
   void close()
   {
-    _connection.close();
-    if (_pEventThread)
+    if (_isTerminated || !_pEventThread)
     {
-      _pEventThread->join();
-      delete _pEventThread;
-      _pEventThread = 0;
+      return;
     }
+    _connection.close();
+    _isTerminated = true;
+    _pEventThread->join();
+    delete _pEventThread;
+    _pEventThread = 0;
+
   }
   
   bool connect(const std::string& url, long timeout = 5000)
@@ -166,6 +173,7 @@ public:
     close();
     if (_pEventThread || _connection.isOpen() || !_connection.connect(url))
     {
+      OSS_LOG_ERROR("JsonRpcClient unable to connect to " << url);
       return false;
     }
     JsonRpcTransaction::Ptr pTransaction = createTransaction();
@@ -177,6 +185,11 @@ public:
     if (pTransaction->read(answer, timeout))
     {
       opened = (answer == "on_open");
+      OSS_LOG_DEBUG("JsonRpcClient got signal " << answer);
+    }
+    else
+    {
+      OSS_LOG_DEBUG("JsonRpcClient NO signal from server ");
     }
     _connectTransactionId = -1;
     destroyTransaction(pTransaction->id());
@@ -185,12 +198,15 @@ public:
   
   void processEvents()
   {
-    while (true)
+    while (!_isTerminated)
     {
-      EventData event;
-      _connection.receive(event);
+      Transport::EventData event;
+      if (!_connection.receive(event, 10))
+      {
+        continue;
+      }
       
-      if (event.event == "on_close") 
+      if (event.event == Transport::EventClose) 
       {
         _isConnected = false;
         if (closeHandler)
@@ -207,7 +223,7 @@ public:
         }
         break;
       }
-      else if (event.event == "on_fail") 
+      else if (event.event == Transport::EventFail) 
       {
         _isConnected = false;
         if (failHandler)
@@ -216,7 +232,7 @@ public:
         }
         break;
       }
-      else if (event.event == "on_open") 
+      else if (event.event == Transport::EventOpen) 
       {
         _isConnected = true;
         if (_connectTransactionId != -1)
@@ -228,7 +244,7 @@ public:
           }
         }
       }
-      else if (event.event == "on_message" )
+      else if (event.event == Transport::EventMessage)
       {
         _isConnected = true;
         json::Object* pResponse = new json::Object();
@@ -266,12 +282,15 @@ public:
         // ignore for now
       }
     }
+    OSS_LOG_DEBUG("JsonRpcClient thread TERMINATED");
   }
   
   bool call(const std::string& method, const json::Object& params, json::Object& response, long timeout)
   {
+    OSS_LOG_DEBUG("JsonRpcClient::call method: " << method << " ENTER");
     if (!_isConnected)
     {
+      OSS_LOG_DEBUG("JsonRpcClient::call method: " << method << " called while client is closed");
       return false;
     }
     
@@ -314,7 +333,7 @@ public:
     }
     else if (!ret)
     {
-      OSS_LOG_DEBUG("Unable to receive JSON-RPC response");
+      OSS_LOG_DEBUG("Unable to receive JSON-RPC response for method " << method);
     }
     destroyTransaction(pTransaction->id());
     return ret;

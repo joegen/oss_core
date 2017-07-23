@@ -127,6 +127,7 @@ public:
      , m_read_state(READING)
      , m_strand(e.endpoint_base::m_io_service)
      , m_detached(false)
+     , m_Identifier(0)
     {
         socket_type::init();
         
@@ -1324,6 +1325,15 @@ public:
         }
     }
     
+    // Invoke termiate from within the strand
+    void post_terminate_event() {
+       m_strand.post(boost::bind(
+            &type::terminate,
+            type::shared_from_this(),
+         true
+        ));
+    }
+    
     /// Ends the connection by cleaning up based on current state
     /** Terminate will review the outstanding resources and close each
      * appropriately. Attached handlers will recieve an on_fail or on_close call
@@ -1515,6 +1525,7 @@ public:
     bool                        m_failed_by_me;
     bool                        m_dropped_by_me;
     
+    
     // Read queue
     read_state                  m_read_state;
     message::control_ptr        m_control_message;
@@ -1523,6 +1534,9 @@ public:
     mutable boost::recursive_mutex      m_lock;
     boost::asio::strand         m_strand;
     bool                        m_detached; // TODO: this should be atomic
+    
+    // OSS specific members
+    int m_Identifier;
 };
 
 // connection related types that it and its policy classes need.

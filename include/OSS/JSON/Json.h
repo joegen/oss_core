@@ -38,8 +38,8 @@ typedef json::Exception Exception;
 
 bool json_parse_string(const std::string& jsonString, OSS::JSON::Object& object);
 bool json_parse_string(const std::string& jsonString, OSS::JSON::Object& object, OSS::JSON::Exception& e);
-bool jsong_object_to_string(const OSS::JSON::Object& object, std::string& jsonString);
-bool jsong_object_to_string(const OSS::JSON::Object& object, std::string& jsonString, OSS::JSON::Exception& e);
+bool json_object_to_string(const OSS::JSON::Object& object, std::string& jsonString);
+bool json_object_to_string(const OSS::JSON::Object& object, std::string& jsonString, OSS::JSON::Exception& e);
   
 } }
 

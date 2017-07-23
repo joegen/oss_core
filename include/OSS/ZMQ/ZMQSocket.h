@@ -74,6 +74,7 @@ public:
   bool sendAndReceive(const std::string& cmd, const std::string& data, std::string& response);
 
   bool sendRequest(const std::string& cmd, const std::string& data);
+  bool sendRequest(const std::string& data);
   
   bool sendReply(const std::string& data);
   
@@ -82,6 +83,9 @@ public:
   
   bool receiveRequest(std::string& cmd, std::string& data, unsigned int timeoutms);
   bool receiveRequest(std::string& cmd, std::string& data);
+  
+  bool receiveRequest(std::string& data);
+  bool receiveRequest(std::string& data, unsigned int timeoutms);
   
   void close();
   
@@ -96,6 +100,7 @@ protected:
   bool internal_send_request(const std::string& cmd, const std::string& data);
   bool internal_receive_reply(std::string& reply, unsigned int timeoutms);
   bool internal_receive_request(std::string& cmd, std::string& data, unsigned int timeoutms);
+  bool internal_receive_request(std::string& data, unsigned int timeoutms);
   SocketType _type;
   zmq::context_t* _context;
   zmq::socket_t* _socket;
@@ -119,6 +124,11 @@ inline bool ZMQSocket::sendAndReceive(const std::string& cmd, const std::string&
 inline bool ZMQSocket::receiveRequest(std::string& cmd, std::string& data)
 {
   return receiveRequest(cmd, data, 0);
+}
+
+inline bool ZMQSocket::receiveRequest(std::string& data)
+{
+  return receiveRequest(data, 0);
 }
 
 inline bool ZMQSocket::receiveReply(std::string& reply)

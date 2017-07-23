@@ -47,7 +47,7 @@ WebSocketClient::~WebSocketClient()
 void WebSocketClient::signal_close()
 {
   WebSocketClient::EventData event;
-  event.event = "on_close";
+  event.event = EventClose;
   event.data = "Connection closed";
   _eventQueue.enqueue(event);
 }
@@ -116,7 +116,7 @@ WebSocketClient::Handler::~Handler()
 void WebSocketClient::Handler::on_message(websocketpp::client::connection_ptr pConnection, websocketpp::message::data_ptr pMsg)
 {
   WebSocketClient::EventData event;
-  event.event = "on_message";
+  event.event = EventMessage;
   event.data = pMsg->get_payload();
   _pClient->_eventQueue.enqueue(event);
 }
@@ -125,7 +125,7 @@ void WebSocketClient::Handler::on_open(websocketpp::client::connection_ptr pConn
 {
   _pClient->_isOpen = true;
   WebSocketClient::EventData event;
-  event.event = "on_open";
+  event.event = EventOpen;
   event.data = "Connection opened";
   _pClient->_eventQueue.enqueue(event);  
 }
@@ -139,7 +139,7 @@ void WebSocketClient::Handler::on_close(websocketpp::client::connection_ptr pCon
 void WebSocketClient::Handler::on_fail(websocketpp::client::connection_ptr pConnection)
 {
   WebSocketClient::EventData event;
-  event.event = "on_fail";
+  event.event = EventFail;
   event.data = "Connection failed";
   _pClient->_eventQueue.enqueue(event);  
 }
@@ -147,7 +147,7 @@ void WebSocketClient::Handler::on_fail(websocketpp::client::connection_ptr pConn
 bool WebSocketClient::Handler::on_ping(websocketpp::client::connection_ptr pConnection, std::string data)
 {
   WebSocketClient::EventData event;
-  event.event = "on_ping";
+  event.event = EventPing;
   event.data = data;
   _pClient->_eventQueue.enqueue(event);
   return true;  
@@ -156,7 +156,7 @@ bool WebSocketClient::Handler::on_ping(websocketpp::client::connection_ptr pConn
 void WebSocketClient::Handler::on_pong(websocketpp::client::connection_ptr pConnection, std::string data)
 {
   WebSocketClient::EventData event;
-  event.event = "on_pong";
+  event.event = EventPong;
   event.data = data;
   _pClient->_eventQueue.enqueue(event);
 }
@@ -164,7 +164,7 @@ void WebSocketClient::Handler::on_pong(websocketpp::client::connection_ptr pConn
 void WebSocketClient::Handler::on_pong_timeout(websocketpp::client::connection_ptr pConnection, std::string data)
 {
   WebSocketClient::EventData event;
-  event.event = "on_pong_timeout";
+  event.event = EventPongTimeout;
   event.data = data;
   _pClient->_eventQueue.enqueue(event);
 }

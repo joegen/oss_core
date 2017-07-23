@@ -41,12 +41,12 @@ inline Exception::Exception(const Exception& e) :
   msg = e.msg;
 }
 
-inline Exception::~Exception() _GLIBCXX_USE_NOEXCEPT
+inline Exception::~Exception() throw()
 {
 }
 
 
-inline const char* Exception::what() const  _GLIBCXX_USE_NOEXCEPT
+inline const char* Exception::what() const  throw()
 {
   if (!msg.empty())
     return msg.c_str();

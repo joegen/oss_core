@@ -311,7 +311,7 @@ bool ZMQSocket::publish(const std::string& event)
   {
     return false;
   }
-  return sendRequest("", event);
+  return sendRequest(event);
 }
 
 void ZMQSocket::close()
@@ -347,6 +347,12 @@ bool ZMQSocket::sendAndReceive(const std::string& cmd, const std::string& data, 
   }
   
   return internal_receive_reply(response, timeoutms);
+}
+
+bool ZMQSocket::sendRequest(const std::string& data)
+{
+  OSS::mutex_critic_sec_lock lock(_mutex);
+  return internal_send_request("", data);
 }
 
 bool ZMQSocket::sendRequest(const std::string& cmd, const std::string& data)
@@ -427,7 +433,16 @@ bool ZMQSocket::internal_receive_reply(std::string& response, unsigned int timeo
     return false;
   }
   
-  zeromq_receive(*_socket, response);  
+  try
+  {
+    zeromq_receive(*_socket, response);  
+  }
+  catch(std::exception& e)
+  {
+    _canReconnect = true;
+    internal_close();
+    return false;
+  }
   return true;
 }
 
@@ -456,6 +471,33 @@ bool ZMQSocket::internal_receive_request(std::string& cmd, std::string& data, un
   }
   
   zeromq_receive(*_socket, cmd); 
+  zeromq_receive(*_socket, data);  
+  return true;
+}
+
+bool ZMQSocket::receiveRequest(std::string& data, unsigned int timeoutms)
+{
+  if (_type == PUSH)
+  {
+    return false;
+  }
+  
+  OSS::mutex_critic_sec_lock lock(_mutex);
+  return internal_receive_request(data, timeoutms);
+}
+
+bool ZMQSocket::internal_receive_request(std::string& data, unsigned int timeoutms)
+{
+  if (!_socket)
+  {
+    return false;
+  }
+  
+  if (timeoutms && !zeromq_poll_read(_socket, timeoutms))
+  {
+    return false;
+  }
+  
   zeromq_receive(*_socket, data);  
   return true;
 }

@@ -28,22 +28,16 @@
 #include "OSS/UTL/Thread.h"
 #include "OSS/Net/WebSocket.h"
 #include "OSS/Net/IPAddress.h"
+#include "OSS/Net/ClientTransport.h"
 
 
 namespace OSS {
 namespace Net {
   
   
-class WebSocketClient
+class WebSocketClient : public ClientTransport
 {
 public:
-  
-  struct EventData
-  {
-    std::string event;
-    std::string data;
-  };
-  
   WebSocketClient();
   ~WebSocketClient();
   
