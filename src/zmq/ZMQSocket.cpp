@@ -349,6 +349,23 @@ bool ZMQSocket::sendAndReceive(const std::string& cmd, const std::string& data, 
   return internal_receive_reply(response, timeoutms);
 }
 
+bool ZMQSocket::sendAndReceive(const std::string& data, std::string& response, unsigned int timeoutms)
+{
+  if (_type == PUSH)
+  {
+    return false;
+  }
+  
+  OSS::mutex_critic_sec_lock lock(_mutex);
+  
+  if (!internal_send_request("", data))
+  {
+    return false;
+  }
+  
+  return internal_receive_reply(response, timeoutms);
+}
+
 bool ZMQSocket::sendRequest(const std::string& data)
 {
   OSS::mutex_critic_sec_lock lock(_mutex);

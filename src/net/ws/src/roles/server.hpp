@@ -320,7 +320,8 @@ void server<endpoint>::stop_listen(bool join) {
     	boost::unique_lock<boost::recursive_mutex> lock(m_endpoint.m_lock);
 	
 		if (m_state != LISTENING) {
-			throw exception("stop_listen called from invalid state");
+			//throw exception("stop_listen called from invalid state");
+      return;
 		}
     }
     
@@ -337,7 +338,8 @@ void server<endpoint>::stop_listen(bool join) {
 	boost::unique_lock<boost::recursive_mutex> lock(m_endpoint.m_lock);
 	
 	if (m_state != LISTENING) {
-		throw exception("stop_listen called from invalid state");
+		//throw exception("stop_listen called from invalid state");
+    return;
 	}
 	
 	// Clean up

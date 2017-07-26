@@ -264,6 +264,7 @@ public:
             }
             else
             {
+              OSS_LOG_DEBUG("JsonRpcClient got a response for a destroyed transaction.  Message: " << event.data);
               delete pResponse;
             }
           }
@@ -287,11 +288,15 @@ public:
   
   bool call(const std::string& method, const json::Object& params, json::Object& response, long timeout)
   {
-    OSS_LOG_DEBUG("JsonRpcClient::call method: " << method << " ENTER");
     if (!_isConnected)
     {
       OSS_LOG_DEBUG("JsonRpcClient::call method: " << method << " called while client is closed");
       return false;
+    }
+    
+    if (_connection.implementsSendAndReceive())
+    {
+      return callSendAndReceive(method, params, response, timeout);
     }
     
     JsonRpcTransaction::Ptr pTransaction = createTransaction();
@@ -381,6 +386,39 @@ public:
   {
     return _connection;
   }
+  
+protected:
+  bool callSendAndReceive(const std::string& method, const json::Object& params, json::Object& response, long timeout)
+  {
+    try
+    {
+      std::ostringstream requestStrm;
+      json::Object request;
+      request["jsonrpc"] = json::String("2.0");
+      request["method"] = json::String(method);
+      request["id"] = json::Number(generateId());
+      request["params"] = params;
+      json::Writer::Write(request, requestStrm);
+      std::string result;
+      if (!_connection.sendAndReceive(requestStrm.str(), result, timeout))
+      {
+        OSS_LOG_DEBUG("Unable to send JSON-RPC request " << method);
+        return false;
+      }
+      return OSS::JSON::json_parse_string(result, response);
+    }
+    catch(json::Exception& e)
+    {
+      OSS_LOG_DEBUG("Unable to send JSON-RPC request: " << e.what());
+      return false;
+    }
+    catch(std::exception& e)
+    {
+      OSS_LOG_DEBUG("Unable to send JSON-RPC request: " << e.what());
+      return false;
+    }
+  }
+  
 private:
   Connection _connection;
   TransactionMap _transactions;

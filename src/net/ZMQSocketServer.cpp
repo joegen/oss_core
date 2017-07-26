@@ -72,6 +72,7 @@ void ZMQSocketServer::internal_read_messages()
   }
   _socket.close();
   _isTerminated = true;
+  OSS_LOG_DEBUG("ZMQSocketServer thread TERMINATED");
 }
 
 void ZMQSocketServer::close()
@@ -80,6 +81,8 @@ void ZMQSocketServer::close()
   {
     return;
   }
+  
+  OSS_LOG_DEBUG("ZMQSocketServer::close()");
   
   ZMQSocketClient client;
   if (!client.connect(_bindAddress))

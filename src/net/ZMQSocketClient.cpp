@@ -115,6 +115,12 @@ bool ZMQSocketClient::receive(EventData& event, long timeout)
   return true;
 }
 
+bool ZMQSocketClient::sendAndReceive(const std::string& data, std::string& response, long timeout)
+{
+  return _pSocket->sendAndReceive(data, response, timeout);
+}
+
+
 int ZMQSocketClient::getPollfd()
 {
   //

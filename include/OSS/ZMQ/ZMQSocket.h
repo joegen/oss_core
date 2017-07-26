@@ -72,6 +72,9 @@ public:
   
   bool sendAndReceive(const std::string& cmd, const std::string& data, std::string& response, unsigned int timeoutms);
   bool sendAndReceive(const std::string& cmd, const std::string& data, std::string& response);
+  
+  bool sendAndReceive(const std::string& data, std::string& response, unsigned int timeoutms);
+  bool sendAndReceive(const std::string& data, std::string& response);
 
   bool sendRequest(const std::string& cmd, const std::string& data);
   bool sendRequest(const std::string& data);
@@ -119,6 +122,11 @@ protected:
 inline bool ZMQSocket::sendAndReceive(const std::string& cmd, const std::string& data, std::string& response)
 {
   return sendAndReceive(cmd, data, response, 0);
+}
+
+inline bool ZMQSocket::sendAndReceive(const std::string& data, std::string& response)
+{
+  return sendAndReceive(data, response, 0);
 }
 
 inline bool ZMQSocket::receiveRequest(std::string& cmd, std::string& data)

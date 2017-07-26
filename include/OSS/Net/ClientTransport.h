@@ -82,6 +82,12 @@ public:
   
   virtual bool getLocalAddress(IPAddress& address) = 0;
     // Return the local address of the server if transport is a networtk transport
+  
+  virtual bool implementsSendAndReceive();
+    // Whether the client implements sendAndReceive
+  
+  virtual bool sendAndReceive(const std::string& data, std::string& response, long timeout);
+    // Implementation for sendAndReceive
 };
 
 //
@@ -94,6 +100,16 @@ inline ClientTransport::ClientTransport()
 
 inline ClientTransport::~ClientTransport()
 {
+}
+
+inline bool ClientTransport::implementsSendAndReceive()
+{
+  return false;
+}
+  
+inline bool ClientTransport::sendAndReceive(const std::string& data, std::string& response, long timeout)
+{
+  return false;
 }
 
 } } // OSS::Net

@@ -212,7 +212,7 @@ public:
       {
         errorCode = MethodNotFound;
         createErrorObject(result, rpcId, errorCode, "Invalid procedure name");
-         OSS_LOG_DEBUG("JsonRpcServer unable to find method" << method.Value() << " Connection " << connectionId);
+        OSS_LOG_DEBUG("JsonRpcServer unable to find method" << method.Value() << " Connection " << connectionId);
       }
       else
       {
@@ -222,6 +222,11 @@ public:
            OSS_LOG_DEBUG("JsonRpcServer invoking method " << method.Value() << " Connection " << connectionId);
           if (!func(params, result, errorCode, errorMessage) || errorCode != 0)
           {
+            if (errorCode == 0)
+            {
+              errorCode = ServerError; 
+              errorMessage = "Unknown Server Exception";
+            }
             OSS_LOG_DEBUG("JsonRpcServer method " << method.Value() << " Connection " << connectionId << " returned false.  Error=" << errorCode);
             createErrorObject(result, rpcId, errorCode, errorMessage);
           }

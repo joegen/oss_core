@@ -53,6 +53,12 @@ public:
   virtual bool receive(EventData& event, long timeout);
     // Receive an event from the server or local transport with timeout
   
+  virtual bool implementsSendAndReceive();
+    // Whether the client implements sendAndReceive
+  
+  virtual bool sendAndReceive(const std::string& data, std::string& response, long timeout);
+    // Implementation for sendAndReceive
+  
   virtual int getPollfd();
     // Return the file descriptor if the transport is pollable
   
@@ -78,6 +84,14 @@ private:
   IPAddress _remoteAddress;
   RequestQueue _eventQueue;
 };
+
+//
+// Inlines
+//
+ inline bool ZMQSocketClient::implementsSendAndReceive()
+ {
+   return true;
+ }
 
 } } // OSS::Net
 #endif // ENABLE_FEATURE_ZMQ
