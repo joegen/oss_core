@@ -371,18 +371,19 @@ void JSBase::addGlobalScript(const std::string& script)
 }
 
 bool JSBase::initialize(const boost::filesystem::path& scriptFile, const std::string& functionName,
-  void(*extensionGlobals)(OSS_HANDLE) )
+  void(*extensionGlobals)(OSS_HANDLE), const std::string& preloaded )
 {
-  return internalInitialize(scriptFile, functionName, extensionGlobals);
+  _preloaded = preloaded;
+  return internalInitialize(scriptFile, functionName, extensionGlobals, _preloaded);
 }
 
 bool JSBase::internalInitialize(
   const boost::filesystem::path& scriptFile, const std::string& functionName,
-  void(*extensionGlobals)(OSS_HANDLE) )
+  void(*extensionGlobals)(OSS_HANDLE), const std::string& preloaded)
 {
   v8::Locker __v8Locker__;
   
-  if (!boost::filesystem::exists(scriptFile))
+  if (preloaded.empty() && !boost::filesystem::exists(scriptFile))
   {
     OSS_LOG_ERROR("Google V8 is unable to locate file " << scriptFile);
     return false;
@@ -624,7 +625,15 @@ bool JSBase::internalInitialize(
   //
   //OSS_LOG_INFO("Google V8 is compiling main script " << _script);
   v8::Handle<v8::String> script;
-  script = read_file(OSS::boost_path(_script));
+  
+  if (preloaded.empty())
+  {
+    script = read_file(OSS::boost_path(_script));
+  }
+  else
+  {
+    script = v8::String::New(preloaded.data(), preloaded.size());
+  }
 
   v8::Handle<v8::Script> compiled_script = v8::Script::Compile(script);
 
@@ -684,7 +693,7 @@ bool JSBase::recompile()
 bool JSBase::internalRecompile()
 {
   
-  if (!internalInitialize(_script, _functionName, _extensionGlobals))
+  if (!internalInitialize(_script, _functionName, _extensionGlobals, _preloaded))
   {
     return false;
   }

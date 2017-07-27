@@ -52,7 +52,8 @@ public:
 
   bool initialize(const boost::filesystem::path& script,
     const std::string& functionName,
-    void(*extensionGlobals)(OSS_HANDLE) = 0);
+    void(*extensionGlobals)(OSS_HANDLE) = 0,
+    const std::string& preloaded = std::string());
     /// Initialize the javascript context and the object template.
     /// The function indicated by funtionName must exist in the script
 
@@ -89,7 +90,8 @@ public:
 protected:
   bool internalInitialize(const boost::filesystem::path& script,
     const std::string& functionName,
-    void(*extensionGlobals)(OSS_HANDLE));
+    void(*extensionGlobals)(OSS_HANDLE),
+    const std::string& preloaded = std::string());
     /// Initialize the javascript context and the object template.
     /// The function indicated by funtionName must exist in the scri
 
@@ -111,6 +113,7 @@ protected:
   static OSS::mutex _mutex;
   std::string _functionName;
   void(*_extensionGlobals)(OSS_HANDLE);
+  std::string _preloaded;
   friend class JSWorker;
 };
 
