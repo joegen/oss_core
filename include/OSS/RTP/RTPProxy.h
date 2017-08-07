@@ -69,6 +69,9 @@ public:
     int resizerSamplesLeg2;
     bool countSessions;
     bool isRemoteRpc;
+    int legIndex;
+    std::string inboundCodecs;
+    std::string outboundCodecs;
 
     Attributes()
     {
@@ -81,6 +84,7 @@ public:
       countSessions = false;
       isRemoteRpc = false;
       allowHairPin = false;
+      legIndex = 0;
     }
   };
 

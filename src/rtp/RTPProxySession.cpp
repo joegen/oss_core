@@ -324,6 +324,8 @@ void RTPProxySession::handleSDP(
     OSS_LOG_INFO(_logId << "RTP: Changing state from NEGOTIATED to " << newState << " Count: " << rtpCount);
     
     break;
+  case STATE_INVALID:
+    break;
   }
 }
 
@@ -2881,6 +2883,72 @@ void RTPProxySession::setState(RTPProxySession::State state)
     _authStateTimer.cancel();
   }
   _state = state;
+}
+
+RTPProxySession::State RTPProxySession::state_transition(State currentState, RequestType requestType)
+{
+  switch (currentState)
+  {
+    case IDLE:
+      if (requestType == INVITE)
+      {
+        return INVITE_WAITING_ANSWER_RESPONSE;
+      }
+      else if (requestType == INVITE_RESPONSE)
+      {
+        return INVITE_WAITING_ANSWER_ACK_OR_PRACK;
+      }
+      break;
+    case NEGOTIATED:
+      if (requestType == INVITE)
+      {
+        return INVITE_WAITING_ANSWER_RESPONSE;
+      }
+      else if (requestType == INVITE_RESPONSE)
+      {
+        return INVITE_WAITING_ANSWER_ACK_OR_PRACK;
+      }
+      else if (requestType == UPDATE)
+      {
+        return UPDATE_WAITING_ANSWER;
+      }
+      else if (requestType == PRACK)
+      {
+        return PRACK_WAITING_ANSWER;
+      }
+      break;
+    case INVITE_WAITING_ANSWER_RESPONSE:
+      if (requestType == INVITE_RESPONSE)
+      {
+        return NEGOTIATED;
+      }
+      break;
+    case INVITE_WAITING_ANSWER_ACK_OR_PRACK:
+      if (requestType == INVITE_ACK || requestType == PRACK)
+      {
+        return NEGOTIATED;
+      }
+      break;
+    case OFFER_WAITING_AUTHENTICATION: // This needs work
+      break;
+    case ANSWER_REQUIRED_AUTHENTICATION: // This needs work
+      break;
+    case UPDATE_WAITING_ANSWER:
+      if (requestType == UPDATE_RESPONSE)
+      {
+        return NEGOTIATED;
+      }
+      break;
+    case PRACK_WAITING_ANSWER:
+      if (requestType == PRACK_RESPONSE)
+      {
+        return NEGOTIATED;
+      }
+      break;
+    case STATE_INVALID:
+      break;
+  }
+  return STATE_INVALID;
 }
 
 } } // OSS::RTP

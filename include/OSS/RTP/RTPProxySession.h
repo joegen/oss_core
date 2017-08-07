@@ -55,7 +55,8 @@ public:
     ANSWER_REQUIRED_AUTHENTICATION,
     UPDATE_WAITING_ANSWER,
     PRACK_WAITING_ANSWER,
-    NEGOTIATED
+    NEGOTIATED,
+    STATE_INVALID
   };
 
   RTPProxySession(RTPProxyManager* pManager, const std::string& identifier);
@@ -163,6 +164,9 @@ public:
   
   const std::string& getLastOffer() const;
   const std::string& getLastAnswer() const;
+  
+  static State state_transition(State currentState, RequestType requestType);
+    // returns the next state based on the current request-type
 protected:
   void handleStateIdle(
     const OSS::Net::IPAddress& sentBy,
