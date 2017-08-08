@@ -47,11 +47,13 @@ SIPStack::SIPStack() :
   _enableTCP(true),
 #if ENABLE_FEATURE_WEBSOCKETS 
   _enableWS(true),
+  _enableWSS(true),
 #endif
   _enableTLS(true),
   _udpListeners(),
   _tcpListeners(),
   _wsListeners(),
+  _wssListeners(),
   _tlsListeners(),
   _tlsCertPassword()
 {
@@ -71,9 +73,10 @@ void SIPStack::transportInit()
   bool hasUDP = _udpListeners.size() > 0;
   bool hasTCP = _tcpListeners.size() > 0;
   bool hasWS  = _wsListeners.size() > 0;
+  bool hasWSS  = _wssListeners.size() > 0;
   bool hasTLS = _tlsListeners.size() > 0;
   
-  if (!hasUDP && !hasTCP && !hasWS && !hasTLS)
+  if (!hasUDP && !hasTCP && !hasWS && !hasWSS && !hasTLS)
     throw OSS::SIP::SIPException("No Listener Address Configured");
 
   //
@@ -137,6 +140,23 @@ void SIPStack::transportInit()
       _fsmDispatch.transport().addWSTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual(), iface.alias());
     }
   }
+  
+  if (_enableWSS)
+  {
+    for (std::size_t i = 0; i < _wssListeners.size(); i++)
+    {
+      OSS::Net::IPAddress& iface = _wssListeners[i];
+      std::string ip = iface.address().to_string();
+      std::string port = OSS::string_from_number(iface.getPort());
+      std::string ipPort = iface.toIpPortString();
+      SubNets::const_iterator subnetIter = _wssSubnets.find(ipPort);
+      SIPListener::SubNets subnets;
+      if (subnetIter != _wssSubnets.end())
+        subnets = subnetIter->second;
+      
+      _fsmDispatch.transport().addWSSTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual(), iface.alias());
+    }
+  }
 #endif
 
   //
@@ -172,9 +192,10 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
   bool hasUDP = _udpListeners.size() > 0;
   bool hasTCP = _tcpListeners.size() > 0;
   bool hasWS = _wsListeners.size() > 0;
+  bool hasWSS = _wssListeners.size() > 0;
   bool hasTLS = _tcpListeners.size() > 0;
 
-  if (!hasUDP && !hasTCP && !hasWS && !hasTLS)
+  if (!hasUDP && !hasTCP && !hasWS && !hasWSS && !hasTLS)
     throw OSS::SIP::SIPException("No Listener Address Configured");
 
   //
@@ -183,6 +204,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
   hasUDP = false;
   hasTCP = false;
   hasWS = false;
+  hasWSS = false;
   hasTLS = false;
 
   //
@@ -284,6 +306,36 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
       }
     }
   }
+  
+  if (_enableWSS)
+  {
+    for (std::size_t i = 0; i < _wssListeners.size(); i++)
+    {
+      OSS::Net::IPAddress& iface = _wssListeners[i];
+      std::string ip = iface.address().to_string();
+      std::string ipPort = iface.toIpPortString();
+      SubNets::const_iterator subnetIter = _wssSubnets.find(ipPort);
+      SIPListener::SubNets subnets;
+      if (subnetIter != _wssSubnets.end())
+        subnets = subnetIter->second;
+      
+      for(unsigned short p = wsPortBase; p <= wsPortMax; p++)
+      {
+        try
+        {
+          std::string port = OSS::string_from_number<unsigned short>(p);
+          _fsmDispatch.transport().addWSSTransport(ip, port,iface.externalAddress(), subnets, iface.isVirtual(), iface.alias());
+          iface.setPort(p);
+          hasWSS = true;
+          break;
+        }
+        catch(...)
+        {
+          continue;
+        }
+      }
+    }
+  }
 #endif
 
   //
@@ -319,7 +371,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
     }
   }
 
-  if (!hasUDP && !hasTCP && !hasWS && !hasTLS)
+  if (!hasUDP && !hasTCP && !hasWS && !hasWSS && !hasTLS)
     throw OSS::SIP::SIPException("No Listener Address Configured");
 }
 
@@ -430,8 +482,9 @@ bool SIPStack::initVirtualTransportFromConfig(const boost::filesystem::path& cfg
   bool udpEnabled = carpConfig[0].exists("udp-enabled") && (bool)carpConfig[0]["udp-enabled"];
   bool tlsEnabled = carpConfig[0].exists("tls-enabled") && (bool)carpConfig[0]["tls-enabled"];
   bool wsEnabled = carpConfig[0].exists("ws-enabled") && (bool)carpConfig[0]["ws-enabled"];
+  bool wssEnabled = carpConfig[0].exists("wss-enabled") && (bool)carpConfig[0]["wss-enabled"];
   
-  if (!tcpEnabled && !udpEnabled && !tlsEnabled && !wsEnabled)
+  if (!tcpEnabled && !udpEnabled && !tlsEnabled && !wsEnabled && !wssEnabled)
   {
     //
     // Let us default to UDP and TCP
@@ -494,6 +547,19 @@ bool SIPStack::initVirtualTransportFromConfig(const boost::filesystem::path& cfg
     
     _wsListeners.push_back(listenerAddress);
     _wsSubnets[listenerAddress.toIpPortString()] = subnets;
+  }
+  
+  if (wssEnabled)
+  {   
+    int port = 5063;
+    if (carpConfig[0].exists("wss-port"))
+    {
+      port = (int)carpConfig[0]["wss-port"];
+    }
+    listenerAddress.setPort(port);
+    
+    _wssListeners.push_back(listenerAddress);
+    _wssSubnets[listenerAddress.toIpPortString()] = subnets;
   }
   
   return true;
@@ -676,6 +742,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
     bool tlsEnabled = iface.exists("tls-enabled") && (bool)iface["tls-enabled"];
     bool tcpEnabled = iface.exists("tcp-enabled") && (bool)iface["tcp-enabled"];
     bool wsEnabled = iface.exists("ws-enabled") && (bool)iface["ws-enabled"];
+    bool wssEnabled = iface.exists("wss-enabled") && (bool)iface["wss-enabled"];
     
     bool udpEnabled = true;
     if (iface.exists("udp-enabled"))
@@ -684,6 +751,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
     int sipPort = iface.exists("sip-port") ?  (int)iface["sip-port"] : 5060;
     int tlsPort = iface.exists("tls-port") ?  (int)iface["tls-port"] : 5061;
     int wsPort = iface.exists("ws-port") ?  (int)iface["ws-port"] : 5062;
+    int wssPort = iface.exists("wss-port") ?  (int)iface["wss-port"] : 5063;
 
     std::vector<std::string> subnets;
     if (iface.exists("subnets"))
@@ -730,6 +798,11 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
     if (wsEnabled)
     {
       registerConfiguredTransport(_wsListeners, _wsSubnets, ip, wsPort, external, subnets);
+    }
+    
+    if (wssEnabled)
+    {
+      registerConfiguredTransport(_wssListeners, _wssSubnets, ip, wssPort, external, subnets);
     }
 
     if (tlsEnabled && hasInitializedTLS)
@@ -808,7 +881,15 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
     }
     else if (iface.exists("ws-enabled") && (bool)iface["ws-enabled"])
     {
-      int port = iface.exists("sip-port") ? (int)iface["sip-port"] : 5060;
+      int port = iface.exists("ws-port") ? (int)iface["ws-port"] : 5062;
+      OSS::Net::IPAddress listener;
+      listener = ip;
+      listener.setPort(port);
+      _fsmDispatch.transport().defaultListenerAddress() = listener;
+    }
+    else if (iface.exists("wss-enabled") && (bool)iface["wss-enabled"])
+    {
+      int port = iface.exists("wss-port") ? (int)iface["wss-port"] : 5063;
       OSS::Net::IPAddress listener;
       listener = ip;
       listener.setPort(port);

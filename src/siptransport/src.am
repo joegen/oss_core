@@ -14,7 +14,10 @@ if ENABLE_FEATURE_WEBSOCKETS
 liboss_core_la_SOURCES +=  \
     siptransport/SIPWebSocketConnection.cpp \
     siptransport/SIPWebSocketConnectionManager.cpp \
-    siptransport/SIPWebSocketListener.cpp
+    siptransport/SIPWebSocketListener.cpp \
+    siptransport/SIPWebSocketTlsConnection.cpp \
+    siptransport/SIPWebSocketTlsConnectionManager.cpp \
+    siptransport/SIPWebSocketTlsListener.cpp
 endif
 
 if ENABLE_FEATURE_XOR

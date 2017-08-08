@@ -298,17 +298,20 @@ private:
   bool _enableTCP;
 #if ENABLE_FEATURE_WEBSOCKETS
   bool _enableWS;
+  bool _enableWSS;
 #endif
   bool _enableTLS;
   
   OSS::socket_address_list _udpListeners;
   OSS::socket_address_list _tcpListeners;
   OSS::socket_address_list _wsListeners;
+  OSS::socket_address_list _wssListeners;
   OSS::socket_address_list _tlsListeners;
   
   SubNets _udpSubnets;
   SubNets _tcpSubnets;
   SubNets _wsSubnets;
+  SubNets _wssSubnets;
   SubNets _tlsSubnets;
   
   std::string _tlsCertPassword;

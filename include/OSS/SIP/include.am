@@ -63,5 +63,8 @@ nobase_include_HEADERS += \
     OSS/SIP/SIPQ/SIPQEndpoint.h \
     OSS/SIP/SIPWebSocketConnection.h \
     OSS/SIP/SIPWebSocketConnectionManager.h \
-    OSS/SIP/SIPWebSocketListener.h
+    OSS/SIP/SIPWebSocketListener.h \
+    OSS/SIP/SIPWebSocketTlsConnection.h \
+    OSS/SIP/SIPWebSocketTlsConnectionManager.h \
+    OSS/SIP/SIPWebSocketTlsListener.h
 

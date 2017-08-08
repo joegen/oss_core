@@ -36,6 +36,7 @@
 #include "OSS/SIP/SIPUDPListener.h"
 #include "OSS/SIP/SIPTCPListener.h"
 #include "OSS/SIP/SIPWebSocketListener.h"
+#include "OSS/SIP/SIPWebSocketTlsListener.h"
 #include "OSS/SIP/SIPTLSListener.h"
 #include "OSS/EP/EndpointListener.h"
 
@@ -56,6 +57,7 @@ public:
   typedef std::map<std::string, SIPTCPListener::Ptr> TCPListeners;
 #if ENABLE_FEATURE_WEBSOCKETS
   typedef std::map<std::string, SIPWebSocketListener::Ptr> WSListeners;
+  typedef std::map<std::string, SIPWebSocketTlsListener::Ptr> WSSListeners;
 #endif
   typedef std::map<std::string, SIPTLSListener::Ptr> TLSListeners;
   typedef std::map<std::string, EndpointListener*> Endpoints;;
@@ -110,6 +112,12 @@ public:
     ///
     /// If the transport already exists, this function will throw
     /// a SIPDuplicateTransport exception
+  
+  void addWSSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp = false, const std::string& alias = std::string());
+    /// Add a new WebSocket transport bound to the ip address and port.
+    ///
+    /// If the transport already exists, this function will throw
+    /// a SIPDuplicateTransport exception
 #endif
 
   void addTLSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp = false, const std::string& alias = std::string());
@@ -129,6 +137,9 @@ public:
   SIPWebSocketListener::Ptr findWSListener(const std::string& key) const;
     /// Get the transport pointer using either the alais or ip:port as key
     ///
+  SIPWebSocketTlsListener::Ptr findWSSListener(const std::string& key) const;
+    /// Get the transport pointer using either the alais or ip:port as key
+    /// 
 #endif
   
   SIPTLSListener::Ptr findTLSListener(const std::string& key) const;
@@ -161,6 +172,12 @@ public:
 
 #if ENABLE_FEATURE_WEBSOCKETS  
   SIPTransportSession::Ptr createClientWsTransport(
+    const OSS::Net::IPAddress& localAddress,
+    const OSS::Net::IPAddress& remoteAddress);
+    /// Creates a new client transport based
+    /// on local and remote address tuples
+  
+  SIPTransportSession::Ptr createClientWssTransport(
     const OSS::Net::IPAddress& localAddress,
     const OSS::Net::IPAddress& remoteAddress);
     /// Creates a new client transport based
@@ -212,6 +229,12 @@ public:
 
   bool isWsEnabled() const;
     /// Flag whether WebSocket transport is enabled for this service
+  
+  void setWssEnabled(bool enabled);
+    /// Enable or disable WebSocket transport;
+
+  bool isWssEnabled() const;
+    /// Flag whether WebSocket transport is enabled for this service
 #endif
   
   void setTlsEnabled(bool enabled);
@@ -261,14 +284,19 @@ public:
   boost::asio::ssl::context& tlsServerContext();
   boost::asio::ssl::context& tlsClientContext();
   
+  boost::shared_ptr<boost::asio::ssl::context> tlsServerContextPtr();
+  boost::shared_ptr<boost::asio::ssl::context> tlsClientContextPtr();
+  
   SIPTransportSession::Dispatch& dispatch();
   
 private:
   boost::asio::io_service _ioService;
   boost::thread* _pIoServiceThread;
   boost::asio::ip::tcp::resolver _resolver;
-  boost::asio::ssl::context _tlsServerContext;
-  boost::asio::ssl::context _tlsClientContext;
+  
+  boost::shared_ptr<boost::asio::ssl::context> _pTlsServerContext;
+  boost::shared_ptr<boost::asio::ssl::context> _pTlsClientContext;
+  
   SIPTransportSession::Dispatch _dispatch;
   SIPStreamedConnectionManager _tcpConMgr;
   SIPStreamedConnectionManager _tlsConMgr;
@@ -284,8 +312,11 @@ private:
   unsigned short _tcpPortMax;
 #if ENABLE_FEATURE_WEBSOCKETS
   SIPWebSocketConnectionManager _wsConMgr;
+  WSSListeners _wssListeners;
+  SIPWebSocketTlsConnectionManager _wssConMgr;
   WSListeners _wsListeners;
   bool _wsEnabled;
+  bool _wssEnabled;
   unsigned short _wsPortBase;
   unsigned short _wsPortMax;
 #endif
@@ -329,6 +360,16 @@ inline void SIPTransportService::setWsEnabled(bool enabled)
 inline bool SIPTransportService::isWsEnabled() const
 {
   return _wsEnabled;
+}
+
+inline void SIPTransportService::setWssEnabled(bool enabled)
+{
+  _wssEnabled = enabled;
+}
+
+inline bool SIPTransportService::isWssEnabled() const
+{
+  return _wssEnabled;
 }
 #endif
 
@@ -376,12 +417,22 @@ inline boost::asio::io_service& SIPTransportService::ioService()
 
 inline boost::asio::ssl::context& SIPTransportService::tlsServerContext()
 {
-  return _tlsServerContext;
+  return *_pTlsServerContext.get();
 }
 
 inline boost::asio::ssl::context& SIPTransportService::tlsClientContext()
 {
-  return _tlsClientContext;
+  return *_pTlsClientContext.get();
+}
+
+inline boost::shared_ptr<boost::asio::ssl::context> SIPTransportService::tlsServerContextPtr()
+{
+  return _pTlsServerContext;
+}
+
+inline boost::shared_ptr<boost::asio::ssl::context> SIPTransportService::tlsClientContextPtr()
+{
+  return _pTlsClientContext;
 }
 
 inline SIPTransportSession::Dispatch& SIPTransportService::dispatch()

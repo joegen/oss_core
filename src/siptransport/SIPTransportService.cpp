@@ -34,8 +34,10 @@ SIPTransportService::SIPTransportService(const SIPTransportSession::Dispatch& di
   _ioService(),
   _pIoServiceThread(0),
   _resolver(_ioService),
-  _tlsServerContext(_ioService, boost::asio::ssl::context::sslv23_server),
-  _tlsClientContext(_ioService, boost::asio::ssl::context::sslv23_client),
+  _pTlsServerContext(boost::shared_ptr<boost::asio::ssl::context>(
+    new boost::asio::ssl::context(_ioService, boost::asio::ssl::context::sslv23_server))),
+  _pTlsClientContext(boost::shared_ptr<boost::asio::ssl::context>(
+    new boost::asio::ssl::context (_ioService, boost::asio::ssl::context::sslv23_client))),
   _dispatch(dispatch),
   _tcpConMgr(_dispatch),
   _tlsConMgr(_dispatch),
@@ -49,7 +51,9 @@ SIPTransportService::SIPTransportService(const SIPTransportSession::Dispatch& di
   _tcpPortMax(20000)
 #if ENABLE_FEATURE_WEBSOCKETS
  ,_wsConMgr(_dispatch),
+  _wssConMgr(_dispatch),
   _wsEnabled(true),
+  _wssEnabled(true),
   _wsPortBase(10000),
   _wsPortMax(20000)
 #endif
@@ -102,6 +106,15 @@ void SIPTransportService::run()
     {
       iter->second->run();
       OSS_LOG_INFO("Started WebSocket Listener " << iter->first);
+    }
+  }
+  
+  for (WSSListeners::iterator iter = _wssListeners.begin(); iter != _wssListeners.end(); iter++)
+  {
+    if (!iter->second->isVirtual() && !iter->second->hasStarted())
+    {
+      iter->second->run();
+      OSS_LOG_INFO("Started WebSocket TLS Listener " << iter->first);
     }
   }
 #endif
@@ -186,6 +199,28 @@ void SIPTransportService::runVirtualTransports()
       }
     }
   }
+  
+  for (WSSListeners::iterator iter = _wssListeners.begin(); iter != _wssListeners.end(); iter++)
+  {
+    if (iter->second->isVirtual())
+    {
+      if (!iter->second->hasStarted())
+      {
+        iter->second->run();
+        OSS_LOG_INFO("Started Virtual WSS Listener " << iter->first);
+      }
+      else
+      {
+        boost::system::error_code e;
+        iter->second->restart(e);
+        
+        if (e)
+        {
+          OSS_LOG_ERROR("SIPTransportService::runVirtualTransports(WSS) Exception: " << e.message());
+        }
+      }
+    }
+  }
 #endif
 
   for (TLSListeners::iterator iter = _tlsListeners.begin(); iter != _tlsListeners.end(); iter++)
@@ -264,6 +299,23 @@ void SIPTransportService::stopVirtualTransports()
       }
     }
   }
+  
+  for (WSSListeners::iterator iter = _wssListeners.begin(); iter != _wssListeners.end(); iter++)
+  {
+    if (iter->second->isVirtual())
+    {
+      if (iter->second->hasStarted())
+      {
+        boost::system::error_code e;
+        OSS_LOG_INFO("Closing Virtual WSS Listener " << iter->first);
+        iter->second->closeTemporarily(e);
+        if (e)
+        {
+          OSS_LOG_ERROR("SIPTransportService::stopVirtualTransports(WSS) Exception: " << e.message());
+        }
+      }
+    }
+  }
 #endif
   
   for (TLSListeners::iterator iter = _tlsListeners.begin(); iter != _tlsListeners.end(); iter++)
@@ -310,6 +362,10 @@ void SIPTransportService::handleStop()
   WSListeners::iterator wsIter;
   for (wsIter = _wsListeners.begin(); wsIter != _wsListeners.end(); wsIter++)
     wsIter->second->handleStop();
+  
+  WSSListeners::iterator wssIter;
+  for (wssIter = _wssListeners.begin(); wssIter != _wssListeners.end(); wssIter++)
+    wssIter->second->handleStop();
 #endif
 
   TLSListeners::iterator tlsIter;
@@ -333,6 +389,8 @@ bool SIPTransportService::isLocalTransport(const OSS::Net::IPAddress& transportA
 #if ENABLE_FEATURE_WEBSOCKETS
   else if (_wsListeners.find(key) != _wsListeners.end())
     return true;
+  else if (_wssListeners.find(key) != _wssListeners.end())
+    return true;
 #endif
   else if (_tlsListeners.find(key) != _tlsListeners.end())
     return true;
@@ -352,6 +410,8 @@ bool SIPTransportService::isLocalTransport(const std::string& proto,
 #if ENABLE_FEATURE_WEBSOCKETS
   else if (proto == "ws")
     return _wsListeners.find(key) != _wsListeners.end();
+  else if (proto == "wss")
+    return _wssListeners.find(key) != _wssListeners.end();
 #endif
   else if (proto == "tls")
     return _tlsListeners.find(key) != _tlsListeners.end();
@@ -394,6 +454,16 @@ const SIPListener* SIPTransportService::getTransportForDestination(const std::st
   else if (proto == "ws" || proto == "WS")
   {
     for (WSListeners::const_iterator iter = _wsListeners.begin(); iter != _wsListeners.end(); iter++)
+    {
+      if (iter->second->isAcceptableDestination(address))
+      {
+        return iter->second.get();
+      }
+    }
+  }
+  else if (proto == "wss" || proto == "WSS")
+  {
+    for (WSSListeners::const_iterator iter = _wssListeners.begin(); iter != _wssListeners.end(); iter++)
     {
       if (iter->second->isAcceptableDestination(address))
       {
@@ -504,6 +574,33 @@ void SIPTransportService::addWSTransport(const std::string& ip, const std::strin
   if (!ec)
     SIPTransportSession::rateLimit().clearAddress(whiteList, true);
   OSS_LOG_INFO("WebSocket SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
+}
+
+void SIPTransportService::addWSSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp, const std::string& alias)
+{
+  OSS_LOG_INFO("Adding WebSocket TLS SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
+  std::string key;
+  OSS::string_sprintf_string<256>(key, "%s:%s", ip.c_str(), port.c_str());
+  if (_wssListeners.find(key) != _wssListeners.end())
+    throw OSS::SIP::SIPException("Duplicate WebSocket transport while calling addWSSTransport()");
+  SIPWebSocketTlsListener::Ptr pWsListener = SIPWebSocketTlsListener::Ptr(new SIPWebSocketTlsListener(this, ip, port, _wssConMgr));
+  
+  pWsListener->setVirtual(isVirtualIp);
+  pWsListener->setExternalAddress(externalIp);
+  pWsListener->subNets() = subnets;
+  _wssListeners[key] = pWsListener;
+  
+  if (!alias.empty())
+  {
+    pWsListener->setTransportAlias(alias);
+    _wssListeners[alias] = pWsListener;
+  }
+  
+  boost::system::error_code ec;
+  boost::asio::ip::address whiteList = boost::asio::ip::address::from_string(ip, ec);
+  if (!ec)
+    SIPTransportSession::rateLimit().clearAddress(whiteList, true);
+  OSS_LOG_INFO("Secure WebSocket SIP Listener " << ip << ":" << port << " (" << externalIp << ") ACTIVE");
 }
 #endif
 
@@ -671,6 +768,38 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
     }
     return pWSConnection;
   }
+  else if (proto == "WSS" || proto == "wss")
+  {
+    SIPTransportSession::Ptr pWSConnection;
+
+    //
+    // Recycle old connection if it's still there
+    //
+    if (!transportId.empty())
+    {
+      pWSConnection = _wssConMgr.findConnectionById(OSS::string_to_number<OSS::UInt64>(transportId.c_str()));
+      if (requirePersistent && !pWSConnection)
+      {
+        OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId
+          << " and a persistent connection has been requested.  Giving up...");
+        return pWSConnection;
+      }
+    }
+
+    if (!pWSConnection)
+    {
+      pWSConnection = _wssConMgr.findConnectionByAddress(remoteAddress);
+    }
+
+    if (!pWSConnection)
+    {
+      if (!transportId.empty())
+      {
+        OSS_LOG_WARNING(logId << "SIPTransportService::createClientTransport - Unable to find persistent connection for transport-id=" <<  transportId);
+      }
+    }
+    return pWSConnection;
+  }
 #endif
   else if (proto == "TLS" || proto == "tls")
   {
@@ -749,7 +878,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientTlsTransport(
     const OSS::Net::IPAddress& localAddress,
     const OSS::Net::IPAddress& remoteAddress)
 {
-  SIPTransportSession::Ptr pTlsConnection(new SIPStreamedConnection(_ioService, &_tlsClientContext, _tlsConMgr, 0));
+  SIPTransportSession::Ptr pTlsConnection(new SIPStreamedConnection(_ioService, _pTlsClientContext.get(), _tlsConMgr, 0));
   pTlsConnection->isClient() = true;
   pTlsConnection->clientBind(localAddress, _tcpPortBase, _tcpPortMax);
   pTlsConnection->clientConnect(remoteAddress);
@@ -758,6 +887,16 @@ SIPTransportSession::Ptr SIPTransportService::createClientTlsTransport(
 
 #if ENABLE_FEATURE_WEBSOCKETS
 SIPTransportSession::Ptr SIPTransportService::createClientWsTransport(
+    const OSS::Net::IPAddress& localAddress,
+    const OSS::Net::IPAddress& remoteAddress)
+{
+  //
+  // We dont have a concept of client connection for websockets
+  //
+  return SIPTransportSession::Ptr();
+}
+
+SIPTransportSession::Ptr SIPTransportService::createClientWssTransport(
     const OSS::Net::IPAddress& localAddress,
     const OSS::Net::IPAddress& remoteAddress)
 {
@@ -839,6 +978,16 @@ SIPWebSocketListener::Ptr SIPTransportService::findWSListener(const std::string&
   }
   return SIPWebSocketListener::Ptr();
 }
+
+SIPWebSocketTlsListener::Ptr SIPTransportService::findWSSListener(const std::string& key) const
+{
+  WSSListeners::const_iterator iter = _wssListeners.find(key);
+  if (iter != _wssListeners.end())
+  {
+    return iter->second;
+  }
+  return SIPWebSocketTlsListener::Ptr();
+}
 #endif
   
 SIPTLSListener::Ptr SIPTransportService::findTLSListener(const std::string& key) const
@@ -900,6 +1049,15 @@ bool SIPTransportService::getExternalAddress(
       return true;
     }
   }
+  else if (proto == "wss" || proto == "WSS")
+  {
+    WSSListeners::const_iterator iter = _wssListeners.find(key);
+    if (iter != _wssListeners.end())
+    {
+      externalIp = iter->second->getExternalAddress();
+      return true;
+    }
+  }
 #endif
   else if (proto == "tls" || proto == "TLS")
   {
@@ -926,6 +1084,8 @@ bool SIPTransportService::getInternalAddress(
     return true;
 #if ENABLE_FEATURE_WEBSOCKETS
   else if (getInternalAddress("ws", externalIp, internalIp))
+    return true;
+  else if (getInternalAddress("wss", externalIp, internalIp))
     return true;
 #endif
   return false;
@@ -976,6 +1136,20 @@ bool SIPTransportService::getInternalAddress(
   {
     for (WSListeners::const_iterator iter = _wsListeners.begin();
       iter != _wsListeners.end(); iter++)
+    {
+      unsigned short port = OSS::string_to_number<unsigned short>(iter->second->getPort().c_str());
+      if (iter->second->getExternalAddress() == ip && port == externalIp.getPort())
+      {
+        internalIp = OSS::Net::IPAddress(iter->second->getAddress(), port);
+        internalIp.externalAddress() = ip;
+        return true;
+      }
+    }
+  }
+  else if (proto == "wss" || proto == "WSS")
+  {
+    for (WSSListeners::const_iterator iter = _wssListeners.begin();
+      iter != _wssListeners.end(); iter++)
     {
       unsigned short port = OSS::string_to_number<unsigned short>(iter->second->getPort().c_str());
       if (iter->second->getExternalAddress() == ip && port == externalIp.getPort())
