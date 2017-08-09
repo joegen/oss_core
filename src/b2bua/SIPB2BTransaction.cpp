@@ -717,6 +717,14 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
     if (transport == "ws" && scheme != "sips")
       _wsSrvTargets = OSS::dns_lookup_srv(srvHost);
     
+    srvHost = "_sip._wss.";
+    srvHost += host;
+
+    if (transport == "wss")
+    {
+      _wssSrvTargets = OSS::dns_lookup_srv(srvHost);
+    }
+    
     srvHost = "_sip._tls.";
     srvHost += host;
     if (transport == "tls" || scheme == "sips")
@@ -811,6 +819,29 @@ bool SIPB2BTransaction::resolveSessionTarget(SIPMessage::Ptr& pClientRequest, OS
       if (transport == "ws")
       {
         OSS_LOG_DEBUG(logId << "SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._ws." << host << " not found ");
+      }
+    }
+    
+    if (!target.isValid() && !_wssSrvTargets.empty())
+    {
+      //
+      // sort then get the first transport
+      //
+      unsigned short targetPort = _wssSrvTargets.begin()->get<2>();
+      if (targetPort == 0)
+        targetPort = 5060;
+      target = _wssSrvTargets.begin()->get<1>();
+      target.setPort(targetPort);
+      
+      OSS_LOG_DEBUG(logId << "SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._wss." << host << " -> " << target.toIpPortString());
+      
+      pClientRequest->setProperty(OSS::PropertyMap::PROP_TargetTransport, "wss");
+    }
+    else if (!target.isValid())
+    {
+      if (transport == "wss")
+      {
+        OSS_LOG_DEBUG(logId << "SIPB2BTransaction::resolveSessionTarget - DNS/SRV _sip._wss." << host << " not found ");
       }
     }
 

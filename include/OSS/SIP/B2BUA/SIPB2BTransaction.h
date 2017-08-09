@@ -218,6 +218,7 @@ protected:
   OSS::dns_srv_record_list _udpSrvTargets;
   OSS::dns_srv_record_list _tcpSrvTargets;
   OSS::dns_srv_record_list _wsSrvTargets;
+  OSS::dns_srv_record_list _wssSrvTargets;
   OSS::dns_srv_record_list _tlsSrvTargets;
   OSS::Net::IPAddress _localInterface;
   SIPB2BDialogData _dialogData;

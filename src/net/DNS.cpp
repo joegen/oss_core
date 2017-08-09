@@ -26,7 +26,7 @@
 
 #define DNS_USE_UDNSPP 1
 
-#if DNS_USE_UDNSPP
+#if !DNS_USE_UDNSPP
 
 #if OSS_OS_FAMILY_WINDOWS
   #include <windns.h>
@@ -530,6 +530,11 @@ dns_host_record_list OSS_API dns_lookup_host(const std::string& query)
 {
   dns_host_record_list rrlist;
   
+  if (OSS::string_ends_with(query, ".invalid"))
+  {
+    return rrlist;
+  }
+  
   if (OSS::Net::IPAddress::isIPAddress(query))
   {
     rrlist.push_back(query);
@@ -550,6 +555,11 @@ dns_host_record_list OSS_API dns_lookup_host(const std::string& query)
 dns_srv_record_list OSS_API dns_lookup_srv(const std::string& query)
 {
   dns_srv_record_list rrlist;
+  
+  if (OSS::string_ends_with(query, ".invalid"))
+  {
+    return rrlist;
+  }
   
   DNSSRVRecord rr = gResolver.resolveSRV(query, 0);
   

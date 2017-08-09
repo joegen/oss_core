@@ -59,6 +59,8 @@ bool SIPB2BContact::transform(SIPB2BTransactionManager* pManager,
     else if (via.find("2.0/tls") != std::string::npos)
       transportScheme = "tls";
     else if (via.find("2.0/ws") != std::string::npos)
+      transportScheme = "wss";
+    else if (via.find("2.0/ws") != std::string::npos)
       transportScheme = "ws";
   }
 

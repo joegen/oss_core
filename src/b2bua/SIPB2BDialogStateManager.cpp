@@ -1296,7 +1296,7 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
     //
     // User request URI if no route is set
     //
-    if (!targetAddress.isValid() && transportScheme != "WS")
+    if (!targetAddress.isValid() && (transportScheme != "WS" && transportScheme != "WSS"))
     {
       SIPURI requestTarget = remoteContact.getURI();
       std::string host;
@@ -1328,7 +1328,7 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
         targetAddress = IPAddress::fromV4IPPort(pLeg->remoteIp.c_str());
     }
 
-    if (!targetAddress.isValid() && transportScheme != "WS")
+    if (!targetAddress.isValid() && (transportScheme != "WS" && transportScheme != "WSS"))
     {
       SIPMessage::Ptr serverError = pMsg->createResponse(SIPMessage::CODE_481_TransactionDoesNotExist, "Unable to determine dialog target");
       return serverError;
@@ -1340,7 +1340,7 @@ SIPMessage::Ptr SIPB2BDialogStateManager::onRouteMidDialogTransaction(
     return serverError;
   }
 
-  if (!targetAddress.isValid() && transportScheme != "WS")
+  if (!targetAddress.isValid() && (transportScheme != "WS" && transportScheme != "WSS"))
   {
     SIPMessage::Ptr serverError = pMsg->createResponse(SIPMessage::CODE_500_InternalServerError, "Can't Resolve Requested Target");
     return serverError;
@@ -1547,7 +1547,7 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
     //
     std::string host;
     unsigned short port = 0;
-    if (!targetAddress.isValid() && transportScheme != "WS")
+    if (!targetAddress.isValid() && (transportScheme != "WS" && transportScheme != "WSS"))
     {
       SIPURI requestTarget = remoteContact.getURI();
       requestTarget.getHostPort(host, port);
@@ -1576,7 +1576,7 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
       targetAddress = IPAddress::fromV4IPPort(remoteIp.c_str());
     }
 
-    if (!targetAddress.isValid() && transportScheme != "WS")
+    if (!targetAddress.isValid() && (transportScheme != "WS" && transportScheme != "WSS"))
       throw B2BUAStateException("Unable to determine target for ACK request");
 
     std::ostringstream cacheId;

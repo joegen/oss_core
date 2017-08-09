@@ -1015,7 +1015,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onProcessRequestBody(
   // do not handle SDP for SIP over websockets.  It is using ICE
   // to traverse NAT.  Media anchor will mess that up.
   //
-  if (pTransaction->serverTransport() && pTransaction->serverTransport()->getTransportScheme() == "ws")
+  if (pTransaction->serverTransport() && (pTransaction->serverTransport()->getTransportScheme() == "ws" || pTransaction->serverTransport()->getTransportScheme() == "wss"))
     return OSS::SIP::SIPMessage::Ptr();
   
   std::string sessionId;
@@ -1174,7 +1174,7 @@ void SIPB2BScriptableHandler::onProcessResponseBody(
   // do not handle SDP for SIP over websockets.  It is using ICE
   // to traverse NAT.  Media anchor will mess that up.
   //
-  if (pTransaction->serverTransport() && pTransaction->serverTransport()->getTransportScheme() == "ws")
+  if (pTransaction->serverTransport() && (pTransaction->serverTransport()->getTransportScheme() == "ws" || pTransaction->serverTransport()->getTransportScheme() == "wss"))
     return;
 
   //
