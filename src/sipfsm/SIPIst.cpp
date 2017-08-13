@@ -137,6 +137,7 @@ bool SIPIst::onSendMessage(SIPMessage::Ptr pMsg)
     }
     else if (pMsg->is2xx())
     {
+      pTransaction->markHasSent2xx();
       pTransaction->setState(SIPTransaction::TRN_STATE_TERMINATED);
       pTransaction->terminate();
       

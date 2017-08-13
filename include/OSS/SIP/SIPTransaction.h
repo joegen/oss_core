@@ -326,6 +326,9 @@ public:
   void attachB2BTransaction(const B2BTransactionSharedPtr& pB2BTransaction);
   
   B2BTransactionSharedPtr getB2BTransaction();
+  
+  void markHasSent2xx();
+  bool hasSent2xx() const;
 protected:
   SIPTransaction::Callback _responseTU;
   SIPTransaction::TerminateCallback _terminateCallback;
@@ -359,6 +362,7 @@ private:
   SIPMessage::Ptr _pInitialRequest;
   bool _hasTerminated;
   bool _reconnectOnResponse;
+  bool _hasSent2xx;
   friend class SIPTransactionPool;
   friend class SIPIstPool;
   friend class SIPNistPool;
@@ -470,6 +474,15 @@ inline SIPTransaction::Type SIPTransaction::getType() const
 inline void SIPTransaction::setResponseCallback(const ResponseCallback& responseCallback)
 {
   _responseCallback = responseCallback;
+}
+
+inline void SIPTransaction::markHasSent2xx()
+{
+  _hasSent2xx = true;
+}
+inline bool SIPTransaction::hasSent2xx() const
+{
+  return _hasSent2xx;
 }
 
 } } // namespace OSS::SIP

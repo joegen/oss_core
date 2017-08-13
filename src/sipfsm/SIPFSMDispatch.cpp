@@ -177,6 +177,19 @@ void SIPFSMDispatch::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
   }
   else
   {
+    if (transactionType == SIPTransaction::TYPE_IST && pMsg->isRequest("ACK") && trn->hasSent2xx())
+    {
+      //
+      // There is a transaction but it is already completed so this is an ACK for 2xx
+      // This can happen if the ACK for 2xx has the via branch as the 2xx.  We handle it gracefully
+      //
+      if (_ackOr2xxTransactionHandler)
+      {
+        OSS_LOG_DEBUG("Found transaction " << trn->getId() << " for ACK but it is already terminated.  This is an ACK for 2XX");
+        _ackOr2xxTransactionHandler(pMsg, pTransport);
+      }
+    }
+    
     if (!trn->transportService())
     {
       //

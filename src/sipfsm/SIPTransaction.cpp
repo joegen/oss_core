@@ -48,7 +48,8 @@ SIPTransaction::SIPTransaction():
   _pParent(),
   _isParent(true),
   _hasTerminated(false),
-  _reconnectOnResponse(false)
+  _reconnectOnResponse(false),
+  _hasSent2xx(false)
 {
 }
 
@@ -65,7 +66,8 @@ SIPTransaction::SIPTransaction(SIPTransaction::Ptr pParent) :
   _pParent(pParent),
   _isParent(false),
   _hasTerminated(false),
-  _reconnectOnResponse(false)
+  _reconnectOnResponse(false),
+  _hasSent2xx(false)
 {
   _id = pParent->getId();
   _logId = pParent->getLogId();
@@ -96,7 +98,8 @@ SIPTransaction::SIPTransaction(const SIPTransaction&) :
   _pParent(),
   _isParent(false),
   _hasTerminated(false),
-  _reconnectOnResponse(false)
+  _reconnectOnResponse(false),
+  _hasSent2xx(false)
 {
 }
 
@@ -529,7 +532,7 @@ void SIPTransaction::terminate()
 
   if (isParent())
   {
-    OSS_LOG_INFO(_logId << getTypeString() << " (parent) TERMINATED - child(ren) " << getActiveBranchCount());
+    OSS_LOG_INFO(_logId << getTypeString() << " " << getId() << " (parent) TERMINATED - child(ren) " << getActiveBranchCount());
     {
       OSS::mutex_critic_sec_lock lock(_branchesMutex);
       for (Branches::iterator iter = _branches.begin(); iter != _branches.end(); iter++)
@@ -545,7 +548,7 @@ void SIPTransaction::terminate()
   }
   else
   {
-    OSS_LOG_INFO(_logId << getTypeString() << " (child) TERMINATED - siblings " << getActiveBranchCount());
+    OSS_LOG_INFO(_logId << getTypeString() << " " << getId() << " (child) TERMINATED - siblings " << getActiveBranchCount());
   }
 }
 
