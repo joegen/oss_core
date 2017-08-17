@@ -265,7 +265,6 @@ SIPB2BScriptableHandler::SIPB2BScriptableHandler(
   _inboundScript(contextName),
   _authScript(contextName),
   _routeScript(contextName),
-  _routeFailoverScript(contextName),
   _outboundScript(contextName),
   _outboundResponseScript(contextName),
   _pTransactionManager(pTransactionManager),
@@ -1955,13 +1954,6 @@ void SIPB2BScriptableHandler::recompileScripts()
     logMsg << "Recompiling script " << _routeScript.getScriptFilePath();
     OSS::log_information(logMsg.str());
     _routeScript.recompile();
-  }
-  if (_routeFailoverScript.isInitialized())
-  {
-    std::ostringstream logMsg;
-    logMsg << "Recompiling script " << _routeFailoverScript.getScriptFilePath();
-    OSS::log_information(logMsg.str());
-    _routeFailoverScript.recompile();
   }
   if (_outboundScript.isInitialized())
   {

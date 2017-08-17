@@ -242,12 +242,6 @@ public:
     /// This method will throw a JSSIPMessageException if an error occurs
     /// in loading or compiling the script
 
-  bool loadRouteFailoverScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals = "", const std::string& helpers = "");
-    /// Load the routing failover script file for this transaction.
-    ///
-    /// This method will throw a JSSIPMessageException if an error occurs
-    /// in loading or compiling the script
-
   bool loadOutboundScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals = "", const std::string& helpers = "");
     /// Load the routing script file for this transaction.
     ///
@@ -356,7 +350,6 @@ protected:
   OSS::JS::JSSIPMessage _inboundScript;
   OSS::JS::JSSIPMessage _authScript;
   OSS::JS::JSSIPMessage _routeScript;
-  OSS::JS::JSSIPMessage _routeFailoverScript;
   OSS::JS::JSSIPMessage _outboundScript;
   OSS::JS::JSSIPMessage _outboundResponseScript;
   SIPB2BTransactionManager* _pTransactionManager;
@@ -412,11 +405,6 @@ inline bool SIPB2BScriptableHandler::loadAuthScript(const boost::filesystem::pat
 inline bool SIPB2BScriptableHandler::loadRouteScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals, const std::string& helpers)
 {
   return loadScript(_routeScript, scriptFile, extensionGlobals, globals, helpers);
-}
-
-inline bool SIPB2BScriptableHandler::loadRouteFailoverScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals, const std::string& helpers)
-{
-  return loadScript(_routeFailoverScript, scriptFile, extensionGlobals, globals, helpers);
 }
 
 inline bool SIPB2BScriptableHandler::loadOutboundScript(const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals, const std::string& helpers)
