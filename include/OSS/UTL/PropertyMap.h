@@ -26,6 +26,9 @@ struct PropertyMap
 {
   #define PROP_MAP_STRINGS \
   { \
+    "source-address", \
+    "source-port", \
+    "source-transport", \
     "target-address", \
     "target-port", \
     "target-transport", \
@@ -81,6 +84,9 @@ struct PropertyMap
 
   enum Enum
   {
+    PROP_SourceAddress,
+    PROP_SourcePort,
+    PROP_SourceTransport,
     PROP_TargetAddress,
     PROP_TargetPort,
     PROP_TargetTransport,
