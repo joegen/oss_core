@@ -57,6 +57,7 @@ public:
 
   struct Attributes
   {
+    typedef std::map<std::string, std::string> CustomAttributes;
     bool verbose;
     bool forceCreate;
     bool enableTranscoding;
@@ -70,8 +71,7 @@ public:
     bool countSessions;
     bool isRemoteRpc;
     int legIndex;
-    std::string inboundCodecs;
-    std::string outboundCodecs;
+    CustomAttributes attributes;
 
     Attributes()
     {
