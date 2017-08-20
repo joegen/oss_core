@@ -1011,79 +1011,14 @@ bool SIPStack::initializeTlsContext(
     bool verifyPeer // Verify the peer certificates.  If the peer CA file is not set, set this value to false
 )
 {
-  boost::asio::ssl::context& tlsClientContext = transport().tlsClientContext();
-  boost::asio::ssl::context& tlsServerContext = transport().tlsServerContext();
-  //
-  // configure the client context
-  //
-  if (verifyPeer)
-  {
-    tlsClientContext.set_verify_mode(boost::asio::ssl::context::verify_none);
-    tlsServerContext.set_verify_mode(boost::asio::ssl::context::verify_peer | boost::asio::ssl::context::verify_fail_if_no_peer_cert);
-    OSS_LOG_INFO("SIPStack::initializeTlsContext - Peer Certificate Verification Enforcing");
-  }
-  else
-  {
-    tlsClientContext.set_verify_mode(boost::asio::ssl::context::verify_none);
-    tlsServerContext.set_verify_mode(boost::asio::ssl::context::verify_none);
-    OSS_LOG_INFO("SIPStack::initializeTlsContext - Peer Certificate Verification Disabled");
-  }
-  
-  if (!peerCaFile.empty())
-  {
-    try
-    {
-      tlsClientContext.load_verify_file(peerCaFile);
-      tlsServerContext.load_verify_file(peerCaFile);
-    }
-    catch(...)
-    {
-      OSS_LOG_WARNING("SIPStack::initializeTlsContext - Unable to load peerCaFile " << peerCaFile << " TLS will be disabled.");
-      return false;
-    }
-    OSS_LOG_INFO("SIPStack::initializeTlsContext - Loaded peerCaFile " << peerCaFile);
-  }
-
-  if (!peerCaPath.empty())
-  {
-    try
-    {
-      tlsClientContext.add_verify_path(peerCaPath);
-      tlsServerContext.add_verify_path(peerCaPath);
-    }
-    catch(...)
-    {
-      OSS_LOG_ERROR("SIPStack::initializeTlsContext - Unable to add peerCaPath " << peerCaPath);
-      return false;
-    }
-    OSS_LOG_INFO("SIPStack::initializeTlsContext - Loaded peerCaPath " << peerCaPath);
-  }
-  
-  //
-  // Configure the server context
-  //
-  
-  _tlsCertPassword = tlsCertFilePassword;
-  
-  try
-  {
-    tlsClientContext.set_password_callback(boost::bind(&SIPStack::getTlsCertPassword, this));
-    tlsClientContext.use_certificate_file(tlsCertFile, boost::asio::ssl::context::pem);
-    tlsClientContext.use_private_key_file(privateKey, boost::asio::ssl::context::pem);
-    
-    tlsServerContext.set_password_callback(boost::bind(&SIPStack::getTlsCertPassword, this));
-    tlsServerContext.use_certificate_file(tlsCertFile, boost::asio::ssl::context::pem);
-    tlsServerContext.use_private_key_file(privateKey, boost::asio::ssl::context::pem);
-  }
-  catch(...)
-  {
-    OSS_LOG_ERROR("SIPStack::initializeTlsContext - Unable to add tlsCertFile " << tlsCertFile);
-    return false;
-  }
-  
-  OSS_LOG_INFO("SIPStack::initializeTlsContext - Server certificate " << tlsCertFile << " loaded");
-  
-  return true;
+  return transport().initializeTlsContext(
+    verifyPeer,
+    peerCaFile, // can be empty
+    peerCaPath, // can be empty
+    tlsCertFilePassword, // can be empty
+    tlsCertFile, // required
+    privateKey // required
+  );
 }
 
 void SIPStack::stop()

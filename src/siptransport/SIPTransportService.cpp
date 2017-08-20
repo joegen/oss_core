@@ -34,10 +34,6 @@ SIPTransportService::SIPTransportService(const SIPTransportSession::Dispatch& di
   _ioService(),
   _pIoServiceThread(0),
   _resolver(_ioService),
-  _pTlsServerContext(boost::shared_ptr<boost::asio::ssl::context>(
-    new boost::asio::ssl::context(_ioService, boost::asio::ssl::context::sslv23_server))),
-  _pTlsClientContext(boost::shared_ptr<boost::asio::ssl::context>(
-    new boost::asio::ssl::context (_ioService, boost::asio::ssl::context::sslv23_client))),
   _dispatch(dispatch),
   _tcpConMgr(_dispatch),
   _tlsConMgr(_dispatch),

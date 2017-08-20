@@ -17,7 +17,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#include "OSS/Net/WebSocketServer.h"
+#include "OSS/Net/WebSocketTlsServer.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/Net/IPAddress.h"
 #include "OSS/UTL/CoreUtils.h"
@@ -26,7 +26,7 @@
 namespace OSS {
 namespace Net {
 
-
+  
 static int get_next_index()
 {
   static int index = 0;
@@ -37,80 +37,91 @@ static int get_next_index()
   return index;
 }
 
-class ServerReadWriteHandler : public websocketpp::server::handler
+class ServerReadWriteHandler : public websocketpp::server_tls::handler
 {
 public:
-  ServerReadWriteHandler(WebSocketServer& listener) :
+  ServerReadWriteHandler(WebSocketTlsServer& listener) :
     _listener(listener)
   {
   }
 
-  void on_close(websocketpp::server::connection_ptr pConnection)
+  void on_close(websocketpp::server_tls::connection_ptr pConnection)
   {
     _listener.handleClose(pConnection);
   }
 
-  void on_message(websocketpp::server::connection_ptr pConnection, websocketpp::server::handler::message_ptr pMsg)
+  void on_message(websocketpp::server_tls::connection_ptr pConnection, websocketpp::server_tls::handler::message_ptr pMsg)
   {
     std::string payload = pMsg->get_payload();
     _listener.handleMessage(pConnection, payload);
   }
   
-  void on_error(websocketpp::server::connection_ptr pConnection)
+  void on_error(websocketpp::server_tls::connection_ptr pConnection)
   {
     std::string error = pConnection->get_fail_reason();
     _listener.handleError(pConnection, error);
   }
 
-  bool on_ping(websocketpp::server::connection_ptr pConnection)
+  bool on_ping(websocketpp::server_tls::connection_ptr pConnection)
   {
     _listener.handlePing(pConnection);
     return true;
   }
   
-  void on_pong(websocketpp::server::connection_ptr pConnection)
+  void on_pong(websocketpp::server_tls::connection_ptr pConnection)
   {
     _listener.handlePong(pConnection);
   }
   
-  void on_pong_timeout(websocketpp::server::connection_ptr pConnection,std::string)
+  void on_pong_timeout(websocketpp::server_tls::connection_ptr pConnection,std::string)
   {
     _listener.handlePongTimeout(pConnection);
   }
+  
+  boost::shared_ptr<boost::asio::ssl::context> on_tls_init() 
+  {
+    return _listener.getTlsContext();
+  }
 
 private:
-  WebSocketServer& _listener;
+  WebSocketTlsServer& _listener;
 };
   
-class ServerAcceptHandler : public websocketpp::server::handler
+class ServerAcceptHandler : public websocketpp::server_tls::handler
 {
 public:
-  ServerAcceptHandler(WebSocketServer& listener) :
+  ServerAcceptHandler(WebSocketTlsServer& listener) :
     _listener(listener)
   {
   }
 
-  void on_fail(websocketpp::server::connection_ptr pConnection)
+  void on_fail(websocketpp::server_tls::connection_ptr pConnection)
   {
     OSS_LOG_ERROR("ServerAcceptHandler::on_fail reason: " << pConnection->get_fail_reason());
   }
-  void on_open(websocketpp::server::connection_ptr pConnection)
+  void on_open(websocketpp::server_tls::connection_ptr pConnection)
   {
     OSS_LOG_DEBUG("SIPWebSocketListener::ServerAcceptHandler::on_open");
     _listener.handleOpen(pConnection);
   }
-  void validate(websocketpp::server::connection_ptr pConnection)
+  void validate(websocketpp::server_tls::connection_ptr pConnection)
   {
   }
-  WebSocketServer& _listener;
+  
+  boost::shared_ptr<boost::asio::ssl::context> on_tls_init()
+  {
+    return _listener.getTlsContext();
+  }
+  
+  WebSocketTlsServer& _listener;
 };
   
-WebSocketServer::WebSocketServer() :
+WebSocketTlsServer::WebSocketTlsServer() :
   _pServerThread(0),
   _hasStarted(false)
 {
-  _pServerAcceptHandler = websocketpp::server::handler::ptr(new ServerAcceptHandler(*this));
-  _pServerEndPoint = new websocketpp::server(_pServerAcceptHandler);
+  _pServerAcceptHandler = websocketpp::server_tls::handler::ptr(new ServerAcceptHandler(*this));
+  _pServerEndPoint = new websocketpp::server_tls(_pServerAcceptHandler);
   if (PRIO_DEBUG == log_get_level())
   {
     _pServerEndPoint->alog().set_level(websocketpp::log::alevel::ALL);
@@ -118,13 +129,13 @@ WebSocketServer::WebSocketServer() :
   }
 }
 
-WebSocketServer::~WebSocketServer()
+WebSocketTlsServer::~WebSocketTlsServer()
 {
   close();
   delete _pServerEndPoint;
 }
-  
-bool WebSocketServer::listen(const std::string& bindAddress)
+ 
+bool WebSocketTlsServer::listen(const std::string& bindAddress)
 {
   _bindAddress = IPAddress::fromV4IPPort(bindAddress.c_str());
   if (!_bindAddress.isValid())
@@ -134,13 +145,13 @@ bool WebSocketServer::listen(const std::string& bindAddress)
   if (!_hasStarted)
   {
     assert(!_pServerThread);
-    _pServerThread = new boost::thread(boost::bind(&WebSocketServer::internal_listen, this));
+    _pServerThread = new boost::thread(boost::bind(&WebSocketTlsServer::internal_listen, this));
     _hasStarted = true;
   }
   return _hasStarted;
 }
 
-void WebSocketServer::internal_listen()
+void WebSocketTlsServer::internal_listen()
 {
   try
   {
@@ -151,13 +162,13 @@ void WebSocketServer::internal_listen()
   }
   catch(const std::exception& e)
   {
-    OSS_LOG_ERROR("WebSocketServer::listen " << _bindAddress.toIpPortString() << " Exception: " << e.what());
+    OSS_LOG_ERROR("WebSocketTlsServer::listen " << _bindAddress.toIpPortString() << " Exception: " << e.what());
   }
   
   _hasStarted = false;
 }
 
-void WebSocketServer::close()
+void WebSocketTlsServer::close()
 {
   _pServerEndPoint->stop_listen(true);
   if (_pServerThread)
@@ -168,7 +179,7 @@ void WebSocketServer::close()
   }
 }
 
-bool  WebSocketServer::sendMessage(int connectionId, const std::string& msg)
+bool  WebSocketTlsServer::sendMessage(int connectionId, const std::string& msg)
 {
   OSS::mutex_critic_sec_lock lock(_connectionsMutex);
   Connections::iterator iter = _connections.find(connectionId);
@@ -187,52 +198,52 @@ bool  WebSocketServer::sendMessage(int connectionId, const std::string& msg)
   return true;
 }
 
-void WebSocketServer::handleOpen(websocketpp::server::connection_ptr pConnection)
+void WebSocketTlsServer::handleOpen(websocketpp::server_tls::connection_ptr pConnection)
 {
-  pConnection->set_handler(websocketpp::server::handler::ptr(new ServerReadWriteHandler(*this)));
+  pConnection->set_handler(websocketpp::server_tls::handler::ptr(new ServerReadWriteHandler(*this)));
   
   _connectionsMutex.lock();
   pConnection->m_Identifier = get_next_index();
   
-  OSS_LOG_DEBUG("WebSocketServer::handleOpen: Connection id " <<  pConnection->m_Identifier << " CREATED");
+  OSS_LOG_DEBUG("WebSocketTlsServer::handleOpen: Connection id " <<  pConnection->m_Identifier << " CREATED");
   _connections[pConnection->m_Identifier] = pConnection;
   _connectionsMutex.unlock();
   
   onOpen(pConnection->m_Identifier);
 }
 
-void WebSocketServer::handleClose(websocketpp::server::connection_ptr pConnection)
+void WebSocketTlsServer::handleClose(websocketpp::server_tls::connection_ptr pConnection)
 {
-  OSS_LOG_DEBUG("WebSocketServer::handleClose: Connection id " <<  pConnection->m_Identifier << " CLOSED");
+  OSS_LOG_DEBUG("WebSocketTlsServer::handleClose: Connection id " <<  pConnection->m_Identifier << " CLOSED");
   onClose(pConnection->m_Identifier);
   _connectionsMutex.lock();
   _connections.erase(pConnection->m_Identifier);
   _connectionsMutex.unlock();
 }
 
-void WebSocketServer::handleError(websocketpp::server::connection_ptr pConnection, const std::string& error)
+void WebSocketTlsServer::handleError(websocketpp::server_tls::connection_ptr pConnection, const std::string& error)
 {
-  OSS_LOG_DEBUG("WebSocketServer::handleError: Connection id " <<  pConnection->m_Identifier << " ERROR: " << error);
+  OSS_LOG_DEBUG("WebSocketTlsServer::handleError: Connection id " <<  pConnection->m_Identifier << " ERROR: " << error);
   onError(pConnection->m_Identifier, error);
 }
 
-void WebSocketServer::handleMessage(websocketpp::server::connection_ptr pConnection, const std::string& message)
+void WebSocketTlsServer::handleMessage(websocketpp::server_tls::connection_ptr pConnection, const std::string& message)
 {
-  OSS_LOG_DEBUG("WebSocketServer::handleMessage: Connection id " <<  pConnection->m_Identifier << " received message " << message);
+  OSS_LOG_DEBUG("WebSocketTlsServer::handleMessage: Connection id " <<  pConnection->m_Identifier << " received message " << message);
   onMessage(pConnection->m_Identifier, message);
 }
 
-void WebSocketServer::handlePing(websocketpp::server::connection_ptr pConnection)
+void WebSocketTlsServer::handlePing(websocketpp::server_tls::connection_ptr pConnection)
 {
   onPing(pConnection->m_Identifier);
 }
 
-void WebSocketServer::handlePong(websocketpp::server::connection_ptr pConnection)
+void WebSocketTlsServer::handlePong(websocketpp::server_tls::connection_ptr pConnection)
 {
   onPong(pConnection->m_Identifier);
 }
 
-void WebSocketServer::handlePongTimeout(websocketpp::server::connection_ptr pConnection)
+void WebSocketTlsServer::handlePongTimeout(websocketpp::server_tls::connection_ptr pConnection)
 {
   onPongTimeout(pConnection->m_Identifier);
 }

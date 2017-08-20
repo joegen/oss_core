@@ -39,7 +39,7 @@
 #include "OSS/SIP/SIPWebSocketTlsListener.h"
 #include "OSS/SIP/SIPTLSListener.h"
 #include "OSS/EP/EndpointListener.h"
-
+#include "OSS/Net/TlsContext.h"
 
 
 namespace OSS {
@@ -60,7 +60,8 @@ public:
   typedef std::map<std::string, SIPWebSocketTlsListener::Ptr> WSSListeners;
 #endif
   typedef std::map<std::string, SIPTLSListener::Ptr> TLSListeners;
-  typedef std::map<std::string, EndpointListener*> Endpoints;;
+  typedef std::map<std::string, EndpointListener*> Endpoints;
+  typedef OSS::Net::TlsContext TlsContext;
 
   SIPTransportService(const SIPTransportSession::Dispatch& dispatch);
 
@@ -284,18 +285,27 @@ public:
   boost::asio::ssl::context& tlsServerContext();
   boost::asio::ssl::context& tlsClientContext();
   
-  boost::shared_ptr<boost::asio::ssl::context> tlsServerContextPtr();
-  boost::shared_ptr<boost::asio::ssl::context> tlsClientContextPtr();
+  TlsContext::Context tlsServerContextPtr();
+  TlsContext::Context tlsClientContextPtr();
   
   SIPTransportSession::Dispatch& dispatch();
+  
+  bool initializeTlsContext(
+    bool verifyPeer,
+    const std::string& peerCaFile, // can be empty
+    const std::string& caDirectory, // can be empty
+    const std::string& certPassword, // can be empty
+    const std::string& certFile, // required
+    const std::string& privateKey // required
+  );
   
 private:
   boost::asio::io_service _ioService;
   boost::thread* _pIoServiceThread;
   boost::asio::ip::tcp::resolver _resolver;
   
-  boost::shared_ptr<boost::asio::ssl::context> _pTlsServerContext;
-  boost::shared_ptr<boost::asio::ssl::context> _pTlsClientContext;
+  TlsContext::Context _pTlsServerContext;
+  TlsContext::Context _pTlsClientContext;
   
   SIPTransportSession::Dispatch _dispatch;
   SIPStreamedConnectionManager _tcpConMgr;
@@ -320,6 +330,7 @@ private:
   unsigned short _wsPortBase;
   unsigned short _wsPortMax;
 #endif
+  TlsContext _tlsContext;
 
 };
 
@@ -425,12 +436,12 @@ inline boost::asio::ssl::context& SIPTransportService::tlsClientContext()
   return *_pTlsClientContext.get();
 }
 
-inline boost::shared_ptr<boost::asio::ssl::context> SIPTransportService::tlsServerContextPtr()
+inline SIPTransportService::TlsContext::Context SIPTransportService::tlsServerContextPtr()
 {
   return _pTlsServerContext;
 }
 
-inline boost::shared_ptr<boost::asio::ssl::context> SIPTransportService::tlsClientContextPtr()
+inline SIPTransportService::TlsContext::Context SIPTransportService::tlsClientContextPtr()
 {
   return _pTlsClientContext;
 }
@@ -438,6 +449,24 @@ inline boost::shared_ptr<boost::asio::ssl::context> SIPTransportService::tlsClie
 inline SIPTransportSession::Dispatch& SIPTransportService::dispatch()
 {
   return _dispatch;
+}
+
+inline bool SIPTransportService::initializeTlsContext(
+  bool verifyPeer,
+  const std::string& peerCaFile, // can be empty
+  const std::string& caDirectory, // can be empty
+  const std::string& certPassword, // can be empty
+  const std::string& certFile, // required
+  const std::string& privateKey // required
+)
+{
+  if (_tlsContext.initialize(&_ioService, verifyPeer, peerCaFile, caDirectory, certPassword, certFile, privateKey))
+  {
+    _pTlsClientContext = _tlsContext.getClientContext();
+    _pTlsServerContext = _tlsContext.getServerContext();
+    return true;
+  }
+  return false;
 }
 
 } } // OSS::SIP

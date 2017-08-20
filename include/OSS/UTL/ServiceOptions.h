@@ -121,6 +121,8 @@ public:
 
   pid_t  writePidFile(const char* pidFile, bool exclusive);
   
+  int argc();
+  char** argv();
 protected:
   boost::program_options::options_description* options_description(OptionType type);
   
@@ -823,6 +825,16 @@ inline void ServiceOptions::waitForTerminationRequest()
 	int sig;
 	sigwait(&sset, &sig);
   std::cout << "Termination Signal RECEIVED" << std::endl;
+}
+
+inline int ServiceOptions::argc()
+{
+  return _argc;
+}
+
+inline char** ServiceOptions::argv()
+{
+  return _argv;
 }
 
 } // OSS
