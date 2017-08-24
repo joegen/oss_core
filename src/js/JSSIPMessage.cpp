@@ -18,6 +18,8 @@
 //
 
 
+#include <OSS/SIP/SIPHeaderTokens.h>
+
 #include "OSS/JS/JSSIPMessage.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/Net/Net.h"
@@ -31,6 +33,8 @@
 #include "OSS/SIP/SIPFrom.h"
 #include "OSS/SIP/SIPURI.h"
 #include "OSS/SIP/SIPContact.h"
+#include "OSS/SIP/SIPCSeq.h"
+
 
 namespace OSS {
 namespace JS {
@@ -66,6 +70,31 @@ static std::string jsvalToString(const jsval& str)
     return "";
   jsstringutf8 value(str);
   return *value;
+}
+
+static /*size_t*/ jsval msgGetMethod(const jsargs& args/*const char* headerName*/)
+{
+  if (args.Length() != 1)
+    return jsvoid();
+
+  jsscope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return jsvoid();
+
+  try
+  {
+    std::string cseq = pMsg->hdrGet(OSS::SIP::HDR_CSEQ);
+    OSS::SIP::SIPCSeq hCSeq(cseq.c_str());
+    return jsstring::New(hCSeq.getMethod().c_str());
+  }
+  catch(OSS::Exception e)
+  {
+    std::ostringstream msg;
+    msg << "JavaScript->C++ Exception: msgGetMethod - " << e.message();
+    OSS::log_error(msg.str());
+    return jsvoid();
+  }
 }
 
 static /*size_t*/ jsval msgHdrPresent(const jsargs& args/*const char* headerName*/)
@@ -1372,6 +1401,53 @@ static jsval msgGetRequestUriPort(const jsargs& args)
   return jsvoid();
 }
 
+static jsval msgGetRequestUriParameters(const jsargs& args)
+{
+  if (args.Length() < 1)
+    return jsvoid();
+
+  jsscope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return jsvoid();
+
+  std::string requestURI;
+  if (SIPRequestLine::getURI(pMsg->startLine(), requestURI))
+  {
+    std::string params;
+    if (SIPURI::getParams(requestURI, params))
+      return jsstring::New(params.c_str());
+  }
+  return jsvoid();
+}
+
+static jsval msgSetRequestUriParameters(const jsargs& args)
+{
+  if (args.Length() < 2)
+    return jsbool::New(false);
+
+  jsscope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return jsbool::New(false);
+  
+  std::string params = jsvalToString(args[1]);
+
+  try
+  {
+    std::string requestURI;
+    if (SIPRequestLine::getURI(pMsg->startLine(), requestURI))
+    {
+      SIPURI::setParams(requestURI, params);
+    }
+  }
+  catch(...)
+  {
+    return jsbool::New(false);
+  }
+  return jsbool::New(true);
+}
+
 jsval msgGetToUser(const jsargs& args)
 {
   if (args.Length() < 1)
@@ -1447,6 +1523,30 @@ jsval msgGetToHost(const jsargs& args)
   if (!SIPFrom::getHost(to, host))
     return jsvoid();
   return jsstring::New(host.c_str());
+}
+
+jsval msgGetToPort(const jsargs& args)
+{
+  if (args.Length() < 1)
+    return jsvoid();
+
+  jsscope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return jsvoid();
+
+  std::string to = pMsg->hdrGet(OSS::SIP::HDR_TO);
+  std::string host;
+  if (!SIPFrom::getHostPort(to, host))
+    return jsvoid();
+  
+  std::vector<std::string> tokens = OSS::string_tokenize(host, ":");
+  if (tokens.size() <= 1)
+  {
+    return jsvoid();
+  }
+  
+  return jsstring::New(tokens[1].c_str());
 }
 
 jsval msgSetToHostPort(const jsargs& args)
@@ -1550,6 +1650,30 @@ jsval msgGetFromHost(const jsargs& args)
   if (!SIPFrom::getHost(from, host))
     return jsvoid();
   return jsstring::New(host.c_str());
+}
+
+jsval msgGetFromPort(const jsargs& args)
+{
+  if (args.Length() < 1)
+    return jsvoid();
+
+  jsscope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return jsvoid();
+
+  std::string from = pMsg->hdrGet(OSS::SIP::HDR_FROM);
+  std::string host;
+  if (!SIPFrom::getHostPort(from, host))
+    return jsvoid();
+  
+  std::vector<std::string> tokens = OSS::string_tokenize(host, ":");
+  if (tokens.size() <= 1)
+  {
+    return jsvoid();
+  }
+  
+  return jsstring::New(tokens[1].c_str());
 }
 
 jsval msgSetFromHostPort(const jsargs& args)
@@ -1707,6 +1831,7 @@ jsval msgGetAuthenticator(const jsargs& args)
 void JSSIPMessage::initGlobalFuncs(OSS_HANDLE objectTemplate)
 {
   v8::Handle<v8::ObjectTemplate>& global = *(static_cast<v8::Handle<v8::ObjectTemplate>*>(objectTemplate));
+  global->Set(jsstring::New("msgGetMethod"), jsfunc::New(msgGetMethod));
   global->Set(jsstring::New("msgHdrPresent"), jsfunc::New(msgHdrPresent));
   global->Set(jsstring::New("msgHdrGetSize"), jsfunc::New(msgHdrGetSize));
   global->Set(jsstring::New("msgHdrGet"), jsfunc::New(msgHdrGet));
@@ -1741,15 +1866,19 @@ void JSSIPMessage::initGlobalFuncs(OSS_HANDLE objectTemplate)
   global->Set(jsstring::New("msgGetRequestUriHostPort"), jsfunc::New(msgGetRequestUriHostPort));
   global->Set(jsstring::New("msgGetRequestUriHost"), jsfunc::New(msgGetRequestUriHost));
   global->Set(jsstring::New("msgGetRequestUriPort"), jsfunc::New(msgGetRequestUriPort));
+  global->Set(jsstring::New("msgGetRequestUriParameters"), jsfunc::New(msgGetRequestUriParameters));
+  global->Set(jsstring::New("msgSetRequestUriParameters"), jsfunc::New(msgSetRequestUriParameters));
   global->Set(jsstring::New("msgGetToUser"), jsfunc::New(msgGetToUser));
   global->Set(jsstring::New("msgSetToUser"), jsfunc::New(msgSetToUser));
   global->Set(jsstring::New("msgGetToHostPort"), jsfunc::New(msgGetToHostPort));
   global->Set(jsstring::New("msgGetToHost"), jsfunc::New(msgGetToHost));
   global->Set(jsstring::New("msgSetToHostPort"), jsfunc::New(msgSetToHostPort));
+  global->Set(jsstring::New("msgGetToPort"), jsfunc::New(msgGetToPort));
   global->Set(jsstring::New("msgGetFromUser"), jsfunc::New(msgGetFromUser));
   global->Set(jsstring::New("msgSetFromUser"), jsfunc::New(msgSetFromUser));
   global->Set(jsstring::New("msgGetFromHostPort"), jsfunc::New(msgGetFromHostPort));
   global->Set(jsstring::New("msgGetFromHost"), jsfunc::New(msgGetFromHost));
+  global->Set(jsstring::New("msgGetFromPort"), jsfunc::New(msgGetFromPort));
   global->Set(jsstring::New("msgSetFromHostPort"), jsfunc::New(msgSetFromHostPort));
   global->Set(jsstring::New("msgGetContactUri"), jsfunc::New(msgGetContactUri));
   global->Set(jsstring::New("msgGetContactParameter"), jsfunc::New(msgGetContactParameter));
