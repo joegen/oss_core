@@ -44,7 +44,8 @@ public:
   virtual void onPongTimeout(int connectionId) = 0;
 };
   
-  
+typedef boost::function<bool(const OSS::JSON::Object& /*params*/, OSS::JSON::Object& /*result*/, int& /*error code*/, std::string& /*error message*/)> JsonRpcProcedure;
+
 template<typename Transport>
 class JsonRpcServer
 {
@@ -107,7 +108,6 @@ public:
   typedef json::Number Number;
   typedef json::Object Object;
   typedef json::String String;
-  typedef boost::function<bool(const OSS::JSON::Object& /*params*/, OSS::JSON::Object& /*result*/, int& /*error code*/, std::string& /*error message*/)> JsonRpcProcedure;
   typedef std::map<std::string, JsonRpcProcedure> Procedures;
   
   JsonRpcServer() :
