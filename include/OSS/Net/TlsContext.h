@@ -31,11 +31,21 @@
 namespace OSS  {
 namespace Net {
 
-
 class TlsContext
 {
 public:
   typedef boost::shared_ptr<boost::asio::ssl::context> Context;
+  
+  struct Config
+  {
+    boost::asio::io_service* pIoService; // Pointer for the IO service
+    bool verifyPeer; // Verify the peer certificates.  If the peer CA file is not set, set this value to false
+    std::string peerCaFile; // (can be empty) If the remote peer this server is connecting to uses a self signed certificate, this file is used to verify authenticity of the peer identity
+    std::string caDirectory; // (can be empty)  directory of peer CA certificates this server recornizes. The files must be named with the CA subject name hash value. (see man SSL_CTX_load_verify_locations for more info)
+    std::string certPassword; // (can be empty) Set this value if tlsCertFile is password protected
+    std::string certFile; // (Required) Certificate to be used by this server.  File should be in PEM format
+    std::string privateKey; // (Required) Private key to be used by this server.  File should be in PEM format
+  };
   
   TlsContext();
   ~TlsContext();
@@ -50,15 +60,19 @@ public:
     const std::string& privateKey // required
   );
   
+  bool initialize(const Config& config);
+  
+  
   const Context& getServerContext() const;
   const Context& getClientContext() const;
-  
   std::string getTlsCertPassword() const;
+  bool isInitialized() const;
 protected:
   boost::asio::io_service* _pIoService;
   Context _pClientContext;
   Context _pServerContext;
   std::string _certPassword;
+  bool _isInitialized;
   
 };
 
@@ -67,13 +81,26 @@ protected:
 //
 
 inline TlsContext::TlsContext() :
-  _pIoService(0)
+  _pIoService(0),
+  _isInitialized(false)
 {
 
 }
 
 inline TlsContext::~TlsContext()
 {
+}
+
+inline bool TlsContext::initialize(const Config& config)
+{
+  return initialize(
+    config.pIoService,
+    config.verifyPeer,
+    config.peerCaFile,
+    config.caDirectory,
+    config.certPassword,
+    config.certFile,
+    config.privateKey);
 }
 
 inline bool TlsContext::initialize(
@@ -86,7 +113,7 @@ inline bool TlsContext::initialize(
   const std::string& privateKey // required
 )
 {
-  if (_pIoService || _pServerContext || _pClientContext)
+  if (_isInitialized)
   {
     OSS_LOG_ERROR("TlsContext::initialize - Not initializing TLS context.  Context are already initialized.");
     return false;
@@ -155,7 +182,7 @@ inline bool TlsContext::initialize(
     return false;
   }
 
-  return true;
+  return (_isInitialized = true);
 }
 
 inline const TlsContext::Context& TlsContext::getServerContext() const
@@ -171,6 +198,11 @@ inline const TlsContext::Context& TlsContext::getClientContext() const
 inline std::string TlsContext::getTlsCertPassword() const
 {
   return _certPassword;
+}
+
+inline bool TlsContext::isInitialized() const
+{
+  return _isInitialized;
 }
 
 
