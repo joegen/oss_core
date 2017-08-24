@@ -292,8 +292,12 @@ public:
   MessageType getType() const;
     /// Return the type of message this handler would process
 
+  const std::string& getName() const;
+  void setName(const std::string& name);
+  
 private:
   MessageType _type;
+  std::string _name;
 };
 
 //
@@ -304,6 +308,16 @@ inline SIPB2BHandler::MessageType SIPB2BHandler::getType() const
 {
   return _type;
 }
+
+ inline const std::string& SIPB2BHandler::getName() const
+ {
+   return _name;
+ }
+ 
+ inline void SIPB2BHandler::setName(const std::string& name)
+ {
+   _name = name;
+ }
 
 inline SIPB2BHandler::SIPB2BHandler(MessageType type) : _type(type)
 {
