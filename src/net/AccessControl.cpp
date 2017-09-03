@@ -77,6 +77,7 @@ void AccessControl::logPacket(const boost::asio::ip::address& source, std::size_
   if (++_currentIterationCount >= _packetsPerSecondThreshold)
   {
     boost::posix_time::ptime now(boost::posix_time::microsec_clock::local_time());
+    int currentCount = _currentIterationCount;
     _currentIterationCount = 0;
     boost::posix_time::time_duration timeDiff = now - _lastTime;
     if (timeDiff.total_milliseconds() <=  1000)
@@ -84,7 +85,7 @@ void AccessControl::logPacket(const boost::asio::ip::address& source, std::size_
       //
       // We got a ratelimit violation
       //
-      OSS_LOG_WARNING("ALERT: Threshold Violation Detected.  Rate" << _currentIterationCount << " >= " << _packetsPerSecondThreshold);
+      OSS_LOG_WARNING("ALERT: Threshold Violation Detected.  Rate " << currentCount << " >= " << _packetsPerSecondThreshold);
 
       if (pReport)
         pReport->thresholdViolated = true;
