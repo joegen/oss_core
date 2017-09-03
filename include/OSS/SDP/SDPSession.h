@@ -92,6 +92,10 @@ public:
     /// Set the sessin wide IP Address binding for media.  Take note that
     /// a c lines must exist prior to calling this function
   
+  void setAddressV4(const std::string& address);
+  
+  void setAddressV6(const std::string& address);
+  
   bool getOrigin(
     std::string& userName,
     std::string& sessionId,
@@ -125,6 +129,16 @@ std::basic_ostream<Elem, Traits>& operator<<(
 {
   os << h.toString();
   return os;
+}
+
+inline void SDPSession::setAddressV4(const std::string& address)
+{
+  changeAddress(address, "IP4");
+}
+  
+inline void SDPSession::setAddressV6(const std::string& address)
+{
+  changeAddress(address, "IP6");
 }
 
 } }// OSS::SDP
