@@ -37,6 +37,12 @@
 #include "OSS/RTP/RTPResizer.h"
 #include "OSS/RTP/RTPPacket.h"
 
+// Note: Always define this for now.
+// We encounter crashes in I/O because
+// sockets are deleted in the middle
+// of an opration
+#define RTP_THREADED 1
+
 namespace OSS {
 namespace RTP {
 
