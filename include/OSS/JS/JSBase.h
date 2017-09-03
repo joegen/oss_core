@@ -41,6 +41,19 @@ namespace JS {
 
 OSS_CREATE_INLINE_EXCEPTION(JSBaseException, OSS::IOException, "Javascript SIPMessage Processor Exception");
 
+typedef v8::Handle<v8::Value> jsval;
+typedef v8::Arguments jsargs;
+typedef v8::String jsstring;
+typedef v8::String::Utf8Value jsstringutf8;
+typedef v8::FunctionTemplate jsfunc;
+#define jsvoid v8::Undefined
+typedef v8::Boolean jsbool;
+typedef v8::Integer jsint;
+typedef v8::HandleScope jsscope;
+typedef v8::Handle<v8::External> jsfield;
+
+std::string jsvalToString(const jsval& str);
+
 class OSS_API JSBase : boost::noncopyable
 {
 public:

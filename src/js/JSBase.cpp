@@ -42,6 +42,14 @@ static std::string toString(v8::Handle<v8::Value> str)
   return *value;
 }
 
+std::string jsvalToString(const jsval& str)
+{
+  if (!str->IsString())
+    return "";
+  jsstringutf8 value(str);
+  return *value;
+}
+
 const char* toCString(const v8::String::Utf8Value& value)
 {
   return *value ? *value : "<str conversion failed>";
@@ -127,11 +135,11 @@ static void reportException(v8::TryCatch &try_catch, bool show_line)
     {
       errorMsg << *trace;
     }
-    OSS_LOG_ERROR("\t[CID=00000000] JS: " << *error << std::endl << "{" << std::endl << errorMsg.str() << std::endl << "}");
+    OSS_LOG_ERROR("[CID=00000000]\tJS: " << *error << std::endl << "{" << std::endl << errorMsg.str() << std::endl << "}");
   }
   else
   {
-    OSS_LOG_ERROR("\t[CID=00000000] JS: Unknown Exception");
+    OSS_LOG_ERROR("[CID=00000000]\tJS: Unknown Exception");
   }
 }
 
@@ -151,8 +159,8 @@ static v8::Handle<v8::Value> log_info_callback(const v8::Arguments& args)
     v8::Handle<v8::Value> arg1 = args[1];
     v8::String::Utf8Value value1(arg1);
     std::ostringstream msg;
-    msg << *value0 << "JS: " << *value1;
-    OSS::log_notice(msg.str());
+    msg << *value0 << " " << *value1;
+    OSS::log_information(msg.str());
   }
   else
   {
@@ -160,8 +168,8 @@ static v8::Handle<v8::Value> log_info_callback(const v8::Arguments& args)
     v8::Handle<v8::Value> arg = args[0];
     v8::String::Utf8Value value(arg);
     std::ostringstream msg;
-    msg << "JS: " << *value;
-    OSS::log_notice(msg.str());
+    msg << *value;
+    OSS::log_information(msg.str());
   }
   
   return v8::Undefined();
@@ -181,7 +189,7 @@ static v8::Handle<v8::Value> log_debug_callback(const v8::Arguments& args)
     v8::Handle<v8::Value> arg1 = args[1];
     v8::String::Utf8Value value1(arg1);
     std::ostringstream msg;
-    msg << *value0 << "JS: " << *value1;
+    msg << *value0 << " " << *value1;
     OSS::log_debug(msg.str());
   }
   else
@@ -190,7 +198,7 @@ static v8::Handle<v8::Value> log_debug_callback(const v8::Arguments& args)
     v8::Handle<v8::Value> arg = args[0];
     v8::String::Utf8Value value(arg);
     std::ostringstream msg;
-    msg << "JS: " << *value;
+    msg << *value;
     OSS::log_debug(msg.str());
   }
 
@@ -323,6 +331,35 @@ static v8::Handle<v8::String> read_directory(const boost::filesystem::path& dire
   return  v8::String::New(data.c_str(), data.size());
 }
 
+static jsval include(const jsargs& args) 
+{
+  jsscope scope;
+  v8::TryCatch try_catch;
+  try_catch.SetVerbose(true);
+  
+  for (int i = 0; i < args.Length(); i++) 
+  {
+    std::string fileName = jsvalToString(args[i]);
+    if (boost::filesystem::exists(fileName))
+    {
+      v8::Handle<v8::String>  script = read_file(fileName);
+      v8::Handle<v8::Script> compiled = v8::Script::Compile(script);
+      v8::Handle<v8::Value> result = compiled->Run();
+      if (result.IsEmpty())
+      {
+        // The TryCatch above is still in effect and will have caught the error.
+        reportException(try_catch, true);
+        return jsvoid();
+      }
+      return result;
+    }
+    else
+    {
+      OSS_LOG_ERROR("[CID=00000000]\t JS: Unable to locate external script " << fileName);
+    }
+  }
+  return jsvoid();
+}
 
 
 static std::string V8ErrorReport;
@@ -455,6 +492,7 @@ bool JSBase::internalInitialize(
   //v8::Handle<v8::ObjectTemplate> global = v8::ObjectTemplate::New();
   v8::Handle<v8::ObjectTemplate> global = v8::ObjectTemplate::New();
   *(static_cast<v8::Persistent<v8::ObjectTemplate>*>(_globalTemplate)) = v8::Persistent<v8::ObjectTemplate>::New(global);
+  global->Set(v8::String::New("include"), v8::FunctionTemplate::New(include));
   global->Set(v8::String::New("log_info"), v8::FunctionTemplate::New(log_info_callback));
   global->Set(v8::String::New("log_debug"), v8::FunctionTemplate::New(log_debug_callback));
   global->Set(v8::String::New("log_error"), v8::FunctionTemplate::New(log_error_callback));

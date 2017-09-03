@@ -34,23 +34,14 @@
 #include "OSS/SIP/SIPURI.h"
 #include "OSS/SIP/SIPContact.h"
 #include "OSS/SIP/SIPCSeq.h"
+#include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 
 
 namespace OSS {
 namespace JS {
 
 using namespace OSS::SIP;
-
-typedef v8::Handle<v8::Value> jsval;
-typedef v8::Arguments jsargs;
-typedef v8::String jsstring;
-typedef v8::String::Utf8Value jsstringutf8;
-typedef v8::FunctionTemplate jsfunc;
-#define jsvoid v8::Undefined
-typedef v8::Boolean jsbool;
-typedef v8::Integer jsint;
-typedef v8::HandleScope jsscope;
-typedef v8::Handle<v8::External> jsfield;
+using B2BUA::SIPB2BTransaction;
 
 static OSS::SIP::SIPMessage* unwrapRequest(const jsargs& args)
 {
@@ -62,14 +53,6 @@ static OSS::SIP::SIPMessage* unwrapRequest(const jsargs& args)
   jsfield field = jsfield::Cast(obj->ToObject()->GetInternalField(0));
   void* ptr = field->Value();
   return static_cast<OSS::SIP::SIPMessage*>(ptr);
-}
-
-static std::string jsvalToString(const jsval& str)
-{
-  if (!str->IsString())
-    return "";
-  jsstringutf8 value(str);
-  return *value;
 }
 
 static /*size_t*/ jsval msgGetMethod(const jsargs& args/*const char* headerName*/)
@@ -1827,6 +1810,174 @@ jsval msgGetAuthenticator(const jsargs& args)
   return jsstring::New(authenticator.c_str());
 }
 
+static jsval msgSetTransactionProperty(const jsargs& args)
+{
+  if (args.Length() < 3)
+    return jsbool::New(false);
+
+  jsscope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return jsbool::New(false);
+
+  SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
+  if (!pTrn)
+    return jsbool::New(false);
+
+  std::string name = jsvalToString(args[1]);
+  std::string value = jsvalToString(args[2]);
+
+  if (name.empty() || value.empty())
+    return jsbool::New(false);
+
+  pTrn->setProperty(name, value);
+
+  return jsbool::New(true);
+}
+
+static jsval msgGetTransactionProperty(const jsargs& args)
+{
+  if (args.Length() < 2)
+    return jsvoid();
+
+  jsscope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return jsvoid();
+
+  SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
+  if (!pTrn)
+    return jsvoid();
+
+  std::string name = jsvalToString(args[1]);
+
+  if (name.empty())
+    return jsvoid();
+  std::string value;
+  if (name == "log-id")
+    value = pTrn->getLogId();
+  else
+    pTrn->getProperty(name, value);
+
+  return jsstring::New(value.c_str());
+}
+
+static jsval msgSetProperty(const jsargs& args)
+{
+  if (args.Length() < 3)
+    return jsbool::New(false);
+
+  jsscope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return jsbool::New(false);
+
+  std::string name = jsvalToString(args[1]);
+  std::string value = jsvalToString(args[2]);
+
+  if (name.empty() || value.empty())
+    return jsbool::New(false);
+
+  pMsg->setProperty(name, value);
+
+  return jsbool::New(true);
+}
+
+static jsval msgGetProperty(const jsargs& args)
+{
+  if (args.Length() < 2)
+    return jsvoid();
+
+  jsscope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return jsvoid();
+
+  std::string name = jsvalToString(args[1]);
+
+  if (name.empty())
+    return jsvoid();
+  std::string value;
+  pMsg->getProperty(name, value);
+
+  return jsstring::New(value.c_str());
+}
+
+
+static jsval msgGetSourceAddress(const jsargs& args)
+{
+  if (args.Length() < 1)
+    return jsvoid();
+
+  jsscope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return jsvoid();
+
+  SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
+  if (!pTrn || !pTrn->serverTransport())
+    return jsvoid();
+
+  OSS::Net::IPAddress addr = pTrn->serverTransport()->getRemoteAddress();
+
+  return jsstring::New(addr.toString().c_str());
+}
+
+static jsval msgGetSourcePort(const jsargs& args)
+{
+  if (args.Length() < 1)
+    return jsvoid();
+
+  jsscope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return jsvoid();
+
+  SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
+  if (!pTrn || !pTrn->serverTransport())
+    return jsvoid();
+
+  OSS::Net::IPAddress addr = pTrn->serverTransport()->getRemoteAddress();
+
+  return jsint::New(addr.getPort());
+}
+
+static jsval msgGetInterfaceAddress(const jsargs& args)
+{
+  if (args.Length() < 1)
+    return jsvoid();
+
+  jsscope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return jsvoid();
+
+  SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
+  if (!pTrn || !pTrn->serverTransport())
+    return jsvoid();
+
+  OSS::Net::IPAddress addr = pTrn->serverTransport()->getLocalAddress();
+  return jsstring::New(addr.toString().c_str());
+}
+
+static jsval msgGetInterfacePort(const jsargs& args)
+{
+  if (args.Length() < 1)
+    return jsvoid();
+
+  jsscope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  if (!pMsg)
+    return jsvoid();
+
+  SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
+  if (!pTrn || !pTrn->serverTransport())
+    return jsvoid();
+
+  OSS::Net::IPAddress addr = pTrn->serverTransport()->getLocalAddress();
+
+  return jsint::New(addr.getPort());
+}
 
 void JSSIPMessage::initGlobalFuncs(OSS_HANDLE objectTemplate)
 {
@@ -1883,6 +2034,14 @@ void JSSIPMessage::initGlobalFuncs(OSS_HANDLE objectTemplate)
   global->Set(jsstring::New("msgGetContactUri"), jsfunc::New(msgGetContactUri));
   global->Set(jsstring::New("msgGetContactParameter"), jsfunc::New(msgGetContactParameter));
   global->Set(jsstring::New("msgGetAuthenticator"), jsfunc::New(msgGetAuthenticator));
+  global->Set(jsstring::New("msgSetProperty"), jsfunc::New(msgSetProperty));
+  global->Set(jsstring::New("msgGetProperty"), jsfunc::New(msgGetProperty));
+  global->Set(jsstring::New("msgSetTransactionProperty"), jsfunc::New(msgSetTransactionProperty));
+  global->Set(jsstring::New("msgGetTransactionProperty"), jsfunc::New(msgGetTransactionProperty));
+  global->Set(jsstring::New("msgGetSourceAddress"), jsfunc::New(msgGetSourceAddress));
+  global->Set(jsstring::New("msgGetSourcePort"), jsfunc::New(msgGetSourcePort));
+  global->Set(jsstring::New("msgGetInterfaceAddress"), jsfunc::New(msgGetInterfaceAddress));
+  global->Set(jsstring::New("msgGetInterfacePort"), jsfunc::New(msgGetInterfacePort));
   //
   // Request-Line
   //
