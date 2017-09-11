@@ -35,6 +35,7 @@ namespace JS {
 std::vector<std::string> JSBase::_globalScripts; 
 JSBase::InternalModules JSBase::_modules;
 JSBase::ModuleHelpers JSBase::_moduleHelpers;
+std::string JSBase::_modulesDir;
   
 static std::string toString(v8::Handle<v8::Value> str)
 {
@@ -363,6 +364,77 @@ static jsval js_include(const jsargs& args)
   return jsvoid();
 }
 
+static std::string get_module_canonical_file_name(const std::string& fileName)
+{
+  try
+  {
+    std::string canonicalName = fileName;
+    OSS::string_trim(canonicalName);
+
+    JSBase::InternalModules::iterator iter = JSBase::_modules.find(fileName);
+    if (iter != JSBase::_modules.end())
+    {
+      return fileName;
+    }
+
+    if (!OSS::string_ends_with(canonicalName, ".js"))
+    {
+      canonicalName += ".js";
+    }
+
+    if (OSS::string_starts_with(canonicalName, "/"))
+    {
+      return canonicalName;
+    }
+
+    if (OSS::string_starts_with(canonicalName, "./"))
+    {
+      boost::filesystem::path currentPath = boost::filesystem::current_path();
+      currentPath = OSS::boost_path_concatenate(currentPath, canonicalName.substr(2, std::string::npos));
+      return OSS::boost_path(currentPath);
+    }
+
+    boost::filesystem::path path(canonicalName.c_str());
+    boost::filesystem::path absolutePath = boost::filesystem::absolute(path);
+    if (boost::filesystem::exists(absolutePath))
+    {
+      return OSS::boost_path(absolutePath);
+    }
+
+    if (!JSBase::_modulesDir.empty())
+    {
+      boost::filesystem::path modulesDir(JSBase::_modulesDir.c_str());
+      absolutePath = OSS::boost_path_concatenate(modulesDir, canonicalName);
+      if (boost::filesystem::exists(absolutePath))
+      {
+        return OSS::boost_path(absolutePath);
+      }
+    }
+  }
+  catch(...)
+  {
+  }
+  return fileName;
+}
+
+static jsval js_get_module_cononical_file_name(const jsargs& args) 
+{
+  if (args.Length() < 1)
+  {
+    return jsvoid();
+  }
+  jsscope scope;
+  v8::TryCatch try_catch;
+  try_catch.SetVerbose(true);
+  std::string fileName = jsvalToString(args[0]);
+  std::string canonical = get_module_canonical_file_name(fileName);
+  if (canonical.empty())
+  {
+    return jsvoid();
+  }
+  return jsstring::New(canonical.c_str());
+}
+
 static jsval js_get_module_script(const jsargs& args) 
 {
   if (args.Length() < 1)
@@ -381,13 +453,14 @@ static jsval js_get_module_script(const jsargs& args)
   {
     return v8::Handle<v8::String>(v8::String::New(iter->second.script.c_str()));
   }
-  else if (boost::filesystem::exists(fileName))
+  
+  if (boost::filesystem::exists(fileName))
   {
     return read_file(fileName);
   }
   else
   {
-    OSS_LOG_ERROR("Unable to locate text file " << fileName);
+    OSS_LOG_ERROR("Unable to locate module " << fileName);
   }
   return jsvoid();
 }
@@ -426,7 +499,7 @@ static jsval js_compile_module(const jsargs& args)
   try_catch.SetVerbose(true);
   
   std::ostringstream strm;
-  strm << "( function(module) {";
+  strm << "( function(module, exports) {";
   strm << jsvalToString(args[0]);
   strm << "});";
 
@@ -611,6 +684,7 @@ bool JSBase::internalInitialize(
   global->Set(v8::String::New("__compile"), v8::FunctionTemplate::New(js_compile));
   global->Set(v8::String::New("__compile_module"), v8::FunctionTemplate::New(js_compile_module));
   global->Set(v8::String::New("__get_module_script"), v8::FunctionTemplate::New(js_get_module_script));
+  global->Set(v8::String::New("__get_module_cononical_file_name"), v8::FunctionTemplate::New(js_get_module_cononical_file_name));
   
   global->Set(v8::String::New("log_info"), v8::FunctionTemplate::New(log_info_callback));
   global->Set(v8::String::New("log_debug"), v8::FunctionTemplate::New(log_debug_callback));

@@ -1,3 +1,5 @@
-module.exports.debug = log_debug;
-module.exports.info = log_info;
-module.exports.error = log_error;
+"use strict";
+
+exports.debug = log_debug;
+exports.info = log_info;
+exports.error = log_error;

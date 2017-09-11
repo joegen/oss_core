@@ -151,6 +151,7 @@ public:
   static InternalModules _modules;
   static ModuleHelpers _moduleHelpers;
   static std::vector<std::string> _globalScripts;
+  static std::string _modulesDir;
 };
 
 

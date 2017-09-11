@@ -37,7 +37,8 @@ void set_limits()
 bool prepareOptions(ServiceOptions& options)
 {
   options.addDaemonOptions();
-  options.addOptionString('x', "script", "The Script to execute"); 
+  options.addOptionString('x', "script", "The Script to execute");
+  options.addOptionString('m', "modules-dir", "Directory where to find the commonJS modules"); 
   return options.parseOptions();
 }
 
