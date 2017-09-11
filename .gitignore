@@ -14,3 +14,11 @@ src/boost_pch.hpp.gch
 *.la
 *.so
 /build/
+Makefile
+config/compile
+config/ltmain.sh
+config/test-driver
+include/Makefile
+include/OSS/build.h
+src/Makefile
+src/config.h.*
