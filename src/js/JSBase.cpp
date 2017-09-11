@@ -387,6 +387,13 @@ static std::string get_module_canonical_file_name(const std::string& fileName)
       return canonicalName;
     }
 
+    if (OSS::string_starts_with(canonicalName, "~/"))
+    {
+      boost::filesystem::path currentPath(getenv("HOME"));
+      currentPath = OSS::boost_path_concatenate(currentPath, canonicalName.substr(2, std::string::npos));
+      return OSS::boost_path(currentPath);
+    }
+    
     if (OSS::string_starts_with(canonicalName, "./"))
     {
       boost::filesystem::path currentPath = boost::filesystem::current_path();

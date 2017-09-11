@@ -66,7 +66,9 @@ int main(int argc, char** argv)
     options.displayUsage(std::cout);
     _exit(-1);
   }
-  
+
+  options.getOption("modules-dir", JS::JSBase::_modulesDir);
+
   boost::filesystem::path path = boost::filesystem::path(script.c_str());
 
   JS::JSBase::initModules();
