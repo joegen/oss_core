@@ -138,11 +138,11 @@ static void reportException(v8::TryCatch &try_catch, bool show_line)
     {
       errorMsg << *trace;
     }
-    OSS_LOG_ERROR("[CID=00000000]\tJS: " << *error << std::endl << "{" << std::endl << errorMsg.str() << std::endl << "}");
+    OSS_LOG_ERROR(*error << std::endl << "{" << std::endl << errorMsg.str() << std::endl << "}");
   }
   else
   {
-    OSS_LOG_ERROR("[CID=00000000]\tJS: Unknown Exception");
+    OSS_LOG_ERROR("Unknown Exception");
   }
 }
 
@@ -575,12 +575,24 @@ bool JSBase::initModules()
   //
   // Register internal modules
   //
-  Module logger_js;
-  logger_js.name = "logger";
-  logger_js.script = std::string(
+  Module module;
+  module.name = "logger";
+  module.script = std::string(
     #include "js/OSSJS_logger.js.h"
   );
-  JSBase::registerInternalModule(logger_js);
+  JSBase::registerInternalModule(module);
+  
+  module.name = "object";
+  module.script = std::string(
+    #include "js/OSSJS_object.js.h"
+  );
+  JSBase::registerInternalModule(module);
+  
+  module.name = "assert";
+  module.script = std::string(
+    #include "js/OSSJS_assert.js.h"
+  );
+  JSBase::registerInternalModule(module);
   return true;
 }
 

@@ -7,7 +7,9 @@ endif
 
 JAVASCRIPT_SRC = \
     js/OSSJS_modules.js.h \
-    js/OSSJS_logger.js.h
+    js/OSSJS_logger.js.h \
+    js/OSSJS_object.js.h \
+    js/OSSJS_assert.js.h
 
 EXTRA_DIST += JAVASCRIPT_SRC 
 BUILT_SOURCES += ${JAVASCRIPT_SRC}
