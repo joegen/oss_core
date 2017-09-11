@@ -1,0 +1,2 @@
+liboss_core_la_SOURCES +=  \
+    snpp/SNPPMessage.cpp
