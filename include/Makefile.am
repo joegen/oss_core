@@ -22,5 +22,6 @@ include OSS/STUN/include.am
 include OSS/UTL/include.am
 include OSS/wsinclude.am
 include OSS/ZMQ/include.am
+include OSS/SNPP/include.am
 
 DISTCLEANFILES = Makefile.in

@@ -506,40 +506,6 @@ void setSystemParameters()
 	}
 }
 
-void  fork_me(int argc, char** argv, bool& isDaemon)
-{
-  for (int i = 0; i < argc; i++)
-  {
-    std::string arg = argv[i];
-    if (arg == "-D" || arg == "--daemonize")
-    {
-      isDaemon = true;
-      break;
-    }
-  }
-
-  if (isDaemon)
-  {
-     int pid = 0;
-   if(getppid() == 1)
-     return;
-   pid=fork();
-   if (pid<0) exit(1); /* fork error */
-   if (pid>0) exit(0); /* parent exits */
-   /* child (daemon) continues */
-   setsid(); /* obtain a new process group */
-
-   for (int descriptor = getdtablesize();descriptor >= 0;--descriptor)
-   {
-     close(descriptor); /* close all descriptors we have inheritted from parent*/
-   }
-
-   ::close(STDIN_FILENO);
-   ::close(STDOUT_FILENO);
-   ::close(STDERR_FILENO);
-  }
-}
-
 void saveProcessId(ServiceOptions& options)
 {
   std::string pidFilePath;
@@ -724,7 +690,7 @@ int main(int argc, char** argv)
   setSystemParameters();
 
   bool isDaemon = false;
-  fork_me(argc, argv, isDaemon);
+  ServiceOptions::daemonize(argc, argv, isDaemon);
 
   std::set_terminate(&ServiceOptions::catch_global);
 

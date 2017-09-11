@@ -57,12 +57,23 @@ std::string jsvalToString(const jsval& str);
 class OSS_API JSBase : boost::noncopyable
 {
 public:
+  struct Module
+  {
+    std::string name;
+    std::string script;
+  };
+  
+  typedef std::map<std::string, Module> InternalModules;
+  typedef std::vector<Module> ModuleHelpers;
+  
   JSBase(const std::string& contextName);
     /// Create a new JSBase
 
   virtual ~JSBase();
     /// Destroy the JSBase
 
+  bool run(const boost::filesystem::path& script);
+  
   bool initialize(const boost::filesystem::path& script,
     const std::string& functionName,
     void(*extensionGlobals)(OSS_HANDLE) = 0,
@@ -79,7 +90,7 @@ public:
   bool isInitialized() const;
     /// Returns true if the script has been initialized
 
-  virtual void initGlobalFuncs(OSS_HANDLE objectTemplate) = 0;
+  virtual void initGlobalFuncs(OSS_HANDLE objectTemplate);
     /// Initialize global functions that will be exposed to the java script engine
 
   const boost::filesystem::path& getScriptFilePath() const;
@@ -100,6 +111,13 @@ public:
   static void addGlobalScript(const std::string& script);
     /// Prepend JS code the the compiled script
 
+  static void registerInternalModule(const Module& module);
+
+  static void registerModuleHelper(const Module& module);
+  
+  static bool compileModuleHelpers();
+  
+  static bool initModules();
 protected:
   bool internalInitialize(const boost::filesystem::path& script,
     const std::string& functionName,
@@ -128,6 +146,11 @@ protected:
   void(*_extensionGlobals)(OSS_HANDLE);
   std::string _preloaded;
   friend class JSWorker;
+  
+public:
+  static InternalModules _modules;
+  static ModuleHelpers _moduleHelpers;
+  static std::vector<std::string> _globalScripts;
 };
 
 
@@ -160,6 +183,15 @@ inline void JSBase::setGlobalScriptsDirectory(const std::string& globalScriptsDi
 inline void JSBase::setHelperScriptsDirectory(const std::string& helperScriptsDirectory)
 {
   _helperScriptsDirectory = helperScriptsDirectory;
+}
+
+inline void JSBase::initGlobalFuncs(OSS_HANDLE objectTemplate) 
+{
+}
+
+inline bool JSBase::run(const boost::filesystem::path& script)
+{
+  return initialize(script, "", 0, "");
 }
 
 } } // OSS::JS

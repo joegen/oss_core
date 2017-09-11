@@ -163,7 +163,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %files app
 %attr(755,root,root) %{_bindir}/oss_*
-%attr(755,root,root) %{_bindir}/lohika
 
 
 %post

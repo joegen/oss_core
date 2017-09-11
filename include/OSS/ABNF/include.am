@@ -63,5 +63,6 @@ nobase_include_HEADERS += \
     OSS/ABNF/ABNFSIPAuthority.h \
     OSS/ABNF/ABNFSIPTextUtf8Char.h \
     OSS/ABNF/ABNFSIPQdText.h \
-    OSS/ABNF/ABNFSIPTransportParam.h
+    OSS/ABNF/ABNFSIPTransportParam.h \
+    OSS/ABNF/ABNFSNPPRequestLine.h
 

@@ -161,19 +161,19 @@ public:
     {
       static const char* method_map[] = 
       {
-        "INVITE",
-        "BYE",
-        "ACK",
-        "PRACK",
-        "CANCEL",
-        "INFO",
-        "REFER",
-        "UPDATE",
-        "SUBSCRIBE",
-        "NOTIFY",
-        "PUBLISH",
-        "MESSAGE",
-        "OPTIONS"
+        REQ_INVITE,
+        REQ_BYE,
+        REQ_ACK,
+        REQ_PRACK,
+        REQ_CANCEL,
+        REQ_INFO,
+        REQ_REFER,
+        REQ_UPDATE,
+        REQ_SUBSCRIBE,
+        REQ_NOTIFY,
+        REQ_PUBLISH,
+        REQ_MESSAGE,
+        REQ_OPTIONS
       };
       
       ret = (char*)method_map[type];

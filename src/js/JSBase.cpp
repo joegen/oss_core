@@ -32,7 +32,9 @@ namespace OSS {
 namespace JS {
 
 
-static std::vector<std::string> _globalScripts; 
+std::vector<std::string> JSBase::_globalScripts; 
+JSBase::InternalModules JSBase::_modules;
+JSBase::ModuleHelpers JSBase::_moduleHelpers;
   
 static std::string toString(v8::Handle<v8::Value> str)
 {
@@ -259,7 +261,7 @@ static v8::Handle<v8::String> read_global_scripts()
 {
   std::ostringstream data;
   
-  for (std::vector<std::string>::iterator iter = _globalScripts.begin(); iter != _globalScripts.end(); iter++)
+  for (std::vector<std::string>::iterator iter = JSBase::_globalScripts.begin(); iter != JSBase::_globalScripts.end(); iter++)
   {
     data << *iter << std::endl;
   }
@@ -331,7 +333,7 @@ static v8::Handle<v8::String> read_directory(const boost::filesystem::path& dire
   return  v8::String::New(data.c_str(), data.size());
 }
 
-static jsval include(const jsargs& args) 
+static jsval js_include(const jsargs& args) 
 {
   jsscope scope;
   v8::TryCatch try_catch;
@@ -355,10 +357,90 @@ static jsval include(const jsargs& args)
     }
     else
     {
-      OSS_LOG_ERROR("[CID=00000000]\t JS: Unable to locate external script " << fileName);
+      OSS_LOG_ERROR("Unable to locate external script " << fileName);
     }
   }
   return jsvoid();
+}
+
+static jsval js_get_module_script(const jsargs& args) 
+{
+  if (args.Length() < 1)
+  {
+    return jsvoid();
+  }
+  
+  jsscope scope;
+  v8::TryCatch try_catch;
+  try_catch.SetVerbose(true);
+
+  std::string fileName = jsvalToString(args[0]);
+  
+  JSBase::InternalModules::iterator iter = JSBase::_modules.find(fileName);
+  if (iter != JSBase::_modules.end())
+  {
+    return v8::Handle<v8::String>(v8::String::New(iter->second.script.c_str()));
+  }
+  else if (boost::filesystem::exists(fileName))
+  {
+    return read_file(fileName);
+  }
+  else
+  {
+    OSS_LOG_ERROR("Unable to locate text file " << fileName);
+  }
+  return jsvoid();
+}
+
+static jsval js_compile(const jsargs& args)
+{
+  if (args.Length() < 1)
+  {
+    return jsvoid();
+  }
+  v8::HandleScope scope;
+  v8::TryCatch try_catch;
+  try_catch.SetVerbose(true);
+  
+  v8::Handle<v8::String> script = v8::Handle<v8::String>::Cast(args[0]);
+  v8::Handle<v8::Script> compiled = v8::Script::Compile(script, args[1]);
+  
+  v8::Handle<v8::Value> result = compiled->Run();
+  if (result.IsEmpty())
+  {
+    // The TryCatch above is still in effect and will have caught the error.
+    reportException(try_catch, true);
+    return jsvoid();
+  }
+  return result;
+}
+
+static jsval js_compile_module(const jsargs& args)
+{
+  if (args.Length() < 1)
+  {
+    return jsvoid();
+  }
+  v8::HandleScope scope;
+  v8::TryCatch try_catch;
+  try_catch.SetVerbose(true);
+  
+  std::ostringstream strm;
+  strm << "( function(module) {";
+  strm << jsvalToString(args[0]);
+  strm << "});";
+
+  v8::Handle<v8::String> script(v8::String::New(strm.str().c_str())); 
+  v8::Handle<v8::Script> compiled = v8::Script::New(script, args[1]);
+  
+  v8::Handle<v8::Value> result = compiled->Run();
+  if (result.IsEmpty())
+  {
+    // The TryCatch above is still in effect and will have caught the error.
+    reportException(try_catch, true);
+    return jsvoid();
+  }
+  return result;
 }
 
 
@@ -391,7 +473,10 @@ JSBase::~JSBase()
   {
     static_cast<v8::Persistent<v8::ObjectTemplate>*>(_globalTemplate)->Dispose();
     static_cast<v8::Persistent<v8::ObjectTemplate>*>(_requestTemplate)->Dispose();
-    static_cast<v8::Persistent<v8::Function>*>(_processFunc)->Dispose();
+    if (_processFunc)
+    {
+      static_cast<v8::Persistent<v8::Function>*>(_processFunc)->Dispose();
+    }
     static_cast<v8::Persistent<v8::Context>*>(_context)->Dispose();
   }
 
@@ -400,6 +485,30 @@ JSBase::~JSBase()
   delete static_cast<v8::Persistent<v8::Function>*>(_processFunc);
   delete static_cast<v8::Persistent<v8::Context>*>(_context);
 
+}
+
+bool JSBase::initModules()
+{
+  //
+  // Register the helpers
+  //
+  Module modules_js;
+  modules_js.name = "modules.js";
+  modules_js.script = std::string(
+    #include "js/OSSJS_modules.js.h"
+  );
+  JSBase::registerModuleHelper(modules_js);
+  
+  //
+  // Register internal modules
+  //
+  Module logger_js;
+  logger_js.name = "logger";
+  logger_js.script = std::string(
+    #include "js/OSSJS_logger.js.h"
+  );
+  JSBase::registerInternalModule(logger_js);
+  return true;
 }
 
 void JSBase::addGlobalScript(const std::string& script)
@@ -422,7 +531,7 @@ bool JSBase::internalInitialize(
   
   if (preloaded.empty() && !boost::filesystem::exists(scriptFile))
   {
-    OSS_LOG_ERROR("Google V8 is unable to locate file " << scriptFile);
+    OSS_LOG_ERROR("Unable to locate file " << scriptFile);
     return false;
   }
 
@@ -466,8 +575,13 @@ bool JSBase::internalInitialize(
   }
 
 
+  v8::Persistent<v8::Function>* processFunc_ = 0;
+  if (!functionName.empty())
+  {
+    processFunc_ = new v8::Persistent<v8::Function>();
+  }
+  
   v8::Persistent<v8::Context>* context_ = new v8::Persistent<v8::Context>();
-  v8::Persistent<v8::Function>* processFunc_ = new v8::Persistent<v8::Function>();
   v8::Persistent<v8::ObjectTemplate>* requestTemplate_ = new v8::Persistent<v8::ObjectTemplate>;
   v8::Persistent<v8::ObjectTemplate>* globalTemplate_ = new v8::Persistent<v8::ObjectTemplate>;
   _context = context_;
@@ -492,7 +606,12 @@ bool JSBase::internalInitialize(
   //v8::Handle<v8::ObjectTemplate> global = v8::ObjectTemplate::New();
   v8::Handle<v8::ObjectTemplate> global = v8::ObjectTemplate::New();
   *(static_cast<v8::Persistent<v8::ObjectTemplate>*>(_globalTemplate)) = v8::Persistent<v8::ObjectTemplate>::New(global);
-  global->Set(v8::String::New("include"), v8::FunctionTemplate::New(include));
+  
+  global->Set(v8::String::New("__include"), v8::FunctionTemplate::New(js_include));
+  global->Set(v8::String::New("__compile"), v8::FunctionTemplate::New(js_compile));
+  global->Set(v8::String::New("__compile_module"), v8::FunctionTemplate::New(js_compile_module));
+  global->Set(v8::String::New("__get_module_script"), v8::FunctionTemplate::New(js_get_module_script));
+  
   global->Set(v8::String::New("log_info"), v8::FunctionTemplate::New(log_info_callback));
   global->Set(v8::String::New("log_debug"), v8::FunctionTemplate::New(log_debug_callback));
   global->Set(v8::String::New("log_error"), v8::FunctionTemplate::New(log_error_callback));
@@ -657,6 +776,8 @@ bool JSBase::internalInitialize(
       OSS::log_warning(logMsg.str());
     }
   }
+  
+  JSBase::compileModuleHelpers();
 
   //
   // Compile the main script script
@@ -695,23 +816,26 @@ bool JSBase::internalInitialize(
 
   // The script compiled and ran correctly.  Now we fetch out the
   // Process function from the global object.
-  v8::Handle<v8::String> process_name = v8::String::New(functionName.c_str());
-  v8::Handle<v8::Value> process_val = context->Global()->Get(process_name);
-
-  // If there is no Process function, or if it is not a function,
-  // bail out
-  if (!process_val->IsFunction())
+  if (!functionName.empty())
   {
-    OSS_LOG_ERROR("Google V8 is unable to load function " << functionName);
-    return false;
+    v8::Handle<v8::String> process_name = v8::String::New(functionName.c_str());
+    v8::Handle<v8::Value> process_val = context->Global()->Get(process_name);
+
+    // If there is no Process function, or if it is not a function,
+    // bail out
+    if (!process_val->IsFunction())
+    {
+      OSS_LOG_ERROR("Google V8 is unable to load function " << functionName);
+      return false;
+    }
+
+    // It is a function; cast it to a Function
+    v8::Handle<v8::Function> process_fun = v8::Handle<v8::Function>::Cast(process_val);
+
+    // Store the function in a Persistent handle, since we also want
+    // that to remain after this call returns
+    *(static_cast<v8::Persistent<v8::Function>*>(_processFunc)) = v8::Persistent<v8::Function>::New(process_fun);
   }
-
-  // It is a function; cast it to a Function
-  v8::Handle<v8::Function> process_fun = v8::Handle<v8::Function>::Cast(process_val);
-
-  // Store the function in a Persistent handle, since we also want
-  // that to remain after this call returns
-  *(static_cast<v8::Persistent<v8::Function>*>(_processFunc)) = v8::Persistent<v8::Function>::New(process_fun);
 
   // all went well.  request the template creation as the final step
   v8::Handle<v8::ObjectTemplate> objectTemplate = v8::ObjectTemplate::New();
@@ -746,7 +870,7 @@ bool JSBase::processRequest(OSS_HANDLE request)
 
 bool JSBase::internalProcessRequest(OSS_HANDLE request)
 {
-  if (!_isInitialized)
+  if (!_isInitialized || !_processFunc)
     return false;
   
   v8::Locker __v8Locker__;
@@ -834,7 +958,38 @@ bool JSBase::callFunction(const std::string& funcName)
 
 }
 
+void JSBase::registerInternalModule(const Module& module)
+{
+  assert(_modules.find(module.name) == _modules.end());
+  _modules[module.name] = module;
+}
 
+void JSBase::registerModuleHelper(const Module& module)
+{
+  _moduleHelpers.push_back(module);
+}
+
+bool JSBase::compileModuleHelpers()
+{
+  v8::HandleScope scope;
+  v8::TryCatch try_catch;
+  try_catch.SetVerbose(true);
+  for (ModuleHelpers::iterator iter = _moduleHelpers.begin(); iter != _moduleHelpers.end(); iter++)
+  {
+    v8::Handle<v8::String> script(v8::String::New(iter->script.c_str()));
+    v8::Handle<v8::Value> name(v8::String::New(iter->name.c_str()));
+    v8::Handle<v8::Script> compiled = v8::Script::Compile(script, name);
+
+    v8::Handle<v8::Value> result = compiled->Run();
+    if (result.IsEmpty())
+    {
+      // The TryCatch above is still in effect and will have caught the error.
+      reportException(try_catch, true);
+      return false;
+    }
+  }
+  return true;
+}
 
 
 } } // OSS::JS

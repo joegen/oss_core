@@ -67,6 +67,7 @@ include zmq/src.am
 include b2bua/src.am
 include js/src.am
 include json/src.am
+include snpp/src.am
 
 DISTCLEANFILES = Makefile.in
 
@@ -88,6 +89,3 @@ include unit_test/Makefile.am
 #
 bin_PROGRAMS =
 include apps/Makefile.am
-include lohika_js/Makefile.am
-
-

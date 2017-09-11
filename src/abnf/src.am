@@ -52,4 +52,5 @@ liboss_core_la_SOURCES +=  \
     abnf/ABNFSIPDomainLabel.cpp \
     abnf/ABNFSIPRequestURI.cpp \
     abnf/ABNFSIPGenericParam.cpp \
-    abnf/ABNFSIPHierPart.cpp
+    abnf/ABNFSIPHierPart.cpp \
+    abnf/ABNFSNPPRequestLine.cpp

@@ -3,8 +3,7 @@
     * SIP ABNF Parser
     * SIP Finite State Machines
     * SIP B2B User Agent
-    * Java Script Engine using Google V8
-    * CommonJS support using Duktape
+    * CommonJS Java Script Engine using Google V8
     * SIP Over Websockets
     * STUN server
     * RTP Proxy
