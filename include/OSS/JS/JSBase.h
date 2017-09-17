@@ -30,6 +30,8 @@
 #include <boost/tuple/tuple.hpp>
 
 #include "OSS/JS/JS.h"
+#include "OSS/JS/JSUtil.h"
+#include "OSS/JS/JSModule.h"
 #include "OSS/UTL/Thread.h"
 #include "OSS/UTL/BlockingQueue.h"
 
@@ -41,31 +43,9 @@ namespace JS {
 
 OSS_CREATE_INLINE_EXCEPTION(JSBaseException, OSS::IOException, "Javascript SIPMessage Processor Exception");
 
-typedef v8::Handle<v8::Value> jsval;
-typedef v8::Arguments jsargs;
-typedef v8::String jsstring;
-typedef v8::String::Utf8Value jsstringutf8;
-typedef v8::FunctionTemplate jsfunc;
-#define jsvoid v8::Undefined
-typedef v8::Boolean jsbool;
-typedef v8::Integer jsint;
-typedef v8::HandleScope jsscope;
-typedef v8::Handle<v8::External> jsfield;
-
-std::string jsvalToString(const jsval& str);
-
 class OSS_API JSBase : boost::noncopyable
 {
 public:
-  struct Module
-  {
-    std::string name;
-    std::string script;
-  };
-  
-  typedef std::map<std::string, Module> InternalModules;
-  typedef std::vector<Module> ModuleHelpers;
-  
   JSBase(const std::string& contextName);
     /// Create a new JSBase
 
@@ -110,14 +90,24 @@ public:
   
   static void addGlobalScript(const std::string& script);
     /// Prepend JS code the the compiled script
-
-  static void registerInternalModule(const Module& module);
-
-  static void registerModuleHelper(const Module& module);
   
-  static bool compileModuleHelpers();
+  v8::Persistent<v8::Context>&  getContext();
+  v8::Persistent<v8::ObjectTemplate>& getObjectTemplate();
+  v8::Persistent<v8::ObjectTemplate>& getGlobalTemplate();
   
-  static bool initModules();
+  JSModule& getModuleManager();
+  
+  static JSBase* GetCurrent();
+  
+  static OSS::mutex_critic_sec _currentBaseMutex;
+  static std::map<int32_t, JSBase*> _currentBaseMap;
+  static int32_t _baseId;
+  
+  static int addBase(JSBase* base);
+  static void removeBase(int id);
+  
+  // returns the current active JSBase
+  
 protected:
   bool internalInitialize(const boost::filesystem::path& script,
     const std::string& functionName,
@@ -136,22 +126,21 @@ protected:
   boost::filesystem::path _script;
   std::string _globalScriptsDirectory;
   std::string _helperScriptsDirectory;
-  OSS_HANDLE _context;
-  OSS_HANDLE _processFunc;
-  OSS_HANDLE _requestTemplate;
-  OSS_HANDLE _globalTemplate;
+  
+  v8::Persistent<v8::Context>* _context;
+  v8::Persistent<v8::Function>* _processFunc;
+  v8::Persistent<v8::ObjectTemplate>* _requestTemplate;
+  v8::Persistent<v8::ObjectTemplate>* _globalTemplate;
+
   bool _isInitialized;
   static OSS::mutex _mutex;
   std::string _functionName;
   void(*_extensionGlobals)(OSS_HANDLE);
   std::string _preloaded;
-  friend class JSWorker;
-  
+  JSModule _moduleManager;
+  int32_t _id;
 public:
-  static InternalModules _modules;
-  static ModuleHelpers _moduleHelpers;
   static std::vector<std::string> _globalScripts;
-  static std::string _modulesDir;
 };
 
 
@@ -193,6 +182,26 @@ inline void JSBase::initGlobalFuncs(OSS_HANDLE objectTemplate)
 inline bool JSBase::run(const boost::filesystem::path& script)
 {
   return initialize(script, "", 0, "");
+}
+
+inline v8::Persistent<v8::Context>&  JSBase::getContext()
+{
+  return *_context;
+}
+
+inline v8::Persistent<v8::ObjectTemplate>& JSBase::getObjectTemplate()
+{
+  return *_requestTemplate;
+}
+
+inline v8::Persistent<v8::ObjectTemplate>& JSBase::getGlobalTemplate()
+{
+  return *_globalTemplate;
+}
+
+inline JSModule& JSBase::getModuleManager()
+{
+  return _moduleManager;
 }
 
 } } // OSS::JS

@@ -32,232 +32,11 @@ namespace OSS {
 namespace JS {
 
 
-std::vector<std::string> JSBase::_globalScripts; 
-JSBase::InternalModules JSBase::_modules;
-JSBase::ModuleHelpers JSBase::_moduleHelpers;
-std::string JSBase::_modulesDir;
+std::vector<std::string> JSBase::_globalScripts;
+OSS::mutex_critic_sec JSBase::_currentBaseMutex;
+std::map<int32_t, JSBase*> JSBase::_currentBaseMap;
+int32_t JSBase::_baseId = 0;
   
-static std::string toString(v8::Handle<v8::Value> str)
-{
-  if (!str->IsString())
-    return "";
-  v8::String::Utf8Value value(str);
-  return *value;
-}
-
-std::string jsvalToString(const jsval& str)
-{
-  if (!str->IsString())
-    return "";
-  jsstringutf8 value(str);
-  return *value;
-}
-
-const char* toCString(const v8::String::Utf8Value& value)
-{
-  return *value ? *value : "<str conversion failed>";
-}
-
-static void reportException(v8::TryCatch &try_catch, bool show_line)
-{
-  using namespace v8;
-  
-  Handle<Message> message = try_catch.Message();
-
-  v8::String::Utf8Value error(try_catch.Exception());
-  if (error.length() > 0)
-  {
-
-    std::ostringstream errorMsg;
-
-    /*
-     02:50:22.863: [CID=00000000] JS: File undefined:12
-    [CID=00000000] JS: Source Line   var notheetoo = nothere.subst(0, 10);
-    [CID=00000000] JS:
-                              ^
-    [CID=00000000] JS:
-    {TypeError: Cannot call method 'subst' of undefined
-        at RouteProfile.isTellMeRoutable (unknown source)
-        at RouteProfile.isRoutable (unknown source)
-        at handle_request (unknown source)
-    }
-    */
-
-    if (show_line && !message.IsEmpty())
-    {
-      // Print (filename):(line number): (message).
-      String::Utf8Value filename(message->GetScriptResourceName());
-      const char* filename_string = toCString(filename);
-      int linenum = message->GetLineNumber();
-      //fprintf(stderr, "%s:%i\n", filename_string, linenum);
-
-      errorMsg << filename_string << ":" << linenum << std::endl;
-      // Print line of source code.
-      String::Utf8Value sourceline(message->GetSourceLine());
-      const char* sourceline_string = toCString(sourceline);
-
-      // HACK HACK HACK
-      //
-      // FIXME
-      //
-      // Because of how CommonJS modules work, all scripts are wrapped with a
-      // "function (function (exports, __filename, ...) {"
-      // to provide script local variables.
-      //
-      // When reporting errors on the first line of a script, this wrapper
-      // function is leaked to the user. This HACK is to remove it. The length
-      // of the wrapper is 62. That wrapper is defined in src/node.js
-      //
-      // If that wrapper is ever changed, then this number also has to be
-      // updated. Or - someone could clean this up so that the two peices
-      // don't need to be changed.
-      //
-      // Even better would be to get support into V8 for wrappers that
-      // shouldn't be reported to users.
-      int offset = linenum == 1 ? 62 : 0;
-
-      //fprintf(stderr, "%s\n", sourceline_string + offset);
-      errorMsg << sourceline_string + offset << std::endl;
-      // Print wavy underline (GetUnderline is deprecated).
-      int start = message->GetStartColumn();
-      for (int i = offset; i < start; i++)
-      {
-        errorMsg << " ";
-      }
-      int end = message->GetEndColumn();
-      for (int i = start; i < end; i++)
-      {
-        errorMsg << "^";
-      }
-      errorMsg << std::endl;
-    }
-
-    String::Utf8Value trace(try_catch.StackTrace());
-
-    if (trace.length() > 0)
-    {
-      errorMsg << *trace;
-    }
-    OSS_LOG_ERROR(*error << std::endl << "{" << std::endl << errorMsg.str() << std::endl << "}");
-  }
-  else
-  {
-    OSS_LOG_ERROR("Unknown Exception");
-  }
-}
-
-
-
-static v8::Handle<v8::Value> log_info_callback(const v8::Arguments& args)
-{
-  if (args.Length() < 1)
-    return v8::Undefined();
-
-  if (args.Length() == 2)
-  {
-    v8::HandleScope scope;
-    v8::Handle<v8::Value> arg0 = args[0];
-    v8::String::Utf8Value value0(arg0);
-
-    v8::Handle<v8::Value> arg1 = args[1];
-    v8::String::Utf8Value value1(arg1);
-    std::ostringstream msg;
-    msg << *value0 << " " << *value1;
-    OSS::log_information(msg.str());
-  }
-  else
-  {
-    v8::HandleScope scope;
-    v8::Handle<v8::Value> arg = args[0];
-    v8::String::Utf8Value value(arg);
-    std::ostringstream msg;
-    msg << *value;
-    OSS::log_information(msg.str());
-  }
-  
-  return v8::Undefined();
-}
-
-static v8::Handle<v8::Value> log_debug_callback(const v8::Arguments& args)
-{
-  if (args.Length() < 1)
-    return v8::Undefined();
-
-  if (args.Length() == 2)
-  {
-    v8::HandleScope scope;
-    v8::Handle<v8::Value> arg0 = args[0];
-    v8::String::Utf8Value value0(arg0);
-
-    v8::Handle<v8::Value> arg1 = args[1];
-    v8::String::Utf8Value value1(arg1);
-    std::ostringstream msg;
-    msg << *value0 << " " << *value1;
-    OSS::log_debug(msg.str());
-  }
-  else
-  {
-    v8::HandleScope scope;
-    v8::Handle<v8::Value> arg = args[0];
-    v8::String::Utf8Value value(arg);
-    std::ostringstream msg;
-    msg << *value;
-    OSS::log_debug(msg.str());
-  }
-
-  return v8::Undefined();
-}
-
-static v8::Handle<v8::Value> log_error_callback(const v8::Arguments& args)
-{
-  if (args.Length() < 1)
-    return v8::Undefined();
-
-  if (args.Length() == 2)
-  {
-    v8::HandleScope scope;
-    v8::Handle<v8::Value> arg0 = args[0];
-    v8::String::Utf8Value value0(arg0);
-
-    v8::Handle<v8::Value> arg1 = args[1];
-    v8::String::Utf8Value value1(arg1);
-    std::ostringstream msg;
-    msg << *value0 << "JavaScript Error: " << *value1;
-    OSS::log_error(msg.str());
-  }
-  else
-  {
-    v8::HandleScope scope;
-    v8::Handle<v8::Value> arg = args[0];
-    v8::String::Utf8Value value(arg);
-    std::ostringstream msg;
-    msg << "JavaScript Error: " << *value;
-    OSS::log_error(msg.str());
-  }
-  return v8::Undefined();
-}
-
-// Reads a file into a v8 string.
-static v8::Handle<v8::String> read_file(const std::string& name) {
-  FILE* file = fopen(name.c_str(), "rb");
-  if (file == NULL) return v8::Handle<v8::String>();
-
-  fseek(file, 0, SEEK_END);
-  int size = ftell(file);
-  rewind(file);
-
-  char* chars = new char[size + 1];
-  chars[size] = '\0';
-  for (int i = 0; i < size;) {
-    int read = fread(&chars[i], 1, size - i, file);
-    i += read;
-  }
-  fclose(file);
-  v8::Handle<v8::String> result = v8::String::New(chars, size);
-  delete[] chars;
-  return result;
-}
-
 static v8::Handle<v8::String> read_global_scripts()
 {
   std::ostringstream data;
@@ -270,260 +49,6 @@ static v8::Handle<v8::String> read_global_scripts()
   return  v8::String::New(data.str().c_str(), data.str().size());
 }
 
-static v8::Handle<v8::String> read_directory(const boost::filesystem::path& directory)
-{
-  std::string data;
-
-  if (boost::filesystem::exists(directory))
-  {
-    try
-    {
-      boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
-      for (boost::filesystem::directory_iterator itr(directory); itr != end_itr; ++itr)
-      {
-        if (boost::filesystem::is_directory(itr->status()))
-        {
-          continue;
-        }
-        else
-        {
-          boost::filesystem::path currentFile = itr->path();
-          std::string fileName = OSS::boost_file_name(currentFile);
-          if (boost::filesystem::is_regular(currentFile))
-          {
-            if (OSS::string_ends_with(fileName, ".js"))
-            {
-              //OSS_LOG_INFO("Google V8 is loading " << currentFile);
-              FILE* file = fopen(OSS::boost_path(currentFile).c_str(), "rb");
-              if (file == NULL)
-              {
-                OSS_LOG_ERROR("Google V8 failed to open file " << currentFile);
-                return v8::Handle<v8::String>();
-              }
-
-              fseek(file, 0, SEEK_END);
-              int size = ftell(file);
-              rewind(file);
-
-              char* chars = new char[size + 1];
-              chars[size] = '\0';
-              for (int i = 0; i < size;) {
-                int read = fread(&chars[i], 1, size - i, file);
-                i += read;
-              }
-              fclose(file);
-              data += chars;
-              //OSS_LOG_INFO("Google V8 " << currentFile << " LOADED");
-              delete[] chars;
-            }
-
-          }
-        }
-      }
-    }
-    catch(std::exception& e)
-    {
-      OSS_LOG_WARNING("Googe V8 exception: " << e.what());
-    }
-    catch(...)
-    {
-      OSS_LOG_WARNING("Unknown Googe V8 exception.");
-    }
-
-  }
-  return  v8::String::New(data.c_str(), data.size());
-}
-
-static jsval js_include(const jsargs& args) 
-{
-  jsscope scope;
-  v8::TryCatch try_catch;
-  try_catch.SetVerbose(true);
-  
-  for (int i = 0; i < args.Length(); i++) 
-  {
-    std::string fileName = jsvalToString(args[i]);
-    if (boost::filesystem::exists(fileName))
-    {
-      v8::Handle<v8::String>  script = read_file(fileName);
-      v8::Handle<v8::Script> compiled = v8::Script::Compile(script);
-      v8::Handle<v8::Value> result = compiled->Run();
-      if (result.IsEmpty())
-      {
-        // The TryCatch above is still in effect and will have caught the error.
-        reportException(try_catch, true);
-        return jsvoid();
-      }
-      return result;
-    }
-    else
-    {
-      OSS_LOG_ERROR("Unable to locate external script " << fileName);
-    }
-  }
-  return jsvoid();
-}
-
-static std::string get_module_canonical_file_name(const std::string& fileName)
-{
-  try
-  {
-    std::string canonicalName = fileName;
-    OSS::string_trim(canonicalName);
-
-    JSBase::InternalModules::iterator iter = JSBase::_modules.find(fileName);
-    if (iter != JSBase::_modules.end())
-    {
-      return fileName;
-    }
-
-    if (!OSS::string_ends_with(canonicalName, ".js"))
-    {
-      canonicalName += ".js";
-    }
-
-    if (OSS::string_starts_with(canonicalName, "/"))
-    {
-      return canonicalName;
-    }
-
-    if (OSS::string_starts_with(canonicalName, "~/"))
-    {
-      boost::filesystem::path currentPath(getenv("HOME"));
-      currentPath = OSS::boost_path_concatenate(currentPath, canonicalName.substr(2, std::string::npos));
-      return OSS::boost_path(currentPath);
-    }
-    
-    if (OSS::string_starts_with(canonicalName, "./"))
-    {
-      boost::filesystem::path currentPath = boost::filesystem::current_path();
-      currentPath = OSS::boost_path_concatenate(currentPath, canonicalName.substr(2, std::string::npos));
-      return OSS::boost_path(currentPath);
-    }
-
-    boost::filesystem::path path(canonicalName.c_str());
-    boost::filesystem::path absolutePath = boost::filesystem::absolute(path);
-    if (boost::filesystem::exists(absolutePath))
-    {
-      return OSS::boost_path(absolutePath);
-    }
-
-    if (!JSBase::_modulesDir.empty())
-    {
-      boost::filesystem::path modulesDir(JSBase::_modulesDir.c_str());
-      absolutePath = OSS::boost_path_concatenate(modulesDir, canonicalName);
-      if (boost::filesystem::exists(absolutePath))
-      {
-        return OSS::boost_path(absolutePath);
-      }
-    }
-  }
-  catch(...)
-  {
-  }
-  return fileName;
-}
-
-static jsval js_get_module_cononical_file_name(const jsargs& args) 
-{
-  if (args.Length() < 1)
-  {
-    return jsvoid();
-  }
-  jsscope scope;
-  v8::TryCatch try_catch;
-  try_catch.SetVerbose(true);
-  std::string fileName = jsvalToString(args[0]);
-  std::string canonical = get_module_canonical_file_name(fileName);
-  if (canonical.empty())
-  {
-    return jsvoid();
-  }
-  return jsstring::New(canonical.c_str());
-}
-
-static jsval js_get_module_script(const jsargs& args) 
-{
-  if (args.Length() < 1)
-  {
-    return jsvoid();
-  }
-  
-  jsscope scope;
-  v8::TryCatch try_catch;
-  try_catch.SetVerbose(true);
-
-  std::string fileName = jsvalToString(args[0]);
-  
-  JSBase::InternalModules::iterator iter = JSBase::_modules.find(fileName);
-  if (iter != JSBase::_modules.end())
-  {
-    return v8::Handle<v8::String>(v8::String::New(iter->second.script.c_str()));
-  }
-  
-  if (boost::filesystem::exists(fileName))
-  {
-    return read_file(fileName);
-  }
-  else
-  {
-    OSS_LOG_ERROR("Unable to locate module " << fileName);
-  }
-  return jsvoid();
-}
-
-static jsval js_compile(const jsargs& args)
-{
-  if (args.Length() < 1)
-  {
-    return jsvoid();
-  }
-  v8::HandleScope scope;
-  v8::TryCatch try_catch;
-  try_catch.SetVerbose(true);
-  
-  v8::Handle<v8::String> script = v8::Handle<v8::String>::Cast(args[0]);
-  v8::Handle<v8::Script> compiled = v8::Script::Compile(script, args[1]);
-  
-  v8::Handle<v8::Value> result = compiled->Run();
-  if (result.IsEmpty())
-  {
-    // The TryCatch above is still in effect and will have caught the error.
-    reportException(try_catch, true);
-    return jsvoid();
-  }
-  return result;
-}
-
-static jsval js_compile_module(const jsargs& args)
-{
-  if (args.Length() < 1)
-  {
-    return jsvoid();
-  }
-  v8::HandleScope scope;
-  v8::TryCatch try_catch;
-  try_catch.SetVerbose(true);
-  
-  std::ostringstream strm;
-  strm << "( function(module, exports) {";
-  strm << jsvalToString(args[0]);
-  strm << "});";
-
-  v8::Handle<v8::String> script(v8::String::New(strm.str().c_str())); 
-  v8::Handle<v8::Script> compiled = v8::Script::New(script, args[1]);
-  
-  v8::Handle<v8::Value> result = compiled->Run();
-  if (result.IsEmpty())
-  {
-    // The TryCatch above is still in effect and will have caught the error.
-    reportException(try_catch, true);
-    return jsvoid();
-  }
-  return result;
-}
-
-
 static std::string V8ErrorReport;
 static bool _hasSetErrorCB = false;
 static void V8ErrorMessageCallback(v8::Handle<v8::Message> message,
@@ -532,7 +57,7 @@ v8::Handle<v8::Value> data)
   v8::HandleScope handle_scope;
   std::string error =
           + " Javascript error on line " + OSS::string_from_number(message->GetLineNumber())
-          + " : " + toString(message->GetSourceLine());
+          + " : " + string_from_js_string(message->GetSourceLine());
   OSS::log_error(error);
 }
 
@@ -543,64 +68,31 @@ JSBase::JSBase(const std::string& contextName) :
   _requestTemplate(0),
   _globalTemplate(0),
   _isInitialized(false),
-  _extensionGlobals(0)
+  _extensionGlobals(0),
+  _moduleManager(this)
 {
+  _id = JSBase::addBase(this);
 }
 
 JSBase::~JSBase()
 {
+  JSBase::removeBase(_id);
   if (_globalTemplate)
   {
-    static_cast<v8::Persistent<v8::ObjectTemplate>*>(_globalTemplate)->Dispose();
-    static_cast<v8::Persistent<v8::ObjectTemplate>*>(_requestTemplate)->Dispose();
+    _globalTemplate->Dispose();
+    _requestTemplate->Dispose();
     if (_processFunc)
     {
-      static_cast<v8::Persistent<v8::Function>*>(_processFunc)->Dispose();
+      _processFunc->Dispose();
     }
-    static_cast<v8::Persistent<v8::Context>*>(_context)->Dispose();
+    _context->Dispose();
   }
 
-  delete static_cast<v8::Persistent<v8::ObjectTemplate>*>(_globalTemplate);
-  delete static_cast<v8::Persistent<v8::ObjectTemplate>*>(_requestTemplate);
-  delete static_cast<v8::Persistent<v8::Function>*>(_processFunc);
-  delete static_cast<v8::Persistent<v8::Context>*>(_context);
+  delete _globalTemplate;
+  delete _requestTemplate;
+  delete _processFunc;
+  delete _context;
 
-}
-
-bool JSBase::initModules()
-{
-  //
-  // Register the helpers
-  //
-  Module modules_js;
-  modules_js.name = "modules.js";
-  modules_js.script = std::string(
-    #include "js/OSSJS_modules.js.h"
-  );
-  JSBase::registerModuleHelper(modules_js);
-  
-  //
-  // Register internal modules
-  //
-  Module module;
-  module.name = "logger";
-  module.script = std::string(
-    #include "js/OSSJS_logger.js.h"
-  );
-  JSBase::registerInternalModule(module);
-  
-  module.name = "object";
-  module.script = std::string(
-    #include "js/OSSJS_object.js.h"
-  );
-  JSBase::registerInternalModule(module);
-  
-  module.name = "assert";
-  module.script = std::string(
-    #include "js/OSSJS_assert.js.h"
-  );
-  JSBase::registerInternalModule(module);
-  return true;
 }
 
 void JSBase::addGlobalScript(const std::string& script)
@@ -632,37 +124,32 @@ bool JSBase::internalInitialize(
   // Create a handle scope to hold the temporary references.
   v8::HandleScope handle_scope;
   
-  v8::Persistent<v8::ObjectTemplate>* oldGlobalTemplate = static_cast<v8::Persistent<v8::ObjectTemplate>*>(_globalTemplate);
-  v8::Persistent<v8::ObjectTemplate>* oldRequestTemplate = static_cast<v8::Persistent<v8::ObjectTemplate>*>(_requestTemplate);
-  v8::Persistent<v8::Function>* oldProcessFunc = static_cast<v8::Persistent<v8::Function>*>(_processFunc);
-  v8::Persistent<v8::Context>* oldContext = static_cast<v8::Persistent<v8::Context>*>(_context);
-
-  if (oldContext)
+  if (_context)
   {
-    (*oldContext)->DetachGlobal();
-    oldContext->Dispose();
-    delete static_cast<v8::Persistent<v8::Context>*>(oldContext);
+    (*_context)->DetachGlobal();
+    _context->Dispose();
+    delete _context;
     _context = 0;
   }
   
-  if (oldGlobalTemplate)
+  if (_globalTemplate)
   {
-    oldGlobalTemplate->Dispose();
-    delete static_cast<v8::Persistent<v8::ObjectTemplate>*>(oldGlobalTemplate);
+    _globalTemplate->Dispose();
+    delete _globalTemplate;
     _globalTemplate = 0;
   }
 
-  if (oldRequestTemplate)
+  if (_requestTemplate)
   {
-    oldRequestTemplate->Dispose();
-    delete static_cast<v8::Persistent<v8::ObjectTemplate>*>(oldRequestTemplate);
+    _requestTemplate->Dispose();
+    delete _requestTemplate;
     _requestTemplate = 0;
   }
 
-  if (oldProcessFunc)
+  if (_processFunc)
   {
-    oldProcessFunc->Dispose();
-    delete static_cast<v8::Persistent<v8::Function>*>(oldProcessFunc);
+    _processFunc->Dispose();
+    delete _processFunc;
     _processFunc = 0;
   }
 
@@ -697,18 +184,15 @@ bool JSBase::internalInitialize(
   // built-in global functions.
   //v8::Handle<v8::ObjectTemplate> global = v8::ObjectTemplate::New();
   v8::Handle<v8::ObjectTemplate> global = v8::ObjectTemplate::New();
-  *(static_cast<v8::Persistent<v8::ObjectTemplate>*>(_globalTemplate)) = v8::Persistent<v8::ObjectTemplate>::New(global);
+  *_globalTemplate = v8::Persistent<v8::ObjectTemplate>::New(global);
   
-  global->Set(v8::String::New("__include"), v8::FunctionTemplate::New(js_include));
-  global->Set(v8::String::New("__compile"), v8::FunctionTemplate::New(js_compile));
-  global->Set(v8::String::New("__compile_module"), v8::FunctionTemplate::New(js_compile_module));
-  global->Set(v8::String::New("__get_module_script"), v8::FunctionTemplate::New(js_get_module_script));
-  global->Set(v8::String::New("__get_module_cononical_file_name"), v8::FunctionTemplate::New(js_get_module_cononical_file_name));
-  
+  global->Set(v8::String::New("__js_base_id"), v8::Integer::New(_id));
   global->Set(v8::String::New("log_info"), v8::FunctionTemplate::New(log_info_callback));
   global->Set(v8::String::New("log_debug"), v8::FunctionTemplate::New(log_debug_callback));
   global->Set(v8::String::New("log_error"), v8::FunctionTemplate::New(log_error_callback));
   
+  _moduleManager.setGlobals(global);
+
   //
   // Initialize subclass global functions
   //
@@ -728,7 +212,7 @@ bool JSBase::internalInitialize(
   // Store the context in the processor object in a persistent handle,
   // since we want the reference to remain after we return from this
   // method.
-  *(static_cast<v8::Persistent<v8::Context>*>(_context)) = v8::Persistent<v8::Context>::New(context);
+  *_context = v8::Persistent<v8::Context>::New(context);
 
   // Enter the new context so all the following operations take place
   // within it.
@@ -777,7 +261,7 @@ bool JSBase::internalInitialize(
     v8::Handle<v8::Script> compiledHelper = v8::Script::Compile(helperScript);
     if (compiledHelper.IsEmpty())
     {
-      reportException(try_catch, true);
+      report_js_exception(try_catch, true);
       return false;
     }
 
@@ -787,7 +271,7 @@ bool JSBase::internalInitialize(
     if (result.IsEmpty())
     {
       // The TryCatch above is still in effect and will have caught the error.
-      reportException(try_catch, true);
+      report_js_exception(try_catch, true);
       return false;
     }
    // OSS_LOG_INFO("Google V8 global.detail for " << _script << " EXECUTED");
@@ -837,7 +321,7 @@ bool JSBase::internalInitialize(
               helperScript = read_file(OSS::boost_path(currentFile));
               if (helperScript.IsEmpty())
               {
-                reportException(try_catch, true);
+                report_js_exception(try_catch, true);
                 return false;
               }
 
@@ -845,7 +329,7 @@ bool JSBase::internalInitialize(
 
               if (compiledHelper.IsEmpty())
               {
-                reportException(try_catch, true);
+                report_js_exception(try_catch, true);
                 return false;
               }
 
@@ -854,7 +338,7 @@ bool JSBase::internalInitialize(
               if (result.IsEmpty())
               {
                 // The TryCatch above is still in effect and will have caught the error.
-                reportException(try_catch, true);
+                report_js_exception(try_catch, true);
                 return false;
               }
             }
@@ -869,9 +353,13 @@ bool JSBase::internalInitialize(
       OSS::log_warning(logMsg.str());
     }
   }
-  
-  JSBase::compileModuleHelpers();
 
+  if (!_moduleManager.initialize(try_catch, global))
+  {
+    // Exception is reported inside initialize
+    return false;
+  }
+  
   //
   // Compile the main script script
   //
@@ -891,7 +379,7 @@ bool JSBase::internalInitialize(
 
   if (compiled_script.IsEmpty())
   {
-    reportException(try_catch, true);
+    report_js_exception(try_catch, true);
     return false;
   }
 
@@ -901,7 +389,7 @@ bool JSBase::internalInitialize(
   if (result.IsEmpty())
   {
     // The TryCatch above is still in effect and will have caught the error.
-    reportException(try_catch, true);
+    report_js_exception(try_catch, true);
     return false;
   }
 
@@ -927,13 +415,13 @@ bool JSBase::internalInitialize(
 
     // Store the function in a Persistent handle, since we also want
     // that to remain after this call returns
-    *(static_cast<v8::Persistent<v8::Function>*>(_processFunc)) = v8::Persistent<v8::Function>::New(process_fun);
+    *_processFunc = v8::Persistent<v8::Function>::New(process_fun);
   }
 
   // all went well.  request the template creation as the final step
   v8::Handle<v8::ObjectTemplate> objectTemplate = v8::ObjectTemplate::New();
   objectTemplate->SetInternalFieldCount(1);
-  *(static_cast<v8::Persistent<v8::ObjectTemplate>*>(_requestTemplate)) = v8::Persistent<v8::ObjectTemplate>::New(objectTemplate);
+  *_requestTemplate = v8::Persistent<v8::ObjectTemplate>::New(objectTemplate);
 
   _isInitialized = true;
 
@@ -973,40 +461,24 @@ bool JSBase::internalProcessRequest(OSS_HANDLE request)
   
   // Enter this processor's context so all the remaining operations
   // take place there
-  v8::Context::Scope context_scope(*(static_cast<v8::Persistent<v8::Context>*>(_context)));
+  v8::Context::Scope context_scope(*_context);
 
-  // Fetch the template for creating JavaScript request wrappers.
-  // It only has to be created once, which we do on demand.
-  v8::Handle<v8::ObjectTemplate> templ = *(static_cast<v8::Persistent<v8::ObjectTemplate>*>(_requestTemplate));
-
-    // Set up an exception handler before calling the Process function
+  // Set up an exception handler before calling the Process function
   v8::TryCatch try_catch;
   
-  // Create an empty http request wrapper.
-  v8::Handle<v8::Object> request_obj = templ->NewInstance();
-
-  if (request_obj.IsEmpty())
-  {
-    reportException(try_catch, true);
-    return false;
-  }
-
-  // Wrap the raw C++ pointer in an External so it can be referenced
-  // from within JavaScript.
-  v8::Handle<v8::External> request_ptr = v8::External::New(request);
-
-  // Store the request pointer in the JavaScript wrapper.
-  request_obj->SetInternalField(0, request_ptr);
+  // Wrap the request as an internal field
+  v8::Handle<v8::Object> request_obj;
+  wrap_external_object(try_catch, _context, _requestTemplate, request_obj, request);
 
 
   // Invoke the process function, giving the global object as 'this'
   // and one argument, the request.
   const int argc = 1;
   v8::Handle<v8::Value> argv[argc] = { request_obj };
-  v8::Handle<v8::Value> result = (*(static_cast<v8::Persistent<v8::Function>*>(_processFunc)))->Call((*(static_cast<v8::Persistent<v8::Context>*>(_context)))->Global(), argc, argv);
+  v8::Handle<v8::Value> result = ((*_processFunc)->Call((*_context)->Global(), argc, argv));
   if (result.IsEmpty())
   {
-    reportException(try_catch, true);
+    report_js_exception(try_catch, true);
     return false;
   }
 
@@ -1022,7 +494,7 @@ bool JSBase::callFunction(const std::string& funcName)
   
   v8::HandleScope handle_scope;
 
-  v8::Persistent<v8::Context>& context = *(static_cast<v8::Persistent<v8::Context>*>(_context));
+  v8::Persistent<v8::Context>& context = *_context;
   // Enter this processor's context so all the remaining operations
   // take place there
   v8::Context::Scope context_scope(context);
@@ -1051,37 +523,37 @@ bool JSBase::callFunction(const std::string& funcName)
 
 }
 
-void JSBase::registerInternalModule(const Module& module)
-{
-  assert(_modules.find(module.name) == _modules.end());
-  _modules[module.name] = module;
-}
+#if 0
+std::vector<std::string> JSBase::_globalScripts;
+OSS::mutex_critic_sec JSBase::_currentBaseMutex;
+std::map<int, JSBase*> JSBase::_currentBaseMap;
+int JSBase::_baseId = 0;
+#endif
 
-void JSBase::registerModuleHelper(const Module& module)
+int JSBase::addBase(JSBase* base)
 {
-  _moduleHelpers.push_back(module);
+  OSS::mutex_critic_sec_lock lock(JSBase::_currentBaseMutex);
+  JSBase::_baseId++;
+  JSBase::_currentBaseMap[JSBase::_baseId] = base;
+  return JSBase::_baseId;
 }
-
-bool JSBase::compileModuleHelpers()
+void JSBase::removeBase(int id)
 {
-  v8::HandleScope scope;
-  v8::TryCatch try_catch;
-  try_catch.SetVerbose(true);
-  for (ModuleHelpers::iterator iter = _moduleHelpers.begin(); iter != _moduleHelpers.end(); iter++)
+  OSS::mutex_critic_sec_lock lock(JSBase::_currentBaseMutex);
+  JSBase::_currentBaseMap.erase(id);
+}
+  
+JSBase* JSBase::GetCurrent()
+{
+  OSS::mutex_critic_sec_lock lock(JSBase::_currentBaseMutex);
+  v8::Local<v8::Value> val = v8::Context::GetCurrent()->Global()->Get(v8::String::New("__js_base_id"));
+  int32_t id = val->Int32Value();
+  std::map<int, JSBase*>::iterator iter = JSBase::_currentBaseMap.find(id);
+  if (iter == JSBase::_currentBaseMap.end())
   {
-    v8::Handle<v8::String> script(v8::String::New(iter->script.c_str()));
-    v8::Handle<v8::Value> name(v8::String::New(iter->name.c_str()));
-    v8::Handle<v8::Script> compiled = v8::Script::Compile(script, name);
-
-    v8::Handle<v8::Value> result = compiled->Run();
-    if (result.IsEmpty())
-    {
-      // The TryCatch above is still in effect and will have caught the error.
-      reportException(try_catch, true);
-      return false;
-    }
+    return 0;
   }
-  return true;
+  return iter->second;
 }
 
 

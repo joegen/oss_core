@@ -43,146 +43,134 @@ namespace JS {
 using namespace OSS::SIP;
 using B2BUA::SIPB2BTransaction;
 
-static OSS::SIP::SIPMessage* unwrapRequest(const jsargs& args)
-{
-  if (args.Length() < 1)
-    return 0;
-  jsval obj = args[0];
-  if (!obj->IsObject())
-    return 0;
-  jsfield field = jsfield::Cast(obj->ToObject()->GetInternalField(0));
-  void* ptr = field->Value();
-  return static_cast<OSS::SIP::SIPMessage*>(ptr);
-}
-
-static /*size_t*/ jsval msgGetMethod(const jsargs& args/*const char* headerName*/)
+static /*size_t*/ v8::Handle<v8::Value> msgGetMethod(const v8::Arguments& args/*const char* headerName*/)
 {
   if (args.Length() != 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   try
   {
     std::string cseq = pMsg->hdrGet(OSS::SIP::HDR_CSEQ);
     OSS::SIP::SIPCSeq hCSeq(cseq.c_str());
-    return jsstring::New(hCSeq.getMethod().c_str());
+    return v8::String::New(hCSeq.getMethod().c_str());
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgGetMethod - " << e.message();
     OSS::log_error(msg.str());
-    return jsvoid();
+    return v8::Undefined();
   }
 }
 
-static /*size_t*/ jsval msgHdrPresent(const jsargs& args/*const char* headerName*/)
+static /*size_t*/ v8::Handle<v8::Value> msgHdrPresent(const v8::Arguments& args/*const char* headerName*/)
 {
   if (args.Length() != 2)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
-  std::string headerName = jsvalToString(args[1]);
+  std::string headerName = string_from_js_string(args[1]);
   if (headerName.empty())
-    return jsvoid();
+    return v8::Undefined();
 
   try
   {
-    return jsbool::New(pMsg->hdrPresent(headerName.c_str()));
+    return v8::Boolean::New(pMsg->hdrPresent(headerName.c_str()));
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrPresent - " << e.message();
     OSS::log_error(msg.str());
-    return jsvoid();
+    return v8::Undefined();
   }
 }
 
-static  /*size_t*/ jsval msgHdrGetSize(const jsargs& args/*const char* headerName*/)
+static  /*size_t*/ v8::Handle<v8::Value> msgHdrGetSize(const v8::Arguments& args/*const char* headerName*/)
 {
   if (args.Length() != 2)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
-  std::string headerName = jsvalToString(args[1]);
+  std::string headerName = string_from_js_string(args[1]);
   if (headerName.empty())
-    return jsvoid();
+    return v8::Undefined();
   
   try
   {
-    return jsint::New(pMsg->hdrGetSize(headerName.c_str()));
+    return v8::Integer::New(pMsg->hdrGetSize(headerName.c_str()));
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrGetSize - " << e.message();
     OSS::log_error(msg.str());
-    return jsvoid();
+    return v8::Undefined();
   }
 }
 
-static /*const std::string&*/ jsval msgHdrGet(const jsargs& args/*const char* headerName, size_t index = 0*/)
+static /*const std::string&*/ v8::Handle<v8::Value> msgHdrGet(const v8::Arguments& args/*const char* headerName, size_t index = 0*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
-  std::string headerName = jsvalToString(args[1]);
+  std::string headerName = string_from_js_string(args[1]);
   if (headerName.empty())
-    return jsvoid();
+    return v8::Undefined();
   try
   {
     if (args.Length() > 2)
     {
       size_t index = args[2]->NumberValue();
-      return jsstring::New(pMsg->hdrGet(headerName.c_str(), index).c_str());
+      return v8::String::New(pMsg->hdrGet(headerName.c_str(), index).c_str());
     }
 
-    return jsstring::New(pMsg->hdrGet(headerName.c_str()).c_str());
+    return v8::String::New(pMsg->hdrGet(headerName.c_str()).c_str());
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrGet - " << e.message();
     OSS::log_error(msg.str());
-    return jsvoid();
+    return v8::Undefined();
   }
 }
 
-static /*bool*/ jsval msgHdrSet(const jsargs& args/*const char* headerName, const std::string& headerValue, size_t index*/)
+static /*bool*/ v8::Handle<v8::Value> msgHdrSet(const v8::Arguments& args/*const char* headerName, const std::string& headerValue, size_t index*/)
 {
   if (args.Length() < 3)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  std::string headerName = jsvalToString(args[1]);
+  std::string headerName = string_from_js_string(args[1]);
   if (headerName.empty())
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  std::string headerValue = jsvalToString(args[2]);
+  std::string headerValue = string_from_js_string(args[2]);
   if (headerValue.empty())
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
   size_t index = 0;
   if (args.Length() > 3)
@@ -190,571 +178,571 @@ static /*bool*/ jsval msgHdrSet(const jsargs& args/*const char* headerName, cons
   
   try
   {
-    return jsbool::New(pMsg->hdrSet(headerName.c_str(), headerValue, index));
+    return v8::Boolean::New(pMsg->hdrSet(headerName.c_str(), headerValue, index));
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrSet - " << e.message();
     OSS::log_error(msg.str());
-    return jsvoid();
+    return v8::Undefined();
   }
 }
 
-static /*bool*/ jsval msgHdrRemove(const jsargs& args/*const char* headerName*/)
+static /*bool*/ v8::Handle<v8::Value> msgHdrRemove(const v8::Arguments& args/*const char* headerName*/)
 {
   if (args.Length() < 2)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  std::string headerName = jsvalToString(args[1]);
+  std::string headerName = string_from_js_string(args[1]);
   if (headerName.empty())
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
   
   try
   {
-    return jsbool::New(pMsg->hdrRemove(headerName.c_str()));
+    return v8::Boolean::New(pMsg->hdrRemove(headerName.c_str()));
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrRemove - " << e.message();
     OSS::log_error(msg.str());
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
   }
 }
 
-static /*bool*/ jsval msgHdrListAppend(const jsargs& args/*const char* name, const std::string& value*/)
+static /*bool*/ v8::Handle<v8::Value> msgHdrListAppend(const v8::Arguments& args/*const char* name, const std::string& value*/)
 {
   if (args.Length() < 3)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  std::string headerName = jsvalToString(args[1]);
+  std::string headerName = string_from_js_string(args[1]);
   if (headerName.empty())
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  std::string headerValue = jsvalToString(args[2]);
+  std::string headerValue = string_from_js_string(args[2]);
   if (headerValue.empty())
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
   try
   {
-    return jsbool::New(pMsg->hdrListAppend(headerName.c_str(), headerValue));
+    return v8::Boolean::New(pMsg->hdrListAppend(headerName.c_str(), headerValue));
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrListAppend - " << e.message();
     OSS::log_error(msg.str());
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
   }
 }
 
-static /*bool*/ jsval msgHdrListPrepend(const jsargs& args/*const char* name, const std::string& value*/)
+static /*bool*/ v8::Handle<v8::Value> msgHdrListPrepend(const v8::Arguments& args/*const char* name, const std::string& value*/)
 {
   if (args.Length() < 3)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  std::string headerName = jsvalToString(args[1]);
+  std::string headerName = string_from_js_string(args[1]);
   if (headerName.empty())
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  std::string headerValue = jsvalToString(args[2]);
+  std::string headerValue = string_from_js_string(args[2]);
   if (headerValue.empty())
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
   try
   {
-    return jsbool::New(pMsg->hdrListPrepend(headerName.c_str(), headerValue));
+    return v8::Boolean::New(pMsg->hdrListPrepend(headerName.c_str(), headerValue));
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrListPrepend - " << e.message();
     OSS::log_error(msg.str());
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
   }
 }
 
-static /*std::string*/ jsval msgHdrListPopFront(const jsargs& args/*const char* name*/)
+static /*std::string*/ v8::Handle<v8::Value> msgHdrListPopFront(const v8::Arguments& args/*const char* name*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
-  std::string headerName = jsvalToString(args[1]);
+  std::string headerName = string_from_js_string(args[1]);
   if (headerName.empty())
-    return jsvoid();
+    return v8::Undefined();
 
   try
   {
-    return jsstring::New(pMsg->hdrListPopFront(headerName.c_str()).c_str());
+    return v8::String::New(pMsg->hdrListPopFront(headerName.c_str()).c_str());
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrListPopFront - " << e.message();
     OSS::log_error(msg.str());
-    return jsvoid();
+    return v8::Undefined();
   }
 }
 
-static /*bool*/ jsval msgHdrListRemove(const jsargs& args/*const char* name*/)
+static /*bool*/ v8::Handle<v8::Value> msgHdrListRemove(const v8::Arguments& args/*const char* name*/)
 {
   if (args.Length() < 2)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  std::string headerName = jsvalToString(args[1]);
+  std::string headerName = string_from_js_string(args[1]);
   if (headerName.empty())
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
   try
   {
-    return jsbool::New(pMsg->hdrListRemove(headerName.c_str()));
+    return v8::Boolean::New(pMsg->hdrListRemove(headerName.c_str()));
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrListRemove - " << e.message();
     OSS::log_error(msg.str());
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
   }
 }
 
-static  /*boost::tribool*/ jsval msgIsRequest(const jsargs& args/*const char* method = 0*/)
+static  /*boost::tribool*/ v8::Handle<v8::Value> msgIsRequest(const v8::Arguments& args/*const char* method = 0*/)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   std::string method;
   if (args.Length() >= 2)
-    method = jsvalToString(args[1]);
+    method = string_from_js_string(args[1]);
 
   try
   {
     if (method.empty())
-      return jsbool::New(pMsg->isRequest());
+      return v8::Boolean::New(pMsg->isRequest());
     else
-      return jsbool::New(pMsg->isRequest(method.c_str()));
+      return v8::Boolean::New(pMsg->isRequest(method.c_str()));
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIsRequest - " << e.message();
     OSS::log_error(msg.str());
-    return jsvoid();
+    return v8::Undefined();
   }
 }
 
 
-static /*boost::tribool*/ jsval msgIsResponse(const jsargs& args)
+static /*boost::tribool*/ v8::Handle<v8::Value> msgIsResponse(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   try
   {
-    return jsbool::New(pMsg->isResponse());
+    return v8::Boolean::New(pMsg->isResponse());
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIsResponse - " << e.message();
     OSS::log_error(msg.str());
-    return jsvoid();
+    return v8::Undefined();
   }
 }
 
-static /*boost::tribool*/ jsval msgIs1xx(const jsargs& args)
+static /*boost::tribool*/ v8::Handle<v8::Value> msgIs1xx(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   try
   {
-    return jsbool::New(pMsg->is1xx());
+    return v8::Boolean::New(pMsg->is1xx());
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIs1xx - " << e.message();
     OSS::log_error(msg.str());
-    return jsvoid();
+    return v8::Undefined();
   }
 }
 
-static /*boost::tribool*/ jsval msgIs2xx(const jsargs& args)
+static /*boost::tribool*/ v8::Handle<v8::Value> msgIs2xx(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   try
   {
-    return jsbool::New(pMsg->is2xx());
+    return v8::Boolean::New(pMsg->is2xx());
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIs2xx - " << e.message();
     OSS::log_error(msg.str());
-    return jsvoid();
+    return v8::Undefined();
   }
 }
 
-static /*boost::tribool*/ jsval msgIs3xx(const jsargs& args)
+static /*boost::tribool*/ v8::Handle<v8::Value> msgIs3xx(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   try
   {
-    return jsbool::New(pMsg->is3xx());
+    return v8::Boolean::New(pMsg->is3xx());
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIs3xx - " << e.message();
     OSS::log_error(msg.str());
-    return jsvoid();
+    return v8::Undefined();
   }
 }
 
-static /*boost::tribool*/ jsval msgIs4xx(const jsargs& args)
+static /*boost::tribool*/ v8::Handle<v8::Value> msgIs4xx(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   try
   {
-    return jsbool::New(pMsg->is4xx());
+    return v8::Boolean::New(pMsg->is4xx());
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIs4xx - " << e.message();
     OSS::log_error(msg.str());
-    return jsvoid();
+    return v8::Undefined();
   }
 }
 
-static /*boost::tribool*/ jsval msgIs5xx(const jsargs& args)
+static /*boost::tribool*/ v8::Handle<v8::Value> msgIs5xx(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   try
   {
-    return jsbool::New(pMsg->is5xx());
+    return v8::Boolean::New(pMsg->is5xx());
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIs5xx - " << e.message();
     OSS::log_error(msg.str());
-    return jsvoid();
+    return v8::Undefined();
   }
 }
 
-static /*boost::tribool*/ jsval msgIs6xx(const jsargs& args)
+static /*boost::tribool*/ v8::Handle<v8::Value> msgIs6xx(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   try
   {
-    return jsbool::New(pMsg->is6xx());
+    return v8::Boolean::New(pMsg->is6xx());
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIs6xx - " << e.message();
     OSS::log_error(msg.str());
-    return jsvoid();
+    return v8::Undefined();
   }
 }
 
-static /*boost::tribool*/ jsval msgIsResponseFamily(const jsargs& args/*int responseCode*/)
+static /*boost::tribool*/ v8::Handle<v8::Value> msgIsResponseFamily(const v8::Arguments& args/*int responseCode*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   int responseCode = args[1]->NumberValue();
 
   try
   {
-    return jsbool::New(pMsg->isResponseFamily(responseCode));
+    return v8::Boolean::New(pMsg->isResponseFamily(responseCode));
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIsResponseFamily - " << e.message();
     OSS::log_error(msg.str());
-    return jsvoid();
+    return v8::Undefined();
   }
   
 }
 
-static /*boost::tribool*/ jsval msgIsErrorResponse(const jsargs& args)
+static /*boost::tribool*/ v8::Handle<v8::Value> msgIsErrorResponse(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   try
   {
-    return jsbool::New(pMsg->isErrorResponse());
+    return v8::Boolean::New(pMsg->isErrorResponse());
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIsErrorResponse - " << e.message();
     OSS::log_error(msg.str());
-    return jsvoid();
+    return v8::Undefined();
   }
 }
 
-static /*boost::tribool*/ jsval msgIsMidDialog(const jsargs& args)
+static /*boost::tribool*/ v8::Handle<v8::Value> msgIsMidDialog(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   try
   {
-    return jsbool::New(pMsg->isMidDialog());
+    return v8::Boolean::New(pMsg->isMidDialog());
   }
   catch(OSS::Exception e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrGet - " << e.message();
     OSS::log_error(msg.str());
-    return jsvoid();
+    return v8::Undefined();
   }
 }
 
-static /*std::string&*/ jsval msgGetBody(const jsargs& args)
+static /*std::string&*/ v8::Handle<v8::Value> msgGetBody(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
-  return jsstring::New(pMsg->getBody().c_str());
+  return v8::String::New(pMsg->getBody().c_str());
 }
 
-static /*bool*/ jsval msgSetBody(const jsargs& args/*const std::string& body*/)
+static /*bool*/ v8::Handle<v8::Value> msgSetBody(const v8::Arguments& args/*const std::string& body*/)
 {
   if (args.Length() < 2)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  std::string body = jsvalToString(args[1]);
+  std::string body = string_from_js_string(args[1]);
   pMsg->setBody(body);
 
-  return jsbool::New(true);
+  return v8::Boolean::New(true);
 }
 
-static /*std::string&*/ jsval msgGetStartLine(const jsargs& args)
+static /*std::string&*/ v8::Handle<v8::Value> msgGetStartLine(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
-  return jsstring::New(pMsg->getStartLine().c_str());
+  return v8::String::New(pMsg->getStartLine().c_str());
 }
 
-static /*std::string&*/ jsval msgSetStartLine(const jsargs& args/*const std::string& sline*/)
+static /*std::string&*/ v8::Handle<v8::Value> msgSetStartLine(const v8::Arguments& args/*const std::string& sline*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
-  std::string sline = jsvalToString(args[1]);
+  std::string sline = string_from_js_string(args[1]);
   pMsg->setStartLine(sline);
 
-  return jsvoid();
+  return v8::Undefined();
 }
 
-static jsval msgGetData(const jsargs& args)
+static v8::Handle<v8::Value> msgGetData(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+    return v8::Undefined();
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
-  return jsstring::New(pMsg->data().c_str());
+    return v8::Undefined();
+  return v8::String::New(pMsg->data().c_str());
 }
 
-static jsval msgCommitData(const jsargs& args)
+static v8::Handle<v8::Value> msgCommitData(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+    return v8::Undefined();
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
   pMsg->commitData();
-  return jsstring::New(pMsg->data().c_str());
+  return v8::String::New(pMsg->data().c_str());
 }
 
 //
 // Request-Line Processing
 //
 
-static /*bool*/ jsval requestLineGetMethod(const jsargs& args/*const std::string& rline, std::string& method*/)
+static /*bool*/ v8::Handle<v8::Value> requestLineGetMethod(const v8::Arguments& args/*const std::string& rline, std::string& method*/)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
   std::string result;
   if (OSS::SIP::SIPRequestLine::getMethod(input, result))
-    return jsstring::New(result.c_str());
-  return jsvoid();
+    return v8::String::New(result.c_str());
+  return v8::Undefined();
 }
 
 
-static /*bool*/ jsval requestLineGetURI(const jsargs& args/*const std::string& rline, std::string& uri*/)
+static /*bool*/ v8::Handle<v8::Value> requestLineGetURI(const v8::Arguments& args/*const std::string& rline, std::string& uri*/)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
   std::string result;
   if (OSS::SIP::SIPRequestLine::getURI(input, result))
-    return jsstring::New(result.c_str());
-  return jsvoid();
+    return v8::String::New(result.c_str());
+  return v8::Undefined();
 }
 
-static /*bool*/ jsval requestLineGetVersion(const jsargs& args/*const std::string& rline, std::string& version*/)
+static /*bool*/ v8::Handle<v8::Value> requestLineGetVersion(const v8::Arguments& args/*const std::string& rline, std::string& version*/)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
   std::string result;
   if (OSS::SIP::SIPRequestLine::getVersion(input, result))
-    return jsstring::New(result.c_str());
-  return jsvoid();
+    return v8::String::New(result.c_str());
+  return v8::Undefined();
 }
 
-static /*bool*/ jsval requestLineSetMethod(const jsargs& args/*std::string& rline, const char* method*/)
+static /*bool*/ v8::Handle<v8::Value> requestLineSetMethod(const v8::Arguments& args/*std::string& rline, const char* method*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string newval = jsvalToString(args[1]);
-  return jsbool::New(OSS::SIP::SIPRequestLine::setMethod(input, newval.c_str()));
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string newval = string_from_js_string(args[1]);
+  return v8::Boolean::New(OSS::SIP::SIPRequestLine::setMethod(input, newval.c_str()));
 }
 
-static /*bool*/ jsval requestLineSetURI(const jsargs& args/*std::string& rline, const char* uri*/)
+static /*bool*/ v8::Handle<v8::Value> requestLineSetURI(const v8::Arguments& args/*std::string& rline, const char* uri*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string newval = jsvalToString(args[1]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string newval = string_from_js_string(args[1]);
   if (!OSS::SIP::SIPRequestLine::setURI(input, newval.c_str()))
-    return jsvoid();
-  return jsstring::New(input.c_str());
+    return v8::Undefined();
+  return v8::String::New(input.c_str());
 }
 
 
-static /*bool*/ jsval requestLineSetVersion(const jsargs& args/*std::string& rline, const char* version*/)
+static /*bool*/ v8::Handle<v8::Value> requestLineSetVersion(const v8::Arguments& args/*std::string& rline, const char* version*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string newval = jsvalToString(args[1]);
-  return jsbool::New(OSS::SIP::SIPRequestLine::setVersion(input, newval.c_str()));
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string newval = string_from_js_string(args[1]);
+  return v8::Boolean::New(OSS::SIP::SIPRequestLine::setVersion(input, newval.c_str()));
 }
 
 
@@ -762,517 +750,517 @@ static /*bool*/ jsval requestLineSetVersion(const jsargs& args/*std::string& rli
 // Status-Line Processing
 //
 
-static jsval/*bool*/ statusLineGetVersion(const jsargs& args/*const std::string& sline, std::string& version*/)
+static v8::Handle<v8::Value>/*bool*/ statusLineGetVersion(const v8::Arguments& args/*const std::string& sline, std::string& version*/)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
   std::string result;
   if (OSS::SIP::SIPStatusLine::getVersion(input, result))
-    return jsstring::New(result.c_str());
-  return jsvoid();
+    return v8::String::New(result.c_str());
+  return v8::Undefined();
 }
 
-static jsval/*bool*/ statusLineSetVersion(const jsargs& args/*std::string& sline, const char* version*/)
+static v8::Handle<v8::Value>/*bool*/ statusLineSetVersion(const v8::Arguments& args/*std::string& sline, const char* version*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string newval = jsvalToString(args[1]);
-  return jsbool::New(OSS::SIP::SIPStatusLine::setVersion(input, newval.c_str()));
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string newval = string_from_js_string(args[1]);
+  return v8::Boolean::New(OSS::SIP::SIPStatusLine::setVersion(input, newval.c_str()));
 }
 
 
-static jsval/*bool*/ statusLineGetStatusCode(const jsargs& args/*const std::string& sline,std::string& statusCode*/)
+static v8::Handle<v8::Value>/*bool*/ statusLineGetStatusCode(const v8::Arguments& args/*const std::string& sline,std::string& statusCode*/)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
   std::string result;
   if (OSS::SIP::SIPStatusLine::getStatusCode(input, result))
-    return jsstring::New(result.c_str());
-  return jsvoid();
+    return v8::String::New(result.c_str());
+  return v8::Undefined();
 }
 
 
-static jsval/*bool*/ statusLineSetStatusCode(const jsargs& args/*std::string& sline, const char* statusCode*/)
+static v8::Handle<v8::Value>/*bool*/ statusLineSetStatusCode(const v8::Arguments& args/*std::string& sline, const char* statusCode*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string newval = jsvalToString(args[1]);
-  return jsbool::New(OSS::SIP::SIPStatusLine::setStatusCode(input, newval.c_str()));
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string newval = string_from_js_string(args[1]);
+  return v8::Boolean::New(OSS::SIP::SIPStatusLine::setStatusCode(input, newval.c_str()));
 }
 
 
-static jsval/*bool*/ statusLineGetReasonPhrase(const jsargs& args/*const std::string& sline, std::string& reasonPhrase*/)
+static v8::Handle<v8::Value>/*bool*/ statusLineGetReasonPhrase(const v8::Arguments& args/*const std::string& sline, std::string& reasonPhrase*/)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
   std::string result;
   if (OSS::SIP::SIPStatusLine::getReasonPhrase(input, result))
-    return jsstring::New(result.c_str());
-  return jsvoid();
+    return v8::String::New(result.c_str());
+  return v8::Undefined();
 }
 
 
-static jsval/*bool*/ statusLineSetReasonPhrase(const jsargs& args/*std::string& sline, const char* reasonPhrase*/)
+static v8::Handle<v8::Value>/*bool*/ statusLineSetReasonPhrase(const v8::Arguments& args/*std::string& sline, const char* reasonPhrase*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string newval = jsvalToString(args[1]);
-  return jsbool::New(OSS::SIP::SIPStatusLine::setReasonPhrase(input, newval.c_str()));
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string newval = string_from_js_string(args[1]);
+  return v8::Boolean::New(OSS::SIP::SIPStatusLine::setReasonPhrase(input, newval.c_str()));
 }
 
 //
 // URI Processing
 //
 
-static jsval/*bool*/ uriSetScheme(const jsargs& args/*std::string& uri, const char* scheme*/)
+static v8::Handle<v8::Value>/*bool*/ uriSetScheme(const v8::Arguments& args/*std::string& uri, const char* scheme*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string newval = jsvalToString(args[1]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string newval = string_from_js_string(args[1]);
   if (OSS::SIP::SIPURI::setScheme(input, newval.c_str()))
-    return jsstring::New(input.c_str());
-  return jsvoid();
+    return v8::String::New(input.c_str());
+  return v8::Undefined();
 }
 
-static jsval/*bool*/ uriGetScheme(const jsargs& args/*const std::string& uri, std::string& value*/)
+static v8::Handle<v8::Value>/*bool*/ uriGetScheme(const v8::Arguments& args/*const std::string& uri, std::string& value*/)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
   std::string val;
   if (OSS::SIP::SIPURI::getScheme(input, val))
-    return jsstring::New(val.c_str());
-  return jsvoid();
+    return v8::String::New(val.c_str());
+  return v8::Undefined();
 }
 
-static jsval/*bool*/ uriGetUser(const jsargs& args/*const std::string& uri, std::string& value*/)
+static v8::Handle<v8::Value>/*bool*/ uriGetUser(const v8::Arguments& args/*const std::string& uri, std::string& value*/)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
   std::string val;
   if (OSS::SIP::SIPURI::getUser(input, val))
-    return jsstring::New(val.c_str());
-  return jsvoid();
+    return v8::String::New(val.c_str());
+  return v8::Undefined();
 }
 
-static jsval/*bool*/ uriSetUserInfo(const jsargs& args/*std::string& uri, const char* userInfo*/)
+static v8::Handle<v8::Value>/*bool*/ uriSetUserInfo(const v8::Arguments& args/*std::string& uri, const char* userInfo*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string newval = jsvalToString(args[1]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string newval = string_from_js_string(args[1]);
   if (OSS::SIP::SIPURI::setUserInfo(input, newval.c_str()))
-    return jsstring::New(input.c_str());
-  return jsvoid();
+    return v8::String::New(input.c_str());
+  return v8::Undefined();
 }
 
-static jsval/*bool*/ uriGetPassword(const jsargs& args/*const std::string& uri, std::string& value*/)
+static v8::Handle<v8::Value>/*bool*/ uriGetPassword(const v8::Arguments& args/*const std::string& uri, std::string& value*/)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
   std::string val;
   if (OSS::SIP::SIPURI::getPassword(input, val))
-    return jsstring::New(val.c_str());
-  return jsvoid();
+    return v8::String::New(val.c_str());
+  return v8::Undefined();
 }
 
-static jsval/*bool*/ uriGetHostPort(const jsargs& args/*const std::string& uri, std::string& value*/)
+static v8::Handle<v8::Value>/*bool*/ uriGetHostPort(const v8::Arguments& args/*const std::string& uri, std::string& value*/)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
   std::string val;
   if (OSS::SIP::SIPURI::getHostPort(input, val))
-    return jsstring::New(val.c_str());
-  return jsvoid();
+    return v8::String::New(val.c_str());
+  return v8::Undefined();
 }
 
-static jsval/*bool*/ uriSetHostPort(const jsargs& args/*std::string& uri, const char* hostPort*/)
+static v8::Handle<v8::Value>/*bool*/ uriSetHostPort(const v8::Arguments& args/*std::string& uri, const char* hostPort*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string newval = jsvalToString(args[1]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string newval = string_from_js_string(args[1]);
   if (OSS::SIP::SIPURI::setHostPort(input, newval.c_str()))
-    return jsstring::New(input.c_str());
-  return jsvoid();
+    return v8::String::New(input.c_str());
+  return v8::Undefined();
 }
 
-static jsval/*bool*/ uriGetParams(const jsargs& args/*const std::string& uri, std::string& params*/)
+static v8::Handle<v8::Value>/*bool*/ uriGetParams(const v8::Arguments& args/*const std::string& uri, std::string& params*/)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
   std::string val;
   if (OSS::SIP::SIPURI::getParams(input, val))
-    return jsstring::New(val.c_str());
-  return jsvoid();
+    return v8::String::New(val.c_str());
+  return v8::Undefined();
 }
 
-static jsval/*bool*/ uriSetParams(const jsargs& args/*std::string& uri, const std::string& params*/)
+static v8::Handle<v8::Value>/*bool*/ uriSetParams(const v8::Arguments& args/*std::string& uri, const std::string& params*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string newval = jsvalToString(args[1]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string newval = string_from_js_string(args[1]);
   if (OSS::SIP::SIPURI::setParams(input, newval.c_str()))
-    return jsstring::New(input.c_str());
-  return jsvoid();
+    return v8::String::New(input.c_str());
+  return v8::Undefined();
 }
 
-static jsval/*bool*/ uriHasParam(const jsargs& args/*const std::string& uri, const char* paraName*/)
+static v8::Handle<v8::Value>/*bool*/ uriHasParam(const v8::Arguments& args/*const std::string& uri, const char* paraName*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string val = jsvalToString(args[1]);
-  return jsbool::New(OSS::SIP::SIPURI::hasParam(input, val.c_str()));
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string val = string_from_js_string(args[1]);
+  return v8::Boolean::New(OSS::SIP::SIPURI::hasParam(input, val.c_str()));
 }
 
-static jsval/*bool*/ uriGetParam(const jsargs& args/*const std::string& uri, const char* paramName, std::string& paramValue*/)
+static v8::Handle<v8::Value>/*bool*/ uriGetParam(const v8::Arguments& args/*const std::string& uri, const char* paramName, std::string& paramValue*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string name = jsvalToString(args[1]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string name = string_from_js_string(args[1]);
   std::string value;
   if (OSS::SIP::SIPURI::getParam(input, name.c_str(), value))
-    return jsstring::New(value.c_str());
-  return jsvoid();
+    return v8::String::New(value.c_str());
+  return v8::Undefined();
 }
 
-static jsval/*bool*/ uriGetParamEx(const jsargs& args/*const std::string& params, const char* paramName, std::string& paramValue*/)
+static v8::Handle<v8::Value>/*bool*/ uriGetParamEx(const v8::Arguments& args/*const std::string& params, const char* paramName, std::string& paramValue*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string name = jsvalToString(args[1]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string name = string_from_js_string(args[1]);
   std::string value;
   if (OSS::SIP::SIPURI::getParamEx(input, name.c_str(), value))
-    return jsstring::New(value.c_str());
-  return jsvoid();
+    return v8::String::New(value.c_str());
+  return v8::Undefined();
 }
 
-static jsval/*bool*/ uriSetParam(const jsargs& args/*std::string& uri, const char* paramName, const char* paramValue*/)
+static v8::Handle<v8::Value>/*bool*/ uriSetParam(const v8::Arguments& args/*std::string& uri, const char* paramName, const char* paramValue*/)
 {
   if (args.Length() < 3)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string name = jsvalToString(args[1]);
-  std::string newval = jsvalToString(args[2]);
-  return jsbool::New(OSS::SIP::SIPURI::setParam(input, name.c_str(), newval.c_str()));
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string name = string_from_js_string(args[1]);
+  std::string newval = string_from_js_string(args[2]);
+  return v8::Boolean::New(OSS::SIP::SIPURI::setParam(input, name.c_str(), newval.c_str()));
 }
 
-static jsval/*bool*/ uriSetParamEx(const jsargs& args/*std::string& params, const char* paramName, const char* paramValue*/)
+static v8::Handle<v8::Value>/*bool*/ uriSetParamEx(const v8::Arguments& args/*std::string& params, const char* paramName, const char* paramValue*/)
 {
   if (args.Length() < 3)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string name = jsvalToString(args[1]);
-  std::string newval = jsvalToString(args[2]);
-  return jsbool::New(OSS::SIP::SIPURI::setParam(input, name.c_str(), newval.c_str()));
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string name = string_from_js_string(args[1]);
+  std::string newval = string_from_js_string(args[2]);
+  return v8::Boolean::New(OSS::SIP::SIPURI::setParam(input, name.c_str(), newval.c_str()));
 }
 
-static jsval/*void*/ uriEscapeUser(const jsargs& args/*std::string& result, const char* user*/)
+static v8::Handle<v8::Value>/*void*/ uriEscapeUser(const v8::Arguments& args/*std::string& result, const char* user*/)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
   std::string result;
   OSS::SIP::SIPURI::escapeUser(result, input.c_str());
-    return jsstring::New(result.c_str());
+    return v8::String::New(result.c_str());
 }
 
-static jsval/*void*/ uriEscapeParam(const jsargs& args/*std::string& result, const char* param*/)
+static v8::Handle<v8::Value>/*void*/ uriEscapeParam(const v8::Arguments& args/*std::string& result, const char* param*/)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
   std::string result;
   OSS::SIP::SIPURI::escapeParam(result, input.c_str());
-  return jsstring::New(result.c_str());
+  return v8::String::New(result.c_str());
 }
 
-static jsval/*bool*/ uriGetHeaders(const jsargs& args/*const std::string& uri, std::string& headers*/)
+static v8::Handle<v8::Value>/*bool*/ uriGetHeaders(const v8::Arguments& args/*const std::string& uri, std::string& headers*/)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
   std::string val;
   if (OSS::SIP::SIPURI::getHeaders(input, val))
-    return jsstring::New(val.c_str());
-  return jsvoid();
+    return v8::String::New(val.c_str());
+  return v8::Undefined();
 }
 
-static jsval/*bool*/ uriSetHeaders(const jsargs& args/*std::string& uri, const std::string& headers*/)
+static v8::Handle<v8::Value>/*bool*/ uriSetHeaders(const v8::Arguments& args/*std::string& uri, const std::string& headers*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string newval = jsvalToString(args[1]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string newval = string_from_js_string(args[1]);
   if (OSS::SIP::SIPURI::setHeaders(input, newval.c_str()))
-    return jsstring::New(input.c_str());
-  return jsvoid();
+    return v8::String::New(input.c_str());
+  return v8::Undefined();
 }
 
-static jsval/*bool*/ uriVerify(const jsargs& args/*const char* uri*/)
+static v8::Handle<v8::Value>/*bool*/ uriVerify(const v8::Arguments& args/*const char* uri*/)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  return jsbool::New(OSS::SIP::SIPURI::verify(input.c_str()));
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  return v8::Boolean::New(OSS::SIP::SIPURI::verify(input.c_str()));
 }
 
 //
 // From Processing
 //
 
-static jsval /*bool*/ fromGetDisplayName(const jsargs& args/*const std::string& from, std::string& displayName*/)
+static v8::Handle<v8::Value> /*bool*/ fromGetDisplayName(const v8::Arguments& args/*const std::string& from, std::string& displayName*/)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
   std::string val;
   if (OSS::SIP::SIPFrom::getDisplayName(input, val))
-    return jsstring::New(val.c_str());
-  return jsvoid();
+    return v8::String::New(val.c_str());
+  return v8::Undefined();
 }
 
-static jsval /*bool*/ fromSetDisplayName(const jsargs& args/*std::string& from, const char* uri*/)
+static v8::Handle<v8::Value> /*bool*/ fromSetDisplayName(const v8::Arguments& args/*std::string& from, const char* uri*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string newval = jsvalToString(args[1]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string newval = string_from_js_string(args[1]);
   if (OSS::SIP::SIPFrom::setDisplayName(input, newval.c_str()))
-    return jsstring::New(input.c_str());
-  return jsvoid();
+    return v8::String::New(input.c_str());
+  return v8::Undefined();
 }
 
-static jsval /*bool*/ fromGetURI(const jsargs& args/*const std::string& from, std::string& uri*/)
+static v8::Handle<v8::Value> /*bool*/ fromGetURI(const v8::Arguments& args/*const std::string& from, std::string& uri*/)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
   std::string val;
   if (OSS::SIP::SIPFrom::getURI(input, val))
-    return jsstring::New(val.c_str());
-  return jsvoid();
+    return v8::String::New(val.c_str());
+  return v8::Undefined();
 }
 
-static jsval /*bool*/ fromSetURI(const jsargs& args/*std::string& from, const char* uri*/)
+static v8::Handle<v8::Value> /*bool*/ fromSetURI(const v8::Arguments& args/*std::string& from, const char* uri*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string newval = jsvalToString(args[1]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string newval = string_from_js_string(args[1]);
   if (OSS::SIP::SIPFrom::setURI(input, newval.c_str()))
-    return jsstring::New(input.c_str());
-  return jsvoid();
+    return v8::String::New(input.c_str());
+  return v8::Undefined();
 }
 
-static jsval /*bool*/ fromGetHeaderParams(const jsargs& args/*const std::string& from, std::string& headerParams*/)
+static v8::Handle<v8::Value> /*bool*/ fromGetHeaderParams(const v8::Arguments& args/*const std::string& from, std::string& headerParams*/)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
   std::string val;
   if (OSS::SIP::SIPFrom::getHeaderParams(input, val))
-    return jsstring::New(val.c_str());
-  return jsvoid();
+    return v8::String::New(val.c_str());
+  return v8::Undefined();
 }
 
-static jsval /*bool*/ fromSetHeaderParams(const jsargs& args/*std::string& from, const char* headerParams*/)
+static v8::Handle<v8::Value> /*bool*/ fromSetHeaderParams(const v8::Arguments& args/*std::string& from, const char* headerParams*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string newval = jsvalToString(args[1]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string newval = string_from_js_string(args[1]);
   if (OSS::SIP::SIPFrom::setHeaderParams(input, newval.c_str()))
-    return jsstring::New(input.c_str());
-  return jsvoid();
+    return v8::String::New(input.c_str());
+  return v8::Undefined();
 }
 
-static jsval /*bool*/ fromGetHeaderParam(const jsargs& args/*const std::string& from, const char* paramName, std::string& paramValue*/)
+static v8::Handle<v8::Value> /*bool*/ fromGetHeaderParam(const v8::Arguments& args/*const std::string& from, const char* paramName, std::string& paramValue*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string name = jsvalToString(args[1]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string name = string_from_js_string(args[1]);
   std::string val;
   if (OSS::SIP::SIPFrom::getHeaderParam(input, name.c_str(), val))
-    return jsstring::New(val.c_str());
-  return jsvoid();
+    return v8::String::New(val.c_str());
+  return v8::Undefined();
 }
 
-static jsval /*bool*/ fromGetHeaderParamEx(const jsargs& args/*const std::string& headerParams, const char* paramName, std::string& paramValue*/)
+static v8::Handle<v8::Value> /*bool*/ fromGetHeaderParamEx(const v8::Arguments& args/*const std::string& headerParams, const char* paramName, std::string& paramValue*/)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string name = jsvalToString(args[1]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string name = string_from_js_string(args[1]);
   std::string val;
   if (OSS::SIP::SIPFrom::getHeaderParamEx(input, name.c_str(), val))
-    return jsstring::New(val.c_str());
-  return jsvoid();
+    return v8::String::New(val.c_str());
+  return v8::Undefined();
 }
 
-static jsval /*bool*/ fromSetHeaderParam(const jsargs& args/*std::string& from, const char* paramName, const char* paramValue*/)
+static v8::Handle<v8::Value> /*bool*/ fromSetHeaderParam(const v8::Arguments& args/*std::string& from, const char* paramName, const char* paramValue*/)
 {
   if (args.Length() < 3)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string name = jsvalToString(args[1]);
-  std::string newval = jsvalToString(args[2]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string name = string_from_js_string(args[1]);
+  std::string newval = string_from_js_string(args[2]);
   if (OSS::SIP::SIPFrom::setHeaderParam(input, name.c_str(), newval.c_str()))
-    return jsstring::New(input.c_str());
-  return jsvoid();
+    return v8::String::New(input.c_str());
+  return v8::Undefined();
 }
 
-static jsval /*bool*/ fromSetHeaderParamEx(const jsargs& args/*std::string& headerParams, const char* paramName, const char* paramValue*/)
+static v8::Handle<v8::Value> /*bool*/ fromSetHeaderParamEx(const v8::Arguments& args/*std::string& headerParams, const char* paramName, const char* paramValue*/)
 {
   if (args.Length() < 3)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  std::string name = jsvalToString(args[1]);
-  std::string newval = jsvalToString(args[2]);
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  std::string name = string_from_js_string(args[1]);
+  std::string newval = string_from_js_string(args[2]);
   if (OSS::SIP::SIPFrom::setHeaderParamEx(input, name.c_str(), newval.c_str()))
-    return jsstring::New(input.c_str());
-  return jsvoid();
+    return v8::String::New(input.c_str());
+  return v8::Undefined();
 }
 
 //
 // Misc functions
 //
 
-static jsval cidrVerify(const jsargs& args)
+static v8::Handle<v8::Value> cidrVerify(const v8::Arguments& args)
 {
   if (args.Length() < 2)
-    return jsvoid();
-  std::string ip = jsvalToString(args[0]);
-  std::string cidr = jsvalToString(args[1]);
+    return v8::Undefined();
+  std::string ip = string_from_js_string(args[0]);
+  std::string cidr = string_from_js_string(args[1]);
   if (ip.empty() || cidr.empty())
-    return jsvoid();
+    return v8::Undefined();
   bool verified = OSS::socket_address_cidr_verify(ip, cidr);
-  return jsbool::New(verified);
+  return v8::Boolean::New(verified);
 }
 
-static jsval wildCardCompare(const jsargs& args)
+static v8::Handle<v8::Value> wildCardCompare(const v8::Arguments& args)
 {
   if (args.Length() < 2)
-    return jsvoid();
+    return v8::Undefined();
 
-  std::string wild = jsvalToString(args[0]);
-  std::string input = jsvalToString(args[1]);
+  std::string wild = string_from_js_string(args[0]);
+  std::string input = string_from_js_string(args[1]);
 
-  return jsbool::New(OSS::string_wildcard_compare(wild.c_str(), input));
+  return v8::Boolean::New(OSS::string_wildcard_compare(wild.c_str(), input));
 }
 
-static jsval isIpInRange(const jsargs& args)
+static v8::Handle<v8::Value> isIpInRange(const v8::Arguments& args)
 {
   if (args.Length() < 3)
-    return jsvoid();
-  std::string low = jsvalToString(args[0]);
-  std::string high = jsvalToString(args[1]);
-  std::string strIp = jsvalToString(args[2]);
+    return v8::Undefined();
+  std::string low = string_from_js_string(args[0]);
+  std::string high = string_from_js_string(args[1]);
+  std::string strIp = string_from_js_string(args[2]);
 
   if (low.empty() || high.empty() || strIp.empty())
-    return jsvoid();
+    return v8::Undefined();
   
   bool verified = OSS::socket_address_range_verify(low, high, strIp);
   
-  return jsbool::New(verified);
+  return v8::Boolean::New(verified);
 }
 
-static jsval md5Hash(const jsargs& args)
+static v8::Handle<v8::Value> md5Hash(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
-  std::string input = jsvalToString(args[0]);
-  return jsstring::New(OSS::string_md5_hash(input.c_str()).c_str());
+    return v8::Undefined();
+  std::string input = string_from_js_string(args[0]);
+  return v8::String::New(OSS::string_md5_hash(input.c_str()).c_str());
 }
 
-static jsval msgGetRequestUri(const jsargs& args)
+static v8::Handle<v8::Value> msgGetRequestUri(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   std::string requestURI;
   if (SIPRequestLine::getURI(pMsg->startLine(), requestURI))
   {
-    return jsstring::New(requestURI.c_str());
+    return v8::String::New(requestURI.c_str());
   }
-  return jsvoid();
+  return v8::Undefined();
 }
 
 
-static jsval msgSetRequestUri(const jsargs& args)
+static v8::Handle<v8::Value> msgSetRequestUri(const v8::Arguments& args)
 {
   if (args.Length() < 2)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  std::string uri = jsvalToString(args[1]);
+  std::string uri = string_from_js_string(args[1]);
 
   try
   {
-    return jsbool::New(SIPRequestLine::setURI(pMsg->startLine(), uri.c_str()));
+    return v8::Boolean::New(SIPRequestLine::setURI(pMsg->startLine(), uri.c_str()));
   }
   catch(...)
   {
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
   }
 }
 
-static jsval msgGetRequestUriUser(const jsargs& args)
+static v8::Handle<v8::Value> msgGetRequestUriUser(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   std::string requestURI;
   if (SIPRequestLine::getURI(pMsg->startLine(), requestURI))
   {
     std::string user;
     if (SIPURI::getUser(requestURI, user))
-      return jsstring::New(user.c_str());
+      return v8::String::New(user.c_str());
   }
-  return jsstring::New("");
+  return v8::String::New("");
 }
 
-static jsval msgSetRequestUriUser(const jsargs& args)
+static v8::Handle<v8::Value> msgSetRequestUriUser(const v8::Arguments& args)
 {
   if (args.Length() < 2)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  std::string user = jsvalToString(args[1]);
+  std::string user = string_from_js_string(args[1]);
 
   try
   {
@@ -1281,49 +1269,49 @@ static jsval msgSetRequestUriUser(const jsargs& args)
     {
       SIPURI::setUserInfo(requestURI, user.c_str());
       if (SIPRequestLine::setURI(pMsg->startLine(), requestURI.c_str()))
-        return jsbool::New(true);
+        return v8::Boolean::New(true);
       else
-        return jsbool::New(false);
+        return v8::Boolean::New(false);
     }
   }
   catch(...)
   {
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
   }
-  return jsbool::New(false);
+  return v8::Boolean::New(false);
 }
 
-static jsval msgGetRequestUriHostPort(const jsargs& args)
+static v8::Handle<v8::Value> msgGetRequestUriHostPort(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   std::string requestURI;
   if (SIPRequestLine::getURI(pMsg->startLine(), requestURI))
   {
     std::string hostPort;
     if (SIPURI::getHostPort(requestURI, hostPort))
-      return jsstring::New(hostPort.c_str());
+      return v8::String::New(hostPort.c_str());
   }
-  return jsvoid();
+  return v8::Undefined();
 }
 
-static jsval msgSetRequestUriHostPort(const jsargs& args)
+static v8::Handle<v8::Value> msgSetRequestUriHostPort(const v8::Arguments& args)
 {
   if (args.Length() < 2)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  std::string hostPort = jsvalToString(args[1]);
+  std::string hostPort = string_from_js_string(args[1]);
 
   try
   {
@@ -1332,89 +1320,89 @@ static jsval msgSetRequestUriHostPort(const jsargs& args)
     {
       SIPURI::setHostPort(requestURI, hostPort.c_str());
       if (SIPRequestLine::setURI(pMsg->startLine(), requestURI.c_str()))
-        return jsbool::New(true);
+        return v8::Boolean::New(true);
       else
-        return jsbool::New(false);
+        return v8::Boolean::New(false);
     }
   }
   catch(...)
   {
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
   }
-  return jsbool::New(false);
+  return v8::Boolean::New(false);
 }
 
-static jsval msgGetRequestUriHost(const jsargs& args)
+static v8::Handle<v8::Value> msgGetRequestUriHost(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   std::string requestURI;
   if (SIPRequestLine::getURI(pMsg->startLine(), requestURI))
   {
     std::string host;
     if (SIPURI::getHost(requestURI, host))
-      return jsstring::New(host.c_str());
+      return v8::String::New(host.c_str());
   }
-  return jsvoid();
+  return v8::Undefined();
 }
 
-static jsval msgGetRequestUriPort(const jsargs& args)
+static v8::Handle<v8::Value> msgGetRequestUriPort(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   std::string requestURI;
   if (SIPRequestLine::getURI(pMsg->startLine(), requestURI))
   {
     std::string port;
     if (SIPURI::getPort(requestURI, port))
-      return jsstring::New(port.c_str());
+      return v8::String::New(port.c_str());
   }
-  return jsvoid();
+  return v8::Undefined();
 }
 
-static jsval msgGetRequestUriParameters(const jsargs& args)
+static v8::Handle<v8::Value> msgGetRequestUriParameters(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   std::string requestURI;
   if (SIPRequestLine::getURI(pMsg->startLine(), requestURI))
   {
     std::string params;
     if (SIPURI::getParams(requestURI, params))
-      return jsstring::New(params.c_str());
+      return v8::String::New(params.c_str());
   }
-  return jsvoid();
+  return v8::Undefined();
 }
 
-static jsval msgSetRequestUriParameters(const jsargs& args)
+static v8::Handle<v8::Value> msgSetRequestUriParameters(const v8::Arguments& args)
 {
   if (args.Length() < 2)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
   
-  std::string params = jsvalToString(args[1]);
+  std::string params = string_from_js_string(args[1]);
 
   try
   {
@@ -1426,278 +1414,278 @@ static jsval msgSetRequestUriParameters(const jsargs& args)
   }
   catch(...)
   {
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
   }
-  return jsbool::New(true);
+  return v8::Boolean::New(true);
 }
 
-jsval msgGetToUser(const jsargs& args)
+v8::Handle<v8::Value> msgGetToUser(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   std::string to = pMsg->hdrGet(OSS::SIP::HDR_TO);
   std::string user;
   if (!SIPFrom::getUser(to, user))
-    return jsvoid();
-  return jsstring::New(user.c_str());
+    return v8::Undefined();
+  return v8::String::New(user.c_str());
 }
 
-jsval msgSetToUser(const jsargs& args)
+v8::Handle<v8::Value> msgSetToUser(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
   try
   {
     std::string to = pMsg->hdrGet(OSS::SIP::HDR_TO);
-    std::string user = jsvalToString(args[1]);
+    std::string user = string_from_js_string(args[1]);
     if (!SIPFrom::setUser(to, user.c_str()))
-      return jsbool::New(false);
+      return v8::Boolean::New(false);
     if (!pMsg->hdrSet(OSS::SIP::HDR_TO, to.c_str()))
-      return jsbool::New(false);
-    return jsbool::New(true);
+      return v8::Boolean::New(false);
+    return v8::Boolean::New(true);
   }
   catch(...)
   {
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
   }
 }
 
-jsval msgGetToHostPort(const jsargs& args)
+v8::Handle<v8::Value> msgGetToHostPort(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   std::string to = pMsg->hdrGet(OSS::SIP::HDR_TO);
   std::string hostPort;
   if (!SIPFrom::getHostPort(to, hostPort))
-    return jsvoid();
-  return jsstring::New(hostPort.c_str());
+    return v8::Undefined();
+  return v8::String::New(hostPort.c_str());
 }
 
-jsval msgGetToHost(const jsargs& args)
+v8::Handle<v8::Value> msgGetToHost(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   std::string to = pMsg->hdrGet(OSS::SIP::HDR_TO);
   std::string host;
   if (!SIPFrom::getHost(to, host))
-    return jsvoid();
-  return jsstring::New(host.c_str());
+    return v8::Undefined();
+  return v8::String::New(host.c_str());
 }
 
-jsval msgGetToPort(const jsargs& args)
+v8::Handle<v8::Value> msgGetToPort(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   std::string to = pMsg->hdrGet(OSS::SIP::HDR_TO);
   std::string host;
   if (!SIPFrom::getHostPort(to, host))
-    return jsvoid();
+    return v8::Undefined();
   
   std::vector<std::string> tokens = OSS::string_tokenize(host, ":");
   if (tokens.size() <= 1)
   {
-    return jsvoid();
+    return v8::Undefined();
   }
   
-  return jsstring::New(tokens[1].c_str());
+  return v8::String::New(tokens[1].c_str());
 }
 
-jsval msgSetToHostPort(const jsargs& args)
+v8::Handle<v8::Value> msgSetToHostPort(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
   try
   {
     std::string to = pMsg->hdrGet(OSS::SIP::HDR_TO);
-    std::string hostPort = jsvalToString(args[1]);
+    std::string hostPort = string_from_js_string(args[1]);
     if (!SIPFrom::setHostPort(to, hostPort.c_str()))
-      return jsbool::New(false);
+      return v8::Boolean::New(false);
     if (!pMsg->hdrSet(OSS::SIP::HDR_TO, to.c_str()))
-      return jsbool::New(false);
-    return jsbool::New(true);
+      return v8::Boolean::New(false);
+    return v8::Boolean::New(true);
   }
   catch(...)
   {
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
   }
 }
 
-jsval msgGetFromUser(const jsargs& args)
+v8::Handle<v8::Value> msgGetFromUser(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   std::string to = pMsg->hdrGet(OSS::SIP::HDR_FROM);
   std::string user;
   if (!SIPFrom::getUser(to, user))
-    return jsvoid();
-  return jsstring::New(user.c_str());
+    return v8::Undefined();
+  return v8::String::New(user.c_str());
 }
 
-jsval msgSetFromUser(const jsargs& args)
+v8::Handle<v8::Value> msgSetFromUser(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
   try
   {
     std::string from = pMsg->hdrGet(OSS::SIP::HDR_FROM);
-    std::string user = jsvalToString(args[1]);
+    std::string user = string_from_js_string(args[1]);
     if (!SIPFrom::setUser(from, user.c_str()))
-      return jsbool::New(false);
+      return v8::Boolean::New(false);
     if (!pMsg->hdrSet(OSS::SIP::HDR_FROM, from.c_str()))
-      return jsbool::New(false);
-    return jsbool::New(true);
+      return v8::Boolean::New(false);
+    return v8::Boolean::New(true);
   }
   catch(...)
   {
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
   }
 }
 
-jsval msgGetFromHostPort(const jsargs& args)
+v8::Handle<v8::Value> msgGetFromHostPort(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   std::string to = pMsg->hdrGet(OSS::SIP::HDR_FROM);
   std::string hostPort;
   if (!SIPFrom::getHostPort(to, hostPort))
-    return jsvoid();
-  return jsstring::New(hostPort.c_str());
+    return v8::Undefined();
+  return v8::String::New(hostPort.c_str());
 }
 
-jsval msgGetFromHost(const jsargs& args)
+v8::Handle<v8::Value> msgGetFromHost(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   std::string from = pMsg->hdrGet(OSS::SIP::HDR_FROM);
   std::string host;
   if (!SIPFrom::getHost(from, host))
-    return jsvoid();
-  return jsstring::New(host.c_str());
+    return v8::Undefined();
+  return v8::String::New(host.c_str());
 }
 
-jsval msgGetFromPort(const jsargs& args)
+v8::Handle<v8::Value> msgGetFromPort(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   std::string from = pMsg->hdrGet(OSS::SIP::HDR_FROM);
   std::string host;
   if (!SIPFrom::getHostPort(from, host))
-    return jsvoid();
+    return v8::Undefined();
   
   std::vector<std::string> tokens = OSS::string_tokenize(host, ":");
   if (tokens.size() <= 1)
   {
-    return jsvoid();
+    return v8::Undefined();
   }
   
-  return jsstring::New(tokens[1].c_str());
+  return v8::String::New(tokens[1].c_str());
 }
 
-jsval msgSetFromHostPort(const jsargs& args)
+v8::Handle<v8::Value> msgSetFromHostPort(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
   try
   {
     std::string from = pMsg->hdrGet(OSS::SIP::HDR_FROM);
-    std::string hostPort = jsvalToString(args[1]);
+    std::string hostPort = string_from_js_string(args[1]);
     if (!SIPFrom::setHostPort(from, hostPort.c_str()))
-      return jsbool::New(false);
+      return v8::Boolean::New(false);
     if (!pMsg->hdrSet(OSS::SIP::HDR_FROM, from.c_str()))
-      return jsbool::New(false);
-    return jsbool::New(true);
+      return v8::Boolean::New(false);
+    return v8::Boolean::New(true);
   }
   catch(...)
   {
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
   }
 }
 
-jsval msgGetContactUri(const jsargs& args)
+v8::Handle<v8::Value> msgGetContactUri(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   std::string hContactList = pMsg->hdrGet(OSS::SIP::HDR_CONTACT);
   if (hContactList.empty())
-    return jsvoid();
+    return v8::Undefined();
 
   ContactURI contact;
   if (!hContactList.empty())
@@ -1705,26 +1693,26 @@ jsval msgGetContactUri(const jsargs& args)
 
   std::string contactUri = contact.getURI();
 
-  return jsstring::New(contactUri.c_str());
+  return v8::String::New(contactUri.c_str());
 }
 
-jsval msgGetContactParameter(const jsargs& args)
+v8::Handle<v8::Value> msgGetContactParameter(const v8::Arguments& args)
 {
   if (args.Length() < 2)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
-  std::string param = jsvalToString(args[1]);
+  std::string param = string_from_js_string(args[1]);
   if (param.empty())
-    return jsvoid();
+    return v8::Undefined();
 
   std::string hContactList = pMsg->hdrGet(OSS::SIP::HDR_CONTACT);
   if (hContactList.empty())
-    return jsvoid();
+    return v8::Undefined();
 
   ContactURI contact;
   if (!hContactList.empty())
@@ -1732,22 +1720,22 @@ jsval msgGetContactParameter(const jsargs& args)
 
   std::string value = contact.getHeaderParam(param.c_str());
   if (value.empty())
-    return jsvoid();
+    return v8::Undefined();
 
-  return jsstring::New(value.c_str());
+  return v8::String::New(value.c_str());
 }
 
-jsval msgGetAuthenticator(const jsargs& args)
+v8::Handle<v8::Value> msgGetAuthenticator(const v8::Arguments& args)
 {
   if (args.Length() < 2)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
-  std::string realm = jsvalToString(args[1]);
+  std::string realm = string_from_js_string(args[1]);
   OSS::string_to_lower(realm);
 
   int wwwAuthSize = pMsg->hdrGetSize(OSS::SIP::HDR_AUTHORIZATION);
@@ -1807,319 +1795,319 @@ jsval msgGetAuthenticator(const jsargs& args)
     }
   }
 
-  return jsstring::New(authenticator.c_str());
+  return v8::String::New(authenticator.c_str());
 }
 
-static jsval msgSetTransactionProperty(const jsargs& args)
+static v8::Handle<v8::Value> msgSetTransactionProperty(const v8::Arguments& args)
 {
   if (args.Length() < 3)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
   SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
   if (!pTrn)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  std::string name = jsvalToString(args[1]);
-  std::string value = jsvalToString(args[2]);
+  std::string name = string_from_js_string(args[1]);
+  std::string value = string_from_js_string(args[2]);
 
   if (name.empty() || value.empty())
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
   pTrn->setProperty(name, value);
 
-  return jsbool::New(true);
+  return v8::Boolean::New(true);
 }
 
-static jsval msgGetTransactionProperty(const jsargs& args)
+static v8::Handle<v8::Value> msgGetTransactionProperty(const v8::Arguments& args)
 {
   if (args.Length() < 2)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
   if (!pTrn)
-    return jsvoid();
+    return v8::Undefined();
 
-  std::string name = jsvalToString(args[1]);
+  std::string name = string_from_js_string(args[1]);
 
   if (name.empty())
-    return jsvoid();
+    return v8::Undefined();
   std::string value;
   if (name == "log-id")
     value = pTrn->getLogId();
   else
     pTrn->getProperty(name, value);
 
-  return jsstring::New(value.c_str());
+  return v8::String::New(value.c_str());
 }
 
-static jsval msgSetProperty(const jsargs& args)
+static v8::Handle<v8::Value> msgSetProperty(const v8::Arguments& args)
 {
   if (args.Length() < 3)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
-  std::string name = jsvalToString(args[1]);
-  std::string value = jsvalToString(args[2]);
+  std::string name = string_from_js_string(args[1]);
+  std::string value = string_from_js_string(args[2]);
 
   if (name.empty() || value.empty())
-    return jsbool::New(false);
+    return v8::Boolean::New(false);
 
   pMsg->setProperty(name, value);
 
-  return jsbool::New(true);
+  return v8::Boolean::New(true);
 }
 
-static jsval msgGetProperty(const jsargs& args)
+static v8::Handle<v8::Value> msgGetProperty(const v8::Arguments& args)
 {
   if (args.Length() < 2)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
-  std::string name = jsvalToString(args[1]);
+  std::string name = string_from_js_string(args[1]);
 
   if (name.empty())
-    return jsvoid();
+    return v8::Undefined();
   std::string value;
   pMsg->getProperty(name, value);
 
-  return jsstring::New(value.c_str());
+  return v8::String::New(value.c_str());
 }
 
 
-static jsval msgGetSourceAddress(const jsargs& args)
+static v8::Handle<v8::Value> msgGetSourceAddress(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
   if (!pTrn || !pTrn->serverTransport())
-    return jsvoid();
+    return v8::Undefined();
 
   OSS::Net::IPAddress addr = pTrn->serverTransport()->getRemoteAddress();
 
-  return jsstring::New(addr.toString().c_str());
+  return v8::String::New(addr.toString().c_str());
 }
 
-static jsval msgGetSourcePort(const jsargs& args)
+static v8::Handle<v8::Value> msgGetSourcePort(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
   if (!pTrn || !pTrn->serverTransport())
-    return jsvoid();
+    return v8::Undefined();
 
   OSS::Net::IPAddress addr = pTrn->serverTransport()->getRemoteAddress();
 
-  return jsint::New(addr.getPort());
+  return v8::Integer::New(addr.getPort());
 }
 
-static jsval msgGetInterfaceAddress(const jsargs& args)
+static v8::Handle<v8::Value> msgGetInterfaceAddress(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
   if (!pTrn || !pTrn->serverTransport())
-    return jsvoid();
+    return v8::Undefined();
 
   OSS::Net::IPAddress addr = pTrn->serverTransport()->getLocalAddress();
-  return jsstring::New(addr.toString().c_str());
+  return v8::String::New(addr.toString().c_str());
 }
 
-static jsval msgGetInterfacePort(const jsargs& args)
+static v8::Handle<v8::Value> msgGetInterfacePort(const v8::Arguments& args)
 {
   if (args.Length() < 1)
-    return jsvoid();
+    return v8::Undefined();
 
-  jsscope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = unwrap_external_object<OSS::SIP::SIPMessage>(args);
   if (!pMsg)
-    return jsvoid();
+    return v8::Undefined();
 
   SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
   if (!pTrn || !pTrn->serverTransport())
-    return jsvoid();
+    return v8::Undefined();
 
   OSS::Net::IPAddress addr = pTrn->serverTransport()->getLocalAddress();
 
-  return jsint::New(addr.getPort());
+  return v8::Integer::New(addr.getPort());
 }
 
 void JSSIPMessage::initGlobalFuncs(OSS_HANDLE objectTemplate)
 {
   v8::Handle<v8::ObjectTemplate>& global = *(static_cast<v8::Handle<v8::ObjectTemplate>*>(objectTemplate));
-  global->Set(jsstring::New("msgGetMethod"), jsfunc::New(msgGetMethod));
-  global->Set(jsstring::New("msgHdrPresent"), jsfunc::New(msgHdrPresent));
-  global->Set(jsstring::New("msgHdrGetSize"), jsfunc::New(msgHdrGetSize));
-  global->Set(jsstring::New("msgHdrGet"), jsfunc::New(msgHdrGet));
-  global->Set(jsstring::New("msgHdrSet"), jsfunc::New(msgHdrSet));
-  global->Set(jsstring::New("msgHdrRemove"), jsfunc::New(msgHdrRemove));
-  global->Set(jsstring::New("msgHdrListAppend"), jsfunc::New(msgHdrListAppend));
-  global->Set(jsstring::New("msgHdrListPrepend"), jsfunc::New(msgHdrListPrepend));
-  global->Set(jsstring::New("msgHdrListPopFront"), jsfunc::New(msgHdrListPopFront));
-  global->Set(jsstring::New("msgHdrListRemove"), jsfunc::New(msgHdrListRemove));
-  global->Set(jsstring::New("msgIsRequest"), jsfunc::New(msgIsRequest));
-  global->Set(jsstring::New("msgIsResponse"), jsfunc::New(msgIsResponse));
-  global->Set(jsstring::New("msgIs1xx"), jsfunc::New(msgIs1xx));
-  global->Set(jsstring::New("msgIs2xx"), jsfunc::New(msgIs2xx));
-  global->Set(jsstring::New("msgIs3xx"), jsfunc::New(msgIs3xx));
-  global->Set(jsstring::New("msgIs4xx"), jsfunc::New(msgIs4xx));
-  global->Set(jsstring::New("msgIs5xx"), jsfunc::New(msgIs5xx));
-  global->Set(jsstring::New("msgIs6xx"), jsfunc::New(msgIs6xx));
-  global->Set(jsstring::New("msgIsResponseFamily"), jsfunc::New(msgIsResponseFamily));
-  global->Set(jsstring::New("msgIsErrorResponse"), jsfunc::New(msgIsErrorResponse));
-  global->Set(jsstring::New("msgIsMidDialog"), jsfunc::New(msgIsMidDialog));
-  global->Set(jsstring::New("msgGetBody"), jsfunc::New(msgGetBody));
-  global->Set(jsstring::New("msgSetBody"), jsfunc::New(msgSetBody));
-  global->Set(jsstring::New("msgGetStartLine"), jsfunc::New(msgGetStartLine));
-  global->Set(jsstring::New("msgSetStartLine"), jsfunc::New(msgSetStartLine));
-  global->Set(jsstring::New("msgGetData"), jsfunc::New(msgGetData));
-  global->Set(jsstring::New("msgCommitData"), jsfunc::New(msgCommitData));
-  global->Set(jsstring::New("msgGetRequestUri"), jsfunc::New(msgGetRequestUri));
-  global->Set(jsstring::New("msgSetRequestUri"), jsfunc::New(msgSetRequestUri));
-  global->Set(jsstring::New("msgGetRequestUriUser"), jsfunc::New(msgGetRequestUriUser));
-  global->Set(jsstring::New("msgSetRequestUriUser"), jsfunc::New(msgSetRequestUriUser));
-  global->Set(jsstring::New("msgSetRequestUriHostPort"), jsfunc::New(msgSetRequestUriHostPort));
-  global->Set(jsstring::New("msgGetRequestUriHostPort"), jsfunc::New(msgGetRequestUriHostPort));
-  global->Set(jsstring::New("msgGetRequestUriHost"), jsfunc::New(msgGetRequestUriHost));
-  global->Set(jsstring::New("msgGetRequestUriPort"), jsfunc::New(msgGetRequestUriPort));
-  global->Set(jsstring::New("msgGetRequestUriParameters"), jsfunc::New(msgGetRequestUriParameters));
-  global->Set(jsstring::New("msgSetRequestUriParameters"), jsfunc::New(msgSetRequestUriParameters));
-  global->Set(jsstring::New("msgGetToUser"), jsfunc::New(msgGetToUser));
-  global->Set(jsstring::New("msgSetToUser"), jsfunc::New(msgSetToUser));
-  global->Set(jsstring::New("msgGetToHostPort"), jsfunc::New(msgGetToHostPort));
-  global->Set(jsstring::New("msgGetToHost"), jsfunc::New(msgGetToHost));
-  global->Set(jsstring::New("msgSetToHostPort"), jsfunc::New(msgSetToHostPort));
-  global->Set(jsstring::New("msgGetToPort"), jsfunc::New(msgGetToPort));
-  global->Set(jsstring::New("msgGetFromUser"), jsfunc::New(msgGetFromUser));
-  global->Set(jsstring::New("msgSetFromUser"), jsfunc::New(msgSetFromUser));
-  global->Set(jsstring::New("msgGetFromHostPort"), jsfunc::New(msgGetFromHostPort));
-  global->Set(jsstring::New("msgGetFromHost"), jsfunc::New(msgGetFromHost));
-  global->Set(jsstring::New("msgGetFromPort"), jsfunc::New(msgGetFromPort));
-  global->Set(jsstring::New("msgSetFromHostPort"), jsfunc::New(msgSetFromHostPort));
-  global->Set(jsstring::New("msgGetContactUri"), jsfunc::New(msgGetContactUri));
-  global->Set(jsstring::New("msgGetContactParameter"), jsfunc::New(msgGetContactParameter));
-  global->Set(jsstring::New("msgGetAuthenticator"), jsfunc::New(msgGetAuthenticator));
-  global->Set(jsstring::New("msgSetProperty"), jsfunc::New(msgSetProperty));
-  global->Set(jsstring::New("msgGetProperty"), jsfunc::New(msgGetProperty));
-  global->Set(jsstring::New("msgSetTransactionProperty"), jsfunc::New(msgSetTransactionProperty));
-  global->Set(jsstring::New("msgGetTransactionProperty"), jsfunc::New(msgGetTransactionProperty));
-  global->Set(jsstring::New("msgGetSourceAddress"), jsfunc::New(msgGetSourceAddress));
-  global->Set(jsstring::New("msgGetSourcePort"), jsfunc::New(msgGetSourcePort));
-  global->Set(jsstring::New("msgGetInterfaceAddress"), jsfunc::New(msgGetInterfaceAddress));
-  global->Set(jsstring::New("msgGetInterfacePort"), jsfunc::New(msgGetInterfacePort));
+  global->Set(v8::String::New("msgGetMethod"), v8::FunctionTemplate::New(msgGetMethod));
+  global->Set(v8::String::New("msgHdrPresent"), v8::FunctionTemplate::New(msgHdrPresent));
+  global->Set(v8::String::New("msgHdrGetSize"), v8::FunctionTemplate::New(msgHdrGetSize));
+  global->Set(v8::String::New("msgHdrGet"), v8::FunctionTemplate::New(msgHdrGet));
+  global->Set(v8::String::New("msgHdrSet"), v8::FunctionTemplate::New(msgHdrSet));
+  global->Set(v8::String::New("msgHdrRemove"), v8::FunctionTemplate::New(msgHdrRemove));
+  global->Set(v8::String::New("msgHdrListAppend"), v8::FunctionTemplate::New(msgHdrListAppend));
+  global->Set(v8::String::New("msgHdrListPrepend"), v8::FunctionTemplate::New(msgHdrListPrepend));
+  global->Set(v8::String::New("msgHdrListPopFront"), v8::FunctionTemplate::New(msgHdrListPopFront));
+  global->Set(v8::String::New("msgHdrListRemove"), v8::FunctionTemplate::New(msgHdrListRemove));
+  global->Set(v8::String::New("msgIsRequest"), v8::FunctionTemplate::New(msgIsRequest));
+  global->Set(v8::String::New("msgIsResponse"), v8::FunctionTemplate::New(msgIsResponse));
+  global->Set(v8::String::New("msgIs1xx"), v8::FunctionTemplate::New(msgIs1xx));
+  global->Set(v8::String::New("msgIs2xx"), v8::FunctionTemplate::New(msgIs2xx));
+  global->Set(v8::String::New("msgIs3xx"), v8::FunctionTemplate::New(msgIs3xx));
+  global->Set(v8::String::New("msgIs4xx"), v8::FunctionTemplate::New(msgIs4xx));
+  global->Set(v8::String::New("msgIs5xx"), v8::FunctionTemplate::New(msgIs5xx));
+  global->Set(v8::String::New("msgIs6xx"), v8::FunctionTemplate::New(msgIs6xx));
+  global->Set(v8::String::New("msgIsResponseFamily"), v8::FunctionTemplate::New(msgIsResponseFamily));
+  global->Set(v8::String::New("msgIsErrorResponse"), v8::FunctionTemplate::New(msgIsErrorResponse));
+  global->Set(v8::String::New("msgIsMidDialog"), v8::FunctionTemplate::New(msgIsMidDialog));
+  global->Set(v8::String::New("msgGetBody"), v8::FunctionTemplate::New(msgGetBody));
+  global->Set(v8::String::New("msgSetBody"), v8::FunctionTemplate::New(msgSetBody));
+  global->Set(v8::String::New("msgGetStartLine"), v8::FunctionTemplate::New(msgGetStartLine));
+  global->Set(v8::String::New("msgSetStartLine"), v8::FunctionTemplate::New(msgSetStartLine));
+  global->Set(v8::String::New("msgGetData"), v8::FunctionTemplate::New(msgGetData));
+  global->Set(v8::String::New("msgCommitData"), v8::FunctionTemplate::New(msgCommitData));
+  global->Set(v8::String::New("msgGetRequestUri"), v8::FunctionTemplate::New(msgGetRequestUri));
+  global->Set(v8::String::New("msgSetRequestUri"), v8::FunctionTemplate::New(msgSetRequestUri));
+  global->Set(v8::String::New("msgGetRequestUriUser"), v8::FunctionTemplate::New(msgGetRequestUriUser));
+  global->Set(v8::String::New("msgSetRequestUriUser"), v8::FunctionTemplate::New(msgSetRequestUriUser));
+  global->Set(v8::String::New("msgSetRequestUriHostPort"), v8::FunctionTemplate::New(msgSetRequestUriHostPort));
+  global->Set(v8::String::New("msgGetRequestUriHostPort"), v8::FunctionTemplate::New(msgGetRequestUriHostPort));
+  global->Set(v8::String::New("msgGetRequestUriHost"), v8::FunctionTemplate::New(msgGetRequestUriHost));
+  global->Set(v8::String::New("msgGetRequestUriPort"), v8::FunctionTemplate::New(msgGetRequestUriPort));
+  global->Set(v8::String::New("msgGetRequestUriParameters"), v8::FunctionTemplate::New(msgGetRequestUriParameters));
+  global->Set(v8::String::New("msgSetRequestUriParameters"), v8::FunctionTemplate::New(msgSetRequestUriParameters));
+  global->Set(v8::String::New("msgGetToUser"), v8::FunctionTemplate::New(msgGetToUser));
+  global->Set(v8::String::New("msgSetToUser"), v8::FunctionTemplate::New(msgSetToUser));
+  global->Set(v8::String::New("msgGetToHostPort"), v8::FunctionTemplate::New(msgGetToHostPort));
+  global->Set(v8::String::New("msgGetToHost"), v8::FunctionTemplate::New(msgGetToHost));
+  global->Set(v8::String::New("msgSetToHostPort"), v8::FunctionTemplate::New(msgSetToHostPort));
+  global->Set(v8::String::New("msgGetToPort"), v8::FunctionTemplate::New(msgGetToPort));
+  global->Set(v8::String::New("msgGetFromUser"), v8::FunctionTemplate::New(msgGetFromUser));
+  global->Set(v8::String::New("msgSetFromUser"), v8::FunctionTemplate::New(msgSetFromUser));
+  global->Set(v8::String::New("msgGetFromHostPort"), v8::FunctionTemplate::New(msgGetFromHostPort));
+  global->Set(v8::String::New("msgGetFromHost"), v8::FunctionTemplate::New(msgGetFromHost));
+  global->Set(v8::String::New("msgGetFromPort"), v8::FunctionTemplate::New(msgGetFromPort));
+  global->Set(v8::String::New("msgSetFromHostPort"), v8::FunctionTemplate::New(msgSetFromHostPort));
+  global->Set(v8::String::New("msgGetContactUri"), v8::FunctionTemplate::New(msgGetContactUri));
+  global->Set(v8::String::New("msgGetContactParameter"), v8::FunctionTemplate::New(msgGetContactParameter));
+  global->Set(v8::String::New("msgGetAuthenticator"), v8::FunctionTemplate::New(msgGetAuthenticator));
+  global->Set(v8::String::New("msgSetProperty"), v8::FunctionTemplate::New(msgSetProperty));
+  global->Set(v8::String::New("msgGetProperty"), v8::FunctionTemplate::New(msgGetProperty));
+  global->Set(v8::String::New("msgSetTransactionProperty"), v8::FunctionTemplate::New(msgSetTransactionProperty));
+  global->Set(v8::String::New("msgGetTransactionProperty"), v8::FunctionTemplate::New(msgGetTransactionProperty));
+  global->Set(v8::String::New("msgGetSourceAddress"), v8::FunctionTemplate::New(msgGetSourceAddress));
+  global->Set(v8::String::New("msgGetSourcePort"), v8::FunctionTemplate::New(msgGetSourcePort));
+  global->Set(v8::String::New("msgGetInterfaceAddress"), v8::FunctionTemplate::New(msgGetInterfaceAddress));
+  global->Set(v8::String::New("msgGetInterfacePort"), v8::FunctionTemplate::New(msgGetInterfacePort));
   //
   // Request-Line
   //
-  global->Set(jsstring::New("requestLineGetMethod"), jsfunc::New(requestLineGetMethod));
-  global->Set(jsstring::New("requestLineGetURI"), jsfunc::New(requestLineGetURI));
-  global->Set(jsstring::New("requestLineGetVersion"), jsfunc::New(requestLineGetVersion));
-  global->Set(jsstring::New("requestLineSetMethod"), jsfunc::New(requestLineSetMethod));
-  global->Set(jsstring::New("requestLineSetURI"), jsfunc::New(requestLineSetURI));
-  global->Set(jsstring::New("requestLineSetVersion"), jsfunc::New(requestLineSetVersion));
+  global->Set(v8::String::New("requestLineGetMethod"), v8::FunctionTemplate::New(requestLineGetMethod));
+  global->Set(v8::String::New("requestLineGetURI"), v8::FunctionTemplate::New(requestLineGetURI));
+  global->Set(v8::String::New("requestLineGetVersion"), v8::FunctionTemplate::New(requestLineGetVersion));
+  global->Set(v8::String::New("requestLineSetMethod"), v8::FunctionTemplate::New(requestLineSetMethod));
+  global->Set(v8::String::New("requestLineSetURI"), v8::FunctionTemplate::New(requestLineSetURI));
+  global->Set(v8::String::New("requestLineSetVersion"), v8::FunctionTemplate::New(requestLineSetVersion));
 
   //
   // Status-Line
   //
-  global->Set(jsstring::New("statusLineGetVersion"), jsfunc::New(statusLineGetVersion));
-  global->Set(jsstring::New("statusLineSetVersion"), jsfunc::New(statusLineSetVersion));
-  global->Set(jsstring::New("statusLineGetStatusCode"), jsfunc::New(statusLineGetStatusCode));
-  global->Set(jsstring::New("statusLineSetStatusCode"), jsfunc::New(statusLineSetStatusCode));
-  global->Set(jsstring::New("statusLineGetReasonPhrase"), jsfunc::New(statusLineGetReasonPhrase));
-  global->Set(jsstring::New("statusLineSetReasonPhrase"), jsfunc::New(statusLineSetReasonPhrase));
+  global->Set(v8::String::New("statusLineGetVersion"), v8::FunctionTemplate::New(statusLineGetVersion));
+  global->Set(v8::String::New("statusLineSetVersion"), v8::FunctionTemplate::New(statusLineSetVersion));
+  global->Set(v8::String::New("statusLineGetStatusCode"), v8::FunctionTemplate::New(statusLineGetStatusCode));
+  global->Set(v8::String::New("statusLineSetStatusCode"), v8::FunctionTemplate::New(statusLineSetStatusCode));
+  global->Set(v8::String::New("statusLineGetReasonPhrase"), v8::FunctionTemplate::New(statusLineGetReasonPhrase));
+  global->Set(v8::String::New("statusLineSetReasonPhrase"), v8::FunctionTemplate::New(statusLineSetReasonPhrase));
 
   //
   // URI
   //
-  global->Set(jsstring::New("uriSetScheme"), jsfunc::New(uriSetScheme));
-  global->Set(jsstring::New("uriGetScheme"), jsfunc::New(uriGetScheme));
-  global->Set(jsstring::New("uriGetUser"), jsfunc::New(uriGetUser));
-  global->Set(jsstring::New("uriSetUserInfo"), jsfunc::New(uriSetUserInfo));
-  global->Set(jsstring::New("uriGetPassword"), jsfunc::New(uriGetPassword));
-  global->Set(jsstring::New("uriGetHostPort"), jsfunc::New(uriGetHostPort));
-  global->Set(jsstring::New("uriSetHostPort"), jsfunc::New(uriSetHostPort));
-  global->Set(jsstring::New("uriGetParams"), jsfunc::New(uriGetParams));
-  global->Set(jsstring::New("uriSetParams"), jsfunc::New(uriSetParams));
-  global->Set(jsstring::New("uriHasParam"), jsfunc::New(uriHasParam));
-  global->Set(jsstring::New("uriGetParam"), jsfunc::New(uriGetParam));
-  global->Set(jsstring::New("uriGetParamEx"), jsfunc::New(uriGetParamEx));
-  global->Set(jsstring::New("uriSetParam"), jsfunc::New(uriSetParam));
-  global->Set(jsstring::New("uriSetParamEx"), jsfunc::New(uriSetParamEx));
-  global->Set(jsstring::New("uriEscapeUser"), jsfunc::New(uriEscapeUser));
-  global->Set(jsstring::New("uriEscapeParam"), jsfunc::New(uriEscapeParam));
-  global->Set(jsstring::New("uriGetHeaders"), jsfunc::New(uriGetHeaders));
-  global->Set(jsstring::New("uriSetHeaders"), jsfunc::New(uriSetHeaders));
-  global->Set(jsstring::New("uriVerify"), jsfunc::New(uriVerify));
+  global->Set(v8::String::New("uriSetScheme"), v8::FunctionTemplate::New(uriSetScheme));
+  global->Set(v8::String::New("uriGetScheme"), v8::FunctionTemplate::New(uriGetScheme));
+  global->Set(v8::String::New("uriGetUser"), v8::FunctionTemplate::New(uriGetUser));
+  global->Set(v8::String::New("uriSetUserInfo"), v8::FunctionTemplate::New(uriSetUserInfo));
+  global->Set(v8::String::New("uriGetPassword"), v8::FunctionTemplate::New(uriGetPassword));
+  global->Set(v8::String::New("uriGetHostPort"), v8::FunctionTemplate::New(uriGetHostPort));
+  global->Set(v8::String::New("uriSetHostPort"), v8::FunctionTemplate::New(uriSetHostPort));
+  global->Set(v8::String::New("uriGetParams"), v8::FunctionTemplate::New(uriGetParams));
+  global->Set(v8::String::New("uriSetParams"), v8::FunctionTemplate::New(uriSetParams));
+  global->Set(v8::String::New("uriHasParam"), v8::FunctionTemplate::New(uriHasParam));
+  global->Set(v8::String::New("uriGetParam"), v8::FunctionTemplate::New(uriGetParam));
+  global->Set(v8::String::New("uriGetParamEx"), v8::FunctionTemplate::New(uriGetParamEx));
+  global->Set(v8::String::New("uriSetParam"), v8::FunctionTemplate::New(uriSetParam));
+  global->Set(v8::String::New("uriSetParamEx"), v8::FunctionTemplate::New(uriSetParamEx));
+  global->Set(v8::String::New("uriEscapeUser"), v8::FunctionTemplate::New(uriEscapeUser));
+  global->Set(v8::String::New("uriEscapeParam"), v8::FunctionTemplate::New(uriEscapeParam));
+  global->Set(v8::String::New("uriGetHeaders"), v8::FunctionTemplate::New(uriGetHeaders));
+  global->Set(v8::String::New("uriSetHeaders"), v8::FunctionTemplate::New(uriSetHeaders));
+  global->Set(v8::String::New("uriVerify"), v8::FunctionTemplate::New(uriVerify));
   
   //
   // From Processing
   //
-  global->Set(jsstring::New("fromGetDisplayName"), jsfunc::New(fromGetDisplayName));
-  global->Set(jsstring::New("fromSetDisplayName"), jsfunc::New(fromSetDisplayName));
-  global->Set(jsstring::New("fromGetURI"), jsfunc::New(fromGetURI));
-  global->Set(jsstring::New("fromSetURI"), jsfunc::New(fromSetURI));
-  global->Set(jsstring::New("fromGetHeaderParams"), jsfunc::New(fromGetHeaderParams));
-  global->Set(jsstring::New("fromSetHeaderParams"), jsfunc::New(fromSetHeaderParams));
-  global->Set(jsstring::New("fromGetHeaderParam"), jsfunc::New(fromGetHeaderParam));
-  global->Set(jsstring::New("fromGetHeaderParamEx"), jsfunc::New(fromGetHeaderParamEx));
-  global->Set(jsstring::New("fromSetHeaderParam"), jsfunc::New(fromSetHeaderParam));
-  global->Set(jsstring::New("fromSetHeaderParamEx"), jsfunc::New(fromSetHeaderParamEx));
+  global->Set(v8::String::New("fromGetDisplayName"), v8::FunctionTemplate::New(fromGetDisplayName));
+  global->Set(v8::String::New("fromSetDisplayName"), v8::FunctionTemplate::New(fromSetDisplayName));
+  global->Set(v8::String::New("fromGetURI"), v8::FunctionTemplate::New(fromGetURI));
+  global->Set(v8::String::New("fromSetURI"), v8::FunctionTemplate::New(fromSetURI));
+  global->Set(v8::String::New("fromGetHeaderParams"), v8::FunctionTemplate::New(fromGetHeaderParams));
+  global->Set(v8::String::New("fromSetHeaderParams"), v8::FunctionTemplate::New(fromSetHeaderParams));
+  global->Set(v8::String::New("fromGetHeaderParam"), v8::FunctionTemplate::New(fromGetHeaderParam));
+  global->Set(v8::String::New("fromGetHeaderParamEx"), v8::FunctionTemplate::New(fromGetHeaderParamEx));
+  global->Set(v8::String::New("fromSetHeaderParam"), v8::FunctionTemplate::New(fromSetHeaderParam));
+  global->Set(v8::String::New("fromSetHeaderParamEx"), v8::FunctionTemplate::New(fromSetHeaderParamEx));
 
   //
   // To Processing
   //
-  global->Set(jsstring::New("toGetDisplayName"), jsfunc::New(fromGetDisplayName));
-  global->Set(jsstring::New("toSetDisplayName"), jsfunc::New(fromSetDisplayName));
-  global->Set(jsstring::New("toGetURI"), jsfunc::New(fromGetURI));
-  global->Set(jsstring::New("toSetURI"), jsfunc::New(fromSetURI));
-  global->Set(jsstring::New("toGetHeaderParams"), jsfunc::New(fromGetHeaderParams));
-  global->Set(jsstring::New("toSetHeaderParams"), jsfunc::New(fromSetHeaderParams));
-  global->Set(jsstring::New("toGetHeaderParam"), jsfunc::New(fromGetHeaderParam));
-  global->Set(jsstring::New("toGetHeaderParamEx"), jsfunc::New(fromGetHeaderParamEx));
-  global->Set(jsstring::New("toSetHeaderParam"), jsfunc::New(fromSetHeaderParam));
-  global->Set(jsstring::New("toSetHeaderParamEx"), jsfunc::New(fromSetHeaderParamEx));
+  global->Set(v8::String::New("toGetDisplayName"), v8::FunctionTemplate::New(fromGetDisplayName));
+  global->Set(v8::String::New("toSetDisplayName"), v8::FunctionTemplate::New(fromSetDisplayName));
+  global->Set(v8::String::New("toGetURI"), v8::FunctionTemplate::New(fromGetURI));
+  global->Set(v8::String::New("toSetURI"), v8::FunctionTemplate::New(fromSetURI));
+  global->Set(v8::String::New("toGetHeaderParams"), v8::FunctionTemplate::New(fromGetHeaderParams));
+  global->Set(v8::String::New("toSetHeaderParams"), v8::FunctionTemplate::New(fromSetHeaderParams));
+  global->Set(v8::String::New("toGetHeaderParam"), v8::FunctionTemplate::New(fromGetHeaderParam));
+  global->Set(v8::String::New("toGetHeaderParamEx"), v8::FunctionTemplate::New(fromGetHeaderParamEx));
+  global->Set(v8::String::New("toSetHeaderParam"), v8::FunctionTemplate::New(fromSetHeaderParam));
+  global->Set(v8::String::New("toSetHeaderParamEx"), v8::FunctionTemplate::New(fromSetHeaderParamEx));
 
   //
   // Misc functions
   //
-  global->Set(jsstring::New("cidrVerify"), jsfunc::New(cidrVerify));
-  global->Set(jsstring::New("isIpInRange"), jsfunc::New(isIpInRange));
-  global->Set(jsstring::New("wildCardCompare"), jsfunc::New(wildCardCompare));
-  global->Set(jsstring::New("md5Hash"), jsfunc::New(md5Hash));
+  global->Set(v8::String::New("cidrVerify"), v8::FunctionTemplate::New(cidrVerify));
+  global->Set(v8::String::New("isIpInRange"), v8::FunctionTemplate::New(isIpInRange));
+  global->Set(v8::String::New("wildCardCompare"), v8::FunctionTemplate::New(wildCardCompare));
+  global->Set(v8::String::New("md5Hash"), v8::FunctionTemplate::New(md5Hash));
 }
 
 } } //const JSSIPMessage& msg OSS::JS
