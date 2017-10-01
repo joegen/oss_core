@@ -203,15 +203,23 @@ void SIPUDPConnection::handleRead(const boost::system::error_code& e, std::size_
       //
       // This is a keep-alive
       //
+      boost::system::error_code ec;
       std::string sport = boost::lexical_cast<std::string>(getRemoteAddress().getPort());
       boost::asio::ip::udp::resolver::iterator ep;
       boost::asio::ip::address addr = getRemoteAddress().address();
       boost::asio::ip::udp::resolver::query query(addr.is_v4() ? boost::asio::ip::udp::v4()
         : boost::asio::ip::udp::v6(), addr.to_string(),  sport == "0" || sport.empty() ? "5060" : sport);
-      ep = _resolver.resolve(query);
-      _socket.async_send_to(boost::asio::buffer(pong.c_str(), pong.size()), *ep,
-          boost::bind(&SIPUDPConnection::handleWrite, shared_from_this(),
-                  boost::asio::placeholders::error));
+      ep = _resolver.resolve(query, ec);
+      if (!ec)
+      {
+        _socket.async_send_to(boost::asio::buffer(pong.c_str(), pong.size()), *ep,
+            boost::bind(&SIPUDPConnection::handleWrite, shared_from_this(),
+                    boost::asio::placeholders::error));
+      }
+      else
+      {
+        OSS_LOG_ERROR( "SIPUDPConnection::handleRead Exception " << boost::diagnostic_information(ec));
+      }
     }
     
     _pRequest.reset();
@@ -230,12 +238,18 @@ void SIPUDPConnection::writeMessage(SIPMessage::Ptr msg, const std::string& ip, 
 {
   if (_socket.is_open())
   {
+    boost::system::error_code ec;
     boost::asio::ip::udp::resolver::iterator ep;
     boost::asio::ip::address addr = boost::asio::ip::address::from_string(ip);
     boost::asio::ip::udp::resolver::query
       query(addr.is_v4() ? boost::asio::ip::udp::v4() : boost::asio::ip::udp::v6(),
       addr.to_string(), port == "0" || port.empty() ? "5060" : port);
-    ep = _resolver.resolve(query);
+    ep = _resolver.resolve(query, ec);
+    if (ec)
+    {
+      OSS_LOG_ERROR( "SIPUDPConnection::writeMessage Exception " << boost::diagnostic_information(ec));
+      return;
+    }
 
 #if ENABLE_FEATURE_XOR
     if (!SIPXOR::isEnabled())
@@ -287,21 +301,28 @@ bool SIPUDPConnection::writeKeepAlive(const std::string& ip, const std::string& 
 {
   if (_socket.is_open())
   {
+    boost::system::error_code ec;
     boost::asio::ip::udp::resolver::iterator ep;
     boost::asio::ip::address addr = boost::asio::ip::address::from_string(ip);
     boost::asio::ip::udp::resolver::query query(addr.is_v4() ? boost::asio::ip::udp::v4()
       : boost::asio::ip::udp::v6(), addr.to_string(), port == "0" || port.empty() ? "5060" : port);
-    ep = _resolver.resolve(query);
+    ep = _resolver.resolve(query, ec);
 
-#if 0
-    _socket.async_send_to(boost::asio::buffer("\r\n\r\n", 4), *ep,
-        boost::bind(&SIPUDPConnection::handleWrite, shared_from_this(),
-                boost::asio::placeholders::error));
-#else
-    boost::system::error_code ec;
-    _socket.send_to(boost::asio::buffer("\r\n\r\n", 4), *ep, 0, ec);
-#endif
-    return !ec;
+    if (!ec)
+    {
+  #if 0
+      _socket.async_send_to(boost::asio::buffer("\r\n\r\n", 4), *ep,
+          boost::bind(&SIPUDPConnection::handleWrite, shared_from_this(),
+                  boost::asio::placeholders::error));
+  #else
+      _socket.send_to(boost::asio::buffer("\r\n\r\n", 4), *ep, 0, ec);
+  #endif
+      return !ec;
+    }
+    else
+    {
+      OSS_LOG_ERROR( "SIPUDPConnection::writeKeepAlive Exception " << boost::diagnostic_information(ec));
+    }
   }
   return false;
 }

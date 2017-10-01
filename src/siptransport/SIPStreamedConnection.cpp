@@ -539,6 +539,7 @@ bool SIPStreamedConnection::clientConnect(const OSS::Net::IPAddress& target, boo
   
   if (_pTcpSocket->is_open())
   {
+    boost::system::error_code ec;
     _connectAddress = target;
     std::string port = OSS::string_from_number<unsigned short>(target.getPort());
     boost::asio::ip::tcp::resolver::iterator ep;
@@ -546,8 +547,13 @@ bool SIPStreamedConnection::clientConnect(const OSS::Net::IPAddress& target, boo
     boost::asio::ip::tcp::resolver::query
     query(addr.is_v4() ? boost::asio::ip::tcp::v4() : boost::asio::ip::tcp::v6(),
       addr.to_string(), port == "0" || port.empty() ? "5060" : port);
-    ep = _resolver.resolve(query);
+    ep = _resolver.resolve(query, ec);
     
+    if (ec)
+    {
+      OSS_LOG_ERROR( "SIPStreamedConnection::clientConnect " << boost::diagnostic_information(ec));
+      return false;
+    }
     
     boost::asio::ip::tcp::endpoint endpoint(addr, target.getPort() == 0 ? 5060 : target.getPort());
     

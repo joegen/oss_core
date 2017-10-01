@@ -921,29 +921,6 @@ void SIPTransportService::sendUDPKeepAlive(const OSS::Net::IPAddress& localAddre
 }
 
 
-#if 0
-//
-// Use DNS resolver instead
-//
-std::list<std::string> SIPTransportService::resolve(
-  const std::string& host,
-  const std::string& service)
-{
-  std::list<std::string> results;
-  boost::asio::ip::tcp::resolver::query query(host, service);
-  boost::asio::ip::tcp::resolver::iterator endpoint_iterator = _resolver.resolve(query);
-  boost::asio::ip::tcp::resolver::iterator end;
-  while (endpoint_iterator != end)
-  {
-    boost::asio::ip::tcp::endpoint ep = *endpoint_iterator;
-    boost::asio::ip::address addr = ep.address();
-    results.push_back(addr.to_string());
-    endpoint_iterator++;
-  }
-  return results;
-}
-#endif
-
 SIPUDPListener::Ptr SIPTransportService::findUDPListener(const std::string& key) const
 {
   UDPListeners::const_iterator iter = _udpListeners.find(key);

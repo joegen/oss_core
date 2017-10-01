@@ -52,16 +52,25 @@ void SIPTCPListener::run()
   if (!_hasStarted)
   {
     // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
+    boost::system::error_code ec;
     boost::asio::ip::tcp::resolver::query query(getAddress(), getPort());
-    boost::asio::ip::tcp::endpoint endpoint = *_resolver.resolve(query);
-    _acceptor.open(endpoint.protocol());
-    _acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
-    _acceptor.bind(endpoint);
-    _acceptor.listen();
-    _acceptor.async_accept(dynamic_cast<SIPStreamedConnection*>(_pNewConnection.get())->socket(),
-        boost::bind(&SIPTCPListener::handleAccept, this,
-          boost::asio::placeholders::error, (void*)0));
-    _hasStarted = true;
+    boost::asio::ip::tcp::endpoint endpoint = *_resolver.resolve(query, ec);
+    
+    if (!ec)
+    {
+      _acceptor.open(endpoint.protocol());
+      _acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+      _acceptor.bind(endpoint);
+      _acceptor.listen();
+      _acceptor.async_accept(dynamic_cast<SIPStreamedConnection*>(_pNewConnection.get())->socket(),
+          boost::bind(&SIPTCPListener::handleAccept, this,
+            boost::asio::placeholders::error, (void*)0));
+      _hasStarted = true;
+    }
+    else
+    {
+      OSS_LOG_ERROR( "SIPTCPListener::run " << boost::diagnostic_information(ec));
+    }
   }
 }
 

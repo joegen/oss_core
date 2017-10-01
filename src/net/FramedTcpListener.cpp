@@ -21,18 +21,27 @@ void FramedTcpListener::run(const std::string& address, const std::string& port)
 {
   _pNewConnection = FramedTcpConnection::Ptr(new FramedTcpConnection(*this));
 
+  boost::system::error_code ec;
   boost::asio::ip::tcp::resolver::query query(address, port);
-  boost::asio::ip::tcp::endpoint endpoint = *_resolver.resolve(query);
-  _acceptor.open(endpoint.protocol());
-  _acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
-  _acceptor.bind(endpoint);
-  _acceptor.listen();
-  _acceptor.async_accept(dynamic_cast<FramedTcpConnection*>(_pNewConnection.get())->socket(),
-      boost::bind(&FramedTcpListener::handleAccept, this,
-        boost::asio::placeholders::error));
+  boost::asio::ip::tcp::endpoint endpoint = *_resolver.resolve(query, ec);
+  
+  if (!ec)
+  {
+    _acceptor.open(endpoint.protocol());
+    _acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+    _acceptor.bind(endpoint);
+    _acceptor.listen();
+    _acceptor.async_accept(dynamic_cast<FramedTcpConnection*>(_pNewConnection.get())->socket(),
+        boost::bind(&FramedTcpListener::handleAccept, this,
+          boost::asio::placeholders::error));
 
-  OSS_LOG_INFO( "FramedTcpListener::run "
-    << " started accepting connections at bind address tcp://" << address << ":" << port);
+    OSS_LOG_INFO( "FramedTcpListener::run "
+      << " started accepting connections at bind address tcp://" << address << ":" << port);
+  }
+  else
+  {
+    OSS_LOG_ERROR( "FramedTcpListener::run " << boost::diagnostic_information(ec));
+  }
 }
 
 void FramedTcpListener::handleAccept(const boost::system::error_code& e)
