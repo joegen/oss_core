@@ -1,3 +1,0 @@
-
-nobase_include_HEADERS += \
-    OSS/SNPP/SNPPMessage.h

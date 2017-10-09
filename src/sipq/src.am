@@ -1,3 +1,0 @@
-liboss_core_la_SOURCES +=  \
-    sipq/sipq.cpp \
-    sipq/SIPQEndpoint.cpp
