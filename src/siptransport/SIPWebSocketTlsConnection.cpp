@@ -179,6 +179,7 @@ void SIPWebSocketTlsConnection::handleRead(const boost::system::error_code& e, s
 		// Message has been read in full
 		//
 		dispatchMessage(_pRequest->shared_from_this(), shared_from_this());
+    _pListener->dumpHepPacket(getRemoteAddress(), getLocalAddress(), _pRequest->data());
 		if (tail >= end)
 		{
 			//
@@ -228,6 +229,7 @@ void SIPWebSocketTlsConnection::writeMessage(SIPMessage::Ptr msg)
 	if (_pServerConnection)
 	{
 		_pServerConnection->send(msg->data(), websocketpp::frame::opcode::BINARY);
+    _pListener->dumpHepPacket(getLocalAddress(), getRemoteAddress(), msg->data());
 	}
 }
 
@@ -287,7 +289,7 @@ OSS::Net::IPAddress SIPWebSocketTlsConnection::getLocalAddress() const
 	    if (!ec)
 	    {
 	      boost::asio::ip::address ip = ep.address();
-	      _localAddress = OSS::Net::IPAddress(ip.to_string(), ep.port());
+	      _localAddress = OSS::Net::IPAddress(ip.to_string(), ep.port(), OSS::Net::IPAddress::WSS);
 	      return _localAddress;
 	    }
 	    else
@@ -312,7 +314,7 @@ OSS::Net::IPAddress SIPWebSocketTlsConnection::getRemoteAddress() const
          if (!ec)
          {
            boost::asio::ip::address ip = ep.address();
-           _lastReadAddress = OSS::Net::IPAddress(ip.to_string(), ep.port());
+           _lastReadAddress = OSS::Net::IPAddress(ip.to_string(), ep.port(), OSS::Net::IPAddress::WSS);
            return _lastReadAddress;
          }
          else

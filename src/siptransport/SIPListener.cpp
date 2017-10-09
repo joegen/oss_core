@@ -117,6 +117,11 @@ bool SIPListener::canBeRestarted() const
   return false;
 }
 
+void SIPListener::dumpHepPacket(const OSS::Net::IPAddress& srcAddress, const OSS::Net::IPAddress& dstAddress, const std::string& data)
+{
+  _pTransportService->dumpHepPacket(srcAddress, dstAddress, data);
+}
+
 
 } } // OSS::SIP
 

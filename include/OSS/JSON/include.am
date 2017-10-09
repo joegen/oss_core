@@ -8,4 +8,6 @@ nobase_include_HEADERS += \
     OSS/JSON/Readme.txt \
     OSS/JSON/writer.h \
     OSS/JSON/reader.h \
-    OSS/JSON/JsonRpcClient.h
+    OSS/JSON/JsonRpcClient.h \
+    OSS/JSON/JsonRpcServer.h \
+    OSS/JSON/Json.h

@@ -65,6 +65,9 @@ public:
 
   IPAddress(const std::string& address, unsigned short port);
     /// Create a new IP address with port
+  
+  IPAddress(const std::string& address, unsigned short port, Protocol protocol);
+    /// Create a new IP address with port and protocol
 
   IPAddress(const IPAddress& address);
     /// Copy constructor

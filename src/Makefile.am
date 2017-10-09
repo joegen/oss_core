@@ -53,7 +53,6 @@ include sipparser/src.am
 include siptransport/src.am
 include sipfsm/src.am
 include sipep/src.am
-include sipq/src.am
 include net/src.am
 include utl/src.am
 include ep/src.am
@@ -67,7 +66,7 @@ include zmq/src.am
 include b2bua/src.am
 include js/src.am
 include json/src.am
-include snpp/src.am
+
 
 DISTCLEANFILES = Makefile.in
 

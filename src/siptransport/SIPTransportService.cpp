@@ -25,11 +25,25 @@
 #include "OSS/SIP/SIPException.h"
 #include "OSS/UTL/Logger.h"
 
+extern "C"
+{
+  #include "OSS/SIP/core_hep.h"
+}
+
 
 namespace OSS {
 namespace SIP {
 
- 
+
+SIPTransportService::HEPSenderCallback SIPTransportService::hepSenderCallback;
+static void hep_sender_callback(void* packet, int len)
+{
+  if (SIPTransportService::hepSenderCallback)
+  {
+    SIPTransportService::hepSenderCallback(packet, len);
+  }
+}
+
 SIPTransportService::SIPTransportService(const SIPTransportSession::Dispatch& dispatch):
   _ioService(),
   _pIoServiceThread(0),
@@ -51,9 +65,18 @@ SIPTransportService::SIPTransportService(const SIPTransportSession::Dispatch& di
   _wsEnabled(true),
   _wssEnabled(true),
   _wsPortBase(10000),
-  _wsPortMax(20000)
+  _wsPortMax(20000),
 #endif
+  _hepEnabled(false),
+  _hepCompressionEnabled(false),
+  _hepId(0),
+  _hepVersion(3)
 {
+  if (!SIPTransportService::hepSenderCallback)
+  {
+    // send_hep_data = hep_sender_callback;
+    SIPTransportService::hepSenderCallback = boost::bind(&SIPTransportService::hepSend, this, _1, _2);
+  }
 }
 
 SIPTransportService::~SIPTransportService()
@@ -83,6 +106,11 @@ void SIPTransportService::run()
     {
       iter->second->run();
       OSS_LOG_INFO("Started UDP Listener " << iter->first);
+      
+      if (!_hepConnection)
+      {
+        _hepConnection = iter->second->connection();
+      }
     }
   }
 
@@ -1151,6 +1179,50 @@ bool SIPTransportService::getInternalAddress(
   return false;
 }
 
+void SIPTransportService::setHepInfo(int version, const std::string& host, const std::string& port, const std::string& password, int hepId)
+{
+  _hepVersion = version;
+  _hepHost = host;
+  _hepPort = port;
+  _hepPassword = password;
+  _hepId = hepId;
+}
+
+void SIPTransportService::dumpHepPacket(const OSS::Net::IPAddress& srcAddress, const OSS::Net::IPAddress& dstAddress, const std::string& data)
+{
+  if (!_hepEnabled || _hepHost.empty() || _hepPort.empty())
+  {
+    return;
+  }
+  
+  con_info_t conInfo;
+  conInfo.capt_id = _hepId;
+  conInfo.capt_password = _hepPassword.empty() ? 0 : _hepPassword.data();
+  conInfo.send_hep_data = hep_sender_callback;
+  conInfo.compress = _hepCompressionEnabled;
+  conInfo.version = _hepVersion;
+  
+  rc_info rcInfo;
+  rcInfo.dst_ip = dstAddress.toString().data();
+  rcInfo.dst_port = dstAddress.getPort();
+  rcInfo.ip_family = dstAddress.address().is_v4() ? AF_INET : AF_INET6;
+  rcInfo.ip_proto = dstAddress.getProtocol() == OSS::Net::IPAddress::UDP ? IPPROTO_UDP : IPPROTO_TCP;
+  rcInfo.proto_type = 0x001;
+  rcInfo.src_ip = srcAddress.toString().data();
+  rcInfo.src_port = srcAddress.getPort();
+  
+  timeval now;
+  gettimeofday(&now, 0);
+  rcInfo.time_sec = now.tv_sec;
+  rcInfo.time_usec = now.tv_usec;
+
+  send_hep(&conInfo, &rcInfo, (unsigned char *)data.data(), data.length());
+}
+
+void SIPTransportService::hepSend(void* packet, int len)
+{
+  dynamic_cast<SIPUDPConnection*>(_hepConnection.get())->writeBytes(packet, len, _hepHost, _hepPort);
+}
 
 } } // OSS::SIP
 

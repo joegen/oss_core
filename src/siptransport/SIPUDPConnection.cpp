@@ -192,6 +192,7 @@ void SIPUDPConnection::handleRead(const boost::system::error_code& e, std::size_
       SIPUDPConnectionClone* clone = new SIPUDPConnectionClone(shared_from_this());
       SIPTransportSession::Ptr pClone(clone);
       dispatchMessage(_pRequest, pClone);
+      _pListener->dumpHepPacket(getRemoteAddress(), getLocalAddress(), _pRequest->data());
     }
     else if (_bytesRead == 4 &&
         (char)_buffer[0] == '\r' &&
@@ -251,6 +252,9 @@ void SIPUDPConnection::writeMessage(SIPMessage::Ptr msg, const std::string& ip, 
       return;
     }
 
+    OSS::Net::IPAddress target(ip, OSS::string_to_number<unsigned short>(port), OSS::Net::IPAddress::UDP);
+    _pListener->dumpHepPacket(getLocalAddress(), target, msg->data());
+    
 #if ENABLE_FEATURE_XOR
     if (!SIPXOR::isEnabled())
     {
@@ -297,7 +301,7 @@ void SIPUDPConnection::writeMessage(SIPMessage::Ptr msg, const std::string& ip, 
   }
 }
 
-bool SIPUDPConnection::writeKeepAlive(const std::string& ip, const std::string& port)
+bool SIPUDPConnection::writeBytes(void* bytes, std::size_t len, const std::string& ip, const std::string& port)
 {
   if (_socket.is_open())
   {
@@ -315,16 +319,21 @@ bool SIPUDPConnection::writeKeepAlive(const std::string& ip, const std::string& 
           boost::bind(&SIPUDPConnection::handleWrite, shared_from_this(),
                   boost::asio::placeholders::error));
   #else
-      _socket.send_to(boost::asio::buffer("\r\n\r\n", 4), *ep, 0, ec);
+      _socket.send_to(boost::asio::buffer(bytes, len), *ep, 0, ec);
   #endif
       return !ec;
     }
     else
     {
-      OSS_LOG_ERROR( "SIPUDPConnection::writeKeepAlive Exception " << boost::diagnostic_information(ec));
+      OSS_LOG_ERROR( "SIPUDPConnection::writeBytes Exception " << boost::diagnostic_information(ec));
     }
   }
   return false;
+}
+
+bool SIPUDPConnection::writeKeepAlive(const std::string& ip, const std::string& port)
+{
+  return writeBytes((void*)"\r\n\r\n", 4, ip, port);
 }
 
 void SIPUDPConnection::handleWrite(const boost::system::error_code& e)
@@ -377,13 +386,13 @@ bool SIPUDPConnection::clientConnect(const OSS::Net::IPAddress& target)
 OSS::Net::IPAddress SIPUDPConnection::getLocalAddress() const
 {
   boost::asio::ip::address ip = _socket.local_endpoint().address();
-  return OSS::Net::IPAddress(ip.to_string(), _socket.local_endpoint().port());
+  return OSS::Net::IPAddress(ip.to_string(), _socket.local_endpoint().port(), OSS::Net::IPAddress::UDP);
 }
 
 OSS::Net::IPAddress SIPUDPConnection::getRemoteAddress() const
 {
    boost::asio::ip::address ip = _senderEndPoint.address();
-  return OSS::Net::IPAddress(ip.to_string(), _senderEndPoint.port());
+  return OSS::Net::IPAddress(ip.to_string(), _senderEndPoint.port(), OSS::Net::IPAddress::UDP);
 }
 
 } } // OSS::SIP

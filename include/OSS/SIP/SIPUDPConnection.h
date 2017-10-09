@@ -70,6 +70,8 @@ public:
     /// keep NAT port bindings open as well as to poke
     /// reliability of the transport for stream based connections.
     /// The default packet is CRLF/CRLF
+  
+  bool writeBytes(void* bytes, std::size_t len, const std::string& ip, const std::string& port);
 
   void clientBind(const OSS::Net::IPAddress& listener, unsigned short portBase, unsigned short portMax);
     /// Bind the local client.  Take note that this is not implemented at all for UDP.

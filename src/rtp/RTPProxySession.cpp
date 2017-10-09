@@ -606,7 +606,11 @@ void RTPProxySession::handleInitialSDPOffer(
         if (!isBlackhole)
         {
           audio->setDataPort(dataAddress.getPort());
-          audio->setControlPort(controlAddress.getPort());
+          
+          if (controlAddress.getPort() != dataAddress.getPort() + 1)
+          {
+            audio->setControlPort(controlAddress.getPort());
+          }
         }
         _hasOfferedAudioProxy = true;
       }
@@ -708,7 +712,10 @@ void RTPProxySession::handleInitialSDPOffer(
         if (!isBlackhole)
         {
           video->setDataPort(dataAddress.getPort());
-          video->setControlPort(controlAddress.getPort());
+          if (controlAddress.getPort() != dataAddress.getPort() + 1)
+          {
+            video->setControlPort(controlAddress.getPort());
+          }
         }
 
         _hasOfferedVideoProxy = true;
@@ -811,7 +818,11 @@ void RTPProxySession::handleInitialSDPOffer(
         if (!isBlackhole)
         {
           fax->setDataPort(dataAddress.getPort());
-          fax->setControlPort(controlAddress.getPort());
+          
+          if (controlAddress.getPort() != dataAddress.getPort() + 1)
+          {
+            fax->setControlPort(controlAddress.getPort());
+          }
         }
 
         _hasOfferedFaxProxy = true;
@@ -929,7 +940,10 @@ void RTPProxySession::handleInitialSDPAnswer(
       if (!isBlackhole)
       {
         audio->setDataPort(dataAddress.getPort());
-        audio->setControlPort(controlAddress.getPort());
+        if (controlAddress.getPort() != dataAddress.getPort() + 1)
+        {
+          audio->setControlPort(controlAddress.getPort());
+        }
       }
     }
   }
@@ -1000,7 +1014,10 @@ void RTPProxySession::handleInitialSDPAnswer(
       if (!isBlackhole)
       {
         video->setDataPort(dataAddress.getPort());
-        video->setControlPort(controlAddress.getPort());
+        if (controlAddress.getPort() != dataAddress.getPort() + 1)
+        {
+          video->setControlPort(controlAddress.getPort());
+        }
       }
     }
   }
@@ -1071,7 +1088,10 @@ void RTPProxySession::handleInitialSDPAnswer(
       if (!isBlackhole)
       {
         fax->setDataPort(dataAddress.getPort());
-        fax->setControlPort(controlAddress.getPort());
+        if (controlAddress.getPort() != dataAddress.getPort() + 1)
+        {
+          fax->setControlPort(controlAddress.getPort());
+        }
       }
     }
   }
@@ -1279,7 +1299,10 @@ void RTPProxySession::handleSDPOffer(
       if (!isBlackhole)
       {
         audio->setDataPort(dataAddress.getPort());
-        audio->setControlPort(controlAddress.getPort());
+        if (controlAddress.getPort() != dataAddress.getPort() + 1)
+        {
+          audio->setControlPort(controlAddress.getPort());
+        }
       }
     }
 
@@ -1374,7 +1397,10 @@ void RTPProxySession::handleSDPOffer(
       if (!isBlackhole)
       {
         video->setDataPort(dataAddress.getPort());
-        video->setControlPort(controlAddress.getPort());
+        if (controlAddress.getPort() != dataAddress.getPort() + 1)
+        {
+          video->setControlPort(controlAddress.getPort());
+        }
       }
     }
 
@@ -1469,7 +1495,10 @@ void RTPProxySession::handleSDPOffer(
       if (!isBlackhole)
       {
         fax->setDataPort(dataAddress.getPort());
-        fax->setControlPort(controlAddress.getPort());
+        if (controlAddress.getPort() != dataAddress.getPort() + 1)
+        {
+          fax->setControlPort(controlAddress.getPort());
+        }
       }
     }
 
@@ -1650,7 +1679,10 @@ void RTPProxySession::handleSDPAnswer(
       if (!isBlackhole)
       {
         audio->setDataPort(dataAddress.getPort());
-        audio->setControlPort(controlAddress.getPort());
+        if (controlAddress.getPort() != dataAddress.getPort() + 1)
+        {
+          audio->setControlPort(controlAddress.getPort());
+        }
       }
     }
   }
@@ -1732,7 +1764,10 @@ void RTPProxySession::handleSDPAnswer(
       if (!isBlackhole)
       {
         video->setDataPort(dataAddress.getPort());
-        video->setControlPort(controlAddress.getPort());
+        if (controlAddress.getPort() != dataAddress.getPort() + 1)
+        {
+          video->setControlPort(controlAddress.getPort());
+        }
       }
     }
   }
@@ -1814,7 +1849,10 @@ void RTPProxySession::handleSDPAnswer(
       if (!isBlackhole)
       {
         fax->setDataPort(dataAddress.getPort());
-        fax->setControlPort(controlAddress.getPort());
+        if (controlAddress.getPort() != dataAddress.getPort() + 1)
+        {
+          fax->setControlPort(controlAddress.getPort());
+        }
       }
     }
   }

@@ -116,6 +116,8 @@ public:
   bool isV4() const;
   
   bool isV6() const;
+  
+  void dumpHepPacket(const OSS::Net::IPAddress& srcAddress, const OSS::Net::IPAddress& dstAddress, const std::string& data);
    
 protected:
   SIPListener(const SIPListener&);

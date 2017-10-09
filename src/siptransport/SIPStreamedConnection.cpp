@@ -281,6 +281,7 @@ void SIPStreamedConnection::writeMessage(SIPMessage::Ptr msg)
     }
   }
   writeMessage(msg->data());
+  _pListener->dumpHepPacket(getLocalAddress(), getRemoteAddress(), msg->data());
 }
 
 bool SIPStreamedConnection::writeKeepAlive()
@@ -364,6 +365,7 @@ void SIPStreamedConnection::handleRead(const boost::system::error_code& e, std::
       {
         dispatchMessage(_pRequest->shared_from_this(), shared_from_this());
         rateLimit().logPacket(_lastReadAddress.address(), _pRequest->data().size());
+        _pListener->dumpHepPacket(getRemoteAddress(), getLocalAddress(), _pRequest->data());
       }
       
       if (tail >= end)
@@ -541,6 +543,7 @@ bool SIPStreamedConnection::clientConnect(const OSS::Net::IPAddress& target, boo
   {
     boost::system::error_code ec;
     _connectAddress = target;
+    _connectAddress.setProtocol(!_pTlsStream ? OSS::Net::IPAddress::TCP : OSS::Net::IPAddress::TLS);
     std::string port = OSS::string_from_number<unsigned short>(target.getPort());
     boost::asio::ip::tcp::resolver::iterator ep;
     boost::asio::ip::address addr = const_cast<OSS::Net::IPAddress&>(target).address();
@@ -714,7 +717,7 @@ OSS::Net::IPAddress SIPStreamedConnection::getLocalAddress() const
     if (!ec)
     {
       boost::asio::ip::address ip = ep.address();
-      _localAddress = OSS::Net::IPAddress(ip.to_string(), ep.port());
+      _localAddress = OSS::Net::IPAddress(ip.to_string(), ep.port(), _pTlsContext ? OSS::Net::IPAddress::TLS : OSS::Net::IPAddress::TCP);
       return _localAddress;
     }
     else
@@ -740,7 +743,7 @@ OSS::Net::IPAddress SIPStreamedConnection::getRemoteAddress() const
       if (!ec)
       {
         boost::asio::ip::address ip = ep.address();
-        _lastReadAddress = OSS::Net::IPAddress(ip.to_string(), ep.port());
+        _lastReadAddress = OSS::Net::IPAddress(ip.to_string(), ep.port(), _pTlsContext ? OSS::Net::IPAddress::TLS : OSS::Net::IPAddress::TCP);
         return _lastReadAddress;
       }
       else

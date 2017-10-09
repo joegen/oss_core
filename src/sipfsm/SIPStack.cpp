@@ -996,6 +996,57 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
       SIPTransportSession::rateLimit().setAutoNullRoute(true);
     }
   }
+  
+  bool homer_enabled = false;
+  if (listeners.exists("homer-enabled"))
+  {
+    homer_enabled = (bool)listeners["homer-enabled"];
+  }
+  
+  if (homer_enabled)
+  {
+    int homer_version = 3;
+    if (listeners.exists("homer-version"))
+    {
+      homer_version = (int)listeners["homer-version"];
+    }
+    
+    bool homer_compression = false;
+    if (listeners.exists("homer-compression"))
+    {
+      homer_compression = (bool)listeners["homer-compression"];
+    }
+    
+    std::string homer_host;
+    if (listeners.exists("homer_host"))
+    {
+      homer_host =  (const char*)listeners["homer-host"];
+    }
+
+    int homer_port = 0;
+    if (listeners.exists("homer-port"))
+    {
+      homer_port = (int)listeners["homer-port"];
+    }
+
+    std::string homer_password;
+    if (listeners.exists("homer-password"))
+    {
+      homer_password = (const char*)listeners["homer-password"];
+    }
+
+    int homer_id = 0;
+    if (listeners.exists("homer-id"))
+    {
+      homer_id = (int)listeners["homer-id"];
+    }
+
+    if (!homer_host.empty() && homer_port)
+    {
+      _fsmDispatch.transport().setHepInfo(homer_version, homer_host, OSS::string_from_number<int>(homer_port), homer_password, homer_id);
+      _fsmDispatch.transport().enableHepCompression(homer_compression);
+    }
+  }
 
   transportInit();
 }

@@ -125,6 +125,25 @@ IPAddress::IPAddress(const std::string& address, unsigned short port) :
   
 }
 
+IPAddress::IPAddress(const std::string& address, unsigned short port, Protocol protocol) :
+  _cidr(0),
+  _isVirtual(false),
+  _protocol(protocol)
+{
+  try
+  {
+    _address = boost::asio::ip::address(boost::asio::ip::address::from_string(address));
+    _port = port;
+  }
+  catch(...)
+  {
+    _address = boost::asio::ip::address();
+    _port = 0;
+  }
+}
+
+
+
 void IPAddress::swap(IPAddress& address)
 {
   std::swap(_address, address._address);
