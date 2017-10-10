@@ -54,8 +54,6 @@
 #include <netinet/ip6.h>
 #endif /* USE_IPV6 */
 
-#include <pcap.h>
-
 #include "OSS/SIP/core_hep.h"
 
 pthread_t call_thread;   
