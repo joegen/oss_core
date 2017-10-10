@@ -1018,7 +1018,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
     }
     
     std::string homer_host;
-    if (listeners.exists("homer_host"))
+    if (listeners.exists("homer-host"))
     {
       homer_host =  (const char*)listeners["homer-host"];
     }
@@ -1043,6 +1043,7 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 
     if (!homer_host.empty() && homer_port)
     {
+      _fsmDispatch.transport().enableHep(true);
       _fsmDispatch.transport().setHepInfo(homer_version, homer_host, OSS::string_from_number<int>(homer_port), homer_password, homer_id);
       _fsmDispatch.transport().enableHepCompression(homer_compression);
     }

@@ -196,7 +196,7 @@ int send_hepv3 (con_info_t* coninfo, rc_info_t *rcinfo, unsigned char *data, uns
     if (buffer==0){
         fprintf(stderr,"ERROR: out of memory\n");
         free(hg);
-        return 1;
+        return 0;
     }
     
     memcpy((void*) buffer, hg, sizeof(struct hep_generic));
@@ -385,7 +385,7 @@ int send_hep (con_info_t* coninfo, rc_info_t *rcinfo, unsigned char *data, unsig
         switch(coninfo->version) {
         
             case 3:
-		return send_hepv3(coninfo, rcinfo, sendzip  ? zipData : data , len, sendzip);
+                return send_hepv3(coninfo, rcinfo, sendzip  ? zipData : data , len, sendzip);
                 break;
                 
             case 2:            
@@ -398,7 +398,7 @@ int send_hep (con_info_t* coninfo, rc_info_t *rcinfo, unsigned char *data, unsig
                 break;
         }
 
-	if(zipData) free(zipData);
+        if(zipData) free(zipData);
         
         return 0;
 }

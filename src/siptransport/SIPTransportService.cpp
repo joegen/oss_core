@@ -1186,6 +1186,7 @@ void SIPTransportService::setHepInfo(int version, const std::string& host, const
   _hepPort = port;
   _hepPassword = password;
   _hepId = hepId;
+  OSS_LOG_INFO("Enabling Homer SIP Capture: hep" << _hepVersion << "://" << _hepId << "@" << _hepHost << ":" << _hepPort);
 }
 
 void SIPTransportService::dumpHepPacket(const OSS::Net::IPAddress& srcAddress, const OSS::Net::IPAddress& dstAddress, const std::string& data)
@@ -1195,6 +1196,9 @@ void SIPTransportService::dumpHepPacket(const OSS::Net::IPAddress& srcAddress, c
     return;
   }
   
+  std::string src = srcAddress.toString().data();
+  std::string dst = dstAddress.toString().data();
+  
   con_info_t conInfo;
   conInfo.capt_id = _hepId;
   conInfo.capt_password = _hepPassword.empty() ? 0 : _hepPassword.data();
@@ -1203,13 +1207,15 @@ void SIPTransportService::dumpHepPacket(const OSS::Net::IPAddress& srcAddress, c
   conInfo.version = _hepVersion;
   
   rc_info rcInfo;
-  rcInfo.dst_ip = dstAddress.toString().data();
+  
+  rcInfo.src_ip = src.data();
+  rcInfo.src_port = srcAddress.getPort();
+  
+  rcInfo.dst_ip = dst.data();
   rcInfo.dst_port = dstAddress.getPort();
   rcInfo.ip_family = dstAddress.address().is_v4() ? AF_INET : AF_INET6;
   rcInfo.ip_proto = dstAddress.getProtocol() == OSS::Net::IPAddress::UDP ? IPPROTO_UDP : IPPROTO_TCP;
   rcInfo.proto_type = 0x001;
-  rcInfo.src_ip = srcAddress.toString().data();
-  rcInfo.src_port = srcAddress.getPort();
   
   timeval now;
   gettimeofday(&now, 0);
