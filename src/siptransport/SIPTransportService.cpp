@@ -58,9 +58,9 @@ SIPTransportService::SIPTransportService(const SIPTransportSession::Dispatch& di
   _tcpEnabled(true),
   _tlsEnabled(false),
   _tcpPortBase(10000),
-  _tcpPortMax(20000)
+  _tcpPortMax(20000),
 #if ENABLE_FEATURE_WEBSOCKETS
- ,_wsConMgr(_dispatch),
+  _wsConMgr(_dispatch),
   _wssConMgr(_dispatch),
   _wsEnabled(true),
   _wssEnabled(true),
