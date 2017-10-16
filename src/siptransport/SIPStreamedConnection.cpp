@@ -151,22 +151,19 @@ void SIPStreamedConnection::start(const SIPTransportSession::Dispatch& dispatch)
   
   if (_isClient)
   {
+    OSS::mutex_critic_sec_lock lock(_pendingMutex);
+    _isClientStarted = true;
     //
     // Start is called after a successful client handshake with the server.
     // we can start reading from the secure stream at this point 
     //  
     readSome();
-    
-    OSS::mutex_critic_sec_lock lock(_pendingMutex);
-    _isClientStarted = true;
-    
     while (!_pending.empty())
     {
       SIPMessage::Ptr pPending = _pending.front();
       _pending.pop();
       writeMessage(pPending->data());
     }
-    
   }
   else
   {
@@ -198,7 +195,7 @@ void SIPStreamedConnection::stop()
 
 void SIPStreamedConnection::readSome()
 {
-  if (_isStopping)
+  if (_isStopping || (_isClient && !_isClientStarted))
   {
     return;
   }
@@ -221,7 +218,7 @@ void SIPStreamedConnection::readSome()
 
 void SIPStreamedConnection::writeMessage(const std::string& buf)
 { 
-  if (_isStopping)
+  if (_isStopping || (_isClient && !_isClientStarted))
   {
     return;
   }
@@ -231,20 +228,20 @@ void SIPStreamedConnection::writeMessage(const std::string& buf)
     ssl_socket& sock = *_pTlsStream;
     boost::asio::async_write(sock, boost::asio::buffer(buf, buf.size()),
           boost::bind(&SIPStreamedConnection::handleWrite, shared_from_this(),
-            boost::asio::placeholders::error));
+            boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
   }
-  else
+  else if (_pTcpSocket)
   {
     tcp_socket& sock = *_pTcpSocket;
     boost::asio::async_write(sock, boost::asio::buffer(buf, buf.size()),
           boost::bind(&SIPStreamedConnection::handleWrite, shared_from_this(),
-            boost::asio::placeholders::error));
+            boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
   }
 }
 
 void SIPStreamedConnection::writeMessage(const std::string& buf, boost::system::error_code& ec)
 {
-  if (_isStopping)
+  if (_isStopping || (_isClient && !_isClientStarted))
   {
     return;
   }
@@ -281,7 +278,6 @@ void SIPStreamedConnection::writeMessage(SIPMessage::Ptr msg)
     }
   }
   writeMessage(msg->data());
-  _pListener->dumpHepPacket(getLocalAddress(), getRemoteAddress(), msg->data());
 }
 
 bool SIPStreamedConnection::writeKeepAlive()
@@ -330,7 +326,7 @@ void SIPStreamedConnection::handleRead(const boost::system::error_code& e, std::
       if (!ec)
       {
         boost::asio::ip::address ip = ep.address();
-        _lastReadAddress = OSS::Net::IPAddress(ip.to_string(), ep.port());
+        _lastReadAddress = OSS::Net::IPAddress(ip.to_string(), ep.port(), _pTlsContext ? OSS::Net::IPAddress::TLS : OSS::Net::IPAddress::TCP);
       }
     }
 
@@ -365,7 +361,6 @@ void SIPStreamedConnection::handleRead(const boost::system::error_code& e, std::
       {
         dispatchMessage(_pRequest->shared_from_this(), shared_from_this());
         rateLimit().logPacket(_lastReadAddress.address(), _pRequest->data().size());
-        _pListener->dumpHepPacket(getRemoteAddress(), getLocalAddress(), _pRequest->data());
       }
       
       if (tail >= end)
@@ -485,7 +480,7 @@ void SIPStreamedConnection::handleRead(const boost::system::error_code& e, std::
   }
 }
 
-void SIPStreamedConnection::handleWrite(const boost::system::error_code& e)
+void SIPStreamedConnection::handleWrite(const boost::system::error_code& e, std::size_t bytes_transferred)
 {
   if (_isStopping)
   {
@@ -560,52 +555,14 @@ bool SIPStreamedConnection::clientConnect(const OSS::Net::IPAddress& target, boo
     
     boost::asio::ip::tcp::endpoint endpoint(addr, target.getPort() == 0 ? 5060 : target.getPort());
     
-#if 0
     // Set a deadline for the asynchronous operation. As a host name may
     // resolve to multiple endpoints, this function uses the composed operation
     // async_connect. The deadline applies to the entire operation, rather than
     // individual connection attempts.
     _deadline.expires_from_now(timeout);
     
-    // Set up the variable that receives the result of the asynchronous
-    // operation. The error code is set to would_block to signal that the
-    // operation is incomplete. Asio guarantees that its asynchronous
-    // operations will never fail with would_block, so any other value in
-    // ec indicates completion.
-    boost::system::error_code ec = boost::asio::error::would_block;
-    
-    // Start the asynchronous operation itself. The boost::lambda function
-    // object is used as a callback and will update the ec variable when the
-    // operation completes. The blocking_udp_client.cpp example shows how you
-    // can use boost::bind rather than boost::lambda.
-    Semaphore sem;
-    _pTcpSocket->async_connect(*ep, boost::bind(&SIPStreamedConnection::handleConnect, shared_from_this(), boost::asio::placeholders::error, ep, &ec, &sem));
-    _deadline.async_wait(boost::bind(&SIPStreamedConnection::handleConnectTimeout, shared_from_this(), boost::asio::placeholders::error));
-    // Block until the asynchronous operation has completed.
-    sem.wait();
-#else
     _pTcpSocket->async_connect(*ep, boost::bind(&SIPStreamedConnection::handleConnect, shared_from_this(), boost::asio::placeholders::error, ep, (boost::system::error_code*)0, (Semaphore*)0));
-#endif    
-    
-    if (_pTcpSocket->is_open())
-    {
-      if (!_pTlsStream)
-      {
-        _connectionManager.start(shared_from_this());
-      }
-      else
-      {
-        _pTlsStream->async_handshake(boost::asio::ssl::stream_base::client,
-            boost::bind(&SIPStreamedConnection::handleClientHandshake, shared_from_this(),
-              boost::asio::placeholders::error));
-      }
-      return true;
-    }
-    else
-    {
-      socket().close();
-      return false;
-    }
+    _deadline.async_wait(boost::bind(&SIPStreamedConnection::handleConnectTimeout, shared_from_this(), boost::asio::placeholders::error));
   }
   else
   {
@@ -613,6 +570,7 @@ bool SIPStreamedConnection::clientConnect(const OSS::Net::IPAddress& target, boo
     _isConnected = false;
     return false;
   }
+  return true;
 }
 
 
@@ -748,7 +706,7 @@ OSS::Net::IPAddress SIPStreamedConnection::getRemoteAddress() const
       }
       else
       {
-        OSS_LOG_WARNING("SIPStreamedConnection::getRemoteAddress() Exception " << ec.message() << ". Using connect address");
+        OSS_LOG_WARNING("SIPStreamedConnection::getRemoteAddress() Exception " << ec.message() << ". Using connect address " << _connectAddress.toIpPortString());
         return _connectAddress;
       }
   }

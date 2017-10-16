@@ -36,6 +36,15 @@ namespace SIP {
 
 
 SIPTransportService::HEPSenderCallback SIPTransportService::hepSenderCallback;
+bool SIPTransportService::_hepEnabled = false;
+bool SIPTransportService::_hepCompressionEnabled = false;
+SIPUDPConnection::Ptr SIPTransportService::_hepConnection;
+std::string SIPTransportService::_hepHost;
+std::string SIPTransportService::_hepPort = 0;
+int SIPTransportService::_hepId = 0;
+int SIPTransportService::_hepVersion = 3;
+std::string SIPTransportService::_hepPassword;
+  
 static void hep_sender_callback(void* packet, int len)
 {
   if (SIPTransportService::hepSenderCallback)
@@ -65,17 +74,13 @@ SIPTransportService::SIPTransportService(const SIPTransportSession::Dispatch& di
   _wsEnabled(true),
   _wssEnabled(true),
   _wsPortBase(10000),
-  _wsPortMax(20000),
+  _wsPortMax(20000)
 #endif
-  _hepEnabled(false),
-  _hepCompressionEnabled(false),
-  _hepId(0),
-  _hepVersion(3)
 {
   if (!SIPTransportService::hepSenderCallback)
   {
     // send_hep_data = hep_sender_callback;
-    SIPTransportService::hepSenderCallback = boost::bind(&SIPTransportService::hepSend, this, _1, _2);
+    SIPTransportService::hepSenderCallback = boost::bind(SIPTransportService::hepSend, _1, _2);
   }
 }
 
@@ -107,9 +112,9 @@ void SIPTransportService::run()
       iter->second->run();
       OSS_LOG_INFO("Started UDP Listener " << iter->first);
       
-      if (!_hepConnection)
+      if (!SIPTransportService::_hepConnection)
       {
-        _hepConnection = iter->second->connection();
+        SIPTransportService::_hepConnection = iter->second->connection();
       }
     }
   }
@@ -1189,9 +1194,48 @@ void SIPTransportService::setHepInfo(int version, const std::string& host, const
   OSS_LOG_INFO("Enabling Homer SIP Capture: hep" << _hepVersion << "://" << _hepId << "@" << _hepHost << ":" << _hepPort);
 }
 
-void SIPTransportService::dumpHepPacket(const OSS::Net::IPAddress& srcAddress, const OSS::Net::IPAddress& dstAddress, const std::string& data)
+const std::string& SIPTransportService::getHepHost()
 {
-  if (!_hepEnabled || _hepHost.empty() || _hepPort.empty())
+  return SIPTransportService::_hepHost;
+}
+
+const std::string& SIPTransportService::getHepPort()
+{
+  return SIPTransportService::_hepPort;
+}
+
+const std::string& SIPTransportService::getHepPassword()
+{
+  return SIPTransportService::_hepPassword;
+}
+
+int SIPTransportService::getHepId()
+{
+  return SIPTransportService::_hepId;
+}
+
+void SIPTransportService::enableHep(bool enabled)
+{
+  SIPTransportService::_hepEnabled = enabled;
+}
+
+bool SIPTransportService::isHepEnabled()
+{
+  return SIPTransportService::_hepEnabled;
+}
+
+void SIPTransportService::enableHepCompression(bool enabled)
+{
+  _hepCompressionEnabled = enabled;
+}
+bool SIPTransportService::isHepCompressionEnabled()
+{
+  return _hepCompressionEnabled;
+}
+
+void SIPTransportService::dumpHepPacket(OSS::Net::IPAddress::Protocol proto, const OSS::Net::IPAddress& srcAddress, const OSS::Net::IPAddress& dstAddress, const std::string& data)
+{
+  if (!_hepEnabled || _hepHost.empty() || _hepPort.empty() || !srcAddress.isValid() || !dstAddress.isValid() || data.empty())
   {
     return;
   }
@@ -1214,7 +1258,7 @@ void SIPTransportService::dumpHepPacket(const OSS::Net::IPAddress& srcAddress, c
   rcInfo.dst_ip = dst.data();
   rcInfo.dst_port = dstAddress.getPort();
   rcInfo.ip_family = dstAddress.address().is_v4() ? AF_INET : AF_INET6;
-  rcInfo.ip_proto = dstAddress.getProtocol() == OSS::Net::IPAddress::UDP ? IPPROTO_UDP : IPPROTO_TCP;
+  rcInfo.ip_proto = (proto == OSS::Net::IPAddress::UDP ? IPPROTO_UDP : IPPROTO_TCP);
   rcInfo.proto_type = 0x001;
   
   timeval now;

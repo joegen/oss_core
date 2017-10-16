@@ -172,7 +172,7 @@ void SIPWebSocketConnection::handleRead(const boost::system::error_code& e, std:
 		// Message has been read in full
 		//
 		dispatchMessage(_pRequest->shared_from_this(), shared_from_this());
-    _pListener->dumpHepPacket(getRemoteAddress(), getLocalAddress(), _pRequest->data());
+    
 		if (tail >= end)
 		{
 			//
@@ -209,7 +209,7 @@ void SIPWebSocketConnection::handleRead(const boost::system::error_code& e, std:
 	}
 }
 
-void SIPWebSocketConnection::handleWrite(const boost::system::error_code& e)
+void SIPWebSocketConnection::handleWrite(const boost::system::error_code& e, std::size_t bytes_transferred)
 /// Handle completion of a write operation.
 {
 	// Not implemented for ws
@@ -222,7 +222,6 @@ void SIPWebSocketConnection::writeMessage(SIPMessage::Ptr msg)
 	if (_pServerConnection)
 	{
 		_pServerConnection->send(msg->data(), websocketpp::frame::opcode::BINARY);
-    _pListener->dumpHepPacket(getLocalAddress(), getRemoteAddress(), msg->data());
 	}
 }
 

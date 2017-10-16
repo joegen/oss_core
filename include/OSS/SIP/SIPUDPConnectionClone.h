@@ -74,7 +74,7 @@ private:
   void handleRead(const boost::system::error_code& e, std::size_t bytes_transferred, OSS_HANDLE userData = 0);
     /// Handle completion of a read operation.
 
-  void handleWrite(const boost::system::error_code& e);
+  void handleWrite(const boost::system::error_code& e, std::size_t bytes_transferred);
     /// Handle completion of a write operation.
 
   void handleConnect(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator endPointIter, boost::system::error_code* out_ec, Semaphore* pSem);

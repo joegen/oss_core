@@ -102,7 +102,7 @@ void STUNClient::sendTestRequest(
   sock.async_send_to(boost::asio::buffer(buf, len),
     boost::asio::ip::udp::endpoint(dest.address(), dest.getPort()),
     boost::bind(&STUNClient::handleWrite, shared_from_this(),
-                      boost::asio::placeholders::error));
+                      boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 
   sock.async_receive_from(boost::asio::buffer(_buffer), _senderEndPoint,
       boost::bind(&STUNClient::handleReadNatType, shared_from_this(),
@@ -341,7 +341,7 @@ void STUNClient::handleReadNatType(const boost::system::error_code& e, std::size
   _semReadEvent.set();
 }
 
-void STUNClient::handleWrite(const boost::system::error_code& e)
+void STUNClient::handleWrite(const boost::system::error_code& e, std::size_t bytes_transferred)
 {
 
 }

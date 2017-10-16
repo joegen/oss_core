@@ -89,7 +89,7 @@ void EndpointConnection::handleRead(const boost::system::error_code& e, std::siz
   assert(false);
 }
 
-void EndpointConnection::handleWrite(const boost::system::error_code& e)
+void EndpointConnection::handleWrite(const boost::system::error_code& e, std::size_t bytes_transferred)
 {
   //
   // Not implemented

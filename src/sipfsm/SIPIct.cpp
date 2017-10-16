@@ -323,9 +323,16 @@ void SIPIct::handleSendAck(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTrans
     logMsg << pTransaction->getLogId() << ">>> " << _pAck->startLine()
     << " LEN: " << _pAck->data().size()
     << " SRC: " << pTransport->getLocalAddress().toIpPortString()
-    << " DST: " << pTransaction->remoteAddress().toString()
+    << " DST: " << pTransaction->remoteAddress().toIpPortString()
     << " ENC: " << pTransaction->isXOREncrypted()
     << " PROT: " << pTransport->getTransportScheme();
+    
+    SIPTransportService::dumpHepPacket(
+      pTransport->getTransportScheme() == "udp" ? OSS::Net::IPAddress::UDP : OSS::Net::IPAddress::TCP,
+      pTransport->getLocalAddress(),
+      pTransaction->remoteAddress(),
+      _pAck->data()
+    );
 
     OSS::log_notice(logMsg.str());
 

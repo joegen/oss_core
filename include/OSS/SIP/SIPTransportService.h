@@ -301,19 +301,17 @@ public:
   );
   
   static HEPSenderCallback hepSenderCallback;
-  void enableHep(bool enabled);
-  bool isHepEnabled() const;
-  void enableHepCompression(bool enabled);
-  bool isHepCompressionEnabled() const;
-  void setHepInfo(int version, const std::string& host, const std::string& port, const std::string& password, int hepId);
-  const std::string& getHepHost() const;
-  const std::string& getHepPort() const;
-  const std::string& getHepPassword() const;
-  int getHepId() const;
-  void dumpHepPacket(const OSS::Net::IPAddress& srcAddress, const OSS::Net::IPAddress& dstAddress, const std::string& data);
-  
-protected:
-  void hepSend(void* packet, int len);
+  static void enableHep(bool enabled);
+  static bool isHepEnabled();
+  static void enableHepCompression(bool enabled);
+  static bool isHepCompressionEnabled();
+  static void setHepInfo(int version, const std::string& host, const std::string& port, const std::string& password, int hepId);
+  static const std::string& getHepHost();
+  static const std::string& getHepPort();
+  static const std::string& getHepPassword();
+  static int getHepId();
+  static void dumpHepPacket(OSS::Net::IPAddress::Protocol proto, const OSS::Net::IPAddress& srcAddress, const OSS::Net::IPAddress& dstAddress, const std::string& data);
+  static void hepSend(void* packet, int len);
 
 private:
   boost::asio::io_service _ioService;
@@ -347,14 +345,16 @@ private:
   unsigned short _wsPortMax;
 #endif
   TlsContext _tlsContext;
-  bool _hepEnabled;
-  bool _hepCompressionEnabled;
-  SIPUDPConnection::Ptr _hepConnection;
-  std::string _hepHost;
-  std::string _hepPort;
-  int _hepId;
-  int _hepVersion;
-  std::string _hepPassword;
+  
+public:
+  static bool _hepEnabled;
+  static bool _hepCompressionEnabled;
+  static SIPUDPConnection::Ptr _hepConnection;
+  static std::string _hepHost;
+  static std::string _hepPort;
+  static int _hepId;
+  static int _hepVersion;
+  static std::string _hepPassword;
 };
 
 //
@@ -490,44 +490,6 @@ inline bool SIPTransportService::initializeTlsContext(
     return true;
   }
   return false;
-}
-
-inline const std::string& SIPTransportService::getHepHost() const
-{
-  return _hepHost;
-}
-inline const std::string& SIPTransportService::getHepPort() const
-{
-  return _hepPort;
-}
-
-inline const std::string& SIPTransportService::getHepPassword() const
-{
-  return _hepPassword;
-}
-
-inline int SIPTransportService::getHepId() const
-{
-  return _hepId;
-}
-
-inline void SIPTransportService::enableHep(bool enabled)
-{
-  _hepEnabled = enabled;
-}
-
-inline bool SIPTransportService::isHepEnabled() const
-{
-  return _hepEnabled;
-}
-
-inline void SIPTransportService::enableHepCompression(bool enabled)
-{
-  _hepCompressionEnabled = enabled;
-}
-inline bool SIPTransportService::isHepCompressionEnabled() const
-{
-  return _hepCompressionEnabled;
 }
 
 } } // OSS::SIP

@@ -111,7 +111,7 @@ protected:
   void handleReadNatType(const boost::system::error_code& e, std::size_t bytes_transferred);
     /// Handle completion of a read operation.
 
-  void handleWrite(const boost::system::error_code& e);
+  void handleWrite(const boost::system::error_code& e, std::size_t bytes_transferred);
     /// Handle completion of a write operation.
 
 private:

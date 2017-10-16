@@ -192,7 +192,6 @@ void SIPUDPConnection::handleRead(const boost::system::error_code& e, std::size_
       SIPUDPConnectionClone* clone = new SIPUDPConnectionClone(shared_from_this());
       SIPTransportSession::Ptr pClone(clone);
       dispatchMessage(_pRequest, pClone);
-      _pListener->dumpHepPacket(getRemoteAddress(), getLocalAddress(), _pRequest->data());
     }
     else if (_bytesRead == 4 &&
         (char)_buffer[0] == '\r' &&
@@ -215,7 +214,7 @@ void SIPUDPConnection::handleRead(const boost::system::error_code& e, std::size_
       {
         _socket.async_send_to(boost::asio::buffer(pong.c_str(), pong.size()), *ep,
             boost::bind(&SIPUDPConnection::handleWrite, shared_from_this(),
-                    boost::asio::placeholders::error));
+                    boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
       }
       else
       {
@@ -253,14 +252,13 @@ void SIPUDPConnection::writeMessage(SIPMessage::Ptr msg, const std::string& ip, 
     }
 
     OSS::Net::IPAddress target(ip, OSS::string_to_number<unsigned short>(port), OSS::Net::IPAddress::UDP);
-    _pListener->dumpHepPacket(getLocalAddress(), target, msg->data());
     
 #if ENABLE_FEATURE_XOR
     if (!SIPXOR::isEnabled())
     {
       _socket.async_send_to(boost::asio::buffer(msg->data(), msg->data().size()), *ep,
         boost::bind(&SIPUDPConnection::handleWrite, shared_from_this(),
-                boost::asio::placeholders::error));
+                boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
     }else
     {
       std::string isXOR;
@@ -268,7 +266,7 @@ void SIPUDPConnection::writeMessage(SIPMessage::Ptr msg, const std::string& ip, 
       {
         _socket.async_send_to(boost::asio::buffer(msg->data(), msg->data().size()), *ep,
         boost::bind(&SIPUDPConnection::handleWrite, shared_from_this(),
-                boost::asio::placeholders::error));
+                boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
       }
       else
       {
@@ -281,7 +279,7 @@ void SIPUDPConnection::writeMessage(SIPMessage::Ptr msg, const std::string& ip, 
 #if 0
         _socket.async_send_to(boost::asio::buffer(newBuff, len), *ep,
         boost::bind(&SIPUDPConnection::handleWrite, shared_from_this(),
-                boost::asio::placeholders::error));
+                boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 #else
         boost::system::error_code ec;
         _socket.send_to(boost::asio::buffer(newBuff, len), *ep, 0, ec);
@@ -296,7 +294,7 @@ void SIPUDPConnection::writeMessage(SIPMessage::Ptr msg, const std::string& ip, 
 #else
     _socket.async_send_to(boost::asio::buffer(msg->data(), msg->data().size()), *ep,
         boost::bind(&SIPUDPConnection::handleWrite, shared_from_this(),
-                boost::asio::placeholders::error));
+                boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 #endif
   }
 }
@@ -317,7 +315,7 @@ bool SIPUDPConnection::writeBytes(void* bytes, std::size_t len, const std::strin
   #if 0
       _socket.async_send_to(boost::asio::buffer("\r\n\r\n", 4), *ep,
           boost::bind(&SIPUDPConnection::handleWrite, shared_from_this(),
-                  boost::asio::placeholders::error));
+                  boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
   #else
       _socket.send_to(boost::asio::buffer(bytes, len), *ep, 0, ec);
   #endif
@@ -336,7 +334,7 @@ bool SIPUDPConnection::writeKeepAlive(const std::string& ip, const std::string& 
   return writeBytes((void*)"\r\n\r\n", 4, ip, port);
 }
 
-void SIPUDPConnection::handleWrite(const boost::system::error_code& e)
+void SIPUDPConnection::handleWrite(const boost::system::error_code& e, std::size_t bytes_transferred)
 {
   // This is only significant for stream based connections (TCP/TLS)
   if (e)

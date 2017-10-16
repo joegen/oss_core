@@ -24,6 +24,7 @@
 #include "OSS/SIP/SIPListener.h"
 #include "OSS/SIP/SIPTransportService.h"
 #include "OSS/SIP/SIPMessage.h"
+#include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 #include "OSS/UTL/BlockingQueue.h"
 
 
@@ -80,6 +81,14 @@ public:
   void setDispatch(const SIPTransportSession::Dispatch& dispatch);
     /// Set the dispatch callback
   
+  virtual bool onRouteCall(
+    SIPMessage::Ptr& pRequest,
+    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
+    OSS::Net::IPAddress& localInterface,
+    OSS::Net::IPAddress& target);
+    /// Returns true if this enpoint should handle the call.
+    /// Implementations must override this method
+  
 protected:
   virtual void monitorEvents();
     /// event loop
@@ -127,6 +136,15 @@ inline const EndpointConnection::Ptr& EndpointListener::getConnection() const
 inline void EndpointListener::setDispatch(const SIPTransportSession::Dispatch& dispatch)
 {
   _dispatch = dispatch;
+}
+
+inline bool EndpointListener::onRouteCall(
+    SIPMessage::Ptr& pRequest,
+    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
+    OSS::Net::IPAddress& localInterface,
+    OSS::Net::IPAddress& target)
+{
+  return false;
 }
 
 } }  // OSS::SIP::EP

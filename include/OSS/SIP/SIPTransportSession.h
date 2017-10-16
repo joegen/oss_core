@@ -91,7 +91,7 @@ public:
   virtual void handleRead(const boost::system::error_code& e, std::size_t bytes_transferred, OSS_HANDLE userData = 0) = 0;
     /// Handle completion of a read operation.
 
-  virtual void handleWrite(const boost::system::error_code& e) = 0;
+  virtual void handleWrite(const boost::system::error_code& e, std::size_t bytes_transferred) = 0;
     /// Handle completion of a write operation.
 
 

@@ -175,6 +175,13 @@ void SIPTransaction::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
 
     if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
       OSS::log_debug(pMsg->createLoggerData());
+    
+    SIPTransportService::dumpHepPacket(
+      pTransport->getTransportScheme() == "udp" ? OSS::Net::IPAddress::UDP : OSS::Net::IPAddress::TCP,
+      _remoteAddress,
+      _localAddress,
+      pMsg->data()
+    );
   }
 
   //
@@ -458,6 +465,13 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg)
 
     if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
       OSS::log_debug(pMsg->createLoggerData());
+    
+    SIPTransportService::dumpHepPacket(
+      _transport->getTransportScheme() == "udp" ? OSS::Net::IPAddress::UDP : OSS::Net::IPAddress::TCP,
+      _transport->getLocalAddress(),
+      _transport->getRemoteAddress(),
+      pMsg->data()
+    );
   }
 
   if (_fsm->onSendMessage(pMsg))
@@ -504,6 +518,13 @@ void SIPTransaction::writeMessage(SIPMessage::Ptr pMsg, const OSS::Net::IPAddres
       OSS::log_notice(logMsg.str());
       if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
         OSS::log_debug(pMsg->createLoggerData());
+      
+      SIPTransportService::dumpHepPacket(
+        _transport->getTransportScheme() == "udp" ? OSS::Net::IPAddress::UDP : OSS::Net::IPAddress::TCP,
+        _transport->getLocalAddress(),
+        remoteAddress,
+        pMsg->data()
+      );
     }
 
     _transport->writeMessage(pMsg,

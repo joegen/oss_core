@@ -1043,9 +1043,9 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 
     if (!homer_host.empty() && homer_port)
     {
-      _fsmDispatch.transport().enableHep(true);
-      _fsmDispatch.transport().setHepInfo(homer_version, homer_host, OSS::string_from_number<int>(homer_port), homer_password, homer_id);
-      _fsmDispatch.transport().enableHepCompression(homer_compression);
+      SIPTransportService::enableHep(true);
+      SIPTransportService::setHepInfo(homer_version, homer_host, OSS::string_from_number<int>(homer_port), homer_password, homer_id);
+      SIPTransportService::enableHepCompression(homer_compression);
     }
   }
 
@@ -1114,8 +1114,16 @@ void SIPStack::sendRequestDirect(const SIPMessage::Ptr& pRequest,
       << " LEN: " << pRequest->data().size()
       << " SRC: " << localAddress.toIpPortString()
       << " DST: " << remoteAddress.toIpPortString()
-      << " ENC: " << isXOREncrypted;
+      << " ENC: " << isXOREncrypted
+      << " PROT: " << transport;
       OSS::log_information(logMsg.str());
+      
+      SIPTransportService::dumpHepPacket(
+        transport == "udp" ? OSS::Net::IPAddress::UDP : OSS::Net::IPAddress::TCP,
+        localAddress,
+        remoteAddress,
+        pRequest->data()
+      );
       
       if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
         OSS::log_debug(pRequest->createLoggerData());

@@ -66,7 +66,7 @@ void SIPUDPConnectionClone::writeMessage(SIPMessage::Ptr msg, const std::string&
   _orginalConnection->writeMessage(msg, ip, port);
 }
 
-void SIPUDPConnectionClone::handleWrite(const boost::system::error_code& e)
+void SIPUDPConnectionClone::handleWrite(const boost::system::error_code& e, std::size_t bytes_transferred)
 {
   // This is only significant for stream based connections (TCP/TLS)
 }
