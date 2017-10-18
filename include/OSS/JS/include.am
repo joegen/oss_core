@@ -4,4 +4,5 @@ nobase_include_HEADERS += \
     OSS/JS/JSSIPMessage.h \
     OSS/JS/ObjectWrap.h \
     OSS/JS/JSUtil.h \
-    OSS/JS/JSModule.h
+    OSS/JS/JSModule.h \
+    OSS/JS/JSPlugin.h

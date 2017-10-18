@@ -29,6 +29,7 @@
 namespace OSS {
 namespace JS {
 
+JSPluginLoader JSModule::_loader;
 
 static JSModule& get_current_module_manager()
 {
@@ -313,7 +314,20 @@ bool JSModule::compileModuleHelpers(v8::TryCatch& try_catch, v8::Handle<v8::Obje
 
   return true;
 }
-  
+
+JSPlugin* JSModule::loadPlugin(const std::string& path, const std::string& name)
+{
+  try
+  {
+    JSModule::_loader.loadLibrary(path);
+    return JSModule::_loader.create(name);
+  }
+  catch(const std::exception& e)
+  {
+    OSS_LOG_ERROR("Unable to load plugin " << path);
+  }
+  return 0;
+}
 
 
 } }

@@ -1,0 +1,4 @@
+lib_LTLIBRARIES += libjslogger.la
+libjslogger_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+libjslogger_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+libjslogger_la_SOURCES = js/modules/Logger.cpp

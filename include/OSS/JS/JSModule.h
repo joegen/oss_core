@@ -27,6 +27,7 @@
 
 #include "v8.h"
 #include "OSS/UTL/CoreUtils.h"
+#include "OSS/JS/JSPlugin.h"
 
 
 namespace OSS {
@@ -56,6 +57,8 @@ public:
   ModuleHelpers& getModuleHelpers();
   const std::string& getModulesDir() const;
   void setModulesDir(const std::string& modulesDir);
+  static JSPlugin* loadPlugin(const std::string& path, const std::string& name);
+  
 protected:
   void registerInternalModule(const Module& module);
   void registerModuleHelper(const Module& module);
@@ -66,6 +69,9 @@ protected:
   InternalModules _modules;
   ModuleHelpers _moduleHelpers;
   std::string _modulesDir;
+  
+public:
+  static JSPluginLoader _loader;
 };
 
 
