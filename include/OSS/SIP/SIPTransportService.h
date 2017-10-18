@@ -329,11 +329,6 @@ private:
   TLSListeners _tlsListeners;
   Endpoints _endpoints;
   OSS::Net::IPAddress _defaultListenerAddress;
-  bool _udpEnabled;
-  bool _tcpEnabled;
-  bool _tlsEnabled;
-  unsigned short _tcpPortBase;
-  unsigned short _tcpPortMax;
 #if ENABLE_FEATURE_WEBSOCKETS
   SIPWebSocketConnectionManager _wsConMgr;
   WSSListeners _wssListeners;
@@ -344,6 +339,11 @@ private:
   unsigned short _wsPortBase;
   unsigned short _wsPortMax;
 #endif
+  bool _udpEnabled;
+  bool _tcpEnabled;
+  bool _tlsEnabled;
+  unsigned short _tcpPortBase;
+  unsigned short _tcpPortMax;
   TlsContext _tlsContext;
   
 public:

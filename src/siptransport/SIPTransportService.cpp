@@ -40,7 +40,7 @@ bool SIPTransportService::_hepEnabled = false;
 bool SIPTransportService::_hepCompressionEnabled = false;
 SIPUDPConnection::Ptr SIPTransportService::_hepConnection;
 std::string SIPTransportService::_hepHost;
-std::string SIPTransportService::_hepPort = 0;
+std::string SIPTransportService::_hepPort;
 int SIPTransportService::_hepId = 0;
 int SIPTransportService::_hepVersion = 3;
 std::string SIPTransportService::_hepPassword;
@@ -63,19 +63,19 @@ SIPTransportService::SIPTransportService(const SIPTransportSession::Dispatch& di
   _udpListeners(),
   _tcpListeners(),
   _tlsListeners(),
-  _udpEnabled(true),
-  _tcpEnabled(true),
-  _tlsEnabled(false),
-  _tcpPortBase(10000),
-  _tcpPortMax(20000),
 #if ENABLE_FEATURE_WEBSOCKETS
   _wsConMgr(_dispatch),
   _wssConMgr(_dispatch),
   _wsEnabled(true),
   _wssEnabled(true),
   _wsPortBase(10000),
-  _wsPortMax(20000)
+  _wsPortMax(20000),
 #endif
+  _udpEnabled(true),
+  _tcpEnabled(true),
+  _tlsEnabled(false),
+  _tcpPortBase(10000),
+  _tcpPortMax(20000)
 {
   if (!SIPTransportService::hepSenderCallback)
   {
