@@ -19,6 +19,7 @@
 
 
 #include "OSS/OSS.h"
+#include "OSS/build.h"
 
 #if OSS_OS_FAMILY_WINDOWS
   #include <Mmsystem.h>
@@ -447,6 +448,90 @@ void freeCArray(int argc, char*** argv)
   for (int i = 0; i < argc; i++)
     free((*argv)[i]);
   free(*argv);
+}
+
+static std::string expand_system_dir(const char* dir)
+{
+  std::string expanded = dir;
+  OSS::string_replace(expanded, "${prefix}", OSS_PREFIX_DIR);
+  OSS::string_replace(expanded, "${exec_prefix}", OSS_PREFIX_DIR);
+  OSS::string_replace(expanded, "${datarootdir}", OSS_DATA_ROOT_DIR);
+  return expanded;
+}
+
+static std::string gSystemPrefix;
+static std::string gSystemExecPrefix;
+static std::string gSystemBinDir;
+static std::string gSystemSbinDir;
+static std::string gSystemLibExecDir;
+static std::string gSystemDataDir;
+static std::string gSystemConfDir;
+static std::string gSystemLocalStateDir;
+static std::string gSystemIncludeDir;
+static std::string gSystemLibDir;
+
+const std::string& system_prefix()
+{
+  return gSystemPrefix;
+}
+
+const std::string& system_exec_prefix()
+{
+  return gSystemExecPrefix;
+}
+
+const std::string& system_bindir()
+{
+  return gSystemBinDir;
+}
+
+const std::string& system_sbindir()
+{
+  return gSystemSbinDir;
+}
+
+const std::string& system_libexecdir()
+{
+  return gSystemLibExecDir;
+}
+
+const std::string& system_datadir()
+{
+  return gSystemDataDir;
+}
+
+const std::string& system_confdir()
+{
+  return gSystemConfDir;
+}
+
+const std::string& system_localstatedir()
+{
+  return gSystemLocalStateDir;
+}
+
+const std::string& system_includedir()
+{
+  return gSystemIncludeDir;
+}
+
+const std::string& system_libdir()
+{
+  return gSystemLibDir;
+}
+
+void __init_system_dir()
+{
+  gSystemPrefix = expand_system_dir(OSS_PREFIX_DIR);
+  gSystemExecPrefix = expand_system_dir(OSS_PREFIX_DIR);
+  gSystemBinDir = expand_system_dir(OSS_BIN_DIR);
+  gSystemSbinDir = expand_system_dir(OSS_SBIN_DIR);
+  gSystemLibExecDir = expand_system_dir(OSS_LIBEXEC_DIR);
+  gSystemDataDir = expand_system_dir(OSS_DATA_ROOT_DIR);
+  gSystemConfDir = expand_system_dir(OSS_SYSCONF_DIR);
+  gSystemLocalStateDir = expand_system_dir(OSS_LOCAL_STATE_DIR);
+  gSystemIncludeDir = expand_system_dir(OSS_INCLUDE_DIR);
+  gSystemLibDir = expand_system_dir(OSS_LIB_DIR);
 }
 
 } // OSS

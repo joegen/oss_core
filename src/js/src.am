@@ -4,12 +4,12 @@ liboss_core_la_SOURCES +=  \
     js/JSBase.cpp \
     js/JSSIPMessage.cpp \
     js/JSUtil.cpp \
-    js/JSModule.cpp
+    js/JSModule.cpp \
+    js/JSPluginManager.cpp
 endif
 
 JAVASCRIPT_SRC = \
     js/OSSJS_modules.js.h \
-    js/OSSJS_logger.js.h \
     js/OSSJS_object.js.h \
     js/OSSJS_assert.js.h
 
@@ -22,4 +22,12 @@ js/OSSJS_%.js.h: js/%.js
 
 if ENABLE_FEATURE_V8
 include js/modules/src.am
+
+js_plugin-install-hook:
+	cd ${DESTDIR}${libdir}; \
+	mkdir -p oss_modules; \
+	ln -snf ${DESTDIR}${libdir}/libjslogger.so ${DESTDIR}${libdir}/oss_modules/logger.jso
+else
+js_plugin-install-hook:
+	@echo "Not installing plugins"
 endif

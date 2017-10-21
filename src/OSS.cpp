@@ -18,12 +18,15 @@
 //
 
 #include <vector>
+#include <map>
 #include "OSS/OSS.h"
+#include "OSS/build.h"
 #include "OSS/Net/Net.h"
 #include "OSS/UTL/Logger.h"
 #include "Poco/Stopwatch.h"
 #include "Poco/Timestamp.h"
 #include "OSS/UTL/Thread.h"
+#include "OSS/UTL/CoreUtils.h"
 
 
 namespace OSS {
@@ -34,33 +37,37 @@ static bool gCalledDeinit = false;
 
 namespace Private {
 
-    TimedFuncTimer::TimedFuncTimer(const char* fileName, int lineNumber, const char* funcName)
-    {
-      _fileName = fileName;
-      _lineNumber = lineNumber;
-      _funcName = funcName;
-      _stopWatch = new Poco::Stopwatch();
-      _pitStop = 0;
-      static_cast<Poco::Stopwatch*>(_stopWatch)->start();
-    }
+  
+  
+  TimedFuncTimer::TimedFuncTimer(const char* fileName, int lineNumber, const char* funcName)
+  {
+    _fileName = fileName;
+    _lineNumber = lineNumber;
+    _funcName = funcName;
+    _stopWatch = new Poco::Stopwatch();
+    _pitStop = 0;
+    static_cast<Poco::Stopwatch*>(_stopWatch)->start();
+  }
 
-    TimedFuncTimer::~TimedFuncTimer()
-    {
-      Poco::Stopwatch* stopWatch = static_cast<Poco::Stopwatch*>(_stopWatch);
-      Poco::Timestamp::TimeDiff diff = stopWatch->elapsed();
-      OSS_LOG_NOTICE("Timed Function: " << _fileName << ":" << _lineNumber
-              << ":" << _funcName << "() Total Elapsed = " << diff << " microseconds");
-      delete stopWatch;
-    }
+  TimedFuncTimer::~TimedFuncTimer()
+  {
+    Poco::Stopwatch* stopWatch = static_cast<Poco::Stopwatch*>(_stopWatch);
+    Poco::Timestamp::TimeDiff diff = stopWatch->elapsed();
+    OSS_LOG_NOTICE("Timed Function: " << _fileName << ":" << _lineNumber
+            << ":" << _funcName << "() Total Elapsed = " << diff << " microseconds");
+    delete stopWatch;
+  }
 
-    void TimedFuncTimer::flushElapsed(const char* label)
-    {
-      Poco::Stopwatch* stopWatch = static_cast<Poco::Stopwatch*>(_stopWatch);
-      Poco::Timestamp::TimeDiff diff = stopWatch->elapsed() - _pitStop;
-      _pitStop += diff;
-      OSS_LOG_NOTICE("Timed Function Flush " << label << ": " << _fileName << ":" << _lineNumber
-              << ":" << _funcName << "() Elapsed = " << diff << " microseconds");
-    }
+  void TimedFuncTimer::flushElapsed(const char* label)
+  {
+    Poco::Stopwatch* stopWatch = static_cast<Poco::Stopwatch*>(_stopWatch);
+    Poco::Timestamp::TimeDiff diff = stopWatch->elapsed() - _pitStop;
+    _pitStop += diff;
+    OSS_LOG_NOTICE("Timed Function Flush " << label << ": " << _fileName << ":" << _lineNumber
+            << ":" << _funcName << "() Elapsed = " << diff << " microseconds");
+  }
+  
+  
 }
 
 static std::vector<boost::function<void()> > _initFuncs;
@@ -86,6 +93,7 @@ void OSS_init()
   
   gCalledInit = true;
   OSS::Private::net_init();
+  OSS::__init_system_dir();
 
   for (static std::vector<boost::function<void()> >::iterator iter = _initFuncs.begin();
     iter != _initFuncs.end(); iter++) (*iter)();

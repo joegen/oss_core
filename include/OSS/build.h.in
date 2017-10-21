@@ -68,12 +68,18 @@
 #define OSS_HAVE_ZMQ @OSS_HAVE_ZMQ@
 
 //
-// DUKTAPE build configuration
+// System Directory variables
 //
-#define DUK_OPT_NO_COMMONJS_MODULES 1
-#define DUK_OPT_NO_BYTECODE_DUMP_SUPPORT 1
-#define DUK_OPT_SEGFAULT_ON_PANIC 1
-#define DUK_OPT_FASTINT 1
-#define DUK_OPT_JSON_STRINGIFY_FASTPATH 1
+#define OSS_PREFIX_DIR "@prefix@"
+#define OSS_EXEC_PREFIX "@exec_prefix@"
+#define OSS_BIN_DIR "@bindir@"
+#define OSS_SBIN_DIR "@sbindir@"
+#define OSS_LIBEXEC_DIR "@libexecdir@"
+#define OSS_DATA_ROOT_DIR "@datarootdir@"
+#define OSS_SYSCONF_DIR "@sysconfdir@"
+#define OSS_LOCAL_STATE_DIR "@localstatedir@"
+#define OSS_INCLUDE_DIR "@includedir@"
+#define OSS_LIB_DIR "@libdir@"
+
 
 #endif

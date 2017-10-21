@@ -88,3 +88,8 @@ include unit_test/Makefile.am
 #
 bin_PROGRAMS =
 include apps/Makefile.am
+
+#
+# install hook
+#
+install-exec-hook: js_plugin-install-hook

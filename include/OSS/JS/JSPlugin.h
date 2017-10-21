@@ -30,7 +30,7 @@ public:
   JSPlugin();
   virtual ~JSPlugin();
   virtual std::string name() const = 0;
-  virtual v8::Handle<v8::Value> exports(const v8::Arguments& args) = 0;
+  virtual bool initExportFunc(std::string& funcName) = 0;
 };
 
 inline JSPlugin::JSPlugin()
@@ -44,6 +44,38 @@ inline JSPlugin::~JSPlugin()
 
 typedef Poco::ClassLoader<JSPlugin> JSPluginLoader;
 typedef Poco::Manifest<JSPlugin> JSPluginManifest;
+
+#define JS_REGISTER_MODULE(Class, Name) \
+class Class : public JSPlugin \
+{ \
+public: \
+  Class(); \
+  virtual std::string name() const; \
+  virtual bool initExportFunc(std::string& funcName); \
+}; \
+Class::Class() {} \
+std::string Class::name() const { return Name; } \
+bool Class::initExportFunc(std::string& funcName) \
+{ \
+  funcName = "__" Name "_init_exports"; \
+  v8::Context::GetCurrent()->Global()->Set(v8::String::New(funcName.c_str()), v8::FunctionTemplate::New(init_exports)->GetFunction()); \
+  return true; \
+} \
+extern "C" { \
+  bool pocoBuildManifest(Poco::ManifestBase* pManifest_) { \
+    typedef Poco::Manifest<JSPlugin> _Manifest; \
+    std::string requiredType(typeid(_Manifest).name()); \
+    std::string actualType(pManifest_->className()); \
+    if (requiredType == actualType) { \
+      Poco::Manifest<JSPlugin>* pManifest = static_cast<_Manifest*>(pManifest_); \
+      pManifest->insert(new Poco::MetaObject<Class, JSPlugin>("oss_module")); \
+      return true; \
+    } \
+    else { \
+      return false; \
+    } \
+  } \
+}
 
 #endif // OSS_JSPLUGIN_H_INCLUDED
 

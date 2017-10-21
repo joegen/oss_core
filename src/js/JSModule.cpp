@@ -18,6 +18,7 @@
 //
 
 #include "OSS/build.h"
+#include "OSS/UTL/CoreUtils.h"
 #if ENABLE_FEATURE_V8
 
 #include "v8.h"
@@ -29,7 +30,6 @@
 namespace OSS {
 namespace JS {
 
-JSPluginLoader JSModule::_loader;
 
 static JSModule& get_current_module_manager()
 {
@@ -66,6 +66,61 @@ static v8::Handle<v8::Value> js_include(const v8::Arguments& args)
   return v8::Undefined();
 }
 
+static std::string get_plugin_canonical_file_name(const std::string& fileName)
+{
+  try
+  {
+    std::string canonicalName = fileName;
+    OSS::string_trim(canonicalName);
+    
+    if (!OSS::string_ends_with(canonicalName, ".jso"))
+    {
+      canonicalName += ".jso";
+    }
+
+    if (OSS::string_starts_with(canonicalName, "/"))
+    {
+      return canonicalName;
+    }
+
+    if (OSS::string_starts_with(canonicalName, "~/"))
+    {
+      boost::filesystem::path currentPath(getenv("HOME"));
+      currentPath = OSS::boost_path_concatenate(currentPath, canonicalName.substr(2, std::string::npos));
+      return OSS::boost_path(currentPath);
+    }
+    
+    if (OSS::string_starts_with(canonicalName, "./"))
+    {
+      boost::filesystem::path currentPath = boost::filesystem::current_path();
+      currentPath = OSS::boost_path_concatenate(currentPath, canonicalName.substr(2, std::string::npos));
+      return OSS::boost_path(currentPath);
+    }
+
+    boost::filesystem::path path(canonicalName.c_str());
+    boost::filesystem::path absolutePath = boost::filesystem::absolute(path);
+    if (boost::filesystem::exists(absolutePath))
+    {
+      return OSS::boost_path(absolutePath);
+    }
+
+    const std::string& modulesDir = get_current_module_manager().getModulesDir();
+    if (!modulesDir.empty())
+    {
+      boost::filesystem::path modDir(modulesDir.c_str());
+      absolutePath = OSS::boost_path_concatenate(modDir, canonicalName);
+      if (boost::filesystem::exists(absolutePath))
+      {
+        return OSS::boost_path(absolutePath);
+      }
+    }
+  }
+  catch(...)
+  {
+  }
+  return fileName;
+}
+
 static std::string get_module_canonical_file_name(const std::string& fileName)
 {
   try
@@ -78,6 +133,11 @@ static std::string get_module_canonical_file_name(const std::string& fileName)
     if (iter != modules.end())
     {
       return fileName;
+    }
+    
+    if (OSS::string_ends_with(canonicalName, ".jso"))
+    {
+      return get_plugin_canonical_file_name(fileName);
     }
 
     if (!OSS::string_ends_with(canonicalName, ".js"))
@@ -114,8 +174,8 @@ static std::string get_module_canonical_file_name(const std::string& fileName)
     const std::string& modulesDir = get_current_module_manager().getModulesDir();
     if (!modulesDir.empty())
     {
-      boost::filesystem::path modulesDir(modulesDir.c_str());
-      absolutePath = OSS::boost_path_concatenate(modulesDir, canonicalName);
+      boost::filesystem::path modDir(modulesDir.c_str());
+      absolutePath = OSS::boost_path_concatenate(modDir, canonicalName);
       if (boost::filesystem::exists(absolutePath))
       {
         return OSS::boost_path(absolutePath);
@@ -125,7 +185,7 @@ static std::string get_module_canonical_file_name(const std::string& fileName)
   catch(...)
   {
   }
-  return fileName;
+  return get_plugin_canonical_file_name(fileName);
 }
 
 static v8::Handle<v8::Value> js_get_module_cononical_file_name(const v8::Arguments& args) 
@@ -144,6 +204,32 @@ static v8::Handle<v8::Value> js_get_module_cononical_file_name(const v8::Argumen
     return v8::Undefined();
   }
   return v8::String::New(canonical.c_str());
+}
+
+static v8::Handle<v8::Value> js_load_plugin(const v8::Arguments& args) 
+{
+  if (args.Length() < 1)
+  {
+    return v8::Undefined();
+  }
+  v8::HandleScope scope;
+  v8::TryCatch try_catch;
+  try_catch.SetVerbose(true);
+  std::string fileName = string_from_js_value(args[0]);
+  JSPlugin* pPlugin = JSPluginManager::instance().loadPlugin(fileName);
+  if (!pPlugin)
+  {
+    return v8::Undefined();
+  }
+  
+  std::string exportFunc;
+  if (pPlugin->initExportFunc(exportFunc))
+  {
+    v8::Handle<v8::String> func_name = v8::String::New(exportFunc.c_str());
+    return v8::Context::GetCurrent()->Global()->Get(func_name);
+  }
+  
+  return v8::Undefined();
 }
 
 static v8::Handle<v8::Value> js_get_module_script(const v8::Arguments& args) 
@@ -231,6 +317,7 @@ static v8::Handle<v8::Value> js_compile_module(const v8::Arguments& args)
 JSModule::JSModule(JSBase* pBase) :
   _pBase(pBase)
 {
+  _modulesDir = OSS::system_libdir() + "/oss_modules";
 }
 
 JSModule::~JSModule()
@@ -253,11 +340,6 @@ bool JSModule::initialize(v8::TryCatch& try_catch, v8::Handle<v8::ObjectTemplate
   // Register internal modules
   //
   Module module;
-  module.name = "logger";
-  module.script = std::string(
-    #include "js/OSSJS_logger.js.h"
-  );
-  registerInternalModule(module);
   
   module.name = "object";
   module.script = std::string(
@@ -292,6 +374,7 @@ bool JSModule::setGlobals(v8::Handle<v8::ObjectTemplate>& global)
   global->Set(v8::String::New("__compile_module"), v8::FunctionTemplate::New(js_compile_module));
   global->Set(v8::String::New("__get_module_script"), v8::FunctionTemplate::New(js_get_module_script));
   global->Set(v8::String::New("__get_module_cononical_file_name"), v8::FunctionTemplate::New(js_get_module_cononical_file_name));
+  global->Set(v8::String::New("__load_plugin"), v8::FunctionTemplate::New(js_load_plugin));
   return true;
 }
 
@@ -313,20 +396,6 @@ bool JSModule::compileModuleHelpers(v8::TryCatch& try_catch, v8::Handle<v8::Obje
   } 
 
   return true;
-}
-
-JSPlugin* JSModule::loadPlugin(const std::string& path, const std::string& name)
-{
-  try
-  {
-    JSModule::_loader.loadLibrary(path);
-    return JSModule::_loader.create(name);
-  }
-  catch(const std::exception& e)
-  {
-    OSS_LOG_ERROR("Unable to load plugin " << path);
-  }
-  return 0;
 }
 
 

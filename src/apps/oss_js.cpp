@@ -67,14 +67,16 @@ int main(int argc, char** argv)
     _exit(-1);
   }
 
-  std::string modulesDir;
-  options.getOption("modules-dir", modulesDir);
-  
-
   boost::filesystem::path path = boost::filesystem::path(script.c_str());
 
   JS::JSBase vm("oss_js");
-  vm.getModuleManager().setModulesDir(modulesDir);
+
+  std::string modulesDir;
+  options.getOption("modules-dir", modulesDir);
+  if (!modulesDir.empty())
+  {
+    vm.getModuleManager().setModulesDir(modulesDir);
+  }
   
   if (!vm.run(path))
   {

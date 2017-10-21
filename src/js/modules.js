@@ -33,12 +33,28 @@ function require(path)
   }
   var module = new Module();
   module.path = modulePath;
-  var script = __get_module_script(module.path);
-  if (typeof script === "undefined")
+  
+  if (module.path.search(".jso") != module.path.length - 4)
   {
-    return;
+    var script = __get_module_script(module.path);
+    if (typeof script === "undefined")
+    {
+      return;
+    }
+    __compile_module(script, module.path)(module, module.exports);
   }
-  __compile_module(script, module.path)(module, module.exports);
-  __cache_module(module.path, module.exports);
+  else
+  {
+    var exportFunc = __load_plugin(module.path);
+    if (typeof exportFunc === "function")
+    {
+      module.exports = exportFunc();
+    }
+  }
+  
+  if (typeof module.exports !== "undefined")
+  {
+    __cache_module(module.path, module.exports);
+  }
   return module.exports;
 }
