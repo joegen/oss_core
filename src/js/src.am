@@ -22,11 +22,7 @@ js/OSSJS_%.js.h: js/%.js
 
 if ENABLE_FEATURE_V8
 include js/modules/src.am
-
-js_plugin-install-hook:
-	cd ${DESTDIR}${libdir}; \
-	mkdir -p oss_modules; \
-	ln -snf ${DESTDIR}${libdir}/libjslogger.so ${DESTDIR}${libdir}/oss_modules/logger.jso
+js_plugin-install-hook: js_module-install-hook
 else
 js_plugin-install-hook:
 	@echo "Not installing plugins"

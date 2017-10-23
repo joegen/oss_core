@@ -68,8 +68,8 @@ void __log_level_set(v8::Local<v8::String> property, v8::Local<v8::Value> value,
 
 static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
 {
-  v8::HandleScope scope; 
-  v8::Local<v8::Object> exports = v8::Object::New();
+  v8::HandleScope scope;
+  v8::Persistent<v8::Object> exports = v8::Persistent<v8::Object>::New(v8::Object::New());
   
   //
   // Methods
@@ -97,6 +97,6 @@ static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
   return exports;
 }
 
-JS_REGISTER_MODULE(Logger, "logger");
+JS_REGISTER_MODULE(Logger);
 
 

@@ -1,4 +1,55 @@
-lib_LTLIBRARIES += libjslogger.la
+js_helper-install-hook:
+	cd ${DESTDIR}${libdir}; rm -rf oss_modules; mkdir -p oss_modules/examples
+	cp ${srcdir}/js/modules/*.js ${DESTDIR}${libdir}/oss_modules/
+	cp ${srcdir}/js/modules/examples/*.js ${DESTDIR}${libdir}/oss_modules/examples
+
+EXTRA_DIST += js/modules/examples/pipe_example.js
+
+lib_LTLIBRARIES += \
+    libjsconst.la \
+    libjserror.la \
+    libjslogger.la \
+    libjspoll.la \
+    libjsfork.la \
+    libjspipe.la \
+    libjssystem.la
+
+libjsconst_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+libjsconst_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+libjsconst_la_SOURCES = js/modules/const.cpp
+
+libjserror_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+libjserror_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+libjserror_la_SOURCES = js/modules/error.cpp
+
 libjslogger_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
 libjslogger_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
-libjslogger_la_SOURCES = js/modules/Logger.cpp
+libjslogger_la_SOURCES = js/modules/logger.cpp
+EXTRA_DIST += js/modules/logger.js
+
+libjspoll_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+libjspoll_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+libjspoll_la_SOURCES = js/modules/poll.cpp
+EXTRA_DIST += js/modules/poll.js
+
+libjsfork_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+libjsfork_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+libjsfork_la_SOURCES = js/modules/fork.cpp
+
+libjspipe_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+libjspipe_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+libjspipe_la_SOURCES = js/modules/pipe.cpp
+
+libjssystem_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+libjssystem_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+libjssystem_la_SOURCES = js/modules/system.cpp
+
+js_module-install-hook: js_helper-install-hook
+	ln -snf ${DESTDIR}${libdir}/libjsconst.so ${DESTDIR}${libdir}/oss_modules/consts.jso
+	ln -snf ${DESTDIR}${libdir}/libjserror.so ${DESTDIR}${libdir}/oss_modules/error.jso
+	ln -snf ${DESTDIR}${libdir}/libjslogger.so ${DESTDIR}${libdir}/oss_modules/logger.jso
+	ln -snf ${DESTDIR}${libdir}/libjspoll.so ${DESTDIR}${libdir}/oss_modules/_poll.jso
+	ln -snf ${DESTDIR}${libdir}/libjsfork.so ${DESTDIR}${libdir}/oss_modules/fork.jso
+	ln -snf ${DESTDIR}${libdir}/libjspipe.so ${DESTDIR}${libdir}/oss_modules/pipe.jso
+	ln -snf ${DESTDIR}${libdir}/libjssystem.so ${DESTDIR}${libdir}/oss_modules/_system.jso
+

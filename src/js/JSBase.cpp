@@ -365,17 +365,18 @@ bool JSBase::internalInitialize(
   //
   //OSS_LOG_INFO("Google V8 is compiling main script " << _script);
   v8::Handle<v8::String> script;
-  
+  v8::Handle<v8::Script> compiled_script;
   if (preloaded.empty())
   {
     script = read_file(OSS::boost_path(_script));
+    compiled_script = v8::Script::Compile(script, v8::String::New(_script.c_str()));
   }
   else
   {
     script = v8::String::New(preloaded.data(), preloaded.size());
+    compiled_script = v8::Script::Compile(script);
   }
-
-  v8::Handle<v8::Script> compiled_script = v8::Script::Compile(script);
+  
 
   if (compiled_script.IsEmpty())
   {

@@ -45,7 +45,7 @@ inline JSPlugin::~JSPlugin()
 typedef Poco::ClassLoader<JSPlugin> JSPluginLoader;
 typedef Poco::Manifest<JSPlugin> JSPluginManifest;
 
-#define JS_REGISTER_MODULE(Class, Name) \
+#define JS_REGISTER_MODULE(Class) \
 class Class : public JSPlugin \
 { \
 public: \
@@ -54,10 +54,10 @@ public: \
   virtual bool initExportFunc(std::string& funcName); \
 }; \
 Class::Class() {} \
-std::string Class::name() const { return Name; } \
+std::string Class::name() const { return #Class; } \
 bool Class::initExportFunc(std::string& funcName) \
 { \
-  funcName = "__" Name "_init_exports"; \
+  funcName = "__" #Class "_init_exports"; \
   v8::Context::GetCurrent()->Global()->Set(v8::String::New(funcName.c_str()), v8::FunctionTemplate::New(init_exports)->GetFunction()); \
   return true; \
 } \
@@ -76,6 +76,8 @@ extern "C" { \
     } \
   } \
 }
+
+#define CONST_EXPORT(Name) exports->Set(v8::String::New(#Name), v8::Integer::New(Name), v8::ReadOnly);
 
 #endif // OSS_JSPLUGIN_H_INCLUDED
 
