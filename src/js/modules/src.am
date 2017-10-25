@@ -12,7 +12,8 @@ lib_LTLIBRARIES += \
     libjspoll.la \
     libjsfork.la \
     libjspipe.la \
-    libjssystem.la
+    libjssystem.la \
+    libjsbuffer.la
 
 libjsconst_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
 libjsconst_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
@@ -44,6 +45,10 @@ libjssystem_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
 libjssystem_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
 libjssystem_la_SOURCES = js/modules/system.cpp
 
+libjsbuffer_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+libjsbuffer_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+libjsbuffer_la_SOURCES = js/modules/buffer.cpp
+
 js_module-install-hook: js_helper-install-hook
 	ln -snf ${DESTDIR}${libdir}/libjsconst.so ${DESTDIR}${libdir}/oss_modules/consts.jso
 	ln -snf ${DESTDIR}${libdir}/libjserror.so ${DESTDIR}${libdir}/oss_modules/error.jso
@@ -52,4 +57,5 @@ js_module-install-hook: js_helper-install-hook
 	ln -snf ${DESTDIR}${libdir}/libjsfork.so ${DESTDIR}${libdir}/oss_modules/fork.jso
 	ln -snf ${DESTDIR}${libdir}/libjspipe.so ${DESTDIR}${libdir}/oss_modules/pipe.jso
 	ln -snf ${DESTDIR}${libdir}/libjssystem.so ${DESTDIR}${libdir}/oss_modules/_system.jso
+	ln -snf ${DESTDIR}${libdir}/libjsbuffer.so ${DESTDIR}${libdir}/oss_modules/buffer.jso
 

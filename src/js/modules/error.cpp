@@ -9,13 +9,6 @@ static v8::Handle<v8::Value> __errno_get(v8::Local<v8::String> property, const v
   return v8::Integer::New(errno);
 }
 
-static void __errno_set(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo& info)
-{
-  //
-  // Do Nothing.  errno is readonly
-  //
-}
-
 static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
 {
   v8::HandleScope scope; 
@@ -24,7 +17,7 @@ static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
   //
   // Mutable Properties
   //
-  exports->SetAccessor(v8::String::New("errno"), __errno_get, __errno_set);
+  exports->SetAccessor(v8::String::New("errno"), __errno_get, 0);
   
   //
   // Standard system errors

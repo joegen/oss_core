@@ -2,6 +2,17 @@
 
 var _poll = require("_poll");
 
+function copyProps (src, dst) 
+{
+  for (var key in src) 
+  {
+    if (key !== "poll")
+    {
+      dst[key] = src[key]
+    }
+  }
+}
+
 exports.poll = function(pfds, timeout)
 {
   if (timeout !== null) 
