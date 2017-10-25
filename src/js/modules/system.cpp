@@ -2,8 +2,13 @@
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/Logger.h"
 #include <unistd.h>
+#include "OSS/JS/BufferObject.h"
 
-typedef std::vector<unsigned char> ByteArray;
+
+using OSS::JS::BufferObject;
+using OSS::JS::ObjectWrap;
+typedef BufferObject::ByteArray ByteArray;
+
 
 static bool int_array_to_byte_array(v8::Handle<v8::Array>& input, ByteArray& output)
 {
@@ -66,7 +71,7 @@ static v8::Handle<v8::Value>  ___exit(const v8::Arguments& args)
 static v8::Handle<v8::Value> __write(const v8::Arguments& args)
 {
   v8::HandleScope scope;
-  if (args.Length() < 2 || !args[0]->IsInt32() || (!args[1]->IsArray() && !args[1]->IsString()))
+  if (args.Length() < 2 || !args[0]->IsInt32() || (!args[1]->IsArray() && !args[1]->IsString() && !args[1]->IsObject()))
   {
     return v8::Int32::New(-1);
   }
@@ -90,7 +95,18 @@ static v8::Handle<v8::Value> __write(const v8::Arguments& args)
     }
     return v8::Int32::New(::write(fd, bytes.data(), bytes.size()));
   }
-  return v8::Int32::New(-1);
+  else if (args[1]->IsObject())
+  {
+    v8::HandleScope scope;
+    if (!args[1]->ToObject()->Has(v8::String::NewSymbol("ObjectType")) ||
+      !args[1]->ToObject()->Get(v8::String::NewSymbol("ObjectType"))->ToString()->Equals(v8::String::NewSymbol("Buffer")))
+    {
+      return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Argument Requires Buffer")));
+    }
+    BufferObject* pBuffer = ObjectWrap::Unwrap<BufferObject>(args[1]->ToObject());
+    return v8::Int32::New(::write(fd, pBuffer->buffer().data(), pBuffer->buffer().size()));
+  }
+  return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument")));
 }
 
 static v8::Handle<v8::Value> __read(const v8::Arguments& args)
@@ -102,18 +118,21 @@ static v8::Handle<v8::Value> __read(const v8::Arguments& args)
   }
   
   int fd = args[0]->ToInt32()->Value();
-  ByteArray buf(args[1]->ToInt32()->Value());
+  
+  //
+  // Create a new Buffer
+  //
+  v8::Handle<v8::Value> result = BufferObject::createNew(args[1]->ToInt32()->Value());
+  BufferObject* pBuffer = ObjectWrap::Unwrap<BufferObject>(result->ToObject());
+
+  ByteArray& buf = pBuffer->buffer();
   std::size_t ret = ::read(fd, buf.data(), buf.size());
   if (!ret)
   {
     return v8::Undefined();
   }
-  v8::Handle<v8::Array> output = v8::Array::New(ret);
-  if (!byte_array_to_int_array(buf, output))
-  {
-    return v8::Undefined();
-  }
-  return output;
+  
+  return result;
 }
 
 static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)

@@ -58,3 +58,12 @@ function require(path)
   }
   return module.exports;
 }
+
+//
+// Initialize global plugins
+//
+require("buffer");
+var __create_buffer_object = function(arg)
+{
+  return new Buffer(arg);
+}

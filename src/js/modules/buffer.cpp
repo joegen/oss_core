@@ -1,3 +1,22 @@
+// Library: OSS_CORE - Foundation API for SIP B2BUA
+// Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
+//
+// Permission is hereby granted, to any person or organization
+// obtaining a copy of the software and accompanying documentation covered by
+// this license (the "Software") to use, execute, and to prepare
+// derivative works of the Software, all subject to the
+// "GNU Lesser General Public License (LGPL)".
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT
+// SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE
+// FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
+// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+
 #include "OSS/JS/JSPlugin.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/Logger.h"
@@ -119,13 +138,6 @@ v8::Handle<v8::Value> BufferObject::New(const v8::Arguments& args)
   
   pBuffer->Wrap(args.This());
   return args.This();
-}
-
-v8::Handle<v8::Value> BufferObject::Create(const v8::Arguments& args)
-{
-  v8::HandleScope scope;
-  v8::Handle<v8::Value> buffer = BufferObject::_constructor->NewInstance();
-  return buffer;
 }
 
 v8::Handle<v8::Value> BufferObject::size(const v8::Arguments& args)
@@ -258,6 +270,19 @@ v8::Handle<v8::Value> BufferObject::setAt(uint32_t index,v8::Local<v8::Value> va
   return v8::Undefined();
 }
 
+v8::Handle<v8::Value> BufferObject::createNew(uint32_t size)
+{
+  v8::Handle<v8::Value> newBuffer = v8::Context::GetCurrent()->Global()->Get(v8::String::NewSymbol("__create_buffer_object"));
+  if (!newBuffer->IsFunction())
+  {
+    return v8::ThrowException(v8::Exception::Error(v8::String::New("Unable to instantiate __create_buffer_object")));
+  }
+  v8::Handle<v8::Function> newBufferFunc = v8::Handle<v8::Function>::Cast(newBuffer);
+  v8::Handle<v8::Value> funcArgs[1];
+  funcArgs[0] = v8::Uint32::New(size);
+  return newBufferFunc->Call(v8::Context::GetCurrent()->Global(), 1, funcArgs);
+}
+
 void BufferObject::Init(v8::Handle<v8::Object> exports)
 {
   v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(BufferObject::New);
@@ -267,7 +292,6 @@ void BufferObject::Init(v8::Handle<v8::Object> exports)
   
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
   
-  tpl->PrototypeTemplate()->Set(v8::String::NewSymbol("Create"), v8::FunctionTemplate::New(Create)->GetFunction());
   tpl->PrototypeTemplate()->Set(v8::String::NewSymbol("size"), v8::FunctionTemplate::New(size)->GetFunction());
   tpl->PrototypeTemplate()->Set(v8::String::NewSymbol("toArray"), v8::FunctionTemplate::New(toArray)->GetFunction());
   tpl->PrototypeTemplate()->Set(v8::String::NewSymbol("toString"), v8::FunctionTemplate::New(toString)->GetFunction());
@@ -280,6 +304,10 @@ void BufferObject::Init(v8::Handle<v8::Object> exports)
   
   BufferObject::_constructor = v8::Persistent<v8::Function>::New(tpl->GetFunction());
   exports->Set(v8::String::NewSymbol("Buffer"), BufferObject::_constructor);
+  //
+  // Expose as a global object
+  //
+  v8::Context::GetCurrent()->Global()->Set(v8::String::NewSymbol("Buffer"), BufferObject::_constructor);
 }
 
 static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)

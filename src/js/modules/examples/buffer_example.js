@@ -1,5 +1,9 @@
+//
+// Buffer is exported as a global object 
+// so no need to save the exports into a variable
+//
+require("buffer");
 
-var buffer = require("buffer");
 var assert = require("assert");
 var logger = require("logger");
 
@@ -11,13 +15,13 @@ var log = function(msg)
 //
 // Create a buffer with preallocated size
 //
-var buf1 = new buffer.Buffer(1024);
+var buf1 = new Buffer(1024);
 assert.ok(buf1.size() === 1024);
 
 //
 // Create a buffer from an array of bytes
 //
-var buf2 = new buffer.Buffer([0,1,2,3,4,5,6,7,8,9]);
+var buf2 = new Buffer([0,1,2,3,4,5,6,7,8,9]);
 assert.ok(buf2.size() === 10);
 
 //
@@ -31,13 +35,13 @@ for (var i = 0; i < 10; i++)
 //
 // Create a buffer from a string
 //
-var buf3 = new buffer.Buffer("The Quick Brown Fox.");
+var buf3 = new Buffer("The Quick Brown Fox.");
 assert.ok(buf3.size() === 20);
 
 //
 // Create a buffer from another buffer
 //
-var buf4 = new buffer.Buffer(buf3);
+var buf4 = new Buffer(buf3);
 assert.ok(buf4.size() === 20);
 assert.ok(buf4.toString() === buf3.toString());
 
