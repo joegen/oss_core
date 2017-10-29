@@ -272,6 +272,11 @@ namespace zmq
         {
             return ptr;
         }
+        
+        inline void* get()
+        {
+          return ptr;
+        }
 
         inline void close()
         {

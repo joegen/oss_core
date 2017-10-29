@@ -58,7 +58,7 @@ public:
   typedef zmq::pollitem_t PollItem;
   typedef std::vector<PollItem> PollItems;
   
-  ZMQSocket(SocketType type);
+  ZMQSocket(SocketType type, zmq::context_t* pContext = 0);
   
   ~ZMQSocket();
   
@@ -96,6 +96,11 @@ public:
   
   static int poll(ZMQSocket::PollItems& pollItems, long timeoutMiliseconds);
   
+  void initPollItem(zmq_pollitem_t& item);
+  
+  int pollForEvents();
+  
+  int getFd() const;
 protected:
   void internal_close();
   bool internal_connect(const std::string& peerAddress);
@@ -112,6 +117,7 @@ protected:
   OSS::mutex_critic_sec _mutex;
   bool _canReconnect;
   bool _isInproc;
+  bool _isExternalContext;
   static zmq::context_t* _inproc_context;
 };
 
@@ -148,7 +154,7 @@ inline zmq::socket_t* ZMQSocket::socket()
 {
   return _socket;
 }
-    
+
 } } // OSS::ZMQ
 
 #endif // OSS_HAVE_ZMQ

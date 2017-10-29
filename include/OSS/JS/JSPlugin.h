@@ -31,6 +31,13 @@ public:
   virtual ~JSPlugin();
   virtual std::string name() const = 0;
   virtual bool initExportFunc(std::string& funcName) = 0;
+  void setContext(v8::Persistent<v8::Context>* pContext);
+  v8::Persistent<v8::Context>* getContext();
+  void setGlobal(v8::Persistent<v8::ObjectTemplate>* pGlobal);
+  v8::Persistent<v8::ObjectTemplate>* getGlobal();
+
+  static v8::Persistent<v8::Context>* _pContext;
+  static v8::Persistent<v8::ObjectTemplate>* _pGlobal;
 };
 
 inline JSPlugin::JSPlugin()
@@ -40,7 +47,6 @@ inline JSPlugin::JSPlugin()
 inline JSPlugin::~JSPlugin()
 {
 }
-
 
 typedef Poco::ClassLoader<JSPlugin> JSPluginLoader;
 typedef Poco::Manifest<JSPlugin> JSPluginManifest;

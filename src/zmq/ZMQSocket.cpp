@@ -111,20 +111,32 @@ static bool zeromq_poll_read(zmq::socket_t* sock, int timeoutms)
   return items[0].revents & ZMQ_POLLIN;
 }
   
-ZMQSocket::ZMQSocket(SocketType type) :
+ZMQSocket::ZMQSocket(SocketType type, zmq::context_t* pContext) :
   _type(type),
   _context(0),
   _socket(0),
   _canReconnect(false),
-  _isInproc(false)
+  _isInproc(false),
+  _isExternalContext(false)
 {
-  _context = new zmq::context_t(1);
+  if (pContext)
+  {
+    _isExternalContext = true;
+    _context = pContext;
+  }
+  else  
+  {
+    _context = new zmq::context_t(1);
+  }
 }
   
 ZMQSocket::~ZMQSocket()
 {
   close();
-  delete _context;
+  if (!_isExternalContext)
+  {
+    delete _context;
+  }
 }
 
 bool ZMQSocket::bind(const std::string& bindAddress)
@@ -133,6 +145,7 @@ bool ZMQSocket::bind(const std::string& bindAddress)
   
   if ( _socket || !_context)
   {
+    OSS_LOG_ERROR("Socket is already set while calling bind");
     return false;
   }
   
@@ -144,7 +157,7 @@ bool ZMQSocket::bind(const std::string& bindAddress)
   switch(_type)
   {
   case REP:
-    if (_isInproc)
+    if (!_isExternalContext && _isInproc)
     {
       _socket = zeromq_create_socket(_inproc_context, ZMQ_REP);
     }
@@ -153,18 +166,18 @@ bool ZMQSocket::bind(const std::string& bindAddress)
       _socket = zeromq_create_socket(_context, ZMQ_REP);
     }
     break;
-  case PUSH:
-    if (_isInproc)
+  case PULL:
+    if (!_isExternalContext && _isInproc)
     {
-      _socket = zeromq_create_socket(_inproc_context, ZMQ_PUSH);
+      _socket = zeromq_create_socket(_inproc_context, ZMQ_PULL);
     }
     else
     {
-      _socket = zeromq_create_socket(_context, ZMQ_PUSH);
+      _socket = zeromq_create_socket(_context, ZMQ_PULL);
     }
     break;
   case PUB:
-    if (_isInproc)
+    if (!_isExternalContext && _isInproc)
     {
       _socket = zeromq_create_socket(_inproc_context, ZMQ_PUB);
     }
@@ -174,6 +187,7 @@ bool ZMQSocket::bind(const std::string& bindAddress)
     }
     break;
   default:
+    OSS_LOG_ERROR("Calling bind on incompatible socket");
     return false;
   }
   
@@ -182,6 +196,8 @@ bool ZMQSocket::bind(const std::string& bindAddress)
     return false;
   }
   
+  
+
   try
   {
     _socket->bind(bindAddress.c_str());
@@ -231,7 +247,7 @@ bool ZMQSocket::internal_connect(const std::string& peerAddress)
   switch(_type)
   {
   case REQ:
-    if (_isInproc)
+    if (!_isExternalContext && _isInproc)
     {
       _socket = zeromq_create_socket(_inproc_context, ZMQ_REQ);
     }
@@ -240,18 +256,18 @@ bool ZMQSocket::internal_connect(const std::string& peerAddress)
       _socket = zeromq_create_socket(_context, ZMQ_REQ);
     }
     break;
-  case PULL:
-    if (_isInproc)
+  case PUSH:
+    if (!_isExternalContext && _isInproc)
     {
-      _socket = zeromq_create_socket(_inproc_context, ZMQ_PULL);
+      _socket = zeromq_create_socket(_inproc_context, ZMQ_PUSH);
     }
     else
     {
-      _socket = zeromq_create_socket(_context, ZMQ_PULL);
+      _socket = zeromq_create_socket(_context, ZMQ_PUSH);
     }
     break;
   case SUB:
-    if (_isInproc)
+    if (!_isExternalContext && _isInproc)
     {
       _socket = zeromq_create_socket(_inproc_context, ZMQ_SUB);
     }
@@ -261,6 +277,7 @@ bool ZMQSocket::internal_connect(const std::string& peerAddress)
     }
     break;
   default:
+    OSS_LOG_ERROR("Calling connect on incompatible socket");
     return false;
   }
   
@@ -407,7 +424,6 @@ bool ZMQSocket::internal_send_request(const std::string& cmd, const std::string&
     internal_close();
     return false;
   }
-  
   return true;
 }
 
@@ -521,7 +537,6 @@ bool ZMQSocket::internal_receive_request(std::string& data, unsigned int timeout
 
 int ZMQSocket::poll(ZMQSocket::PollItems& pollItems, long timeoutms)
 {
-  zmq::pollitem_t* items = pollItems.data();
   int timeout = timeoutms;
 #if ZMQ_VERSION_MAJOR < 4
   if (timeoutms > 0)
@@ -529,7 +544,57 @@ int ZMQSocket::poll(ZMQSocket::PollItems& pollItems, long timeoutms)
     timeout = timeoutms * 1000; // convert to nanoseconds
   }
 #endif  
-  return zmq::poll(items, pollItems.size(), timeout);
+  return zmq::poll(pollItems.data(), pollItems.size(), timeout);
+}
+
+int ZMQSocket::getFd() const
+{
+  if (!_socket)
+  {
+    return 0;
+  }
+  int fd = 0;
+  size_t fd_len = sizeof(fd);
+  _socket->getsockopt(ZMQ_FD, &fd, &fd_len);
+  return fd;
+}
+
+void ZMQSocket::initPollItem(zmq_pollitem_t& item)
+{
+  if (_socket)
+  {
+    item.socket = _socket->get();
+    item.events = ZMQ_POLLIN;
+    item.revents = 0;
+    item.fd = 0;
+  }
+}
+
+int ZMQSocket::pollForEvents()
+{
+  ZMQSocket::PollItems pfds(1);
+  zmq_pollitem_t item = { (void*)(*_socket), 0, ZMQ_POLLIN, 0 };
+  pfds[0] = item;
+  while (true)
+  {
+    int rc = ZMQSocket::poll(pfds, 0);
+    if (rc < 0) 
+    {
+      if (zmq_errno() == EINTR) 
+      {
+        continue;
+      } 
+      else 
+      {
+        return -1;
+      }
+    } 
+    else 
+    {
+      break;
+    }
+  }
+  return pfds[0].revents & pfds[0].events;
 }
 
 

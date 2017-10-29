@@ -35,6 +35,11 @@ public:
   JSPlugin* loadPlugin(const std::string& path);
   void releaseAllPlugins();
   static JSPluginManager& instance();
+  void setContext(v8::Persistent<v8::Context>* pContext);
+  v8::Persistent<v8::Context>* getContext();
+  
+  void setGlobal(v8::Persistent<v8::ObjectTemplate>* pGlobal);
+  v8::Persistent<v8::ObjectTemplate>* getGlobal();
   
 private:
   OSS::mutex_critic_sec _pluginMutex;
@@ -45,6 +50,29 @@ protected:
   JSPluginManager();
   ~JSPluginManager();
 };
+
+
+//
+// Inlines
+//
+inline void JSPluginManager::setContext(v8::Persistent<v8::Context>* pContext)
+{
+  JSPlugin::_pContext = pContext;
+}
+inline v8::Persistent<v8::Context>* JSPluginManager::getContext()
+{
+  return JSPlugin::_pContext;
+}
+  
+inline void JSPluginManager::setGlobal(v8::Persistent<v8::ObjectTemplate>* pGlobal)
+{
+  JSPlugin::_pGlobal = pGlobal;
+}
+
+inline v8::Persistent<v8::ObjectTemplate>* JSPluginManager::getGlobal()
+{
+  return JSPlugin::_pGlobal;
+}
 
 
 } }

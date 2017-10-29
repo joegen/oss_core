@@ -23,10 +23,11 @@
 
 #include "OSS/JS/JSPluginManager.h"
 
+v8::Persistent<v8::Context>* JSPlugin::_pContext;
+v8::Persistent<v8::ObjectTemplate>* JSPlugin::_pGlobal;
 
 namespace OSS {
 namespace JS {
-
 
 JSPluginManager::JSPluginManager()
 {

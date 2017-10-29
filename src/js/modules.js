@@ -62,8 +62,17 @@ function require(path)
 //
 // Initialize global plugins
 //
-require("buffer");
+function __copy_exports (src, dst) 
+{
+  for (var key in src) 
+  {
+    dst[key] = src[key]
+  }
+}
+
 var __create_buffer_object = function(arg)
 {
   return new Buffer(arg);
 }
+require("buffer");
+

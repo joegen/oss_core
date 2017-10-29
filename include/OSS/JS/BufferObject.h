@@ -24,14 +24,10 @@
 #include <vector>
 #include <OSS/JS/ObjectWrap.h>
 
-namespace OSS {
-namespace JS {  
-
-class BufferObject : public ObjectWrap
+class BufferObject : public OSS::JS::ObjectWrap
 {
 public:
   typedef std::vector<unsigned char> ByteArray;
-  static v8::Persistent<v8::Function> _new;
   static v8::Persistent<v8::Function> _constructor;
   static void Init(v8::Handle<v8::Object> exports);
   static v8::Handle<v8::Value> New(const v8::Arguments& args);
@@ -53,10 +49,14 @@ public:
   static v8::Handle<v8::Value> getAt(uint32_t index, const v8::AccessorInfo& info);
   static v8::Handle<v8::Value> setAt(uint32_t index, v8::Local<v8::Value> value, const v8::AccessorInfo& info);
   
+  
   //
   // Helpers
   //
   static v8::Handle<v8::Value> createNew(uint32_t size);
+  static v8::Persistent<v8::Function> createNewFunc;
+  static bool isBuffer(v8::Local<v8::Value> value);
+  static v8::Handle<v8::Value>  isBufferObject(const v8::Arguments& args);
   
   ByteArray& buffer();
 private:
@@ -75,8 +75,6 @@ inline BufferObject::ByteArray& BufferObject::buffer()
   return _buffer;
 }
 
-
-} } // OSS::JS
 
 #endif // OSS_BUFFEROBJECT_H_INCLUDED
 

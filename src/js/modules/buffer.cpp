@@ -20,13 +20,12 @@
 #include "OSS/JS/JSPlugin.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/Logger.h"
-#include "OSS/JS/ObjectWrap.h"
 #include "OSS/JS/BufferObject.h"
 
 using OSS::JS::ObjectWrap;
-
-using OSS::JS::BufferObject;
 typedef BufferObject::ByteArray ByteArray; 
+
+v8::Persistent<v8::Function> BufferObject::createNewFunc;
 
 static bool int_array_to_byte_array(v8::Handle<v8::Array>& input, ByteArray& output)
 {
@@ -85,6 +84,7 @@ BufferObject::BufferObject(std::size_t size) :
 
 BufferObject::~BufferObject()
 {
+  OSS_LOG_INFO("BufferObject::~BufferObject");
 }
 
 v8::Handle<v8::Value> BufferObject::New(const v8::Arguments& args) 
@@ -272,24 +272,38 @@ v8::Handle<v8::Value> BufferObject::setAt(uint32_t index,v8::Local<v8::Value> va
 
 v8::Handle<v8::Value> BufferObject::createNew(uint32_t size)
 {
-  v8::Handle<v8::Value> newBuffer = v8::Context::GetCurrent()->Global()->Get(v8::String::NewSymbol("__create_buffer_object"));
-  if (!newBuffer->IsFunction())
-  {
-    return v8::ThrowException(v8::Exception::Error(v8::String::New("Unable to instantiate __create_buffer_object")));
-  }
-  v8::Handle<v8::Function> newBufferFunc = v8::Handle<v8::Function>::Cast(newBuffer);
+  v8::HandleScope scope;
   v8::Handle<v8::Value> funcArgs[1];
   funcArgs[0] = v8::Uint32::New(size);
-  return newBufferFunc->Call(v8::Context::GetCurrent()->Global(), 1, funcArgs);
+  return BufferObject::createNewFunc->Call((*JSPlugin::_pContext)->Global(), 1, funcArgs);
+}
+
+bool BufferObject::isBuffer(v8::Local<v8::Value> value)
+{
+  v8::HandleScope scope;
+  
+  return !value.IsEmpty() && value->IsObject() &&
+    value->ToObject()->Has(v8::String::NewSymbol("ObjectType")) &&
+    value->ToObject()->Get(v8::String::NewSymbol("ObjectType"))->ToString()->Equals(v8::String::NewSymbol("Buffer"));
+}
+
+v8::Handle<v8::Value>  BufferObject::isBufferObject(const v8::Arguments& args)
+{
+  v8::HandleScope scope;
+  if (args.Length() == 0)
+  {
+    return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument")));
+  }
+  return v8::Boolean::New(BufferObject::isBuffer(args[0]));
 }
 
 void BufferObject::Init(v8::Handle<v8::Object> exports)
 {
+  v8::HandleScope scope; 
   v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(BufferObject::New);
   
   tpl->SetClassName(v8::String::NewSymbol("Buffer"));
   tpl->PrototypeTemplate()->Set(v8::String::NewSymbol("ObjectType"), v8::String::NewSymbol("Buffer"));
-  
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
   
   tpl->PrototypeTemplate()->Set(v8::String::NewSymbol("size"), v8::FunctionTemplate::New(size)->GetFunction());
@@ -300,14 +314,25 @@ void BufferObject::Init(v8::Handle<v8::Object> exports)
   tpl->PrototypeTemplate()->Set(v8::String::NewSymbol("fromBuffer"), v8::FunctionTemplate::New(fromBuffer)->GetFunction());
   tpl->PrototypeTemplate()->Set(v8::String::NewSymbol("equals"), v8::FunctionTemplate::New(equals)->GetFunction());
   
+  
   tpl->PrototypeTemplate()->SetIndexedPropertyHandler(getAt, setAt);
   
   BufferObject::_constructor = v8::Persistent<v8::Function>::New(tpl->GetFunction());
   exports->Set(v8::String::NewSymbol("Buffer"), BufferObject::_constructor);
+  exports->Set(v8::String::NewSymbol("isBuffer"), v8::FunctionTemplate::New(isBufferObject)->GetFunction());
   //
   // Expose as a global object
   //
-  v8::Context::GetCurrent()->Global()->Set(v8::String::NewSymbol("Buffer"), BufferObject::_constructor);
+  (*JSPlugin::_pContext)->Global()->Set(v8::String::NewSymbol("Buffer"), BufferObject::_constructor);
+  
+  //
+  // Export the createNew function
+  //
+  v8::Handle<v8::Value> newBufferFunc = (*JSPlugin::_pContext)->Global()->Get(v8::String::NewSymbol("__create_buffer_object"));
+  if (newBufferFunc->IsFunction())
+  {
+    BufferObject::createNewFunc = v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(newBufferFunc));
+  }
 }
 
 static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)

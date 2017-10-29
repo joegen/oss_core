@@ -5,7 +5,6 @@
 #include "OSS/JS/BufferObject.h"
 
 
-using OSS::JS::BufferObject;
 using OSS::JS::ObjectWrap;
 typedef BufferObject::ByteArray ByteArray;
 
@@ -24,17 +23,6 @@ static bool int_array_to_byte_array(v8::Handle<v8::Array>& input, ByteArray& out
     output.push_back(val);
   }
   return !output.empty();
-}
-
-static bool byte_array_to_int_array(ByteArray& input, v8::Handle<v8::Array>& output)
-{
-  v8::HandleScope scope;
-  uint32_t i = 0;
-  for (ByteArray::iterator iter = input.begin(); iter != input.end(); iter++)
-  {
-    output->Set(i++, v8::Int32::New(*iter));
-  }
-  return output->Length() > 0;
 }
 
 static v8::Handle<v8::Value>  __close(const v8::Arguments& args)
@@ -98,8 +86,7 @@ static v8::Handle<v8::Value> __write(const v8::Arguments& args)
   else if (args[1]->IsObject())
   {
     v8::HandleScope scope;
-    if (!args[1]->ToObject()->Has(v8::String::NewSymbol("ObjectType")) ||
-      !args[1]->ToObject()->Get(v8::String::NewSymbol("ObjectType"))->ToString()->Equals(v8::String::NewSymbol("Buffer")))
+    if (!BufferObject::isBuffer(args[1]))
     {
       return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Argument Requires Buffer")));
     }
@@ -129,10 +116,22 @@ static v8::Handle<v8::Value> __read(const v8::Arguments& args)
   std::size_t ret = ::read(fd, buf.data(), buf.size());
   if (!ret)
   {
+    OSS_LOG_INFO("__read returning undefined");
     return v8::Undefined();
   }
-  
+  OSS_LOG_INFO("__read returning buffer " << buf.size());
   return result;
+}
+
+static v8::Handle<v8::Value> __sleep(const v8::Arguments& args)
+{
+  v8::HandleScope scope;
+  if (args.Length() < 1 || !args[0]->IsUint32())
+  {
+    return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument")));
+  }
+  ::sleep(args[0]->ToUint32()->Value());
+  return v8::Undefined();
 }
 
 static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
@@ -144,6 +143,7 @@ static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
   exports->Set(v8::String::New("close"), v8::FunctionTemplate::New(__close)->GetFunction());
   exports->Set(v8::String::New("exit"), v8::FunctionTemplate::New(__exit)->GetFunction()); 
   exports->Set(v8::String::New("_exit"), v8::FunctionTemplate::New(___exit)->GetFunction());
+  exports->Set(v8::String::New("sleep"), v8::FunctionTemplate::New(__sleep)->GetFunction());
   
   return exports;
 }

@@ -354,6 +354,9 @@ bool JSBase::internalInitialize(
     }
   }
 
+  JSPluginManager::instance().setContext(_context);
+  JSPluginManager::instance().setGlobal(_globalTemplate);
+  
   if (!_moduleManager.initialize(try_catch, global))
   {
     // Exception is reported inside initialize
