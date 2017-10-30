@@ -30,7 +30,7 @@ class ZMQSocketObject : public OSS::JS::ObjectWrap
 public:
   typedef OSS::ZMQ::ZMQSocket Socket;
   ZMQSocketObject(Socket::SocketType type);
-  ~ZMQSocketObject();
+  virtual ~ZMQSocketObject();
   
   static v8::Persistent<v8::Function> _constructor;
   static void Init(v8::Handle<v8::Object> exports);

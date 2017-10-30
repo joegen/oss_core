@@ -8,13 +8,14 @@ const system = require("system");
 var requester = new zmq.ZMQSocket(zmq.REQ);
 var responder = new zmq.ZMQSocket(zmq.REP);
 
-assert.ok(responder.bind("tcp://127.0.0.1:50000"));
-assert.ok(requester.connect("tcp://127.0.0.1:50000"));
+assert(responder.bind("tcp://127.0.0.1:50000"));
+assert(requester.connect("tcp://127.0.0.1:50000"));
 responder.start(function()
 {
   var msg = responder.receive();
   log.log(log.INFO, msg.toString());
-  assert.ok(responder.send("Bye ZeroMQ!"));
+  var response = new Buffer("Bye ZeroMQ!");
+  assert(responder.send(response));
 });
 
 requester.start(function()
@@ -26,7 +27,8 @@ requester.start(function()
   system.exit(0);
 });
 
-assert.ok(requester.send("Hello ZeroMQ!"));
+var request = new Buffer("Hello ZeroMQ!");
+assert(requester.send(request));
 
 async.processEvents();
 

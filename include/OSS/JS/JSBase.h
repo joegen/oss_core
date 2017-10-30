@@ -97,6 +97,8 @@ public:
   
   JSModule& getModuleManager();
   
+  void setEnableCommonJS(bool enableCommonJS);
+  
   static JSBase* GetCurrent();
   
   static OSS::mutex_critic_sec _currentBaseMutex;
@@ -139,6 +141,7 @@ protected:
   std::string _preloaded;
   JSModule _moduleManager;
   int32_t _id;
+  bool _enableCommonJS;
 public:
   static std::vector<std::string> _globalScripts;
 };
@@ -202,6 +205,11 @@ inline v8::Persistent<v8::ObjectTemplate>& JSBase::getGlobalTemplate()
 inline JSModule& JSBase::getModuleManager()
 {
   return _moduleManager;
+}
+
+inline void JSBase::setEnableCommonJS(bool enableCommonJS)
+{
+  _enableCommonJS = enableCommonJS;
 }
 
 } } // OSS::JS

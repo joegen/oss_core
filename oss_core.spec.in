@@ -152,14 +152,18 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(644,root,root,755)
 %doc CONTRIBUTORS README NEWS TODO ChangeLog
-%attr(755,root,root) %{_libdir}/liboss_core.so*
+%attr(755,root,root) %{_libdir}/liboss_*.so*
+%dir %attr(755,root,root) %{_libdir}/oss_modules
+%dir %attr(755,root,root) %{_libdir}/oss_modules/examples
+%{_libdir}/oss_modules/*.js*
+%{_libdir}/oss_modules/examples/*
 
 %files devel
 %defattr(644,root,root,755)
 %dir %attr(755,root,root) %{_includedir}/OSS
 %{_includedir}/OSS/*
-%{_libdir}/liboss_core.la
-%{_libdir}/liboss_core.a
+%{_libdir}/liboss_*.la
+%{_libdir}/liboss_*.a
 
 %files app
 %attr(755,root,root) %{_bindir}/oss_*

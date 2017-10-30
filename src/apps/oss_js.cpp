@@ -70,6 +70,7 @@ int main(int argc, char** argv)
   boost::filesystem::path path = boost::filesystem::path(script.c_str());
 
   JS::JSBase vm("oss_js");
+  vm.setEnableCommonJS(true);
 
   std::string modulesDir;
   options.getOption("modules-dir", modulesDir);

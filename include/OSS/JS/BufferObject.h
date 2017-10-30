@@ -63,7 +63,7 @@ private:
   BufferObject();
   BufferObject(std::size_t size);
   BufferObject(const BufferObject& obj);
-  ~BufferObject();
+  virtual ~BufferObject();
   ByteArray _buffer;
 };
 

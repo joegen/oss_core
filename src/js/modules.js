@@ -1,8 +1,8 @@
 function Module()
 {
+  this.path = "";
+  this.exports = {};
 }
-Module.prototype.exports = {};
-Module.prototype.path = {}
 
 var __registered_modules = {};
 
@@ -56,6 +56,7 @@ function require(path)
   {
     __cache_module(module.path, module.exports);
   }
+  
   return module.exports;
 }
 
@@ -75,4 +76,21 @@ var __create_buffer_object = function(arg)
   return new Buffer(arg);
 }
 require("buffer");
+
+//
+// Clean up exports
+//
+function __cleanup_modules()
+{
+  for(var obj in __registered_modules)
+  {
+    var mod = __registered_modules[obj];
+    if (mod.hasOwnProperty("__cleanup_exports") && typeof mod.__cleanup_exports === "function")
+    {
+      mod.__cleanup_exports();
+    }
+  }
+  require("async").__stop_event_loop();
+}
+
 

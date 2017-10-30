@@ -24,6 +24,7 @@
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/Net/Net.h"
+#include "OSS/UTL/Semaphore.h"
 
 
 typedef v8::Persistent<v8::Function> PersistentFunction;
@@ -31,6 +32,9 @@ typedef std::vector< v8::Persistent<v8::Value> > ArgumentVector;
 
 typedef std::map<int, QueueObject*> ActiveQueue;
 static ActiveQueue _activeQueue;
+static bool _isTerminating = false;
+static OSS::Semaphore* _exitSem = 0;
+static OSS::UInt64  _garbageCollectionFrequency = 30; /// 30 seconds default
 
 struct MonitoredFdData
 {
@@ -247,8 +251,8 @@ static v8::Handle<v8::Value> __unmonitor_descriptor(const v8::Arguments& args)
 static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
 {
   v8::HandleScope scope;
-  
-  while (true)
+  OSS::UInt64 lastGarbageCollectionTime = 0;
+  while (!_isTerminating)
   {
     pollfd pfds[3];
     pfds[0].fd = _wakeupPipe[0];
@@ -285,12 +289,7 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
       descriptors.push_back(fd);
     }
     
-    int ret = ::poll(descriptors.data(), descriptors.size(), -1);
-    
-    if (ret == -1)
-    {
-      break;
-    }
+    int ret = ::poll(descriptors.data(), descriptors.size(), 100);
     
     //
     // Lock the isolate
@@ -298,13 +297,44 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
     v8::Locker lock;
     v8::HandleScope scope;
     
+    if (ret == -1)
+    {
+      break;
+    }
+    else if (ret == 0)
+    {
+      //
+      // Use the timeout to let V8 perform internal garbage collection tasks
+      //
+      while(!v8::V8::IdleNotification());
+      continue;
+    }
+    
+    //
+    // Perform garbage collection every 30 seconds
+    //
+    OSS::UInt64 now = OSS::getTime();
+    if (now - lastGarbageCollectionTime > _garbageCollectionFrequency * 1000)
+    {
+      v8::V8::LowMemoryNotification();
+      lastGarbageCollectionTime = now;
+    }
+    
     if (descriptors[0].revents & POLLIN)
     {
+      
       std::size_t r = 0;
       char buf[1];
       r = read(_wakeupPipe[0], buf, 1);
       (void)r;
-      continue;
+      if (_isTerminating)
+      {
+        break;
+      }
+      else
+      {
+        continue;
+      }
     }
     else if (descriptors[1].revents & POLLIN)
     {
@@ -360,6 +390,7 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
       }
     }
   }
+  _exitSem->signal();
   return v8::Undefined();
 }
 
@@ -384,6 +415,30 @@ void QueueObject::Init(v8::Handle<v8::Object> exports)
   
 }
 
+static v8::Handle<v8::Value> __stop_event_loop(const v8::Arguments& args)
+{
+  v8::HandleScope scope;
+  if (!_isTerminating)
+  {
+    _isTerminating = true;
+    __wakeup_pipe();
+    //
+    // Perform the rest of the cleanup here
+    //
+  }
+  return v8::Undefined();
+}
+
+static v8::Handle<v8::Value> __set_garbage_collection_frequency(const v8::Arguments& args)
+{
+  v8::HandleScope scope;
+  if (args.Length() == 0 || !args[0]->IsInt32())
+  {
+    return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument")));
+  }
+  _garbageCollectionFrequency = args[0]->ToInt32()->Value();
+  return v8::Undefined();
+}
 
 static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
 {
@@ -396,6 +451,8 @@ static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
   exports->Set(v8::String::New("setTimeout"), v8::FunctionTemplate::New(__schedule_one_shot_timer)->GetFunction());
   exports->Set(v8::String::New("monitorFd"), v8::FunctionTemplate::New(__monitor_descriptor)->GetFunction());
   exports->Set(v8::String::New("unmonitorFd"), v8::FunctionTemplate::New(__unmonitor_descriptor)->GetFunction());
+  exports->Set(v8::String::New("__stop_event_loop"), v8::FunctionTemplate::New(__stop_event_loop)->GetFunction());
+  exports->Set(v8::String::New("setGCFrequency"), v8::FunctionTemplate::New(__set_garbage_collection_frequency)->GetFunction());
   
   QueueObject::Init(exports);
   

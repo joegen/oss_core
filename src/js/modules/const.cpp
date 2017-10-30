@@ -44,7 +44,9 @@ static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
   CONST_EXPORT(O_DIRECT);       /* Direct disk access.	*/
   CONST_EXPORT(O_NOATIME);      /* Do not set atime.  */
   CONST_EXPORT(O_PATH);         /* Resolve pathname but do not open file.  */
+#ifdef O_TMPFILE
   CONST_EXPORT(O_TMPFILE);      /* Atomically create nameless file.  */
+#endif
 #endif
   
   CONST_EXPORT(STDOUT_FILENO);

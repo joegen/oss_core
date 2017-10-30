@@ -55,7 +55,7 @@ public:
   typedef OSS::BlockingQueue<Event::Ptr> EventQueue;
 
   QueueObject();
-  ~QueueObject();
+  virtual ~QueueObject();
   
   static v8::Persistent<v8::Function> _constructor;
   static void Init(v8::Handle<v8::Object> exports);

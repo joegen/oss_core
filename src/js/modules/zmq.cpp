@@ -36,6 +36,7 @@ typedef OSS::ZMQ::ZMQSocket::PollItems PollItems;
 static bool _wakeupPipeEnabled = false;
 static zmq::context_t* _context = 0;
 static OSS::Semaphore* _notifySem;
+static bool _isTerminating = false;
 
 
 static void __wakeup_pipe()
@@ -66,7 +67,8 @@ void ZMQSocketObject::clearReadable()
 
 void ZMQSocketObject::pollForReadEvents()
 {
-  while (true)
+   _wakeupPipeEnabled = true;
+  while (!_isTerminating)
   {
     PollItems items;
     zmq_pollitem_t notifier;
@@ -83,7 +85,12 @@ void ZMQSocketObject::pollForReadEvents()
     }
 
     int rc = OSS::ZMQ::ZMQSocket::poll(items, -1);
-    if (rc < 0) 
+    
+    if (_isTerminating)
+    {
+      break;
+    }
+    else if (rc < 0) 
     {
       if (zmq_errno() == EINTR) 
       {
@@ -228,7 +235,7 @@ v8::Handle<v8::Value> ZMQSocketObject::subscribe(const v8::Arguments& args)
   v8::HandleScope scope;
   ZMQSocketObject* pObject = ObjectWrap::Unwrap<ZMQSocketObject>(args.This());
   std::string arg;
-  if (!__get_string_arg(args, arg))
+  if (!__get_string_arg(args, arg) && !__get_buffer_arg(args, arg))
   {
     return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument")));
   }
@@ -240,7 +247,7 @@ v8::Handle<v8::Value> ZMQSocketObject::publish(const v8::Arguments& args)
   v8::HandleScope scope;
   ZMQSocketObject* pObject = ObjectWrap::Unwrap<ZMQSocketObject>(args.This());
   std::string arg;
-  if (!__get_string_arg(args, arg))
+  if (!__get_string_arg(args, arg) && !__get_buffer_arg(args, arg))
   {
     return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument")));
   }
@@ -252,7 +259,7 @@ v8::Handle<v8::Value> ZMQSocketObject::send(const v8::Arguments& args)
   v8::HandleScope scope;
   ZMQSocketObject* pObject = ObjectWrap::Unwrap<ZMQSocketObject>(args.This());
   std::string arg;
-  if (!__get_string_arg(args, arg) && !!__get_buffer_arg(args, arg))
+  if (!__get_string_arg(args, arg) && !__get_buffer_arg(args, arg))
   {
     return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument")));
   }
@@ -320,24 +327,51 @@ void ZMQSocketObject::Init(v8::Handle<v8::Object> exports)
   ZMQSocketObject::_constructor = v8::Persistent<v8::Function>::New(tpl->GetFunction());
   exports->Set(v8::String::NewSymbol("ZMQSocket"), ZMQSocketObject::_constructor);
   
-  //
-  // Enable the wakeup pipe only after connecting the notifiers
-  //
   _context = new zmq::context_t(1);
   _notifySem = new OSS::Semaphore();
   _notifyReceiver = new ZMQSocketObject(OSS::ZMQ::ZMQSocket::PULL);
   _notifySender = new ZMQSocketObject(OSS::ZMQ::ZMQSocket::PUSH);
-  assert(_notifyReceiver->getSocket()->bind("tcp://127.0.0.1:65530"));
-  assert(_notifySender->getSocket()->connect("tcp://127.0.0.1:65530"));
-  _wakeupPipeEnabled = true;
+  assert(_notifyReceiver->getSocket()->bind("inproc://zmq_notifier"));
+  assert(_notifySender->getSocket()->connect("inproc://zmq_notifier"));
   ZMQSocketObject::_pPollThread = new boost::thread(boost::bind(pollForReadEvents));
+}
+
+static v8::Handle<v8::Value> cleanup_exports(const v8::Arguments& args)
+{
+  v8::HandleScope scope;
+  if (_isTerminating)
+  {
+    //
+    // Don't let this function be called twice or we will double free stuff
+    //
+    return v8::Undefined();
+  }
+
+  _isTerminating = true;
+  __wakeup_pipe();
+  
+  //
+  // Disable the wakeup pipe from here forward
+  //
+  _wakeupPipeEnabled = false;
+  ZMQSocketObject::_pPollThread->join();
+  delete ZMQSocketObject::_pPollThread;
+  delete _notifyReceiver;
+  delete _notifySender;
+  delete _notifySem;
+  delete _context ;
+
+  return v8::Undefined();
 }
 
 static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
 {
   v8::HandleScope scope; 
   v8::Persistent<v8::Object> exports = v8::Persistent<v8::Object>::New(v8::Object::New());
+  
   ZMQSocketObject::Init(exports);
+  exports->Set(v8::String::NewSymbol("__cleanup_exports"), v8::FunctionTemplate::New(cleanup_exports)->GetFunction());
+  
   return exports;
 }
 

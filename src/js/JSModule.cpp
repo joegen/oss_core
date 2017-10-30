@@ -335,7 +335,8 @@ bool JSModule::initialize(v8::TryCatch& try_catch, v8::Handle<v8::ObjectTemplate
     #include "js/OSSJS_modules.js.h"
   );
   registerModuleHelper(modules_js);
-  
+
+#if 0
   //
   // Register internal modules
   //
@@ -352,6 +353,7 @@ bool JSModule::initialize(v8::TryCatch& try_catch, v8::Handle<v8::ObjectTemplate
     #include "js/OSSJS_assert.js.h"
   );
   registerInternalModule(module);
+#endif
   
   return compileModuleHelpers(try_catch, global);
 }

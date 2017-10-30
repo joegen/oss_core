@@ -23,7 +23,7 @@
 #include "OSS/JS/BufferObject.h"
 
 using OSS::JS::ObjectWrap;
-typedef BufferObject::ByteArray ByteArray; 
+typedef BufferObject::ByteArray ByteArray;
 
 v8::Persistent<v8::Function> BufferObject::createNewFunc;
 
@@ -84,12 +84,12 @@ BufferObject::BufferObject(std::size_t size) :
 
 BufferObject::~BufferObject()
 {
-  OSS_LOG_INFO("BufferObject::~BufferObject");
 }
 
 v8::Handle<v8::Value> BufferObject::New(const v8::Arguments& args) 
 {
   v8::HandleScope scope;
+  
   BufferObject* pBuffer = 0;
   
   if (args.Length() == 1 && args[0]->IsNumber())
@@ -338,7 +338,7 @@ void BufferObject::Init(v8::Handle<v8::Object> exports)
 static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
 {
   v8::HandleScope scope; 
-  v8::Persistent<v8::Object> exports = v8::Persistent<v8::Object>::New(v8::Object::New());
+  v8::Local<v8::Object> exports = v8::Local<v8::Object>::New(v8::Object::New());
   BufferObject::Init(exports);
   return exports;
 }

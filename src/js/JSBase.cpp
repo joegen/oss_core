@@ -69,7 +69,8 @@ JSBase::JSBase(const std::string& contextName) :
   _globalTemplate(0),
   _isInitialized(false),
   _extensionGlobals(0),
-  _moduleManager(this)
+  _moduleManager(this),
+  _enableCommonJS(false)
 {
   _id = JSBase::addBase(this);
 }
@@ -123,6 +124,11 @@ bool JSBase::internalInitialize(
 
   // Create a handle scope to hold the temporary references.
   v8::HandleScope handle_scope;
+  
+  //
+  // Set the external heap to 20mb before attempting to grabage collect
+  //
+  v8::V8::AdjustAmountOfExternalAllocatedMemory(1024 * 1024 * 20);
   
   if (_context)
   {
@@ -191,7 +197,10 @@ bool JSBase::internalInitialize(
   global->Set(v8::String::New("log_debug"), v8::FunctionTemplate::New(log_debug_callback));
   global->Set(v8::String::New("log_error"), v8::FunctionTemplate::New(log_error_callback));
   
-  _moduleManager.setGlobals(global);
+  if (_enableCommonJS)
+  {
+    _moduleManager.setGlobals(global);
+  }
 
   //
   // Initialize subclass global functions
@@ -354,13 +363,16 @@ bool JSBase::internalInitialize(
     }
   }
 
-  JSPluginManager::instance().setContext(_context);
-  JSPluginManager::instance().setGlobal(_globalTemplate);
-  
-  if (!_moduleManager.initialize(try_catch, global))
+  if (_enableCommonJS)
   {
-    // Exception is reported inside initialize
-    return false;
+    JSPluginManager::instance().setContext(_context);
+    JSPluginManager::instance().setGlobal(_globalTemplate);
+
+    if (!_moduleManager.initialize(try_catch, global))
+    {
+      // Exception is reported inside initialize
+      return false;
+    }
   }
   
   //

@@ -133,6 +133,12 @@ static v8::Handle<v8::Value> __sleep(const v8::Arguments& args)
   ::sleep(args[0]->ToUint32()->Value());
   return v8::Undefined();
 }
+static v8::Handle<v8::Value> __gc(const v8::Arguments& args)
+{
+  v8::V8::LowMemoryNotification();
+  while(!v8::V8::IdleNotification());
+  return v8::Undefined();
+}
 
 static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
 {
@@ -144,6 +150,7 @@ static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
   exports->Set(v8::String::New("exit"), v8::FunctionTemplate::New(__exit)->GetFunction()); 
   exports->Set(v8::String::New("_exit"), v8::FunctionTemplate::New(___exit)->GetFunction());
   exports->Set(v8::String::New("sleep"), v8::FunctionTemplate::New(__sleep)->GetFunction());
+  exports->Set(v8::String::New("gc"), v8::FunctionTemplate::New(__gc)->GetFunction());
   
   return exports;
 }
