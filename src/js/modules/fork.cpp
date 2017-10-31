@@ -25,12 +25,14 @@
 
 static v8::Handle<v8::Value> __fork(const v8::Arguments& args)
 {
+  v8::HandleScope scope;
   pid_t pid = ::fork();
   return v8::Int32::New(pid);
 }
 
 static v8::Handle<v8::Value> __wait(const v8::Arguments& args)
 {
+  v8::HandleScope scope;
   int status = 0;
   pid_t pid = ::wait(&status);
   

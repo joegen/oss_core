@@ -413,8 +413,11 @@ namespace OSS {
 typedef void* OSS_HANDLE; /// Type that may safely hold a void *
 
 void OSS_API OSS_init();
+void OSS_API OSS_init(int argc, char** argv);
   /// Initialize the OSS subsystem.
   /// This must be called prior to any function call to OSS API
+
+void OSS_argv(int* argc, char*** argv);
 
 void OSS_API OSS_deinit();
   /// Deinitialize the OSS_API

@@ -19,8 +19,8 @@
 
 #include <list>
 #include "OSS/JS/JSPlugin.h"
-#include "OSS/JS/ZMQSocketObject.h"
-#include "OSS/JS/BufferObject.h"
+#include "OSS/JS/modules/ZMQSocketObject.h"
+#include "OSS/JS/modules/BufferObject.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/UTL/Semaphore.h"
 

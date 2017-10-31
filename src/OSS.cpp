@@ -34,6 +34,8 @@ namespace OSS {
 static OSS::mutex_critic_sec gInitMutex;  
 static bool gCalledInit = false;
 static bool gCalledDeinit = false;
+static char** gArgv = 0;
+static int gArgc = 0;
 
 namespace Private {
 
@@ -83,7 +85,7 @@ void OSS_API OSS_register_deinit(boost::function<void()> func)
   _deinitFuncs.push_back(func);
 }
 
-void OSS_init()
+void OSS_init(int argc, char** argv)
 {
   OSS::mutex_critic_sec_lock lock(gInitMutex);
   if (gCalledInit)
@@ -92,11 +94,24 @@ void OSS_init()
   }
   
   gCalledInit = true;
+  gArgc = argc;
+  gArgv = argv;
   OSS::Private::net_init();
   OSS::__init_system_dir();
 
   for (static std::vector<boost::function<void()> >::iterator iter = _initFuncs.begin();
     iter != _initFuncs.end(); iter++) (*iter)();
+}
+
+void OSS_API OSS_init()
+{
+  OSS_init(0, 0);
+}
+
+void OSS_argv(int* argc, char*** argv)
+{
+  *argc = gArgc;
+  *argv = gArgv;
 }
 
 void OSS_deinit()

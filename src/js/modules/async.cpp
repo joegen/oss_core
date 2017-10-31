@@ -20,7 +20,7 @@
 
 #include <poll.h>
 #include "OSS/JS/JSPlugin.h"
-#include "OSS/JS/QueueObject.h"
+#include "OSS/JS/modules/QueueObject.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/Net/Net.h"

@@ -2,7 +2,7 @@
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/Logger.h"
 #include <unistd.h>
-#include "OSS/JS/BufferObject.h"
+#include "OSS/JS/modules/BufferObject.h"
 
 
 using OSS::JS::ObjectWrap;
@@ -151,7 +151,6 @@ static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
   exports->Set(v8::String::New("_exit"), v8::FunctionTemplate::New(___exit)->GetFunction());
   exports->Set(v8::String::New("sleep"), v8::FunctionTemplate::New(__sleep)->GetFunction());
   exports->Set(v8::String::New("gc"), v8::FunctionTemplate::New(__gc)->GetFunction());
-  
   return exports;
 }
 

@@ -6,5 +6,9 @@ nobase_include_HEADERS += \
     OSS/JS/JSUtil.h \
     OSS/JS/JSModule.h \
     OSS/JS/JSPlugin.h \
-    OSS/JS/JSPluginManager.h \
-    OSS/JS/BufferObject.h
+    OSS/JS/JSPluginManager.h
+
+nobase_include_HEADERS += \
+    OSS/JS/modules/BufferObject.h \
+    OSS/JS/modules/QueueObject.h \
+    OSS/JS/modules/ZMQSocketObject.h

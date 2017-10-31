@@ -20,7 +20,7 @@
 #include "OSS/JS/JSPlugin.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/Logger.h"
-#include "OSS/JS/BufferObject.h"
+#include "OSS/JS/modules/BufferObject.h"
 
 using OSS::JS::ObjectWrap;
 typedef BufferObject::ByteArray ByteArray;
@@ -338,7 +338,7 @@ void BufferObject::Init(v8::Handle<v8::Object> exports)
 static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
 {
   v8::HandleScope scope; 
-  v8::Local<v8::Object> exports = v8::Local<v8::Object>::New(v8::Object::New());
+  v8::Persistent<v8::Object> exports = v8::Persistent<v8::Object>::New(v8::Object::New());
   BufferObject::Init(exports);
   return exports;
 }

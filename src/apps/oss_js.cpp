@@ -33,52 +33,29 @@ void set_limits()
 	}
 }
 
-
-bool prepareOptions(ServiceOptions& options)
-{
-  options.addDaemonOptions();
-  options.addOptionString('x', "script", "The Script to execute");
-  options.addOptionString('m', "modules-dir", "Directory where to find the commonJS modules"); 
-  return options.parseOptions();
-}
-
 int main(int argc, char** argv)
 {
+  if (argc < 2)
+  {
+    std::cerr << "Usage:  oss_js [script] [script_options]" << std::endl;
+    _exit(1);
+  }
+  
+  boost::filesystem::path path = boost::filesystem::path(argv[1]);
+  if (!boost::filesystem::exists(path))
+  {
+    std::cerr << "Script " << argv[1] << " not found." << std::endl;
+    _exit(1);
+  }
+  
   set_limits();
-
-  bool isDaemon = false;
-  ServiceOptions::daemonize(argc, argv, isDaemon);
 
   std::set_terminate(&ServiceOptions::catch_global);
 
-  OSS::OSS_init();
-
-  ServiceOptions options(argc, argv, "oss_js", "1.0.0", "Copyright (c) OSS Software Solutions");
-  if (!prepareOptions(options) || options.hasOption("help"))
-  {
-    options.displayUsage(std::cout);
-    _exit(-1);
-  }
-  
-  std::string script;
-  if (!options.getOption("script", script) || script.empty())
-  {
-    options.displayUsage(std::cout);
-    _exit(-1);
-  }
-
-  boost::filesystem::path path = boost::filesystem::path(script.c_str());
-
+  OSS::OSS_init(argc, argv);
   JS::JSBase vm("oss_js");
   vm.setEnableCommonJS(true);
 
-  std::string modulesDir;
-  options.getOption("modules-dir", modulesDir);
-  if (!modulesDir.empty())
-  {
-    vm.getModuleManager().setModulesDir(modulesDir);
-  }
-  
   if (!vm.run(path))
   {
     _exit(-1);

@@ -9,11 +9,13 @@ EXTRA_DIST += \
     js/modules/examples/async_example.js \
     js/modules/examples/timer_example.js \
     js/modules/examples/queue_example.js \
-    js/modules/examples/zmq_example.js
+    js/modules/examples/zmq_example.js \
+    js/modules/examples/getopt_example.js
 
 EXTRA_DIST += \
     js/modules/object.js \
-    js/modules/assert.js
+    js/modules/assert.js \
+    js/modules/console.js
 
 lib_LTLIBRARIES += liboss_jsconst.la
 liboss_jsconst_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
@@ -67,6 +69,11 @@ liboss_jszmq_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
 liboss_jszmq_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
 liboss_jszmq_la_SOURCES = js/modules/zmq.cpp
 
+lib_LTLIBRARIES += liboss_jsgetopt.la
+liboss_jsgetopt_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsgetopt_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsgetopt_la_SOURCES = js/modules/getopt.cpp
+
 js_module-install-hook: js_helper-install-hook
 	cp ${DESTDIR}${libdir}/liboss_jsconst.so ${DESTDIR}${libdir}/oss_modules/consts.jso
 	cp ${DESTDIR}${libdir}/liboss_jserror.so ${DESTDIR}${libdir}/oss_modules/error.jso
@@ -78,4 +85,5 @@ js_module-install-hook: js_helper-install-hook
 	cp ${DESTDIR}${libdir}/liboss_jsbuffer.so ${DESTDIR}${libdir}/oss_modules/buffer.jso
 	cp ${DESTDIR}${libdir}/liboss_jsasync.so ${DESTDIR}${libdir}/oss_modules/async.jso
 	cp ${DESTDIR}${libdir}/liboss_jszmq.so ${DESTDIR}${libdir}/oss_modules/_zmq.jso
+	cp ${DESTDIR}${libdir}/liboss_jsgetopt.so ${DESTDIR}${libdir}/oss_modules/getopt.jso
 
