@@ -22,6 +22,7 @@
 #include "OSS/build.h"
 #if ENABLE_FEATURE_V8
 
+#include <fstream>
 #include "OSS/JS/JSUtil.h"
 #include "OSS/UTL/Logger.h"
 
@@ -232,7 +233,8 @@ v8::Handle<v8::Value> log_error_callback(const v8::Arguments& args)
 }
 
 // Reads a file into a v8 string.
-v8::Handle<v8::String> read_file(const std::string& name) {
+v8::Handle<v8::String> read_file(const std::string& name)
+{
   FILE* file = fopen(name.c_str(), "rb");
   if (file == NULL) return v8::Handle<v8::String>();
 
@@ -247,9 +249,39 @@ v8::Handle<v8::String> read_file(const std::string& name) {
     i += read;
   }
   fclose(file);
+  
+  //
+  // Check if it starts with a shebang
+  //
+  
   v8::Handle<v8::String> result = v8::String::New(chars, size);
   delete[] chars;
   return result;
+}
+
+v8::Handle<v8::String> read_file_skip_shebang(const std::string& name) 
+{
+  std::ifstream scriptFile;
+  scriptFile.open(name.c_str());
+  
+  if (!scriptFile.is_open() || !scriptFile.good())
+  {
+    return v8::Handle<v8::String>();
+  }
+  std::ostringstream strm;
+  while (!scriptFile.eof())
+  {
+    std::string line;
+    std::getline(scriptFile, line);
+    OSS::string_trim(line);
+    if (OSS::string_starts_with(line, "#!"))
+    {
+      strm << std::endl;
+      continue;
+    }
+    strm << line << std::endl;
+  }
+  return v8::String::New(strm.str().data(), strm.str().size());
 }
 
 v8::Handle<v8::String> read_directory(const boost::filesystem::path& directory)

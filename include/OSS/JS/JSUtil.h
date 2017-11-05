@@ -34,6 +34,7 @@ std::string string_from_js_string(v8::Handle<v8::Value> str);
 std::string string_from_js_value(const v8::Handle<v8::Value>& str);
 const char* cstring_from_js_string(const v8::String::Utf8Value& value);
 v8::Handle<v8::String> read_file(const std::string& name);
+v8::Handle<v8::String> read_file_skip_shebang(const std::string& name);
 v8::Handle<v8::String> read_directory(const boost::filesystem::path& directory);
 
 //

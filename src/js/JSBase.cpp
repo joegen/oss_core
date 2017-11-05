@@ -383,7 +383,7 @@ bool JSBase::internalInitialize(
   v8::Handle<v8::Script> compiled_script;
   if (preloaded.empty())
   {
-    script = read_file(OSS::boost_path(_script));
+    script = read_file_skip_shebang(OSS::boost_path(_script));
     compiled_script = v8::Script::Compile(script, v8::String::New(_script.c_str()));
   }
   else

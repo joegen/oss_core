@@ -1,3 +1,5 @@
+#!/usr/bin/oss_js
+
 "use-strict";
 
 const cfg = require("config");
