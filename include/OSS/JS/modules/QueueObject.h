@@ -23,7 +23,7 @@
 
 #include <v8.h>
 #include <vector>
-#include <OSS/JS/ObjectWrap.h>
+#include <OSS/JS/JSPlugin.h>
 #include <OSS/UTL/BlockingQueue.h>
 
 class QueueObject : public OSS::JS::ObjectWrap

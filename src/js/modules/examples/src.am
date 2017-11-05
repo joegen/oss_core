@@ -1,0 +1,9 @@
+EXTRA_DIST += \
+    js/modules/examples/pipe_example.js \
+    js/modules/examples/buffer_example.js \
+    js/modules/examples/async_example.js \
+    js/modules/examples/timer_example.js \
+    js/modules/examples/queue_example.js \
+    js/modules/examples/zmq_example.js \
+    js/modules/examples/getopt_example.js \
+    js/modules/examples/config_example.js

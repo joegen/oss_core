@@ -22,41 +22,41 @@
 
 #include <v8.h>
 #include <vector>
-#include <OSS/JS/ObjectWrap.h>
+#include <OSS/JS/JSPlugin.h>
 
 class BufferObject : public OSS::JS::ObjectWrap
 {
 public:
   typedef std::vector<unsigned char> ByteArray;
-  static v8::Persistent<v8::Function> _constructor;
-  static void Init(v8::Handle<v8::Object> exports);
-  static v8::Handle<v8::Value> New(const v8::Arguments& args);
+  static JSPersistentFunctionHandle _constructor;
+  static void Init(JSObjectHandle exports);
   
   //
   // Methods
   //
-  static v8::Handle<v8::Value> size(const v8::Arguments& args);
-  static v8::Handle<v8::Value> toArray(const v8::Arguments& args);
-  static v8::Handle<v8::Value> toString(const v8::Arguments& args);
-  static v8::Handle<v8::Value> fromArray(const v8::Arguments& args);
-  static v8::Handle<v8::Value> fromString(const v8::Arguments& args);
-  static v8::Handle<v8::Value> fromBuffer(const v8::Arguments& args);
-  static v8::Handle<v8::Value> equals(const v8::Arguments& args);
+  JS_METHOD_DECLARE(New);
+  JS_METHOD_DECLARE(size);
+  JS_METHOD_DECLARE(toArray);
+  JS_METHOD_DECLARE(toString);
+  JS_METHOD_DECLARE(fromArray);
+  JS_METHOD_DECLARE(fromString);
+  JS_METHOD_DECLARE(fromBuffer);
+  JS_METHOD_DECLARE(equals);
   
   //
   // Properties
   //
-  static v8::Handle<v8::Value> getAt(uint32_t index, const v8::AccessorInfo& info);
-  static v8::Handle<v8::Value> setAt(uint32_t index, v8::Local<v8::Value> value, const v8::AccessorInfo& info);
+  JS_INDEX_GETTER_DECLARE(getAt);
+  JS_INDEX_SETTER_DECLARE(setAt);
   
   
   //
   // Helpers
   //
-  static v8::Handle<v8::Value> createNew(uint32_t size);
-  static v8::Persistent<v8::Function> createNewFunc;
-  static bool isBuffer(v8::Local<v8::Value> value);
-  static v8::Handle<v8::Value>  isBufferObject(const v8::Arguments& args);
+  static JSValueHandle createNew(uint32_t size);
+  static JSPersistentFunctionHandle createNewFunc;
+  static bool isBuffer(JSValueHandle value);
+  static JSValueHandle  isBufferObject(JSArguments& args);
   
   ByteArray& buffer();
 private:

@@ -3,14 +3,7 @@ js_helper-install-hook:
 	cp ${srcdir}/js/modules/*.js ${DESTDIR}${libdir}/oss_modules/
 	cp ${srcdir}/js/modules/examples/*.js ${DESTDIR}${libdir}/oss_modules/examples
 
-EXTRA_DIST += \
-    js/modules/examples/pipe_example.js \
-    js/modules/examples/buffer_example.js \
-    js/modules/examples/async_example.js \
-    js/modules/examples/timer_example.js \
-    js/modules/examples/queue_example.js \
-    js/modules/examples/zmq_example.js \
-    js/modules/examples/getopt_example.js
+include js/modules/examples/src.am
 
 EXTRA_DIST += \
     js/modules/object.js \
@@ -74,6 +67,17 @@ liboss_jsgetopt_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
 liboss_jsgetopt_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
 liboss_jsgetopt_la_SOURCES = js/modules/getopt.cpp
 
+lib_LTLIBRARIES += liboss_jsconfig.la
+liboss_jsconfig_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsconfig_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsconfig_la_SOURCES = js/modules/config.cpp
+EXTRA_DIST += js/modules/config.js
+
+lib_LTLIBRARIES += liboss_jsfilesystem.la
+liboss_jsfilesystem_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsfilesystem_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsfilesystem_la_SOURCES = js/modules/filesystem.cpp
+
 js_module-install-hook: js_helper-install-hook
 	cp ${DESTDIR}${libdir}/liboss_jsconst.so ${DESTDIR}${libdir}/oss_modules/consts.jso
 	cp ${DESTDIR}${libdir}/liboss_jserror.so ${DESTDIR}${libdir}/oss_modules/error.jso
@@ -86,4 +90,6 @@ js_module-install-hook: js_helper-install-hook
 	cp ${DESTDIR}${libdir}/liboss_jsasync.so ${DESTDIR}${libdir}/oss_modules/async.jso
 	cp ${DESTDIR}${libdir}/liboss_jszmq.so ${DESTDIR}${libdir}/oss_modules/_zmq.jso
 	cp ${DESTDIR}${libdir}/liboss_jsgetopt.so ${DESTDIR}${libdir}/oss_modules/getopt.jso
+	cp ${DESTDIR}${libdir}/liboss_jsconfig.so ${DESTDIR}${libdir}/oss_modules/_config.jso
+	cp ${DESTDIR}${libdir}/liboss_jsfilesystem.so ${DESTDIR}${libdir}/oss_modules/filesystem.jso
 

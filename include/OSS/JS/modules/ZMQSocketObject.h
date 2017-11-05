@@ -21,7 +21,7 @@
 #define OSS_ZMQSOCKETOBJECT_H_INCLUDED
 
 #include <v8.h>
-#include <OSS/JS/ObjectWrap.h>
+#include <OSS/JS/JSPlugin.h>
 #include <OSS/ZMQ/ZMQSocket.h>
 #include <OSS/UTL/Thread.h>
 

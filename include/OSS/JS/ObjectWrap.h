@@ -31,13 +31,16 @@ namespace JS {
 
 class ObjectWrap {
  public:
-  ObjectWrap ( ) {
+  ObjectWrap ( ) 
+  {
     refs_ = 0;
   }
 
 
-  virtual ~ObjectWrap ( ) {
-    if (!handle_.IsEmpty()) {
+  virtual ~ObjectWrap ( ) 
+  {
+    if (!handle_.IsEmpty()) 
+    {
       assert(handle_.IsNearDeath());
       handle_.ClearWeak();
       handle_->SetInternalField(0, v8::Undefined());
@@ -48,17 +51,49 @@ class ObjectWrap {
 
 
   template <class T>
-  static inline T* Unwrap (v8::Handle<v8::Object> handle) {
+  static inline T* Unwrap (v8::Handle<v8::Object> handle) 
+  {
     assert(!handle.IsEmpty());
     assert(handle->InternalFieldCount() > 0);
     return static_cast<T*>(handle->GetPointerFromInternalField(0));
   }
+  
+  template <class T>
+  static v8::Local<v8::FunctionTemplate> ExportConstructorTemplate(const char * className, v8::Handle<v8::Object>& exports)
+  {
+    v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(T::New);
+    tpl->SetClassName(v8::String::NewSymbol(className));
+    tpl->PrototypeTemplate()->Set(v8::String::NewSymbol("ObjectType"), v8::String::NewSymbol(className));
+    tpl->InstanceTemplate()->SetInternalFieldCount(1);
+    return tpl;
+  }
+  
+  template <class T>
+  static void FinalizeConstructorTemplate(const char * className, v8::Local<v8::FunctionTemplate>& tpl, v8::Handle<v8::Object>& exports)
+  {
+    T::_constructor = v8::Persistent<v8::Function>::New(tpl->GetFunction());
+    exports->Set(v8::String::NewSymbol(className), T::_constructor);
+  }
+  
+  template <class T>
+  static void ExportMethod(v8::Local<v8::FunctionTemplate>& tpl, const char* method,  v8::InvocationCallback callback)
+  {
+    tpl->PrototypeTemplate()->Set(v8::String::NewSymbol(method), v8::FunctionTemplate::New(callback)->GetFunction());
+  }
+  
+  template <class T>
+  static void ExportIndexHandler(v8::Local<v8::FunctionTemplate>& tpl, v8::IndexedPropertyGetter getter,  v8::IndexedPropertySetter setter = 0)
+  {
+    tpl->PrototypeTemplate()->SetIndexedPropertyHandler(getter, setter);
+  }
+ 
 
 
   v8::Persistent<v8::Object> handle_; // ro
 
  protected:
-  inline void Wrap (v8::Handle<v8::Object> handle) {
+  inline void Wrap (v8::Handle<v8::Object> handle) 
+  {
     assert(handle_.IsEmpty());
     assert(handle->InternalFieldCount() > 0);
     handle_ = v8::Persistent<v8::Object>::New(handle);
@@ -67,7 +102,8 @@ class ObjectWrap {
   }
 
 
-  inline void MakeWeak (void) {
+  inline void MakeWeak (void) 
+  {
     handle_.MakeWeak(this, WeakCallback);
     handle_.MarkIndependent();
   }
@@ -76,7 +112,8 @@ class ObjectWrap {
    * Refed objects will not be garbage collected, even if
    * all references are lost.
    */
-  virtual void Ref() {
+  virtual void Ref() 
+  {
     assert(!handle_.IsEmpty());
     refs_++;
     handle_.ClearWeak();
@@ -91,11 +128,15 @@ class ObjectWrap {
    *
    * DO NOT CALL THIS FROM DESTRUCTOR
    */
-  virtual void Unref() {
+  virtual void Unref() 
+  {
     assert(!handle_.IsEmpty());
     assert(!handle_.IsWeak());
     assert(refs_ > 0);
-    if (--refs_ == 0) { MakeWeak(); }
+    if (--refs_ == 0) 
+    { 
+      MakeWeak(); 
+    }
   }
 
 
@@ -103,7 +144,8 @@ class ObjectWrap {
 
 
  private:
-  static void WeakCallback (v8::Persistent<v8::Value> value, void *data) {
+  static void WeakCallback (v8::Persistent<v8::Value> value, void *data) 
+  {
     ObjectWrap *obj = static_cast<ObjectWrap*>(data);
     assert(value == obj->handle_);
     assert(!obj->refs_);
@@ -111,7 +153,6 @@ class ObjectWrap {
     delete obj;
   }
 };
-
 
 } } // OSS::JS
 
