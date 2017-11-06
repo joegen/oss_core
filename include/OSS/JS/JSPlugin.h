@@ -129,37 +129,47 @@ inline bool js_string_to_byte_array(std::string& input, ByteArray& output)
 //
 // Class and method implementation macros
 //
-#define JS_METHOD_DECLARE(Method) static v8::Handle<v8::Value> Method(const v8::Arguments& args)
-#define JS_INDEX_GETTER_DECLARE(Method) static v8::Handle<v8::Value> Method(uint32_t index, const v8::AccessorInfo& args);
-#define JS_INDEX_SETTER_DECLARE(Method) static v8::Handle<v8::Value> Method(uint32_t index, v8::Local<v8::Value> value, const v8::AccessorInfo& args);
+#define JS_CONSTRUCTOR_DECLARE() \
+  static JSPersistentFunctionHandle _constructor; \
+  static void Init(JSObjectHandle exports); \
+  static v8::Handle<v8::Value> New(const v8::Arguments& _args_);
+
+#define JS_METHOD_DECLARE(Method) static v8::Handle<v8::Value> Method(const v8::Arguments& _args_)
+#define JS_INDEX_GETTER_DECLARE(Method) static v8::Handle<v8::Value> Method(uint32_t index, const v8::AccessorInfo& _args_);
+#define JS_INDEX_SETTER_DECLARE(Method) static v8::Handle<v8::Value> Method(uint32_t index, v8::Local<v8::Value> value, const v8::AccessorInfo& _args_);
 
 #define js_export_method(Name, Func) exports->Set(v8::String::NewSymbol(Name), v8::FunctionTemplate::New(Func)->GetFunction())
 #define js_export_global_constructor(Name, Func) (*JSPlugin::_pContext)->Global()->Set(v8::String::NewSymbol(Name), Func)
 #define js_export_const CONST_EXPORT
+#define js_export_string(Name, Value) exports->Set(v8::String::NewSymbol(Name), v8::String::NewSymbol(Value), v8::ReadOnly);
 
-#define JS_CLASS_INTERFACE(Class, Name) void Class::Init(v8::Handle<v8::Object> exports) {\
+#define JS_CLASS_INTERFACE(Class, Name) \
+  JSPersistentFunctionHandle Class::_constructor; \
+  void Class::Init(v8::Handle<v8::Object> exports) {\
   js_begin_scope(); \
   std::string className = Name; \
-  v8::Local<v8::FunctionTemplate> tpl = ObjectWrap::ExportConstructorTemplate<Class>(Name, exports);
+  v8::Local<v8::FunctionTemplate> tpl = OSS::JS::ObjectWrap::ExportConstructorTemplate<Class>(Name, exports);
 
-#define JS_CLASS_METHOD_DEFINE(Class, Name, Func) ObjectWrap::ExportMethod<Class>(tpl, Name, Func)
+#define JS_CLASS_METHOD_DEFINE(Class, Name, Func) OSS::JS::ObjectWrap::ExportMethod<Class>(tpl, Name, Func)
 
-#define JS_CLASS_INDEX_ACCESSOR_DEFINE(Class, Getter, Setter) ObjectWrap::ExportIndexHandler<Class>(tpl, Getter, Setter);
-#define JS_CLASS_INTERFACE_END(Class) } ObjectWrap::FinalizeConstructorTemplate<Class>(className.c_str(), tpl, exports);
+#define JS_CLASS_INDEX_ACCESSOR_DEFINE(Class, Getter, Setter) OSS::JS::ObjectWrap::ExportIndexHandler<Class>(tpl, Getter, Setter);
+#define JS_CLASS_INTERFACE_END(Class) } OSS::JS::ObjectWrap::FinalizeConstructorTemplate<Class>(className.c_str(), tpl, exports);
 #define js_export_class(Class) Class::Init(exports)
 
-#define JS_METHOD_IMPL(Method) v8::Handle<v8::Value>  Method(const v8::Arguments& args) { \
+#define JS_METHOD_IMPL(Method) v8::Handle<v8::Value>  Method(const v8::Arguments& _args_) { \
   js_begin_scope();
+
+#define JS_CONSTRUCTOR_IMPL(Class) JS_METHOD_IMPL(Class::New)
 
 #define js_method_result(ReturnValue) ReturnValue; }
 
-#define JS_INDEX_GETTER_IMPL(Method) JSValueHandle Method(uint32_t index, const v8::AccessorInfo& args) { \
+#define JS_INDEX_GETTER_IMPL(Method) JSValueHandle Method(uint32_t index, const v8::AccessorInfo& _args_) { \
   js_begin_scope();
 
-#define JS_INDEX_SETTER_IMPL(Method)  JSValueHandle Method(uint32_t index,v8::Local<v8::Value> value, const v8::AccessorInfo& args) { \
+#define JS_INDEX_SETTER_IMPL(Method)  JSValueHandle Method(uint32_t index,v8::Local<v8::Value> value, const v8::AccessorInfo& _args_) { \
   js_begin_scope();
 
-#define JS_EXPORTS_INIT() static v8::Handle<v8::Value> init_exports(const v8::Arguments& args) { js_begin_scope(); \
+#define JS_EXPORTS_INIT() static v8::Handle<v8::Value> init_exports(const v8::Arguments& _args_) { js_begin_scope(); \
   v8::Persistent<v8::Object> exports = v8::Persistent<v8::Object>::New(v8::Object::New());
 
 #define js_export_finalize() } return exports;
@@ -184,6 +194,7 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define JSInt32(Value) v8::Int32::New(Value)
 #define JSUInt32(Value) v8::Uint32::New(Value)
 #define JSInteger(Value) v8::Integer::New(Value)
+#define JSException(What) v8::ThrowException(v8::Exception::Error(JSLiteral(What)))
 
 //
 // Function Value
@@ -196,34 +207,37 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 //
 // Helper functions
 //
-#define js_throw(What) return v8::ThrowException(v8::Exception::TypeError(JSLiteral(What)))
+#define js_throw(What) return JSException(What)
+#define js_assert(Expression, What) if (!Expression) { js_throw(What); }
 #define js_is_function(Handle) Handle->IsFunction()
 #define js_get_global() (*JSPlugin::_pContext)->Global()
 #define js_get_global_method(Name) js_get_global()->Get(JSLiteral(Name))
 #define js_begin_scope() v8::HandleScope scope
+#define js_unwrap_object(Class, Object) OSS::JS::ObjectWrap::Unwrap<Class>(Object)
 
 
 //
 // Argument parsing
 //
-#define js_method_arg_self() args.This()
-#define js_method_get_arg_length() args.Length()
-#define js_method_arg(Index) args[Index]
+#define js_method_arg_self() _args_.This()
+#define js_method_get_arg_length() _args_.Length()
+#define js_method_arg(Index) _args_[Index]
 
-#define js_method_arg_is_object(Index) args[Index]->IsObject()
-#define js_method_arg_is_string(Index) args[Index]->IsString()
-#define js_method_arg_is_array(Index) args[Index]->IsArray()
-#define js_method_arg_is_number(Index) args[Index]->IsNumber()
-#define js_method_arg_is_int32(Index) args[Index]->IsInt32()
-#define js_method_arg_is_uint32(Index) args[Index]->IsUint32()
-#define js_method_arg_is_bool(Index) args[Index]->IsBoolean()
-#define js_method_arg_is_date(Index) args[Index]->IsDate()
+#define js_method_arg_is_object(Index) _args_[Index]->IsObject()
+#define js_method_arg_is_string(Index) _args_[Index]->IsString()
+#define js_method_arg_is_array(Index) _args_[Index]->IsArray()
+#define js_method_arg_is_number(Index) _args_[Index]->IsNumber()
+#define js_method_arg_is_int32(Index) _args_[Index]->IsInt32()
+#define js_method_arg_is_uint32(Index) _args_[Index]->IsUint32()
+#define js_method_arg_is_bool(Index) _args_[Index]->IsBoolean()
+#define js_method_arg_is_date(Index) _args_[Index]->IsDate()
+#define js_method_arg_is_buffer(Index) BufferObject::isBuffer(_args_[Index])
 
-#define js_method_arg_assert_size_eq(Value) if (args.Length() != Value) js_throw("Invalid Argument Count")
-#define js_method_arg_assert_size_gt(Value) if (args.Length() <= Value) js_throw("Invalid Argument Count")
-#define js_method_arg_assert_size_lt(Value) if (args.Length() >= Value) js_throw("Invalid Argument Count")
-#define js_method_arg_assert_size_gteq(Value) if (args.Length() < Value) js_throw("Invalid Argument Count")
-#define js_method_arg_assert_size_lteq(Value) if (args.Length() > Value) js_throw("Invalid Argument Count")
+#define js_method_arg_assert_size_eq(Value) if (_args_.Length() != Value) js_throw("Invalid Argument Count")
+#define js_method_arg_assert_size_gt(Value) if (_args_.Length() <= Value) js_throw("Invalid Argument Count")
+#define js_method_arg_assert_size_lt(Value) if (_args_.Length() >= Value) js_throw("Invalid Argument Count")
+#define js_method_arg_assert_size_gteq(Value) if (_args_.Length() < Value) js_throw("Invalid Argument Count")
+#define js_method_arg_assert_size_lteq(Value) if (_args_.Length() > Value) js_throw("Invalid Argument Count")
 #define js_method_arg_assert_object(Index) if (!js_method_arg_is_object(Index)) js_throw("Invalid Argument Type")
 #define js_method_arg_assert_string(Index) if (!js_method_arg_is_string(Index)) js_throw("Invalid Argument Type")
 #define js_method_arg_assert_array(Index) if (!js_method_arg_is_array(Index)) js_throw("Invalid Argument Type")
@@ -233,21 +247,22 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define js_method_arg_assert_bool(Index) if (!js_method_arg_is_bool(Index)) js_throw("Invalid Argument Type")
 #define js_method_arg_assert_date(Index) if (!js_method_arg_is_date(Index)) js_throw("Invalid Argument Type")
 
-#define js_method_arg_as_object(Index) args[Index]->ToObject()
-#define js_method_arg_as_cstr(Index) ((const char*) *v8::String::Utf8Value(args[Index]))
-#define js_method_arg_as_array(Index) JSArrayHandle::Cast(args[Index])
-#define js_method_arg_as_integer(Index) args[Index]->IntegerValue()
-#define js_method_arg_as_number(Index) args[Index]->NumberValue()
-#define js_method_arg_as_int32(Index) args[Index]->Int32Value()
-#define js_method_arg_as_uint32(Index) args[Index]->Uint32Value()
-#define js_method_arg_as_bool(Index) args[Index]->BooleanValue()
+#define js_method_arg_as_object(Index) _args_[Index]->ToObject()
+#define js_method_arg_as_string(Index) v8::String::Utf8Value(_args_[Index])
+#define js_method_arg_as_std_string(Index) std::string((const char*) *js_method_arg_as_string(Index))
+#define js_method_arg_as_array(Index) JSArrayHandle::Cast(_args_[Index])
+#define js_method_arg_as_integer(Index) _args_[Index]->IntegerValue()
+#define js_method_arg_as_number(Index) _args_[Index]->NumberValue()
+#define js_method_arg_as_int32(Index) _args_[Index]->Int32Value()
+#define js_method_arg_as_uint32(Index) _args_[Index]->Uint32Value()
+#define js_method_arg_as_bool(Index) _args_[Index]->BooleanValue()
 
 
-#define js_method_arg_has_property(Index, Name) args[Index]->ToObject()->Has(v8::String::NewSymbol(Name))
-#define js_method_arg_get_property(Index, Name) args[Index]->ToObject()->Get(v8::String::NewSymbol(Name))
+#define js_method_arg_has_property(Index, Name) _args_[Index]->ToObject()->Has(v8::String::NewSymbol(Name))
+#define js_method_arg_get_property(Index, Name) _args_[Index]->ToObject()->Get(v8::String::NewSymbol(Name))
 
-#define js_method_arg_unwrap_object(Class, Index) ObjectWrap::Unwrap<Class>(js_method_arg_as_object(Index))
-#define js_method_arg_unwrap_self(Class) ObjectWrap::Unwrap<Class>(js_method_arg_self())
+#define js_method_arg_unwrap_object(Class, Index) js_unwrap_object(Class, js_method_arg_as_object(Index))
+#define js_method_arg_unwrap_self(Class) js_unwrap_object(Class, js_method_arg_self())
 
 #define js_setter_info_unwrap_self js_method_arg_unwrap_self
 #define js_getter_info_unwrap_self js_method_arg_unwrap_self

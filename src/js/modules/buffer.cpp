@@ -26,7 +26,6 @@ using OSS::JS::ObjectWrap;
 
 
 JSPersistentFunctionHandle BufferObject::createNewFunc;
-JSPersistentFunctionHandle BufferObject::_constructor;
 
 //
 // Define the Interface
@@ -78,7 +77,7 @@ bool BufferObject::isBuffer(JSValueHandle value)
     value->ToObject()->Get(JSLiteral("ObjectType"))->ToString()->Equals(JSLiteral("Buffer"));
 }
 
-JS_METHOD_IMPL(BufferObject::New)
+JS_CONSTRUCTOR_IMPL(BufferObject)
 {
   BufferObject* pBuffer = 0;
   
@@ -88,7 +87,7 @@ JS_METHOD_IMPL(BufferObject::New)
   }
   else if (js_method_get_arg_length() == 1 && js_method_arg_is_string(0))
   {
-    std::string str = js_method_arg_as_cstr(0);
+    std::string str = js_method_arg_as_std_string(0);
     pBuffer = new BufferObject();
     if (!js_string_to_byte_array(str, pBuffer->_buffer))
     {
@@ -151,7 +150,7 @@ JS_METHOD_IMPL(BufferObject::fromString)
 {
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
-  std::string str = js_method_arg_as_cstr(0);
+  std::string str = js_method_arg_as_std_string(0);
   BufferObject* pBuffer = js_method_arg_unwrap_self(BufferObject);
   if (!js_string_to_byte_array(str, pBuffer->_buffer))
   {

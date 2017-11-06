@@ -5,153 +5,124 @@
 #include "OSS/JS/modules/BufferObject.h"
 
 
-using OSS::JS::ObjectWrap;
-typedef BufferObject::ByteArray ByteArray;
-
-
-static bool int_array_to_byte_array(v8::Handle<v8::Array>& input, ByteArray& output)
+JS_METHOD_IMPL(__close)
 {
-  v8::HandleScope scope;
-  output.reserve(input->Length());
-  for(uint32_t i = 0; i < input->Length(); i++)
-  {
-    uint32_t val = input->Get(i)->ToInt32()->Value();
-    if (val >= 256)
-    {
-      return false;
-    }
-    output.push_back(val);
-  }
-  return !output.empty();
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_int32(0);
+  int fd = js_method_arg_as_int32(0);
+  return js_method_result(JSInt32(::close(fd)));
 }
 
-static v8::Handle<v8::Value>  __close(const v8::Arguments& args)
+JS_METHOD_IMPL(__exit)
 {
-  v8::HandleScope scope;
-  if (args.Length() < 1 || !args[0]->IsInt32())
-  {
-    return v8::Int32::New(-1);
-  }
-  int fd = args[0]->ToInt32()->Value();
-  return v8::Int32::New(::close(fd));
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_int32(0);
+  ::exit(js_method_arg_as_int32(0));
+  return js_method_result(JSUndefined());
 }
 
-static v8::Handle<v8::Value>  __exit(const v8::Arguments& args)
+JS_METHOD_IMPL(___exit)
 {
-  v8::HandleScope scope;
-  if (args.Length() < 1 || !args[0]->IsInt32())
-  {
-    return v8::Int32::New(-1);
-  }
-  ::exit(args[0]->ToInt32()->Value());
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_int32(0);
+  ::_exit(js_method_arg_as_int32(0));
+  return js_method_result(JSUndefined());
 }
 
-static v8::Handle<v8::Value>  ___exit(const v8::Arguments& args)
+JS_METHOD_IMPL(__write)
 {
-  v8::HandleScope scope;
-  if (args.Length() < 1 || !args[0]->IsInt32())
+  js_method_arg_assert_size_eq(2);
+  js_method_arg_assert_int32(0);
+  int fd = js_method_arg_as_int32(0);
+  if (js_method_arg_is_string(1))
   {
-    return v8::Int32::New(-1);
+    std::string data = js_method_arg_as_std_string(1);
+    return JSInt32(::write(fd, data.data(), data.size()));
   }
-  ::_exit(args[0]->ToInt32()->Value());
-}
-
-static v8::Handle<v8::Value> __write(const v8::Arguments& args)
-{
-  v8::HandleScope scope;
-  if (args.Length() < 2 || !args[0]->IsInt32() || (!args[1]->IsArray() && !args[1]->IsString() && !args[1]->IsObject()))
+  else if (js_method_arg_is_array(1))
   {
-    return v8::Int32::New(-1);
-  }
-  
-  int fd = args[0]->ToInt32()->Value();
-  
-  if (args[1]->IsString())
-  {
-    v8::String::Utf8Value arg1(args[1]);
-    char* data = *arg1;
-    std::size_t len = strlen(data) + 1;
-    return v8::Int32::New(::write(fd, data, len));
-  }
-  else if (args[1]->IsArray())
-  {
-    v8::Handle<v8::Array> args1 = v8::Handle<v8::Array>::Cast(args[1]);
+    JSArrayHandle args1 = js_method_arg_as_array(1);
     ByteArray bytes;
-    if (!int_array_to_byte_array(args1, bytes))
+    if (!js_int_array_to_byte_array(args1, bytes))
     {
-      return v8::Int32::New(-1);
+      return JSInt32(-1);
     }
-    return v8::Int32::New(::write(fd, bytes.data(), bytes.size()));
+    return JSInt32(::write(fd, bytes.data(), bytes.size()));
   }
-  else if (args[1]->IsObject())
+  else if (js_method_arg_is_buffer(1))
   {
-    v8::HandleScope scope;
-    if (!BufferObject::isBuffer(args[1]))
-    {
-      return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Argument Requires Buffer")));
-    }
-    BufferObject* pBuffer = ObjectWrap::Unwrap<BufferObject>(args[1]->ToObject());
-    return v8::Int32::New(::write(fd, pBuffer->buffer().data(), pBuffer->buffer().size()));
-  }
-  return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument")));
-}
-
-static v8::Handle<v8::Value> __read(const v8::Arguments& args)
-{
-  v8::HandleScope scope;
-  if (args.Length() < 2 || !args[0]->IsInt32() || !args[1]->IsInt32() )
-  {
-    return v8::Undefined();
+    BufferObject* pBuffer = js_method_arg_unwrap_object(BufferObject, 1);
+    return JSInt32(::write(fd, pBuffer->buffer().data(), pBuffer->buffer().size()));
   }
   
-  int fd = args[0]->ToInt32()->Value();
+  return js_method_result(JSException("Invalid Argument"));
+}
+
+JS_METHOD_IMPL(__read)
+{
+  js_method_arg_assert_size_eq(2);
+  js_method_arg_assert_int32(0);
+  js_method_arg_assert_int32(1);
+
+  
+  int fd = js_method_arg_as_int32(0);
+  int len = js_method_arg_as_int32(1);
   
   //
   // Create a new Buffer
   //
-  v8::Handle<v8::Value> result = BufferObject::createNew(args[1]->ToInt32()->Value());
-  BufferObject* pBuffer = ObjectWrap::Unwrap<BufferObject>(result->ToObject());
+  JSValueHandle result = BufferObject::createNew(len);
+  BufferObject* pBuffer = js_unwrap_object(BufferObject, result->ToObject());
 
   ByteArray& buf = pBuffer->buffer();
   std::size_t ret = ::read(fd, buf.data(), buf.size());
   if (!ret)
   {
-    OSS_LOG_INFO("__read returning undefined");
-    return v8::Undefined();
+    return JSUndefined();
   }
-  OSS_LOG_INFO("__read returning buffer " << buf.size());
-  return result;
+  return js_method_result(result);
 }
 
-static v8::Handle<v8::Value> __sleep(const v8::Arguments& args)
+JS_METHOD_IMPL(__sleep)
 {
-  v8::HandleScope scope;
-  if (args.Length() < 1 || !args[0]->IsUint32())
-  {
-    return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument")));
-  }
-  ::sleep(args[0]->ToUint32()->Value());
-  return v8::Undefined();
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_uint32(0);
+  ::sleep(js_method_arg_as_uint32(0));
+  return js_method_result(JSUndefined());
 }
-static v8::Handle<v8::Value> __gc(const v8::Arguments& args)
+JS_METHOD_IMPL(__gc)
 {
   v8::V8::LowMemoryNotification();
   while(!v8::V8::IdleNotification());
-  return v8::Undefined();
+  return js_method_result(JSUndefined());
 }
 
-static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
+JS_EXPORTS_INIT()
 {
-  v8::HandleScope scope; 
-  v8::Persistent<v8::Object> exports = v8::Persistent<v8::Object>::New(v8::Object::New());
-  exports->Set(v8::String::New("read"), v8::FunctionTemplate::New(__read)->GetFunction());
-  exports->Set(v8::String::New("write"), v8::FunctionTemplate::New(__write)->GetFunction());
-  exports->Set(v8::String::New("close"), v8::FunctionTemplate::New(__close)->GetFunction());
-  exports->Set(v8::String::New("exit"), v8::FunctionTemplate::New(__exit)->GetFunction()); 
-  exports->Set(v8::String::New("_exit"), v8::FunctionTemplate::New(___exit)->GetFunction());
-  exports->Set(v8::String::New("sleep"), v8::FunctionTemplate::New(__sleep)->GetFunction());
-  exports->Set(v8::String::New("gc"), v8::FunctionTemplate::New(__gc)->GetFunction());
-  return exports;
+  js_export_method("read", __read);
+  js_export_method("write", __write);
+  js_export_method("close", __close);
+  js_export_method("exit", __exit);
+  js_export_method("_exit", ___exit);
+  js_export_method("sleep", __sleep);
+  js_export_method("gc", __gc);
+  
+
+  //
+  // Export system directory variables
+  //
+  js_export_string("PREFIX", OSS::system_prefix().c_str());
+  js_export_string("EXEC_PREFIX", OSS::system_exec_prefix().c_str());
+  js_export_string("BINDIR", OSS::system_bindir().c_str());
+  js_export_string("SBINDIR", OSS::system_sbindir().c_str());
+  js_export_string("LIBEXECDIR", OSS::system_libexecdir().c_str());
+  js_export_string("DATADIR", OSS::system_datadir().c_str());
+  js_export_string("CONFDIR", OSS::system_confdir().c_str());
+  js_export_string("LOCALSTATEDIR", OSS::system_localstatedir().c_str());
+  js_export_string("INCLUDEDIR", OSS::system_includedir().c_str());
+  js_export_string("LIBDIR", OSS::system_libdir().c_str());
+  
+  js_export_finalize(); 
 }
 
 JS_REGISTER_MODULE(System);

@@ -78,6 +78,12 @@ liboss_jsfilesystem_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_I
 liboss_jsfilesystem_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
 liboss_jsfilesystem_la_SOURCES = js/modules/filesystem.cpp
 
+lib_LTLIBRARIES += liboss_jsfile.la
+liboss_jsfile_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsfile_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsfile_la_SOURCES = js/modules/file.cpp
+EXTRA_DIST += js/modules/file.js
+
 js_module-install-hook: js_helper-install-hook
 	cp ${DESTDIR}${libdir}/liboss_jsconst.so ${DESTDIR}${libdir}/oss_modules/consts.jso
 	cp ${DESTDIR}${libdir}/liboss_jserror.so ${DESTDIR}${libdir}/oss_modules/error.jso
@@ -92,4 +98,5 @@ js_module-install-hook: js_helper-install-hook
 	cp ${DESTDIR}${libdir}/liboss_jsgetopt.so ${DESTDIR}${libdir}/oss_modules/getopt.jso
 	cp ${DESTDIR}${libdir}/liboss_jsconfig.so ${DESTDIR}${libdir}/oss_modules/_config.jso
 	cp ${DESTDIR}${libdir}/liboss_jsfilesystem.so ${DESTDIR}${libdir}/oss_modules/filesystem.jso
+	cp ${DESTDIR}${libdir}/liboss_jsfile.so ${DESTDIR}${libdir}/oss_modules/_file.jso
 

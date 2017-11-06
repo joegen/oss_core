@@ -112,14 +112,14 @@ encapsulate functions and operations for:
     * CARP High Availability
 
 # Install header files
-%package app
+%package utils
 Requires: %name
 Group: Applications/Networking
 Vendor: OSS Software Solutions
 Summary: Group: Applications bundled with %name
 
 
-%description app
+%description utils
 oss_core is a high level library implementation of a SIP B2BUA
 The library currently provides classes that
 encapsulate functions and operations for:
@@ -153,6 +153,8 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %doc CONTRIBUTORS README NEWS TODO ChangeLog
 %attr(755,root,root) %{_libdir}/liboss_*.so*
+%attr(755,root,root) %{_bindir}/oss_core
+%attr(755,root,root) %{_bindir}/oss_js
 %dir %attr(755,root,root) %{_libdir}/oss_modules
 %dir %attr(755,root,root) %{_libdir}/oss_modules/examples
 %{_libdir}/oss_modules/*.js*
@@ -165,8 +167,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/liboss_*.la
 %{_libdir}/liboss_*.a
 
-%files app
-%attr(755,root,root) %{_bindir}/oss_*
+%files utils
+%attr(755,root,root) %{_bindir}/oss_carp
+%attr(755,root,root) %{_bindir}/oss_garp
 
 
 %post

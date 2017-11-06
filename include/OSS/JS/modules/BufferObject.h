@@ -28,13 +28,13 @@ class BufferObject : public OSS::JS::ObjectWrap
 {
 public:
   typedef std::vector<unsigned char> ByteArray;
-  static JSPersistentFunctionHandle _constructor;
-  static void Init(JSObjectHandle exports);
   
+  
+  JS_CONSTRUCTOR_DECLARE();
+
   //
   // Methods
   //
-  JS_METHOD_DECLARE(New);
   JS_METHOD_DECLARE(size);
   JS_METHOD_DECLARE(toArray);
   JS_METHOD_DECLARE(toString);

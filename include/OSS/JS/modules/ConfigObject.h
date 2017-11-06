@@ -29,10 +29,8 @@ class ConfigObject : public OSS::JS::ObjectWrap
 {
 public:
   typedef std::map<uint32_t, config_setting_t*> Settings;
-  static JSPersistentFunctionHandle _constructor;
-  static void Init(JSObjectHandle exports);
   
-  JS_METHOD_DECLARE(New);
+  JS_CONSTRUCTOR_DECLARE();
   JS_METHOD_DECLARE(readFile);
   JS_METHOD_DECLARE(writeFile);
   JS_METHOD_DECLARE(rootSetting);

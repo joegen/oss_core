@@ -25,7 +25,6 @@
 //
 // Define the Interface
 //
-JSPersistentFunctionHandle ConfigObject::_constructor;
 JS_CLASS_INTERFACE(ConfigObject, "Config") 
 {
   JS_CLASS_METHOD_DEFINE(ConfigObject, "readFile", readFile);
@@ -87,7 +86,7 @@ uint32_t ConfigObject::findSetting(config_setting_t* pSetting)
   return 0;
 }
 
-JS_METHOD_IMPL(ConfigObject::New) 
+JS_CONSTRUCTOR_IMPL(ConfigObject) 
 {
   ConfigObject* pConfig = new ConfigObject();
   pConfig->Wrap(js_method_arg_self());
@@ -99,7 +98,7 @@ JS_METHOD_IMPL(ConfigObject::readFile)
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   ConfigObject* pConfig = js_method_arg_unwrap_self(ConfigObject);
-  std::string path = js_method_arg_as_cstr(0);
+  std::string path = js_method_arg_as_std_string(0);
   return js_method_result(JSBoolean(!!config_read_file(&pConfig->getConfig(), path.c_str())));
 }
 
@@ -108,7 +107,7 @@ JS_METHOD_IMPL(ConfigObject::writeFile)
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   ConfigObject* pConfig = js_method_arg_unwrap_self(ConfigObject);
-  std::string path = js_method_arg_as_cstr(0);
+  std::string path = js_method_arg_as_std_string(0);
   return js_method_result(JSBoolean(!!config_write_file(&pConfig->getConfig(), path.c_str())));
 }
 
@@ -117,7 +116,7 @@ JS_METHOD_IMPL(ConfigObject::lookupString)
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   
-  std::string key = js_method_arg_as_cstr(0);
+  std::string key = js_method_arg_as_std_string(0);
   ConfigObject* pConfig = js_method_arg_unwrap_self(ConfigObject);
   const char* value;
   if (!config_lookup_string(&pConfig->getConfig(), key.c_str(), &value))
@@ -132,7 +131,7 @@ JS_METHOD_IMPL(ConfigObject::lookupFloat)
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   
-  std::string key = js_method_arg_as_cstr(0);
+  std::string key = js_method_arg_as_std_string(0);
   ConfigObject* pConfig = js_method_arg_unwrap_self(ConfigObject);
   double value = 0;
   if (!config_lookup_float(&pConfig->getConfig(), key.c_str(), &value))
@@ -147,7 +146,7 @@ JS_METHOD_IMPL(ConfigObject::lookupInteger)
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   
-  std::string key = js_method_arg_as_cstr(0);
+  std::string key = js_method_arg_as_std_string(0);
   ConfigObject* pConfig = js_method_arg_unwrap_self(ConfigObject);
   int value = 0;
   if (!config_lookup_int(&pConfig->getConfig(), key.c_str(), &value))
@@ -162,7 +161,7 @@ JS_METHOD_IMPL(ConfigObject::lookupBoolean)
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   
-  std::string key = js_method_arg_as_cstr(0);
+  std::string key = js_method_arg_as_std_string(0);
   ConfigObject* pConfig = js_method_arg_unwrap_self(ConfigObject);
   int value = 0;
   if (!config_lookup_bool(&pConfig->getConfig(), key.c_str(), &value))
@@ -177,7 +176,7 @@ JS_METHOD_IMPL(ConfigObject::lookupSetting)
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   
-  std::string key = js_method_arg_as_cstr(0);
+  std::string key = js_method_arg_as_std_string(0);
   ConfigObject* pConfig = js_method_arg_unwrap_self(ConfigObject);
   config_setting_t* pSetting = config_lookup(&pConfig->getConfig(), key.c_str());
   if (!pSetting)
@@ -257,7 +256,7 @@ JS_METHOD_IMPL(ConfigObject::settingLookupString)
   js_method_arg_assert_string(1);
   
   uint32_t settingId = js_method_arg_as_uint32(0);
-  std::string key = js_method_arg_as_cstr(1);
+  std::string key = js_method_arg_as_std_string(1);
   ConfigObject* pConfig = js_method_arg_unwrap_self(ConfigObject);
   config_setting_t* pSetting = pConfig->findSetting(settingId);
   
@@ -288,7 +287,7 @@ JS_METHOD_IMPL(ConfigObject::settingLookupInteger)
   js_method_arg_assert_string(1);
   
   uint32_t settingId = js_method_arg_as_uint32(0);
-  std::string key = js_method_arg_as_cstr(1);
+  std::string key = js_method_arg_as_std_string(1);
   ConfigObject* pConfig = js_method_arg_unwrap_self(ConfigObject);
   config_setting_t* pSetting = pConfig->findSetting(settingId);
   if (!pSetting)
@@ -317,7 +316,7 @@ JS_METHOD_IMPL(ConfigObject::settingLookupFloat)
   js_method_arg_assert_string(1);
   
   uint32_t settingId = js_method_arg_as_uint32(0);
-  std::string key = js_method_arg_as_cstr(1);
+  std::string key = js_method_arg_as_std_string(1);
   ConfigObject* pConfig = js_method_arg_unwrap_self(ConfigObject);
   config_setting_t* pSetting = pConfig->findSetting(settingId);
   if (!pSetting)
@@ -346,7 +345,7 @@ JS_METHOD_IMPL(ConfigObject::settingLookupBoolean)
   js_method_arg_assert_string(1);
   
   uint32_t settingId = js_method_arg_as_uint32(0);
-  std::string key = js_method_arg_as_cstr(1);
+  std::string key = js_method_arg_as_std_string(1);
   ConfigObject* pConfig = js_method_arg_unwrap_self(ConfigObject);
   config_setting_t* pSetting = pConfig->findSetting(settingId);
   if (!pSetting)
@@ -375,7 +374,7 @@ JS_METHOD_IMPL(ConfigObject::settingLookupSetting)
   js_method_arg_assert_string(1);
   
   uint32_t settingId = js_method_arg_as_uint32(0);
-  std::string key = js_method_arg_as_cstr(1);
+  std::string key = js_method_arg_as_std_string(1);
   ConfigObject* pConfig = js_method_arg_unwrap_self(ConfigObject);
   config_setting_t* pSetting = pConfig->findSetting(settingId);
   config_setting_t* pChildSetting = config_setting_get_member(pSetting, key.c_str());
@@ -431,7 +430,7 @@ JS_METHOD_IMPL(ConfigObject::settingAddSetting)
   js_method_arg_assert_int32(2);
   
   uint32_t settingId = js_method_arg_as_uint32(0);
-  std::string key = js_method_arg_as_cstr(1);
+  std::string key = js_method_arg_as_std_string(1);
   int type = js_method_arg_as_int32(2);
   
   ConfigObject* pConfig = js_method_arg_unwrap_self(ConfigObject);
@@ -448,7 +447,7 @@ JS_METHOD_IMPL(ConfigObject::settingSetAsString)
   js_method_arg_assert_string(1);
   
   uint32_t settingId = js_method_arg_as_uint32(0);
-  std::string value = js_method_arg_as_cstr(1);
+  std::string value = js_method_arg_as_std_string(1);
   ConfigObject* pConfig = js_method_arg_unwrap_self(ConfigObject);
   config_setting_t* pSetting = pConfig->findSetting(settingId);
   
