@@ -66,13 +66,15 @@ FileObject::~FileObject()
 
 JS_CONSTRUCTOR_IMPL(FileObject) 
 {
+  js_enter_scope();
   FileObject* pFile = new FileObject();
   pFile->Wrap(js_method_arg_self());
-  return js_method_result(js_method_arg_self());
+  return js_method_arg_self();
 }
 
 JS_METHOD_IMPL(FileObject::_fopen)
 {
+  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_string(0);
   js_method_arg_assert_string(1);
@@ -80,11 +82,12 @@ JS_METHOD_IMPL(FileObject::_fopen)
   std::string options = js_method_arg_as_std_string(1);
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   pFile->_pFile = ::fopen(file.c_str(), options.c_str());
-  return js_method_result( JSBoolean(pFile->_pFile != 0) );
+  return JSBoolean(pFile->_pFile != 0);
 }
 
 JS_METHOD_IMPL(FileObject::_fmemopen)
 {
+  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_uint32(0);
   js_method_arg_assert_string(1);
@@ -99,11 +102,12 @@ JS_METHOD_IMPL(FileObject::_fmemopen)
   BufferObject* pBuffer = js_unwrap_object(BufferObject, result->ToObject());
   ByteArray& buf = pBuffer->buffer();
   pFile->_pFile = ::fmemopen(buf.data(), buf.size(), options.c_str());
-  return js_method_result( JSBoolean(pFile->_pFile != 0) );
+  return JSBoolean(pFile->_pFile != 0);
 }
 
 JS_METHOD_IMPL(FileObject::_fclose)
 {
+  js_enter_scope();
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   if (pFile->_pFile)
   {
@@ -111,11 +115,12 @@ JS_METHOD_IMPL(FileObject::_fclose)
     pFile->_pFile = 0;
     return JSInt32(::fclose(pHandle));
   }
-  return js_method_result( JSInt32(EOF) );
+  return JSInt32(EOF);
 }
 
 JS_METHOD_IMPL(FileObject::_fseek)
 {
+  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_int32(0);
   js_method_arg_assert_int32(1);
@@ -123,44 +128,45 @@ JS_METHOD_IMPL(FileObject::_fseek)
   int32_t whence = js_method_arg_as_int32(1);
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   js_assert(pFile->_pFile, "Invalid Argument");
-  return js_method_result( 
-    JSInt32( ::fseek(pFile->_pFile, offset, whence)) 
-  );
+  return JSInt32( ::fseek(pFile->_pFile, offset, whence) );
 }
 
 JS_METHOD_IMPL(FileObject::_rewind)
 {
+  js_enter_scope();
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   js_assert(pFile->_pFile, "Invalid Argument");
   ::rewind(pFile->_pFile);
-  return js_method_result( JSUndefined() );
+  return JSUndefined();
 }
 
 JS_METHOD_IMPL(FileObject::_fflush)
 {
+  js_enter_scope();
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   js_assert(pFile->_pFile, "Invalid Argument");
-  return js_method_result( JSInt32(::fflush(pFile->_pFile)) );
+  return JSInt32(::fflush(pFile->_pFile));
 }
 
 JS_METHOD_IMPL(FileObject::_feof)
 {
+  js_enter_scope();
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   js_assert(pFile->_pFile, "Invalid Argument");
-  return js_method_result( 
-    JSBoolean(::feof(pFile->_pFile) != 0) 
-  );
+  return JSBoolean(::feof(pFile->_pFile) != 0);
 }
 
 JS_METHOD_IMPL(FileObject::_ferror)
 {
+  js_enter_scope();
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   js_assert(pFile->_pFile, "Invalid Argument");
-  return js_method_result( JSInt32(::ferror(pFile->_pFile)) );
+  return JSInt32(::ferror(pFile->_pFile));
 }
 
 JS_METHOD_IMPL(FileObject::_fread)
 {
+  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_uint32(0);
   int len = js_method_arg_as_int32(0);
@@ -175,11 +181,12 @@ JS_METHOD_IMPL(FileObject::_fread)
   {
     return JSUndefined();
   }
-  return js_method_result(result);
+  return result;
 }
 
 JS_METHOD_IMPL(FileObject::_fwrite)
 {
+  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   js_assert(pFile->_pFile, "Invalid Argument");
@@ -205,11 +212,12 @@ JS_METHOD_IMPL(FileObject::_fwrite)
     return JSInt32(::fwrite(pBuffer->buffer().data(), 1, pBuffer->buffer().size(), pFile->_pFile));
   }
   
-  return js_method_result(JSException("Invalid Argument"));
+  return JSException("Invalid Argument");
 }
 
 JS_METHOD_IMPL(FileObject::_fgets)
 {
+  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_uint32(0);
   int len = js_method_arg_as_int32(0);
@@ -223,45 +231,50 @@ JS_METHOD_IMPL(FileObject::_fgets)
   {
     return JSUndefined();
   }
-  return js_method_result(result);
+  return result;
 }
 
 JS_METHOD_IMPL(FileObject::_fileno)
 {
+  js_enter_scope();
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   js_assert(pFile->_pFile, "Invalid State");
-  return js_method_result( JSInt32(::fileno(pFile->_pFile)) );
+  return  JSInt32(::fileno(pFile->_pFile));
 }
 
 JS_METHOD_IMPL(FileObject::_fputc)
 {
+  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_int32(0);
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   js_assert(pFile->_pFile, "Invalid State");
   int c = js_method_arg_as_int32(0);
-  return js_method_result( JSInt32(::fputc(c, pFile->_pFile)) );
+  return JSInt32(::fputc(c, pFile->_pFile));
 }
 
 JS_METHOD_IMPL(FileObject::_fputs)
 {
+  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   std::string data = js_method_arg_as_std_string(0);
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   js_assert(pFile->_pFile, "Invalid State");
-  return js_method_result( JSInt32(::fputs(data.c_str(), pFile->_pFile)) );
+  return JSInt32(::fputs(data.c_str(), pFile->_pFile));
 }
 
 JS_METHOD_IMPL(FileObject::_ftell)
 {
+  js_enter_scope();
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   js_assert(pFile->_pFile, "Invalid State");
-  return js_method_result( JSInt32(::ftell(pFile->_pFile)) );
+  return JSInt32(::ftell(pFile->_pFile));
 }
 
 JS_EXPORTS_INIT()
 {
+  js_enter_scope();
   js_export_class(FileObject);
   js_export_global_constructor("File", FileObject::_constructor);
   

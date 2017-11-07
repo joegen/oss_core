@@ -146,7 +146,7 @@ inline bool js_string_to_byte_array(std::string& input, ByteArray& output)
 #define JS_CLASS_INTERFACE(Class, Name) \
   JSPersistentFunctionHandle Class::_constructor; \
   void Class::Init(v8::Handle<v8::Object> exports) {\
-  js_begin_scope(); \
+  js_enter_scope(); \
   std::string className = Name; \
   v8::Local<v8::FunctionTemplate> tpl = OSS::JS::ObjectWrap::ExportConstructorTemplate<Class>(Name, exports);
 
@@ -156,20 +156,15 @@ inline bool js_string_to_byte_array(std::string& input, ByteArray& output)
 #define JS_CLASS_INTERFACE_END(Class) } OSS::JS::ObjectWrap::FinalizeConstructorTemplate<Class>(className.c_str(), tpl, exports);
 #define js_export_class(Class) Class::Init(exports)
 
-#define JS_METHOD_IMPL(Method) v8::Handle<v8::Value>  Method(const v8::Arguments& _args_) { \
-  js_begin_scope();
+#define JS_METHOD_IMPL(Method) v8::Handle<v8::Value>  Method(const v8::Arguments& _args_)\
 
 #define JS_CONSTRUCTOR_IMPL(Class) JS_METHOD_IMPL(Class::New)
 
-#define js_method_result(ReturnValue) ReturnValue; }
+#define JS_INDEX_GETTER_IMPL(Method) JSValueHandle Method(uint32_t index, const v8::AccessorInfo& _args_)
 
-#define JS_INDEX_GETTER_IMPL(Method) JSValueHandle Method(uint32_t index, const v8::AccessorInfo& _args_) { \
-  js_begin_scope();
+#define JS_INDEX_SETTER_IMPL(Method)  JSValueHandle Method(uint32_t index,v8::Local<v8::Value> value, const v8::AccessorInfo& _args_)
 
-#define JS_INDEX_SETTER_IMPL(Method)  JSValueHandle Method(uint32_t index,v8::Local<v8::Value> value, const v8::AccessorInfo& _args_) { \
-  js_begin_scope();
-
-#define JS_EXPORTS_INIT() static v8::Handle<v8::Value> init_exports(const v8::Arguments& _args_) { js_begin_scope(); \
+#define JS_EXPORTS_INIT() static v8::Handle<v8::Value> init_exports(const v8::Arguments& _args_) { js_enter_scope(); \
   v8::Persistent<v8::Object> exports = v8::Persistent<v8::Object>::New(v8::Object::New());
 
 #define js_export_finalize() } return exports;
@@ -194,6 +189,7 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define JSInt32(Value) v8::Int32::New(Value)
 #define JSUInt32(Value) v8::Uint32::New(Value)
 #define JSInteger(Value) v8::Integer::New(Value)
+#define JSObject() v8::Object::New();
 #define JSException(What) v8::ThrowException(v8::Exception::Error(JSLiteral(What)))
 
 //
@@ -212,7 +208,7 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define js_is_function(Handle) Handle->IsFunction()
 #define js_get_global() (*JSPlugin::_pContext)->Global()
 #define js_get_global_method(Name) js_get_global()->Get(JSLiteral(Name))
-#define js_begin_scope() v8::HandleScope scope
+#define js_enter_scope() v8::HandleScope _scope_
 #define js_unwrap_object(Class, Object) OSS::JS::ObjectWrap::Unwrap<Class>(Object)
 
 
@@ -246,6 +242,7 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define js_method_arg_assert_uint32(Index) if (!js_method_arg_is_uint32(Index)) js_throw("Invalid Argument Type")
 #define js_method_arg_assert_bool(Index) if (!js_method_arg_is_bool(Index)) js_throw("Invalid Argument Type")
 #define js_method_arg_assert_date(Index) if (!js_method_arg_is_date(Index)) js_throw("Invalid Argument Type")
+#define js_method_arg_assert_buffer(Index) if (!js_method_arg_is_buffer(Index)) js_throw("Invalid Argument Type")
 
 #define js_method_arg_as_object(Index) _args_[Index]->ToObject()
 #define js_method_arg_as_string(Index) v8::String::Utf8Value(_args_[Index])
@@ -256,6 +253,7 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define js_method_arg_as_int32(Index) _args_[Index]->Int32Value()
 #define js_method_arg_as_uint32(Index) _args_[Index]->Uint32Value()
 #define js_method_arg_as_bool(Index) _args_[Index]->BooleanValue()
+#define js_method_arg_as_buffer(Index) js_method_arg_unwrap_object(BufferObject, Index)
 
 
 #define js_method_arg_has_property(Index, Name) _args_[Index]->ToObject()->Has(v8::String::NewSymbol(Name))
@@ -266,8 +264,6 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 
 #define js_setter_info_unwrap_self js_method_arg_unwrap_self
 #define js_getter_info_unwrap_self js_method_arg_unwrap_self
-#define js_setter_result js_method_result
-#define js_getter_result js_method_result
 #define js_setter_value_as_uint32() value->ToUint32()->Value()
 #define js_setter_index() index
 #define js_getter_index js_setter_index

@@ -7,30 +7,34 @@
 
 JS_METHOD_IMPL(__close)
 {
+  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_int32(0);
   int fd = js_method_arg_as_int32(0);
-  return js_method_result(JSInt32(::close(fd)));
+  return JSInt32(::close(fd));
 }
 
 JS_METHOD_IMPL(__exit)
 {
+  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_int32(0);
   ::exit(js_method_arg_as_int32(0));
-  return js_method_result(JSUndefined());
+  return JSUndefined();
 }
 
 JS_METHOD_IMPL(___exit)
 {
+  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_int32(0);
   ::_exit(js_method_arg_as_int32(0));
-  return js_method_result(JSUndefined());
+  return JSUndefined();
 }
 
 JS_METHOD_IMPL(__write)
 {
+  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_int32(0);
   int fd = js_method_arg_as_int32(0);
@@ -55,11 +59,12 @@ JS_METHOD_IMPL(__write)
     return JSInt32(::write(fd, pBuffer->buffer().data(), pBuffer->buffer().size()));
   }
   
-  return js_method_result(JSException("Invalid Argument"));
+  return JSException("Invalid Argument");
 }
 
 JS_METHOD_IMPL(__read)
 {
+  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_int32(0);
   js_method_arg_assert_int32(1);
@@ -80,25 +85,28 @@ JS_METHOD_IMPL(__read)
   {
     return JSUndefined();
   }
-  return js_method_result(result);
+  return result;
 }
 
 JS_METHOD_IMPL(__sleep)
 {
+  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_uint32(0);
   ::sleep(js_method_arg_as_uint32(0));
-  return js_method_result(JSUndefined());
+  return JSUndefined();
 }
 JS_METHOD_IMPL(__gc)
 {
+  js_enter_scope();
   v8::V8::LowMemoryNotification();
   while(!v8::V8::IdleNotification());
-  return js_method_result(JSUndefined());
+  return JSUndefined();
 }
 
 JS_EXPORTS_INIT()
 {
+  js_enter_scope();
   js_export_method("read", __read);
   js_export_method("write", __write);
   js_export_method("close", __close);

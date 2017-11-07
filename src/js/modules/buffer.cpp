@@ -63,7 +63,7 @@ BufferObject::~BufferObject()
 
 JSValueHandle BufferObject::createNew(uint32_t size)
 {
-  js_begin_scope();
+  js_enter_scope();
   JSValueHandle funcArgs[1];
   funcArgs[0] = JSUInt32(size);
   return BufferObject::createNewFunc->Call((*JSPlugin::_pContext)->Global(), 1, funcArgs);
@@ -71,7 +71,7 @@ JSValueHandle BufferObject::createNew(uint32_t size)
 
 bool BufferObject::isBuffer(JSValueHandle value)
 {
-  js_begin_scope();
+  js_enter_scope();
   return !value.IsEmpty() && value->IsObject() &&
     value->ToObject()->Has(JSLiteral("ObjectType")) &&
     value->ToObject()->Get(JSLiteral("ObjectType"))->ToString()->Equals(JSLiteral("Buffer"));
@@ -79,6 +79,7 @@ bool BufferObject::isBuffer(JSValueHandle value)
 
 JS_CONSTRUCTOR_IMPL(BufferObject)
 {
+  js_enter_scope();
   BufferObject* pBuffer = 0;
   
   if (js_method_get_arg_length() == 1 && js_method_arg_is_number(0))
@@ -125,16 +126,18 @@ JS_CONSTRUCTOR_IMPL(BufferObject)
   
   pBuffer->Wrap(js_method_arg_self());
   
-  return js_method_result(js_method_arg_self());
+  return js_method_arg_self();
 }
 
 JS_METHOD_IMPL(BufferObject::size)
 {
-  return js_method_result(JSInteger(js_method_arg_unwrap_self(BufferObject)->_buffer.size()));
+  js_enter_scope();
+  return JSInteger(js_method_arg_unwrap_self(BufferObject)->_buffer.size());
 }
 
 JS_METHOD_IMPL(BufferObject::fromArray)
 {
+  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_array(0);
   JSArrayHandle array = js_method_arg_as_array(0);
@@ -143,11 +146,12 @@ JS_METHOD_IMPL(BufferObject::fromArray)
   {
     js_throw("Invalid Array Elements");
   }
-  return js_method_result(JSUndefined());
+  return JSUndefined();
 }
 
 JS_METHOD_IMPL(BufferObject::fromString)
 {
+  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   std::string str = js_method_arg_as_std_string(0);
@@ -156,11 +160,12 @@ JS_METHOD_IMPL(BufferObject::fromString)
   {
     js_throw("Invalid Array Elements");
   }
-  return js_method_result(JSUndefined());
+  return JSUndefined();
 }
 
 JS_METHOD_IMPL(BufferObject::fromBuffer)
 {
+  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_object(0);
   if (!BufferObject::isBuffer(js_method_arg_as_object(0)))
@@ -170,25 +175,28 @@ JS_METHOD_IMPL(BufferObject::fromBuffer)
   BufferObject* theirs = js_method_arg_unwrap_object(BufferObject, 0);
   BufferObject* ours = js_method_arg_unwrap_self(BufferObject);
   ours->_buffer = theirs->_buffer;
-  return js_method_result(JSUndefined());
+  return JSUndefined();
 }
 
 JS_METHOD_IMPL(BufferObject::toArray)
 {
+  js_enter_scope();
   BufferObject* pBuffer = js_method_arg_unwrap_self(BufferObject);
   JSArrayHandle output = JSArray(pBuffer->_buffer.size());
   js_byte_array_to_int_array(pBuffer->_buffer, output);
-  return js_method_result(output);
+  return output;
 }
 
 JS_METHOD_IMPL(BufferObject::toString) 
 {
+  js_enter_scope();
   BufferObject* pBuffer = js_method_arg_unwrap_self(BufferObject);
-  return js_method_result(JSString((const char*)pBuffer->_buffer.data(), pBuffer->_buffer.size()));
+  return JSString((const char*)pBuffer->_buffer.data(), pBuffer->_buffer.size());
 }
 
 JS_METHOD_IMPL(BufferObject::equals) 
 {
+  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_object(0);
   
@@ -198,12 +206,13 @@ JS_METHOD_IMPL(BufferObject::equals)
   }
   BufferObject* theirs = js_method_arg_unwrap_object(BufferObject, 0);
   BufferObject* ours = js_method_arg_unwrap_self(BufferObject);
-  return js_method_result(JSBoolean(ours->_buffer == theirs->_buffer));
+  return JSBoolean(ours->_buffer == theirs->_buffer);
 }
 
 JS_METHOD_IMPL(BufferObject::isBufferObject)
 {
-  return js_method_result(JSBoolean(BufferObject::isBuffer(js_method_arg(0))));
+  js_enter_scope();
+  return JSBoolean(BufferObject::isBuffer(js_method_arg(0)));
 }
 
 //
@@ -211,16 +220,18 @@ JS_METHOD_IMPL(BufferObject::isBufferObject)
 //
 JS_INDEX_GETTER_IMPL(BufferObject::getAt)
 {
+  js_enter_scope();
   BufferObject* pBuffer = js_getter_info_unwrap_self(BufferObject);
   if (index >= pBuffer->_buffer.size())
   {
     js_throw("Index Out Of Range");
   }
-  return js_getter_result(JSUInt32(pBuffer->_buffer[js_getter_index()]));
+  return JSUInt32(pBuffer->_buffer[js_getter_index()]);
 }
 
 JS_INDEX_SETTER_IMPL(BufferObject::setAt)
 {
+  js_enter_scope();
   BufferObject* pBuffer = js_setter_info_unwrap_self(BufferObject);
   
   if (js_setter_index() >= pBuffer->_buffer.size())
@@ -233,11 +244,12 @@ JS_INDEX_SETTER_IMPL(BufferObject::setAt)
     js_throw("Invalid Argument");
   }
   pBuffer->_buffer[js_setter_index()] = val;
-  return js_setter_result(JSUndefined());
+  return JSUndefined();
 }
 
 JS_EXPORTS_INIT()
 {
+  js_enter_scope();
   js_export_method("isBuffer", BufferObject::isBufferObject);
   js_export_class(BufferObject);
   js_export_global_constructor("Buffer", BufferObject::_constructor);
