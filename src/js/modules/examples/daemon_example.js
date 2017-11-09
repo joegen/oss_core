@@ -41,7 +41,7 @@ var main = function()
   if (String.fromCharCode(opt.getopt("d")) === "d")
   {
     console.log("Daemonizing...");
-    system.daemonize();
+    daemonize();
     
     //
     // You may also call system.daemonize() which implements the same function
