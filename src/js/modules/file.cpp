@@ -18,6 +18,7 @@
 //
 
 #include <unistd.h>
+#include <sys/file.h>
 #include "OSS/JS/JSPlugin.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/Logger.h"
@@ -45,6 +46,7 @@ JS_CLASS_INTERFACE(FileObject, "File")
   JS_CLASS_METHOD_DEFINE(FileObject, "fputc", _fputc);
   JS_CLASS_METHOD_DEFINE(FileObject, "fputs", _fputs);
   JS_CLASS_METHOD_DEFINE(FileObject, "ftell", _ftell);
+  JS_CLASS_METHOD_DEFINE(FileObject, "flock", _flock);
   
   JS_CLASS_INTERFACE_END(FileObject); 
 }
@@ -272,6 +274,17 @@ JS_METHOD_IMPL(FileObject::_ftell)
   return JSInt32(::ftell(pFile->_pFile));
 }
 
+JS_METHOD_IMPL(FileObject::_flock)
+{
+  js_enter_scope();
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_int32(0);
+  int32_t operation = js_method_arg_as_int32(0);
+  FileObject* pFile = js_method_arg_unwrap_self(FileObject);
+  js_assert(pFile->_pFile, "Invalid State");
+  return JSInt32(::flock(::fileno(pFile->_pFile), operation));
+}
+
 JS_EXPORTS_INIT()
 {
   js_enter_scope();
@@ -283,6 +296,11 @@ JS_EXPORTS_INIT()
   js_export_const(SEEK_CUR);
   js_export_const(SEEK_END);
   js_export_const(LINE_MAX_LEN);
+  js_export_const(LOCK_SH);
+  js_export_const(LOCK_EX)
+  js_export_const(LOCK_UN);
+  js_export_const(LOCK_NB);
+  
   
   js_export_finalize();
 }

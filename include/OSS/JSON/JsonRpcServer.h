@@ -109,6 +109,7 @@ public:
   typedef json::Object Object;
   typedef json::String String;
   typedef std::map<std::string, JsonRpcProcedure> Procedures;
+  typedef boost::function<std::string(int, const std::string)> MessageCallback;
   
   JsonRpcServer() :
     _transport(*this),
@@ -182,6 +183,13 @@ public:
     int errorCode = 0;
     int rpcId = -1;
     std::string errorMessage;
+    
+    if (_onMessage)
+    {
+      std::string response = _onMessage(connectionId, message);
+      _transport.sendMessage(connectionId, response);
+      return;
+    }
     
     if (!OSS::JSON::json_parse_string(message, object))
     {
@@ -309,10 +317,15 @@ public:
     }
   }
   
+  void setMessageHandler(MessageCallback cb)
+  {
+    _onMessage = cb;
+  }
 protected:
   ServerTransport _transport;
   Procedures _procedures;
   JsonRpcServerHandler* _pHandler;
+  MessageCallback _onMessage;
 };
 
 } } // OSS::JSON

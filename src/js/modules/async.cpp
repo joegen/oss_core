@@ -20,6 +20,7 @@
 
 #include <poll.h>
 #include "OSS/JS/JSPlugin.h"
+#include "OSS/JS/modules/Async.h"
 #include "OSS/JS/modules/QueueObject.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/Logger.h"
@@ -248,6 +249,31 @@ static v8::Handle<v8::Value> __unmonitor_descriptor(const v8::Arguments& args)
   return v8::Undefined();
 }
 
+struct MonitoredStringQueueData
+{
+  AsyncStringQueue* queue;
+  AsyncStringQueueCallback cb;
+};
+
+typedef std::map<int, MonitoredStringQueueData> MonitoredStringQueue;
+static MonitoredStringQueue _monitoredStringQueue;
+
+void Async::register_string_queue(AsyncStringQueue* pQueue, AsyncStringQueueCallback cb)
+{
+  MonitoredStringQueueData data;
+  data.queue = pQueue;
+  data.cb = cb;
+  _monitoredStringQueue[pQueue->getFd()] = data;
+  __wakeup_pipe();
+}
+
+void Async::unregister_string_queue(int fd)
+{
+  _monitoredStringQueue.erase(fd);
+  __wakeup_pipe();
+}
+
+
 static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
 {
   v8::HandleScope scope;
@@ -272,6 +298,15 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
     descriptors.push_back(pfds[2]);
     
     for(ActiveQueue::iterator iter = _activeQueue.begin(); iter != _activeQueue.end(); iter++)
+    {
+      pollfd fd;
+      fd.fd = iter->first;
+      fd.events = POLLIN;
+      fd.revents = 0;
+      descriptors.push_back(fd);
+    }
+    
+    for (MonitoredStringQueue::iterator iter = _monitoredStringQueue.begin(); iter != _monitoredStringQueue.end(); iter++)
     {
       pollfd fd;
       fd.fd = iter->first;
@@ -376,6 +411,22 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
             }
             found = true;
           }
+          
+          if (!found)
+          {
+            MonitoredStringQueue::iterator iter = _monitoredStringQueue.find(descriptors[i].fd);
+            if (iter != _monitoredStringQueue.end())
+            {
+              std::string message;
+              iter->second.queue->dequeue(message);
+              if (!message.empty())
+              {
+                iter->second.cb(message);
+              }
+              found = true;
+            }
+          }
+          
           if (!found)
           {
             MonitoredFd::iterator iter = _monitoredFd.find(descriptors[i].fd);
@@ -459,5 +510,5 @@ static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
   return exports;
 }
 
-JS_REGISTER_MODULE(Async);
+JS_REGISTER_MODULE(JSAsync);
 

@@ -96,6 +96,7 @@ JS_METHOD_IMPL(__sleep)
   ::sleep(js_method_arg_as_uint32(0));
   return JSUndefined();
 }
+
 JS_METHOD_IMPL(__gc)
 {
   js_enter_scope();
@@ -103,6 +104,31 @@ JS_METHOD_IMPL(__gc)
   while(!v8::V8::IdleNotification());
   return JSUndefined();
 }
+
+JS_METHOD_IMPL(__setsid)
+{
+  js_enter_scope();
+  return JSInt32(setsid());
+}
+
+JS_METHOD_IMPL(__getdtablesize)
+{
+  js_enter_scope();
+  return JSInt32(getdtablesize());
+}
+
+JS_METHOD_IMPL(__getpid)
+{
+  js_enter_scope();
+  return JSInt32(getpid());
+}
+
+JS_METHOD_IMPL(__getppid)
+{
+  js_enter_scope();
+  return JSInt32(getppid());
+}
+
 
 JS_EXPORTS_INIT()
 {
@@ -114,6 +140,10 @@ JS_EXPORTS_INIT()
   js_export_method("_exit", ___exit);
   js_export_method("sleep", __sleep);
   js_export_method("gc", __gc);
+  js_export_method("setsid", __setsid);
+  js_export_method("getdtablesize", __getdtablesize);
+  js_export_method("getpid", __getpid);
+  js_export_method("getppid", __getppid);
   
 
   //

@@ -183,6 +183,7 @@ inline bool js_string_to_byte_array(std::string& input, ByteArray& output)
 #define JSLiteral(Text) v8::String::NewSymbol(Text)
 #define JSArguments const v8::Arguments
 inline JSStringHandle JSString(const char* str) { return v8::String::New(str); }
+inline JSStringHandle JSString(const std::string& str) { return v8::String::New(str.data(), str.size()); }
 inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::String::New(str, len); }
 #define JSBoolean(Exp) v8::Boolean::New(Exp)
 #define JSArray(Size) v8::Array::New(Size)
@@ -190,6 +191,7 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define JSUInt32(Value) v8::Uint32::New(Value)
 #define JSInteger(Value) v8::Integer::New(Value)
 #define JSObject() v8::Object::New();
+#define JSStringNew(Str) v8::String::New(Str)
 #define JSException(What) v8::ThrowException(v8::Exception::Error(JSLiteral(What)))
 
 //
@@ -204,7 +206,7 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 // Helper functions
 //
 #define js_throw(What) return JSException(What)
-#define js_assert(Expression, What) if (!Expression) { js_throw(What); }
+#define js_assert(Expression, What) if (!(Expression)) { js_throw(What); }
 #define js_is_function(Handle) Handle->IsFunction()
 #define js_get_global() (*JSPlugin::_pContext)->Global()
 #define js_get_global_method(Name) js_get_global()->Get(JSLiteral(Name))
@@ -228,6 +230,7 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define js_method_arg_is_bool(Index) _args_[Index]->IsBoolean()
 #define js_method_arg_is_date(Index) _args_[Index]->IsDate()
 #define js_method_arg_is_buffer(Index) BufferObject::isBuffer(_args_[Index])
+#define js_method_arg_is_function(Index) _args_[Index]->IsFunction()
 
 #define js_method_arg_assert_size_eq(Value) if (_args_.Length() != Value) js_throw("Invalid Argument Count")
 #define js_method_arg_assert_size_gt(Value) if (_args_.Length() <= Value) js_throw("Invalid Argument Count")
@@ -243,6 +246,7 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define js_method_arg_assert_bool(Index) if (!js_method_arg_is_bool(Index)) js_throw("Invalid Argument Type")
 #define js_method_arg_assert_date(Index) if (!js_method_arg_is_date(Index)) js_throw("Invalid Argument Type")
 #define js_method_arg_assert_buffer(Index) if (!js_method_arg_is_buffer(Index)) js_throw("Invalid Argument Type")
+#define js_method_arg_assert_function(Index) if (!js_method_arg_is_function(Index)) js_throw("Invalid Argument Type")
 
 #define js_method_arg_as_object(Index) _args_[Index]->ToObject()
 #define js_method_arg_as_string(Index) v8::String::Utf8Value(_args_[Index])
@@ -268,6 +272,8 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define js_setter_index() index
 #define js_getter_index js_setter_index
 
+#define js_handle_as_string(Handle) v8::String::Utf8Value(Handle)
+#define js_handle_as_std_string(Handle) std::string((const char*) *js_handle_as_string(Handle))
 
 #endif // OSS_JSPLUGIN_H_INCLUDED
 

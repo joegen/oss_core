@@ -120,9 +120,10 @@ var example3 = function()
   for (var i = 0; i < array.size(); i++)
   {
     var element = array.getElement(i);
-    console.log(element.get());
   }
   config.save("newconfig.cfg");
+  
+  console.log(config.toString());
   
 }
 

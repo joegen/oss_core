@@ -17,38 +17,21 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#ifndef OSS_FILEOBJECT_H_INCLUDED
-#define OSS_FILEOBJECT_H_INCLUDED
+#ifndef OSS_ASYNC_H_INCLUDED
+#define OSS_ASYNC_H_INCLUDED
 
+#include <OSS/JS/JSPlugin.h>
+#include <OSS/UTL/BlockingQueue.h>
 
-#include <stdio.h>
-#include "OSS/JS/JSPlugin.h"
+typedef OSS::BlockingQueue<std::string> AsyncStringQueue;
+typedef boost::function<void(std::string message)> AsyncStringQueueCallback;
 
-class FileObject : public OSS::JS::ObjectWrap
+struct Async
 {
-public:
-  JS_CONSTRUCTOR_DECLARE();
-  JS_METHOD_DECLARE(_fopen);
-  JS_METHOD_DECLARE(_fclose);
-  JS_METHOD_DECLARE(_fseek);
-  JS_METHOD_DECLARE(_rewind);
-  JS_METHOD_DECLARE(_fflush);
-  JS_METHOD_DECLARE(_feof);
-  JS_METHOD_DECLARE(_ferror);
-  JS_METHOD_DECLARE(_fread);
-  JS_METHOD_DECLARE(_fwrite);
-  JS_METHOD_DECLARE(_fgets);
-  JS_METHOD_DECLARE(_fileno);
-  JS_METHOD_DECLARE(_fmemopen);
-  JS_METHOD_DECLARE(_fputc);
-  JS_METHOD_DECLARE(_fputs);
-  JS_METHOD_DECLARE(_ftell);
-  JS_METHOD_DECLARE(_flock);
-  
-private:
-  FileObject();
-  virtual ~FileObject();
-  FILE* _pFile;
+  static void register_string_queue(AsyncStringQueue* pQueue, AsyncStringQueueCallback cb);
+  static void unregister_string_queue(int fd);
 };
-#endif // OSS_FILEOBJECT_H_INCLUDED
+
+
+#endif // endif
 

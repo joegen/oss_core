@@ -33,6 +33,7 @@ public:
   JS_CONSTRUCTOR_DECLARE();
   JS_METHOD_DECLARE(readFile);
   JS_METHOD_DECLARE(writeFile);
+  JS_METHOD_DECLARE(toString);
   JS_METHOD_DECLARE(rootSetting);
   JS_METHOD_DECLARE(lookupString);
   JS_METHOD_DECLARE(lookupInteger);

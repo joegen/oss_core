@@ -22,6 +22,8 @@
 #include "OSS/UTL/Logger.h"
 #include "OSS/JS/modules/ConfigObject.h"
 
+#include <stdio.h>
+
 //
 // Define the Interface
 //
@@ -29,6 +31,7 @@ JS_CLASS_INTERFACE(ConfigObject, "Config")
 {
   JS_CLASS_METHOD_DEFINE(ConfigObject, "readFile", readFile);
   JS_CLASS_METHOD_DEFINE(ConfigObject, "writeFile", writeFile);
+  JS_CLASS_METHOD_DEFINE(ConfigObject, "toString", toString);
   JS_CLASS_METHOD_DEFINE(ConfigObject, "rootSetting", rootSetting);
   JS_CLASS_METHOD_DEFINE(ConfigObject, "lookupString", lookupString);
   JS_CLASS_METHOD_DEFINE(ConfigObject, "lookupInteger", lookupInteger);
@@ -112,6 +115,34 @@ JS_METHOD_IMPL(ConfigObject::writeFile)
   ConfigObject* pConfig = js_method_arg_unwrap_self(ConfigObject);
   std::string path = js_method_arg_as_std_string(0);
   return JSBoolean(!!config_write_file(&pConfig->getConfig(), path.c_str()));
+}
+
+JS_METHOD_IMPL(ConfigObject::toString)
+{
+  js_enter_scope();
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_uint32(0);
+  uint32_t bufLen = js_method_arg_as_uint32(0);
+  ConfigObject* pConfig = js_method_arg_unwrap_self(ConfigObject);
+  
+  FILE* fp = ::fmemopen(0, bufLen, "w+");
+  config_write(&pConfig->getConfig(), fp);
+  
+  fseek(fp, 0, SEEK_END);
+  int size = ftell(fp);
+  rewind(fp);
+
+  char* chars = new char[size + 1];
+  chars[size] = '\0';
+  for (int i = 0; i < size;) {
+    int read = fread(&chars[i], 1, size - i, fp);
+    i += read;
+  }
+  fclose(fp);
+  
+  JSStringHandle result = JSString(chars, size);
+  delete[] chars;
+  return result;
 }
 
 JS_METHOD_IMPL(ConfigObject::lookupString)
@@ -543,8 +574,6 @@ JS_EXPORTS_INIT()
 {
   js_enter_scope();
   js_export_class(ConfigObject);
-  js_export_global_constructor("Config", ConfigObject::_constructor);
-  
   js_export_const(CONFIG_TYPE_GROUP);
   js_export_const(CONFIG_TYPE_INT);
   js_export_const(CONFIG_TYPE_FLOAT);

@@ -5,30 +5,56 @@ const log = require("logger");
 const async = require("async");
 const system = require("system");
 
-var requester = new zmq.ZMQSocket(zmq.REQ);
-var responder = new zmq.ZMQSocket(zmq.REP);
-
-assert(responder.bind("tcp://127.0.0.1:50000"));
-assert(requester.connect("tcp://127.0.0.1:50000"));
-responder.start(function()
+function example1()
 {
-  var msg = responder.receive();
-  log.log(log.INFO, msg.toString());
-  var response = new Buffer("Bye ZeroMQ!");
-  assert(responder.send(response));
-});
+  var requester = new zmq.ZMQSocket(zmq.REQ);
+  var responder = new zmq.ZMQSocket(zmq.REP);
 
-requester.start(function()
+  assert(responder.bind("tcp://127.0.0.1:50000"));
+  assert(requester.connect("tcp://127.0.0.1:50000"));
+  responder.start(function()
+  {
+    var msg = responder.receive();
+    log.log(log.INFO, msg.toString());
+    var response = new Buffer("Bye ZeroMQ!");
+    assert(responder.send(response));
+  });
+
+  requester.start(function()
+  {
+    var msg = requester.receive();
+    log.log(log.INFO, msg.toString());
+    responder.close();
+    requester.close();
+    system.exit(0);
+  });
+
+  var request = new Buffer("Hello ZeroMQ!");
+  assert(requester.send(request));
+}
+
+function example2()
 {
-  var msg = requester.receive();
-  log.log(log.INFO, msg.toString());
-  responder.close();
-  requester.close();
-  system.exit(0);
-});
+  zmq.zmq_rpc_server(
+    "tcp://127.0.0.1:50001",
+    {
+      "ping" : function(args)
+      {
+        return "pong";
+      },
+      "hello" : function(args)
+      {
+        return "Hi there!";
+      },
+      "bye" : function(args)
+      {
+        return "See you!";
+      }
+    }
+  );
+}
 
-var request = new Buffer("Hello ZeroMQ!");
-assert(requester.send(request));
+example1();
 
 async.processEvents();
 

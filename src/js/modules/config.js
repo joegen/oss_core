@@ -26,6 +26,15 @@ ConfigFile.prototype.save = function(path)
   return this._config.writeFile(path);
 }
 
+ConfigFile.prototype.toString = function(bufLen)
+{
+  if (typeof bufLen === "undefined")
+  {
+    bufLen = 1024 * 1024;
+  }
+  return this._config.toString(bufLen);
+}
+
 ConfigFile.prototype.getString = function(key)
 {
   return this._config.lookupString(key);
