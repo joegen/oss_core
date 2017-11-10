@@ -91,4 +91,9 @@ File.prototype.unlock = function()
   return this._file.flock(_file.LOCK_UN | _file.LOCK_NB) == 0;
 }
 
+File.prototype.getFd = function()
+{
+  return this._file.fileno();
+}
+
 exports.File = File;

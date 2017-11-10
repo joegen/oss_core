@@ -12,13 +12,13 @@ __copy_exports(consts, exports);
 
 exports.exit = function(code)
 {
-  __cleanup_modules();
+  //__cleanup_modules();
   _system.exit(code);
 }
 
 exports._exit = function(code)
 {
-  __cleanup_modules();
+  //__cleanup_modules();
   _system._exit(code);
 }
 

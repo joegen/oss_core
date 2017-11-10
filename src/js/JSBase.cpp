@@ -55,10 +55,14 @@ static void V8ErrorMessageCallback(v8::Handle<v8::Message> message,
 v8::Handle<v8::Value> data)
 {
   v8::HandleScope handle_scope;
-  std::string error =
-          + " Javascript error on line " + OSS::string_from_number(message->GetLineNumber())
-          + " : " + string_from_js_string(message->GetSourceLine());
-  OSS::log_error(error);
+  
+  if (message->GetSourceLine()->IsString())
+  {
+    std::string error =
+            + " Javascript error on line " + OSS::string_from_number(message->GetLineNumber())
+            + " : " + string_from_js_string(message->GetSourceLine());
+    OSS::log_error(error);
+  }
 }
 
 JSBase::JSBase(const std::string& contextName) :
