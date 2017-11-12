@@ -180,7 +180,8 @@ Process::Process(const std::string& processName, const std::string& startupComma
   _monitored(false),
   _isAlive(false),
   _noChild(false),
-  _initWait(0)
+  _initWait(0),
+  _deadProcAction(ProcessRestart)
 {
   
 }
@@ -257,7 +258,7 @@ bool Process::execute()
 
   if (_pid != -1)
   {
-    OSS_LOG_INFO("Process monitor attaching to existing process " << _processName << " with PID=" << _pid);
+    OSS_LOG_DEBUG("Process monitor attaching to existing process " << _processName << " with PID=" << _pid);
     return true;
   }
 
@@ -268,7 +269,7 @@ bool Process::execute()
     boost::split(tokens, _startupCommand, boost::is_any_of(" "), boost::token_compress_on);
     if (tokens.size() >= 2)
     {
-      OSS_LOG_INFO("Spawning " << _startupCommand);
+      OSS_LOG_DEBUG("Spawning " << _startupCommand);
       char** argv = (char**)calloc((tokens.size()+1), sizeof(char **));
       argv[0] = (char *) malloc(tokens[0].size()+1);
       strcpy( argv[0], tokens[0].c_str());
@@ -291,7 +292,7 @@ bool Process::execute()
     }
     else if (tokens.size() == 1)
     {
-      OSS_LOG_INFO("Spawning " << _startupCommand);
+      OSS_LOG_DEBUG("Spawning " << _startupCommand);
       if (execl(tokens[0].c_str(), "", NULL) == -1)
       {
         OSS_LOG_ERROR("Failed to execute " << _startupCommand << " ERROR: " << strerror(errno));
@@ -330,7 +331,7 @@ bool Process::execute()
 
     if (_pid != -1)
     {
-      OSS_LOG_INFO( "Finished spawning process " << _processName << " PID=" << _pid);
+      OSS_LOG_DEBUG( "Finished spawning process " << _processName << " PID=" << _pid);
     }
     else
     {
@@ -349,7 +350,7 @@ Process::Action Process::onDeadProcess(int consecutiveHits)
 {
   if (deadProcHandler)
     return deadProcHandler(consecutiveHits);
-  return ProcessRestart;
+  return _deadProcAction;
 }
 
 Process::Action Process::onMemoryViolation(int consecutiveHits, double mem)
@@ -392,7 +393,7 @@ bool Process::exists(double& currentMem, double& currentCpu)
 
 void Process::internalExecuteAndMonitor(int initialWait)
 {
-  OSS_LOG_INFO("Started monitoring " << _processName);
+  OSS_LOG_DEBUG("Started monitoring " << _processName);
   _monitored = true;
   _deadProcessIteration = 0;
   _maxMemViolationIteration = 0;
@@ -463,7 +464,7 @@ void Process::internalExecuteAndMonitor(int initialWait)
     }
     else if (action == ProcessRestart)
     {
-      OSS_LOG_INFO("Process monitor is restarting process "  << _processName << " PID=" << _pid);
+      OSS_LOG_DEBUG("Process monitor is restarting process "  << _processName << " PID=" << _pid);
       if (!alive)
       {
         _pid = -1;
@@ -475,7 +476,7 @@ void Process::internalExecuteAndMonitor(int initialWait)
         if (!restart())
           continue;
       }
-      OSS_LOG_INFO("Process monitor monitoring process " << _processName << " PID=" << _pid);
+      OSS_LOG_DEBUG("Process monitor monitoring process " << _processName << " PID=" << _pid);
     }
     else if (action == ProcessBackoff)
     {
@@ -492,7 +493,7 @@ void Process::internalExecuteAndMonitor(int initialWait)
           if (!restart())
             continue;
         }
-        OSS_LOG_INFO("Process monitor monitoring process " << _processName << " PID=" << _pid);
+        OSS_LOG_DEBUG("Process monitor monitoring process " << _processName << " PID=" << _pid);
       }
     }
     else
@@ -506,7 +507,7 @@ void Process::internalExecuteAndMonitor(int initialWait)
     }
   }
 
-  OSS_LOG_INFO("Stopped monitoring " << _processName);
+  OSS_LOG_DEBUG("Stopped monitoring " << _processName);
 }
 
 int Process::countProcessInstances(const std::string& process)
@@ -656,7 +657,7 @@ bool Process::shutDown(int signal)
   _unmonitor = true;
   if (_pMonitorThread && _pMonitorThread->joinable())
   {
-    OSS_LOG_INFO("Process::shutDown " << _processName << " waiting for monitor thread to exit");
+    OSS_LOG_DEBUG("Process::shutDown " << _processName << " waiting for monitor thread to exit");
     _pMonitorThread->join();
     delete _pMonitorThread;
     _pMonitorThread = 0;
@@ -675,7 +676,7 @@ bool Process::shutDown(int signal)
 
   if (_shutdownCommand.empty())
   {
-    OSS_LOG_INFO("Process::shutDown " << _processName << " killing process " << _pid);
+    OSS_LOG_DEBUG("Process::shutDown " << _processName << " killing process " << _pid);
 
     if (::kill(_pid, signal) == 0)
     {
@@ -691,7 +692,7 @@ bool Process::shutDown(int signal)
 
   pid_t oldPid = _pid;
 
-  OSS_LOG_INFO("Process::shutDown " << _processName << " executing shutdown script " << _shutdownCommand);
+  OSS_LOG_DEBUG("Process::shutDown " << _processName << " executing shutdown script " << _shutdownCommand);
   OSS::Exec::Command command(_shutdownCommand);
   command.execute();
   while (command.isGood() && !command.isEOF())
@@ -720,7 +721,7 @@ bool Process::shutDown(int signal)
 
   _pid = -1;
 
-  OSS_LOG_INFO("Process::shutDown " << _processName << " ended.");
+  OSS_LOG_DEBUG("Process::shutDown " << _processName << " ended.");
   return true;
 }
 

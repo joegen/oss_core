@@ -8,7 +8,9 @@ include js/modules/examples/src.am
 EXTRA_DIST += \
     js/modules/object.js \
     js/modules/assert.js \
-    js/modules/console.js
+    js/modules/console.js \
+    js/modules/fifo.js \
+    js/modules/monitored_file.js
 
 lib_LTLIBRARIES += liboss_jsconst.la
 liboss_jsconst_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
@@ -90,6 +92,17 @@ liboss_jshttpparser_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_I
 liboss_jshttpparser_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
 liboss_jshttpparser_la_SOURCES = js/modules/http_parser.cpp js/modules/http_parser/http_parser.c
 
+lib_LTLIBRARIES += liboss_jsprocess.la
+liboss_jsprocess_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsprocess_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsprocess_la_SOURCES = js/modules/process.cpp
+EXTRA_DIST += js/modules/process.js
+
+lib_LTLIBRARIES += liboss_jsinotify.la
+liboss_jsinotify_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsinotify_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsinotify_la_SOURCES = js/modules/inotify.cpp
+
 js_module-install-hook: js_helper-install-hook
 	cp ${DESTDIR}${libdir}/liboss_jsconst.so ${DESTDIR}${libdir}/oss_modules/consts.jso
 	cp ${DESTDIR}${libdir}/liboss_jserror.so ${DESTDIR}${libdir}/oss_modules/error.jso
@@ -106,4 +119,6 @@ js_module-install-hook: js_helper-install-hook
 	cp ${DESTDIR}${libdir}/liboss_jsfilesystem.so ${DESTDIR}${libdir}/oss_modules/filesystem.jso
 	cp ${DESTDIR}${libdir}/liboss_jsfile.so ${DESTDIR}${libdir}/oss_modules/_file.jso
 	cp ${DESTDIR}${libdir}/liboss_jshttpparser.so ${DESTDIR}${libdir}/oss_modules/http_parser.jso
+	cp ${DESTDIR}${libdir}/liboss_jsprocess.so ${DESTDIR}${libdir}/oss_modules/_process.jso
+	cp ${DESTDIR}${libdir}/liboss_jsinotify.so ${DESTDIR}${libdir}/oss_modules/inotify.jso
 

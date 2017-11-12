@@ -21,24 +21,44 @@
 #include "OSS/UTL/CoreUtils.h"
 #include <boost/filesystem.hpp>
 
-static v8::Handle<v8::Value> __exists(const v8::Arguments& args)
+JS_METHOD_IMPL(__exists)
 {
-  v8::HandleScope scope;
-  if (args.Length() == 0 || !args[0]->IsString())
-  {
-    return v8::Exception::TypeError(v8::String::NewSymbol("Invalid Argument"));
-  }
-  v8::String::Utf8Value pathStr(args[0]);
-  boost::filesystem::path file(*pathStr);
-  return v8::Boolean::New(boost::filesystem::exists(file));
+  js_enter_scope();
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_string(0);
+  std::string filename = js_method_arg_as_std_string(0);
+  boost::filesystem::path file(filename.c_str());
+  return JSBoolean(boost::filesystem::exists(file));
 }
 
-static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
+JS_METHOD_IMPL(__remove)
 {
-  v8::HandleScope scope; 
-  v8::Persistent<v8::Object> exports = v8::Persistent<v8::Object>::New(v8::Object::New());
-  exports->Set(v8::String::New("exists"), v8::FunctionTemplate::New(__exists)->GetFunction());
-  return exports;
+  js_enter_scope();
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_string(0);
+  std::string filename = js_method_arg_as_std_string(0);
+  boost::system::error_code ec;
+  boost::filesystem::path file(filename.c_str());
+  return JSBoolean(boost::filesystem::remove(file, ec));
 }
 
-JS_REGISTER_MODULE(Fork);
+JS_METHOD_IMPL(__remove_all)
+{
+  js_enter_scope();
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_string(0);
+  std::string filename = js_method_arg_as_std_string(0);
+  boost::system::error_code ec;
+  boost::filesystem::path file(filename.c_str());
+  return JSUInt32(boost::filesystem::remove_all(file, ec));
+}
+
+JS_EXPORTS_INIT()
+{
+  js_export_method(("exists"), __exists);
+  js_export_method(("remove"), __remove);
+  js_export_method(("remove_all"), __remove_all);
+  js_export_finalize();
+}
+
+JS_REGISTER_MODULE(JSFileSystem);

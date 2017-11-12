@@ -87,6 +87,7 @@ public:
   bool& noChild();
   void setInitializeWait(unsigned int ms);
   pid_t getPID() const;
+  void setDeadProcAction(Action action);
 protected:
   void internalExecuteAndMonitor(int intialWait);
   std::string _processName;
@@ -111,6 +112,7 @@ protected:
   bool _isAlive;
   bool _noChild;
   unsigned int _initWait;
+  Action _deadProcAction;
 };
 
 //
@@ -135,6 +137,11 @@ inline void Process::setInitializeWait(unsigned int ms)
 inline pid_t Process::getPID() const
 {
   return _pid;
+}
+
+inline void Process::setDeadProcAction(Action action)
+{
+  _deadProcAction = action;
 }
 
 } }  // OSS::Exec

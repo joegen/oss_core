@@ -6,4 +6,5 @@ nobase_include_HEADERS += \
     OSS/JS/modules/ConfigObject.h \
     OSS/JS/modules/FileObject.h \
     OSS/JS/modules/HttpParserObject.h \
-    OSS/JS/modules/http_parser/http_parser.h
+    OSS/JS/modules/http_parser/http_parser.h \
+    OSS/JS/modules/ProcessObject.h

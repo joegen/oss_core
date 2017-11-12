@@ -86,6 +86,7 @@ public:
   }
   ~Timer()
   {
+    timerCallback.Dispose();
   }
   
   void onTimer()
@@ -157,6 +158,23 @@ static v8::Handle<v8::Value> __schedule_one_shot_timer(const v8::Arguments& args
   }
   Timer::timers[Timer::timerId] = pTimer;
   return v8::Int32::New(Timer::timerId);
+}
+
+static v8::Handle<v8::Value> __cancel_one_shot_timer(const v8::Arguments& args)
+{
+  v8::HandleScope scope;
+  if (args.Length() < 1 || !args[0]->IsInt32())
+  {
+    return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument")));
+  }
+  int32_t timerId = args[0]->ToInt32()->Value();
+  Timer::TimerMap::iterator iter = Timer::timers.find(timerId);
+  if (iter != Timer::timers.end())
+  {
+    iter->second->cancel();
+    Timer::timers.erase(iter);
+  }
+  return v8::Undefined();
 }
 
 v8::Persistent<v8::Function> QueueObject::_constructor;
@@ -429,11 +447,14 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
           
           if (!found)
           {
-            MonitoredFd::iterator iter = _monitoredFd.find(descriptors[i].fd);
+            int fd = descriptors[i].fd;
+            MonitoredFd::iterator iter = _monitoredFd.find(fd);
             if (iter != _monitoredFd.end())
             {
               found = true;
-              (*iter->second.pCallback)->Call((*JSPlugin::_pContext)->Global(), 0, 0);
+              std::vector< v8::Local<v8::Value> > args(1);
+              args[0] = v8::Int32::New(fd);
+              (*iter->second.pCallback)->Call((*JSPlugin::_pContext)->Global(), args.size(), args.data());
             }
           }
           break;
@@ -500,6 +521,7 @@ static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
   exports->Set(v8::String::New("call"), v8::FunctionTemplate::New(__call)->GetFunction());
   exports->Set(v8::String::New("processEvents"), v8::FunctionTemplate::New(__process_events)->GetFunction());
   exports->Set(v8::String::New("setTimeout"), v8::FunctionTemplate::New(__schedule_one_shot_timer)->GetFunction());
+  exports->Set(v8::String::New("clearTimeout"), v8::FunctionTemplate::New(__cancel_one_shot_timer)->GetFunction());
   exports->Set(v8::String::New("monitorFd"), v8::FunctionTemplate::New(__monitor_descriptor)->GetFunction());
   exports->Set(v8::String::New("unmonitorFd"), v8::FunctionTemplate::New(__unmonitor_descriptor)->GetFunction());
   exports->Set(v8::String::New("__stop_event_loop"), v8::FunctionTemplate::New(__stop_event_loop)->GetFunction());

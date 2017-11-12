@@ -17,35 +17,31 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#include "OSS/JS/JSPlugin.h"
-#include "OSS/UTL/CoreUtils.h"
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
+#ifndef OSS_PROCESSOBJECT_H_INCLUDED
+#define OSS_PROCESSOBJECT_H_INCLUDED
 
-JS_METHOD_IMPL(__fork)
+
+#include <OSS/JS/JSPlugin.h>
+#include "OSS/Exec/Process.h"
+class ProcessObject : public OSS::JS::ObjectWrap
 {
-  js_enter_scope();
-  return JSInt32(fork());
-}
+public:
+  typedef OSS::Exec::Process Process;
+  
+  JS_CONSTRUCTOR_DECLARE();
+  JS_METHOD_DECLARE(run);
+  JS_METHOD_DECLARE(kill);
+  JS_METHOD_DECLARE(stop);
+  JS_METHOD_DECLARE(restart);
+  JS_METHOD_DECLARE(unmonitor);
+  JS_METHOD_DECLARE(isAlive);
+  JS_METHOD_DECLARE(getPid);
+  
+private:
+  ProcessObject();
+  virtual ~ProcessObject();
+  Process *_pProcess;
+};
 
-JS_METHOD_IMPL(__wait)
-{
-  js_enter_scope();
-  int status = 0;
-  pid_t pid = ::wait(&status);
-  JSObjectHandle result = JSObject();
-  result->Set(JSLiteral("pid"), JSUInt32(pid));
-  result->Set(JSLiteral("status"), JSUInt32(status));
-  return result;
-}
+#endif // OSS_PROCESSOBJECT_H_INCLUDED
 
-JS_EXPORTS_INIT()
-{
-  js_enter_scope();
-  js_export_method("fork", __fork);
-  js_export_method("wait", __wait);
-  js_export_finalize();
-}
-
-JS_REGISTER_MODULE(JSFork);
