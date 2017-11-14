@@ -239,9 +239,10 @@ static v8::Handle<v8::Value> __monitor_descriptor(const v8::Arguments& args)
 
   MonitoredFdData data;
   data.pfd.fd = args[0]->ToInt32()->Value();
-  data.pfd.events = POLLIN;
   data.pCallback = new PersistentFunction();
   *data.pCallback = v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(args[1]));
+  data.pfd.events = POLLIN;
+  
   _monitoredFd[data.pfd.fd] = data;
   __wakeup_pipe();
   return v8::Undefined();
@@ -414,11 +415,14 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
     else
     {
       bool found = false;
-      for (std::size_t i = 3; i < descriptors.size(); i++)
+      std::size_t fdsize = descriptors.size();
+      for (std::size_t i = 3; i < fdsize; i++)
       {
-        if (descriptors[i].revents & POLLIN)
+        pollfd& pfd = descriptors[i];
+        int revents = pfd.revents;
+        if (revents & POLLIN)
         {
-          ActiveQueue::iterator iter = _activeQueue.find(descriptors[i].fd);
+          ActiveQueue::iterator iter = _activeQueue.find(pfd.fd);
           if (iter != _activeQueue.end())
           {
             QueueObject::Event::Ptr pEvent;
@@ -432,7 +436,7 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
           
           if (!found)
           {
-            MonitoredStringQueue::iterator iter = _monitoredStringQueue.find(descriptors[i].fd);
+            MonitoredStringQueue::iterator iter = _monitoredStringQueue.find(pfd.fd);
             if (iter != _monitoredStringQueue.end())
             {
               std::string message;
@@ -447,16 +451,21 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
           
           if (!found)
           {
-            int fd = descriptors[i].fd;
+            int fd = pfd.fd;
             MonitoredFd::iterator iter = _monitoredFd.find(fd);
             if (iter != _monitoredFd.end())
             {
               found = true;
-              std::vector< v8::Local<v8::Value> > args(1);
+              std::vector< v8::Local<v8::Value> > args(2);
               args[0] = v8::Int32::New(fd);
+              args[1] = v8::Int32::New(revents);
               (*iter->second.pCallback)->Call((*JSPlugin::_pContext)->Global(), args.size(), args.data());
             }
           }
+        }
+        
+        if (found)
+        {
           break;
         }
       }

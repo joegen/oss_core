@@ -104,7 +104,7 @@ JS_METHOD_IMPL(__recvfrom_inet_dgram_socket)
   
   memset(HOST_BUF, 0, HOST_BUF_SIZE);
   memset(SERVICE_BUF, 0, SERVICE_BUF_SIZE);
-  uint32_t ret = recvfrom_inet_dgram_socket(fd, pBuffer->buffer().data(), size, HOST_BUF, HOST_BUF_SIZE, SERVICE_BUF, SERVICE_BUF_SIZE, flags, LIBSOCKET_NUMERIC);
+  uint32_t ret = recvfrom_inet_dgram_socket(fd, (void*)pBuffer->buffer().data(), size, HOST_BUF, HOST_BUF_SIZE, SERVICE_BUF, SERVICE_BUF_SIZE, flags, LIBSOCKET_NUMERIC);
   
   JSObjectHandle result = JSObject();
   result->Set(JSLiteral("size"), JSUInt32(ret));

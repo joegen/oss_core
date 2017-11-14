@@ -25,6 +25,7 @@
 #include <Poco/ClassLoader.h>
 #include <Poco/Manifest.h>
 #include "OSS/JS/ObjectWrap.h"
+#include <iostream>
 
 class JSPlugin
 {
@@ -85,20 +86,31 @@ extern "C" { \
   } \
 }
 typedef std::vector<unsigned char> ByteArray;
-inline bool js_byte_array_to_int_array(ByteArray& input, v8::Handle<v8::Array>& output)
+inline bool js_byte_array_to_int_array(ByteArray& input, v8::Handle<v8::Array>& output, std::size_t sz = 0)
 {
   uint32_t i = 0;
   for (ByteArray::iterator iter = input.begin(); iter != input.end(); iter++)
   {
     output->Set(i++, v8::Int32::New(*iter));
+    if (sz && i >= sz)
+    {
+      break;
+    }
   }
   return output->Length() > 0;
 }
 
-inline  bool js_int_array_to_byte_array(v8::Handle<v8::Array>& input, ByteArray& output)
+inline  bool js_int_array_to_byte_array(v8::Handle<v8::Array>& input, ByteArray& output, bool resize = false)
 {
-  output.clear();
-  output.reserve(input->Length());
+  if (resize)
+  {
+    output.clear();
+    output.reserve(input->Length());
+  }
+  else
+  {
+    std::fill(output.begin(), output.end(), 0);
+  }
   for(uint32_t i = 0; i < input->Length(); i++)
   {
     uint32_t val = input->Get(i)->ToInt32()->Value();
@@ -106,18 +118,40 @@ inline  bool js_int_array_to_byte_array(v8::Handle<v8::Array>& input, ByteArray&
     {
       return false;
     }
-    output.push_back(val);
+    if (resize)
+    {
+      output.push_back(val);
+    }
+    else
+    {
+      output[i] = val;
+    }
   }
   return !output.empty();
 }
 
-inline bool js_string_to_byte_array(std::string& input, ByteArray& output)
+inline bool js_string_to_byte_array(std::string& input, ByteArray& output, bool resize = false)
 {
-  output.clear();
-  output.reserve(input.size());
+  if (resize)
+  {
+    output.clear();
+    output.reserve(input.size());
+  }
+  else
+  {
+    std::fill(output.begin(), output.end(), 0);
+  }
+  
   for(uint32_t i = 0; i < input.size(); i++)
   {
-    output.push_back((uint32_t)input.at(i));
+    if (resize)
+    {
+      output.push_back((uint32_t)input.at(i));
+    }
+    else
+    {
+      output[i] = (uint32_t)input.at(i);
+    }
   }
   return !output.empty();
 }
@@ -219,7 +253,7 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 // Argument parsing
 //
 #define js_method_arg_self() _args_.This()
-#define js_method_get_arg_length() _args_.Length()
+#define js_method_arg_length() _args_.Length()
 #define js_method_arg(Index) _args_[Index]
 
 #define js_method_arg_is_object(Index) _args_[Index]->IsObject()

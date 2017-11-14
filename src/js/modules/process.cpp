@@ -41,13 +41,13 @@ JS_CONSTRUCTOR_IMPL(ProcessObject)
   std::string shutdownCommand;
   std::string pidFile;
   
-  if (js_method_get_arg_length() >= 3)
+  if (js_method_arg_length() >= 3)
   {
     js_method_arg_assert_string(2);
     startupCommand = js_method_arg_as_std_string(2);
   }
   
-  if (js_method_get_arg_length() >= 4)
+  if (js_method_arg_length() >= 4)
   {
     js_method_arg_assert_string(3);
     pidFile = js_method_arg_as_std_string(3);

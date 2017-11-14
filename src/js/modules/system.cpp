@@ -35,13 +35,20 @@ JS_METHOD_IMPL(___exit)
 JS_METHOD_IMPL(__write)
 {
   js_enter_scope();
-  js_method_arg_assert_size_eq(2);
+  js_method_arg_assert_size_gteq(2);
   js_method_arg_assert_int32(0);
-  int fd = js_method_arg_as_int32(0);
+  int32_t fd = js_method_arg_as_int32(0);
+  uint32_t size = 0;
+  if (js_method_arg_length() == 3)
+  {
+    js_method_arg_assert_uint32(2);
+    size = js_method_arg_as_uint32(2);
+  }
+  
   if (js_method_arg_is_string(1))
   {
     std::string data = js_method_arg_as_std_string(1);
-    return JSInt32(::write(fd, data.data(), data.size()));
+    return JSInt32(::write(fd, data.data(), size ? size : data.size()));
   }
   else if (js_method_arg_is_array(1))
   {
@@ -51,12 +58,12 @@ JS_METHOD_IMPL(__write)
     {
       return JSInt32(-1);
     }
-    return JSInt32(::write(fd, bytes.data(), bytes.size()));
+    return JSInt32(::write(fd, bytes.data(), size ? size : bytes.size()));
   }
   else if (js_method_arg_is_buffer(1))
   {
     BufferObject* pBuffer = js_method_arg_unwrap_object(BufferObject, 1);
-    return JSInt32(::write(fd, pBuffer->buffer().data(), pBuffer->buffer().size()));
+    return JSInt32(::write(fd, pBuffer->buffer().data(), size ? size : pBuffer->buffer().size()));
   }
   
   return JSException("Invalid Argument");
@@ -73,7 +80,7 @@ JS_METHOD_IMPL(__read)
   int32_t fd = js_method_arg_as_int32(0);
   uint32_t len = js_method_arg_as_uint32(1);
   
-  if (js_method_get_arg_length() == 2)
+  if (js_method_arg_length() == 2)
   {
     //
     // Create a new Buffer
@@ -89,7 +96,7 @@ JS_METHOD_IMPL(__read)
     }
     return result;
   }
-  else if (js_method_get_arg_length() == 3)
+  else if (js_method_arg_length() == 3)
   {
     //
     // Use the provided buffer
