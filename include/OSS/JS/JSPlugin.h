@@ -141,7 +141,8 @@ inline bool js_string_to_byte_array(std::string& input, ByteArray& output)
 #define js_export_method(Name, Func) exports->Set(v8::String::NewSymbol(Name), v8::FunctionTemplate::New(Func)->GetFunction())
 #define js_export_global_constructor(Name, Func) (*JSPlugin::_pContext)->Global()->Set(v8::String::NewSymbol(Name), Func)
 #define js_export_const CONST_EXPORT
-#define js_export_string(Name, Value) exports->Set(v8::String::NewSymbol(Name), v8::String::NewSymbol(Value), v8::ReadOnly);
+#define js_export_string(Name, Value) exports->Set(v8::String::NewSymbol(Name), v8::String::NewSymbol(Value), v8::ReadOnly)
+#define js_export_int32(Name, Value) exports->Set(v8::String::NewSymbol(Name), v8::Int32::New(Value), v8::ReadOnly)
 
 #define JS_CLASS_INTERFACE(Class, Name) \
   JSPersistentFunctionHandle Class::_constructor; \

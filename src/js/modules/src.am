@@ -103,6 +103,11 @@ liboss_jsinotify_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO
 liboss_jsinotify_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
 liboss_jsinotify_la_SOURCES = js/modules/inotify.cpp
 
+lib_LTLIBRARIES += liboss_jsinetsocket.la
+liboss_jsinetsocket_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsinetsocket_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsinetsocket_la_SOURCES = js/modules/inet_socket.cpp js/modules/inet_socket/inet_socket.c
+
 js_module-install-hook: js_helper-install-hook
 	cp ${DESTDIR}${libdir}/liboss_jsconst.so ${DESTDIR}${libdir}/oss_modules/consts.jso
 	cp ${DESTDIR}${libdir}/liboss_jserror.so ${DESTDIR}${libdir}/oss_modules/error.jso
@@ -121,4 +126,5 @@ js_module-install-hook: js_helper-install-hook
 	cp ${DESTDIR}${libdir}/liboss_jshttpparser.so ${DESTDIR}${libdir}/oss_modules/http_parser.jso
 	cp ${DESTDIR}${libdir}/liboss_jsprocess.so ${DESTDIR}${libdir}/oss_modules/_process.jso
 	cp ${DESTDIR}${libdir}/liboss_jsinotify.so ${DESTDIR}${libdir}/oss_modules/inotify.jso
+	cp ${DESTDIR}${libdir}/liboss_jsinetsocket.so ${DESTDIR}${libdir}/oss_modules/inetsocket.jso
 

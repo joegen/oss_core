@@ -65,27 +65,46 @@ JS_METHOD_IMPL(__write)
 JS_METHOD_IMPL(__read)
 {
   js_enter_scope();
-  js_method_arg_assert_size_eq(2);
+  js_method_arg_assert_size_gteq(2);
   js_method_arg_assert_int32(0);
-  js_method_arg_assert_int32(1);
+  js_method_arg_assert_uint32(1);
 
   
-  int fd = js_method_arg_as_int32(0);
-  int len = js_method_arg_as_int32(1);
+  int32_t fd = js_method_arg_as_int32(0);
+  uint32_t len = js_method_arg_as_uint32(1);
   
-  //
-  // Create a new Buffer
-  //
-  JSValueHandle result = BufferObject::createNew(len);
-  BufferObject* pBuffer = js_unwrap_object(BufferObject, result->ToObject());
-
-  ByteArray& buf = pBuffer->buffer();
-  std::size_t ret = ::read(fd, buf.data(), buf.size());
-  if (!ret)
+  if (js_method_get_arg_length() == 2)
   {
-    return JSUndefined();
+    //
+    // Create a new Buffer
+    //
+    JSValueHandle result = BufferObject::createNew(len);
+    BufferObject* pBuffer = js_unwrap_object(BufferObject, result->ToObject());
+
+    ByteArray& buf = pBuffer->buffer();
+    std::size_t ret = ::read(fd, buf.data(), buf.size());
+    if (!ret)
+    {
+      return JSUndefined();
+    }
+    return result;
   }
-  return result;
+  else if (js_method_get_arg_length() == 3)
+  {
+    //
+    // Use the provided buffer
+    //
+    js_method_arg_assert_buffer(2);
+    BufferObject* pBuffer = js_method_arg_unwrap_object(BufferObject, 2);
+    if (len > pBuffer->buffer().size())
+    {
+      js_throw("Length paramater exceeds buffer size");
+    }
+    ByteArray& buf = pBuffer->buffer();
+    std::size_t ret = ::read(fd, buf.data(), len);
+    return JSInt32(ret);
+  }
+  return JSUndefined();
 }
 
 JS_METHOD_IMPL(__sleep)
