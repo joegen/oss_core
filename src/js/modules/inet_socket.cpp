@@ -21,6 +21,8 @@
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/JS/modules/inet_socket/inet_socket.h"
 #include "OSS/JS/modules/BufferObject.h"
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 
 #define HOST_BUF_SIZE 512
@@ -187,9 +189,16 @@ JS_METHOD_IMPL(__accept_inet_stream_socket)
   
   memset(HOST_BUF, 0, HOST_BUF_SIZE);
   memset(SERVICE_BUF, 0, SERVICE_BUF_SIZE);
-  int32_t ret = accept_inet_stream_socket(fd, HOST_BUF, HOST_BUF_SIZE, SERVICE_BUF, SERVICE_BUF_SIZE, LIBSOCKET_NUMERIC, flags);
+  int32_t cfd = accept_inet_stream_socket(fd, HOST_BUF, HOST_BUF_SIZE, SERVICE_BUF, SERVICE_BUF_SIZE, LIBSOCKET_NUMERIC, flags);
   
-  return JSInt32(ret);
+  JSObjectHandle result = JSObject();
+  result->Set(JSLiteral("fd"), JSInt32(cfd));
+  if (cfd != -1)
+  {
+    result->Set(JSLiteral("host"), JSString(HOST_BUF));
+    result->Set(JSLiteral("port"), JSString(SERVICE_BUF));
+  }
+  return result;
 }
 
 JS_METHOD_IMPL(__get_address_family)
@@ -220,6 +229,80 @@ JS_METHOD_IMPL(__create_multicast_socket)
   return JSInt32(ret);
 }
 
+JS_METHOD_IMPL(__getpeername)
+{
+  js_enter_scope();
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_int32(0);
+  int32_t fd = js_method_arg_as_int32(0);
+  
+  socklen_t len = 0;
+  struct sockaddr_storage addr;
+  char host[INET6_ADDRSTRLEN];
+  int port = 0;
+  
+  len = sizeof addr;
+  if (getpeername(fd, (struct sockaddr*)&addr, &len) == -1)
+  {
+    return JSUndefined();
+  }
+
+  if (addr.ss_family == AF_INET) 
+  {
+      struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+      port = ntohs(s->sin_port);
+      inet_ntop(AF_INET, &s->sin_addr, host, sizeof host);
+  } 
+  else // AF_INET6
+  { 
+      struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
+      port = ntohs(s->sin6_port);
+      inet_ntop(AF_INET6, &s->sin6_addr, host, sizeof host);
+  }
+  
+  JSObjectHandle result = JSObject();
+  result->Set(JSLiteral("host"), JSString(host));
+  result->Set(JSLiteral("port"), JSString(OSS::string_from_number<int>(port).c_str()));
+  return result;
+}
+
+JS_METHOD_IMPL(__getsockname)
+{
+  js_enter_scope();
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_int32(0);
+  int32_t fd = js_method_arg_as_int32(0);
+  
+  socklen_t len = 0;
+  struct sockaddr_storage addr;
+  char host[INET6_ADDRSTRLEN];
+  int port = 0;
+  
+  len = sizeof addr;
+  if (getsockname(fd, (struct sockaddr*)&addr, &len) == -1)
+  {
+    return JSUndefined();
+  }
+
+  if (addr.ss_family == AF_INET) 
+  {
+      struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+      port = ntohs(s->sin_port);
+      inet_ntop(AF_INET, &s->sin_addr, host, sizeof host);
+  } 
+  else // AF_INET6
+  { 
+      struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
+      port = ntohs(s->sin6_port);
+      inet_ntop(AF_INET6, &s->sin6_addr, host, sizeof host);
+  }
+  
+  JSObjectHandle result = JSObject();
+  result->Set(JSLiteral("host"), JSString(host));
+  result->Set(JSLiteral("port"), JSString(OSS::string_from_number<int>(port).c_str()));
+  return result;
+}
+
 JS_EXPORTS_INIT()
 {
   js_enter_scope();
@@ -235,6 +318,8 @@ JS_EXPORTS_INIT()
   js_export_method("accept_inet_stream_socket", __accept_inet_stream_socket);
   js_export_method("get_address_family", __get_address_family);
   js_export_method("create_multicast_socket", __create_multicast_socket);
+  js_export_method("getpeername", __getpeername);
+  js_export_method("getsockname", __getsockname);
   
   js_export_int32("SOCKET_TCP", LIBSOCKET_TCP);
   js_export_int32("SOCKET_UDP", LIBSOCKET_UDP);

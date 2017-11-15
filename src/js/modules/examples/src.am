@@ -9,4 +9,6 @@ EXTRA_DIST += \
     js/modules/examples/config_example.js \
     js/modules/examples/data/config_example.cfg \
     js/modules/examples/zmq_json_rpc_example.js \
-    js/modules/examples/daemon_example.js
+    js/modules/examples/daemon_example.js \
+    js/modules/examples/udp_socket_example.js \
+    js/modules/examples/tcp_socket_example.js

@@ -28,6 +28,8 @@ client.on("read", function(socket)
 {
   var result = socket.receiveFrom(BUF_SIZE);
   console.log("Received " + result.size + " bytes from " + result.host + ":" + result.port + " " + bufferToString(result.data));
+  client.close();
+  server.close();
   system.exit(0);
 });
 
