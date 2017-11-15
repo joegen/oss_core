@@ -9,19 +9,16 @@ assert(writer.writeLine("Duis aute irure dolor in reprehenderit in voluptate vel
 assert(writer.writeLine("Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."));
 writer.close();
 
-var content = [];
 var reader = new File("test_file.txt", "r");
-
-
-var index = 0;
+var content = "";
 while (!reader.eof())
 {
   var line = reader.readLine();
   if (typeof line !== "undefined")
   {
     console.log("LINE: " + line);
-    content[index++] = line;
+    content += line;
   }
 }
-console.log(content.join("\n"));
+console.log("CONTENT: " + content);
 reader.close();

@@ -41,7 +41,12 @@ function require(path)
     {
       throw new ReferenceError("Unable to load javascript exports for " + path);
     }
+    
+    var current_path = __current_path();
+    var parent_path = __parent_path(module.path);
+    __chdir(parent_path);
     __compile_module(script, module.path)(module, module.exports);
+    __chdir(current_path);
   }
   else
   {

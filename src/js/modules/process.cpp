@@ -64,7 +64,7 @@ JS_CONSTRUCTOR_IMPL(ProcessObject)
 JS_METHOD_IMPL(ProcessObject::run)
 {
   js_enter_scope();
-  ProcessObject* pProcess = js_getter_info_unwrap_self(ProcessObject);
+  ProcessObject* pProcess = js_method_arg_unwrap_self(ProcessObject);
   return JSBoolean(pProcess->_pProcess->executeAndMonitor());
 }
 
@@ -74,7 +74,7 @@ JS_METHOD_IMPL(ProcessObject::kill)
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_int32(0);
   int signal = js_method_arg_as_int32(0);
-  ProcessObject* pProcess = js_getter_info_unwrap_self(ProcessObject);
+  ProcessObject* pProcess = js_method_arg_unwrap_self(ProcessObject);
   return JSInt32(pProcess->_pProcess->kill(signal));
 }
 
@@ -84,21 +84,21 @@ JS_METHOD_IMPL(ProcessObject::stop)
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_int32(0);
   int signal = js_method_arg_as_int32(0);
-  ProcessObject* pProcess = js_getter_info_unwrap_self(ProcessObject);
+  ProcessObject* pProcess = js_method_arg_unwrap_self(ProcessObject);
   return JSBoolean(pProcess->_pProcess->shutDown(signal));
 }
 
 JS_METHOD_IMPL(ProcessObject::restart)
 {
   js_enter_scope();
-  ProcessObject* pProcess = js_getter_info_unwrap_self(ProcessObject);
+  ProcessObject* pProcess = js_method_arg_unwrap_self(ProcessObject);
   return JSBoolean(pProcess->_pProcess->restart());
 }
 
 JS_METHOD_IMPL(ProcessObject::unmonitor)
 {
   js_enter_scope();
-  ProcessObject* pProcess = js_getter_info_unwrap_self(ProcessObject);
+  ProcessObject* pProcess = js_method_arg_unwrap_self(ProcessObject);
   pProcess->_pProcess->unmonitor();
   return JSUndefined();
 }
@@ -106,14 +106,14 @@ JS_METHOD_IMPL(ProcessObject::unmonitor)
 JS_METHOD_IMPL(ProcessObject::isAlive)
 {
   js_enter_scope();
-  ProcessObject* pProcess = js_getter_info_unwrap_self(ProcessObject);
+  ProcessObject* pProcess = js_method_arg_unwrap_self(ProcessObject);
   return JSBoolean(pProcess->_pProcess->isAlive());
 }
 
 JS_METHOD_IMPL(ProcessObject::getPid)
 {
   js_enter_scope();
-  ProcessObject* pProcess = js_getter_info_unwrap_self(ProcessObject);
+  ProcessObject* pProcess = js_method_arg_unwrap_self(ProcessObject);
   return JSInt32(pProcess->_pProcess->getPID());
 }
 

@@ -24,6 +24,7 @@
 #include "v8.h"
 #include "OSS/JS/JSBase.h"
 #include "OSS/JS/JSModule.h"
+#include "OSS/JS/JSPlugin.h"
 #include "OSS/UTL/Logger.h"
 
 
@@ -366,7 +367,12 @@ static v8::Handle<v8::Value> js_compile_module(const v8::Arguments& args)
   v8::Handle<v8::String> script(v8::String::New(strm.str().c_str())); 
   v8::Handle<v8::Script> compiled = v8::Script::New(script, args[1]);
   
+  std::string fileName = *v8::String::Utf8Value(args[1]);
+  boost::filesystem::path path(fileName.c_str());
+  boost::filesystem::path parent_path = path.parent_path();
+  boost::filesystem::path current_path = boost::filesystem::current_path();
   v8::Handle<v8::Value> result = compiled->Run();
+
   if (result.IsEmpty())
   {
     // The TryCatch above is still in effect and will have caught the error.
@@ -431,6 +437,33 @@ void JSModule::registerModuleHelper(const Module& module)
   _moduleHelpers.push_back(module);
 }
 
+JS_METHOD_IMPL(__chdir)
+{
+  js_enter_scope();
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_string(0);
+  std::string dir = js_method_arg_as_std_string(0);
+  return JSInt32(chdir(dir.c_str()));
+}
+
+JS_METHOD_IMPL(__current_path)
+{
+  js_enter_scope();
+  boost::filesystem::path path = boost::filesystem::current_path();
+  return JSString(OSS::boost_path(path).c_str());
+}
+
+JS_METHOD_IMPL(__parent_path)
+{
+  js_enter_scope();
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_string(0);
+  std::string pathStr = js_method_arg_as_std_string(0);
+  boost::filesystem::path path(pathStr.c_str());
+  boost::filesystem::path parent = path.parent_path();
+  return JSString(OSS::boost_path(parent).c_str());
+}
+
 bool JSModule::setGlobals(v8::Handle<v8::ObjectTemplate>& global)
 {
   global->Set(v8::String::New("__include"), v8::FunctionTemplate::New(js_include));
@@ -439,6 +472,9 @@ bool JSModule::setGlobals(v8::Handle<v8::ObjectTemplate>& global)
   global->Set(v8::String::New("__get_module_script"), v8::FunctionTemplate::New(js_get_module_script));
   global->Set(v8::String::New("__get_module_cononical_file_name"), v8::FunctionTemplate::New(js_get_module_cononical_file_name));
   global->Set(v8::String::New("__load_plugin"), v8::FunctionTemplate::New(js_load_plugin));
+  global->Set(v8::String::New("__current_path"), v8::FunctionTemplate::New(__current_path));
+  global->Set(v8::String::New("__parent_path"), v8::FunctionTemplate::New(__parent_path));
+  global->Set(v8::String::New("__chdir"), v8::FunctionTemplate::New(__chdir));
   return true;
 }
 

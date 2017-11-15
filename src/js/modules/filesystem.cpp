@@ -69,6 +69,27 @@ JS_METHOD_IMPL(__current_path)
   return JSString(OSS::boost_path(path).c_str());
 }
 
+JS_METHOD_IMPL(__is_directory)
+{
+  js_enter_scope();
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_string(0);
+  std::string dir = js_method_arg_as_std_string(0);
+  boost::filesystem::path path(dir.c_str());
+  return JSBoolean(boost::filesystem::is_directory(path));
+}
+
+JS_METHOD_IMPL(__get_directory)
+{
+  js_enter_scope();
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_string(0);
+  std::string pathStr = js_method_arg_as_std_string(0);
+  boost::filesystem::path path(pathStr.c_str());
+  boost::filesystem::path parent = path.parent_path();
+  return JSString(OSS::boost_path(parent).c_str());
+}
+
 JS_EXPORTS_INIT()
 {
   js_export_method(("exists"), __exists);
@@ -76,6 +97,8 @@ JS_EXPORTS_INIT()
   js_export_method(("remove_all"), __remove_all);
   js_export_method(("chdir"), __chdir);
   js_export_method(("current_path"), __current_path);
+  js_export_method(("is_directory"), __is_directory);
+  js_export_method(("get_directory"), __get_directory);
   js_export_finalize();
 }
 

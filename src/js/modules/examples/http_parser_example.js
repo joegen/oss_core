@@ -2,7 +2,7 @@
 "use-strict"
 
 const console = require("console");
-const HttpParser = require("http_parser").HttpParser;
+const HttpParser = require("http").HttpParser;
 const assert = require("assert");
 
 var request = '';
