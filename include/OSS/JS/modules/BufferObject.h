@@ -42,6 +42,7 @@ public:
   JS_METHOD_DECLARE(fromString);
   JS_METHOD_DECLARE(fromBuffer);
   JS_METHOD_DECLARE(equals);
+  JS_METHOD_DECLARE(resize);
   
   //
   // Properties
@@ -73,6 +74,77 @@ private:
 inline BufferObject::ByteArray& BufferObject::buffer()
 {
   return _buffer;
+}
+
+typedef std::vector<unsigned char> ByteArray;
+inline bool js_byte_array_to_int_array(ByteArray& input, v8::Handle<v8::Array>& output, std::size_t sz)
+{
+  uint32_t i = 0;
+  for (ByteArray::iterator iter = input.begin(); iter != input.end(); iter++)
+  {
+    output->Set(i++, v8::Int32::New(*iter));
+    if (sz && i >= sz)
+    {
+      break;
+    }
+  }
+  return output->Length() > 0;
+}
+
+inline  bool js_int_array_to_byte_array(v8::Handle<v8::Array>& input, ByteArray& output, bool resize = false)
+{
+  if (resize)
+  {
+    output.clear();
+    output.reserve(input->Length());
+  }
+  else
+  {
+    std::fill(output.begin(), output.end(), 0);
+  }
+  for(uint32_t i = 0; i < input->Length(); i++)
+  {
+    uint32_t val = input->Get(i)->ToInt32()->Value();
+    if (val >= 256)
+    {
+      return false;
+    }
+    if (resize)
+    {
+      output.push_back(val);
+    }
+    else
+    {
+      output[i] = val;
+    }
+  }
+  return !output.empty();
+}
+
+inline bool js_string_to_byte_array(std::string& input, ByteArray& output, bool resize)
+{
+  if (resize)
+  {
+    output.clear();
+    output.reserve(input.size());
+  }
+  else
+  {
+    std::fill(output.begin(), output.end(), 0);
+  }
+  
+  for(uint32_t i = 0; i < input.size(); i++)
+  {
+    if (resize)
+    {
+      output.push_back((uint32_t)input.at(i));
+    }
+    else
+    {
+      output[i] = (uint32_t)input.at(i);
+    }
+  }
+  return !output.empty();
 }
 
 

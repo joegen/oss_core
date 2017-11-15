@@ -121,6 +121,61 @@ static std::string get_plugin_canonical_file_name(const std::string& fileName)
   return fileName;
 }
 
+static std::string get_directory_module_canonical_file_name(const std::string& fileName)
+{
+  try
+  {
+    std::string canonicalName = fileName;
+    OSS::string_trim(canonicalName);
+    
+    if (!OSS::string_ends_with(canonicalName, "/index.js"))
+    {
+      canonicalName += "/index.js";
+    }
+
+    if (OSS::string_starts_with(canonicalName, "/"))
+    {
+      return canonicalName;
+    }
+
+    if (OSS::string_starts_with(canonicalName, "~/"))
+    {
+      boost::filesystem::path currentPath(getenv("HOME"));
+      currentPath = OSS::boost_path_concatenate(currentPath, canonicalName.substr(2, std::string::npos));
+      return OSS::boost_path(currentPath);
+    }
+    
+    if (OSS::string_starts_with(canonicalName, "./"))
+    {
+      boost::filesystem::path currentPath = boost::filesystem::current_path();
+      currentPath = OSS::boost_path_concatenate(currentPath, canonicalName.substr(2, std::string::npos));
+      return OSS::boost_path(currentPath);
+    }
+
+    boost::filesystem::path path(canonicalName.c_str());
+    boost::filesystem::path absolutePath = boost::filesystem::absolute(path);
+    if (boost::filesystem::exists(absolutePath))
+    {
+      return OSS::boost_path(absolutePath);
+    }
+
+    const std::string& modulesDir = get_current_module_manager().getModulesDir();
+    if (!modulesDir.empty())
+    {
+      boost::filesystem::path modDir(modulesDir.c_str());
+      absolutePath = OSS::boost_path_concatenate(modDir, canonicalName);
+      if (boost::filesystem::exists(absolutePath))
+      {
+        return OSS::boost_path(absolutePath);
+      }
+    }
+  }
+  catch(...)
+  {
+  }
+  return fileName;
+}
+
 static std::string get_module_canonical_file_name(const std::string& fileName)
 {
   try
@@ -185,6 +240,13 @@ static std::string get_module_canonical_file_name(const std::string& fileName)
   catch(...)
   {
   }
+  
+  boost::filesystem::path directoryModule(get_directory_module_canonical_file_name(fileName));
+  if (boost::filesystem::exists(directoryModule))
+  {
+    return OSS::boost_path(directoryModule);
+  }
+  
   return get_plugin_canonical_file_name(fileName);
 }
 

@@ -229,10 +229,13 @@ JS_METHOD_IMPL(FileObject::_fgets)
   JSValueHandle result = BufferObject::createNew(len);
   BufferObject* pBuffer = js_unwrap_object(BufferObject, result->ToObject());
   ByteArray& buf = pBuffer->buffer();
-  if (!::fgets((char*)buf.data(), buf.size(), pFile->_pFile))
+  
+  char* line = ::fgets((char*)buf.data(), buf.size(), pFile->_pFile);
+  if (!line)
   {
     return JSUndefined();
   }
+  buf.resize(strlen(line));
   return result;
 }
 

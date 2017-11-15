@@ -91,7 +91,7 @@ EXTRA_DIST += js/modules/file.js
 lib_LTLIBRARIES += liboss_jshttpparser.la
 liboss_jshttpparser_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
 liboss_jshttpparser_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
-liboss_jshttpparser_la_SOURCES = js/modules/http_parser.cpp js/modules/http_parser/http_parser.c
+liboss_jshttpparser_la_SOURCES = js/modules/http/http_parser.cpp js/modules/http/http_parser/http_parser.c
 
 lib_LTLIBRARIES += liboss_jsprocess.la
 liboss_jsprocess_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@

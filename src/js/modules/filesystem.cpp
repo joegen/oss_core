@@ -53,11 +53,29 @@ JS_METHOD_IMPL(__remove_all)
   return JSUInt32(boost::filesystem::remove_all(file, ec));
 }
 
+JS_METHOD_IMPL(__chdir)
+{
+  js_enter_scope();
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_string(0);
+  std::string dir = js_method_arg_as_std_string(0);
+  return JSInt32(chdir(dir.c_str()));
+}
+
+JS_METHOD_IMPL(__current_path)
+{
+  js_enter_scope();
+  boost::filesystem::path path = boost::filesystem::current_path();
+  return JSString(OSS::boost_path(path).c_str());
+}
+
 JS_EXPORTS_INIT()
 {
   js_export_method(("exists"), __exists);
   js_export_method(("remove"), __remove);
   js_export_method(("remove_all"), __remove_all);
+  js_export_method(("chdir"), __chdir);
+  js_export_method(("current_path"), __current_path);
   js_export_finalize();
 }
 

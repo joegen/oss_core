@@ -39,6 +39,7 @@ JS_CLASS_INTERFACE(BufferObject, "Buffer")
   JS_CLASS_METHOD_DEFINE(BufferObject, "fromString", fromString);
   JS_CLASS_METHOD_DEFINE(BufferObject, "fromBuffer", fromBuffer);
   JS_CLASS_METHOD_DEFINE(BufferObject, "equals", equals);
+  JS_CLASS_METHOD_DEFINE(BufferObject, "resize", resize);
   JS_CLASS_INDEX_ACCESSOR_DEFINE(BufferObject, getAt, setAt); 
   JS_CLASS_INTERFACE_END(BufferObject); 
 }
@@ -90,7 +91,7 @@ JS_CONSTRUCTOR_IMPL(BufferObject)
   {
     std::string str = js_method_arg_as_std_string(0);
     pBuffer = new BufferObject();
-    if (!js_string_to_byte_array(str, pBuffer->_buffer))
+    if (!js_string_to_byte_array(str, pBuffer->_buffer, true))
     {
       delete pBuffer;
       js_throw("Invalid String Elements");
@@ -261,6 +262,17 @@ JS_METHOD_IMPL(BufferObject::equals)
   return JSBoolean(ours->_buffer == theirs->_buffer);
 }
 
+JS_METHOD_IMPL(BufferObject::resize)
+{
+  js_enter_scope();
+  BufferObject* buf = js_method_arg_unwrap_self(BufferObject);
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_uint32(0);
+  uint32_t size = js_method_arg_as_uint32(0);
+  buf->buffer().resize(size);
+  return JSUndefined();
+}
+
 JS_METHOD_IMPL(BufferObject::isBufferObject)
 {
   js_enter_scope();
@@ -298,6 +310,8 @@ JS_INDEX_SETTER_IMPL(BufferObject::setAt)
   pBuffer->_buffer[js_setter_index()] = val;
   return JSUndefined();
 }
+
+
 
 JS_EXPORTS_INIT()
 {
