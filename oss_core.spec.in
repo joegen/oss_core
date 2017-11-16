@@ -158,6 +158,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %attr(755,root,root) %{_libdir}/oss_modules
 %dir %attr(755,root,root) %{_libdir}/oss_modules/examples
 %{_libdir}/oss_modules/*.js*
+%{_libdir}/oss_modules/http/*
 %{_libdir}/oss_modules/examples/*
 
 %files devel

@@ -201,7 +201,7 @@ static std::string get_module_canonical_file_name(const std::string& fileName)
       canonicalName += ".js";
     }
 
-    if (OSS::string_starts_with(canonicalName, "/"))
+    if (OSS::string_starts_with(canonicalName, "/") && boost::filesystem::exists(boost::filesystem::path(canonicalName.c_str())))
     {
       return canonicalName;
     }
@@ -210,14 +210,20 @@ static std::string get_module_canonical_file_name(const std::string& fileName)
     {
       boost::filesystem::path currentPath(getenv("HOME"));
       currentPath = OSS::boost_path_concatenate(currentPath, canonicalName.substr(2, std::string::npos));
-      return OSS::boost_path(currentPath);
+      if (boost::filesystem::exists(currentPath))
+      {
+        return OSS::boost_path(currentPath);
+      }
     }
     
     if (OSS::string_starts_with(canonicalName, "./"))
     {
       boost::filesystem::path currentPath = boost::filesystem::current_path();
       currentPath = OSS::boost_path_concatenate(currentPath, canonicalName.substr(2, std::string::npos));
-      return OSS::boost_path(currentPath);
+      if (boost::filesystem::exists(currentPath))
+      {
+        return OSS::boost_path(currentPath);
+      }
     }
 
     boost::filesystem::path path(canonicalName.c_str());
