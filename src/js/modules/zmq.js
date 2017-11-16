@@ -10,6 +10,9 @@ const Fifo = require("fifo").Fifo;
 
 __copy_exports(_zmq, exports);
 
+const READ_BUFFER_SIZE = 1024 * 16;
+var READ_BUFFER = new Buffer(READ_BUFFER_SIZE);
+
 exports.ZMQSocket.prototype.start = function(callback)
 {
   if (typeof callback === "function")
@@ -63,10 +66,19 @@ var ZmqRpcServer = function(address)
   var _this = this;
   this.onNewRequest = function()
   {
-    var request = _this._socket.receive();
-    var rpc = JSON.parse(request);
+    var request = _this._socket.receive(READ_BUFFER);
+    if (!buffer.isBuffer(request))
+    {
+      return _this._socket.send(JSON.stringify(new ZmqRpcError(-32603, "Internal JSON-RPC error")));
+    }
+    
+    log_info("--->" + request.payloadSize)
+    log_info("------->" + request.toString(request.payloadSize));
+    
+    var rpc = JSON.parse(request.toString(request.payloadSize));
     var method = rpc.method;
     var params = rpc.params;
+
     var response = new Object();
     response.jsonrpc = "2.0";
     response.id = rpc.id;
@@ -136,8 +148,13 @@ var ZmqRpcClient = function(address)
   this.onNewResponse = function()
   {
     _this._expectingResponse = false;
-    var response = _this._socket.receive();
-    var rpc = JSON.parse(response);
+    var response = _this._socket.receive(READ_BUFFER);
+    if (!buffer.isBuffer(response))
+    {
+      return _this._socket.send(JSON.stringify(new ZmqRpcError(-32603, "Internal JSON-RPC error")));
+    }
+    
+    var rpc = JSON.parse(response.toString(response.payloadSize));
     var method = _this._activeMethod;
 
     // Call pending call to excute prior to calling callbacks

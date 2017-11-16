@@ -274,10 +274,23 @@ v8::Handle<v8::Value> ZMQSocketObject::receive(const v8::Arguments& args)
   v8::Handle<v8::Value> result = v8::Undefined();
   if (pObject->_pSocket->receiveReply(msg, 0))
   {
-    result = BufferObject::createNew(args[1]->ToInt32()->Value());
-    BufferObject* pBuffer = ObjectWrap::Unwrap<BufferObject>(result->ToObject());
-    std::copy(msg.begin(), msg.end(), std::back_inserter(pBuffer->buffer()));
+    BufferObject* pBuffer = 0;
+    if (args.Length() == 1 && BufferObject::isBuffer(args[0]))
+    {
+      result = args[0];
+      pBuffer = ObjectWrap::Unwrap<BufferObject>(args[0]->ToObject());
+      if (msg.size() > pBuffer->buffer().size())
+      {
+        return v8::ThrowException(v8::Exception::Error(v8::String::New("Size of read buffer is too small")));
+      }
+      std::copy(msg.begin(), msg.end(), pBuffer->buffer().begin());
+    }
+    else
+    {
+      return v8::ThrowException(v8::Exception::Error(v8::String::New("Read buffer not provider")));
+    }
   }
+  result->ToObject()->Set(v8::String::NewSymbol("payloadSize"), v8::Uint32::New(msg.size()));
   pObject->clearReadable();
   return result;
 }

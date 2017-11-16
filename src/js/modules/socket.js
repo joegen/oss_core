@@ -8,10 +8,10 @@ const poll = require("poll");
 const buffer = require("buffer");
 const console = require("console");
 
-const READ_BUFFER_SIZE = 1024 * 10;
+const READ_BUFFER_SIZE = 1024 * 16;
 var READ_BUFFER = new Buffer(READ_BUFFER_SIZE);
 
-const WRITE_BUFFER_SIZE = 1024 * 10;
+const WRITE_BUFFER_SIZE = 1024 * 16;
 var WRITE_BUFFER = new Buffer(WRITE_BUFFER_SIZE);
 
 
