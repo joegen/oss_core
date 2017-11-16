@@ -32,6 +32,8 @@ namespace OSS {
 namespace JS {
 
 
+boost::filesystem::path JSModule::_mainScript;
+  
 static JSModule& get_current_module_manager()
 {
   return JSBase::GetCurrent()->getModuleManager();
@@ -67,6 +69,85 @@ static v8::Handle<v8::Value> js_include(const v8::Arguments& args)
   return v8::Undefined();
 }
 
+static bool module_path_exists(const std::string& canonicalName, std::string& absolutePath)
+{
+  if (OSS::string_starts_with(canonicalName, "/") && boost::filesystem::exists(boost::filesystem::path(canonicalName.c_str())))
+  {
+    
+    absolutePath = canonicalName;
+    return true;
+  }
+
+  if (OSS::string_starts_with(canonicalName, "~/"))
+  {
+    boost::filesystem::path currentPath(getenv("HOME"));
+    currentPath = OSS::boost_path_concatenate(currentPath, canonicalName.substr(2, std::string::npos));
+    if (boost::filesystem::exists(currentPath))
+    {
+      absolutePath = OSS::boost_path(currentPath);
+      return true;
+    }
+  }
+
+  if (OSS::string_starts_with(canonicalName, "./"))
+  {
+    boost::filesystem::path currentPath = boost::filesystem::current_path();
+    currentPath = OSS::boost_path_concatenate(currentPath, canonicalName.substr(2, std::string::npos));
+    if (boost::filesystem::exists(currentPath))
+    {
+      absolutePath = OSS::boost_path(currentPath);
+      return true;
+    }
+  }
+
+  boost::filesystem::path path(canonicalName.c_str());
+  boost::filesystem::path absPath = boost::filesystem::absolute(path);
+  if (boost::filesystem::exists(absPath))
+  {
+    absolutePath = OSS::boost_path(absPath);
+    return true;
+  }
+
+  //
+  // Check the global module directory
+  //
+  std::string modulesDir = get_current_module_manager().getModulesDir();
+  boost::filesystem::path modDir(modulesDir.c_str());
+  absPath = OSS::boost_path_concatenate(modDir, canonicalName);
+  if (boost::filesystem::exists(absPath))
+  {
+    absolutePath = OSS::boost_path(absPath);
+    return true;
+  }
+  else
+  { 
+    //
+    // check it against the directory of the main script
+    //
+    boost::filesystem::path parent_path = JSModule::_mainScript.parent_path();
+    absPath = OSS::boost_path_concatenate(parent_path, canonicalName);
+    if (boost::filesystem::exists(absPath))
+    {
+      absolutePath = OSS::boost_path(absPath);
+      return true;
+    }
+    else
+    {
+      // Check it against current path
+      //
+      boost::filesystem::path current_path = boost::filesystem::current_path();
+      absPath = OSS::boost_path_concatenate(current_path, canonicalName);
+      if (boost::filesystem::exists(absPath))
+      {
+        absolutePath = OSS::boost_path(absPath);
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 static std::string get_plugin_canonical_file_name(const std::string& fileName)
 {
   try
@@ -79,53 +160,10 @@ static std::string get_plugin_canonical_file_name(const std::string& fileName)
       canonicalName += ".jso";
     }
 
-    if (OSS::string_starts_with(canonicalName, "/"))
+    std::string absolutePath;
+    if (module_path_exists(canonicalName, absolutePath))
     {
-      return canonicalName;
-    }
-
-    if (OSS::string_starts_with(canonicalName, "~/"))
-    {
-      boost::filesystem::path currentPath(getenv("HOME"));
-      currentPath = OSS::boost_path_concatenate(currentPath, canonicalName.substr(2, std::string::npos));
-      return OSS::boost_path(currentPath);
-    }
-    
-    if (OSS::string_starts_with(canonicalName, "./"))
-    {
-      boost::filesystem::path currentPath = boost::filesystem::current_path();
-      currentPath = OSS::boost_path_concatenate(currentPath, canonicalName.substr(2, std::string::npos));
-      return OSS::boost_path(currentPath);
-    }
-
-    boost::filesystem::path path(canonicalName.c_str());
-    boost::filesystem::path absolutePath = boost::filesystem::absolute(path);
-    if (boost::filesystem::exists(absolutePath))
-    {
-      return OSS::boost_path(absolutePath);
-    }
-
-    //
-    // Check the global module directory
-    //
-    std::string modulesDir = get_current_module_manager().getModulesDir();
-    boost::filesystem::path modDir(modulesDir.c_str());
-    absolutePath = OSS::boost_path_concatenate(modDir, canonicalName);
-    if (boost::filesystem::exists(absolutePath))
-    {
-      return OSS::boost_path(absolutePath);
-    }
-    else
-    {
-      //
-      // Check it agsint current path
-      //
-      boost::filesystem::path current_path = boost::filesystem::current_path();
-      absolutePath = OSS::boost_path_concatenate(current_path, canonicalName);
-      if (boost::filesystem::exists(absolutePath))
-      {
-        return OSS::boost_path(absolutePath);
-      }
+      return absolutePath;
     }
   }
   catch(...)
@@ -146,53 +184,10 @@ static std::string get_directory_module_canonical_file_name(const std::string& f
       canonicalName += "/index.js";
     }
 
-    if (OSS::string_starts_with(canonicalName, "/"))
+    std::string absolutePath;
+    if (module_path_exists(canonicalName, absolutePath))
     {
-      return canonicalName;
-    }
-
-    if (OSS::string_starts_with(canonicalName, "~/"))
-    {
-      boost::filesystem::path currentPath(getenv("HOME"));
-      currentPath = OSS::boost_path_concatenate(currentPath, canonicalName.substr(2, std::string::npos));
-      return OSS::boost_path(currentPath);
-    }
-    
-    if (OSS::string_starts_with(canonicalName, "./"))
-    {
-      boost::filesystem::path currentPath = boost::filesystem::current_path();
-      currentPath = OSS::boost_path_concatenate(currentPath, canonicalName.substr(2, std::string::npos));
-      return OSS::boost_path(currentPath);
-    }
-
-    boost::filesystem::path path(canonicalName.c_str());
-    boost::filesystem::path absolutePath = boost::filesystem::absolute(path);
-    if (boost::filesystem::exists(absolutePath))
-    {
-      return OSS::boost_path(absolutePath);
-    }
-
-    //
-    // Check the global module directory
-    //
-    std::string modulesDir = get_current_module_manager().getModulesDir();
-    boost::filesystem::path modDir(modulesDir.c_str());
-    absolutePath = OSS::boost_path_concatenate(modDir, canonicalName);
-    if (boost::filesystem::exists(absolutePath))
-    {
-      return OSS::boost_path(absolutePath);
-    }
-    else
-    {
-      //
-      // Check it agsint current path
-      //
-      boost::filesystem::path current_path = boost::filesystem::current_path();
-      absolutePath = OSS::boost_path_concatenate(current_path, canonicalName);
-      if (boost::filesystem::exists(absolutePath))
-      {
-        return OSS::boost_path(absolutePath);
-      }
+      return absolutePath;
     }
   }
   catch(...)
@@ -225,59 +220,10 @@ static std::string get_module_canonical_file_name(const std::string& fileName)
       canonicalName += ".js";
     }
 
-    if (OSS::string_starts_with(canonicalName, "/") && boost::filesystem::exists(boost::filesystem::path(canonicalName.c_str())))
+    std::string absolutePath;
+    if (module_path_exists(canonicalName, absolutePath))
     {
-      return canonicalName;
-    }
-
-    if (OSS::string_starts_with(canonicalName, "~/"))
-    {
-      boost::filesystem::path currentPath(getenv("HOME"));
-      currentPath = OSS::boost_path_concatenate(currentPath, canonicalName.substr(2, std::string::npos));
-      if (boost::filesystem::exists(currentPath))
-      {
-        return OSS::boost_path(currentPath);
-      }
-    }
-    
-    if (OSS::string_starts_with(canonicalName, "./"))
-    {
-      boost::filesystem::path currentPath = boost::filesystem::current_path();
-      currentPath = OSS::boost_path_concatenate(currentPath, canonicalName.substr(2, std::string::npos));
-      if (boost::filesystem::exists(currentPath))
-      {
-        return OSS::boost_path(currentPath);
-      }
-    }
-
-    boost::filesystem::path path(canonicalName.c_str());
-    boost::filesystem::path absolutePath = boost::filesystem::absolute(path);
-    if (boost::filesystem::exists(absolutePath))
-    {
-      return OSS::boost_path(absolutePath);
-    }
-
-    //
-    // Check the global module directory
-    //
-    std::string modulesDir = get_current_module_manager().getModulesDir();
-    boost::filesystem::path modDir(modulesDir.c_str());
-    absolutePath = OSS::boost_path_concatenate(modDir, canonicalName);
-    if (boost::filesystem::exists(absolutePath))
-    {
-      return OSS::boost_path(absolutePath);
-    }
-    else
-    {
-      //
-      // Check it agsint current path
-      //
-      boost::filesystem::path current_path = boost::filesystem::current_path();
-      absolutePath = OSS::boost_path_concatenate(current_path, canonicalName);
-      if (boost::filesystem::exists(absolutePath))
-      {
-        return OSS::boost_path(absolutePath);
-      }
+      return absolutePath;
     }
   }
   catch(...)

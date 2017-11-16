@@ -57,7 +57,8 @@ public:
   ModuleHelpers& getModuleHelpers();
   const std::string& getModulesDir() const;
   void setModulesDir(const std::string& modulesDir);
-  
+  void setMainScript(const boost::filesystem::path& script);
+  const boost::filesystem::path& getMainScript() const;
 protected:
   void registerInternalModule(const Module& module);
   void registerModuleHelper(const Module& module);
@@ -68,6 +69,8 @@ protected:
   InternalModules _modules;
   ModuleHelpers _moduleHelpers;
   std::string _modulesDir;
+public:
+  static boost::filesystem::path _mainScript;
 };
 
 
@@ -93,6 +96,15 @@ inline const std::string& JSModule::getModulesDir() const
 inline void JSModule::setModulesDir(const std::string& modulesDir)
 {
   _modulesDir = modulesDir;
+}
+
+inline void JSModule::setMainScript(const boost::filesystem::path& script)
+{
+  _mainScript = script;
+}
+inline const boost::filesystem::path& JSModule::getMainScript() const
+{
+  return _mainScript;
 }
 
 

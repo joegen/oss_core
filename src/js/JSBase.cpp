@@ -204,6 +204,7 @@ bool JSBase::internalInitialize(
   if (_enableCommonJS)
   {
     _moduleManager.setGlobals(global);
+    _moduleManager.setMainScript(_script);
   }
 
   //
