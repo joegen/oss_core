@@ -283,6 +283,7 @@ public:
   SIPTransaction::Ptr createClientTransaction(const SIPMessage::Ptr& pRequest);
     /// Create a new transaction for a new non-ACK outgoing request
   
+  OSS::mutex& transportMutex();
 private:
 
   //
@@ -301,6 +302,8 @@ private:
   bool _enableWSS;
 #endif
   bool _enableTLS;
+  
+  mutable OSS::mutex _transportMutex;
   
   OSS::socket_address_list _udpListeners;
   OSS::socket_address_list _tcpListeners;
@@ -382,6 +385,11 @@ inline std::string SIPStack::getTlsCertPassword() const
 inline SIPTransaction::Ptr SIPStack::createClientTransaction(const SIPMessage::Ptr& pRequest)
 {
   return _fsmDispatch.createClientTransaction(pRequest);
+}
+
+inline OSS::mutex& SIPStack::transportMutex()
+{
+  return _transportMutex;
 }
 
 

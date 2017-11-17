@@ -70,6 +70,8 @@ void SIPStack::run()
 
 void SIPStack::transportInit()
 {
+  OSS::mutex_lock lockTransport(_transportMutex);
+  
   bool hasUDP = _udpListeners.size() > 0;
   bool hasTCP = _tcpListeners.size() > 0;
   bool hasWS  = _wsListeners.size() > 0;
@@ -79,6 +81,7 @@ void SIPStack::transportInit()
   if (!hasUDP && !hasTCP && !hasWS && !hasWSS && !hasTLS)
     throw OSS::SIP::SIPException("No Listener Address Configured");
 
+  _fsmDispatch.transport().flagAllForPotentialPurge(true);
   //
   // Prepare the UDP Transport
   //
@@ -178,6 +181,8 @@ void SIPStack::transportInit()
       _fsmDispatch.transport().addTLSTransport(ip, port, iface.externalAddress(), subnets, iface.isVirtual(), iface.alias());
     }
   }
+  
+  _fsmDispatch.transport().purgeFlaggedTransports();
 }
 
 void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortMax,
@@ -185,6 +190,8 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
     unsigned short wsPortBase, unsigned short wsPortMax,
     unsigned short tlsPortBase, unsigned short tlsPortMax)
 {
+  OSS::mutex_lock lockTransport(_transportMutex);
+  
   OSS_VERIFY(udpPortBase <= udpPortMax);
   OSS_VERIFY(tcpPortBase <= tcpPortMax);
   OSS_VERIFY(tlsPortBase <= tlsPortMax);
@@ -207,6 +214,7 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
   hasWSS = false;
   hasTLS = false;
 
+  _fsmDispatch.transport().flagAllForPotentialPurge(true);
   //
   // Prepare the UDP Transport
   //
@@ -373,6 +381,8 @@ void SIPStack::transportInit(unsigned short udpPortBase, unsigned short udpPortM
 
   if (!hasUDP && !hasTCP && !hasWS && !hasWSS && !hasTLS)
     throw OSS::SIP::SIPException("No Listener Address Configured");
+  
+  _fsmDispatch.transport().purgeFlaggedTransports();
 }
 
 
@@ -689,6 +699,8 @@ static void registerConfiguredTransport(OSS::socket_address_list& listeners,
 
 void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 {
+  OSS::mutex_lock lockTransport(_transportMutex);
+  
   ClassType config;
   config.load(OSS::boost_path(cfgFile));
   DataType root = config.self();
@@ -717,6 +729,12 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
   {
     defaultAddress = OSS::Net::IPAddress::getDefaultAddress().toString();
   }
+  
+  _udpListeners.clear();
+  _tcpListeners.clear();
+  _tlsListeners.clear();
+  _wsListeners.clear();
+  _wssListeners.clear();
   
   for (int i = 0; i < ifaceCount; i++)
   {

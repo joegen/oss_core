@@ -119,6 +119,9 @@ public:
   
   static void dumpHepPacket(OSS::Net::IPAddress::Protocol proto, const OSS::Net::IPAddress& srcAddress, const OSS::Net::IPAddress& dstAddress, const std::string& data);
    
+  void setPurgeFlag(bool purge);
+  bool isFlaggedForPurging() const;
+  
 protected:
   SIPListener(const SIPListener&);
   SIPListener& operator = (const SIPListener&);
@@ -135,6 +138,7 @@ protected:
   bool _hasStarted;
   bool _isEndpoint;
   bool _isRunning;
+  bool _purgeFlag;
   OSS::Net::IPAddress _netAddress;
 };
 
@@ -225,6 +229,16 @@ inline bool SIPListener::isV4() const
 inline bool SIPListener::isV6() const
 {
   return _netAddress.address().is_v6();
+}
+
+inline void SIPListener::setPurgeFlag(bool purge)
+{
+  _purgeFlag = purge;
+}
+
+inline bool SIPListener::isFlaggedForPurging() const
+{
+  return _purgeFlag;
 }
 
 } } // OSS::SIP

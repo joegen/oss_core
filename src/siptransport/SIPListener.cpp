@@ -36,7 +36,8 @@ SIPListener::SIPListener(
     _port(port),
     _isVirtual(false),
     _hasStarted(false),
-    _isEndpoint(false)
+    _isEndpoint(false),
+    _purgeFlag(false)
 {
   if (_pTransportService)
   {

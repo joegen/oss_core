@@ -101,9 +101,9 @@ void SIPTransportService::deinitialize()
 
 void SIPTransportService::run()
 {
-
-  assert(!_pIoServiceThread);
+  OSS::mutex_lock lockTransports(_transportMutex);
   
+  assert(!_pIoServiceThread);
 
   for (UDPListeners::iterator iter = _udpListeners.begin(); iter != _udpListeners.end(); iter++)
   {
@@ -162,6 +162,8 @@ void SIPTransportService::run()
 
 void SIPTransportService::runVirtualTransports()
 {
+  OSS::mutex_lock lockTransports(_transportMutex);
+  
   for (UDPListeners::iterator iter = _udpListeners.begin(); iter != _udpListeners.end(); iter++)
   {
     if (iter->second->isVirtual())
@@ -277,6 +279,8 @@ void SIPTransportService::runVirtualTransports()
   
 void SIPTransportService::stopVirtualTransports()
 {
+  OSS::mutex_lock lockTransports(_transportMutex);
+  
   for (UDPListeners::iterator iter = _udpListeners.begin(); iter != _udpListeners.end(); iter++)
   {
     if (iter->second->isVirtual())
@@ -380,6 +384,8 @@ void SIPTransportService::stop()
 
 void SIPTransportService::handleStop()
 {
+  OSS::mutex_lock lockTransports(_transportMutex);
+  
   UDPListeners::iterator udpIter;
   for (udpIter = _udpListeners.begin(); udpIter != _udpListeners.end(); udpIter++)
     udpIter->second->handleStop();
@@ -410,6 +416,7 @@ void SIPTransportService::handleStop()
 
 bool SIPTransportService::isLocalTransport(const OSS::Net::IPAddress& transportAddress) const
 {
+  OSS::mutex_lock lockTransports(_transportMutex);
   std::string key = transportAddress.toIpPortString();
   if (_udpListeners.find(key) != _udpListeners.end())
     return true;
@@ -430,6 +437,7 @@ bool SIPTransportService::isLocalTransport(const std::string& proto,
     const std::string& ip,
     const std::string& port) const
 {
+  OSS::mutex_lock lockTransports(_transportMutex);
   std::string key;
   OSS::string_sprintf_string<256>(key, "%s:%s", ip.c_str(), port.c_str());
   if (proto == "udp")
@@ -449,6 +457,7 @@ bool SIPTransportService::isLocalTransport(const std::string& proto,
 
 const SIPListener* SIPTransportService::getTransportForDestination(const std::string& proto, const std::string& address) const
 {
+  OSS::mutex_lock lockTransports(_transportMutex);
   if (proto == "udp" || proto == "UDP")
   {
     for (UDPListeners::const_iterator iter = _udpListeners.begin(); iter != _udpListeners.end(); iter++)
@@ -524,11 +533,17 @@ bool SIPTransportService::addEndpoint(EndpointListener* pEndpoint)
 }
 void SIPTransportService::addUDPTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp, const std::string& alias)
 {
+  OSS::mutex_lock lockTransports(_transportMutex);
   OSS_LOG_INFO("Adding UDP SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
   OSS::string_sprintf_string<256>(key, "%s:%s", ip.c_str(), port.c_str());
+  
   if (_udpListeners.find(key) != _udpListeners.end())
-    throw OSS::SIP::SIPException("Duplicate UDP Transport detected while calling addUDPTransport()");
+  {
+    _udpListeners[key]->setPurgeFlag(false);
+    return;
+  }
+  
   SIPUDPListener::Ptr udpListener(new SIPUDPListener(this, _dispatch, ip, port));
   
   udpListener->setVirtual(isVirtualIp);
@@ -552,11 +567,16 @@ void SIPTransportService::addUDPTransport(const std::string& ip, const std::stri
 
 void SIPTransportService::addTCPTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp, const std::string& alias)
 {
+  OSS::mutex_lock lockTransports(_transportMutex);
   OSS_LOG_INFO("Adding TCP SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
   OSS::string_sprintf_string<256>(key, "%s:%s", ip.c_str(), port.c_str());
+  
   if (_tcpListeners.find(key) != _tcpListeners.end())
-    throw OSS::SIP::SIPException("Duplicate TCP transport while calling addTCPTransport()");
+  {
+    _tcpListeners[key]->setPurgeFlag(false);
+    return;
+  }
   SIPTCPListener::Ptr pTcpListener = SIPTCPListener::Ptr(new SIPTCPListener(this, _dispatch, ip, port, _tcpConMgr));
   
   pTcpListener->setVirtual(isVirtualIp);
@@ -580,11 +600,17 @@ void SIPTransportService::addTCPTransport(const std::string& ip, const std::stri
 #if ENABLE_FEATURE_WEBSOCKETS
 void SIPTransportService::addWSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp, const std::string& alias)
 {
+  OSS::mutex_lock lockTransports(_transportMutex);
   OSS_LOG_INFO("Adding WebSocket SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
   OSS::string_sprintf_string<256>(key, "%s:%s", ip.c_str(), port.c_str());
+  
   if (_wsListeners.find(key) != _wsListeners.end())
-    throw OSS::SIP::SIPException("Duplicate WebSocket transport while calling addWSTransport()");
+  {
+    _wsListeners[key]->setPurgeFlag(false);
+    return;
+  }
+  
   SIPWebSocketListener::Ptr pWsListener = SIPWebSocketListener::Ptr(new SIPWebSocketListener(this, ip, port, _wsConMgr));
   
   pWsListener->setVirtual(isVirtualIp);
@@ -607,11 +633,17 @@ void SIPTransportService::addWSTransport(const std::string& ip, const std::strin
 
 void SIPTransportService::addWSSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp, const std::string& alias)
 {
+  OSS::mutex_lock lockTransports(_transportMutex);
   OSS_LOG_INFO("Adding WebSocket TLS SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
   OSS::string_sprintf_string<256>(key, "%s:%s", ip.c_str(), port.c_str());
+  
   if (_wssListeners.find(key) != _wssListeners.end())
-    throw OSS::SIP::SIPException("Duplicate WebSocket transport while calling addWSSTransport()");
+  {
+    _wssListeners[key]->setPurgeFlag(false);
+    return;
+  }
+  
   SIPWebSocketTlsListener::Ptr pWsListener = SIPWebSocketTlsListener::Ptr(new SIPWebSocketTlsListener(this, ip, port, _wssConMgr));
   
   pWsListener->setVirtual(isVirtualIp);
@@ -635,11 +667,17 @@ void SIPTransportService::addWSSTransport(const std::string& ip, const std::stri
 
 void SIPTransportService::addTLSTransport(const std::string& ip, const std::string& port, const std::string& externalIp, const SIPListener::SubNets& subnets, bool isVirtualIp, const std::string& alias)
 {
+  OSS::mutex_lock lockTransports(_transportMutex);
   OSS_LOG_INFO("Adding TLS SIP Listener " << ip << ":" << port << " (" << externalIp << ")");
   std::string key;
   OSS::string_sprintf_string<256>(key, "%s:%s", ip.c_str(), port.c_str());
+  
   if (_tlsListeners.find(key) != _tlsListeners.end())
-    throw OSS::SIP::SIPException("Duplicate TSL transport while calling addTLSTransport()");
+  {
+    _tlsListeners[key]->setPurgeFlag(false);
+    return;
+  }
+  
   SIPTLSListener::Ptr pTlsListener = SIPTLSListener::Ptr(new SIPTLSListener(this, _dispatch, ip, port, _tlsConMgr));
   
   pTlsListener->setVirtual(isVirtualIp);
@@ -667,6 +705,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientTransport(
   const std::string& proto_,
   const std::string& transportId)
 {
+  OSS::mutex_lock lockTransports(_transportMutex);
   std::string logId = pMsg->createContextId(true);
   std::string requirePersistentValue;
   pMsg->getProperty(OSS::PropertyMap::PROP_RequirePersistentConnection, requirePersistentValue);
@@ -939,6 +978,7 @@ SIPTransportSession::Ptr SIPTransportService::createClientWssTransport(
 void SIPTransportService::sendUDPKeepAlive(const OSS::Net::IPAddress& localAddress,
     const OSS::Net::IPAddress& target)
 {
+  OSS::mutex_lock lockTransports(_transportMutex);
   std::string localIp = localAddress.toString();
   std::string localPort = OSS::string_from_number<unsigned short>(localAddress.getPort());
   std::string targetIp = target.toString();
@@ -956,6 +996,7 @@ void SIPTransportService::sendUDPKeepAlive(const OSS::Net::IPAddress& localAddre
 
 SIPUDPListener::Ptr SIPTransportService::findUDPListener(const std::string& key) const
 {
+  OSS::mutex_lock lockTransports(_transportMutex);
   UDPListeners::const_iterator iter = _udpListeners.find(key);
   if (iter != _udpListeners.end())
   {
@@ -966,6 +1007,7 @@ SIPUDPListener::Ptr SIPTransportService::findUDPListener(const std::string& key)
   
 SIPTCPListener::Ptr SIPTransportService::findTCPListener(const std::string& key) const
 {
+  OSS::mutex_lock lockTransports(_transportMutex);
   TCPListeners::const_iterator iter = _tcpListeners.find(key);
   if (iter != _tcpListeners.end())
   {
@@ -977,6 +1019,7 @@ SIPTCPListener::Ptr SIPTransportService::findTCPListener(const std::string& key)
 #if ENABLE_FEATURE_WEBSOCKETS
 SIPWebSocketListener::Ptr SIPTransportService::findWSListener(const std::string& key) const
 {
+  OSS::mutex_lock lockTransports(_transportMutex);
   WSListeners::const_iterator iter = _wsListeners.find(key);
   if (iter != _wsListeners.end())
   {
@@ -987,6 +1030,7 @@ SIPWebSocketListener::Ptr SIPTransportService::findWSListener(const std::string&
 
 SIPWebSocketTlsListener::Ptr SIPTransportService::findWSSListener(const std::string& key) const
 {
+  OSS::mutex_lock lockTransports(_transportMutex);
   WSSListeners::const_iterator iter = _wssListeners.find(key);
   if (iter != _wssListeners.end())
   {
@@ -998,6 +1042,7 @@ SIPWebSocketTlsListener::Ptr SIPTransportService::findWSSListener(const std::str
   
 SIPTLSListener::Ptr SIPTransportService::findTLSListener(const std::string& key) const
 {
+  OSS::mutex_lock lockTransports(_transportMutex);
   TLSListeners::const_iterator iter = _tlsListeners.find(key);
   if (iter != _tlsListeners.end())
   {
@@ -1026,6 +1071,7 @@ bool SIPTransportService::getExternalAddress(
   const OSS::Net::IPAddress& internalIp,
   std::string& externalIp) const
 {
+  OSS::mutex_lock lockTransports(_transportMutex);
   std::string key = internalIp.toIpPortString();
   if (proto == "udp" || proto == "UDP")
   {
@@ -1107,6 +1153,8 @@ bool SIPTransportService::getInternalAddress(
     internalIp = externalIp;
     return true;
   }
+  
+  OSS::mutex_lock lockTransports(_transportMutex);
 
   std::string ip = externalIp.toString();
   if (proto == "udp" || proto == "UDP")
@@ -1272,6 +1320,110 @@ void SIPTransportService::dumpHepPacket(OSS::Net::IPAddress::Protocol proto, con
 void SIPTransportService::hepSend(void* packet, int len)
 {
   dynamic_cast<SIPUDPConnection*>(_hepConnection.get())->writeBytes(packet, len, _hepHost, _hepPort);
+}
+
+void SIPTransportService::flagAllForPotentialPurge(bool purge)
+{
+  OSS::mutex_lock lockTransports(_transportMutex);
+
+  
+  for (UDPListeners::iterator iter = _udpListeners.begin(); iter != _udpListeners.end(); iter++)
+  {
+    iter->second->setPurgeFlag(purge);
+  }
+  
+  for (TCPListeners::iterator iter = _tcpListeners.begin(); iter != _tcpListeners.end(); iter++)
+  {
+    iter->second->setPurgeFlag(purge);
+  }
+  
+  for (TLSListeners::iterator iter = _tlsListeners.begin(); iter != _tlsListeners.end(); iter++)
+  {
+    iter->second->setPurgeFlag(purge);
+  }
+
+#if ENABLE_FEATURE_WEBSOCKETS
+  for (WSListeners::iterator iter = _wsListeners.begin(); iter != _wsListeners.end(); iter++)
+  {
+    iter->second->setPurgeFlag(purge);
+  }
+  
+  for (WSSListeners::iterator iter = _wssListeners.begin(); iter != _wssListeners.end(); iter++)
+  {
+    iter->second->setPurgeFlag(purge);
+  }
+#endif
+}
+  
+void SIPTransportService::purgeFlaggedTransports()
+{
+  OSS::mutex_lock lockTransports(_transportMutex);
+  for (UDPListeners::iterator iter = _udpListeners.begin(); iter != _udpListeners.end(); )
+  {
+    if (iter->second->isFlaggedForPurging())
+    {
+      iter->second->handleStop();
+      _udpListeners.erase(iter++);
+    }
+    else
+    {
+      iter++;
+    }
+  }
+  
+  for (TCPListeners::iterator iter = _tcpListeners.begin(); iter != _tcpListeners.end(); )
+  {
+    if (iter->second->isFlaggedForPurging())
+    {
+      iter->second->handleStop();
+      _tcpListeners.erase(iter++);
+    }
+    else
+    {
+      iter++;
+    }
+  }
+  
+  for (TLSListeners::iterator iter = _tlsListeners.begin(); iter != _tlsListeners.end(); )
+  {
+    if (iter->second->isFlaggedForPurging())
+    {
+      iter->second->handleStop();
+      _tlsListeners.erase(iter++);
+    }
+    else
+    {
+      iter++;
+    }
+  }
+
+#if ENABLE_FEATURE_WEBSOCKETS
+  for (WSListeners::iterator iter = _wsListeners.begin(); iter != _wsListeners.end(); )
+  {
+    if (iter->second->isFlaggedForPurging())
+    {
+      iter->second->handleStop();
+      _wsListeners.erase(iter++);
+    }
+    else
+    {
+      iter++;
+    }
+  }
+  
+  for (WSSListeners::iterator iter = _wssListeners.begin(); iter != _wssListeners.end(); )
+  {
+    if (iter->second->isFlaggedForPurging())
+    {
+      iter->second->handleStop();
+      _wssListeners.erase(iter++);
+    }
+    else
+    {
+      iter++;
+    }
+  }
+#endif
 }
 
 } } // OSS::SIP

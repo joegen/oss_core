@@ -300,6 +300,10 @@ public:
     const std::string& privateKey // required
   );
   
+  void flagAllForPotentialPurge(bool purge);
+  
+  void purgeFlaggedTransports();
+  
   static HEPSenderCallback hepSenderCallback;
   static void enableHep(bool enabled);
   static bool isHepEnabled();
@@ -324,6 +328,7 @@ private:
   SIPTransportSession::Dispatch _dispatch;
   SIPStreamedConnectionManager _tcpConMgr;
   SIPStreamedConnectionManager _tlsConMgr;
+  mutable OSS::mutex _transportMutex;
   UDPListeners _udpListeners;
   TCPListeners _tcpListeners;
   TLSListeners _tlsListeners;
