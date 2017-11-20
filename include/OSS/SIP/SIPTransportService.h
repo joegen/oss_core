@@ -488,6 +488,11 @@ inline bool SIPTransportService::initializeTlsContext(
   const std::string& privateKey // required
 )
 {
+  if (_pTlsClientContext && _pTlsServerContext)
+  {
+    return true;
+  }
+  
   if (_tlsContext.initialize(&_ioService, verifyPeer, peerCaFile, caDirectory, certPassword, certFile, privateKey))
   {
     _pTlsClientContext = _tlsContext.getClientContext();
