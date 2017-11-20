@@ -14,7 +14,8 @@ EXTRA_DIST += \
     js/modules/fifo.js \
     js/modules/monitored_file.js \
     js/modules/socket.js \
-    js/modules/http/index.js
+    js/modules/http/index.js \
+    js/modules/xml-parser.js
 
 lib_LTLIBRARIES += liboss_jsconst.la
 liboss_jsconst_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
