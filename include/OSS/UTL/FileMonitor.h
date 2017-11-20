@@ -25,14 +25,17 @@
 #include <string>
 #include <boost/function.hpp>
 #include <boost/thread.hpp>
+#include <boost/filesystem.hpp>
+
+#include "OSS/UTL/CoreUtils.h"
 
 namespace OSS { 
 namespace UTL {
 
 
-struct NotifyInfo
+struct FileMonitorNotifyInfo
 {
-  typedef boost::function<void(NotifyInfo&)> EventHandler;
+  typedef boost::function<void(FileMonitorNotifyInfo&)> EventHandler;
   std::string path;
   int fd;
   int revents;
@@ -44,8 +47,10 @@ class FileMonitor
 public:
   
   static FileMonitor& instance();
+  typedef FileMonitorNotifyInfo NotifyInfo;
   typedef NotifyInfo::EventHandler EventHandler;
-  int addWatch(const std::string& path, EventHandler handler);
+  int addWatch(const boost::filesystem::path& path, EventHandler handler, int mask = 0);
+  int addWatch(const std::string& path, EventHandler handler, int mask = 0);
   void removeWatch(int fd);
   void shutdown();
  
@@ -53,6 +58,16 @@ private:
   FileMonitor();
   ~FileMonitor();
 };
+
+
+//
+// Inlines
+//
+
+inline int FileMonitor::addWatch(const boost::filesystem::path& path, EventHandler handler, int mask)
+{
+  return addWatch(OSS::boost_path(path), handler, mask);
+}
 
 } }
 

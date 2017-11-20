@@ -31,7 +31,7 @@ namespace UTL {
 
 #define BUF_LEN (10 * (sizeof(struct inotify_event) + NAME_MAX + 1))
 
-
+typedef FileMonitorNotifyInfo NotifyInfo;
 typedef std::map<int, NotifyInfo> Handlers;
 
 int inotify_fd = -1;
@@ -167,7 +167,7 @@ FileMonitor& FileMonitor::instance()
   return monitor;
 }
   
-int FileMonitor::addWatch(const std::string& path, EventHandler handler)
+int FileMonitor::addWatch(const std::string& path, EventHandler handler, int mask)
 {
   if (!inotify_thread || inotify_fd == -1 || inotify_is_shutting_down)
   {
@@ -177,7 +177,7 @@ int FileMonitor::addWatch(const std::string& path, EventHandler handler)
   NotifyInfo info;
   info.path = path;
   info.handler = handler;
-  info.fd = inotify_add_watch(inotify_fd, path.c_str(), IN_ALL_EVENTS);
+  info.fd = inotify_add_watch(inotify_fd, path.c_str(), mask ? mask : IN_ALL_EVENTS);
   info.revents = 0;
   
   if (info.fd != -1)
