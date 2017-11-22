@@ -12,4 +12,5 @@ EXTRA_DIST += \
     js/modules/examples/daemon_example.js \
     js/modules/examples/udp_socket_example.js \
     js/modules/examples/tcp_socket_example.js \
-    js/modules/examples/xmlparser_example.js
+    js/modules/examples/xmlparser_example.js \
+    js/modules/examples/dns_example.js

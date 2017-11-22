@@ -46,19 +46,24 @@ typedef std::map<int, MonitoredFdData> MonitoredFd;
 static MonitoredFd _monitoredFd;
 
 
-class BlockingCall
+class FunctionCallInfo
 {
 public:
-  typedef boost::shared_ptr<BlockingCall> Ptr;
+  typedef boost::shared_ptr<FunctionCallInfo> Ptr;
   PersistentFunction call;
   ArgumentVector args;
   PersistentFunction result;
-  BlockingCall()
+  bool isDirectCall;
+  FunctionCallInfo()
   {
+    isDirectCall = false;
   }
-  ~BlockingCall()
+  ~FunctionCallInfo()
   {
-    call.Dispose();
+    if (!isDirectCall)
+    {
+      call.Dispose();
+    }
     result.Dispose();
     for (ArgumentVector::iterator iter = args.begin(); iter != args.end(); iter++)
     {
@@ -66,7 +71,7 @@ public:
     }
   }
 };
-typedef OSS::BlockingQueue<BlockingCall::Ptr> CallQueue;
+typedef OSS::BlockingQueue<FunctionCallInfo::Ptr> CallQueue;
 static CallQueue _callQueue(true);
 
 class Timer : public boost::enable_shared_from_this<Timer>
@@ -131,7 +136,7 @@ static v8::Handle<v8::Value> __call(const v8::Arguments& args)
     return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument")));
   }
   
-  BlockingCall::Ptr pCallInfo(new BlockingCall());
+  FunctionCallInfo::Ptr pCallInfo(new FunctionCallInfo());
   
   pCallInfo->call = v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(args[0]));
   handle_to_arg_vector(args[1], pCallInfo->args);
@@ -139,6 +144,15 @@ static v8::Handle<v8::Value> __call(const v8::Arguments& args)
   
   _callQueue.enqueue(pCallInfo);
   return v8::Undefined();
+}
+
+void Async::async_execute(const JSPersistentFunctionHandle& func, const JSPersistentArgumentVector& args)
+{
+  FunctionCallInfo::Ptr pCallInfo(new FunctionCallInfo());
+  pCallInfo->isDirectCall = true;
+  pCallInfo->call = func;
+  pCallInfo->args = args;
+  _callQueue.enqueue(pCallInfo);
 }
 
 static v8::Handle<v8::Value> __schedule_one_shot_timer(const v8::Arguments& args)
@@ -247,15 +261,8 @@ static v8::Handle<v8::Value> __monitor_descriptor(const v8::Arguments& args)
   __wakeup_pipe();
   return v8::Undefined();
 }
-
-static v8::Handle<v8::Value> __unmonitor_descriptor(const v8::Arguments& args)
+void Async::unmonitor_fd(int fd)
 {
-  v8::HandleScope scope;
-  if (args.Length() < 1 || !args[0]->IsInt32())
-  {
-    return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument")));
-  }
-  int fd = args[0]->ToInt32()->Value();
   MonitoredFd::iterator iter = _monitoredFd.find(fd);
   if (iter != _monitoredFd.end())
   {
@@ -265,6 +272,17 @@ static v8::Handle<v8::Value> __unmonitor_descriptor(const v8::Arguments& args)
     _monitoredFd.erase(iter);
     __wakeup_pipe();
   }
+}
+
+static v8::Handle<v8::Value> __unmonitor_descriptor(const v8::Arguments& args)
+{
+  v8::HandleScope scope;
+  if (args.Length() < 1 || !args[0]->IsInt32())
+  {
+    return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument")));
+  }
+  int fd = args[0]->ToInt32()->Value();
+  Async::unmonitor_fd(fd);
   return v8::Undefined();
 }
 
@@ -291,7 +309,6 @@ void Async::unregister_string_queue(int fd)
   _monitoredStringQueue.erase(fd);
   __wakeup_pipe();
 }
-
 
 static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
 {
@@ -392,14 +409,21 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
     }
     else if (descriptors[1].revents & POLLIN)
     {
-      BlockingCall::Ptr pCallInfo;
+      FunctionCallInfo::Ptr pCallInfo;
       _callQueue.dequeue(pCallInfo);
       if (pCallInfo)
       {
-        v8::Handle<v8::Value> result = pCallInfo->call->Call((*JSPlugin::_pContext)->Global(), pCallInfo->args.size(), pCallInfo->args.data());
-        ArgumentVector resultArg;
-        handle_to_arg_vector(result, resultArg);
-        pCallInfo->result->Call((*JSPlugin::_pContext)->Global(), resultArg.size(), resultArg.data());
+        if (pCallInfo->isDirectCall)
+        {
+          pCallInfo->call->Call((*JSPlugin::_pContext)->Global(), pCallInfo->args.size(), pCallInfo->args.data());
+        }
+        else
+        {
+          v8::Handle<v8::Value> result = pCallInfo->call->Call((*JSPlugin::_pContext)->Global(), pCallInfo->args.size(), pCallInfo->args.data());
+          ArgumentVector resultArg;
+          handle_to_arg_vector(result, resultArg);
+          pCallInfo->result->Call((*JSPlugin::_pContext)->Global(), resultArg.size(), resultArg.data());
+        }
       }
     }
     else if (descriptors[2].revents & POLLIN)

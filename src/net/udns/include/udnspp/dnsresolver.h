@@ -20,7 +20,6 @@
 #ifndef UDNSPP_DNSRESOLVER_INCLUDED
 #define UDNSPP_DNSRESOLVER_INCLUDED
 
-
 #include <udnspp/dnscontext.h>
 #include <udnspp/dnsarecord.h>
 #include <udnspp/dnssrvrecord.h>
@@ -31,16 +30,12 @@
 #include <udnspp/dnscache.h>
 
 
-#ifdef HAVE_BOOSTLIBS
-#define ENABLE_ASYNC_RESOLVE
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/thread.hpp>
-#endif
+
 
 namespace udnspp {
-
-#ifdef ENABLE_ASYNC_RESOLVE
 
 typedef boost::function<void(const DNSARecordV4&, void*)> DNSARecordV4CB;
 typedef boost::function<void(const DNSARecordV6&, void*)> DNSARecordV6CB;
@@ -50,9 +45,6 @@ typedef boost::function<void(const DNSTXTRecord&, void*)> DNSTXTRecordCB;
 typedef boost::function<void(const DNSNAPTRRecord&, void*)> DNSNAPTRRecordCB;
 typedef boost::function<void(const DNSMXRecord&, void*)> DNSMXRecordCB;
 
-#endif
-
-#ifdef ENABLE_LRU_CACHE
 typedef DNSCache<DNSARecordV4> DNSARecordV4Cache;
 typedef DNSCache<DNSARecordV6> DNSARecordV6Cache;
 typedef DNSCache<DNSSRVRecord> DNSSRVRecordCache;
@@ -60,20 +52,17 @@ typedef DNSCache<DNSPTRRecord> DNSPTRRecordCache;
 typedef DNSCache<DNSTXTRecord> DNSTXTRecordCache;
 typedef DNSCache<DNSNAPTRRecord> DNSNAPTRRecordCache;
 typedef DNSCache<DNSMXRecord> DNSMXRecordCache;
-#endif
 
 
 class DNSResolver
 {
 public:
-#ifdef ENABLE_ASYNC_RESOLVE
   typedef boost::mutex mutex;
   typedef boost::lock_guard<mutex> mutex_lock;
-#endif
 
   DNSResolver();
 
-  DNSResolver(DNSContext* pContext);
+  DNSResolver(DNSContext* pContext, bool autoDeleteContext = false);
 
   ~DNSResolver();
 
@@ -93,7 +82,6 @@ public:
 
   DNSTXTRecord resolveTXT(const std::string& name, int qcls, int flags) const;
 
-#ifdef ENABLE_ASYNC_RESOLVE
 
   void resolveA4(const std::string& name, int flags, DNSARecordV4CB cb, void* userData) const;
 
@@ -111,6 +99,8 @@ public:
 
   void resolveTXT(const std::string& name, int qcls, int flags, DNSTXTRecordCB cb, void* userData) const;
 
+  DNSContext* context() const;
+
   void start();
 
   void stop();
@@ -118,18 +108,15 @@ public:
   void processEvents();
 
 private:
+
   bool _stopProcessingEvents;
   boost::thread* _pThread;
   mutable mutex _eventMutex;
-
-
-#endif  // ENABLE_ASYNC_RESOLVE
 
 private:
   DNSContext* _pContext;
   bool _canDeleteContext;
 
-#ifdef ENABLE_LRU_CACHE
 public:
   void enableLRUCache(bool enabled);
   bool isLRUCacheEnabled() const;
@@ -151,7 +138,6 @@ private:
   mutable DNSTXTRecordCache _txtCache;
   mutable DNSNAPTRRecordCache _naPtrCache;
   mutable DNSMXRecordCache _mxCache;
-#endif
 
 };
 
@@ -159,7 +145,11 @@ private:
 // Inlines
 //
 
-#ifdef ENABLE_LRU_CACHE
+inline DNSContext* DNSResolver::context() const
+{
+  return _pContext;
+}
+
 inline  void DNSResolver::enableLRUCache(bool enabled)
 {
   _enableLRUCache = enabled;
@@ -204,8 +194,6 @@ inline DNSMXRecordCache& DNSResolver::mxCache()
 {
   return _mxCache;
 }
-
-#endif
 
 
 } // namespace udnspp

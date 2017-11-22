@@ -30,6 +30,8 @@ struct Async
 {
   static void register_string_queue(AsyncStringQueue* pQueue, AsyncStringQueueCallback cb);
   static void unregister_string_queue(int fd);
+  static void async_execute(const JSPersistentFunctionHandle& handle, const JSPersistentArgumentVector& args);
+  static void unmonitor_fd(int fd);
 };
 
 

@@ -4,6 +4,8 @@ js_helper-install-hook:
 	cp ${srcdir}/js/modules/examples/*.js ${DESTDIR}${libdir}/oss_modules/examples
 	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/http
 	cp ${srcdir}/js/modules/http/*.js ${DESTDIR}${libdir}/oss_modules/http
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/dns
+	cp ${srcdir}/js/modules/dns/*.js ${DESTDIR}${libdir}/oss_modules/dns
 
 include js/modules/examples/src.am
 
@@ -113,6 +115,12 @@ liboss_jsinetsocket_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_I
 liboss_jsinetsocket_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
 liboss_jsinetsocket_la_SOURCES = js/modules/inet_socket/inet_socket.c js/modules/inet_socket.cpp
 
+
+lib_LTLIBRARIES += liboss_jsdns.la
+liboss_jsdns_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsdns_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsdns_la_SOURCES = js/modules/dns/dns.cpp
+
 js_module-install-hook: js_helper-install-hook
 	cp ${DESTDIR}${libdir}/liboss_jsconst.so ${DESTDIR}${libdir}/oss_modules/consts.jso
 	cp ${DESTDIR}${libdir}/liboss_jserror.so ${DESTDIR}${libdir}/oss_modules/error.jso
@@ -132,4 +140,5 @@ js_module-install-hook: js_helper-install-hook
 	cp ${DESTDIR}${libdir}/liboss_jsprocess.so ${DESTDIR}${libdir}/oss_modules/_process.jso
 	cp ${DESTDIR}${libdir}/liboss_jsinotify.so ${DESTDIR}${libdir}/oss_modules/inotify.jso
 	cp ${DESTDIR}${libdir}/liboss_jsinetsocket.so ${DESTDIR}${libdir}/oss_modules/inet_socket.jso
+	cp ${DESTDIR}${libdir}/liboss_jsdns.so ${DESTDIR}${libdir}/oss_modules/dns/_dns.jso
 

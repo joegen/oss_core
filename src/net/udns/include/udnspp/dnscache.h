@@ -20,7 +20,7 @@
 #ifndef UDNSPP_DNSCACHE_INCLUDED
 #define UDNSPP_DNSCACHE_INCLUDED
 
-#ifdef HAVE_BOOSTLIBS
+
 #if !defined(NDEBUG)
 #define BOOST_MULTI_INDEX_ENABLE_INVARIANT_CHECKING
 #define BOOST_MULTI_INDEX_ENABLE_SAFE_MODE
@@ -31,11 +31,7 @@
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 
-#define ENABLE_LRU_CACHE
-#endif
 
-
-#ifdef ENABLE_LRU_CACHE
 
 #include <map>
 #include <cassert>
@@ -157,6 +153,5 @@ namespace udnspp {
 
 }  // namespace udnspp
 
-#endif // ENABLE_LRU_CACHE
 
 #endif // UDNSPP_DNSCACHE_INCLUDED

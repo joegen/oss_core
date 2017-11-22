@@ -34,10 +34,6 @@ public:
   virtual ~JSPlugin();
   virtual std::string name() const = 0;
   virtual bool initExportFunc(std::string& funcName) = 0;
-  void setContext(v8::Persistent<v8::Context>* pContext);
-  v8::Persistent<v8::Context>* getContext();
-  void setGlobal(v8::Persistent<v8::ObjectTemplate>* pGlobal);
-  v8::Persistent<v8::ObjectTemplate>* getGlobal();
 
   static v8::Persistent<v8::Context>* _pContext;
   static v8::Persistent<v8::ObjectTemplate>* _pGlobal;
@@ -107,6 +103,7 @@ extern "C" { \
 #define js_export_global_constructor(Name, Func) (*JSPlugin::_pContext)->Global()->Set(v8::String::NewSymbol(Name), Func)
 #define js_export_const CONST_EXPORT
 #define js_export_string(Name, Value) exports->Set(v8::String::NewSymbol(Name), v8::String::NewSymbol(Value), v8::ReadOnly)
+#define js_export_string_symbol(Name) exports->Set(v8::String::NewSymbol(Name), v8::String::NewSymbol(Name), v8::ReadOnly)
 #define js_export_int32(Name, Value) exports->Set(v8::String::NewSymbol(Name), v8::Int32::New(Value), v8::ReadOnly)
 
 #define JS_CLASS_INTERFACE(Class, Name) \
@@ -145,28 +142,33 @@ extern "C" { \
 #define JSArrayHandle v8::Handle<v8::Array>
 #define JSObjectHandle v8::Handle<v8::Object>
 #define JSLocalObjectHandle v8::Local<v8::Object>
+#define JSLocalObjectTemplateHandle v8::Local<v8::ObjectTemplate>
 #define JSPersistentObjectHandle v8::Persistent<v8::Object>
 #define JSLiteral(Text) v8::String::NewSymbol(Text)
-#define JSArguments const v8::Arguments
+#define JSExternalHandle v8::Handle<v8::External> 
+#define JSPersistentFunctionHandle v8::Persistent<v8::Function>
+#define JSFunctionHandle v8::Handle<v8::Function>
+#define JSLocalFunctionHandle v8::Local<v8::Function>
+#define JSPersistentFunctionCast(Handle) JSPersistentFunctionHandle::New(JSFunctionHandle::Cast(Handle))
 inline JSStringHandle JSString(const char* str) { return v8::String::New(str); }
 inline JSStringHandle JSString(const std::string& str) { return v8::String::New(str.data(), str.size()); }
 inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::String::New(str, len); }
+
+#define JSArguments const v8::Arguments
+#define JSLocalArgumentVector std::vector< v8::Local<v8::Value> >
+#define JSPersistentArgumentVector std::vector< v8::Persistent<v8::Value> >
 #define JSBoolean(Exp) v8::Boolean::New(Exp)
 #define JSArray(Size) v8::Array::New(Size)
 #define JSInt32(Value) v8::Int32::New(Value)
 #define JSUInt32(Value) v8::Uint32::New(Value)
 #define JSInteger(Value) v8::Integer::New(Value)
-#define JSObject() v8::Object::New();
+#define JSObject() v8::Object::New()
+#define JSObjectTemplate() v8::ObjectTemplate::New()
 #define JSStringNew(Str) v8::String::New(Str)
+#define JSExternal(Ptr) v8::External::New(Ptr)
 #define JSException(What) v8::ThrowException(v8::Exception::Error(JSLiteral(What)))
 
-//
-// Function Value
-//
-#define JSPersistentFunctionHandle v8::Persistent<v8::Function>
-#define JSFunctionHandle v8::Handle<v8::Function>
-#define JSLocalFunctionHandle v8::Local<v8::Function>
-#define JSPersistentFunctionCast(Handle) JSPersistentFunctionHandle::New(JSFunctionHandle::Cast(Handle))
+
 
 //
 // Helper functions
@@ -224,6 +226,7 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define js_method_arg_as_uint32(Index) _args_[Index]->Uint32Value()
 #define js_method_arg_as_bool(Index) _args_[Index]->BooleanValue()
 #define js_method_arg_as_buffer(Index) js_method_arg_unwrap_object(BufferObject, Index)
+#define js_method_arg_as_persistent_function(Index) v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(_args_[Index]))
 
 
 #define js_method_arg_has_property(Index, Name) _args_[Index]->ToObject()->Has(v8::String::NewSymbol(Name))
@@ -240,6 +243,25 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 
 #define js_handle_as_string(Handle) v8::String::Utf8Value(Handle)
 #define js_handle_as_std_string(Handle) std::string((const char*) *js_handle_as_string(Handle))
+
+inline JSObjectHandle js_wrap_pointer_to_local_object(void* ptr)
+{
+  JSLocalObjectTemplateHandle objectTemplate = JSObjectTemplate();
+  objectTemplate->SetInternalFieldCount(1);
+  
+  JSLocalObjectTemplateHandle classTemplate = JSLocalObjectTemplateHandle::New(objectTemplate);
+  JSObjectHandle objectWrapper = classTemplate->NewInstance();
+  JSExternalHandle objectPointer = JSExternal(ptr);
+  objectWrapper->SetInternalField(0, objectPointer);
+  return objectWrapper;
+}
+
+template <typename T>
+T* js_unwrap_pointer_from_local_object(JSObjectHandle obj, uint32_t index = 0)
+{
+  JSExternalHandle ptr = JSExternalHandle::Cast(obj->GetInternalField(index));
+  return static_cast<T*>(ptr->Value());
+}
 
 #endif // OSS_JSPLUGIN_H_INCLUDED
 
