@@ -4,6 +4,7 @@ var _system = require("_system");
 var pipe = require("pipe");
 var fork = require("fork");
 var consts = require("consts");
+var async = require("async");
 
 __copy_exports(_system, exports);
 __copy_exports(pipe, exports);
@@ -12,13 +13,15 @@ __copy_exports(consts, exports);
 
 exports.exit = function(code)
 {
-  //__cleanup_modules();
+  async.__stop_event_loop();
+  __cleanup_modules();
   _system.exit(code);
 }
 
 exports._exit = function(code)
 {
-  //__cleanup_modules();
+  async.__stop_event_loop();
+  __cleanup_modules();
   _system._exit(code);
 }
 

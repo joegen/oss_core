@@ -31,6 +31,7 @@
 using namespace udnspp;
 
 #define POOL_SIZE 10
+#define MAX_TIMEOUT_SEC 1
 typedef OSS::BlockingQueue<DNSResolver*> ContextPool;
 typedef std::map<int, DNSContext*> ContextMap;
 static ContextPool _pool;
@@ -55,6 +56,12 @@ static void initialize_pool(uint32_t size)
   }
 }
 
+static void relinquish_context(DNSResolver* resolver)
+{
+  assert(resolver);
+  Async::unmonitor_fd(resolver->context()->getSocketFd());
+  _pool.enqueue(resolver);
+}
 
 static void on_a_lookup(const DNSARecordV4& record, void* userData)
 {
@@ -79,9 +86,7 @@ static void on_a_lookup(const DNSARecordV4& record, void* userData)
   
   JSValueHandle obj = (*cb)->Get(JSLiteral("resolver"));
   DNSResolver* resolver = js_unwrap_pointer_from_local_object<DNSResolver>(obj->ToObject());
-  Async::unmonitor_fd(resolver->context()->getSocketFd());
-  assert(resolver);
-  _pool.enqueue(resolver);
+  relinquish_context(resolver);
   
   (*cb)->Call((*JSPlugin::_pContext)->Global(), args.size(), args.data());
   cb->Dispose();
@@ -130,8 +135,9 @@ JS_METHOD_IMPL(__lookup_a)
   DNSResolver* resolver = js_unwrap_pointer_from_local_object<DNSResolver>(obj);
   (*cb)->Set(JSLiteral("resolver"), obj);
   resolver->resolveA4(query, 0, resolver_cb, cb);
-  while(!dns_timeouts(resolver->context()->context(), -1, 0) == -1);
-  return JSUndefined();
+  //while(!dns_timeouts(resolver->context()->context(), -1, 0) == -1);
+  //return JSUndefined();
+  return JSInt32(dns_timeouts(resolver->context()->context(),MAX_TIMEOUT_SEC, 0));
 }
 
 JS_METHOD_IMPL(__lookup_aaaa)
@@ -181,7 +187,7 @@ JS_METHOD_IMPL(__relinquish_context)
   js_method_arg_assert_object(0);
   JSLocalObjectHandle obj = js_method_arg_as_object(0);
   DNSResolver* resolver = js_unwrap_pointer_from_local_object<DNSResolver>(obj);
-  _pool.enqueue(resolver);
+  relinquish_context(resolver);
   return JSUndefined();
 }
 
@@ -233,6 +239,21 @@ JS_METHOD_IMPL(__set_work_callback)
   return JSUndefined();
 }
 
+JS_METHOD_IMPL(__get_next_context_timeout)
+{
+  js_enter_scope();
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_object(0);
+  JSLocalObjectHandle obj = js_method_arg_as_object(0);
+  DNSResolver* resolver = js_unwrap_pointer_from_local_object<DNSResolver>(obj);
+  if (!resolver)
+  {
+    return JSInt32(-1);
+  }
+  return JSInt32(dns_timeouts(resolver->context()->context(), MAX_TIMEOUT_SEC, 0));
+}
+
+
 JS_EXPORTS_INIT()
 {
   js_enter_scope();
@@ -242,6 +263,7 @@ JS_EXPORTS_INIT()
   js_export_method("_get_context_count", __get_context_count);
   js_export_method("_process_io_events", __process_io_events);
   js_export_method("_set_work_callback", __set_work_callback);
+  js_export_method("_get_next_context_timeout", __get_next_context_timeout);
   js_export_method("_lookup_a", __lookup_a);
   js_export_method("_lookup_aaaa", __lookup_aaaa);
   js_export_method("_lookup_srv", __lookup_srv);

@@ -96,7 +96,10 @@ public:
   
   void onTimer()
   {
-    queue.enqueue(shared_from_this());
+    if (!_isTerminating)
+    {
+      queue.enqueue(shared_from_this());
+    }
   }
   
   void cancel()
