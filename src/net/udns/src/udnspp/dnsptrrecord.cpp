@@ -44,7 +44,10 @@ DNSPTRRecord::~DNSPTRRecord()
 
 void DNSPTRRecord::parseRR(dns_rr_ptr* pRr)
 {
-  assert(pRr);
+  if(!pRr)
+  {
+    return;
+  }
   _cname = pRr->dnsptr_cname;
   _qname = pRr->dnsptr_qname;
   _ttl = pRr->dnsptr_ttl;

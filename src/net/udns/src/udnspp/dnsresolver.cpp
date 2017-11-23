@@ -323,7 +323,7 @@ struct ResolveSRVCB
 static void dns_query_a4_cb(struct dns_ctx* ctx, struct dns_rr_a4* result, void* userData)
 {
   ResolveA4CB* pCb = static_cast<ResolveA4CB*>(userData);
-  if (result && pCb)
+  if (pCb)
   {
     DNSARecordV4 rr(result);
 

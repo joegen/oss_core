@@ -51,7 +51,10 @@ DNSARecordV4& DNSARecordV4::operator=(dns_rr_a4* pRr)
 
 void DNSARecordV4::parseRR(dns_rr_a4* pRr)
 {
-  assert(pRr);
+  if(!pRr)
+  {
+    return;
+  }
   _cname = pRr->dnsa4_cname;
   _qname = pRr->dnsa4_qname;
   _ttl = pRr->dnsa4_ttl;
@@ -84,7 +87,10 @@ DNSARecordV6& DNSARecordV6::operator=(dns_rr_a6* pRr)
 
 void DNSARecordV6::parseRR(dns_rr_a6* pRr)
 {
-  assert(pRr);
+  if(!pRr)
+  {
+    return;
+  }
   _cname = pRr->dnsa6_cname;
   _qname = pRr->dnsa6_qname;
   _ttl = pRr->dnsa6_ttl;

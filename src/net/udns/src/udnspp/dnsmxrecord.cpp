@@ -52,7 +52,10 @@ DNSMXRecord::~DNSMXRecord()
 
 void DNSMXRecord::parseRR(dns_rr_mx* pRr)
 {
-  assert(pRr);
+  if(!pRr)
+  {
+    return;
+  }
   _cname = pRr->dnsmx_cname;
   _qname = pRr->dnsmx_qname;
   _ttl = pRr->dnsmx_ttl;

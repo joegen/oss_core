@@ -52,7 +52,10 @@ namespace udnspp {
 
   void DNSTXTRecord::parseRR(dns_rr_txt* pRr)
   {
-    assert(pRr);
+    if(!pRr)
+    {
+      return;
+    }
     _cname = pRr->dnstxt_cname;
     _qname = pRr->dnstxt_qname;
     _ttl = pRr->dnstxt_ttl;

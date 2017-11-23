@@ -185,13 +185,18 @@ static v8::Handle<v8::Value> __cancel_one_shot_timer(const v8::Arguments& args)
     return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument")));
   }
   int32_t timerId = args[0]->ToInt32()->Value();
+  Async::clear_timer(timerId);
+  return v8::Undefined();
+}
+
+void Async::clear_timer(int timerId)
+{
   Timer::TimerMap::iterator iter = Timer::timers.find(timerId);
   if (iter != Timer::timers.end())
   {
     iter->second->cancel();
     Timer::timers.erase(iter);
   }
-  return v8::Undefined();
 }
 
 v8::Persistent<v8::Function> QueueObject::_constructor;

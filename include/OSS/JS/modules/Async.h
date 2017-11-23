@@ -32,6 +32,7 @@ struct Async
   static void unregister_string_queue(int fd);
   static void async_execute(const JSPersistentFunctionHandle& handle, const JSPersistentArgumentVector& args);
   static void unmonitor_fd(int fd);
+  static void clear_timer(int timerId);
 };
 
 

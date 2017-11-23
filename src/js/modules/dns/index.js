@@ -78,13 +78,40 @@ var lookup = function(type, query, timeout, cb)
   {
     _dns._lookup_a(query, cb, context);
   }
+  else if (type === "AAAA")
+  {
+    _dns._lookup_aaaa(query, cb, context);
+  }
+  else if (type === "SRV")
+  {
+    _dns._lookup_srv(query, cb, context);
+  }
+  else if (type === "PTR4" || type === "PTR")
+  {
+    _dns._lookup_ptr4(query, cb, context);
+  }
+  else if (type === "PTR6")
+  {
+    _dns._lookup_ptr6(query, cb, context);
+  }
+  else if (type === "NAPTR")
+  {
+    _dns._lookup_naptr(query, cb, context);
+  }
+  else if (type === "TXT")
+  {
+    _dns._lookup_txt(query, cb, context);
+  }
+  else if (type === "MX")
+  {
+    _dns._lookup_mx(query, cb, context);
+  }
   else
   {
     throw new Error("Invalid type");
   }
   async.monitorFd(context.fd, function(fd, revents)
   {
-    async.clearTimeout(context.timerId);
     _dns._process_io_events(fd);
   });
   
@@ -93,7 +120,6 @@ var lookup = function(type, query, timeout, cb)
   //
   context.timeout = timeout;
   context.timerId = async.setTimeout(on_context_timer, 1000, [context, 1, cb]);
-  
   return context;
 }
 

@@ -44,7 +44,10 @@ DNSNAPTRRecord::~DNSNAPTRRecord()
 
 void DNSNAPTRRecord::parseRR(dns_rr_naptr* pRr)
 {
-  assert(pRr);
+  if(!pRr)
+  {
+    return;
+  }
   _cname = pRr->dnsnaptr_cname;
   _qname = pRr->dnsnaptr_qname;
   _ttl = pRr->dnsnaptr_ttl;

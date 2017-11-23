@@ -52,7 +52,10 @@ DNSSRVRecord::~DNSSRVRecord()
 
 void DNSSRVRecord::parseRR(dns_rr_srv* pRr)
 {
-  assert(pRr);
+  if(!pRr)
+  {
+    return;
+  }
   _cname = pRr->dnssrv_cname;
   _qname = pRr->dnssrv_qname;
   _ttl = pRr->dnssrv_ttl;

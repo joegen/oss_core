@@ -36,8 +36,7 @@ typedef OSS::BlockingQueue<DNSResolver*> ContextPool;
 typedef std::map<int, DNSContext*> ContextMap;
 static ContextPool _pool;
 static ContextMap _map;
-static boost::thread* pollThread = 0;
-JSPersistentFunctionHandle* work_cb = 0;
+JSPersistentFunctionHandle* _work_cb = 0;
 pollfd pfds[POOL_SIZE];
 
 static void initialize_pool(uint32_t size)
@@ -63,19 +62,12 @@ static void relinquish_context(DNSResolver* resolver)
   _pool.enqueue(resolver);
 }
 
-static void on_a_lookup(const DNSARecordV4& record, void* userData)
+template <typename T>
+void call_result_callback(const T& record, const JSLocalValueHandle& result, void* userData)
 {
   JSPersistentFunctionHandle* cb = (JSPersistentFunctionHandle*)userData;
-  const DNSAddressList& records = record.getRecords();
-  JSLocalValueHandle result = JSArray(records.size());
-  std::size_t index = 0;
-  for (DNSAddressList::const_iterator iter = records.begin(); iter != records.end(); iter++)
-  {
-    result->ToObject()->Set(index, JSString(*iter));
-  }
   
   JSLocalValueHandle common = JSObject();
- 
   common->ToObject()->Set(JSLiteral("cname"), JSString(record.getCName().c_str()));
   common->ToObject()->Set(JSLiteral("qname"), JSString(record.getQName().c_str()));
   common->ToObject()->Set(JSLiteral("ttl"), JSUInt32(record.getTTL()));
@@ -88,40 +80,122 @@ static void on_a_lookup(const DNSARecordV4& record, void* userData)
   DNSResolver* resolver = js_unwrap_pointer_from_local_object<DNSResolver>(obj->ToObject());
   relinquish_context(resolver);
   
+  if (obj->ToObject()->HasOwnProperty(JSLiteral("timerId")))
+  {
+    JSValueHandle timerId = obj->ToObject()->Get(JSLiteral("timerId"));
+    Async::clear_timer(timerId->ToInt32()->Value());
+  }
+  
   (*cb)->Call((*JSPlugin::_pContext)->Global(), args.size(), args.data());
   cb->Dispose();
   delete cb;
   
-  (*work_cb)->Call((*JSPlugin::_pContext)->Global(), 0, 0);
+  (*_work_cb)->Call((*JSPlugin::_pContext)->Global(), 0, 0);
+}
+
+static void on_a_lookup(const DNSARecordV4& record, void* userData)
+{
+  const DNSAddressList& records = record.getRecords();
+  JSLocalValueHandle result = JSArray(records.size());
+  std::size_t index = 0;
+  for (DNSAddressList::const_iterator iter = records.begin(); iter != records.end(); iter++)
+  {
+    result->ToObject()->Set(index++, JSString(*iter));
+  }
+  call_result_callback<DNSARecordV4>(record, result, userData);
 }
 
 static void on_aaaa_lookup(const DNSARecordV6& record, void* userData)
 {
+  const DNSAddressList& records = record.getRecords();
+  JSLocalValueHandle result = JSArray(records.size());
+  std::size_t index = 0;
+  for (DNSAddressList::const_iterator iter = records.begin(); iter != records.end(); iter++)
+  {
+    result->ToObject()->Set(index++, JSString(*iter));
+  }
+  call_result_callback<DNSARecordV6>(record, result, userData);
 }
 
 static void on_srv_lookup(const DNSSRVRecord& record, void* userData)
 {
+  const DNSSRVRecordList& records = record.getRecords();
+  JSLocalValueHandle result = JSArray(records.size());
+  std::size_t index = 0;
+  for (DNSSRVRecordList::const_iterator iter = records.begin(); iter != records.end(); iter++)
+  {
+    JSObjectHandle srv = JSObject();
+    srv->Set(JSLiteral("priority"), JSInt32(iter->priority));
+    srv->Set(JSLiteral("weight"), JSInt32(iter->weight));
+    srv->Set(JSLiteral("port"), JSInt32(iter->port));
+    srv->Set(JSLiteral("name"), JSString(iter->name));
+    result->ToObject()->Set(index++, srv);
+  }
+  call_result_callback<DNSSRVRecord>(record, result, userData);
 }
 
 static void on_ptr_lookup(const DNSPTRRecord& record, void* userData)
 {
+  const DNSPTRRecordList& records = record.getRecords();
+  JSLocalValueHandle result = JSArray(records.size());
+  std::size_t index = 0;
+  for (DNSPTRRecordList::const_iterator iter = records.begin(); iter != records.end(); iter++)
+  {
+    result->ToObject()->Set(index++, JSString(*iter));
+  }
+  call_result_callback<DNSPTRRecord>(record, result, userData);
 }
 
 static void on_txt_lookup(const DNSTXTRecord& record, void* userData)
 {
+  const DNSTXTRecordList& records = record.getRecords();
+  JSLocalValueHandle result = JSArray(records.size());
+  std::size_t index = 0;
+  for (DNSTXTRecordList::const_iterator iter = records.begin(); iter != records.end(); iter++)
+  {
+    result->ToObject()->Set(index++, JSString(*iter));
+  }
+  call_result_callback<DNSTXTRecord>(record, result, userData);
 }
 
 static void on_naptr_lookup(const DNSNAPTRRecord& record, void* userData)
 {
+  const DNSNAPTRRecordList& records = record.getRecords();
+  JSLocalValueHandle result = JSArray(records.size());
+  std::size_t index = 0;
+  for (DNSNAPTRRecordList::const_iterator iter = records.begin(); iter != records.end(); iter++)
+  {
+    JSObjectHandle srv = JSObject();
+    srv->Set(JSLiteral("order"), JSInt32(iter->order));
+    srv->Set(JSLiteral("preference"), JSInt32(iter->preference));
+    srv->Set(JSLiteral("flags"), JSString(iter->flags));
+    srv->Set(JSLiteral("service"), JSString(iter->service));
+    srv->Set(JSLiteral("regexp"), JSString(iter->regexp));
+    srv->Set(JSLiteral("replacement"), JSString(iter->flags));
+    result->ToObject()->Set(index++, srv);
+  }
+  call_result_callback<DNSNAPTRRecord>(record, result, userData);
 }
 
 static void on_mx_lookup(const DNSMXRecord& record, void* userData)
 {
+  const DNSMXRecordList& records = record.getRecords();
+  JSLocalValueHandle result = JSArray(records.size());
+  std::size_t index = 0;
+  for (DNSMXRecordList::const_iterator iter = records.begin(); iter != records.end(); iter++)
+  {
+    JSObjectHandle srv = JSObject();
+    srv->Set(JSLiteral("priority"), JSInt32(iter->priority));
+    srv->Set(JSLiteral("name"), JSString(iter->name));
+    result->ToObject()->Set(index++, srv);
+  }
+  call_result_callback<DNSMXRecord>(record, result, userData);
 }
 
 JS_METHOD_IMPL(__lookup_a)
 {
   static DNSARecordV4CB resolver_cb = boost::bind(on_a_lookup, _1, _2);
+  
   js_enter_scope();
   js_method_arg_assert_size_eq(3);
   js_method_arg_assert_string(0);
@@ -134,15 +208,15 @@ JS_METHOD_IMPL(__lookup_a)
   JSLocalObjectHandle obj = js_method_arg_as_object(2);
   DNSResolver* resolver = js_unwrap_pointer_from_local_object<DNSResolver>(obj);
   (*cb)->Set(JSLiteral("resolver"), obj);
+  
   resolver->resolveA4(query, 0, resolver_cb, cb);
-  //while(!dns_timeouts(resolver->context()->context(), -1, 0) == -1);
-  //return JSUndefined();
   return JSInt32(dns_timeouts(resolver->context()->context(),MAX_TIMEOUT_SEC, 0));
 }
 
 JS_METHOD_IMPL(__lookup_aaaa)
 {
   static DNSARecordV6CB resolver_cb = boost::bind(on_aaaa_lookup, _1, _2);
+  
   js_enter_scope();
   js_method_arg_assert_size_eq(3);
   js_method_arg_assert_string(0);
@@ -154,15 +228,16 @@ JS_METHOD_IMPL(__lookup_aaaa)
   *cb = js_method_arg_as_persistent_function(1);
   JSLocalObjectHandle obj = js_method_arg_as_object(2);
   DNSResolver* resolver = js_unwrap_pointer_from_local_object<DNSResolver>(obj);
+  (*cb)->Set(JSLiteral("resolver"), obj);
   
   resolver->resolveA6(query, 0, resolver_cb, cb);
-  while(!dns_timeouts(resolver->context()->context(), -1, 0) == -1);
-  return JSUndefined();
+  return JSInt32(dns_timeouts(resolver->context()->context(),MAX_TIMEOUT_SEC, 0));
 }
 
 JS_METHOD_IMPL(__lookup_srv)
 {
-  static DNSARecordV4CB resolver_cb = boost::bind(on_a_lookup, _1, _2);
+   static DNSSRVRecordCB resolver_cb = boost::bind(on_srv_lookup, _1, _2);
+  
   js_enter_scope();
   js_method_arg_assert_size_eq(3);
   js_method_arg_assert_string(0);
@@ -174,10 +249,115 @@ JS_METHOD_IMPL(__lookup_srv)
   *cb = js_method_arg_as_persistent_function(1);
   JSLocalObjectHandle obj = js_method_arg_as_object(2);
   DNSResolver* resolver = js_unwrap_pointer_from_local_object<DNSResolver>(obj);
+  (*cb)->Set(JSLiteral("resolver"), obj);
   
-  resolver->resolveA4(query, 0, resolver_cb, cb);
-  dns_timeouts(resolver->context()->context(), -1, 0);
-  return JSUndefined();
+  resolver->resolveSRV(query, 0, resolver_cb, cb);
+  return JSInt32(dns_timeouts(resolver->context()->context(),MAX_TIMEOUT_SEC, 0));
+}
+
+JS_METHOD_IMPL(__lookup_ptr4)
+{
+  static DNSPTRRecordCB resolver_cb = boost::bind(on_ptr_lookup, _1, _2);
+  
+  js_enter_scope();
+  js_method_arg_assert_size_eq(3);
+  js_method_arg_assert_string(0);
+  js_method_arg_assert_function(1);
+  js_method_arg_assert_object(2);
+  
+  std::string query = js_method_arg_as_std_string(0);
+  JSPersistentFunctionHandle* cb = new JSPersistentFunctionHandle; 
+  *cb = js_method_arg_as_persistent_function(1);
+  JSLocalObjectHandle obj = js_method_arg_as_object(2);
+  DNSResolver* resolver = js_unwrap_pointer_from_local_object<DNSResolver>(obj);
+  (*cb)->Set(JSLiteral("resolver"), obj);
+  
+  resolver->resolvePTR4(query, resolver_cb, cb);
+  return JSInt32(dns_timeouts(resolver->context()->context(),MAX_TIMEOUT_SEC, 0));
+}
+
+JS_METHOD_IMPL(__lookup_ptr6)
+{
+  static DNSPTRRecordCB resolver_cb = boost::bind(on_ptr_lookup, _1, _2);
+  
+  js_enter_scope();
+  js_method_arg_assert_size_eq(3);
+  js_method_arg_assert_string(0);
+  js_method_arg_assert_function(1);
+  js_method_arg_assert_object(2);
+  
+  std::string query = js_method_arg_as_std_string(0);
+  JSPersistentFunctionHandle* cb = new JSPersistentFunctionHandle; 
+  *cb = js_method_arg_as_persistent_function(1);
+  JSLocalObjectHandle obj = js_method_arg_as_object(2);
+  DNSResolver* resolver = js_unwrap_pointer_from_local_object<DNSResolver>(obj);
+  (*cb)->Set(JSLiteral("resolver"), obj);
+  
+  resolver->resolvePTR6(query, resolver_cb, cb);
+  return JSInt32(dns_timeouts(resolver->context()->context(),MAX_TIMEOUT_SEC, 0));
+}
+
+JS_METHOD_IMPL(__lookup_naptr)
+{
+  static DNSNAPTRRecordCB resolver_cb = boost::bind(on_naptr_lookup, _1, _2);
+  
+  js_enter_scope();
+  js_method_arg_assert_size_eq(3);
+  js_method_arg_assert_string(0);
+  js_method_arg_assert_function(1);
+  js_method_arg_assert_object(2);
+  
+  std::string query = js_method_arg_as_std_string(0);
+  JSPersistentFunctionHandle* cb = new JSPersistentFunctionHandle; 
+  *cb = js_method_arg_as_persistent_function(1);
+  JSLocalObjectHandle obj = js_method_arg_as_object(2);
+  DNSResolver* resolver = js_unwrap_pointer_from_local_object<DNSResolver>(obj);
+  (*cb)->Set(JSLiteral("resolver"), obj);
+  
+  resolver->resolveNAPTR(query, 0, resolver_cb, cb);
+  return JSInt32(dns_timeouts(resolver->context()->context(),MAX_TIMEOUT_SEC, 0));
+}
+
+JS_METHOD_IMPL(__lookup_txt)
+{
+  static DNSTXTRecordCB resolver_cb = boost::bind(on_txt_lookup, _1, _2);
+  
+  js_enter_scope();
+  js_method_arg_assert_size_eq(3);
+  js_method_arg_assert_string(0);
+  js_method_arg_assert_function(1);
+  js_method_arg_assert_object(2);
+  
+  std::string query = js_method_arg_as_std_string(0);
+  JSPersistentFunctionHandle* cb = new JSPersistentFunctionHandle; 
+  *cb = js_method_arg_as_persistent_function(1);
+  JSLocalObjectHandle obj = js_method_arg_as_object(2);
+  DNSResolver* resolver = js_unwrap_pointer_from_local_object<DNSResolver>(obj);
+  (*cb)->Set(JSLiteral("resolver"), obj);
+  
+  resolver->resolveTXT(query, 0, DNS_C_ANY, resolver_cb, cb);
+  return JSInt32(dns_timeouts(resolver->context()->context(),MAX_TIMEOUT_SEC, 0));
+}
+
+JS_METHOD_IMPL(__lookup_mx)
+{
+  static DNSMXRecordCB resolver_cb = boost::bind(on_mx_lookup, _1, _2);
+  
+  js_enter_scope();
+  js_method_arg_assert_size_eq(3);
+  js_method_arg_assert_string(0);
+  js_method_arg_assert_function(1);
+  js_method_arg_assert_object(2);
+  
+  std::string query = js_method_arg_as_std_string(0);
+  JSPersistentFunctionHandle* cb = new JSPersistentFunctionHandle; 
+  *cb = js_method_arg_as_persistent_function(1);
+  JSLocalObjectHandle obj = js_method_arg_as_object(2);
+  DNSResolver* resolver = js_unwrap_pointer_from_local_object<DNSResolver>(obj);
+  (*cb)->Set(JSLiteral("resolver"), obj);
+  
+  resolver->resolveMX(query, 0, resolver_cb, cb);
+  return JSInt32(dns_timeouts(resolver->context()->context(),MAX_TIMEOUT_SEC, 0));
 }
 
 JS_METHOD_IMPL(__relinquish_context)
@@ -234,8 +414,8 @@ JS_METHOD_IMPL(__set_work_callback)
   js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_function(0);
-  work_cb = new JSPersistentFunctionHandle; 
-  *work_cb = js_method_arg_as_persistent_function(0);
+  _work_cb = new JSPersistentFunctionHandle; 
+  *_work_cb = js_method_arg_as_persistent_function(0);
   return JSUndefined();
 }
 
@@ -267,6 +447,12 @@ JS_EXPORTS_INIT()
   js_export_method("_lookup_a", __lookup_a);
   js_export_method("_lookup_aaaa", __lookup_aaaa);
   js_export_method("_lookup_srv", __lookup_srv);
+  js_export_method("_lookup_txt", __lookup_txt);
+  js_export_method("_lookup_mx", __lookup_mx);
+  js_export_method("_lookup_ptr", __lookup_ptr4);
+  js_export_method("_lookup_ptr4", __lookup_ptr4);
+  js_export_method("_lookup_ptr6", __lookup_ptr6);
+  js_export_method("_lookup_naptr", __lookup_naptr);
   js_export_finalize();
 }
 
