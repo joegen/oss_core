@@ -13,4 +13,6 @@ EXTRA_DIST += \
     js/modules/examples/udp_socket_example.js \
     js/modules/examples/tcp_socket_example.js \
     js/modules/examples/xmlparser_example.js \
-    js/modules/examples/dns_example.js
+    js/modules/examples/dns_example.js \
+    js/modules/examples/http_client_example.js \
+    js/modules/examples/event_emitter_example.js

@@ -20,17 +20,23 @@
 
 
 #include <Poco/ClassLoader.h>
+#include <Poco/ThreadPool.h>
 
 #include "OSS/JS/JSPluginManager.h"
 
 v8::Persistent<v8::Context>* JSPlugin::_pContext;
 v8::Persistent<v8::ObjectTemplate>* JSPlugin::_pGlobal;
+Poco::ThreadPool* JSPlugin::_pThreadPool = 0;
 
 namespace OSS {
 namespace JS {
 
 JSPluginManager::JSPluginManager()
 {
+  if (!JSPlugin::_pThreadPool)
+  {
+    JSPlugin::_pThreadPool = new Poco::ThreadPool(10, 256);
+  }
 }
 
 JSPluginManager::~JSPluginManager()

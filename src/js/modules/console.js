@@ -2,6 +2,32 @@ const system = require("system");
 const object = require("object");
 const defines = require("consts");
 
+var dump_log = function(out, args)
+{
+  var msg;
+  if (args.length == 1)
+  {
+    msg = args[0];
+  }
+  else
+  {
+    for (var i = 0; i < args.length; i++)
+    {
+      if (i == 0)
+        msg = args[i];
+      else
+        msg += args[i];
+      
+      if (i < args.length - 1)
+      {
+        msg += " ";
+      }
+    }
+  }
+  msg += "\n";
+  system.write(out, msg);
+}
+
 var Console = function(cout, cerr)
 {
   if (object.isNumber(cout))
@@ -23,27 +49,23 @@ var Console = function(cout, cerr)
   }
 }
 
-Console.prototype.log = function(msg)
+Console.prototype.log = function()
 {
-  msg += "\n";
-  system.write(this.out, msg);
+  dump_log(this.out, arguments);
 }
 
-Console.prototype.error= function(msg)
+Console.prototype.error = function()
 {
-  msg += "\n";
-  system.write(this.err, msg);
+  dump_log(this.err, arguments);
 }
 exports.Console = Console;
 
-exports.log = function(msg)
+exports.log = function()
 {
-  msg += "\n";
-  system.write(defines.STDIN_FILENO, msg);
+  dump_log(defines.STDIN_FILENO, arguments);
 }
 
-exports.error = function(msg)
+exports.error = function()
 {
-  msg += "\n";
-  system.write(defines.STDERR_FILENO, msg);
+  dump_log(defines.STDERR_FILENO, arguments);
 }

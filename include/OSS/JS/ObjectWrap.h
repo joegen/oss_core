@@ -53,8 +53,10 @@ class ObjectWrap {
   template <class T>
   static inline T* Unwrap (v8::Handle<v8::Object> handle) 
   {
-    assert(!handle.IsEmpty());
-    assert(handle->InternalFieldCount() > 0);
+    if(handle.IsEmpty() || handle->InternalFieldCount() <= 0)
+    {
+      return 0;
+    }
     return static_cast<T*>(handle->GetPointerFromInternalField(0));
   }
   

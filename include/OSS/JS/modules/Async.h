@@ -22,17 +22,30 @@
 
 #include <OSS/JS/JSPlugin.h>
 #include <OSS/UTL/BlockingQueue.h>
+#include <queue>
 
 typedef OSS::BlockingQueue<std::string> AsyncStringQueue;
 typedef boost::function<void(std::string message)> AsyncStringQueueCallback;
+typedef boost::function<void()> WakeupTask;
+typedef std::queue<WakeupTask> WakeupTaskQueue;
+
 
 struct Async
 {
+  static WakeupTaskQueue _wakeupTaskQueue;
+  static OSS::mutex_critic_sec _wakeupTaskQueueMutex;
+  static JSPersistentFunctionHandle _jsonParser;
+  
   static void register_string_queue(AsyncStringQueue* pQueue, AsyncStringQueueCallback cb);
   static void unregister_string_queue(int fd);
   static void async_execute(const JSPersistentFunctionHandle& handle, const JSPersistentArgumentVector& args);
   static void unmonitor_fd(int fd);
   static void clear_timer(int timerId);
+    
+  static void __wakeup_pipe();
+  static void __insert_wakeup_task(const WakeupTask& task);
+  static bool __do_one_wakeup_task();
+  static JSValueHandle __json_parse(const std::string& json);
 };
 
 

@@ -43,6 +43,7 @@ public:
   JS_METHOD_DECLARE(fromBuffer);
   JS_METHOD_DECLARE(equals);
   JS_METHOD_DECLARE(resize);
+  JS_METHOD_DECLARE(clear);
   
   //
   // Properties

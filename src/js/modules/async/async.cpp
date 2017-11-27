@@ -31,8 +31,6 @@
 typedef v8::Persistent<v8::Function> PersistentFunction;
 typedef std::vector< v8::Persistent<v8::Value> > ArgumentVector;
 
-typedef std::map<int, QueueObject*> ActiveQueue;
-static ActiveQueue _activeQueue;
 static bool _isTerminating = false;
 static OSS::Semaphore* _exitSem = 0;
 static OSS::UInt64  _garbageCollectionFrequency = 30; /// 30 seconds default
@@ -199,57 +197,35 @@ void Async::clear_timer(int timerId)
   }
 }
 
-v8::Persistent<v8::Function> QueueObject::_constructor;
 static int _wakeupPipe[2];
-
-static void __wakeup_pipe()
+WakeupTaskQueue Async::_wakeupTaskQueue;
+OSS::mutex_critic_sec Async::_wakeupTaskQueueMutex;
+void Async::__wakeup_pipe()
 {
   std::size_t w = 0;
   w = write(_wakeupPipe[1], " ", 1);
   (void)w;
 }
 
-QueueObject::QueueObject() :
-  _queue(true)
+void Async::__insert_wakeup_task(const WakeupTask& task)
 {
-  _activeQueue[_queue.getFd()] = this;
-  __wakeup_pipe();
+  OSS::mutex_critic_sec_lock lock(_wakeupTaskQueueMutex);
+  Async::_wakeupTaskQueue.push(task);
+  Async::__wakeup_pipe();
 }
 
-QueueObject::~QueueObject()
+bool Async::__do_one_wakeup_task()
 {
-  _eventCallback.Dispose();
-  _activeQueue.erase(_queue.getFd());
-  __wakeup_pipe();
-}
-
-v8::Handle<v8::Value> QueueObject::New(const v8::Arguments& args)
-{
-  if (args.Length() != 1 || !args[0]->IsFunction())
+  OSS::mutex_critic_sec_lock lock(Async::_wakeupTaskQueueMutex);
+  if (Async::_wakeupTaskQueue.empty())
   {
-    return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument")));
+    return false;
   }
-  
-  v8::HandleScope scope; 
-  QueueObject* pQueue = new QueueObject();
-  pQueue->_eventCallback = v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(args[0]));
-  pQueue->Wrap(args.This());
-  return args.This();
+  Async::_wakeupTaskQueue.front()();
+  Async::_wakeupTaskQueue.pop();
+  return true;
 }
 
-v8::Handle<v8::Value> QueueObject::enqueue(const v8::Arguments& args)
-{
-  v8::HandleScope scope;
-  if (args.Length() < 1 || !args[0]->IsArray())
-  {
-    return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument.  Usage: enqueue(Array)")));
-  }
-  QueueObject* pQueue = ObjectWrap::Unwrap<QueueObject>(args.This());
-  Event::Ptr pEvent = Event::Ptr(new QueueObject::Event(*pQueue));
-  handle_to_arg_vector(args[0], pEvent->_eventData);
-  pQueue->_queue.enqueue(pEvent);
-  return v8::Undefined();
-}
 
 static v8::Handle<v8::Value> __monitor_descriptor(const v8::Arguments& args)
 {
@@ -266,7 +242,7 @@ static v8::Handle<v8::Value> __monitor_descriptor(const v8::Arguments& args)
   data.pfd.events = POLLIN;
   
   _monitoredFd[data.pfd.fd] = data;
-  __wakeup_pipe();
+  Async::__wakeup_pipe();
   return v8::Undefined();
 }
 void Async::unmonitor_fd(int fd)
@@ -278,7 +254,7 @@ void Async::unmonitor_fd(int fd)
     delete iter->second.pCallback;
     
     _monitoredFd.erase(iter);
-    __wakeup_pipe();
+    Async::__wakeup_pipe();
   }
 }
 
@@ -309,13 +285,13 @@ void Async::register_string_queue(AsyncStringQueue* pQueue, AsyncStringQueueCall
   data.queue = pQueue;
   data.cb = cb;
   _monitoredStringQueue[pQueue->getFd()] = data;
-  __wakeup_pipe();
+  Async::__wakeup_pipe();
 }
 
 void Async::unregister_string_queue(int fd)
 {
   _monitoredStringQueue.erase(fd);
-  __wakeup_pipe();
+  Async::__wakeup_pipe();
 }
 
 static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
@@ -335,13 +311,15 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
     pfds[2].events = POLLIN;
     pfds[2].revents = 0;
   
+    QueueObject::_activeQueueMutex->lock();
+    
     std::vector<pollfd> descriptors;
-    descriptors.reserve(_activeQueue.size() + 3);
+    descriptors.reserve(QueueObject::_activeQueue.size() + 3);
     descriptors.push_back(pfds[0]);
     descriptors.push_back(pfds[1]);
     descriptors.push_back(pfds[2]);
     
-    for(ActiveQueue::iterator iter = _activeQueue.begin(); iter != _activeQueue.end(); iter++)
+    for(QueueObject::QueueObject::ActiveQueue::iterator iter = QueueObject::_activeQueue.begin(); iter != QueueObject::_activeQueue.end(); iter++)
     {
       pollfd fd;
       fd.fd = iter->first;
@@ -349,6 +327,8 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
       fd.revents = 0;
       descriptors.push_back(fd);
     }
+    
+    QueueObject::_activeQueueMutex->unlock();
     
     for (MonitoredStringQueue::iterator iter = _monitoredStringQueue.begin(); iter != _monitoredStringQueue.end(); iter++)
     {
@@ -397,6 +377,14 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
     {
       v8::V8::LowMemoryNotification();
       lastGarbageCollectionTime = now;
+    }
+    
+    //
+    // Check if C++ just wants to execute a task in the event loop
+    //
+    if (Async::__do_one_wakeup_task())
+    {
+      continue;
     }
     
     if (descriptors[0].revents & POLLIN)
@@ -454,8 +442,9 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
         int revents = pfd.revents;
         if (revents & POLLIN)
         {
-          ActiveQueue::iterator iter = _activeQueue.find(pfd.fd);
-          if (iter != _activeQueue.end())
+          QueueObject::_activeQueueMutex->lock();
+          QueueObject::ActiveQueue::iterator iter = QueueObject::_activeQueue.find(pfd.fd);
+          if (iter != QueueObject::_activeQueue.end())
           {
             QueueObject::Event::Ptr pEvent;
             iter->second->_queue.dequeue(pEvent);
@@ -465,6 +454,7 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
             }
             found = true;
           }
+          QueueObject::_activeQueueMutex->unlock();
           
           if (!found)
           {
@@ -507,26 +497,6 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
   return v8::Undefined();
 }
 
-void QueueObject::Init(v8::Handle<v8::Object> exports)
-{
-
-  v8::HandleScope scope; 
-  v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(QueueObject::New);
-  tpl->SetClassName(v8::String::NewSymbol("Queue"));
-  tpl->PrototypeTemplate()->Set(v8::String::NewSymbol("ObjectType"), v8::String::NewSymbol("Queue"));
-  tpl->InstanceTemplate()->SetInternalFieldCount(1);
-
-  tpl->PrototypeTemplate()->Set(v8::String::NewSymbol("enqueue"), v8::FunctionTemplate::New(QueueObject::enqueue)->GetFunction());
-
-  
-  QueueObject::_constructor = v8::Persistent<v8::Function>::New(tpl->GetFunction());
-  exports->Set(v8::String::NewSymbol("Queue"), QueueObject::_constructor);
-  //
-  // Expose as a global object
-  //
-  (*JSPlugin::_pContext)->Global()->Set(v8::String::NewSymbol("Queue"), QueueObject::_constructor);
-  
-}
 
 static v8::Handle<v8::Value> __stop_event_loop(const v8::Arguments& args)
 {
@@ -534,7 +504,7 @@ static v8::Handle<v8::Value> __stop_event_loop(const v8::Arguments& args)
   if (!_isTerminating)
   {
     _isTerminating = true;
-    __wakeup_pipe();
+    Async::__wakeup_pipe();
     //
     // Perform the rest of the cleanup here
     //
@@ -553,24 +523,55 @@ static v8::Handle<v8::Value> __set_garbage_collection_frequency(const v8::Argume
   return v8::Undefined();
 }
 
-static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
+JSPersistentFunctionHandle Async::_jsonParser;
+JSValueHandle Async::__json_parse(const std::string& json)
+{
+  if (Async::_jsonParser.IsEmpty())
+  {
+    js_throw("JSON parser function is not set");
+  }
+  JSValueHandle val = JSString(json);
+  JSArgumentVector jsonArg;
+  jsonArg.push_back(val);
+  return Async::_jsonParser->Call((*JSPlugin::_pContext)->Global(), jsonArg.size(), jsonArg.data());
+}
+
+JS_METHOD_IMPL(__set_json_parser)
+{
+  js_enter_scope();
+  js_method_arg_declare_persistent_function(func, 0);
+  Async::_jsonParser = func;
+  return JSUndefined();
+}
+
+JS_METHOD_IMPL(emit_json_string)
+{
+  js_enter_scope();
+  js_method_arg_declare_uint32(fd, 0);
+  js_method_arg_declare_string(json, 1);
+  QueueObject::json_enqueue(fd, json);
+  return JSUndefined();
+}
+
+JS_EXPORTS_INIT()
 {
   ::pipe(_wakeupPipe);
+
+  js_export_method("call", __call);
+  js_export_method("processEvents", __process_events);
+  js_export_method("setTimeout", __schedule_one_shot_timer);
+  js_export_method("clearTimeout", __cancel_one_shot_timer);
+  js_export_method("monitorFd", __monitor_descriptor);
+  js_export_method("unmonitorFd", __unmonitor_descriptor);
+  js_export_method("setGCFrequency", __set_garbage_collection_frequency);
+  js_export_method("emit_json_string", emit_json_string);
   
-  v8::HandleScope scope; 
-  v8::Persistent<v8::Object> exports = v8::Persistent<v8::Object>::New(v8::Object::New());
-  exports->Set(v8::String::New("call"), v8::FunctionTemplate::New(__call)->GetFunction());
-  exports->Set(v8::String::New("processEvents"), v8::FunctionTemplate::New(__process_events)->GetFunction());
-  exports->Set(v8::String::New("setTimeout"), v8::FunctionTemplate::New(__schedule_one_shot_timer)->GetFunction());
-  exports->Set(v8::String::New("clearTimeout"), v8::FunctionTemplate::New(__cancel_one_shot_timer)->GetFunction());
-  exports->Set(v8::String::New("monitorFd"), v8::FunctionTemplate::New(__monitor_descriptor)->GetFunction());
-  exports->Set(v8::String::New("unmonitorFd"), v8::FunctionTemplate::New(__unmonitor_descriptor)->GetFunction());
-  exports->Set(v8::String::New("__stop_event_loop"), v8::FunctionTemplate::New(__stop_event_loop)->GetFunction());
-  exports->Set(v8::String::New("setGCFrequency"), v8::FunctionTemplate::New(__set_garbage_collection_frequency)->GetFunction());
+  js_export_method("__stop_event_loop", __stop_event_loop);
+  js_export_method("__set_json_parser", __set_json_parser);
   
-  QueueObject::Init(exports);
+  js_export_class(QueueObject);
   
-  return exports;
+  js_export_finalize();
 }
 
 JS_REGISTER_MODULE(JSAsync);

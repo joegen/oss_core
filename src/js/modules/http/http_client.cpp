@@ -1,0 +1,341 @@
+// Library: OSS_CORE - Foundation API for SIP B2BUA
+// Copyright (c) OSS Software Solutions
+// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
+//
+// Permission is hereby granted, to any person or organization
+// obtaining a copy of the software and accompanying documentation covered by
+// this license (the "Software") to use, execute, and to prepare
+// derivative works of the Software, all subject to the
+// "GNU Lesser General Public License (LGPL)".
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT
+// SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE
+// FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
+// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+
+#include "OSS/JS/JSPlugin.h"
+#include "OSS/UTL/CoreUtils.h"
+#include "OSS/UTL/Logger.h"
+#include "OSS/JS/modules/HttpClientObject.h"
+#include "OSS/JS/modules/HttpRequestObject.h"
+#include "OSS/JS/modules/HttpResponseObject.h"
+#include "OSS/JS/modules/BufferObject.h"
+
+using OSS::JS::ObjectWrap;
+
+class ResponseReceiver : public Poco::Runnable
+{
+public:
+  HttpClientObject* _client;
+  HttpResponseObject* _response;
+  ResponseReceiver(HttpClientObject* client, HttpResponseObject* response) :
+    _client(client),
+    _response(response)
+  {
+  }
+  void run()
+  {
+  }
+};
+
+//
+// Define the Interface
+//
+JS_CLASS_INTERFACE(HttpClientObject, "HttpClient") 
+{
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "setHost", setHost);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "getHost", getHost);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "setPort", setPort);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "getPort", getPort);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "setProxyHost", setProxyHost);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "setProxyPort", setProxyPort);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "getProxyHost", getProxyHost);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "getProxyPort", getProxyPort);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "setProxyUsername", setProxyUsername);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "getProxyUserName", getProxyUsername);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "setProxyPassword", setProxyPassword);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "getProxyPassword", getProxyPassword);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "setKeepAliveTimeout", setKeepAliveTimeout);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "getKeepAliveTimeout", getKeepAliveTimeout);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "sendRequest", sendRequest);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "receiveResponse", receiveResponse);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "peekResponse", peekResponse);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "reset", reset);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "secure", secure);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "bypassProxy", bypassProxy);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "connected", connected);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "getSocketFd", getSocketFd);
+  
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "_read", read);
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "_write", write);
+  
+  JS_CLASS_INTERFACE_END(HttpClientObject);
+}
+
+HttpClientObject::HttpClientObject() :
+  _input(0),
+  _output(0)
+{
+}
+
+HttpClientObject::~HttpClientObject()
+{
+}
+
+JS_CONSTRUCTOR_IMPL(HttpClientObject)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = new HttpClientObject();
+  pClient->Wrap(js_method_arg_self());
+  return js_method_arg_self();
+}
+
+JS_METHOD_IMPL(HttpClientObject::setHost)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_string(0);
+  std::string value = js_method_arg_as_std_string(0);
+  pClient->_session.setHost(value);
+  return JSUndefined();
+}
+
+JS_METHOD_IMPL(HttpClientObject::getHost)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  return JSString(pClient->_session.getHost());
+}
+
+JS_METHOD_IMPL(HttpClientObject::setPort)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_uint32(0);
+  uint32_t value = js_method_arg_as_uint32(0);
+  pClient->_session.setPort(value);
+  return JSUndefined();
+}
+
+JS_METHOD_IMPL(HttpClientObject::getPort)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  return JSUInt32(pClient->_session.getPort());
+}
+
+JS_METHOD_IMPL(HttpClientObject::setProxyHost)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_string(0);
+  std::string value = js_method_arg_as_std_string(0);
+  pClient->_session.setProxyHost(value);
+  return JSUndefined();
+}
+
+JS_METHOD_IMPL(HttpClientObject::setProxyPort)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_uint32(0);
+  uint32_t value = js_method_arg_as_uint32(0);
+  pClient->_session.setProxyPort(value);
+  return JSUndefined();
+}
+
+JS_METHOD_IMPL(HttpClientObject::getProxyHost)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  return JSString(pClient->_session.getProxyHost());
+}
+
+JS_METHOD_IMPL(HttpClientObject::getProxyPort)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  return JSUInt32(pClient->_session.getProxyPort());
+}
+
+JS_METHOD_IMPL(HttpClientObject::setProxyUsername)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_string(0);
+  std::string value = js_method_arg_as_std_string(0);
+  pClient->_session.setProxyUsername(value);
+  return JSUndefined();
+}
+
+JS_METHOD_IMPL(HttpClientObject::getProxyUsername)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  return JSString(pClient->_session.getProxyUsername());
+}
+
+JS_METHOD_IMPL(HttpClientObject::setProxyPassword)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_string(0);
+  std::string value = js_method_arg_as_std_string(0);
+  pClient->_session.setProxyPassword(value);
+  return JSUndefined();
+}
+
+JS_METHOD_IMPL(HttpClientObject::getProxyPassword)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  return JSString(pClient->_session.getProxyPassword());
+}
+
+JS_METHOD_IMPL(HttpClientObject::setKeepAliveTimeout)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  js_method_arg_assert_size_eq(1);
+  js_method_arg_assert_uint32(0);
+  uint32_t seconds = js_method_arg_as_uint32(0);
+  Poco::Timespan timespan;
+  timespan.assign(seconds, 0);
+  pClient->_session.setKeepAliveTimeout(timespan);
+  return JSUndefined();
+}
+
+JS_METHOD_IMPL(HttpClientObject::getKeepAliveTimeout)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  const Poco::Timespan& timespan = pClient->_session.getKeepAliveTimeout();
+  return JSUInt32(timespan.milliseconds() * 1000);
+}
+
+JS_METHOD_IMPL(HttpClientObject::sendRequest)
+{
+  js_enter_scope();
+  js_method_arg_declare_self(HttpClientObject, self);
+  js_method_arg_declare_external_object(HttpRequestObject, pRequest, 0);
+  
+  self->_output = &(self->_session.sendRequest(*pRequest->request()));
+  return JSBoolean(self->_output && !self->_output->bad() && !self->_output->fail());
+}
+
+JS_METHOD_IMPL(HttpClientObject::receiveResponse)
+{
+  js_enter_scope();
+  js_method_arg_declare_self(HttpClientObject, self);
+  js_method_arg_declare_external_object(HttpResponseObject, pResponse, 0);
+  
+  OSS_LOG_INFO("receiving response");
+  try
+  {
+    self->_output = 0;
+    self->_input = &(self->_session.receiveResponse((*pResponse->response())));
+  }
+  catch(const MessageException& e)
+  {
+    js_throw(e.message().c_str());
+  }
+  catch(...)
+  {
+    js_throw("Unknown Exception");
+  }
+  return JSUndefined();
+}
+
+JS_METHOD_IMPL(HttpClientObject::peekResponse)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  return JSUndefined();
+}
+
+JS_METHOD_IMPL(HttpClientObject::reset)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  pClient->_session.reset();
+  return JSUndefined();
+}
+
+JS_METHOD_IMPL(HttpClientObject::secure)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  return JSBoolean(pClient->_session.secure());
+}
+
+JS_METHOD_IMPL(HttpClientObject::bypassProxy)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  return JSBoolean(pClient->_session.bypassProxy());
+}
+
+JS_METHOD_IMPL(HttpClientObject::connected)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  return JSBoolean(pClient->_session.connected());
+}
+
+JS_METHOD_IMPL(HttpClientObject::getSocketFd)
+{
+  js_enter_scope();
+  HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
+  return JSInt32(pClient->_session.socket().impl()->sockfd());
+}
+
+JS_METHOD_IMPL(HttpClientObject::read)
+{
+  js_enter_scope();
+  js_method_arg_declare_self(HttpClientObject, self);
+  js_method_arg_declare_external_object(BufferObject, buf, 0);
+  js_method_arg_declare_uint32(size, 1);
+  
+  if (self->_input)
+  {
+    std::istream& strm = *self->_input;
+    return JSUInt32(strm.readsome((char*)buf->buffer().data(), size));
+  }
+  
+  return JSUInt32(0);
+}
+
+JS_METHOD_IMPL(HttpClientObject::write)
+{
+  js_enter_scope();
+  js_method_arg_declare_self(HttpClientObject, self);
+  js_method_arg_declare_external_object(BufferObject, buf, 0);
+  js_method_arg_declare_uint32(size, 1);
+  
+  if (self->_output)
+  {
+    std::ostream& strm = *self->_output;
+    return JSBoolean(!strm.write((char*)buf->buffer().data(), size).fail());
+  }
+  
+  return JSBoolean(false);
+}
+
+JS_EXPORTS_INIT()
+{
+  js_enter_scope();
+  js_export_class(HttpClientObject);
+  js_export_finalize(); 
+}
+
+JS_REGISTER_MODULE(JSHttpClient);

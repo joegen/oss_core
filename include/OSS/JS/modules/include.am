@@ -8,4 +8,7 @@ nobase_include_HEADERS += \
     OSS/JS/modules/HttpParserObject.h \
     OSS/JS/modules/http_parser/http_parser.h \
     OSS/JS/modules/ProcessObject.h \
-    OSS/JS/modules/inet_socket/inet_socket.h
+    OSS/JS/modules/inet_socket/inet_socket.h \
+    OSS/JS/modules/HttpClientObject.h \
+    OSS/JS/modules/HttpRequestObject.h \
+    OSS/JS/modules/HttpResponseObject.h

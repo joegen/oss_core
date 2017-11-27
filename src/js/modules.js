@@ -24,13 +24,14 @@ function require(path)
   var modulePath = __get_module_cononical_file_name(path);
   if (typeof modulePath === "undefined")
   {
-    throw new ReferenceError("Unable to resolve canonical file name for module " + path);
+    throw new ReferenceError("Unable to resolve canonical file name for module " + modulePath);
   }
   var cached = __get_cached_module(modulePath);
   if (typeof cached !== "undefined")
   {
     return cached;
   }
+  
   var module = new Module();
   module.path = modulePath;
   
@@ -39,7 +40,7 @@ function require(path)
     var script = __get_module_script(module.path);
     if (typeof script === "undefined")
     {
-      throw new ReferenceError("Unable to load javascript exports for " + path);
+      throw new ReferenceError("Unable to load javascript exports for " + modulePath);
     }
     
     var current_path = __current_path();
@@ -57,7 +58,7 @@ function require(path)
     }
     else
     {
-      throw new ReferenceError("Unable to load plugin exports for " + path);
+      throw new ReferenceError("Unable to load plugin exports for " + modulePath);
     }
   }
   

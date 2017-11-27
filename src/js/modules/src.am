@@ -6,6 +6,8 @@ js_helper-install-hook:
 	cp ${srcdir}/js/modules/http/*.js ${DESTDIR}${libdir}/oss_modules/http
 	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/dns
 	cp ${srcdir}/js/modules/dns/*.js ${DESTDIR}${libdir}/oss_modules/dns
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/async
+	cp ${srcdir}/js/modules/async/*.js ${DESTDIR}${libdir}/oss_modules/async
 
 include js/modules/examples/src.am
 
@@ -17,7 +19,9 @@ EXTRA_DIST += \
     js/modules/monitored_file.js \
     js/modules/socket.js \
     js/modules/http/index.js \
-    js/modules/xml-parser.js
+    js/modules/xml-parser.js \
+    js/modules/utils.js \
+    js/modules/async/async.js
 
 lib_LTLIBRARIES += liboss_jsconst.la
 liboss_jsconst_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
@@ -64,7 +68,7 @@ liboss_jsbuffer_la_SOURCES = js/modules/buffer.cpp
 lib_LTLIBRARIES += liboss_jsasync.la
 liboss_jsasync_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
 liboss_jsasync_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
-liboss_jsasync_la_SOURCES = js/modules/async.cpp
+liboss_jsasync_la_SOURCES = js/modules/async/queue_object.cpp js/modules/async/async.cpp
 
 lib_LTLIBRARIES += liboss_jszmq.la
 liboss_jszmq_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
@@ -99,6 +103,21 @@ liboss_jshttpparser_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_I
 liboss_jshttpparser_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
 liboss_jshttpparser_la_SOURCES = js/modules/http/http_parser.cpp js/modules/http/http_parser/http_parser.c
 
+lib_LTLIBRARIES += liboss_jshttpclient.la
+liboss_jshttpclient_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jshttpclient_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jshttpclient_la_SOURCES = js/modules/http/http_client.cpp
+
+lib_LTLIBRARIES += liboss_jshttprequest.la
+liboss_jshttprequest_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jshttprequest_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jshttprequest_la_SOURCES = js/modules/http/http_request.cpp
+
+lib_LTLIBRARIES += liboss_jshttpresponse.la
+liboss_jshttpresponse_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jshttpresponse_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jshttpresponse_la_SOURCES = js/modules/http/http_response.cpp
+
 lib_LTLIBRARIES += liboss_jsprocess.la
 liboss_jsprocess_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
 liboss_jsprocess_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
@@ -130,13 +149,16 @@ js_module-install-hook: js_helper-install-hook
 	cp ${DESTDIR}${libdir}/liboss_jspipe.so ${DESTDIR}${libdir}/oss_modules/pipe.jso
 	cp ${DESTDIR}${libdir}/liboss_jssystem.so ${DESTDIR}${libdir}/oss_modules/_system.jso
 	cp ${DESTDIR}${libdir}/liboss_jsbuffer.so ${DESTDIR}${libdir}/oss_modules/buffer.jso
-	cp ${DESTDIR}${libdir}/liboss_jsasync.so ${DESTDIR}${libdir}/oss_modules/async.jso
+	cp ${DESTDIR}${libdir}/liboss_jsasync.so ${DESTDIR}${libdir}/oss_modules/async/_async.jso
 	cp ${DESTDIR}${libdir}/liboss_jszmq.so ${DESTDIR}${libdir}/oss_modules/_zmq.jso
 	cp ${DESTDIR}${libdir}/liboss_jsgetopt.so ${DESTDIR}${libdir}/oss_modules/getopt.jso
 	cp ${DESTDIR}${libdir}/liboss_jsconfig.so ${DESTDIR}${libdir}/oss_modules/_config.jso
 	cp ${DESTDIR}${libdir}/liboss_jsfilesystem.so ${DESTDIR}${libdir}/oss_modules/filesystem.jso
 	cp ${DESTDIR}${libdir}/liboss_jsfile.so ${DESTDIR}${libdir}/oss_modules/_file.jso
 	cp ${DESTDIR}${libdir}/liboss_jshttpparser.so ${DESTDIR}${libdir}/oss_modules/http/http_parser.jso
+	cp ${DESTDIR}${libdir}/liboss_jshttpclient.so ${DESTDIR}${libdir}/oss_modules/http/_http_client.jso
+	cp ${DESTDIR}${libdir}/liboss_jshttprequest.so ${DESTDIR}${libdir}/oss_modules/http/_http_request.jso
+	cp ${DESTDIR}${libdir}/liboss_jshttpresponse.so ${DESTDIR}${libdir}/oss_modules/http/_http_response.jso
 	cp ${DESTDIR}${libdir}/liboss_jsprocess.so ${DESTDIR}${libdir}/oss_modules/_process.jso
 	cp ${DESTDIR}${libdir}/liboss_jsinotify.so ${DESTDIR}${libdir}/oss_modules/inotify.jso
 	cp ${DESTDIR}${libdir}/liboss_jsinetsocket.so ${DESTDIR}${libdir}/oss_modules/inet_socket.jso

@@ -40,6 +40,7 @@ JS_CLASS_INTERFACE(BufferObject, "Buffer")
   JS_CLASS_METHOD_DEFINE(BufferObject, "fromBuffer", fromBuffer);
   JS_CLASS_METHOD_DEFINE(BufferObject, "equals", equals);
   JS_CLASS_METHOD_DEFINE(BufferObject, "resize", resize);
+  JS_CLASS_METHOD_DEFINE(BufferObject, "clear", clear);
   JS_CLASS_INDEX_ACCESSOR_DEFINE(BufferObject, getAt, setAt); 
   JS_CLASS_INTERFACE_END(BufferObject); 
 }
@@ -273,6 +274,14 @@ JS_METHOD_IMPL(BufferObject::resize)
   return JSUndefined();
 }
 
+JS_METHOD_IMPL(BufferObject::clear)
+{
+  js_enter_scope();
+  BufferObject* buf = js_method_arg_unwrap_self(BufferObject);
+  buf->buffer().clear();
+  return JSUndefined();
+}
+
 JS_METHOD_IMPL(BufferObject::isBufferObject)
 {
   js_enter_scope();
@@ -310,7 +319,6 @@ JS_INDEX_SETTER_IMPL(BufferObject::setAt)
   pBuffer->_buffer[js_setter_index()] = val;
   return JSUndefined();
 }
-
 
 
 JS_EXPORTS_INIT()

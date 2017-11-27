@@ -25,13 +25,20 @@
 #include <vector>
 #include <OSS/JS/JSPlugin.h>
 #include <OSS/UTL/BlockingQueue.h>
+#include "OSS/JSON/Json.h"
 
 class QueueObject : public OSS::JS::ObjectWrap
 {
 public:
+  struct JsonEvent
+  {
+    int fd;
+    std::string json;
+  };
   typedef std::vector< v8::Persistent<v8::Value> > EventData;
   typedef v8::Persistent<v8::Function> EventCallback;
   typedef std::map<intptr_t, QueueObject*> ActiveQueues;
+  typedef std::queue<JsonEvent> JsonQueue;
   
   class Event : public boost::enable_shared_from_this<Event>
   {
@@ -53,19 +60,29 @@ public:
   };
   
   typedef OSS::BlockingQueue<Event::Ptr> EventQueue;
-
-  QueueObject();
-  virtual ~QueueObject();
   
-  static v8::Persistent<v8::Function> _constructor;
-  static void Init(v8::Handle<v8::Object> exports);
-  static v8::Handle<v8::Value> New(const v8::Arguments& args);
-  static v8::Handle<v8::Value> enqueue(const v8::Arguments& args);
+  JS_CONSTRUCTOR_DECLARE();
+  JS_METHOD_DECLARE(enqueue);
+  JS_METHOD_DECLARE(getFd);
+  
+  static void json_enqueue_object(int fd, OSS::JSON::Object& object);
+  static void json_enqueue(int fd, const std::string& json);
+  static void on_json_dequeue();
+  
+  typedef std::map<int, QueueObject*> ActiveQueue;
+  static OSS::mutex_critic_sec* _activeQueueMutex;
+  static ActiveQueue _activeQueue;
+  static OSS::mutex_critic_sec* _jsonQueueMutex;
+  static JsonQueue _jsonQueue;
   
   EventQueue _queue;
   EventCallback _eventCallback;
+  
+private:
+  QueueObject();
+  virtual ~QueueObject();
+  
 };
-
 
 #endif // OSS_QUEUEOBJECT_H_INCLUDED
 

@@ -24,12 +24,15 @@
 #include <vector>
 #include <Poco/ClassLoader.h>
 #include <Poco/Manifest.h>
+#include <Poco/ThreadPool.h>
+#include <Poco/Runnable.h>
 #include "OSS/JS/ObjectWrap.h"
 #include <iostream>
 
 class JSPlugin
 {
 public:
+  typedef Poco::Runnable Runnable;
   JSPlugin();
   virtual ~JSPlugin();
   virtual std::string name() const = 0;
@@ -37,6 +40,7 @@ public:
 
   static v8::Persistent<v8::Context>* _pContext;
   static v8::Persistent<v8::ObjectTemplate>* _pGlobal;
+  static Poco::ThreadPool* _pThreadPool;
 };
 
 inline JSPlugin::JSPlugin()
@@ -139,7 +143,9 @@ extern "C" { \
 #define JSValueHandle v8::Handle<v8::Value>
 #define JSLocalValueHandle v8::Local<v8::Value>
 #define JSStringHandle v8::Handle<v8::String>
+#define JSLocalStringHandle v8::Local<v8::String>
 #define JSArrayHandle v8::Handle<v8::Array>
+#define JSLocalArrayHandle v8::Local<v8::Array>
 #define JSObjectHandle v8::Handle<v8::Object>
 #define JSLocalObjectHandle v8::Local<v8::Object>
 #define JSLocalObjectTemplateHandle v8::Local<v8::ObjectTemplate>
@@ -155,6 +161,7 @@ inline JSStringHandle JSString(const std::string& str) { return v8::String::New(
 inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::String::New(str, len); }
 
 #define JSArguments const v8::Arguments
+#define JSArgumentVector std::vector< v8::Handle<v8::Value> >
 #define JSLocalArgumentVector std::vector< v8::Local<v8::Value> >
 #define JSPersistentArgumentVector std::vector< v8::Persistent<v8::Value> >
 #define JSBoolean(Exp) v8::Boolean::New(Exp)
@@ -228,7 +235,6 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define js_method_arg_as_buffer(Index) js_method_arg_unwrap_object(BufferObject, Index)
 #define js_method_arg_as_persistent_function(Index) v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(_args_[Index]))
 
-
 #define js_method_arg_has_property(Index, Name) _args_[Index]->ToObject()->Has(v8::String::NewSymbol(Name))
 #define js_method_arg_get_property(Index, Name) _args_[Index]->ToObject()->Get(v8::String::NewSymbol(Name))
 
@@ -243,6 +249,133 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 
 #define js_handle_as_string(Handle) v8::String::Utf8Value(Handle)
 #define js_handle_as_std_string(Handle) std::string((const char*) *js_handle_as_string(Handle))
+
+#define js_method_arg_type(Type, Var, Index, Func) \
+  Type Var; \
+  if (Index >= _args_.Length()) \
+    js_throw("Invalid Argument Count"); \
+  if (!Func(Var, _args_[Index])) \
+    js_throw("Invalid Argument Type");
+
+#define js_method_arg_declare_bool(Var, Index) js_method_arg_type(bool, Var, Index, js_assign_bool)
+#define js_method_arg_declare_uint32(Var, Index) js_method_arg_type(uint32_t, Var, Index, js_assign_uint32)
+#define js_method_arg_declare_int32(Var, Index) js_method_arg_type(int32_t, Var, Index, js_assign_int32)
+#define js_method_arg_declare_number(Var, Index) js_method_arg_type(double, Var, Index, js_assign_number)
+#define js_method_arg_declare_string(Var, Index) js_method_arg_type(std::string, Var, Index, js_assign_string)
+#define js_method_arg_declare_array(Var, Index) js_method_arg_type(JSArrayHandle, Var, Index, js_assign_array)
+#define js_method_arg_declare_object(Var, Index) js_method_arg_type(JSObjectHandle, Var, Index, js_assign_object)
+#define js_method_arg_declare_external_object(Class, Var, Index) js_method_arg_type(Class*, Var, Index, js_assign_external_object<Class>)
+#define js_method_arg_declare_persistent_function(Var, Index) js_method_arg_type(JSPersistentFunctionHandle, Var, Index, js_assign_persistent_function) 
+#define js_method_arg_declare_self(Class, Var) Class* Var = js_method_arg_unwrap_self(Class)
+
+template <typename T>
+bool js_assign_external_object(T*& value, const JSValueHandle& handle)
+{
+  if (!handle->IsObject())
+  {
+    return false;
+  }
+  value = js_unwrap_object(T, handle->ToObject());
+  return true;
+}
+
+inline bool js_assign_persistent_function(JSPersistentFunctionHandle& value, const JSValueHandle& handle) 
+{ 
+  if (!handle->IsFunction())
+  {
+    return false;
+  } 
+  value =  v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(handle));
+  return true; 
+}
+
+inline bool js_assign_uint32(uint32_t& value, const JSValueHandle& handle) 
+{ 
+  if (!handle->IsUint32())
+  {
+    return false;
+  } 
+  value =  handle->ToUint32()->Value();
+  return true; 
+}
+
+inline bool js_assign_int32(int32_t& value, const JSValueHandle& handle) 
+{ 
+  if (!handle->IsInt32())
+  {
+    return false;
+  } 
+  value =  handle->ToInt32()->Value();
+  return true; 
+}
+
+inline bool js_assign_number(double& value, const JSValueHandle& handle) 
+{ 
+  if (!handle->IsNumber())
+  {
+    return false;
+  } 
+  value =  handle->ToNumber()->Value();
+  return true; 
+}
+
+inline bool js_assign_array(JSArrayHandle& value, const JSValueHandle& handle) 
+{ 
+  if (!handle->IsArray())
+  {
+    return false;
+  } 
+  value =  JSArrayHandle::Cast(handle);
+  return true; 
+}
+
+inline bool js_assign_string(std::string& value, const JSValueHandle& handle) 
+{ 
+  if (!handle->IsString())
+  {
+    return false;
+  } 
+  value = (const char*) (*v8::String::Utf8Value(handle)); 
+  return true; 
+}
+
+
+inline bool js_assign_bool(bool& value, const JSValueHandle& handle) 
+{ 
+  if (!handle->IsBoolean())
+  {
+    return false;
+  } 
+  value = handle->ToBoolean()->Value(); 
+  return true; 
+}
+
+inline bool js_assign_object(JSObjectHandle& value, const JSValueHandle& handle) 
+{ 
+  if (!handle->IsObject())
+  {
+    return false;
+  } 
+  value = handle->ToObject();
+  return true; 
+}
+
+inline void js_assign_persistent_arg_vector(JSPersistentArgumentVector& output, const JSValueHandle& handle)
+{
+  if (handle->IsArray())
+  {
+    v8::Handle<v8::Array> arrayArg = v8::Handle<v8::Array>::Cast(handle);
+    for (std::size_t i = 0; i <arrayArg->Length(); i++)
+    {
+      output.push_back(v8::Persistent<v8::Value>::New(arrayArg->Get(i)));
+    }
+  }
+  else
+  {
+    output.push_back(v8::Persistent<v8::Value>::New(handle));
+  }
+}
+
 
 inline JSObjectHandle js_wrap_pointer_to_local_object(void* ptr)
 {
