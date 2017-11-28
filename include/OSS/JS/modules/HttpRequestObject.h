@@ -46,17 +46,11 @@ public:
   JS_METHOD_DECLARE(hasCredentials);
   JS_METHOD_DECLARE(getCredentials);
   JS_METHOD_DECLARE(setCredentials);
-  JS_METHOD_DECLARE(getExpectContinue);
-  JS_METHOD_DECLARE(setExpectContinue);
-  JS_METHOD_DECLARE(hasProxyCredentials);
-  JS_METHOD_DECLARE(getProxyCredentials);
-  JS_METHOD_DECLARE(setProxyCredentials);
   
   JS_METHOD_DECLARE(setVersion);
   JS_METHOD_DECLARE(getVersion);
   JS_METHOD_DECLARE(setContentLength);
   JS_METHOD_DECLARE(getContentLength);
-  JS_METHOD_DECLARE(hasContentLength);
   JS_METHOD_DECLARE(setTransferEncoding);
   JS_METHOD_DECLARE(getTransferEncoding);
   JS_METHOD_DECLARE(setChunkedTransferEncoding);

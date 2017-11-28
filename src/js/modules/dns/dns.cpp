@@ -24,7 +24,7 @@
 #include "OSS/UTL/BlockingQueue.h"
 #include "udnspp/dnsresolver.h"
 #include "OSS/UTL/Logger.h"
-#include "OSS//JS/modules/Async.h"
+#include "OSS/JS/modules/Async.h"
 
 #include <poll.h>
 

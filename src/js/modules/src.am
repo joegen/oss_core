@@ -140,6 +140,12 @@ liboss_jsdns_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
 liboss_jsdns_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
 liboss_jsdns_la_SOURCES = js/modules/dns/dns.cpp
 
+lib_LTLIBRARIES += liboss_jscpprpc_tester.la
+liboss_jscpprpc_tester_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jscpprpc_tester_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jscpprpc_tester_la_SOURCES = js/modules/cpp_rpc_tester.cpp
+EXTRA_DIST += js/modules/cpp_rpc.js
+
 js_module-install-hook: js_helper-install-hook
 	cp ${DESTDIR}${libdir}/liboss_jsconst.so ${DESTDIR}${libdir}/oss_modules/consts.jso
 	cp ${DESTDIR}${libdir}/liboss_jserror.so ${DESTDIR}${libdir}/oss_modules/error.jso
@@ -163,4 +169,5 @@ js_module-install-hook: js_helper-install-hook
 	cp ${DESTDIR}${libdir}/liboss_jsinotify.so ${DESTDIR}${libdir}/oss_modules/inotify.jso
 	cp ${DESTDIR}${libdir}/liboss_jsinetsocket.so ${DESTDIR}${libdir}/oss_modules/inet_socket.jso
 	cp ${DESTDIR}${libdir}/liboss_jsdns.so ${DESTDIR}${libdir}/oss_modules/dns/_dns.jso
+	cp ${DESTDIR}${libdir}/liboss_jscpprpc_tester.so ${DESTDIR}${libdir}/oss_modules/cpp_rpc_tester.jso
 

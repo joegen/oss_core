@@ -45,20 +45,11 @@ public:
   JS_METHOD_DECLARE(setProxyPort);
   JS_METHOD_DECLARE(getProxyHost);
   JS_METHOD_DECLARE(getProxyPort);
-  JS_METHOD_DECLARE(setProxyUsername);
-  JS_METHOD_DECLARE(getProxyUsername);
-  JS_METHOD_DECLARE(setProxyPassword);
-  JS_METHOD_DECLARE(getProxyPassword);
   JS_METHOD_DECLARE(setKeepAliveTimeout);
   JS_METHOD_DECLARE(getKeepAliveTimeout);
   JS_METHOD_DECLARE(sendRequest);
   JS_METHOD_DECLARE(receiveResponse);
-  JS_METHOD_DECLARE(peekResponse);
-  JS_METHOD_DECLARE(reset);
-  JS_METHOD_DECLARE(secure);
-  JS_METHOD_DECLARE(bypassProxy);
   JS_METHOD_DECLARE(connected);
-  JS_METHOD_DECLARE(getSocketFd);
   
   JS_METHOD_DECLARE(read);
   JS_METHOD_DECLARE(write);

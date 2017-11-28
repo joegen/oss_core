@@ -12,9 +12,6 @@ const HttpRequest = http.HttpRequest;
 const console = require("console");
 const HttpResponse = http.HttpResponse;
 
-
-
-
 var client = new HttpClient();
 client.setHost("www.ossapp.com");
 client.setPort(80);
@@ -23,10 +20,7 @@ var session = new HttpSession(client);
 
 session.on("response", function()
 {
-  if (session._response.hasContentLength())
-  {
-    session.read(session._response.getContentLength());
-  }
+  session.read(session._response.getContentLength());
 });
 
 session.on("read", function(size)

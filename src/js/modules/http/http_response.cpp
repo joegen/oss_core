@@ -38,7 +38,6 @@ JS_CLASS_INTERFACE(HttpResponseObject, "HttpResponse")
   JS_CLASS_METHOD_DEFINE(HttpResponseObject, "getVersion", getVersion);
   JS_CLASS_METHOD_DEFINE(HttpResponseObject, "setContentLength", setContentLength);
   JS_CLASS_METHOD_DEFINE(HttpResponseObject, "getContentLength", getContentLength);
-  JS_CLASS_METHOD_DEFINE(HttpResponseObject, "hasContentLength", hasContentLength);
   JS_CLASS_METHOD_DEFINE(HttpResponseObject, "setTransferEncoding", setTransferEncoding);
   JS_CLASS_METHOD_DEFINE(HttpResponseObject, "getTransferEncoding", getTransferEncoding);
   JS_CLASS_METHOD_DEFINE(HttpResponseObject, "setChunkedTransferEncoding", setChunkedTransferEncoding);
@@ -145,14 +144,6 @@ JS_METHOD_IMPL(HttpResponseObject::getContentLength)
   HttpResponseObject* pObject = js_method_arg_unwrap_self(HttpResponseObject);
   js_assert(pObject && pObject->_response, "HTTP Response has been disposed");
   return JSUInt32(pObject->_response->getContentLength());
-}
-
-JS_METHOD_IMPL(HttpResponseObject::hasContentLength)
-{
-  js_enter_scope();
-  HttpResponseObject* pObject = js_method_arg_unwrap_self(HttpResponseObject);
-  js_assert(pObject && pObject->_response, "HTTP Response has been disposed");
-  return JSBoolean(pObject->_response->hasContentLength());
 }
 
 JS_METHOD_IMPL(HttpResponseObject::setTransferEncoding)

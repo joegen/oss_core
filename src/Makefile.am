@@ -20,6 +20,7 @@ AM_CFLAGS = \
     -I$(top_builddir)/include
 
 AM_CPPFLAGS = \
+    -DBOOST_THREAD_PROVIDES_FUTURE \
     -I$(top_builddir)/include \
     -I$(top_builddir)/src \
     -I@OSS_CORE_SRCDIR@/include \

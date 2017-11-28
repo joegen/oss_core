@@ -34,6 +34,9 @@ typedef std::vector< v8::Persistent<v8::Value> > ArgumentVector;
 static bool _isTerminating = false;
 static OSS::Semaphore* _exitSem = 0;
 static OSS::UInt64  _garbageCollectionFrequency = 30; /// 30 seconds default
+pthread_t Async::_threadId = 0;
+Async::PromiseQueue Async::_promises;
+OSS::mutex_critic_sec* Async::_promisesMutex = new OSS::mutex_critic_sec();
 
 struct MonitoredFdData
 {
@@ -294,10 +297,77 @@ void Async::unregister_string_queue(int fd)
   Async::__wakeup_pipe();
 }
 
+JSPersistentFunctionHandle Async::_promiseHandler;
+
+JS_METHOD_IMPL(__set_promise_callback)
+{
+  js_enter_scope();
+  js_method_arg_declare_persistent_function(func, 0);
+  Async::_promiseHandler = func;
+  return JSUndefined();
+}
+
+bool Async::__execute_one_promise()
+{
+  OSS::mutex_critic_sec_lock lock(*Async::_promisesMutex);
+  if (Async::_promises.empty())
+  {
+    return false;
+  }
+  AsyncPromise* promise = Async::_promises.front();
+  JSValueHandle request = Async::__json_parse(promise->_data);
+  
+  JSArgumentVector jsonArg;
+  jsonArg.push_back(request);
+  JSValueHandle result =  Async::_promiseHandler->Call((*JSPlugin::_pContext)->Global(), jsonArg.size(), jsonArg.data());
+  promise->set_value(js_handle_as_std_string(result));
+  Async::_promises.pop();
+  return true;
+}
+
+bool Async::json_execute_promise(const OSS::JSON::Object& request, OSS::JSON::Object& reply, uint32_t timeout)
+{
+  if (Async::_threadId == pthread_self() || Async::_promiseHandler.IsEmpty())
+  {
+    return false;
+  }
+  std::string requestJson;
+  if (!OSS::JSON::json_object_to_string(request, requestJson))
+  {
+    return false;
+  }
+
+  AsyncPromise promise = (requestJson);
+  AsyncFuture future = promise.get_future();
+
+  Async::_promisesMutex->lock();
+  Async::_promises.push(&promise);
+  Async::_promisesMutex->unlock();
+  Async::__wakeup_pipe();
+
+  if (timeout != 0)
+  {
+    boost::system_time const future_timeout = boost::get_system_time() + boost::posix_time::milliseconds(timeout);
+    if (!future.timed_wait_until(future_timeout))
+    {
+      return false;
+    }
+  }
+
+  std::string replyJson = future.get();
+  if (!OSS::JSON::json_parse_string(replyJson, reply))
+  {
+    return false;
+  }
+  return true;
+}
+
 static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
 {
   v8::HandleScope scope;
   OSS::UInt64 lastGarbageCollectionTime = 0;
+  Async::_threadId = pthread_self();
+  
   while (!_isTerminating)
   {
     pollfd pfds[3];
@@ -382,7 +452,7 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
     //
     // Check if C++ just wants to execute a task in the event loop
     //
-    if (Async::__do_one_wakeup_task())
+    if (Async::__do_one_wakeup_task() || Async::__execute_one_promise())
     {
       continue;
     }
@@ -568,6 +638,7 @@ JS_EXPORTS_INIT()
   
   js_export_method("__stop_event_loop", __stop_event_loop);
   js_export_method("__set_json_parser", __set_json_parser);
+  js_export_method("__set_promise_callback", __set_promise_callback);
   
   js_export_class(QueueObject);
   

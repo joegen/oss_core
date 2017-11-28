@@ -40,17 +40,11 @@ JS_CLASS_INTERFACE(HttpRequestObject, "HttpRequest")
   JS_CLASS_METHOD_DEFINE(HttpRequestObject, "hasCredentials", hasCredentials);
   JS_CLASS_METHOD_DEFINE(HttpRequestObject, "getCredentials", getCredentials);
   JS_CLASS_METHOD_DEFINE(HttpRequestObject, "setCredentials", setCredentials);
-  JS_CLASS_METHOD_DEFINE(HttpRequestObject, "getExpectContinue", getExpectContinue);
-  JS_CLASS_METHOD_DEFINE(HttpRequestObject, "setExpectContinue", setExpectContinue);
-  JS_CLASS_METHOD_DEFINE(HttpRequestObject, "hasProxyCredentials", hasProxyCredentials);
-  JS_CLASS_METHOD_DEFINE(HttpRequestObject, "getProxyCredentials", getProxyCredentials);
-  JS_CLASS_METHOD_DEFINE(HttpRequestObject, "setProxyCredentials", setProxyCredentials);
   
   JS_CLASS_METHOD_DEFINE(HttpRequestObject, "setVersion", setVersion);
   JS_CLASS_METHOD_DEFINE(HttpRequestObject, "getVersion", getVersion);
   JS_CLASS_METHOD_DEFINE(HttpRequestObject, "setContentLength", setContentLength);
   JS_CLASS_METHOD_DEFINE(HttpRequestObject, "getContentLength", getContentLength);
-  JS_CLASS_METHOD_DEFINE(HttpRequestObject, "hasContentLength", hasContentLength);
   JS_CLASS_METHOD_DEFINE(HttpRequestObject, "setTransferEncoding", setTransferEncoding);
   JS_CLASS_METHOD_DEFINE(HttpRequestObject, "getTransferEncoding", getTransferEncoding);
   JS_CLASS_METHOD_DEFINE(HttpRequestObject, "setChunkedTransferEncoding", setChunkedTransferEncoding);
@@ -228,69 +222,6 @@ JS_METHOD_IMPL(HttpRequestObject::setCredentials)
   return JSUndefined();
 }
 
-JS_METHOD_IMPL(HttpRequestObject::getExpectContinue)
-{
-  js_enter_scope();
-  HttpRequestObject* pObject = js_method_arg_unwrap_self(HttpRequestObject);
-  js_assert(pObject && pObject->_request, "HTTP Request has been disposed");
-  return JSBoolean(pObject->_request->getExpectContinue());
-}
-
-JS_METHOD_IMPL(HttpRequestObject::setExpectContinue)
-{
-  js_enter_scope();
-  HttpRequestObject* pObject = js_method_arg_unwrap_self(HttpRequestObject);
-  js_assert(pObject && pObject->_request, "HTTP Request has been disposed");
-  js_method_arg_declare_bool(expectAndcontinue, 0);
-  pObject->_request->setExpectContinue(expectAndcontinue);
-  
-  return JSUndefined();
-}
-
-JS_METHOD_IMPL(HttpRequestObject::hasProxyCredentials)
-{
-  js_enter_scope();
-  HttpRequestObject* pObject = js_method_arg_unwrap_self(HttpRequestObject);
-  js_assert(pObject && pObject->_request, "HTTP Request has been disposed");
-  return JSBoolean(pObject->_request->hasProxyCredentials());
-}
-
-JS_METHOD_IMPL(HttpRequestObject::getProxyCredentials)
-{
-  js_enter_scope();
-  HttpRequestObject* pObject = js_method_arg_unwrap_self(HttpRequestObject);
-  js_assert(pObject && pObject->_request, "HTTP Request has been disposed");
-  if (!pObject->_request->hasCredentials())
-  {
-    return JSUndefined();
-  }
-  JSLocalObjectHandle obj = JSObject();
-  
-  std::string scheme;
-  std::string authInfo;
-  pObject->_request->getProxyCredentials(scheme, authInfo);
-  
-  obj->Set(JSLiteral("scheme"), JSString(scheme));
-  obj->Set(JSLiteral("authInfo"), JSString(authInfo));
-  
-  return obj;
-}
-
-JS_METHOD_IMPL(HttpRequestObject::setProxyCredentials)
-{
-  js_enter_scope();
-  HttpRequestObject* pObject = js_method_arg_unwrap_self(HttpRequestObject);
-  js_assert(pObject && pObject->_request, "HTTP Request has been disposed");
-  js_method_arg_assert_size_eq(2);
-  js_method_arg_assert_string(0);
-  js_method_arg_assert_string(1);
-  
-  std::string scheme = js_method_arg_as_std_string(0);
-  std::string authInfo = js_method_arg_as_std_string(1);
-  pObject->_request->setProxyCredentials(scheme, authInfo);
-  return JSUndefined();
-}
-
 JS_METHOD_IMPL(HttpRequestObject::setVersion)
 {
   js_enter_scope();
@@ -327,14 +258,6 @@ JS_METHOD_IMPL(HttpRequestObject::getContentLength)
   HttpRequestObject* pObject = js_method_arg_unwrap_self(HttpRequestObject);
   js_assert(pObject && pObject->_request, "HTTP Request has been disposed");
   return JSUInt32(pObject->_request->getContentLength());
-}
-
-JS_METHOD_IMPL(HttpRequestObject::hasContentLength)
-{
-  js_enter_scope();
-  HttpRequestObject* pObject = js_method_arg_unwrap_self(HttpRequestObject);
-  js_assert(pObject && pObject->_request, "HTTP Request has been disposed");
-  return JSBoolean(pObject->_request->hasContentLength());
 }
 
 JS_METHOD_IMPL(HttpRequestObject::setTransferEncoding)
@@ -447,7 +370,6 @@ JS_EXPORTS_INIT()
 	js_export_string("HTTP_DELETE", HttpRequestObject::Request::HTTP_DELETE.c_str());
 	js_export_string("HTTP_TRACE", HttpRequestObject::Request::HTTP_TRACE.c_str());
 	js_export_string("HTTP_CONNECT", HttpRequestObject::Request::HTTP_CONNECT.c_str());
-	js_export_string("HTTP_PATCH", HttpRequestObject::Request::HTTP_PATCH.c_str());
   js_export_string("HTTP_1_0", HttpRequestObject::Request::HTTP_1_0.c_str());
   js_export_string("HTTP_1_1", HttpRequestObject::Request::HTTP_1_1.c_str());
   

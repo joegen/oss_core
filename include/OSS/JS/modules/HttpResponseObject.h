@@ -45,7 +45,6 @@ public:
   JS_METHOD_DECLARE(getVersion);
   JS_METHOD_DECLARE(setContentLength);
   JS_METHOD_DECLARE(getContentLength);
-  JS_METHOD_DECLARE(hasContentLength);
   JS_METHOD_DECLARE(setTransferEncoding);
   JS_METHOD_DECLARE(getTransferEncoding);
   JS_METHOD_DECLARE(setChunkedTransferEncoding);
