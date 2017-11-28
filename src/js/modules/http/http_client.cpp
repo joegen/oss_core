@@ -24,23 +24,10 @@
 #include "OSS/JS/modules/HttpRequestObject.h"
 #include "OSS/JS/modules/HttpResponseObject.h"
 #include "OSS/JS/modules/BufferObject.h"
+#include "OSS/JSON/Json.h"
+#include "OSS/JS/modules/QueueObject.h"
 
 using OSS::JS::ObjectWrap;
-
-class ResponseReceiver : public Poco::Runnable
-{
-public:
-  HttpClientObject* _client;
-  HttpResponseObject* _response;
-  ResponseReceiver(HttpClientObject* client, HttpResponseObject* response) :
-    _client(client),
-    _response(response)
-  {
-  }
-  void run()
-  {
-  }
-};
 
 //
 // Define the Interface
@@ -73,12 +60,15 @@ JS_CLASS_INTERFACE(HttpClientObject, "HttpClient")
   JS_CLASS_METHOD_DEFINE(HttpClientObject, "_read", read);
   JS_CLASS_METHOD_DEFINE(HttpClientObject, "_write", write);
   
+  JS_CLASS_METHOD_DEFINE(HttpClientObject, "setEventFd", setEventFd);
+  
   JS_CLASS_INTERFACE_END(HttpClientObject);
 }
 
 HttpClientObject::HttpClientObject() :
   _input(0),
-  _output(0)
+  _output(0),
+  _eventFd(-1)
 {
 }
 
@@ -233,24 +223,74 @@ JS_METHOD_IMPL(HttpClientObject::sendRequest)
   return JSBoolean(self->_output && !self->_output->bad() && !self->_output->fail());
 }
 
+
+class ResponseReceiver : public Poco::Runnable
+{
+public:
+  HttpClientObject* _client;
+  HttpResponseObject* _response;
+  int _fd;
+  ResponseReceiver(HttpClientObject* client, HttpResponseObject* response, int emitterFd) :
+    _client(client),
+    _response(response),
+    _fd(emitterFd)
+  {
+  }
+  
+  void run()
+  {
+    try
+    {
+      _client->setOutputStream(0);
+      _client->setInputStream(&(_client->getSession().receiveResponse((*_response->response()))));
+      OSS::JSON::Array json;
+      json[0] = OSS::JSON::String("response");
+      QueueObject::json_enqueue_object(_client->getEventFd(), json);
+    }
+    catch(const HttpClientObject::MessageException& e)
+    {
+      OSS_LOG_ERROR(e.message().c_str());
+      OSS::JSON::Array json;
+      json[0] = OSS::JSON::String("error");
+      json[1] = OSS::JSON::String(e.message().c_str());
+      QueueObject::json_enqueue_object(_client->getEventFd(), json);
+    }
+    catch(const std::exception& e)
+    {
+      OSS::JSON::Array json;
+      json[0] = OSS::JSON::String("error");
+      json[1] = OSS::JSON::String(e.what());
+      QueueObject::json_enqueue_object(_client->getEventFd(), json);
+    }
+    
+    delete this;
+  }
+};
+
 JS_METHOD_IMPL(HttpClientObject::receiveResponse)
 {
   js_enter_scope();
   js_method_arg_declare_self(HttpClientObject, self);
   js_method_arg_declare_external_object(HttpResponseObject, pResponse, 0);
   
-  OSS_LOG_INFO("receiving response");
+  if (self->getEventFd() == -1)
+  {
+    js_throw("Event Emitter FD not set");
+  }
+  
+  ResponseReceiver* runnable = new ResponseReceiver(self, pResponse, self->getEventFd());
   try
   {
-    self->_output = 0;
-    self->_input = &(self->_session.receiveResponse((*pResponse->response())));
+    JSPlugin::_pThreadPool->start(*runnable);
   }
-  catch(const MessageException& e)
+  catch(const NoThreadAvailableException& e)
   {
+    delete runnable;
     js_throw(e.message().c_str());
   }
   catch(...)
   {
+    delete runnable;
     js_throw("Unknown Exception");
   }
   return JSUndefined();
@@ -299,6 +339,52 @@ JS_METHOD_IMPL(HttpClientObject::getSocketFd)
   return JSInt32(pClient->_session.socket().impl()->sockfd());
 }
 
+class ResponseReader : public Poco::Runnable
+{
+public:
+  HttpClientObject* _client;
+  BufferObject* _buf;
+  uint32_t _size;
+  ResponseReader(HttpClientObject* client, BufferObject* buf, uint32_t size) :
+    _client(client),
+    _buf(buf),
+    _size(size)
+  {
+  }
+  
+  void run()
+  {
+    try
+    {
+      std::istream& strm = *_client->getInputStream();
+      if (strm.read((char*)_buf->buffer().data(), _size))
+      {
+        OSS::JSON::Array json;
+        json[0] = OSS::JSON::String("read");
+        json[1] = OSS::JSON::Number(_size);
+        QueueObject::json_enqueue_object(_client->getEventFd(), json);
+      }
+    }
+    catch(const HttpClientObject::MessageException& e)
+    {
+      OSS_LOG_ERROR(e.message().c_str());
+      OSS::JSON::Array json;
+      json[0] = OSS::JSON::String("error");
+      json[1] = OSS::JSON::String(e.message().c_str());
+      QueueObject::json_enqueue_object(_client->getEventFd(), json);
+    }
+    catch(const std::exception& e)
+    {
+      OSS::JSON::Array json;
+      json[0] = OSS::JSON::String("error");
+      json[1] = OSS::JSON::String(e.what());
+      QueueObject::json_enqueue_object(_client->getEventFd(), json);
+    }
+    
+    delete this;
+  }
+};
+
 JS_METHOD_IMPL(HttpClientObject::read)
 {
   js_enter_scope();
@@ -308,11 +394,30 @@ JS_METHOD_IMPL(HttpClientObject::read)
   
   if (self->_input)
   {
-    std::istream& strm = *self->_input;
-    return JSUInt32(strm.readsome((char*)buf->buffer().data(), size));
+    ResponseReader* runnable = new ResponseReader(self, buf, size);
+    try
+    {
+      JSPlugin::_pThreadPool->start(*runnable);
+    }
+    catch(const NoThreadAvailableException& e)
+    {
+      delete runnable;
+      js_throw(e.message().c_str());
+    }
+    catch(...)
+    {
+      delete runnable;
+      js_throw("Unknown Exception");
+    }
   }
-  
-  return JSUInt32(0);
+  else
+  {
+    OSS::JSON::Array json;
+    json[0] = OSS::JSON::String("error");
+    json[1] = OSS::JSON::String("Input Stream Not Set");
+    QueueObject::json_enqueue_object(self->getEventFd(), json);
+  }
+  return JSUndefined();
 }
 
 JS_METHOD_IMPL(HttpClientObject::write)
@@ -329,6 +434,15 @@ JS_METHOD_IMPL(HttpClientObject::write)
   }
   
   return JSBoolean(false);
+}
+
+JS_METHOD_IMPL(HttpClientObject::setEventFd)
+{
+  js_enter_scope();
+  js_method_arg_declare_self(HttpClientObject, self);
+  js_method_arg_declare_int32(fd, 0);
+  self->_eventFd = fd;
+  return JSUndefined();
 }
 
 JS_EXPORTS_INIT()

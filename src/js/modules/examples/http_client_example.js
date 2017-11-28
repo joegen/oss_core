@@ -7,6 +7,7 @@ const async = require("async");
 
 const http = require("http");
 const HttpClient = http.HttpClient;
+const HttpSession = http.HttpSession;
 const HttpRequest = http.HttpRequest;
 const console = require("console");
 const HttpResponse = http.HttpResponse;
@@ -18,28 +19,29 @@ var client = new HttpClient();
 client.setHost("www.ossapp.com");
 client.setPort(80);
 
-client.on("response", function(request, response)
+var session = new HttpSession(client);
+
+session.on("response", function()
 {
-  if (response.hasContentLength())
+  if (session._response.hasContentLength())
   {
-    var ret = client.read(response.getContentLength());
-    if (ret.length > 0)
-    {
-      console.log(utils.bufferToString(ret));
-    }
-    //
-    // Not really needed but this will free up the memory sooner
-    //
-    request.dispose();
-    response.dispose();
+    session.read(session._response.getContentLength());
+  }
+});
+
+session.on("read", function(size)
+{
+  if (size > 0)
+  {
+    var data = session.readBuffer(size);
+    console.log(utils.bufferToString(data));
   }
   system.exit(0);
 });
 
-client.on("error", function(request, e)
+session.on("error", function(message)
 {
-  console.log(e);
-  request.dispose();
+  console.log(message);
   system.exit(0);
 });
 
@@ -49,11 +51,6 @@ request.setMethod(http.HTTP_GET);
 request.setUri("/");
 request.setContentLength(5);
 request.setContentType("application/text");
-
-
-client.send(request);
-client.write("hello");
-
-log_info("Sent request");
+session.send(request, "hello");
 
 async.processEvents();

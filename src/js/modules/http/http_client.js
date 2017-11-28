@@ -1,11 +1,11 @@
 "use-strict"
 
 const buffer = require("buffer");
+const async = require("async");
+const EventEmitter = async.EventEmitter;
 const _client = require("./_http_client.jso");
 const HttpResponse = require("./_http_response.jso").HttpResponse;
 const HttpRequest = require("./_http_request.jso").HttpRequest;
-
-const async = require("async");
 
 const READ_BUFFER_SIZE = 1024 * 16;
 var READ_BUFFER = new Buffer(READ_BUFFER_SIZE);
@@ -13,38 +13,55 @@ var READ_BUFFER = new Buffer(READ_BUFFER_SIZE);
 const WRITE_BUFFER_SIZE = 1024 * 16;
 var WRITE_BUFFER = new Buffer(WRITE_BUFFER_SIZE);
 
-_client.HttpClient.prototype._on_response = function(request, response) {}
-_client.HttpClient.prototype._on_error = function(request, e) {}
-_client.HttpClient.prototype._has_registered_fd = false;
 
-_client.HttpClient.prototype.send = function(request)
+var HttpSession = function(client)
 {
-  this._request = request;
-  var ret = this.sendRequest(request);
-  if (ret && !this._has_registered_fd)
+  EventEmitter.call(this);
+  this._http = client;
+  this._request = null;
+  this._response = null;
+  this._http.setEventFd(this._fd);
+}
+HttpSession.prototype = Object.create(EventEmitter.prototype);
+
+HttpSession.prototype.send = function(request, body)
+{
+  if (this._request !== null)
   {
-    this._has_registered_fd = true;
-    this._fd = this.getSocketFd();
-    var _this = this;
-    async.monitorFd(this._fd, function(fd, revents) 
-    {
-      var response = new HttpResponse();
-      try
-      {
-        _this.receiveResponse(response);
-        _this._on_response(_this._request, response);
-      }
-      catch(e)
-      {
-        _this._on_error(_this._request, e);
-        response.dispose();
-      }
-    });
+    this._request.dispose();
+    this._request = null;
   }
-  return ret;
+  this._request = request;
+  
+  if (this._http.sendRequest(request))
+  {
+    if (typeof body !== "undefined")
+    {
+      this.write(body);
+    }
+    if (this._response !== null)
+    {
+      this._response.dispose();
+      this._response = null;
+    }
+    this._response = new HttpResponse();
+    try
+    {
+      this._http.receiveResponse(this._response);
+      return true;
+    }
+    catch(e)
+    {
+      this.emit("error", e);
+      this._response.dispose();
+      this._response = null;
+      return false;
+    }
+  }
+  return false;
 }
 
-_client.HttpClient.prototype.write = function(data)
+HttpSession.prototype.write = function(data)
 {
   var size = 0;
   if (buffer.isBuffer(data))
@@ -66,26 +83,21 @@ _client.HttpClient.prototype.write = function(data)
   {
     throw new Error("Invalid data argument.  Must be buffer, array or string");
   }
-  return this._write(WRITE_BUFFER, size);
+  return this._http._write(WRITE_BUFFER, size);
 }
 
-_client.HttpClient.prototype.read = function(size)
+HttpSession.prototype.read = function(size)
 {
-  var ret = this._read(size);
-  if (ret > 0)
-  {
-    READ_BUFFER.toArray(ret);
-  }
-  return [];
+  this._http._read(READ_BUFFER, size);
 }
 
-_client.HttpClient.prototype.on = function(name, func)
+HttpSession.prototype.readBuffer = function(size)
 {
-  if (name === "response") this._on_response = func;
-  if (name === "error") this._on_error = func;
+  return READ_BUFFER.toArray(size);
 }
 
 __copy_exports(_client, exports);
+exports.HttpSession = HttpSession;
 
 
 

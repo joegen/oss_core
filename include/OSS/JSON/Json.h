@@ -40,6 +40,32 @@ bool json_parse_string(const std::string& jsonString, OSS::JSON::Object& object)
 bool json_parse_string(const std::string& jsonString, OSS::JSON::Object& object, OSS::JSON::Exception& e);
 bool json_object_to_string(const OSS::JSON::Object& object, std::string& jsonString);
 bool json_object_to_string(const OSS::JSON::Object& object, std::string& jsonString, OSS::JSON::Exception& e);
+
+template <typename T>
+bool json_to_string(const T& object, std::string& jsonString, OSS::JSON::Exception& e)
+{
+  try
+  {
+    std::stringstream ostr;
+    OSS::JSON::Writer::Write(object, ostr);
+    jsonString = ostr.str();
+  }
+  catch(OSS::JSON::Exception& e_)
+  {
+    e = e_;
+    return false;
+  }
+  return true;
+}
+
+template <typename T>
+bool json_to_string(const T& object, std::string& jsonString)
+{
+  OSS::JSON::Exception e;
+  return json_to_string<T>(object, jsonString, e);
+}
+
+
   
 } }
 

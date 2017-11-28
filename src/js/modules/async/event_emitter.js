@@ -12,7 +12,8 @@ var EventEmitter = function()
     {
       return; // no handler, don't consume this event
     }
-    _this._handlers[event].apply(this, arguments);
+    var args = Array.prototype.slice.call(arguments, 1);
+    _this._handlers[event].apply(this, args);
   }
   
   this._queue = new _async.Queue(this._on_event);

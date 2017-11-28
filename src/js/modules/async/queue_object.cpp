@@ -94,10 +94,10 @@ void QueueObject::json_enqueue(int fd, const std::string& json)
   Async::__insert_wakeup_task(boost::bind(&QueueObject::on_json_dequeue));
 }
 
-void QueueObject::json_enqueue_object(int fd, OSS::JSON::Object& object)
+void QueueObject::json_enqueue_object(int fd, const OSS::JSON::Array& object)
 {
   std::string json;
-  if (OSS::JSON::json_object_to_string(object, json))
+  if (OSS::JSON::json_to_string<OSS::JSON::Array>(object, json))
   {
     QueueObject::json_enqueue(fd, json);
   }
@@ -126,9 +126,5 @@ void QueueObject::on_json_dequeue()
     Event::Ptr pEvent = Event::Ptr(new QueueObject::Event(*iter->second));
     js_assign_persistent_arg_vector(pEvent->_eventData, v8::Local<v8::Value>::New(Async::__json_parse(event.json)));
     iter->second->_queue.enqueue(pEvent);
-  }
-  else
-  {
-     OSS_LOG_INFO("No Queue for " << event.fd);
   }
 }

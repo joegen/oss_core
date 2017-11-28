@@ -48,4 +48,5 @@ bool json_object_to_string(const OSS::JSON::Object& object, std::string& jsonStr
   return true;
 }
 
+
 } } // OSS::JSON

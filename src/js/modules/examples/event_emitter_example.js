@@ -13,12 +13,12 @@ var MyEmitter = function()
 MyEmitter.prototype = Object.create(EventEmitter.prototype);
 
 const myEmitter = new MyEmitter();
-myEmitter.on('event', function(event, a, b) 
+myEmitter.on('event', function(a, b) 
 {
-  console.log(event, a, b);
+  console.log(a, b);
 });
 
-myEmitter.on('exit', function(event, a, b) 
+myEmitter.on('exit', function() 
 {
   system.exit(0);
 });

@@ -21,6 +21,7 @@
 #define OSS_JS_HTTPCLIENTOBJECT_H_INCLUDED
 
 #include <Poco/Net/HTTPClientSession.h>
+#include <Poco/Exception.h>
 #include <Poco/Net/NetException.h>
 #include "OSS/JS/JSPlugin.h"
 
@@ -29,6 +30,7 @@ class HttpClientObject: public OSS::JS::ObjectWrap
 public:
   typedef Poco::Net::HTTPClientSession Session;
   typedef Poco::Net::MessageException MessageException;
+  typedef Poco::NoThreadAvailableException NoThreadAvailableException;
   
   JS_CONSTRUCTOR_DECLARE();
 
@@ -61,13 +63,54 @@ public:
   JS_METHOD_DECLARE(read);
   JS_METHOD_DECLARE(write);
   
+  JS_METHOD_DECLARE(setEventFd);
+  int getEventFd() const;
+  std::istream* getInputStream();
+  std::ostream* getOutputStream();
+  void setInputStream(std::istream* strm);
+  void setOutputStream(std::ostream* strm);
+  Session& getSession();
 private:
   HttpClientObject();
   virtual ~HttpClientObject();
   Session _session;
   std::istream* _input;
   std::ostream* _output;
+  int _eventFd;
 };
+
+//
+// Inlines
+//
+inline int HttpClientObject::getEventFd() const
+{
+  return _eventFd;
+}
+
+inline std::istream* HttpClientObject::getInputStream()
+{
+  return _input;
+}
+
+inline void HttpClientObject::setInputStream(std::istream* strm)
+{
+  _input = strm;
+}
+
+inline void HttpClientObject::setOutputStream(std::ostream* strm)
+{
+  _output = strm;
+}
+
+inline std::ostream* HttpClientObject::getOutputStream()
+{
+  return _output;
+}
+
+inline HttpClientObject::Session& HttpClientObject::getSession()
+{
+  return _session;
+}
 
 #endif //OSS_JS_HTTPCLIENTOBJECT_H_INCLUDED
 
