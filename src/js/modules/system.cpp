@@ -69,6 +69,36 @@ JS_METHOD_IMPL(__write)
   return JSException("Invalid Argument");
 }
 
+JS_METHOD_IMPL(__cout)
+{
+  js_enter_scope();
+  js_method_arg_declare_string(msg, 0);
+  std::cout << msg;
+  return JSUndefined();
+}
+
+JS_METHOD_IMPL(__oendl)
+{
+  js_enter_scope();
+  std::cout << std::endl;
+  return JSUndefined();
+}
+
+JS_METHOD_IMPL(__cerr)
+{
+  js_enter_scope();
+  js_method_arg_declare_string(msg, 0);
+  std::cerr << msg;
+  return JSUndefined();
+}
+
+JS_METHOD_IMPL(__eendl)
+{
+  js_enter_scope();
+  std::cerr << std::endl;
+  return JSUndefined();
+}
+
 JS_METHOD_IMPL(__read)
 {
   js_enter_scope();
@@ -170,6 +200,10 @@ JS_EXPORTS_INIT()
   js_export_method("getdtablesize", __getdtablesize);
   js_export_method("getpid", __getpid);
   js_export_method("getppid", __getppid);
+  js_export_method("cout", __cout);
+  js_export_method("endl", __oendl);
+  js_export_method("cerr", __cerr);
+  js_export_method("eendl", __eendl);
   
 
   //

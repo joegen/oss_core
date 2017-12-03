@@ -49,6 +49,6 @@ function cleanup()
 }
 
 async.setTimeout(cleanup, 100, []);
-async.processEvents();
+
 
 

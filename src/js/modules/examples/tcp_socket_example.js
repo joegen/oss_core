@@ -45,5 +45,3 @@ client.on("read", function(socket)
 client.write("Hello!");
 
 
-async.processEvents();
-

@@ -8,6 +8,8 @@ js_helper-install-hook:
 	cp ${srcdir}/js/modules/dns/*.js ${DESTDIR}${libdir}/oss_modules/dns
 	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/async
 	cp ${srcdir}/js/modules/async/*.js ${DESTDIR}${libdir}/oss_modules/async
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/json_rpc
+	cp ${srcdir}/js/modules/json_rpc/*.js ${DESTDIR}${libdir}/oss_modules/json_rpc
 
 include js/modules/examples/src.am
 
@@ -21,7 +23,8 @@ EXTRA_DIST += \
     js/modules/http/index.js \
     js/modules/xml-parser.js \
     js/modules/utils.js \
-    js/modules/async/async.js
+    js/modules/async/async.js \
+    js/modules/json_rpc/*.js
 
 lib_LTLIBRARIES += liboss_jsconst.la
 liboss_jsconst_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
@@ -107,6 +110,13 @@ lib_LTLIBRARIES += liboss_jshttpclient.la
 liboss_jshttpclient_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
 liboss_jshttpclient_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
 liboss_jshttpclient_la_SOURCES = js/modules/http/http_client.cpp
+EXTRA_DIST += js/modules/http/http_client.js
+
+lib_LTLIBRARIES += liboss_jshttpserver.la
+liboss_jshttpserver_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jshttpserver_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jshttpserver_la_SOURCES = js/modules/http/http_server.cpp
+EXTRA_DIST += js/modules/http/http_server.js
 
 lib_LTLIBRARIES += liboss_jshttprequest.la
 liboss_jshttprequest_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
@@ -163,6 +173,7 @@ js_module-install-hook: js_helper-install-hook
 	cp ${DESTDIR}${libdir}/liboss_jsfile.so ${DESTDIR}${libdir}/oss_modules/_file.jso
 	cp ${DESTDIR}${libdir}/liboss_jshttpparser.so ${DESTDIR}${libdir}/oss_modules/http/http_parser.jso
 	cp ${DESTDIR}${libdir}/liboss_jshttpclient.so ${DESTDIR}${libdir}/oss_modules/http/_http_client.jso
+	cp ${DESTDIR}${libdir}/liboss_jshttpserver.so ${DESTDIR}${libdir}/oss_modules/http/_http_server.jso
 	cp ${DESTDIR}${libdir}/liboss_jshttprequest.so ${DESTDIR}${libdir}/oss_modules/http/_http_request.jso
 	cp ${DESTDIR}${libdir}/liboss_jshttpresponse.so ${DESTDIR}${libdir}/oss_modules/http/_http_response.jso
 	cp ${DESTDIR}${libdir}/liboss_jsprocess.so ${DESTDIR}${libdir}/oss_modules/_process.jso

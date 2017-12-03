@@ -24,8 +24,22 @@ var dump_log = function(out, args)
       }
     }
   }
-  msg += "\n";
-  system.write(out, msg);
+  
+  if (typeof msg === "undefined")
+  {
+    msg = "undefined";
+  }
+  
+  if (out)
+  {
+    msg += "\n";
+    system.write(out, msg.toString());
+  }
+  else
+  {
+    system.cout(msg.toString());
+    system.endl();
+  }
 }
 
 var Console = function(cout, cerr)
@@ -62,10 +76,15 @@ exports.Console = Console;
 
 exports.log = function()
 {
-  dump_log(defines.STDIN_FILENO, arguments);
+  dump_log(undefined, arguments);
 }
 
 exports.error = function()
 {
   dump_log(defines.STDERR_FILENO, arguments);
+}
+
+exports.printStackTrace = function(e)
+{
+  exports.error(e + "\n" + e.stack);
 }

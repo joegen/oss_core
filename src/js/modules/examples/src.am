@@ -16,4 +16,5 @@ EXTRA_DIST += \
     js/modules/examples/dns_example.js \
     js/modules/examples/http_client_example.js \
     js/modules/examples/event_emitter_example.js \
-    js/modules/examples/cpp_rpc_example.js
+    js/modules/examples/cpp_rpc_example.js \
+    js/modules/examples/http_server_example.js

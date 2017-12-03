@@ -1,15 +1,11 @@
 "use-strict"
 
 const utils = require("utils");
-
-const system = require("system");
-const async = require("async");
-
 const http = require("http");
 const HttpClient = http.HttpClient;
 const HttpSession = http.HttpSession;
 const HttpRequest = http.HttpRequest;
-const console = require("console");
+
 const HttpResponse = http.HttpResponse;
 
 var client = new HttpClient();
@@ -17,20 +13,44 @@ client.setHost("www.ossapp.com");
 client.setPort(80);
 
 var session = new HttpSession(client);
-
-session.on("response", function()
+var _this = this;
+this.contentLength = undefined;
+session.on("response", function(response)
 {
-  session.read(session._response.getContentLength());
+  _this.contentLength = response.getContentLength();
+  session.read(_this.contentLength ? _this.contentLength : 1024);
 });
 
-session.on("read", function(size)
+this.buff = new Array();
+session.on("read", function(data)
 {
-  if (size > 0)
+  if (data.length > 0)
   {
-    var data = session.readBuffer(size);
-    console.log(utils.bufferToString(data));
+    _this.buff = _this.buff.concat(data);
+    if (_this.contentLength)
+    {
+      //
+      // We are done.  We have a content length so we are sure we read the correct amount
+      //
+      console.log(utils.bufferToString(_this.buff));
+      system.exit(0);
+    }
+    else
+    {
+      //
+      // read some more since we dont know exactly how much data there is
+      //
+      session.read(1024); 
+    }
   }
-  system.exit(0);
+  else
+  {
+    //
+    // No more data left to read.  We are done.
+    //
+    console.log(utils.bufferToString(_this.buff));
+    system.exit(0);
+  }
 });
 
 session.on("error", function(message)
@@ -46,5 +66,3 @@ request.setUri("/");
 request.setContentLength(5);
 request.setContentType("application/text");
 session.send(request, "hello");
-
-async.processEvents();

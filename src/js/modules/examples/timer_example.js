@@ -16,6 +16,6 @@ var on_timer = function(msg, start)
 }
 
 async.setTimeout(on_timer, 100, ["Hello Timers!", new Date()]);
-async.processEvents();
+
 
 

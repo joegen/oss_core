@@ -36,4 +36,4 @@ client.on("read", function(socket)
 client.connect("127.0.0.1", "50001");
 client.write("Hello!");
 
-async.processEvents();
+

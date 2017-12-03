@@ -85,7 +85,7 @@ void ZMQSocketObject::pollForReadEvents()
     }
 
     int rc = OSS::ZMQ::ZMQSocket::poll(items, -1);
-    
+
     if (_isTerminating)
     {
       break;
@@ -287,7 +287,7 @@ v8::Handle<v8::Value> ZMQSocketObject::receive(const v8::Arguments& args)
     }
     else
     {
-      return v8::ThrowException(v8::Exception::Error(v8::String::New("Read buffer not provider")));
+      return v8::ThrowException(v8::Exception::Error(v8::String::New("Read buffer not provided")));
     }
   }
   result->ToObject()->Set(v8::String::NewSymbol("payloadSize"), v8::Uint32::New(msg.size()));
@@ -363,6 +363,7 @@ static v8::Handle<v8::Value> cleanup_exports(const v8::Arguments& args)
   _isTerminating = true;
   __wakeup_pipe();
   
+  
   //
   // Disable the wakeup pipe from here forward
   //
@@ -372,7 +373,11 @@ static v8::Handle<v8::Value> cleanup_exports(const v8::Arguments& args)
   delete _notifyReceiver;
   delete _notifySender;
   delete _notifySem;
-  delete _context ;
+  //
+  // Intentionally leak the context for it might block if there are
+  // pending I/O 
+  //
+  // delete _context ;
 
   return v8::Undefined();
 }

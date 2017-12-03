@@ -19,5 +19,3 @@ for (var i = 0; i < 10; i++)
   queue.enqueue([i,"args"]);
 }
 queue.enqueue([-1]);
-
-async.processEvents();

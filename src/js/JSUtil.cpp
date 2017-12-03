@@ -259,7 +259,7 @@ v8::Handle<v8::String> read_file(const std::string& name)
   return result;
 }
 
-v8::Handle<v8::String> read_file_skip_shebang(const std::string& name) 
+v8::Handle<v8::String> read_file_skip_shebang(const std::string& name, bool hasCommonJS) 
 {
   std::ifstream scriptFile;
   scriptFile.open(name.c_str());
@@ -269,6 +269,9 @@ v8::Handle<v8::String> read_file_skip_shebang(const std::string& name)
     return v8::Handle<v8::String>();
   }
   std::ostringstream strm;
+  
+  if (hasCommonJS)
+    strm << "try { ";
   while (!scriptFile.eof())
   {
     std::string line;
@@ -281,6 +284,8 @@ v8::Handle<v8::String> read_file_skip_shebang(const std::string& name)
     }
     strm << line << std::endl;
   }
+  if (hasCommonJS)
+    strm << " } catch(e) {console.printStackTrace(e); _exit(-1); } ;async.processEvents();";
   return v8::String::New(strm.str().data(), strm.str().size());
 }
 
@@ -376,6 +381,26 @@ void wrap_external_object(v8::TryCatch&  try_catch,
   // Store the request pointer in the JavaScript wrapper.
   objectInstance->SetInternalField(0, request_ptr);
 
+}
+
+std::string get_stack_trace(v8::Handle<v8::Message> message, uint32_t bufLen)
+{ 
+  FILE* fp = ::fmemopen(0, bufLen, "w+");
+  
+  message->PrintCurrentStackTrace(fp);
+  
+  fseek(fp, 0, SEEK_END);
+  int size = ftell(fp);
+  rewind(fp);
+
+  char* chars = new char[size + 1];
+  chars[size] = '\0';
+  for (int i = 0; i < size;) {
+    int read = fread(&chars[i], 1, size - i, fp);
+    i += read;
+  }
+  fclose(fp);
+  return std::string(chars, size);
 }
 
 } } // OS::JS

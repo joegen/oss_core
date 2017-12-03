@@ -199,7 +199,7 @@ public:
       _client->setOutputStream(0);
       _client->setInputStream(&(_client->getSession().receiveResponse((*_response->response()))));
       OSS::JSON::Array json;
-      json[0] = OSS::JSON::String("response");
+      json[0] = OSS::JSON::String("response_ready");
       QueueObject::json_enqueue_object(_client->getEventFd(), json);
     }
     catch(const HttpClientObject::MessageException& e)
@@ -276,13 +276,11 @@ public:
     try
     {
       std::istream& strm = *_client->getInputStream();
-      if (strm.read((char*)_buf->buffer().data(), _size))
-      {
-        OSS::JSON::Array json;
-        json[0] = OSS::JSON::String("read");
-        json[1] = OSS::JSON::Number(_size);
-        QueueObject::json_enqueue_object(_client->getEventFd(), json);
-      }
+      strm.read((char*)_buf->buffer().data(), _size);
+      OSS::JSON::Array json;
+      json[0] = OSS::JSON::String("read_ready");
+      json[1] = OSS::JSON::Number(strm.gcount());
+      QueueObject::json_enqueue_object(_client->getEventFd(), json);
     }
     catch(const HttpClientObject::MessageException& e)
     {

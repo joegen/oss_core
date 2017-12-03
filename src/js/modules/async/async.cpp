@@ -32,6 +32,7 @@ typedef v8::Persistent<v8::Function> PersistentFunction;
 typedef std::vector< v8::Persistent<v8::Value> > ArgumentVector;
 
 static bool _isTerminating = false;
+static bool _enableAsync = false;
 static OSS::Semaphore* _exitSem = 0;
 static OSS::UInt64  _garbageCollectionFrequency = 30; /// 30 seconds default
 pthread_t Async::_threadId = 0;
@@ -147,6 +148,8 @@ static v8::Handle<v8::Value> __call(const v8::Arguments& args)
   pCallInfo->result = v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(args[2]));
   
   _callQueue.enqueue(pCallInfo);
+  
+  _enableAsync = true;
   return v8::Undefined();
 }
 
@@ -156,6 +159,7 @@ void Async::async_execute(const JSPersistentFunctionHandle& func, const JSPersis
   pCallInfo->isDirectCall = true;
   pCallInfo->call = func;
   pCallInfo->args = args;
+  _enableAsync = true;
   _callQueue.enqueue(pCallInfo);
 }
 
@@ -175,6 +179,7 @@ static v8::Handle<v8::Value> __schedule_one_shot_timer(const v8::Arguments& args
     handle_to_arg_vector(args[2], pTimer->timerArgs);
   }
   Timer::timers[Timer::timerId] = pTimer;
+  _enableAsync = true;
   return v8::Int32::New(Timer::timerId);
 }
 
@@ -214,6 +219,7 @@ void Async::__insert_wakeup_task(const WakeupTask& task)
 {
   OSS::mutex_critic_sec_lock lock(_wakeupTaskQueueMutex);
   Async::_wakeupTaskQueue.push(task);
+  _enableAsync = true;
   Async::__wakeup_pipe();
 }
 
@@ -238,6 +244,8 @@ static v8::Handle<v8::Value> __monitor_descriptor(const v8::Arguments& args)
     return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument")));
   }
 
+  _enableAsync = true;
+  
   MonitoredFdData data;
   data.pfd.fd = args[0]->ToInt32()->Value();
   data.pCallback = new PersistentFunction();
@@ -288,6 +296,7 @@ void Async::register_string_queue(AsyncStringQueue* pQueue, AsyncStringQueueCall
   data.queue = pQueue;
   data.cb = cb;
   _monitoredStringQueue[pQueue->getFd()] = data;
+  _enableAsync = true;
   Async::__wakeup_pipe();
 }
 
@@ -304,6 +313,7 @@ JS_METHOD_IMPL(__set_promise_callback)
   js_enter_scope();
   js_method_arg_declare_persistent_function(func, 0);
   Async::_promiseHandler = func;
+  _enableAsync = true;
   return JSUndefined();
 }
 
@@ -320,12 +330,21 @@ bool Async::__execute_one_promise()
   JSArgumentVector jsonArg;
   jsonArg.push_back(request);
   JSValueHandle result =  Async::_promiseHandler->Call((*JSPlugin::_pContext)->Global(), jsonArg.size(), jsonArg.data());
-  promise->set_value(js_handle_as_std_string(result));
+  
+  std::string theFuture;
+  if (!result.IsEmpty() && result->IsString())
+  {
+    theFuture = js_handle_as_std_string(result);
+  }
+  promise->set_value(theFuture);
   Async::_promises.pop();
   return true;
 }
 
-bool Async::json_execute_promise(const OSS::JSON::Object& request, OSS::JSON::Object& reply, uint32_t timeout)
+void* Async::_promiseData = 0;
+OSS::mutex_critic_sec* Async::_promiseDataMutex = new OSS::mutex_critic_sec;
+
+bool Async::json_execute_promise(const OSS::JSON::Object& request, OSS::JSON::Object& reply, uint32_t timeout, void* promiseData)
 {
   if (Async::_threadId == pthread_self() || Async::_promiseHandler.IsEmpty())
   {
@@ -336,7 +355,10 @@ bool Async::json_execute_promise(const OSS::JSON::Object& request, OSS::JSON::Ob
   {
     return false;
   }
-
+  
+  OSS::mutex_critic_sec_lock lock_promise(*Async::_promiseDataMutex);
+  Async::_promiseData = promiseData;
+  
   AsyncPromise promise = (requestJson);
   AsyncFuture future = promise.get_future();
 
@@ -345,15 +367,24 @@ bool Async::json_execute_promise(const OSS::JSON::Object& request, OSS::JSON::Ob
   Async::_promisesMutex->unlock();
   Async::__wakeup_pipe();
 
-  if (timeout != 0)
+  //
+  // We can only timeout if there is no promise data
+  // because we can seg fault if we exit here adn invalidate
+  // the promise data while ossjs is still referencing it.
+  // If we don't ever return from here, we are seriously fucked.
+  //
+  if (timeout != 0 && !Async::_promiseData)
   {
     boost::system_time const future_timeout = boost::get_system_time() + boost::posix_time::milliseconds(timeout);
     if (!future.timed_wait_until(future_timeout))
     {
+      Async::_promiseData = 0;
       return false;
     }
   }
 
+  Async::_promiseData = 0;
+  
   std::string replyJson = future.get();
   if (!OSS::JSON::json_parse_string(replyJson, reply))
   {
@@ -368,7 +399,16 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
   OSS::UInt64 lastGarbageCollectionTime = 0;
   Async::_threadId = pthread_self();
   
-  while (!_isTerminating)
+  if (QueueObject::_activeQueue.size() > 0)
+  {
+    _enableAsync = true;
+  }
+  
+  if (_enableAsync)
+  {
+    OSS_LOG_INFO("Running Event Loop");
+  }
+  while (_enableAsync && !_isTerminating)
   {
     pollfd pfds[3];
     pfds[0].fd = _wakeupPipe[0];
@@ -419,11 +459,6 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
     }
     
     int ret = ::poll(descriptors.data(), descriptors.size(), 100);
-    
-    //
-    // Lock the isolate
-    //
-    v8::Locker lock;
     v8::HandleScope scope;
     
     if (ret == -1)
@@ -506,6 +541,7 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
     {
       bool found = false;
       std::size_t fdsize = descriptors.size();
+
       for (std::size_t i = 3; i < fdsize; i++)
       {
         pollfd& pfd = descriptors[i];
@@ -563,6 +599,7 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
       }
     }
   }
+  OSS_LOG_INFO("Event Loop Terminated");
   _exitSem->signal();
   return v8::Undefined();
 }

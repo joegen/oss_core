@@ -11,4 +11,5 @@ nobase_include_HEADERS += \
     OSS/JS/modules/inet_socket/inet_socket.h \
     OSS/JS/modules/HttpClientObject.h \
     OSS/JS/modules/HttpRequestObject.h \
-    OSS/JS/modules/HttpResponseObject.h
+    OSS/JS/modules/HttpResponseObject.h \
+    OSS/JS/modules/HttpServerObject.h

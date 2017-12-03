@@ -33,5 +33,3 @@ myEmitter.emit('event', 'a', 'b');
 // and receive the event in JS layer.
 //
 async.emit_json_string(myEmitter._fd,'["exit"]');
-
-async.processEvents();

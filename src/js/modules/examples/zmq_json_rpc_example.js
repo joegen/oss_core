@@ -67,8 +67,6 @@ client.execute("multiply", { var1 : 10, var2 : 20 });
 client.execute("bogus", {});
 client.execute("exit", {});
 
-async.processEvents();
-
 
 
 

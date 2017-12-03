@@ -20,5 +20,3 @@ function(result)
 });
 
 log.log(log.INFO, "I need to sleep");
-
-async.processEvents();

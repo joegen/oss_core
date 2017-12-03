@@ -26,6 +26,7 @@
 #include "OSS/JS/JSModule.h"
 #include "OSS/JS/JSPlugin.h"
 #include "OSS/UTL/Logger.h"
+#include "OSS/JS/JSIsolate.h"
 
 
 namespace OSS {
@@ -36,7 +37,7 @@ boost::filesystem::path JSModule::_mainScript;
   
 static JSModule& get_current_module_manager()
 {
-  return JSBase::GetCurrent()->getModuleManager();
+  return JSIsolate::instance().getModuleManager();
 }
   
 static v8::Handle<v8::Value> js_include(const v8::Arguments& args) 
@@ -370,8 +371,7 @@ static v8::Handle<v8::Value> js_compile_module(const v8::Arguments& args)
   return result;
 }
 
-JSModule::JSModule(JSBase* pBase) :
-  _pBase(pBase)
+JSModule::JSModule()
 {
   _modulesDir = OSS::system_libdir() + "/oss_modules";
 }
@@ -473,7 +473,6 @@ bool JSModule::compileModuleHelpers(v8::TryCatch& try_catch, v8::Handle<v8::Obje
     v8::Handle<v8::String> script(v8::String::New(iter->script.c_str()));
     v8::Handle<v8::Value> name(v8::String::New(iter->name.c_str()));
     v8::Handle<v8::Script> compiled = v8::Script::Compile(script, name);
-
     v8::Handle<v8::Value> result = compiled->Run();
     if (result.IsEmpty())
     {
@@ -482,7 +481,6 @@ bool JSModule::compileModuleHelpers(v8::TryCatch& try_catch, v8::Handle<v8::Obje
       return false;
     }
   } 
-
   return true;
 }
 

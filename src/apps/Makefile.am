@@ -13,8 +13,8 @@ endif
 endif
 
 if ENABLE_FEATURE_V8
-    bin_PROGRAMS += oss_js
-    oss_js_SOURCES = apps/oss_js.cpp
+    bin_PROGRAMS += ossjs
+    ossjs_SOURCES = apps/oss_js.cpp
 endif
 
 if ENABLE_FEATURE_CARP

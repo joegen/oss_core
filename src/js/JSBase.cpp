@@ -51,6 +51,8 @@ static v8::Handle<v8::String> read_global_scripts()
 
 static std::string V8ErrorReport;
 static bool _hasSetErrorCB = false;
+
+
 static void V8ErrorMessageCallback(v8::Handle<v8::Message> message,
 v8::Handle<v8::Value> data)
 {
@@ -59,9 +61,10 @@ v8::Handle<v8::Value> data)
   if (message->GetSourceLine()->IsString())
   {
     std::string error =
-            + " Javascript error on line " + OSS::string_from_number(message->GetLineNumber())
-            + " : " + string_from_js_string(message->GetSourceLine());
+            + "Javascript error on line : "
+            + string_from_js_string(message->GetSourceLine());
     OSS::log_error(error);
+    OSS::log_error(get_stack_trace(message, 1024));
   }
 }
 
@@ -72,9 +75,7 @@ JSBase::JSBase(const std::string& contextName) :
   _requestTemplate(0),
   _globalTemplate(0),
   _isInitialized(false),
-  _extensionGlobals(0),
-  _moduleManager(this),
-  _enableCommonJS(false)
+  _extensionGlobals(0)
 {
   _id = JSBase::addBase(this);
 }
@@ -183,12 +184,8 @@ bool JSBase::internalInitialize(
 
   if (!_hasSetErrorCB)
   {
-    if (!_hasSetErrorCB)
-      v8::V8::AddMessageListener(V8ErrorMessageCallback);
+    v8::V8::AddMessageListener(V8ErrorMessageCallback);
   }
-  
-  
-
   //OSS_LOG_INFO("Google V8 is loading context for " << _script);
   // Create a template for the global object where we set the
   // built-in global functions.
@@ -201,12 +198,6 @@ bool JSBase::internalInitialize(
   global->Set(v8::String::New("log_debug"), v8::FunctionTemplate::New(log_debug_callback));
   global->Set(v8::String::New("log_error"), v8::FunctionTemplate::New(log_error_callback));
   
-  if (_enableCommonJS)
-  {
-    _moduleManager.setGlobals(global);
-    _moduleManager.setMainScript(_script);
-  }
-
   //
   // Initialize subclass global functions
   //
@@ -368,18 +359,6 @@ bool JSBase::internalInitialize(
     }
   }
 
-  if (_enableCommonJS)
-  {
-    JSPluginManager::instance().setContext(_context);
-    JSPluginManager::instance().setGlobal(_globalTemplate);
-
-    if (!_moduleManager.initialize(try_catch, global))
-    {
-      // Exception is reported inside initialize
-      return false;
-    }
-  }
-  
   //
   // Compile the main script script
   //
@@ -388,7 +367,7 @@ bool JSBase::internalInitialize(
   v8::Handle<v8::Script> compiled_script;
   if (preloaded.empty())
   {
-    script = read_file_skip_shebang(OSS::boost_path(_script));
+    script = read_file(OSS::boost_path(_script));
     compiled_script = v8::Script::Compile(script, v8::String::New(_script.c_str()));
   }
   else

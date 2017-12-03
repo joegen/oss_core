@@ -47,7 +47,7 @@ public:
   typedef std::map<std::string, Module> InternalModules;
   typedef std::vector<Module> ModuleHelpers;
   
-  JSModule(JSBase* pBase);
+  JSModule();
   ~JSModule();
   
   bool setGlobals(v8::Handle<v8::ObjectTemplate>& global);
@@ -63,8 +63,6 @@ protected:
   void registerInternalModule(const Module& module);
   void registerModuleHelper(const Module& module);
   bool compileModuleHelpers(v8::TryCatch& try_catch, v8::Handle<v8::ObjectTemplate>& global);
-  
-  JSBase* _pBase;
   
   InternalModules _modules;
   ModuleHelpers _moduleHelpers;

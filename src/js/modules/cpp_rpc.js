@@ -4,6 +4,7 @@ const async = require("async");
 
 var CPPRPC = function(request)
 {
+  
   var method = request.method;
   var arguments = request.arguments;
   
@@ -15,7 +16,9 @@ var CPPRPC = function(request)
     response.error.message = "Method not found";
     return response;
   }
-  return JSON.stringify(CPPRPC[method](arguments));
+  
+  var result = CPPRPC[method](arguments);
+  return JSON.stringify(result);
 }
 
 CPPRPC.on = function(name, func)

@@ -5,7 +5,8 @@ liboss_core_la_SOURCES +=  \
     js/JSSIPMessage.cpp \
     js/JSUtil.cpp \
     js/JSModule.cpp \
-    js/JSPluginManager.cpp
+    js/JSPluginManager.cpp \
+    js/JSIsolate.cpp
 endif
 
 JAVASCRIPT_SRC = \

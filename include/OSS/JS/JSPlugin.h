@@ -265,8 +265,11 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define js_method_arg_declare_array(Var, Index) js_method_arg_type(JSArrayHandle, Var, Index, js_assign_array)
 #define js_method_arg_declare_object(Var, Index) js_method_arg_type(JSObjectHandle, Var, Index, js_assign_object)
 #define js_method_arg_declare_external_object(Class, Var, Index) js_method_arg_type(Class*, Var, Index, js_assign_external_object<Class>)
+#define js_method_arg_declare_function(Var, Index) js_method_arg_type(JSLocalFunctionHandle, Var, Index, js_assign_function) 
 #define js_method_arg_declare_persistent_function(Var, Index) js_method_arg_type(JSPersistentFunctionHandle, Var, Index, js_assign_persistent_function) 
 #define js_method_arg_declare_self(Class, Var) Class* Var = js_method_arg_unwrap_self(Class)
+
+#define js_function_call(Func, Data, Size) Func->Call((*JSPlugin::_pContext)->Global(), Size, Data)
 
 template <typename T>
 bool js_assign_external_object(T*& value, const JSValueHandle& handle)
@@ -286,6 +289,16 @@ inline bool js_assign_persistent_function(JSPersistentFunctionHandle& value, con
     return false;
   } 
   value =  v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(handle));
+  return true; 
+}
+
+inline bool js_assign_function(JSLocalFunctionHandle& value, const JSValueHandle& handle) 
+{ 
+  if (!handle->IsFunction())
+  {
+    return false;
+  } 
+  value =  v8::Local<v8::Function>::New(v8::Handle<v8::Function>::Cast(handle));
   return true; 
 }
 

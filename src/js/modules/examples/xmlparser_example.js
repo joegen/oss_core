@@ -19,7 +19,7 @@ expect.toBe = function(val)
 
 var it = function(what, func)
 {
-  log_info(what);
+  console.log(what);
   func();
 }
 

@@ -7,6 +7,7 @@
 #include "OSS/UTL/Thread.h"
 #include "OSS/UTL/Console.h"
 #include "OSS/JS/JSBase.h"
+#include "OSS/JS/JSIsolate.h"
 
 
 using namespace OSS;
@@ -37,7 +38,7 @@ int main(int argc, char** argv)
 {
   if (argc < 2)
   {
-    std::cerr << "Usage:  oss_js [script] [script_options]" << std::endl;
+    std::cerr << "Usage:  ossjs [script] [script_options]" << std::endl;
     _exit(1);
   }
   
@@ -53,6 +54,8 @@ int main(int argc, char** argv)
   std::set_terminate(&ServiceOptions::catch_global);
 
   OSS::OSS_init(argc, argv);
+  
+#if 0
   JS::JSBase vm("oss_js");
   vm.setEnableCommonJS(true);
 
@@ -61,4 +64,8 @@ int main(int argc, char** argv)
     _exit(-1);
   }
   _exit(0);
+#else
+  JS::JSIsolate::instance().run(path);
+  _exit(JS::JSIsolate::instance().getExitValue());
+#endif
 }

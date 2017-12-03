@@ -115,6 +115,5 @@ dns.lookup("A", "bogusdomain.local", 2, function(result, common)
   system.exit(0);
 });
 
-async.processEvents();
 
 

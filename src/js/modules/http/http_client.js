@@ -21,6 +21,28 @@ var HttpSession = function(client)
   this._request = null;
   this._response = null;
   this._http.setEventFd(this._fd);
+  
+  this.getRequest = function() { return this._request; };
+  this.getResponse = function() { return this._response; };
+  
+  var _this = this;
+  this.on("response_ready", function()
+  {
+    _this._on_event("response", _this._response);
+  });
+  
+  this.on("read_ready", function(size)
+  {
+    if (size > 0)
+    {
+      var data = _this.readBuffer(size);
+      _this._on_event("read", data);
+    }
+    else
+    {
+      _this._on_event("read", []);
+    }
+  });
 }
 HttpSession.prototype = Object.create(EventEmitter.prototype);
 

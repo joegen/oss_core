@@ -14,7 +14,8 @@ function example1()
   assert(requester.connect("tcp://127.0.0.1:50000"));
   responder.start(function()
   {
-    var msg = responder.receive();
+    var msg = new Buffer(1024);
+    responder.receive(msg);
     log.log(log.INFO, msg.toString());
     var response = new Buffer("Bye ZeroMQ!");
     assert(responder.send(response));
@@ -22,7 +23,8 @@ function example1()
 
   requester.start(function()
   {
-    var msg = requester.receive();
+    var msg = new Buffer(1024);
+    requester.receive(msg);
     log.log(log.INFO, msg.toString());
     responder.close();
     requester.close();
@@ -56,7 +58,7 @@ function example2()
 
 example1();
 
-async.processEvents();
+
 
 
 

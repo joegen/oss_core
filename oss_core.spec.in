@@ -154,12 +154,21 @@ rm -rf $RPM_BUILD_ROOT
 %doc CONTRIBUTORS README NEWS TODO ChangeLog
 %attr(755,root,root) %{_libdir}/liboss_*.so*
 %attr(755,root,root) %{_bindir}/oss_core
-%attr(755,root,root) %{_bindir}/oss_js
-%dir %attr(755,root,root) %{_libdir}/oss_modules
+%attr(755,root,root) %{_bindir}/ossjs
+
 %dir %attr(755,root,root) %{_libdir}/oss_modules/examples
+%dir %attr(755,root,root) %{_libdir}/oss_modules/async
+%dir %attr(755,root,root) %{_libdir}/oss_modules/dns
+%dir %attr(755,root,root) %{_libdir}/oss_modules/http
+%dir %attr(755,root,root) %{_libdir}/oss_modules/json_rpc
+
 %{_libdir}/oss_modules/*.js*
-%{_libdir}/oss_modules/http/*
 %{_libdir}/oss_modules/examples/*
+%{_libdir}/oss_modules/http/*
+%{_libdir}/oss_modules/async/*
+%{_libdir}/oss_modules/dns/*
+%{_libdir}/oss_modules/json_rpc/*
+
 
 %files devel
 %defattr(644,root,root,755)

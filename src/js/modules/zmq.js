@@ -72,10 +72,16 @@ var ZmqRpcServer = function(address)
       return _this._socket.send(JSON.stringify(new ZmqRpcError(-32603, "Internal JSON-RPC error")));
     }
     
-    log_info("--->" + request.payloadSize)
-    log_info("------->" + request.toString(request.payloadSize));
     
-    var rpc = JSON.parse(request.toString(request.payloadSize));
+    var rpc;
+    try
+    {
+      rpc = JSON.parse(request.toString(request.payloadSize));
+    }
+    catch(e)
+    {
+      return _this._socket.send(JSON.stringify(new ZmqRpcError(-32700, "Parse error")));
+    }
     var method = rpc.method;
     var params = rpc.params;
 
@@ -154,7 +160,16 @@ var ZmqRpcClient = function(address)
       return _this._socket.send(JSON.stringify(new ZmqRpcError(-32603, "Internal JSON-RPC error")));
     }
     
-    var rpc = JSON.parse(response.toString(response.payloadSize));
+    var rpc;
+    try
+    {
+      rpc = JSON.parse(response.toString(response.payloadSize));
+    }
+    catch(e)
+    {
+      return _this._socket.send(JSON.stringify(new ZmqRpcError(-32700, "Parse error")));
+    }
+    
     var method = _this._activeMethod;
 
     // Call pending call to excute prior to calling callbacks
