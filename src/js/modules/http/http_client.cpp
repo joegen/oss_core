@@ -174,7 +174,14 @@ JS_METHOD_IMPL(HttpClientObject::sendRequest)
   js_method_arg_declare_self(HttpClientObject, self);
   js_method_arg_declare_external_object(HttpRequestObject, pRequest, 0);
   
-  self->_output = &(self->_session.sendRequest(*pRequest->request()));
+  try
+  {
+    self->_output = &(self->_session.sendRequest(*pRequest->request()));
+  }
+  catch(const Poco::Exception& e)
+  {
+    return JSBoolean(false);
+  }
   return JSBoolean(self->_output && !self->_output->bad() && !self->_output->fail());
 }
 
@@ -204,7 +211,6 @@ public:
     }
     catch(const HttpClientObject::MessageException& e)
     {
-      OSS_LOG_ERROR(e.message().c_str());
       OSS::JSON::Array json;
       json[0] = OSS::JSON::String("error");
       json[1] = OSS::JSON::String(e.message().c_str());

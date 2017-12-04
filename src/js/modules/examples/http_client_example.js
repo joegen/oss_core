@@ -5,7 +5,6 @@ const http = require("http");
 const HttpClient = http.HttpClient;
 const HttpSession = http.HttpSession;
 const HttpRequest = http.HttpRequest;
-
 const HttpResponse = http.HttpResponse;
 
 var client = new HttpClient();
@@ -13,26 +12,25 @@ client.setHost("www.ossapp.com");
 client.setPort(80);
 
 var session = new HttpSession(client);
-var _this = this;
-this.contentLength = undefined;
+var contentLength = undefined;
 session.on("response", function(response)
 {
-  _this.contentLength = response.getContentLength();
-  session.read(_this.contentLength ? _this.contentLength : 1024);
+  contentLength = response.getContentLength();
+  session.read(contentLength ? contentLength : 1024);
 });
 
-this.buff = new Array();
+var buff = new Array();
 session.on("read", function(data)
 {
   if (data.length > 0)
   {
-    _this.buff = _this.buff.concat(data);
-    if (_this.contentLength)
+    buff = buff.concat(data);
+    if (contentLength)
     {
       //
       // We are done.  We have a content length so we are sure we read the correct amount
       //
-      console.log(utils.bufferToString(_this.buff));
+      console.log(utils.bufferToString(buff));
       system.exit(0);
     }
     else
@@ -48,7 +46,7 @@ session.on("read", function(data)
     //
     // No more data left to read.  We are done.
     //
-    console.log(utils.bufferToString(_this.buff));
+    console.log(utils.bufferToString(buff));
     system.exit(0);
   }
 });

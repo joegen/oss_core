@@ -21,6 +21,12 @@ var JsonRpcHttpClient = function(host, port)
   {
     _this._readBuffer = [];
     _this._readContentLength = _this._session.getResponse().getContentLength();
+   
+    if (typeof _this._readContentLength === "number" && _this._readContentLength == -1)
+    {
+      _this._readContentLength = 0;
+    }
+    
     if (this._readContentLength)
     {
       _this._session.read(this._readContentLength);
@@ -51,17 +57,37 @@ var JsonRpcHttpClient = function(host, port)
     }
   });
   
-  this.onReadCompleted = function(){ assert(false) } // meant to be overridden
+  this._session.on("error", function(err)
+  {
+      _this.onSendError(err);
+  });
   
-  this.send = function(json)
+  this.onReadCompleted = function(){ assert(false); } // meant to be overridden
+  
+  this.onSendError = function(){ assert(false); } // meant to be overridden
+  
+  this.send = function(json, uri)
   {
     var request = new HttpRequest();
     request.setVersion(http.HTTP_1_1);
     request.setMethod(http.HTTP_POST);
-    request.setUri("/");
+    
+    if (uri)
+    {
+      request.setUri(uri);
+    }
+    else
+    {
+      request.setUri("/");
+    }
+    
     request.setContentLength(json.length);
     request.setContentType("application/json-rpc");
-    this._session.send(request, json);
+    request.set("Accept", "application/json-rpc");
+    if (!_this._session.send(request, json))
+    {
+      _this.onReadCompleted("");
+    }
   }
 }
 

@@ -10,6 +10,8 @@ js_helper-install-hook:
 	cp ${srcdir}/js/modules/async/*.js ${DESTDIR}${libdir}/oss_modules/async
 	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/json_rpc
 	cp ${srcdir}/js/modules/json_rpc/*.js ${DESTDIR}${libdir}/oss_modules/json_rpc
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/logger
+	cp ${srcdir}/js/modules/logger/*.js ${DESTDIR}${libdir}/oss_modules/logger
 
 include js/modules/examples/src.am
 
@@ -24,7 +26,8 @@ EXTRA_DIST += \
     js/modules/xml-parser.js \
     js/modules/utils.js \
     js/modules/async/async.js \
-    js/modules/json_rpc/*.js
+    js/modules/json_rpc/*.js \
+    js/modules/logger/*.js
 
 lib_LTLIBRARIES += liboss_jsconst.la
 liboss_jsconst_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
@@ -39,8 +42,8 @@ liboss_jserror_la_SOURCES = js/modules/error.cpp
 lib_LTLIBRARIES += liboss_jslogger.la
 liboss_jslogger_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
 liboss_jslogger_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
-liboss_jslogger_la_SOURCES = js/modules/logger.cpp
-EXTRA_DIST += js/modules/logger.js
+liboss_jslogger_la_SOURCES = js/modules/logger/logger.cpp
+
 
 lib_LTLIBRARIES += liboss_jspoll.la
 liboss_jspoll_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
@@ -159,7 +162,7 @@ EXTRA_DIST += js/modules/cpp_rpc.js
 js_module-install-hook: js_helper-install-hook
 	cp ${DESTDIR}${libdir}/liboss_jsconst.so ${DESTDIR}${libdir}/oss_modules/consts.jso
 	cp ${DESTDIR}${libdir}/liboss_jserror.so ${DESTDIR}${libdir}/oss_modules/error.jso
-	cp ${DESTDIR}${libdir}/liboss_jslogger.so ${DESTDIR}${libdir}/oss_modules/logger.jso
+	cp ${DESTDIR}${libdir}/liboss_jslogger.so ${DESTDIR}${libdir}/oss_modules/logger/_logger.jso
 	cp ${DESTDIR}${libdir}/liboss_jspoll.so ${DESTDIR}${libdir}/oss_modules/poll.jso
 	cp ${DESTDIR}${libdir}/liboss_jsfork.so ${DESTDIR}${libdir}/oss_modules/fork.jso
 	cp ${DESTDIR}${libdir}/liboss_jspipe.so ${DESTDIR}${libdir}/oss_modules/pipe.jso

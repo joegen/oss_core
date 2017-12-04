@@ -22,6 +22,9 @@ var RequestHandler = function(rpc)
     var rpcId = params.rpcId;
     var inputStreamId = params.inputStreamId;
     var outputStreamId = params.outputStreamId;
+    request.serverAddress = params.serverAddress;
+    request.clientAddress = params.clientAddress;
+    
     if (rpcId && request && inputStreamId && outputStreamId)
     {
       var server = RequestHandler.find(rpcId);
@@ -74,16 +77,21 @@ RequestHandler.find = function(serverId)
 }
 
 CPPRPC.on("HttpServerObject__handleRequest", RequestHandler);
+
 var IncomingMessage = function(headers, inputStreamId, server)
 {
   this.uri = headers.uri;
   this._headers = headers;
   this._inputStreamId = inputStreamId;
   this._server = server;
+  this.serverAddress = headers.serverAddress;
+  this.clientAddress = headers.clientAddress;
+  
+  var _this = this;
   
   this.read = function(size)
   {
-    return this._server.read(this._inputStreamId, size);
+    return _this._server.read(this._inputStreamId, size);
   }
   
   this.getHeader = function(name)
@@ -97,19 +105,46 @@ var IncomingMessage = function(headers, inputStreamId, server)
     {
       if (key.toLowerCase() === headerName)
       {
-        return this._headers[key];
+        return _this._headers[key];
       }
     }
   }
   
+  
   this.getContentLength = function()
   {
-    return parseInt(this.getHeader("Content-Length"));
+    return parseInt(_this.getHeader("Content-Length"));
   }
   
   this.getContentType = function()
   {
-    return this.getHeader("Content-Type");
+    return _this.getHeader("Content-Type");
+  }
+  
+  this.getBody = function()
+  {
+    var contentLength = _this.getContentLength();
+    var body = [];
+    if (contentLength)
+    {
+      body = _this.read(contentLength);
+    }
+    else
+    {
+      while (true)
+      {
+        var buf = _this.read(256);
+        if (buf && buf.length > 0)
+        {
+          body.concat(buf);
+        }
+        else
+        {
+          break;
+        }
+      }
+    }
+    return body;
   }
 }
 
@@ -176,6 +211,13 @@ var HttpServerResponse = function(outputStreamId, server)
   {
     this.send(); // Send the headers if need
     return this._server.write(this._outputStreamId, data);
+  }
+  
+  this.reject = function(status, reason)
+  {
+    this.setStatus(status);
+    this.setReason(reason);
+    this.send();
   }
 }
 

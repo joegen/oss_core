@@ -45,4 +45,9 @@ for (var i = 0; i < parser.getHeaderCount(); i++)
   console.log(i + "-> " + header.header + ": " + header.value);
 }
 
+//
+// Explicitly exit to termiante the event loop
+//
+exit(0);
+
 

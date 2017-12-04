@@ -54,6 +54,10 @@ JSIsolate& JSIsolate::instance()
 JSIsolate::JSIsolate() :
   _pIsolate(0)
 {
+  //
+  // Set the external heap to 20mb before attempting to grabage collect
+  //
+  v8::V8::AdjustAmountOfExternalAllocatedMemory(1);
 }
 
 JSIsolate::~JSIsolate()

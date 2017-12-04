@@ -8,42 +8,37 @@ var JsonRpcHttpServer = function()
 {
   var _this = this;
   
+  this.nonRpcHandler = function(request, response)
+  {
+    //
+    // Send out an empty response
+    //
+    response.send();
+    return;
+  }
+  
   this.requestHandler = function(request, response)
   {
     _this._request = request;
     _this._response = response;
     
     var contentType = request.getContentType();
-    if (!contentType || contentType.toLowerCase() !== "application/json-rpc")
+    if (!contentType)
     {
-      //
-      // Send out an empty response
-      //
-      _this._response.send();
+      _this.nonRpcHandler(request, response);
       return;
-    }
-    
-    var contentLength = request.getContentLength();
-    var body = [];
-    if (contentLength)
-    {
-      body = request.read(contentLength);
     }
     else
     {
-      while (true)
+      contentType = contentType.toLowerCase();
+      if (contentType !== "application/json-rpc" && contentType !== "application/json" && contentType !== "application/jsonrequest")
       {
-        var buf = request.read(256);
-        if (buf && buf.length > 0)
-        {
-          body.concat(buf);
-        }
-        else
-        {
-          break;
-        }
+        _this.nonRpcHandler(request, response);
+        return;
       }
     }
+    
+    var body = request.getBody();
     
     if (body.length > 0)
     {

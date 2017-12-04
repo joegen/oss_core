@@ -403,11 +403,7 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
   {
     _enableAsync = true;
   }
-  
-  if (_enableAsync)
-  {
-    OSS_LOG_INFO("Running Event Loop");
-  }
+
   while (_enableAsync && !_isTerminating)
   {
     pollfd pfds[3];
@@ -470,6 +466,12 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
       //
       // Use the timeout to let V8 perform internal garbage collection tasks
       //
+      OSS::UInt64 now = OSS::getTime();
+      if (now - lastGarbageCollectionTime > _garbageCollectionFrequency * 1000)
+      {
+        v8::V8::LowMemoryNotification();
+        lastGarbageCollectionTime = now;
+      }
       while(!v8::V8::IdleNotification());
       continue;
     }
@@ -599,8 +601,10 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
       }
     }
   }
-  OSS_LOG_INFO("Event Loop Terminated");
-  _exitSem->signal();
+  if (_exitSem)
+  {
+    _exitSem->signal();
+  }
   return v8::Undefined();
 }
 

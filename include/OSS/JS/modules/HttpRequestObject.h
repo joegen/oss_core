@@ -59,6 +59,9 @@ public:
   JS_METHOD_DECLARE(getContentType);
   JS_METHOD_DECLARE(setKeepAlive);
   JS_METHOD_DECLARE(getKeepAlive);
+  
+  JS_METHOD_DECLARE(set);
+  JS_METHOD_DECLARE(get);
 
   JS_METHOD_DECLARE(reset);
   JS_METHOD_DECLARE(dispose);

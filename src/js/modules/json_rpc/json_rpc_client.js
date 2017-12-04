@@ -21,12 +21,20 @@ var JsonRpcClient = function(transport)
     _this._callback(rpcResponse);
   }
   
-  this.execute = function(method, params, callback)
+  this._transport.onSendError = function(error)
+  {
+    var rpcResponse = new JsonRpcResponse();
+    rpcResponse.setId(_this._id);
+    rpcResponse.setError(new JsonRpcError(-1, error));
+    _this._callback(rpcResponse);
+  }
+  
+  this.execute = function(uri, method, params, callback)
   {
     _this._callback = callback;
     var request = new JsonRpcRequest(method, params);
     request.setId(_this._id++);
-    _this._transport.send(request.toJSON());
+    _this._transport.send(request.toJSON(), uri);
   }
 }
 

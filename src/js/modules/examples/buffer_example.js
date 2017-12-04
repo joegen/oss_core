@@ -2,8 +2,6 @@
 // Buffer is exported as a global object 
 // so no need to save the exports into a variable
 //
-require("buffer");
-
 var assert = require("assert");
 var logger = require("logger");
 

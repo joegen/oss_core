@@ -17,7 +17,20 @@ var CPPRPC = function(request)
     return response;
   }
   
-  var result = CPPRPC[method](arguments);
+  var result;
+  try
+  {
+    CPPRPC[method](arguments);
+  }
+  catch(e)
+  {
+    e.printStackTrace();
+    var response = new Object();
+    response.error = new Object();
+    response.error.code = -32603;
+    response.error.message = e;
+    return response;
+  }
   return JSON.stringify(result);
 }
 

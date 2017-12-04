@@ -218,8 +218,9 @@ void HttpServerObject::handleRequest(HTTPServerRequest& request, HTTPServerRespo
   jsonParams["rpcId"] = OSS::JSON::String(_rpcId);
   jsonParams["inputStreamId"] = OSS::JSON::Number(inputStreamId);
   jsonParams["outputStreamId"] = OSS::JSON::Number(responseId);
+  jsonParams["clientAddress"] = OSS::JSON::String(request.clientAddress().toString());
+  jsonParams["serverAddress"] = OSS::JSON::String(request.serverAddress().toString());
   jsonRequest["arguments"] = jsonParams;
-  
   
   if (Async::json_execute_promise(jsonRequest, jsonReply))
   {

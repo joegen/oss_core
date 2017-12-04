@@ -165,3 +165,20 @@ const ossjs = async;
 const exit = system.exit;
 const _exit = system._exit;
 
+const log_notice = logger.log_notice;
+const log_info = logger.log_info;
+const log_debug = logger.log_debug;
+const log_trace = logger.log_trace;
+const log_warning = logger.log_warning;
+const log_error = logger.log_error;
+const log_critical = logger.log_critical;
+const log_fatal = logger.log_fatal;
+
+//
+// Overrides
+//
+Error.prototype.printStackTrace = function()
+{
+  console.error(this + "\n" + this.stack);
+}
+

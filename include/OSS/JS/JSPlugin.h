@@ -250,23 +250,23 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define js_handle_as_string(Handle) v8::String::Utf8Value(Handle)
 #define js_handle_as_std_string(Handle) std::string((const char*) *js_handle_as_string(Handle))
 
-#define js_method_arg_type(Type, Var, Index, Func) \
+#define js_method_arg_type(Type, Var, Index, Func, Msg) \
   Type Var; \
   if (Index >= _args_.Length()) \
     js_throw("Invalid Argument Count"); \
   if (!Func(Var, _args_[Index])) \
-    js_throw("Invalid Argument Type");
+    js_throw(Msg);
 
-#define js_method_arg_declare_bool(Var, Index) js_method_arg_type(bool, Var, Index, js_assign_bool)
-#define js_method_arg_declare_uint32(Var, Index) js_method_arg_type(uint32_t, Var, Index, js_assign_uint32)
-#define js_method_arg_declare_int32(Var, Index) js_method_arg_type(int32_t, Var, Index, js_assign_int32)
-#define js_method_arg_declare_number(Var, Index) js_method_arg_type(double, Var, Index, js_assign_number)
-#define js_method_arg_declare_string(Var, Index) js_method_arg_type(std::string, Var, Index, js_assign_string)
-#define js_method_arg_declare_array(Var, Index) js_method_arg_type(JSArrayHandle, Var, Index, js_assign_array)
-#define js_method_arg_declare_object(Var, Index) js_method_arg_type(JSObjectHandle, Var, Index, js_assign_object)
-#define js_method_arg_declare_external_object(Class, Var, Index) js_method_arg_type(Class*, Var, Index, js_assign_external_object<Class>)
-#define js_method_arg_declare_function(Var, Index) js_method_arg_type(JSLocalFunctionHandle, Var, Index, js_assign_function) 
-#define js_method_arg_declare_persistent_function(Var, Index) js_method_arg_type(JSPersistentFunctionHandle, Var, Index, js_assign_persistent_function) 
+#define js_method_arg_declare_bool(Var, Index) js_method_arg_type(bool, Var, Index, js_assign_bool, "Invalid Type.  Expecting Bool")
+#define js_method_arg_declare_uint32(Var, Index) js_method_arg_type(uint32_t, Var, Index, js_assign_uint32, "Invalid Type.  Expecting UInt32")
+#define js_method_arg_declare_int32(Var, Index) js_method_arg_type(int32_t, Var, Index, js_assign_int32, "Invalid Type.  Expecting Int32")
+#define js_method_arg_declare_number(Var, Index) js_method_arg_type(double, Var, Index, js_assign_number, "Invalid Type.  Expecting Nymber")
+#define js_method_arg_declare_string(Var, Index) js_method_arg_type(std::string, Var, Index, js_assign_string, "Invalid Type.  Expecting String")
+#define js_method_arg_declare_array(Var, Index) js_method_arg_type(JSArrayHandle, Var, Index, js_assign_array, "Invalid Type.  Expecting Array")
+#define js_method_arg_declare_object(Var, Index) js_method_arg_type(JSObjectHandle, Var, Index, js_assign_object, "Invalid Type.  Expecting Object")
+#define js_method_arg_declare_external_object(Class, Var, Index) js_method_arg_type(Class*, Var, Index, js_assign_external_object<Class>, "Invalid Type.  Expecting External Object")
+#define js_method_arg_declare_function(Var, Index) js_method_arg_type(JSLocalFunctionHandle, Var, Index, js_assign_function, "Invalid Type.  Expecting Function") 
+#define js_method_arg_declare_persistent_function(Var, Index) js_method_arg_type(JSPersistentFunctionHandle, Var, Index, js_assign_persistent_function, "Invalid Type.  Expecting Function") 
 #define js_method_arg_declare_self(Class, Var) Class* Var = js_method_arg_unwrap_self(Class)
 
 #define js_function_call(Func, Data, Size) Func->Call((*JSPlugin::_pContext)->Global(), Size, Data)

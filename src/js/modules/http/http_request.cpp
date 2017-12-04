@@ -54,6 +54,9 @@ JS_CLASS_INTERFACE(HttpRequestObject, "HttpRequest")
   JS_CLASS_METHOD_DEFINE(HttpRequestObject, "setKeepAlive", setKeepAlive);
   JS_CLASS_METHOD_DEFINE(HttpRequestObject, "getKeepAlive", getKeepAlive);
   
+  JS_CLASS_METHOD_DEFINE(HttpRequestObject, "set", set);
+  JS_CLASS_METHOD_DEFINE(HttpRequestObject, "get", get);
+  
   JS_CLASS_METHOD_DEFINE(HttpRequestObject, "reset", reset);
   JS_CLASS_METHOD_DEFINE(HttpRequestObject, "dispose", dispose);
   
@@ -316,6 +319,31 @@ JS_METHOD_IMPL(HttpRequestObject::getContentType)
   HttpRequestObject* pObject = js_method_arg_unwrap_self(HttpRequestObject);
   js_assert(pObject && pObject->_request, "HTTP Request has been disposed");
   return JSString(pObject->_request->getContentType());
+}
+
+JS_METHOD_IMPL(HttpRequestObject::set)
+{
+  js_enter_scope();
+  HttpRequestObject* pObject = js_method_arg_unwrap_self(HttpRequestObject);
+  js_assert(pObject && pObject->_request, "HTTP Request has been disposed");
+  
+  js_method_arg_declare_string(name, 0);
+  js_method_arg_declare_string(value, 1);
+  
+  pObject->_request->add(name, value);
+  return JSUndefined();
+}
+
+JS_METHOD_IMPL(HttpRequestObject::get)
+{
+  js_enter_scope();
+  HttpRequestObject* pObject = js_method_arg_unwrap_self(HttpRequestObject);
+  js_assert(pObject && pObject->_request, "HTTP Request has been disposed");
+  
+  js_method_arg_declare_string(name, 0);
+  js_method_arg_declare_string(defVal, 1);
+  
+  return JSString(pObject->_request->get(name, defVal));
 }
 
 JS_METHOD_IMPL(HttpRequestObject::setKeepAlive)
