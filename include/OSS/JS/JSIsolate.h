@@ -40,7 +40,10 @@ namespace JS {
 class JSIsolate : boost::noncopyable
 {
 public:
+ 
   static JSIsolate& instance();
+    // Returns the instance of the root isolate
+
 
   int run(const boost::filesystem::path& script);
   bool call(const std::string& method, const OSS::JSON::Object& arguments, OSS::JSON::Object& reply, uint32_t timeout = 0, void* userData = 0);
@@ -51,6 +54,8 @@ public:
   void setExitValue(int value);
   int getExitValue() const;
   JSModule& getModuleManager();
+  bool isThreadSelf();
+      // returns true if the current thread is the isolate thread
 private:
   JSIsolate();
   ~JSIsolate();
@@ -58,6 +63,7 @@ private:
   v8::Isolate* _pIsolate;
   JSModule _moduleManager;
   int _exitValue;
+  pthread_t _threadId;
 };
   
 //

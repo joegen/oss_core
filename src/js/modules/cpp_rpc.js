@@ -4,7 +4,6 @@ const async = require("async");
 
 var CPPRPC = function(request)
 {
-  
   var method = request.method;
   var arguments = request.arguments;
   
@@ -20,7 +19,7 @@ var CPPRPC = function(request)
   var result;
   try
   {
-    CPPRPC[method](arguments);
+    result = CPPRPC[method](arguments);
   }
   catch(e)
   {
@@ -37,6 +36,11 @@ var CPPRPC = function(request)
 CPPRPC.on = function(name, func)
 {
   CPPRPC[name] = func;
+}
+
+CPPRPC.remove = function(name)
+{
+  delete CPPRPC[name];
 }
 
 async.__set_promise_callback(CPPRPC);

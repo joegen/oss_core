@@ -353,8 +353,7 @@ v8::Handle<v8::String> read_directory(const boost::filesystem::path& directory)
   return  v8::String::New(data.c_str(), data.size());
 }
 
-void wrap_external_object(v8::TryCatch&  try_catch, 
-  v8::Persistent<v8::Context>* pContext, 
+void wrap_external_object(v8::Persistent<v8::Context>* pContext, 
   v8::Persistent<v8::ObjectTemplate>* pRequestTemplate,
   v8::Handle<v8::Object>& objectInstance,
   OSS_HANDLE pObject)
@@ -367,12 +366,6 @@ void wrap_external_object(v8::TryCatch&  try_catch,
 
   
   objectInstance = templ->NewInstance();
-
-  if (objectInstance.IsEmpty())
-  {
-    report_js_exception(try_catch, true);
-    return;
-  }
 
   // Wrap the raw C++ pointer in an External so it can be referenced
   // from within JavaScript.

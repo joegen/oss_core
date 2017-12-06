@@ -1,0 +1,50 @@
+http-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/http
+	cp ${srcdir}/js/modules/http/*.js ${DESTDIR}${libdir}/oss_modules/http
+	cp ${DESTDIR}${libdir}/liboss_jshttpparser.so ${DESTDIR}${libdir}/oss_modules/http/http_parser.jso
+	cp ${DESTDIR}${libdir}/liboss_jshttpclient.so ${DESTDIR}${libdir}/oss_modules/http/_http_client.jso
+	cp ${DESTDIR}${libdir}/liboss_jshttpserver.so ${DESTDIR}${libdir}/oss_modules/http/_http_server.jso
+	cp ${DESTDIR}${libdir}/liboss_jshttprequest.so ${DESTDIR}${libdir}/oss_modules/http/_http_request.jso
+	cp ${DESTDIR}${libdir}/liboss_jshttpresponse.so ${DESTDIR}${libdir}/oss_modules/http/_http_response.jso
+	cp ${DESTDIR}${libdir}/liboss_jshttpsslcontext.so ${DESTDIR}${libdir}/oss_modules/http/_http_ssl_context.jso
+
+
+EXTRA_DIST += \
+    js/modules/http/index.js \
+    js/modules/http/http_client.js \
+    js/modules/http/http_server.js \
+    js/modules/http/http_ssl_context.js
+
+
+lib_LTLIBRARIES += liboss_jshttpparser.la
+liboss_jshttpparser_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jshttpparser_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jshttpparser_la_SOURCES = js/modules/http/http_parser.cpp js/modules/http/http_parser/http_parser.c
+
+lib_LTLIBRARIES += liboss_jshttpclient.la
+liboss_jshttpclient_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jshttpclient_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jshttpclient_la_SOURCES = js/modules/http/http_client.cpp
+
+lib_LTLIBRARIES += liboss_jshttpserver.la
+liboss_jshttpserver_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jshttpserver_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jshttpserver_la_SOURCES = js/modules/http/http_server.cpp
+
+lib_LTLIBRARIES += liboss_jshttprequest.la
+liboss_jshttprequest_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jshttprequest_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jshttprequest_la_SOURCES = js/modules/http/http_request.cpp
+
+lib_LTLIBRARIES += liboss_jshttpresponse.la
+liboss_jshttpresponse_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jshttpresponse_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jshttpresponse_la_SOURCES = js/modules/http/http_response.cpp
+
+lib_LTLIBRARIES += liboss_jshttpsslcontext.la
+liboss_jshttpsslcontext_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jshttpsslcontext_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jshttpsslcontext_la_SOURCES = js/modules/http/http_ssl_context.cpp
+
+
+

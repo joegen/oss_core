@@ -8,9 +8,13 @@ const HttpResponse = http.HttpResponse;
 const utils = require("utils");
 
 
-var JsonRpcHttpClient = function(host, port)
+var JsonRpcHttpClient = function(host, port, secure)
 {
-  this._client = new HttpClient();
+  if (secure === undefined)
+  {
+    secure = false;
+  }
+  this._client = new HttpClient(secure);
   this._client.setHost(host);
   this._client.setPort(port);
   this._session = new HttpSession(this._client);

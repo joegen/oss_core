@@ -20,6 +20,8 @@
 
 #include <poll.h>
 #include "OSS/JS/JSPlugin.h"
+#include "OSS/JS/JSUtil.h"
+#include "OSS/JS/JSIsolate.h"
 #include "OSS/JS/modules/Async.h"
 #include "OSS/JS/modules/QueueObject.h"
 #include "OSS/UTL/CoreUtils.h"
@@ -37,7 +39,8 @@ static OSS::Semaphore* _exitSem = 0;
 static OSS::UInt64  _garbageCollectionFrequency = 30; /// 30 seconds default
 pthread_t Async::_threadId = 0;
 Async::PromiseQueue Async::_promises;
-OSS::mutex_critic_sec* Async::_promisesMutex = new OSS::mutex_critic_sec();
+OSS::mutex* Async::_promisesMutex = new OSS::mutex();
+v8::Persistent<v8::ObjectTemplate> Async::_externalPointerTemplate;
 
 struct MonitoredFdData
 {
@@ -319,71 +322,70 @@ JS_METHOD_IMPL(__set_promise_callback)
 
 bool Async::__execute_one_promise()
 {
-  OSS::mutex_critic_sec_lock lock(*Async::_promisesMutex);
+  OSS::mutex_lock lock(*Async::_promisesMutex);
   if (Async::_promises.empty())
   {
     return false;
   }
-  AsyncPromise* promise = Async::_promises.front();
-  JSValueHandle request = Async::__json_parse(promise->_data);
   
+  AsyncPromise* promise = Async::_promises.front();
+  Async::_promises.pop();
+  
+  JSValueHandle request = Async::__json_parse(promise->_data);
+  //v8::Handle<v8::Object> request_obj;
+  //OSS::JS::wrap_external_object(v8::Context::GetCurrent(), &Async::_externalPointerTemplate, request_obj, promise->_userData);
+
   JSArgumentVector jsonArg;
   jsonArg.push_back(request);
-  JSValueHandle result =  Async::_promiseHandler->Call((*JSPlugin::_pContext)->Global(), jsonArg.size(), jsonArg.data());
-  
+  JSValueHandle result =  Async::_promiseHandler->Call(js_get_global(), jsonArg.size(), jsonArg.data());
   std::string theFuture;
   if (!result.IsEmpty() && result->IsString())
   {
     theFuture = js_handle_as_std_string(result);
   }
   promise->set_value(theFuture);
-  Async::_promises.pop();
   return true;
 }
 
-void* Async::_promiseData = 0;
-OSS::mutex_critic_sec* Async::_promiseDataMutex = new OSS::mutex_critic_sec;
-
 bool Async::json_execute_promise(const OSS::JSON::Object& request, OSS::JSON::Object& reply, uint32_t timeout, void* promiseData)
 {
-  if (Async::_threadId == pthread_self() || Async::_promiseHandler.IsEmpty())
+  if (Async::_promiseHandler.IsEmpty())
   {
     return false;
   }
   std::string requestJson;
   if (!OSS::JSON::json_object_to_string(request, requestJson))
   {
+    OSS_LOG_ERROR("Unable to execute promise. Parser error");
     return false;
   }
   
-  OSS::mutex_critic_sec_lock lock_promise(*Async::_promiseDataMutex);
-  Async::_promiseData = promiseData;
-  
   AsyncPromise promise = (requestJson);
+  promise._userData = promiseData;
   AsyncFuture future = promise.get_future();
 
   Async::_promisesMutex->lock();
   Async::_promises.push(&promise);
   Async::_promisesMutex->unlock();
-  Async::__wakeup_pipe();
 
-  //
-  // We can only timeout if there is no promise data
-  // because we can seg fault if we exit here adn invalidate
-  // the promise data while ossjs is still referencing it.
-  // If we don't ever return from here, we are seriously fucked.
-  //
-  if (timeout != 0 && !Async::_promiseData)
+  
+  if (!OSS::JS::JSIsolate::instance().isThreadSelf())
+  {
+    Async::__wakeup_pipe();
+  }
+  else
+  {
+    Async::__execute_one_promise();
+  }
+
+  if (timeout != 0)
   {
     boost::system_time const future_timeout = boost::get_system_time() + boost::posix_time::milliseconds(timeout);
     if (!future.timed_wait_until(future_timeout))
     {
-      Async::_promiseData = 0;
       return false;
     }
   }
-
-  Async::_promiseData = 0;
   
   std::string replyJson = future.get();
   if (!OSS::JSON::json_parse_string(replyJson, reply))
@@ -391,221 +393,6 @@ bool Async::json_execute_promise(const OSS::JSON::Object& request, OSS::JSON::Ob
     return false;
   }
   return true;
-}
-
-static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
-{
-  v8::HandleScope scope;
-  OSS::UInt64 lastGarbageCollectionTime = 0;
-  Async::_threadId = pthread_self();
-  
-  if (QueueObject::_activeQueue.size() > 0)
-  {
-    _enableAsync = true;
-  }
-
-  while (_enableAsync && !_isTerminating)
-  {
-    pollfd pfds[3];
-    pfds[0].fd = _wakeupPipe[0];
-    pfds[0].events = POLLIN;
-    pfds[0].revents = 0;
-    pfds[1].fd = _callQueue.getFd();
-    pfds[1].events = POLLIN;
-    pfds[1].revents = 0;
-    pfds[2].fd = Timer::queue.getFd();
-    pfds[2].events = POLLIN;
-    pfds[2].revents = 0;
-  
-    QueueObject::_activeQueueMutex->lock();
-    
-    std::vector<pollfd> descriptors;
-    descriptors.reserve(QueueObject::_activeQueue.size() + 3);
-    descriptors.push_back(pfds[0]);
-    descriptors.push_back(pfds[1]);
-    descriptors.push_back(pfds[2]);
-    
-    for(QueueObject::QueueObject::ActiveQueue::iterator iter = QueueObject::_activeQueue.begin(); iter != QueueObject::_activeQueue.end(); iter++)
-    {
-      pollfd fd;
-      fd.fd = iter->first;
-      fd.events = POLLIN;
-      fd.revents = 0;
-      descriptors.push_back(fd);
-    }
-    
-    QueueObject::_activeQueueMutex->unlock();
-    
-    for (MonitoredStringQueue::iterator iter = _monitoredStringQueue.begin(); iter != _monitoredStringQueue.end(); iter++)
-    {
-      pollfd fd;
-      fd.fd = iter->first;
-      fd.events = POLLIN;
-      fd.revents = 0;
-      descriptors.push_back(fd);
-    }
-    
-    for(MonitoredFd::iterator iter = _monitoredFd.begin(); iter != _monitoredFd.end(); iter++)
-    {
-      pollfd fd;
-      fd.fd = iter->second.pfd.fd;
-      fd.events = iter->second.pfd.events;
-      fd.revents = 0;
-      descriptors.push_back(fd);
-    }
-    
-    int ret = ::poll(descriptors.data(), descriptors.size(), 100);
-    v8::HandleScope scope;
-    
-    if (ret == -1)
-    {
-      break;
-    }
-    else if (ret == 0)
-    {
-      //
-      // Use the timeout to let V8 perform internal garbage collection tasks
-      //
-      OSS::UInt64 now = OSS::getTime();
-      if (now - lastGarbageCollectionTime > _garbageCollectionFrequency * 1000)
-      {
-        v8::V8::LowMemoryNotification();
-        lastGarbageCollectionTime = now;
-      }
-      while(!v8::V8::IdleNotification());
-      continue;
-    }
-    
-    //
-    // Perform garbage collection every 30 seconds
-    //
-    OSS::UInt64 now = OSS::getTime();
-    if (now - lastGarbageCollectionTime > _garbageCollectionFrequency * 1000)
-    {
-      v8::V8::LowMemoryNotification();
-      lastGarbageCollectionTime = now;
-    }
-    
-    //
-    // Check if C++ just wants to execute a task in the event loop
-    //
-    if (Async::__do_one_wakeup_task() || Async::__execute_one_promise())
-    {
-      continue;
-    }
-    
-    if (descriptors[0].revents & POLLIN)
-    {
-      
-      std::size_t r = 0;
-      char buf[1];
-      r = read(_wakeupPipe[0], buf, 1);
-      (void)r;
-      if (_isTerminating)
-      {
-        break;
-      }
-      else
-      {
-        continue;
-      }
-    }
-    else if (descriptors[1].revents & POLLIN)
-    {
-      FunctionCallInfo::Ptr pCallInfo;
-      _callQueue.dequeue(pCallInfo);
-      if (pCallInfo)
-      {
-        if (pCallInfo->isDirectCall)
-        {
-          pCallInfo->call->Call((*JSPlugin::_pContext)->Global(), pCallInfo->args.size(), pCallInfo->args.data());
-        }
-        else
-        {
-          v8::Handle<v8::Value> result = pCallInfo->call->Call((*JSPlugin::_pContext)->Global(), pCallInfo->args.size(), pCallInfo->args.data());
-          ArgumentVector resultArg;
-          handle_to_arg_vector(result, resultArg);
-          pCallInfo->result->Call((*JSPlugin::_pContext)->Global(), resultArg.size(), resultArg.data());
-        }
-      }
-    }
-    else if (descriptors[2].revents & POLLIN)
-    {
-      Timer::Ptr pTimer;
-      Timer::queue.dequeue(pTimer);
-      if (pTimer)
-      {
-        Timer::timers.erase(pTimer->identifier);
-        pTimer->timerCallback->Call((*JSPlugin::_pContext)->Global(), pTimer->timerArgs.size(), pTimer->timerArgs.data());
-      }
-    }
-    else
-    {
-      bool found = false;
-      std::size_t fdsize = descriptors.size();
-
-      for (std::size_t i = 3; i < fdsize; i++)
-      {
-        pollfd& pfd = descriptors[i];
-        int revents = pfd.revents;
-        if (revents & POLLIN)
-        {
-          QueueObject::_activeQueueMutex->lock();
-          QueueObject::ActiveQueue::iterator iter = QueueObject::_activeQueue.find(pfd.fd);
-          if (iter != QueueObject::_activeQueue.end())
-          {
-            QueueObject::Event::Ptr pEvent;
-            iter->second->_queue.dequeue(pEvent);
-            if (pEvent)
-            {
-              iter->second->_eventCallback->Call((*JSPlugin::_pContext)->Global(), pEvent->_eventData.size(), pEvent->_eventData.data());
-            }
-            found = true;
-          }
-          QueueObject::_activeQueueMutex->unlock();
-          
-          if (!found)
-          {
-            MonitoredStringQueue::iterator iter = _monitoredStringQueue.find(pfd.fd);
-            if (iter != _monitoredStringQueue.end())
-            {
-              std::string message;
-              iter->second.queue->dequeue(message);
-              if (!message.empty())
-              {
-                iter->second.cb(message);
-              }
-              found = true;
-            }
-          }
-          
-          if (!found)
-          {
-            int fd = pfd.fd;
-            MonitoredFd::iterator iter = _monitoredFd.find(fd);
-            if (iter != _monitoredFd.end())
-            {
-              found = true;
-              std::vector< v8::Local<v8::Value> > args(2);
-              args[0] = v8::Int32::New(fd);
-              args[1] = v8::Int32::New(revents);
-              (*iter->second.pCallback)->Call((*JSPlugin::_pContext)->Global(), args.size(), args.data());
-            }
-          }
-        }
-        
-        if (found)
-        {
-          break;
-        }
-      }
-    }
-  }
-  if (_exitSem)
-  {
-    _exitSem->signal();
-  }
-  return v8::Undefined();
 }
 
 
@@ -644,7 +431,7 @@ JSValueHandle Async::__json_parse(const std::string& json)
   JSValueHandle val = JSString(json);
   JSArgumentVector jsonArg;
   jsonArg.push_back(val);
-  return Async::_jsonParser->Call((*JSPlugin::_pContext)->Global(), jsonArg.size(), jsonArg.data());
+  return Async::_jsonParser->Call(js_get_global(), jsonArg.size(), jsonArg.data());
 }
 
 JS_METHOD_IMPL(__set_json_parser)
@@ -662,6 +449,234 @@ JS_METHOD_IMPL(emit_json_string)
   js_method_arg_declare_string(json, 1);
   QueueObject::json_enqueue(fd, json);
   return JSUndefined();
+}
+
+static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
+{
+  v8::HandleScope scope;
+  OSS::UInt64 lastGarbageCollectionTime = 0;
+  Async::_threadId = pthread_self();
+  
+  if (QueueObject::_activeQueue.size() > 0)
+  {
+    _enableAsync = true;
+  }
+
+  std::vector<pollfd> descriptors;
+  bool reconstructFdSet = true;
+  
+  //
+  // Static Descriptors
+  //
+  pollfd pfds[3];
+  pfds[0].fd = _wakeupPipe[0];
+  pfds[0].events = POLLIN;
+  pfds[0].revents = 0;
+  pfds[1].fd = _callQueue.getFd();
+  pfds[1].events = POLLIN;
+  pfds[1].revents = 0;
+  pfds[2].fd = Timer::queue.getFd();
+  pfds[2].events = POLLIN;
+  pfds[2].revents = 0;
+  while (_enableAsync && !_isTerminating)
+  {
+    if (reconstructFdSet)
+    {
+      descriptors.clear();
+      descriptors.reserve(QueueObject::_activeQueue.size() + 3);
+      descriptors.push_back(pfds[0]);
+      descriptors.push_back(pfds[1]);
+      descriptors.push_back(pfds[2]);
+      
+      QueueObject::_activeQueueMutex->lock();
+      for(QueueObject::QueueObject::ActiveQueue::iterator iter = QueueObject::_activeQueue.begin(); iter != QueueObject::_activeQueue.end(); iter++)
+      {
+        pollfd fd;
+        fd.fd = iter->first;
+        fd.events = POLLIN;
+        fd.revents = 0;
+        descriptors.push_back(fd);
+      }
+      QueueObject::_activeQueueMutex->unlock();
+
+      for (MonitoredStringQueue::iterator iter = _monitoredStringQueue.begin(); iter != _monitoredStringQueue.end(); iter++)
+      {
+        pollfd fd;
+        fd.fd = iter->first;
+        fd.events = POLLIN;
+        fd.revents = 0;
+        descriptors.push_back(fd);
+      }
+
+      for(MonitoredFd::iterator iter = _monitoredFd.begin(); iter != _monitoredFd.end(); iter++)
+      {
+        pollfd fd;
+        fd.fd = iter->second.pfd.fd;
+        fd.events = iter->second.pfd.events;
+        fd.revents = 0;
+        descriptors.push_back(fd);
+      }
+    }
+    int ret = ::poll(descriptors.data(), descriptors.size(), 100);
+    v8::HandleScope scope;
+    if (ret == -1)
+    {
+      break;
+    }
+    else if (ret == 0)
+    {
+      //
+      // Use the timeout to let V8 perform internal garbage collection tasks
+      //
+      OSS::UInt64 now = OSS::getTime();
+      if (now - lastGarbageCollectionTime > _garbageCollectionFrequency * 1000)
+      {
+        v8::V8::LowMemoryNotification();
+        lastGarbageCollectionTime = now;
+      }
+      while(!v8::V8::IdleNotification());
+      continue;
+    }
+    
+    //
+    // Perform garbage collection every 30 seconds
+    //
+    OSS::UInt64 now = OSS::getTime();
+    if (now - lastGarbageCollectionTime > _garbageCollectionFrequency * 1000)
+    {
+      v8::V8::LowMemoryNotification();
+      lastGarbageCollectionTime = now;
+    }
+    
+    //
+    // Check if C++ just wants to execute a task in the event loop
+    //
+    if (Async::__do_one_wakeup_task() || Async::__execute_one_promise())
+    {
+      //
+      // Do not reconstruct fdset if we did some tasks
+      //
+      reconstructFdSet = false;
+      continue;
+    }
+    
+    //
+    // From this point onwards, we only reconstruct the FD set if we are waken up via the wakeup pipe
+    //
+    reconstructFdSet = false;
+    if (descriptors[0].revents & POLLIN)
+    {
+      
+      std::size_t r = 0;
+      char buf[1];
+      r = read(_wakeupPipe[0], buf, 1);
+      (void)r;
+      if (_isTerminating)
+      {
+        break;
+      }
+      else
+      {
+        reconstructFdSet = true;
+        continue;
+      }
+    }
+    else if (descriptors[1].revents & POLLIN)
+    {
+      FunctionCallInfo::Ptr pCallInfo;
+      _callQueue.dequeue(pCallInfo);
+      if (pCallInfo)
+      {
+        if (pCallInfo->isDirectCall)
+        {
+          pCallInfo->call->Call(js_get_global(), pCallInfo->args.size(), pCallInfo->args.data());
+        }
+        else
+        {
+          v8::Handle<v8::Value> result = pCallInfo->call->Call(js_get_global(), pCallInfo->args.size(), pCallInfo->args.data());
+          ArgumentVector resultArg;
+          handle_to_arg_vector(result, resultArg);
+          pCallInfo->result->Call(js_get_global(), resultArg.size(), resultArg.data());
+        }
+      }
+    }
+    else if (descriptors[2].revents & POLLIN)
+    {
+      Timer::Ptr pTimer;
+      Timer::queue.dequeue(pTimer);
+      if (pTimer)
+      {
+        Timer::timers.erase(pTimer->identifier);
+        pTimer->timerCallback->Call(js_get_global(), pTimer->timerArgs.size(), pTimer->timerArgs.data());
+      }
+    }
+    else
+    {
+      bool found = false;
+      std::size_t fdsize = descriptors.size();
+
+      for (std::size_t i = 3; i < fdsize; i++)
+      {
+        pollfd& pfd = descriptors[i];
+        int revents = pfd.revents;
+        if (revents & POLLIN)
+        {
+          QueueObject::_activeQueueMutex->lock();
+          QueueObject::ActiveQueue::iterator iter = QueueObject::_activeQueue.find(pfd.fd);
+          if (iter != QueueObject::_activeQueue.end())
+          {
+            QueueObject::Event::Ptr pEvent;
+            iter->second->_queue.dequeue(pEvent);
+            if (pEvent)
+            {
+              iter->second->_eventCallback->Call(js_get_global(), pEvent->_eventData.size(), pEvent->_eventData.data());
+            }
+            found = true;
+          }
+          QueueObject::_activeQueueMutex->unlock();
+          
+          if (!found)
+          {
+            MonitoredStringQueue::iterator iter = _monitoredStringQueue.find(pfd.fd);
+            if (iter != _monitoredStringQueue.end())
+            {
+              std::string message;
+              iter->second.queue->dequeue(message);
+              if (!message.empty())
+              {
+                iter->second.cb(message);
+              }
+              found = true;
+            }
+          }
+          
+          if (!found)
+          {
+            int fd = pfd.fd;
+            MonitoredFd::iterator iter = _monitoredFd.find(fd);
+            if (iter != _monitoredFd.end())
+            {
+              found = true;
+              std::vector< v8::Local<v8::Value> > args(2);
+              args[0] = v8::Int32::New(fd);
+              args[1] = v8::Int32::New(revents);
+              (*iter->second.pCallback)->Call(js_get_global(), args.size(), args.data());
+            }
+          }
+        }
+        
+        if (found)
+        {
+          break;
+        }
+      }
+    }
+  }
+  if (_exitSem)
+  {
+    _exitSem->signal();
+  }
+  return v8::Undefined();
 }
 
 JS_EXPORTS_INIT()
@@ -682,6 +697,13 @@ JS_EXPORTS_INIT()
   js_export_method("__set_promise_callback", __set_promise_callback);
   
   js_export_class(QueueObject);
+  
+  //
+  // Create the template we use to wrap C++ pointers
+  //
+  v8::Handle<v8::ObjectTemplate> externalObjectTemplate = v8::ObjectTemplate::New();
+  externalObjectTemplate->SetInternalFieldCount(1);
+  Async::_externalPointerTemplate = v8::Persistent<v8::ObjectTemplate>::New(externalObjectTemplate);
   
   js_export_finalize();
 }

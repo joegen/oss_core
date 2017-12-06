@@ -62,8 +62,7 @@ static T* unwrap_external_object(const v8::Arguments& args)
   return static_cast<T*>(ptr);
 }
 
-void wrap_external_object(v8::TryCatch& try_catch, 
-  v8::Persistent<v8::Context>* pContext, 
+void wrap_external_object(v8::Persistent<v8::Context>* pContext, 
   v8::Persistent<v8::ObjectTemplate>* pRequestTemplate,
   v8::Handle<v8::Object>& objectInstance,
   OSS_HANDLE pObject);

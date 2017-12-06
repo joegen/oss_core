@@ -42,6 +42,7 @@ class AsyncPromise : public StringPromise
 public:
   AsyncPromise(const std::string& data) : _data(data) {}
   std::string _data;
+  void* _userData;
 };
 
 struct Async
@@ -53,9 +54,8 @@ struct Async
   static JSPersistentFunctionHandle _promiseHandler;
   static pthread_t _threadId;
   static PromiseQueue _promises;
-  static OSS::mutex_critic_sec* _promisesMutex;
-  static void* _promiseData; // User Data comming from the C++ side.  This should be guarded by a static mutex
-  static OSS::mutex_critic_sec* _promiseDataMutex;
+  static OSS::mutex* _promisesMutex;
+  static v8::Persistent<v8::ObjectTemplate> _externalPointerTemplate;
   
   static void register_string_queue(AsyncStringQueue* pQueue, AsyncStringQueueCallback cb);
     // This is a utility function that allows the C++ side to receive event strings from ossjs plugins

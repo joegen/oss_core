@@ -87,6 +87,7 @@ var HttpSession = function(client)
         return false;
       }
     }
+    _this.emit("error", new Error("HttpSession::sendRequest FAILED"));
     return false;
   }
 
@@ -124,14 +125,19 @@ var HttpSession = function(client)
   {
     return READ_BUFFER.toArray(size);
   }
+
+  this.dispose = function()
+  {
+    _this._http.dispose();
+  }
 }
 HttpSession.prototype = Object.create(EventEmitter.prototype);
 
 
 
-var createSession = function(host, port, uri, result)
+var createSession = function(host, port, uri, resultHandler, autoDispose)
 {
-  var client = new HttpClient();
+  var client = new HttpClient(false);
   client.setHost(host);
   client.setPort(port);
   
@@ -158,7 +164,11 @@ var createSession = function(host, port, uri, result)
         //
         // We are done.  We have a content length so we are sure we read the correct amount
         //
-        result(utils.bufferToString(buff));
+        resultHandler(utils.bufferToString(buff));
+        if (autoDispose != undefined && autoDispose)
+        {
+          session.dispose();
+        }
       }
       else
       {
@@ -173,21 +183,29 @@ var createSession = function(host, port, uri, result)
       //
       // No more data left to read.  We are done.
       //
-      result(utils.bufferToString(buff));
+      resultHandler(utils.bufferToString(buff));
+      if (autoDispose != undefined && autoDispose)
+      {
+        session.dispose();
+      }
     }
   });
 
   session.on("error", function(message)
   {
-    result(undefined, message);
+    resultHandler(undefined, message);
+    if (autoDispose != undefined && autoDispose)
+    {
+      session.dispose();
+    }
   });
   
   return session;
 }
 
-var get = function(host, port, uri, result)
+var get = function(host, port, uri, resultHandler)
 {
-  var session = createSession(host, port, uri, result);
+  var session = createSession(host, port, uri, resultHandler, true);
   var request = new HttpRequest();
   request.setVersion(_request.HTTP_1_1);
   request.setMethod(_request.HTTP_GET);
@@ -195,9 +213,9 @@ var get = function(host, port, uri, result)
   return session.send(request);
 }
 
-var post = function(host, port, uri, contentType, content, result)
+var post = function(host, port, uri, contentType, content, resultHandler)
 {
-  var session = createSession(host, port, uri, result);
+  var session = createSession(host, port, uri, resultHandler, true);
   var request = new HttpRequest();
   request.setVersion(_request.HTTP_1_1);
   request.setMethod(_request.HTTP_POST);

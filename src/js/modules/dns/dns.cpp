@@ -86,11 +86,11 @@ void call_result_callback(const T& record, const JSLocalValueHandle& result, voi
     Async::clear_timer(timerId->ToInt32()->Value());
   }
   
-  (*cb)->Call((*JSPlugin::_pContext)->Global(), args.size(), args.data());
+  (*cb)->Call(js_get_global(), args.size(), args.data());
   cb->Dispose();
   delete cb;
   
-  (*_work_cb)->Call((*JSPlugin::_pContext)->Global(), 0, 0);
+  (*_work_cb)->Call(js_get_global(), 0, 0);
 }
 
 static void on_a_lookup(const DNSARecordV4& record, void* userData)

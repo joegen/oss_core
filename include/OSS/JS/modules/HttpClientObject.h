@@ -21,6 +21,7 @@
 #define OSS_JS_HTTPCLIENTOBJECT_H_INCLUDED
 
 #include <Poco/Net/HTTPClientSession.h>
+#include <Poco/Net/HTTPSClientSession.h>
 #include <Poco/Exception.h>
 #include <Poco/Net/NetException.h>
 #include "OSS/JS/JSPlugin.h"
@@ -29,6 +30,7 @@ class HttpClientObject: public OSS::JS::ObjectWrap
 {
 public:
   typedef Poco::Net::HTTPClientSession Session;
+  typedef Poco::Net::HTTPSClientSession SecureSession;
   typedef Poco::Net::MessageException MessageException;
   typedef Poco::NoThreadAvailableException NoThreadAvailableException;
   
@@ -50,6 +52,8 @@ public:
   JS_METHOD_DECLARE(sendRequest);
   JS_METHOD_DECLARE(receiveResponse);
   JS_METHOD_DECLARE(connected);
+  JS_METHOD_DECLARE(secure);
+  JS_METHOD_DECLARE(dispose);
   
   JS_METHOD_DECLARE(read);
   JS_METHOD_DECLARE(write);
@@ -60,14 +64,17 @@ public:
   std::ostream* getOutputStream();
   void setInputStream(std::istream* strm);
   void setOutputStream(std::ostream* strm);
-  Session& getSession();
-private:
-  HttpClientObject();
+
+protected:
+  HttpClientObject(bool isSecure);
   virtual ~HttpClientObject();
-  Session _session;
+  Session* _session;
   std::istream* _input;
   std::ostream* _output;
   int _eventFd;
+  bool _isSecure;
+  
+  friend class ResponseReceiver;
 };
 
 //
@@ -96,11 +103,6 @@ inline void HttpClientObject::setOutputStream(std::ostream* strm)
 inline std::ostream* HttpClientObject::getOutputStream()
 {
   return _output;
-}
-
-inline HttpClientObject::Session& HttpClientObject::getSession()
-{
-  return _session;
 }
 
 #endif //OSS_JS_HTTPCLIENTOBJECT_H_INCLUDED

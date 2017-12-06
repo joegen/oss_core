@@ -34,7 +34,7 @@ const HttpRequest = http.HttpRequest;
 
 const HttpResponse = http.HttpResponse;
 
-var client = new HttpClient();
+var client = new HttpClient(false);
 client.setHost("localhost");
 client.setPort(port);
 

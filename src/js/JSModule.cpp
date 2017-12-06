@@ -278,7 +278,7 @@ static v8::Handle<v8::Value> js_load_plugin(const v8::Arguments& args)
   if (pPlugin->initExportFunc(exportFunc))
   {
     v8::Handle<v8::String> func_name = v8::String::New(exportFunc.c_str());
-    return v8::Context::GetCurrent()->Global()->Get(func_name);
+    return js_get_global()->Get(func_name);
   }
   
   return v8::Undefined();

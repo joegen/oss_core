@@ -68,7 +68,7 @@ JSValueHandle BufferObject::createNew(uint32_t size)
   js_enter_scope();
   JSValueHandle funcArgs[1];
   funcArgs[0] = JSUInt32(size);
-  return BufferObject::createNewFunc->Call((*JSPlugin::_pContext)->Global(), 1, funcArgs);
+  return BufferObject::createNewFunc->Call(js_get_global(), 1, funcArgs);
 }
 
 bool BufferObject::isBuffer(JSValueHandle value)

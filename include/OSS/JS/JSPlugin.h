@@ -67,7 +67,7 @@ std::string Class::name() const { return #Class; } \
 bool Class::initExportFunc(std::string& funcName) \
 { \
   funcName = "__" #Class "_init_exports"; \
-  v8::Context::GetCurrent()->Global()->Set(v8::String::New(funcName.c_str()), v8::FunctionTemplate::New(init_exports)->GetFunction()); \
+  js_get_global()->Set(v8::String::New(funcName.c_str()), v8::FunctionTemplate::New(init_exports)->GetFunction()); \
   return true; \
 } \
 extern "C" { \
@@ -104,7 +104,7 @@ extern "C" { \
 #define JS_INDEX_SETTER_DECLARE(Method) static v8::Handle<v8::Value> Method(uint32_t index, v8::Local<v8::Value> value, const v8::AccessorInfo& _args_);
 
 #define js_export_method(Name, Func) exports->Set(v8::String::NewSymbol(Name), v8::FunctionTemplate::New(Func)->GetFunction())
-#define js_export_global_constructor(Name, Func) (*JSPlugin::_pContext)->Global()->Set(v8::String::NewSymbol(Name), Func)
+#define js_export_global_constructor(Name, Func) js_get_global()->Set(v8::String::NewSymbol(Name), Func)
 #define js_export_const CONST_EXPORT
 #define js_export_string(Name, Value) exports->Set(v8::String::NewSymbol(Name), v8::String::NewSymbol(Value), v8::ReadOnly)
 #define js_export_string_symbol(Name) exports->Set(v8::String::NewSymbol(Name), v8::String::NewSymbol(Name), v8::ReadOnly)
@@ -183,7 +183,7 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define js_throw(What) return JSException(What)
 #define js_assert(Expression, What) if (!(Expression)) { js_throw(What); }
 #define js_is_function(Handle) Handle->IsFunction()
-#define js_get_global() (*JSPlugin::_pContext)->Global()
+#define js_get_global() v8::Context::GetCalling()->Global()
 #define js_get_global_method(Name) js_get_global()->Get(JSLiteral(Name))
 #define js_enter_scope() v8::HandleScope _scope_
 #define js_unwrap_object(Class, Object) OSS::JS::ObjectWrap::Unwrap<Class>(Object)
@@ -269,7 +269,7 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define js_method_arg_declare_persistent_function(Var, Index) js_method_arg_type(JSPersistentFunctionHandle, Var, Index, js_assign_persistent_function, "Invalid Type.  Expecting Function") 
 #define js_method_arg_declare_self(Class, Var) Class* Var = js_method_arg_unwrap_self(Class)
 
-#define js_function_call(Func, Data, Size) Func->Call((*JSPlugin::_pContext)->Global(), Size, Data)
+#define js_function_call(Func, Data, Size) Func->Call(js_get_global(), Size, Data)
 
 template <typename T>
 bool js_assign_external_object(T*& value, const JSValueHandle& handle)

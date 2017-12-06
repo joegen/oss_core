@@ -114,6 +114,7 @@ int JSIsolate::run(const boost::filesystem::path& script)
     _globalTemplate.Dispose();
     return _exitValue;
   }
+  _threadId = pthread_self();
   
   v8::Handle<v8::Value> result = compiledScript->Run();
   if (result.IsEmpty())
@@ -150,6 +151,11 @@ bool JSIsolate::notify(const OSS::JSON::Object& request, void* userData)
 
 void JSIsolate::terminate()
 {
+}
+
+bool JSIsolate::isThreadSelf()
+{
+  return _threadId == pthread_self();
 }
   
 } } 

@@ -12,4 +12,5 @@ nobase_include_HEADERS += \
     OSS/JS/modules/HttpClientObject.h \
     OSS/JS/modules/HttpRequestObject.h \
     OSS/JS/modules/HttpResponseObject.h \
-    OSS/JS/modules/HttpServerObject.h
+    OSS/JS/modules/HttpServerObject.h \
+    OSS/JS/modules/HttpSSLContextObject.h

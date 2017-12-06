@@ -468,7 +468,7 @@ bool JSBase::internalProcessRequest(OSS_HANDLE request)
   
   // Wrap the request as an internal field
   v8::Handle<v8::Object> request_obj;
-  wrap_external_object(try_catch, _context, _requestTemplate, request_obj, request);
+  wrap_external_object(_context, _requestTemplate, request_obj, request);
 
 
   // Invoke the process function, giving the global object as 'this'
