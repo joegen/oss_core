@@ -75,6 +75,7 @@ protected:
   bool _isSecure;
   
   friend class ResponseReceiver;
+  friend class RequestSender;
 };
 
 //

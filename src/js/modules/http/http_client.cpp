@@ -207,6 +207,40 @@ JS_METHOD_IMPL(HttpClientObject::getKeepAliveTimeout)
   return JSUInt32(timespan.milliseconds() * 1000);
 }
 
+class RequestSender : public Poco::Runnable
+{
+public:
+  HttpClientObject* _client;
+  HttpRequestObject* _request;
+  int _fd;
+  RequestSender(HttpClientObject* client, HttpRequestObject* request, int emitterFd) :
+    _client(client),
+    _request(request),
+    _fd(emitterFd)
+  {
+  }
+  
+  void run()
+  {
+    try
+    {
+      _client->_output = &(_client->_session->sendRequest(*(_request->request())));
+      OSS::JSON::Array json;
+      json[0] = OSS::JSON::String("request_sent");
+      QueueObject::json_enqueue_object(_client->getEventFd(), json);
+    }
+    catch(const Poco::Exception& e)
+    {
+      OSS::JSON::Array json;
+      json[0] = OSS::JSON::String("error");
+      json[1] = OSS::JSON::String(e.message().c_str());
+      QueueObject::json_enqueue_object(_client->getEventFd(), json);
+    }
+    
+    delete this;
+  }
+};
+
 JS_METHOD_IMPL(HttpClientObject::sendRequest)
 {
   js_enter_scope();
@@ -214,15 +248,28 @@ JS_METHOD_IMPL(HttpClientObject::sendRequest)
   assert_session(self);
   js_method_arg_declare_external_object(HttpRequestObject, pRequest, 0);
   
+  if (self->getEventFd() == -1)
+  {
+    js_throw("Event Emitter FD not set");
+  }
+  
+  RequestSender* runnable = new RequestSender(self, pRequest, self->getEventFd());
+  
   try
   {
-    self->_output = &(self->_session->sendRequest(*pRequest->request()));
+    JSPlugin::_pThreadPool->start(*runnable);
   }
-  catch(const Poco::Exception& e)
+  catch(const NoThreadAvailableException& e)
   {
-    return JSBoolean(false);
+    delete runnable;
+    js_throw(e.message().c_str());
   }
-  return JSBoolean(self->_output && !self->_output->bad() && !self->_output->fail());
+  catch(...)
+  {
+    delete runnable;
+    js_throw("Unknown Exception");
+  }
+  return JSUndefined();
 }
 
 

@@ -21,25 +21,6 @@ var JsonRpcHttpClient = function(host, port, secure)
   this._readBuffer = [];
   
   var _this = this;
-  this._session.on("response", function(response)
-  {
-    _this._readBuffer = [];
-    _this._readContentLength = _this._session.getResponse().getContentLength();
-   
-    if (typeof _this._readContentLength === "number" && _this._readContentLength == -1)
-    {
-      _this._readContentLength = 0;
-    }
-    
-    if (this._readContentLength)
-    {
-      _this._session.read(this._readContentLength);
-    }
-    else
-    {
-      _this._session.read(1024);
-    }
-  });
   
   this._session.on("read", function(data)
   {
@@ -88,10 +69,22 @@ var JsonRpcHttpClient = function(host, port, secure)
     request.setContentLength(json.length);
     request.setContentType("application/json-rpc");
     request.set("Accept", "application/json-rpc");
-    if (!_this._session.send(request, json))
+    _this._session.send(request, function(request)
     {
-      _this.onReadCompleted("");
-    }
+      //
+      // Write the body then trigger a receiveResponse
+      //
+      _this._session.write(json);
+      _this._session.receiveResponse(function(response)
+      {
+        var contentLength = response.getContentLength();
+        if (typeof contentLength === "number" && contentLength == -1)
+        {
+          contentLength = 0;
+        }
+        _this._session.read(contentLength ? contentLength : 1024);
+      });
+    });
   }
 }
 

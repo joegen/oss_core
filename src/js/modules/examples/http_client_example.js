@@ -9,20 +9,8 @@ const HttpResponse = http.HttpResponse;
 
 var test_client = function(session, uri, exitOnCompletion)
 {
-  
-  var contentLength = undefined;
-  session.on("response", function(response)
-  {
-    console.log(JSON.stringify(response));
-    contentLength = response.getContentLength();
-    if (contentLength == -1)
-    {
-      contentLength = 0;
-    }
-    session.read(contentLength ? contentLength : 1024);
-  });
-
   var buff = new Array();
+  var contentLength;
   session.on("read", function(data)
   {
     if (data.length > 0)
@@ -72,7 +60,22 @@ var test_client = function(session, uri, exitOnCompletion)
   request.setUri(uri);
   request.setContentLength(5);
   request.setContentType("application/text");
-  session.send(request, "hello");
+  return session.send(request, function(request)
+  {
+    //
+    // Write the body then trigger a receiveResponse
+    //
+    session.write("Hello");
+    session.receiveResponse(function(response)
+    {
+      contentLength = response.getContentLength();
+      if (typeof contentLength === "number" && contentLength == -1)
+      {
+        contentLength = 0;
+      }
+      session.read(contentLength ? contentLength : 1024);
+    });
+  });
 }
 
 
@@ -105,7 +108,6 @@ secureClient.setHost("github.com");
 secureClient.setPort(443);
 var secureSession = new HttpSession(secureClient);
 test_client(secureSession, "/joegen/oss_core/", false);
-
 
 http.get("www.ossapp.com", 80, "/karoo/", function(result)
 {

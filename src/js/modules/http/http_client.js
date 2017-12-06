@@ -30,9 +30,21 @@ var HttpSession = function(client)
   this.getResponse = function() { return this._response; };
   
   var _this = this;
+  
+  this.on("request_sent", function()
+  {
+    if (_this._request.onRequestSent)
+    {
+      _this._request.onRequestSent(_this._request);
+    }
+  });
+  
   this.on("response_ready", function()
   {
-    _this.emit("response", _this._response);
+    if (_this._response.onReceivedResponse)
+    {
+      _this._response.onReceivedResponse(_this._response);
+    }
   });
   
   this.on("read_ready", function(size)
@@ -53,42 +65,33 @@ var HttpSession = function(client)
     _this.emit("error", err);
   });
   
-  this.send = function(request, body)
+  this.send = function(request, requestCb)
   {
     if (_this._request !== null)
     {
       _this._request.dispose();
       _this._request = null;
     }
+    
     _this._request = request;
-
-    if (_this._http.sendRequest(request))
+    _this._request.onRequestSent = requestCb;
+    _this._http.sendRequest(_this._request);
+  }
+  
+  this.receiveResponse = function(responseCb)
+  {
+    _this._response = new HttpResponse();
+    _this._response.onReceivedResponse = responseCb;
+    try
     {
-      if (typeof body !== "undefined")
-      {
-        _this.write(body);
-      }
-      if (_this._response !== null)
-      {
-        _this._response.dispose();
-        _this._response = null;
-      }
-      _this._response = new HttpResponse();
-      try
-      {
-        _this._http.receiveResponse(_this._response);
-        return true;
-      }
-      catch(e)
-      {
-        _this.emit("error", e);
-        _this._response.dispose();
-        _this._response = null;
-        return false;
-      }
+      _this._http.receiveResponse(_this._response);
     }
-    _this.emit("error", new Error("HttpSession::sendRequest FAILED"));
-    return false;
+    catch(e)
+    {
+      _this.emit("error", e);
+      _this._response.dispose();
+      _this._response = null;
+    }
   }
 
   this.write = function(data)
@@ -142,16 +145,6 @@ var createSession = function(host, port, uri, resultHandler, autoDispose)
   client.setPort(port);
   
   var session = new HttpSession(client);
-  var contentLength = undefined;
-  session.on("response", function(response)
-  {
-    contentLength = response.getContentLength();
-    if (typeof contentLength === "number" && contentLength == -1)
-    {
-      contentLength = 0;
-    }
-    session.read(contentLength ? contentLength : 1024);
-  });
 
   var buff = new Array();
   session.on("read", function(data)
@@ -210,7 +203,18 @@ var get = function(host, port, uri, resultHandler)
   request.setVersion(_request.HTTP_1_1);
   request.setMethod(_request.HTTP_GET);
   request.setUri(uri);
-  return session.send(request);
+  session.send(request, function(request)
+  {
+    session.receiveResponse(function(response)
+    {
+      contentLength = response.getContentLength();
+      if (typeof contentLength === "number" && contentLength == -1)
+      {
+        contentLength = 0;
+      }
+      session.read(contentLength ? contentLength : 1024);
+    });
+  });
 }
 
 var post = function(host, port, uri, contentType, content, resultHandler)
@@ -222,7 +226,22 @@ var post = function(host, port, uri, contentType, content, resultHandler)
   request.setUri(uri);
   request.setContentType(contentType);
   request.setContentLength(content.length);
-  return session.send(request, content);
+  return session.send(request, function(request)
+  {
+    //
+    // Write the body then trigger a receiveResponse
+    //
+    session.write(content);
+    session.receiveResponse(function(response)
+    {
+      var contentLength = response.getContentLength();
+      if (typeof contentLength === "number" && contentLength == -1)
+      {
+        contentLength = 0;
+      }
+      session.read(contentLength ? contentLength : 1024);
+    });
+  });
 }
 
 __copy_exports(_client, exports);
