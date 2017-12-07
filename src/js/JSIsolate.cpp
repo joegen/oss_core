@@ -22,6 +22,7 @@
 
 
 #include "OSS/JS/JSIsolate.h"
+#include "OSS/JS/JSIsolateManager.h"
 #include "OSS/JS/modules/Async.h"
 #include "OSS/JS/JSUtil.h"
 #include "OSS/UTL/Logger.h"
@@ -47,17 +48,15 @@ static void V8ErrorMessageCallback(v8::Handle<v8::Message> message, v8::Handle<v
 
 JSIsolate& JSIsolate::instance()
 {
-  static JSIsolate isolate;
+  static JSIsolate isolate("_root_");
   return isolate;
 }
 
-JSIsolate::JSIsolate() :
-  _pIsolate(0)
+JSIsolate::JSIsolate(const std::string& name) :
+  _pIsolate(0),
+  _threadId(0),
+  _name(name)
 {
-  //
-  // Set the external heap to 20mb before attempting to grabage collect
-  //
-  v8::V8::AdjustAmountOfExternalAllocatedMemory(1);
 }
 
 JSIsolate::~JSIsolate()
@@ -114,7 +113,11 @@ int JSIsolate::run(const boost::filesystem::path& script)
     _globalTemplate.Dispose();
     return _exitValue;
   }
+  //
+  // Set the thread id and update the manager
+  //
   _threadId = pthread_self();
+  JSIsolateManager::instance().registerIsolate(*this);
   
   v8::Handle<v8::Value> result = compiledScript->Run();
   if (result.IsEmpty())
@@ -157,7 +160,12 @@ bool JSIsolate::isThreadSelf()
 {
   return _threadId == pthread_self();
 }
-  
+
+JSIsolate::Ptr JSIsolate::getIsolate()
+{
+  return JSIsolate::Ptr(0);
+}
+
 } } 
 
 

@@ -7,7 +7,7 @@
 #include "OSS/UTL/Thread.h"
 #include "OSS/UTL/Console.h"
 #include "OSS/JS/JSBase.h"
-#include "OSS/JS/JSIsolate.h"
+#include "OSS/JS/JSIsolateManager.h"
 
 
 using namespace OSS;
@@ -65,7 +65,7 @@ int main(int argc, char** argv)
   }
   _exit(0);
 #else
-  JS::JSIsolate::instance().run(path);
-  _exit(JS::JSIsolate::instance().getExitValue());
+  JS::JSIsolateManager::instance().rootIsolate()->run(path);
+  _exit(JS::JSIsolateManager::instance().rootIsolate()->getExitValue());
 #endif
 }

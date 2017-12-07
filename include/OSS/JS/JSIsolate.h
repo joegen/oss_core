@@ -40,12 +40,16 @@ namespace JS {
 class JSIsolate : boost::noncopyable
 {
 public:
- 
+  typedef boost::shared_ptr<JSIsolate> Ptr; 
   static JSIsolate& instance();
-    // Returns the instance of the root isolate
+    /// Returns the instance of the root isolate
 
-
+  ~JSIsolate();
+    /// Destructor.  This is intentially made public so isolates can be used
+    /// with shared_ptr
+  
   int run(const boost::filesystem::path& script);
+    /// Run the script using this isolate
   bool call(const std::string& method, const OSS::JSON::Object& arguments, OSS::JSON::Object& reply, uint32_t timeout = 0, void* userData = 0);
   bool call(const OSS::JSON::Object& request, OSS::JSON::Object& reply, uint32_t timeout = 0, void* userData = 0);
   bool notify(const std::string& method, const OSS::JSON::Object& arguments, void* userData = 0);
@@ -54,16 +58,32 @@ public:
   void setExitValue(int value);
   int getExitValue() const;
   JSModule& getModuleManager();
+  
   bool isThreadSelf();
-      // returns true if the current thread is the isolate thread
-private:
-  JSIsolate();
-  ~JSIsolate();
-
+    /// returns true if the current thread is the isolate thread
+  
+  static JSIsolate::Ptr getIsolate();
+    /// Returs the isolate for the current active isolate thread.
+    /// If the current thread is not an isolate thread, an empty pointer
+    /// will be returned
+  
+  const std::string& getName() const;
+    /// Returns the given name for this isolate
+  
+  pthread_t getThreadId() const;
+    /// Returns the thread identifier for this isolate
+  
+protected:
+  JSIsolate(const std::string& name);
+    /// Creates a new isolate.  You MUST not create isolate directly.
+  
   v8::Isolate* _pIsolate;
   JSModule _moduleManager;
   int _exitValue;
   pthread_t _threadId;
+  std::string _name;
+  
+  friend class JSIsolateManager;
 };
   
 //
@@ -84,6 +104,17 @@ inline JSModule& JSIsolate::getModuleManager()
 {
   return _moduleManager;
 }
+
+inline const std::string& JSIsolate::getName() const
+{
+  return _name;
+}
+
+inline pthread_t JSIsolate::getThreadId() const
+{
+  return _threadId;
+}
+
   
 } } 
 
