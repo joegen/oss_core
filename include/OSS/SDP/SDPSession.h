@@ -71,7 +71,7 @@ public:
   SDPMedia::Ptr getMedia(size_t index) const;
     /// Get a pointer to a media description
 
-  bool removeMedia(SDPMedia::Type type, size_t index);
+  SDPMedia::Ptr removeMedia(SDPMedia::Type type, size_t index);
     /// Remove the media description
 
   size_t getMediaCount(SDPMedia::Type type = SDPMedia::TYPE_NONE)const;

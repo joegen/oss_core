@@ -176,7 +176,7 @@ SDPMedia::Ptr SDPSession::getMedia(size_t index) const
   return SDPMedia::Ptr();
 }
 
-bool SDPSession::removeMedia(SDPMedia::Type type, size_t index)
+SDPMedia::Ptr SDPSession::removeMedia(SDPMedia::Type type, size_t index)
 {
   WriteLock lock(_rwMutex);
   size_t mediaIndex = 0;
@@ -185,13 +185,13 @@ bool SDPSession::removeMedia(SDPMedia::Type type, size_t index)
     iter != _mediaDescriptions.end();
     iter++)
   {
-    SDPMedia::Ptr& media = *iter;
+    SDPMedia::Ptr media = *iter;
     if (media->getMediaType() == type)
     {
       if (mediaIndex == index)
       {
         _mediaDescriptions.erase(iter);
-        return true;
+        return media;
       }
       else
       {
@@ -199,7 +199,7 @@ bool SDPSession::removeMedia(SDPMedia::Type type, size_t index)
       }
     }
   }
-  return false;
+  return SDPMedia::Ptr();
 }
 
 size_t SDPSession::getMediaCount(SDPMedia::Type type)const
