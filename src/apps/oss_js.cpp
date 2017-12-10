@@ -55,17 +55,8 @@ int main(int argc, char** argv)
 
   OSS::OSS_init(argc, argv);
   
-#if 0
-  JS::JSBase vm("oss_js");
-  vm.setEnableCommonJS(true);
 
-  if (!vm.run(path))
-  {
-    _exit(-1);
-  }
-  _exit(0);
-#else
-  JS::JSIsolateManager::instance().rootIsolate()->run(path);
-  _exit(JS::JSIsolateManager::instance().rootIsolate()->getExitValue());
-#endif
+  JS::JSIsolate::Ptr pIsolate = JS::JSIsolateManager::instance().rootIsolate();
+  JS::JSIsolateManager::instance().run(pIsolate, path);
+  _exit(pIsolate->getExitValue());
 }

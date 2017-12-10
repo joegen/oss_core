@@ -27,6 +27,7 @@
 #include "OSS/JS/JSPlugin.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/JS/JSIsolate.h"
+#include "OSS/JS/JSIsolateManager.h"
 
 
 namespace OSS {
@@ -35,9 +36,9 @@ namespace JS {
 
 boost::filesystem::path JSModule::_mainScript;
   
-static JSModule& get_current_module_manager()
+static JSModule*get_current_module_manager()
 {
-  return JSIsolate::instance().getModuleManager();
+  return JSIsolateManager::instance().getIsolate()->getModuleManager();
 }
   
 static v8::Handle<v8::Value> js_include(const v8::Arguments& args) 
@@ -112,7 +113,7 @@ static bool module_path_exists(const std::string& canonicalName, std::string& ab
   //
   // Check the global module directory
   //
-  std::string modulesDir = get_current_module_manager().getModulesDir();
+  std::string modulesDir = get_current_module_manager()->getModulesDir();
   boost::filesystem::path modDir(modulesDir.c_str());
   absPath = OSS::boost_path_concatenate(modDir, canonicalName);
   if (boost::filesystem::exists(absPath))
@@ -204,7 +205,7 @@ static std::string get_module_canonical_file_name(const std::string& fileName)
     std::string canonicalName = fileName;
     OSS::string_trim(canonicalName);
     
-    JSModule::InternalModules& modules = get_current_module_manager().getInternalModules();
+    JSModule::InternalModules& modules = get_current_module_manager()->getInternalModules();
     JSModule::InternalModules::iterator iter = modules.find(fileName);
     if (iter != modules.end())
     {
@@ -297,7 +298,7 @@ static v8::Handle<v8::Value> js_get_module_script(const v8::Arguments& args)
 
   std::string fileName = string_from_js_value(args[0]);
   
-  JSModule::InternalModules& modules = get_current_module_manager().getInternalModules();
+  JSModule::InternalModules& modules = get_current_module_manager()->getInternalModules();
   JSModule::InternalModules::iterator iter = modules.find(fileName);
   if (iter != modules.end())
   {

@@ -25,6 +25,8 @@
 #include "udnspp/dnsresolver.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/JS/modules/Async.h"
+#include "OSS/JS/JSIsolate.h"
+#include "OSS/JS/JSEventLoop.h"
 
 #include <poll.h>
 
@@ -58,8 +60,12 @@ static void initialize_pool(uint32_t size)
 static void relinquish_context(DNSResolver* resolver)
 {
   assert(resolver);
-  Async::unmonitor_fd(resolver->context()->getSocketFd());
-  _pool.enqueue(resolver);
+  OSS::JS::JSIsolate::Ptr pIsolate = OSS::JS::JSIsolate::getIsolate();
+  if (pIsolate)
+  {
+    pIsolate->eventLoop()->fdManager().removeFileDescriptor(resolver->context()->getSocketFd());
+    _pool.enqueue(resolver);
+  }
 }
 
 template <typename T>

@@ -28,28 +28,29 @@
 #include "v8.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/JSON/Json.h"
-#include "OSS/JS/JSModule.h"
+#include "OSS/JS/JSPersistentValue.h"
 
 
 namespace OSS {
 namespace JS {
   
-//
-// Singleton implementation for the Common JS Isolate
-//
-class JSIsolate : boost::noncopyable
+class JSEventLoop;
+class JSModule;
+  
+class JSIsolate
 {
 public:
-  typedef boost::shared_ptr<JSIsolate> Ptr; 
-  static JSIsolate& instance();
-    /// Returns the instance of the root isolate
-
+  typedef boost::shared_ptr<JSIsolate> Ptr;
+  typedef JSPersistentValue<v8::Context> Context;
+  typedef JSPersistentValue<v8::ObjectTemplate> ObjectTemplate;
+  typedef JSPersistentValue<v8::ObjectTemplate> Global;
+  typedef JSPersistentValue<v8::ObjectTemplate> GlobalTemplate;
+  
   ~JSIsolate();
     /// Destructor.  This is intentially made public so isolates can be used
     /// with shared_ptr
   
-  int run(const boost::filesystem::path& script);
-    /// Run the script using this isolate
+  
   bool call(const std::string& method, const OSS::JSON::Object& arguments, OSS::JSON::Object& reply, uint32_t timeout = 0, void* userData = 0);
   bool call(const OSS::JSON::Object& request, OSS::JSON::Object& reply, uint32_t timeout = 0, void* userData = 0);
   bool notify(const std::string& method, const OSS::JSON::Object& arguments, void* userData = 0);
@@ -57,7 +58,7 @@ public:
   void terminate();
   void setExitValue(int value);
   int getExitValue() const;
-  JSModule& getModuleManager();
+  JSModule* getModuleManager();
   
   bool isThreadSelf();
     /// returns true if the current thread is the isolate thread
@@ -73,16 +74,32 @@ public:
   pthread_t getThreadId() const;
     /// Returns the thread identifier for this isolate
   
+  bool isRoot() const;
+    /// Returns true if this is the root isolate
+  
+  JSEventLoop* eventLoop();
+    /// Returns a reference to the event loop
 protected:
-  JSIsolate(const std::string& name);
+  JSIsolate(pthread_t parentThreadId);
     /// Creates a new isolate.  You MUST not create isolate directly.
   
+  void setRoot();
+  
+  int run(const boost::filesystem::path& script);
+    /// Run the script using this isolate
+  
+  Context _context;
+  ObjectTemplate _objectTemplate;
+  GlobalTemplate _globalTemplate;
+  
   v8::Isolate* _pIsolate;
-  JSModule _moduleManager;
+  JSModule* _pModuleManager;
   int _exitValue;
   pthread_t _threadId;
+  pthread_t _parentThreadId;
   std::string _name;
-  
+  JSEventLoop* _pEventLoop;
+  bool _isRoot;
   friend class JSIsolateManager;
 };
   
@@ -100,11 +117,6 @@ inline int JSIsolate::getExitValue() const
   return _exitValue;
 }
 
-inline JSModule& JSIsolate::getModuleManager()
-{
-  return _moduleManager;
-}
-
 inline const std::string& JSIsolate::getName() const
 {
   return _name;
@@ -114,6 +126,18 @@ inline pthread_t JSIsolate::getThreadId() const
 {
   return _threadId;
 }
+
+inline bool  JSIsolate::isRoot() const
+{
+  return _isRoot;
+}
+
+ inline void JSIsolate::setRoot() 
+ {
+   _isRoot = true;
+ }
+ 
+
 
   
 } } 

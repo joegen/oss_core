@@ -22,7 +22,8 @@
 #ifndef SRC_NODE_OBJECT_WRAP_H_
 #define SRC_NODE_OBJECT_WRAP_H_
 
-#include "v8.h"
+#include <v8.h>
+#include "OSS/JS/JSIsolate.h"
 #include <assert.h>
 
 
@@ -34,6 +35,7 @@ class ObjectWrap {
   ObjectWrap ( ) 
   {
     refs_ = 0;
+    _pIsolate = JSIsolate::getIsolate();
   }
 
 
@@ -89,7 +91,10 @@ class ObjectWrap {
     tpl->PrototypeTemplate()->SetIndexedPropertyHandler(getter, setter);
   }
  
-
+  const JSIsolate::Ptr& getIsolate()
+  {
+    return _pIsolate;
+  }
 
   v8::Persistent<v8::Object> handle_; // ro
 
@@ -143,7 +148,7 @@ class ObjectWrap {
 
 
   int refs_; // ro
-
+  JSIsolate::Ptr _pIsolate;
 
  private:
   static void WeakCallback (v8::Persistent<v8::Value> value, void *data) 

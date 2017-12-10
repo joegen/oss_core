@@ -132,7 +132,7 @@ extern "C" { \
 #define JS_INDEX_SETTER_IMPL(Method)  JSValueHandle Method(uint32_t index,v8::Local<v8::Value> value, const v8::AccessorInfo& _args_)
 
 #define JS_EXPORTS_INIT() static v8::Handle<v8::Value> init_exports(const v8::Arguments& _args_) { js_enter_scope(); \
-  v8::Persistent<v8::Object> exports = v8::Persistent<v8::Object>::New(v8::Object::New());
+  v8::Local<v8::Object> exports = v8::Local<v8::Object>::New(v8::Object::New());
 
 #define js_export_finalize() } return exports;
 
@@ -268,6 +268,10 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define js_method_arg_declare_function(Var, Index) js_method_arg_type(JSLocalFunctionHandle, Var, Index, js_assign_function, "Invalid Type.  Expecting Function") 
 #define js_method_arg_declare_persistent_function(Var, Index) js_method_arg_type(JSPersistentFunctionHandle, Var, Index, js_assign_persistent_function, "Invalid Type.  Expecting Function") 
 #define js_method_arg_declare_self(Class, Var) Class* Var = js_method_arg_unwrap_self(Class)
+
+#define js_method_declare_isolate(Var) OSS::JS::JSIsolate::Ptr Var = OSS::JS::JSIsolateManager::instance().getIsolate(); \
+  if (!Var) { js_throw("Unable to retrieve isolate"); }
+
 
 #define js_function_call(Func, Data, Size) Func->Call(js_get_global(), Size, Data)
 

@@ -8,7 +8,14 @@ nobase_include_HEADERS += \
     OSS/JS/JSPlugin.h \
     OSS/JS/JSPluginManager.h \
     OSS/JS/JSIsolate.h \
-    OSS/JS/JSIsolateManager.h
+    OSS/JS/JSIsolateManager.h \
+    OSS/JS/JSEventLoop.h \
+    OSS/JS/JSPromise.h \
+    OSS/JS/JSFileDescriptor.h \
+    OSS/JS/JSFileDescriptorManager.h \
+    OSS/JS/JSEventArgument.h \
+    OSS/JS/JSPersistentValue.h \
+    OSS/JS/JSEventQueueManager.h
 
 include OSS/JS/modules/include.am
 

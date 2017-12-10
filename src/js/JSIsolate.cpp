@@ -23,6 +23,8 @@
 
 #include "OSS/JS/JSIsolate.h"
 #include "OSS/JS/JSIsolateManager.h"
+#include "OSS/JS/JSEventLoop.h"
+#include "OSS/JS/JSModule.h"
 #include "OSS/JS/modules/Async.h"
 #include "OSS/JS/JSUtil.h"
 #include "OSS/UTL/Logger.h"
@@ -46,21 +48,21 @@ static void V8ErrorMessageCallback(v8::Handle<v8::Message> message, v8::Handle<v
   }
 }
 
-JSIsolate& JSIsolate::instance()
-{
-  static JSIsolate isolate("_root_");
-  return isolate;
-}
-
-JSIsolate::JSIsolate(const std::string& name) :
+JSIsolate::JSIsolate(pthread_t parentThreadId) :
   _pIsolate(0),
+  _pModuleManager(0),
   _threadId(0),
-  _name(name)
+  _parentThreadId(parentThreadId),
+  _pEventLoop(0),
+  _isRoot(false)
 {
+  _pModuleManager = new JSModule();
+  _pEventLoop = new JSEventLoop();
 }
 
 JSIsolate::~JSIsolate()
 {
+  terminate();
 }
 
 int JSIsolate::run(const boost::filesystem::path& script)
@@ -70,17 +72,21 @@ int JSIsolate::run(const boost::filesystem::path& script)
   v8::Isolate::Scope global_scope(_pIsolate);
   
   v8::HandleScope handle_scope;
-  v8::Persistent<v8::Context> _context;
-  v8::Persistent<v8::ObjectTemplate> _globalTemplate;
+
   
-   v8::Handle<v8::ObjectTemplate> global = v8::ObjectTemplate::New();
+  v8::Handle<v8::ObjectTemplate> global = v8::ObjectTemplate::New();
   _globalTemplate = v8::Persistent<v8::ObjectTemplate>::New(global);
+  
+  //
+  // Set the thread id and update the manager
+  //
+  _threadId = pthread_self();
   
   //
   // Initialize global and assign it to the context
   //
-  _moduleManager.setGlobals(global);
-  _moduleManager.setMainScript(script);
+  _pModuleManager->setGlobals(global);
+  _pModuleManager->setMainScript(script);
   
   v8::Handle<v8::Context> context = v8::Context::New(0, global);
   _context = v8::Persistent<v8::Context>::New(context);
@@ -90,15 +96,13 @@ int JSIsolate::run(const boost::filesystem::path& script)
   try_catch.SetVerbose(true);
   
     
-  JSPluginManager::instance().setContext(&_context);
-  JSPluginManager::instance().setGlobal(&_globalTemplate);
+  JSPluginManager::instance().setContext(&_context.value());
+  JSPluginManager::instance().setGlobal(&_globalTemplate.value());
 
-  if (!_moduleManager.initialize(try_catch, global))
+  if (!_pModuleManager->initialize(try_catch, global))
   {
     report_js_exception(try_catch, true);
     _exitValue = -1;
-    _context.Dispose();
-    _globalTemplate.Dispose();
     return _exitValue;
   }
   
@@ -109,15 +113,8 @@ int JSIsolate::run(const boost::filesystem::path& script)
   {
     report_js_exception(try_catch, true);
     _exitValue = -1;
-    _context.Dispose();
-    _globalTemplate.Dispose();
     return _exitValue;
   }
-  //
-  // Set the thread id and update the manager
-  //
-  _threadId = pthread_self();
-  JSIsolateManager::instance().registerIsolate(*this);
   
   v8::Handle<v8::Value> result = compiledScript->Run();
   if (result.IsEmpty())
@@ -125,9 +122,6 @@ int JSIsolate::run(const boost::filesystem::path& script)
     report_js_exception(try_catch, true);
     _exitValue = -1;
   }
-
-  _context.Dispose();
-  _globalTemplate.Dispose();
   
   return _exitValue;
 }
@@ -154,6 +148,9 @@ bool JSIsolate::notify(const OSS::JSON::Object& request, void* userData)
 
 void JSIsolate::terminate()
 {
+  _pEventLoop->terminate();
+  delete _pEventLoop;
+  _pEventLoop = 0;
 }
 
 bool JSIsolate::isThreadSelf()
@@ -163,7 +160,17 @@ bool JSIsolate::isThreadSelf()
 
 JSIsolate::Ptr JSIsolate::getIsolate()
 {
-  return JSIsolate::Ptr(0);
+  return JSIsolateManager::instance().findIsolate(pthread_self());
+}
+
+JSEventLoop* JSIsolate::eventLoop()
+{
+  return _pEventLoop;
+}
+
+JSModule* JSIsolate::getModuleManager()
+{
+  return _pModuleManager;
 }
 
 } } 

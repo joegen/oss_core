@@ -27,6 +27,8 @@
 namespace OSS {
 namespace JSON {
   
+  
+typedef json::UnknownElement UnknownElement;
 typedef json::Array Array;
 typedef json::Boolean Boolean;
 typedef json::Number Number;

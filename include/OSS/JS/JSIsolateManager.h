@@ -28,6 +28,7 @@
 #include "v8.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/JSON/Json.h"
+#include "OSS/UTL/Thread.h"
 #include "OSS/JS/JSIsolate.h"
 
 
@@ -42,24 +43,23 @@ public:
   
   static JSIsolateManager& instance();
   
-  JSIsolate::Ptr createIsolate(const std::string& name);
+  JSIsolate::Ptr createIsolate(pthread_t parentThreadId);
     /// Creates a new isolate.  Name must be unique
   
-  void destroyIsolate(const std::string& name);
-    /// Deletes the isolate.  If the isolate is running
-    /// the script will be terminated
-  
-  JSIsolate::Ptr findIsolate(const std::string& name);
-    /// Returns the isolate identified by name
   
   JSIsolate::Ptr findIsolate(pthread_t threadId);
     /// Returns the isolate identified by an isolate thread
   
-  void registerIsolate(JSIsolate& isolate);
+  JSIsolate::Ptr getIsolate();
+    /// Returns the isolate for the current thread.
+    /// Null if the calling thread is not an isolate thread
+  
+  void registerIsolate(JSIsolate::Ptr isolate);
     /// Called by the isolate run method to register the isolate and map it 
     /// with a specific thread identifier
   
-  bool hasIsolate(const std::string& name);
+  void run(const JSIsolate::Ptr& pIsolate, const boost::filesystem::path& script);
+  
   bool hasIsolate(pthread_t threadId);
   
   JSIsolate::Ptr rootIsolate();
@@ -68,12 +68,21 @@ public:
 private:
   JSIsolateManager();
   ~JSIsolateManager();
-  void createRootIsolate();
   
   OSS::mutex_critic_sec _mapMutex;
   MapByName _byName;
   MapByThreadId _byThreadId;
+  JSIsolate::Ptr _rootIsolate;
 };
+
+//
+// Inlines
+//
+
+inline JSIsolate::Ptr JSIsolateManager::getIsolate()
+{
+  return findIsolate(pthread_self());
+}
   
 } } // OSS::JS
 

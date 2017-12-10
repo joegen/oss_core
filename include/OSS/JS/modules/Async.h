@@ -28,6 +28,7 @@
 #include <queue>
 #include <pthread.h>
 #include "OSS/JSON/Json.h"
+#include "OSS/JS/JSIsolate.h"
 
 
 typedef OSS::BlockingQueue<std::string> AsyncStringQueue;
@@ -63,7 +64,7 @@ struct Async
   static void unregister_string_queue(int fd);
     // Removes the C++ string queue
   
-  static void unmonitor_fd(int fd);
+  static void unmonitor_fd(const OSS::JS::JSIsolate::Ptr& pIsolate, int fd);
     // Forcibly unmonitor a particular file handle.  Use with extreme caution.
   
   static void clear_timer(int timerId);
@@ -87,7 +88,7 @@ struct Async
   
   //
   // Methods intended to be called within the event loop and are not safe 
-  // to be called directly from another thread.  The se function would be prefix with __
+  // to be called directly from another thread.  These function would be prefix with __
   //
   
   static bool __execute_one_promise();

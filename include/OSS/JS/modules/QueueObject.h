@@ -37,7 +37,7 @@ public:
   };
   typedef std::vector< v8::Persistent<v8::Value> > EventData;
   typedef v8::Persistent<v8::Function> EventCallback;
-  typedef std::map<intptr_t, QueueObject*> ActiveQueues;
+  typedef std::map<int, QueueObject*> ActiveQueues;
   typedef std::queue<JsonEvent> JsonQueue;
   
   class Event : public boost::enable_shared_from_this<Event>
@@ -45,8 +45,7 @@ public:
   public:
     typedef boost::shared_ptr<Event> Ptr;
     QueueObject::EventData _eventData;
-    Event(QueueObject& queue) :
-      _queue(queue)
+    Event()
     {
     }
     ~Event()
@@ -56,7 +55,6 @@ public:
         iter->Dispose();
       }
     }
-    QueueObject& _queue;
   };
   
   typedef OSS::BlockingQueue<Event::Ptr> EventQueue;
@@ -69,9 +67,7 @@ public:
   static void json_enqueue(int fd, const std::string& json);
   static void on_json_dequeue();
   
-  typedef std::map<int, QueueObject*> ActiveQueue;
-  static OSS::mutex_critic_sec* _activeQueueMutex;
-  static ActiveQueue _activeQueue;
+
   static OSS::mutex_critic_sec* _jsonQueueMutex;
   static JsonQueue _jsonQueue;
   

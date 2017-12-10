@@ -22,6 +22,8 @@
 #include "OSS/JS/JSPlugin.h"
 #include "OSS/JS/JSUtil.h"
 #include "OSS/JS/JSIsolate.h"
+#include "OSS/JS/JSIsolateManager.h"
+#include "OSS/JS/JSEventLoop.h"
 #include "OSS/JS/modules/Async.h"
 #include "OSS/JS/modules/QueueObject.h"
 #include "OSS/UTL/CoreUtils.h"
@@ -47,8 +49,6 @@ struct MonitoredFdData
   pollfd pfd;
   PersistentFunction *pCallback;
 };
-typedef std::map<int, MonitoredFdData> MonitoredFd;
-static MonitoredFd _monitoredFd;
 
 
 class FunctionCallInfo
@@ -249,25 +249,16 @@ static v8::Handle<v8::Value> __monitor_descriptor(const v8::Arguments& args)
 
   _enableAsync = true;
   
-  MonitoredFdData data;
-  data.pfd.fd = args[0]->ToInt32()->Value();
-  data.pCallback = new PersistentFunction();
-  *data.pCallback = v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(args[1]));
-  data.pfd.events = POLLIN;
-  
-  _monitoredFd[data.pfd.fd] = data;
+  js_method_declare_isolate(pIsolate);
+  OSS::JS::JSEventLoop* pEventLoop = pIsolate->eventLoop();
+  pEventLoop->fdManager().addFileDescriptor(args[0]->ToInt32()->Value(), args[1], POLLIN);
   Async::__wakeup_pipe();
   return v8::Undefined();
 }
-void Async::unmonitor_fd(int fd)
+void Async::unmonitor_fd(const OSS::JS::JSIsolate::Ptr& pIsolate, int fd)
 {
-  MonitoredFd::iterator iter = _monitoredFd.find(fd);
-  if (iter != _monitoredFd.end())
+  if (pIsolate->eventLoop()->fdManager().removeFileDescriptor(fd))
   {
-    iter->second.pCallback->Dispose();
-    delete iter->second.pCallback;
-    
-    _monitoredFd.erase(iter);
     Async::__wakeup_pipe();
   }
 }
@@ -279,8 +270,9 @@ static v8::Handle<v8::Value> __unmonitor_descriptor(const v8::Arguments& args)
   {
     return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument")));
   }
+  js_method_declare_isolate(pIsolate);
   int fd = args[0]->ToInt32()->Value();
-  Async::unmonitor_fd(fd);
+  Async::unmonitor_fd(pIsolate, fd);
   return v8::Undefined();
 }
 
@@ -369,7 +361,7 @@ bool Async::json_execute_promise(const OSS::JSON::Object& request, OSS::JSON::Ob
   Async::_promisesMutex->unlock();
 
   
-  if (!OSS::JS::JSIsolate::instance().isThreadSelf())
+  if (!OSS::JS::JSIsolateManager::instance().rootIsolate()->isThreadSelf())
   {
     Async::__wakeup_pipe();
   }
@@ -457,7 +449,12 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
   OSS::UInt64 lastGarbageCollectionTime = 0;
   Async::_threadId = pthread_self();
   
-  if (QueueObject::_activeQueue.size() > 0)
+  OSS::JS::JSIsolate::Ptr pIsolate = OSS::JS::JSIsolate::getIsolate();
+  OSS::JS::JSEventLoop* pEventLoop = pIsolate->eventLoop();
+  OSS::JS::JSEventQueueManager& queueManager = pEventLoop->queueManager();
+  OSS::JS::JSFileDescriptorManager& fdManager = pEventLoop->fdManager();
+  
+  if (queueManager.getSize() > 0)
   {
     _enableAsync = true;
   }
@@ -483,21 +480,13 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
     if (reconstructFdSet)
     {
       descriptors.clear();
-      descriptors.reserve(QueueObject::_activeQueue.size() + 3);
+      descriptors.reserve(queueManager.getSize() + 3);
       descriptors.push_back(pfds[0]);
       descriptors.push_back(pfds[1]);
       descriptors.push_back(pfds[2]);
       
-      QueueObject::_activeQueueMutex->lock();
-      for(QueueObject::QueueObject::ActiveQueue::iterator iter = QueueObject::_activeQueue.begin(); iter != QueueObject::_activeQueue.end(); iter++)
-      {
-        pollfd fd;
-        fd.fd = iter->first;
-        fd.events = POLLIN;
-        fd.revents = 0;
-        descriptors.push_back(fd);
-      }
-      QueueObject::_activeQueueMutex->unlock();
+      queueManager.appendDescriptors(descriptors);
+
 
       for (MonitoredStringQueue::iterator iter = _monitoredStringQueue.begin(); iter != _monitoredStringQueue.end(); iter++)
       {
@@ -508,14 +497,8 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
         descriptors.push_back(fd);
       }
 
-      for(MonitoredFd::iterator iter = _monitoredFd.begin(); iter != _monitoredFd.end(); iter++)
-      {
-        pollfd fd;
-        fd.fd = iter->second.pfd.fd;
-        fd.events = iter->second.pfd.events;
-        fd.revents = 0;
-        descriptors.push_back(fd);
-      }
+      fdManager.appendDescriptors(descriptors);
+
     }
     int ret = ::poll(descriptors.data(), descriptors.size(), 100);
     v8::HandleScope scope;
@@ -621,19 +604,8 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
         int revents = pfd.revents;
         if (revents & POLLIN)
         {
-          QueueObject::_activeQueueMutex->lock();
-          QueueObject::ActiveQueue::iterator iter = QueueObject::_activeQueue.find(pfd.fd);
-          if (iter != QueueObject::_activeQueue.end())
-          {
-            QueueObject::Event::Ptr pEvent;
-            iter->second->_queue.dequeue(pEvent);
-            if (pEvent)
-            {
-              iter->second->_eventCallback->Call(js_get_global(), pEvent->_eventData.size(), pEvent->_eventData.data());
-            }
-            found = true;
-          }
-          QueueObject::_activeQueueMutex->unlock();
+
+          found = queueManager.dequeue(pfd.fd);
           
           if (!found)
           {
@@ -652,16 +624,7 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
           
           if (!found)
           {
-            int fd = pfd.fd;
-            MonitoredFd::iterator iter = _monitoredFd.find(fd);
-            if (iter != _monitoredFd.end())
-            {
-              found = true;
-              std::vector< v8::Local<v8::Value> > args(2);
-              args[0] = v8::Int32::New(fd);
-              args[1] = v8::Int32::New(revents);
-              (*iter->second.pCallback)->Call(js_get_global(), args.size(), args.data());
-            }
+            found = fdManager.signalIO(pfd);
           }
         }
         

@@ -22,12 +22,11 @@
 #include "OSS/UTL/Logger.h"
 #include "OSS/JS/modules/Async.h"
 #include "OSS/JS/modules/QueueObject.h"
+#include "OSS/JS/JSEventLoop.h"
+#include "OSS/JS/JSIsolate.h"
 
 using OSS::JS::ObjectWrap;
 
-
-OSS::mutex_critic_sec* QueueObject::_activeQueueMutex = new OSS::mutex_critic_sec();
-QueueObject::ActiveQueue QueueObject::_activeQueue;
 
 OSS::mutex_critic_sec* QueueObject::_jsonQueueMutex = new OSS::mutex_critic_sec();
 QueueObject::JsonQueue QueueObject::_jsonQueue;
@@ -42,14 +41,14 @@ JS_CLASS_INTERFACE(QueueObject, "Queue")
 QueueObject::QueueObject() :
   _queue(true)
 {
-  _activeQueue[_queue.getFd()] = this;
+  getIsolate()->eventLoop()->queueManager().addQueue(this);
   Async::__wakeup_pipe();
 }
 
 QueueObject::~QueueObject()
 {
   _eventCallback.Dispose();
-  _activeQueue.erase(_queue.getFd());
+  getIsolate()->eventLoop()->queueManager().removeQueue(this);
   Async::__wakeup_pipe();
 }
 
@@ -68,7 +67,7 @@ JS_METHOD_IMPL(QueueObject::enqueue)
   js_enter_scope();
   js_method_arg_declare_array(items, 0);
   js_method_arg_declare_self(QueueObject, pQueue);
-  Event::Ptr pEvent = Event::Ptr(new QueueObject::Event(*pQueue));
+  Event::Ptr pEvent = Event::Ptr(new QueueObject::Event());
   js_assign_persistent_arg_vector(pEvent->_eventData, _args_[0]);
   pQueue->_queue.enqueue(pEvent);
   return JSUndefined();
@@ -119,12 +118,8 @@ void QueueObject::on_json_dequeue()
   _jsonQueue.pop();
   _jsonQueueMutex->unlock();
   
-  OSS::mutex_critic_sec_lock lock(*_activeQueueMutex);
-  ActiveQueue::iterator iter = _activeQueue.find(event.fd);
-  if (iter != _activeQueue.end())
-  {
-    Event::Ptr pEvent = Event::Ptr(new QueueObject::Event(*iter->second));
-    js_assign_persistent_arg_vector(pEvent->_eventData, v8::Local<v8::Value>::New(Async::__json_parse(event.json)));
-    iter->second->_queue.enqueue(pEvent);
-  }
+  Event::Ptr pEvent = Event::Ptr(new QueueObject::Event());
+  js_assign_persistent_arg_vector(pEvent->_eventData, v8::Local<v8::Value>::New(Async::__json_parse(event.json)));
+  OSS::JS::JSIsolate::getIsolate()->eventLoop()->queueManager().enqueue(event.fd, pEvent);
+
 }

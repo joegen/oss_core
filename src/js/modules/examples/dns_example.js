@@ -112,8 +112,9 @@ dns.lookup("A", "bogusdomain.local", 2, function(result, common)
   {
     log_info("Request timeout");
   }
-  system.exit(0);
 });
+
+async.setTimeout(exit, 1000, [0]);
 
 
 

@@ -23,6 +23,7 @@
 #include "v8.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/JSON/Json.h"
+#include "OSS/UTL/Logger.h"
 #include "OSS/JS/JSIsolateManager.h"
 
 
@@ -49,62 +50,35 @@ JSIsolateManager::JSIsolateManager()
   //
   // Create the root isolate
   //
-  createRootIsolate();
+  _rootIsolate = JSIsolate::Ptr(new JSIsolate(0));
+  _rootIsolate->setRoot();
 }  
 
 JSIsolateManager::~JSIsolateManager()
 {
 }
 
-JSIsolate::Ptr JSIsolateManager::createIsolate(const std::string& name)
+JSIsolate::Ptr JSIsolateManager::createIsolate(pthread_t parentThreadId)
 {
-  assert(!hasIsolate(name));
-  
-  OSS::mutex_critic_sec_lock lock(_mapMutex);
-  JSIsolate::Ptr pIsolate = JSIsolate::Ptr(new JSIsolate(name));
-  _byName[name] = pIsolate;
-  return JSIsolate::Ptr();
-}
-
-void JSIsolateManager::destroyIsolate(const std::string& name)
-{
-  JSIsolate::Ptr pIsolate = findIsolate(name);
-  if (pIsolate)
-  {
-    pIsolate->terminate();
-    OSS::mutex_critic_sec_lock lock(_mapMutex);
-    _byName.erase(name);
-    _byThreadId.erase(pIsolate->getThreadId());
-  }
-}
-
-JSIsolate::Ptr JSIsolateManager::findIsolate(const std::string& name)
-{
-  OSS::mutex_critic_sec_lock lock(_mapMutex);
-  MapByName::iterator iter = _byName.find(name);
-  if (iter != _byName.end())
-  {
-    return iter->second;
-  }
-  return JSIsolate::Ptr();
+  assert(parentThreadId);
+  JSIsolate::Ptr pIsolate = JSIsolate::Ptr(new JSIsolate(parentThreadId));
+  return pIsolate;
 }
 
 JSIsolate::Ptr JSIsolateManager::findIsolate(pthread_t threadId)
 {
   OSS::mutex_critic_sec_lock lock(_mapMutex);
+  if (_rootIsolate->getThreadId() == threadId)
+  {
+    return _rootIsolate;
+  }
+  
   MapByThreadId::iterator iter = _byThreadId.find(threadId);
   if (iter != _byThreadId.end())
   {
     return iter->second;
   }
   return JSIsolate::Ptr();
-}
-
-bool JSIsolateManager::hasIsolate(const std::string& name)
-{
-  OSS::mutex_critic_sec_lock lock(_mapMutex);
-  MapByName::iterator iter = _byName.find(name);
-  return (iter != _byName.end());
 }
 
 bool JSIsolateManager::hasIsolate(pthread_t threadId)
@@ -114,19 +88,8 @@ bool JSIsolateManager::hasIsolate(pthread_t threadId)
   return (iter != _byThreadId.end());
 }
 
-void JSIsolateManager::createRootIsolate()
+void JSIsolateManager::registerIsolate(JSIsolate::Ptr pIsolate)
 {
-  JSIsolate::Ptr root = createIsolate("_root_");
-  OSS::mutex_critic_sec_lock lock(_mapMutex);
-}
-
-void JSIsolateManager::registerIsolate(JSIsolate& isolate)
-{
-  JSIsolate::Ptr pIsolate = findIsolate(isolate.getName());
-  if (!pIsolate)
-  {
-    return;
-  }
   OSS::mutex_critic_sec_lock lock(_mapMutex);
   assert(pIsolate->getThreadId());
   _byThreadId[pIsolate->getThreadId()] = pIsolate;
@@ -134,7 +97,14 @@ void JSIsolateManager::registerIsolate(JSIsolate& isolate)
 
 JSIsolate::Ptr JSIsolateManager::rootIsolate()
 {
-  return findIsolate("_root_");
+  return _rootIsolate;
+}
+
+void JSIsolateManager::run(const JSIsolate::Ptr& pIsolate, const boost::filesystem::path& script)
+{
+  pIsolate->_threadId  = pthread_self();
+  registerIsolate(pIsolate);
+  pIsolate->run(script);
 }
 
   
