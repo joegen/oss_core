@@ -25,7 +25,7 @@
 #include "OSS/JS/JSEventLoop.h"
 #include "OSS/JS/JSIsolate.h"
 
-using OSS::JS::ObjectWrap;
+using OSS::JS::JSObjectWrap;
 
 
 OSS::mutex_critic_sec* QueueObject::_jsonQueueMutex = new OSS::mutex_critic_sec();
@@ -120,6 +120,6 @@ void QueueObject::on_json_dequeue()
   
   Event::Ptr pEvent = Event::Ptr(new QueueObject::Event());
   js_assign_persistent_arg_vector(pEvent->_eventData, v8::Local<v8::Value>::New(Async::__json_parse(event.json)));
-  OSS::JS::JSIsolate::getIsolate()->eventLoop()->queueManager().enqueue(event.fd, pEvent);
+  getCurrentIsolate()->eventLoop()->queueManager().enqueue(event.fd, pEvent);
 
 }

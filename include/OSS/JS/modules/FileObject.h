@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include "OSS/JS/JSPlugin.h"
 
-class FileObject : public OSS::JS::ObjectWrap
+class FileObject : public OSS::JS::JSObjectWrap
 {
 public:
   JS_CONSTRUCTOR_DECLARE();

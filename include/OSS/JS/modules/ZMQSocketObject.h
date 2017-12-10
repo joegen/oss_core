@@ -25,7 +25,7 @@
 #include <OSS/ZMQ/ZMQSocket.h>
 #include <OSS/UTL/Thread.h>
 
-class ZMQSocketObject : public OSS::JS::ObjectWrap
+class ZMQSocketObject : public OSS::JS::JSObjectWrap
 {
 public:
   typedef OSS::ZMQ::ZMQSocket Socket;

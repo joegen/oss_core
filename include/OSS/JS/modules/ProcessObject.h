@@ -23,7 +23,7 @@
 
 #include <OSS/JS/JSPlugin.h>
 #include "OSS/Exec/Process.h"
-class ProcessObject : public OSS::JS::ObjectWrap
+class ProcessObject : public OSS::JS::JSObjectWrap
 {
 public:
   typedef OSS::Exec::Process Process;

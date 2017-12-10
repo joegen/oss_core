@@ -22,7 +22,7 @@
 #include "OSS/UTL/Logger.h"
 #include "OSS/JS/modules/HttpRequestObject.h"
 
-using OSS::JS::ObjectWrap;
+using OSS::JS::JSObjectWrap;
 
 //
 // Define the Interface

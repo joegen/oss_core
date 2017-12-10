@@ -3,7 +3,7 @@
 #include "OSS/UTL/Logger.h"
 #include "OSS/JS/modules/ProcessObject.h"
 
-using OSS::JS::ObjectWrap;
+using OSS::JS::JSObjectWrap;
 
 JS_CLASS_INTERFACE(ProcessObject, "Process") 
 {

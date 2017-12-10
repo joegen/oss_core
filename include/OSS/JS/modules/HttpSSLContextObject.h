@@ -30,7 +30,7 @@
 #include "OSS/JS/JSPlugin.h"
 
 
-class HttpSSLContextObject: public OSS::JS::ObjectWrap
+class HttpSSLContextObject: public OSS::JS::JSObjectWrap
 {
 public:
   typedef Poco::Net::Context Context;

@@ -30,16 +30,16 @@
 namespace OSS {
 namespace JS {
 
-class ObjectWrap {
+class JSObjectWrap {
  public:
-  ObjectWrap ( ) 
+  JSObjectWrap ( ) 
   {
     refs_ = 0;
     _pIsolate = JSIsolate::getIsolate();
   }
 
 
-  virtual ~ObjectWrap ( ) 
+  virtual ~JSObjectWrap ( ) 
   {
     if (!handle_.IsEmpty()) 
     {
@@ -94,6 +94,11 @@ class ObjectWrap {
   const JSIsolate::Ptr& getIsolate()
   {
     return _pIsolate;
+  }
+  
+  static JSIsolate::Ptr getCurrentIsolate()
+  {
+    return JSIsolate::getIsolate();
   }
 
   v8::Persistent<v8::Object> handle_; // ro
@@ -153,7 +158,7 @@ class ObjectWrap {
  private:
   static void WeakCallback (v8::Persistent<v8::Value> value, void *data) 
   {
-    ObjectWrap *obj = static_cast<ObjectWrap*>(data);
+    JSObjectWrap *obj = static_cast<JSObjectWrap*>(data);
     assert(value == obj->handle_);
     assert(!obj->refs_);
     assert(value.IsNearDeath());

@@ -34,7 +34,7 @@
 #include "OSS/JSON/Json.h"
 #include "OSS/UTL/Thread.h"
 
-class HttpServerObject : public OSS::JS::ObjectWrap
+class HttpServerObject : public OSS::JS::JSObjectWrap
 {
 public:
   typedef Poco::Net::MessageException MessageException;

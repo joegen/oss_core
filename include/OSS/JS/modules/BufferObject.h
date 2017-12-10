@@ -24,7 +24,7 @@
 #include <vector>
 #include <OSS/JS/JSPlugin.h>
 
-class BufferObject : public OSS::JS::ObjectWrap
+class BufferObject : public OSS::JS::JSObjectWrap
 {
 public:
   typedef std::vector<unsigned char> ByteArray;

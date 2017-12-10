@@ -24,7 +24,7 @@
 #include "OSS/UTL/Logger.h"
 #include "OSS/UTL/Semaphore.h"
 
-using OSS::JS::ObjectWrap;
+using OSS::JS::JSObjectWrap;
 v8::Persistent<v8::Function> ZMQSocketObject::_constructor;
 boost::thread* ZMQSocketObject::_pPollThread;
 typedef std::list<ZMQSocketObject*> Sockets;
@@ -186,7 +186,7 @@ static bool __get_buffer_arg(const v8::Arguments& args, std::string& value)
   {
     return false;
   }
-  BufferObject* pBuffer = ObjectWrap::Unwrap<BufferObject>(args[0]->ToObject());
+  BufferObject* pBuffer = JSObjectWrap::Unwrap<BufferObject>(args[0]->ToObject());
   std::copy(pBuffer->buffer().begin(), pBuffer->buffer().end(), std::back_inserter(value));
   return true;
 }
@@ -194,7 +194,7 @@ static bool __get_buffer_arg(const v8::Arguments& args, std::string& value)
 v8::Handle<v8::Value> ZMQSocketObject::connect(const v8::Arguments& args)
 {
   v8::HandleScope scope;
-  ZMQSocketObject* pObject = ObjectWrap::Unwrap<ZMQSocketObject>(args.This());
+  ZMQSocketObject* pObject = JSObjectWrap::Unwrap<ZMQSocketObject>(args.This());
   std::string arg;
   if (!__get_string_arg(args, arg))
   {
@@ -214,7 +214,7 @@ v8::Handle<v8::Value> ZMQSocketObject::connect(const v8::Arguments& args)
 v8::Handle<v8::Value> ZMQSocketObject::bind(const v8::Arguments& args)
 {
   v8::HandleScope scope;
-  ZMQSocketObject* pObject = ObjectWrap::Unwrap<ZMQSocketObject>(args.This());
+  ZMQSocketObject* pObject = JSObjectWrap::Unwrap<ZMQSocketObject>(args.This());
   std::string arg;
   if (!__get_string_arg(args, arg))
   {
@@ -233,7 +233,7 @@ v8::Handle<v8::Value> ZMQSocketObject::bind(const v8::Arguments& args)
 v8::Handle<v8::Value> ZMQSocketObject::subscribe(const v8::Arguments& args)
 {
   v8::HandleScope scope;
-  ZMQSocketObject* pObject = ObjectWrap::Unwrap<ZMQSocketObject>(args.This());
+  ZMQSocketObject* pObject = JSObjectWrap::Unwrap<ZMQSocketObject>(args.This());
   std::string arg;
   if (!__get_string_arg(args, arg) && !__get_buffer_arg(args, arg))
   {
@@ -245,7 +245,7 @@ v8::Handle<v8::Value> ZMQSocketObject::subscribe(const v8::Arguments& args)
 v8::Handle<v8::Value> ZMQSocketObject::publish(const v8::Arguments& args)
 {
   v8::HandleScope scope;
-  ZMQSocketObject* pObject = ObjectWrap::Unwrap<ZMQSocketObject>(args.This());
+  ZMQSocketObject* pObject = JSObjectWrap::Unwrap<ZMQSocketObject>(args.This());
   std::string arg;
   if (!__get_string_arg(args, arg) && !__get_buffer_arg(args, arg))
   {
@@ -257,7 +257,7 @@ v8::Handle<v8::Value> ZMQSocketObject::publish(const v8::Arguments& args)
 v8::Handle<v8::Value> ZMQSocketObject::send(const v8::Arguments& args)
 {
   v8::HandleScope scope;
-  ZMQSocketObject* pObject = ObjectWrap::Unwrap<ZMQSocketObject>(args.This());
+  ZMQSocketObject* pObject = JSObjectWrap::Unwrap<ZMQSocketObject>(args.This());
   std::string arg;
   if (!__get_string_arg(args, arg) && !__get_buffer_arg(args, arg))
   {
@@ -269,7 +269,7 @@ v8::Handle<v8::Value> ZMQSocketObject::send(const v8::Arguments& args)
 v8::Handle<v8::Value> ZMQSocketObject::receive(const v8::Arguments& args)
 {
   v8::HandleScope scope;
-  ZMQSocketObject* pObject = ObjectWrap::Unwrap<ZMQSocketObject>(args.This());
+  ZMQSocketObject* pObject = JSObjectWrap::Unwrap<ZMQSocketObject>(args.This());
   std::string msg;
   v8::Handle<v8::Value> result = v8::Undefined();
   if (pObject->_pSocket->receiveReply(msg, 0))
@@ -278,7 +278,7 @@ v8::Handle<v8::Value> ZMQSocketObject::receive(const v8::Arguments& args)
     if (args.Length() == 1 && BufferObject::isBuffer(args[0]))
     {
       result = args[0];
-      pBuffer = ObjectWrap::Unwrap<BufferObject>(args[0]->ToObject());
+      pBuffer = JSObjectWrap::Unwrap<BufferObject>(args[0]->ToObject());
       if (msg.size() > pBuffer->buffer().size())
       {
         return v8::ThrowException(v8::Exception::Error(v8::String::New("Size of read buffer is too small")));
@@ -298,7 +298,7 @@ v8::Handle<v8::Value> ZMQSocketObject::receive(const v8::Arguments& args)
 v8::Handle<v8::Value> ZMQSocketObject::close(const v8::Arguments& args)
 {
   v8::HandleScope scope;
-  ZMQSocketObject* pObject = ObjectWrap::Unwrap<ZMQSocketObject>(args.This());
+  ZMQSocketObject* pObject = JSObjectWrap::Unwrap<ZMQSocketObject>(args.This());
   pObject->_pSocket->close();
   _socketList.remove(pObject);
   __wakeup_pipe();
@@ -308,7 +308,7 @@ v8::Handle<v8::Value> ZMQSocketObject::close(const v8::Arguments& args)
 v8::Handle<v8::Value> ZMQSocketObject::getFd(const v8::Arguments& args)
 {
   v8::HandleScope scope;
-  ZMQSocketObject* pObject = ObjectWrap::Unwrap<ZMQSocketObject>(args.This());
+  ZMQSocketObject* pObject = JSObjectWrap::Unwrap<ZMQSocketObject>(args.This());
   return v8::Int32::New(pObject->_pipe[0]);
 }
   

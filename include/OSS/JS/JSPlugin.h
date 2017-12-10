@@ -26,7 +26,7 @@
 #include <Poco/Manifest.h>
 #include <Poco/ThreadPool.h>
 #include <Poco/Runnable.h>
-#include "OSS/JS/ObjectWrap.h"
+#include "OSS/JS/JSObjectWrap.h"
 #include <iostream>
 
 class JSPlugin
@@ -115,12 +115,12 @@ extern "C" { \
   void Class::Init(v8::Handle<v8::Object> exports) {\
   js_enter_scope(); \
   std::string className = Name; \
-  v8::Local<v8::FunctionTemplate> tpl = OSS::JS::ObjectWrap::ExportConstructorTemplate<Class>(Name, exports);
+  v8::Local<v8::FunctionTemplate> tpl = OSS::JS::JSObjectWrap::ExportConstructorTemplate<Class>(Name, exports);
 
-#define JS_CLASS_METHOD_DEFINE(Class, Name, Func) OSS::JS::ObjectWrap::ExportMethod<Class>(tpl, Name, Func)
+#define JS_CLASS_METHOD_DEFINE(Class, Name, Func) OSS::JS::JSObjectWrap::ExportMethod<Class>(tpl, Name, Func)
 
-#define JS_CLASS_INDEX_ACCESSOR_DEFINE(Class, Getter, Setter) OSS::JS::ObjectWrap::ExportIndexHandler<Class>(tpl, Getter, Setter);
-#define JS_CLASS_INTERFACE_END(Class) } OSS::JS::ObjectWrap::FinalizeConstructorTemplate<Class>(className.c_str(), tpl, exports);
+#define JS_CLASS_INDEX_ACCESSOR_DEFINE(Class, Getter, Setter) OSS::JS::JSObjectWrap::ExportIndexHandler<Class>(tpl, Getter, Setter);
+#define JS_CLASS_INTERFACE_END(Class) } OSS::JS::JSObjectWrap::FinalizeConstructorTemplate<Class>(className.c_str(), tpl, exports);
 #define js_export_class(Class) Class::Init(exports)
 
 #define JS_METHOD_IMPL(Method) v8::Handle<v8::Value>  Method(const v8::Arguments& _args_)\
@@ -186,7 +186,7 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define js_get_global() v8::Context::GetCalling()->Global()
 #define js_get_global_method(Name) js_get_global()->Get(JSLiteral(Name))
 #define js_enter_scope() v8::HandleScope _scope_
-#define js_unwrap_object(Class, Object) OSS::JS::ObjectWrap::Unwrap<Class>(Object)
+#define js_unwrap_object(Class, Object) OSS::JS::JSObjectWrap::Unwrap<Class>(Object)
 
 
 //
@@ -400,10 +400,10 @@ inline JSObjectHandle js_wrap_pointer_to_local_object(void* ptr)
   objectTemplate->SetInternalFieldCount(1);
   
   JSLocalObjectTemplateHandle classTemplate = JSLocalObjectTemplateHandle::New(objectTemplate);
-  JSObjectHandle objectWrapper = classTemplate->NewInstance();
+  JSObjectHandle JSObjectWrapper = classTemplate->NewInstance();
   JSExternalHandle objectPointer = JSExternal(ptr);
-  objectWrapper->SetInternalField(0, objectPointer);
-  return objectWrapper;
+  JSObjectWrapper->SetInternalField(0, objectPointer);
+  return JSObjectWrapper;
 }
 
 template <typename T>

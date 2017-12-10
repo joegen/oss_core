@@ -24,7 +24,7 @@
 #include <Poco/Net/HTTPResponse.h>
 #include "OSS/JS/JSPlugin.h"
 
-class HttpResponseObject: public OSS::JS::ObjectWrap
+class HttpResponseObject: public OSS::JS::JSObjectWrap
 {
 public:
   typedef Poco::Net::HTTPResponse Response;

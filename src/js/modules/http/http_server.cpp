@@ -25,7 +25,7 @@
 #include "OSS/JS/modules/BufferObject.h"
 
 
-using OSS::JS::ObjectWrap;
+using OSS::JS::JSObjectWrap;
 
 class RequestHandler: public HttpServerObject::HTTPRequestHandler
 {

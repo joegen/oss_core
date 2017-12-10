@@ -24,7 +24,7 @@
 #include "OSS/JS/JSPlugin.h"
 #include "OSS/JS/modules/http_parser/http_parser.h"
 
-class HttpParserObject : public OSS::JS::ObjectWrap
+class HttpParserObject : public OSS::JS::JSObjectWrap
 {
 public:
   typedef std::map<std::string, std::string> Headers;

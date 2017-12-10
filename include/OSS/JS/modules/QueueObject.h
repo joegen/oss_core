@@ -27,7 +27,7 @@
 #include <OSS/UTL/BlockingQueue.h>
 #include "OSS/JSON/Json.h"
 
-class QueueObject : public OSS::JS::ObjectWrap
+class QueueObject : public OSS::JS::JSObjectWrap
 {
 public:
   struct JsonEvent

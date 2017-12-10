@@ -24,7 +24,7 @@
 #include <Poco/Net/HTTPRequest.h>
 #include "OSS/JS/JSPlugin.h"
 
-class HttpRequestObject: public OSS::JS::ObjectWrap
+class HttpRequestObject: public OSS::JS::JSObjectWrap
 {
 public:
   typedef Poco::Net::HTTPRequest Request;

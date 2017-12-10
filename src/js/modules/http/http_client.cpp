@@ -27,7 +27,7 @@
 #include "OSS/JSON/Json.h"
 #include "OSS/JS/modules/QueueObject.h"
 
-using OSS::JS::ObjectWrap;
+using OSS::JS::JSObjectWrap;
 
 #define assert_session(Self) if (!Self->_session) { js_throw("Client session has been disposed"); }
 //

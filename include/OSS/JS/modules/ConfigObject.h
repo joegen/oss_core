@@ -25,7 +25,7 @@
 #include "OSS/JS/JSPlugin.h"
 
 
-class ConfigObject : public OSS::JS::ObjectWrap
+class ConfigObject : public OSS::JS::JSObjectWrap
 {
 public:
   typedef std::map<uint32_t, config_setting_t*> Settings;

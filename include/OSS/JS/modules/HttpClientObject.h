@@ -26,7 +26,7 @@
 #include <Poco/Net/NetException.h>
 #include "OSS/JS/JSPlugin.h"
 
-class HttpClientObject: public OSS::JS::ObjectWrap
+class HttpClientObject: public OSS::JS::JSObjectWrap
 {
 public:
   typedef Poco::Net::HTTPClientSession Session;
