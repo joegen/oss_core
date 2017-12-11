@@ -11,7 +11,8 @@ liboss_core_la_SOURCES +=  \
     js/JSEventLoop.cpp \
     js/JSFileDescriptorManager.cpp \
     js/JSEventEmitter.cpp \
-    js/JSEventQueueManager.cpp
+    js/JSEventQueueManager.cpp \
+    js/JSTaskManager.cpp
 endif
 
 JAVASCRIPT_SRC = \
