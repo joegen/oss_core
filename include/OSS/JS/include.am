@@ -15,7 +15,9 @@ nobase_include_HEADERS += \
     OSS/JS/JSFileDescriptorManager.h \
     OSS/JS/JSEventArgument.h \
     OSS/JS/JSPersistentValue.h \
-    OSS/JS/JSEventQueueManager.h
+    OSS/JS/JSEventQueueManager.h \
+    OSS/JS/JSTask.h \
+    OSS/JS/JSTaskManager.h
 
 include OSS/JS/modules/include.am
 

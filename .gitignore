@@ -22,3 +22,5 @@ include/Makefile
 include/OSS/build.h
 src/Makefile
 src/config.h.*
+/src/js/nbproject/private/
+/src/js/modules/examples/nbproject/private/

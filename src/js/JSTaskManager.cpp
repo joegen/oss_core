@@ -18,37 +18,54 @@
 //
 
 #include "OSS/JS/JSEventLoop.h"
+#include "OSS/JS/JSTaskManager.h"
+
 
 
 namespace OSS {
 namespace JS {
 
 
-JSEventLoop::JSEventLoop() :
-  _fdManager(this),
-  _queueManager(this),
-  _eventEmitter(this),
-  _taskManager(this)
+JSTaskManager::JSTaskManager(JSEventLoop* pEventLoop) :
+  _pEventLoop(pEventLoop)
 {
 }
 
-JSEventLoop::~JSEventLoop()
+JSTaskManager::~JSTaskManager()
 {
+  
 }
 
-void JSEventLoop::processEvents()
+void JSTaskManager::queueTask(const JSTaskBase& task, void* userData, const JSTaskBase& completionCallback)
 {
+  JSTask::Ptr pTask(new JSTask(task, userData));
+  if (completionCallback)
+  {
+    pTask->setCompletionCallback(completionCallback);
+  }
+  queueTask(pTask);
 }
 
-void JSEventLoop::terminate()
+void JSTaskManager::queueTask(const JSTask::Ptr& pTask)
 {
+  OSS::mutex_critic_sec_lock lock(_mutex);
+  push(pTask);
 }
 
-void JSEventLoop::wakeup()
+void JSTaskManager::doOneWork()
 {
+  _mutex.lock();
+  if (!empty())
+  {
+    JSTask::Ptr pTask = front();
+    pop();
+    _mutex.unlock();
+    pTask->execute();
+    return;
+  }
+  _mutex.unlock();
 }
+  
 
-} } 
-
-
+} } // OSS::JS
 

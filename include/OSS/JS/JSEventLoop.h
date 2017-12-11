@@ -33,6 +33,7 @@
 #include "OSS/JS/JSFileDescriptorManager.h"
 #include "OSS/JS/JSEventQueueManager.h"
 #include "OSS/JS/JSEventEmitter.h"
+#include "OSS/JS/JSTaskManager.h"
 
 #include <queue>
 
@@ -45,8 +46,6 @@ class JSEventLoop : boost::noncopyable
 public:
   typedef OSS::BlockingQueue<std::string> StringQueue;
   typedef boost::function<void(std::string message)> StringQueueCallback;
-  typedef boost::function<void()> WakeupTask;
-  typedef std::queue<WakeupTask> WakeupTaskQueue;
   typedef boost::promise<std::string> Promise;
   typedef boost::future<std::string> Future;
   typedef std::vector<pollfd> Descriptors;
@@ -77,9 +76,9 @@ public:
   
   JSEventEmitter& eventEmitter();
   
+  JSTaskManager& taskManager();
+  
 protected:
-  WakeupTaskQueue _wakeupTaskQueue;
-  OSS::mutex_critic_sec _wakeupTaskQueueMutex;
   JSPersistentFunctionHandle _jsonParser;
   JSPersistentFunctionHandle _promiseHandler;
   PromiseQueue _promises;
@@ -88,6 +87,7 @@ protected:
   JSFileDescriptorManager _fdManager;
   JSEventQueueManager _queueManager;
   JSEventEmitter _eventEmitter;
+  JSTaskManager _taskManager;
 };
 
 //
@@ -107,6 +107,11 @@ inline JSEventQueueManager& JSEventLoop::queueManager()
 inline JSEventEmitter& JSEventLoop::eventEmitter()
 {
   return _eventEmitter;
+}
+
+inline JSTaskManager& JSEventLoop::taskManager()
+{
+  return _taskManager;
 }
 
 

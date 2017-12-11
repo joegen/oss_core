@@ -17,38 +17,42 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#include "OSS/JS/JSEventLoop.h"
+#ifndef OSS_JSTASKMANAGER_H_INCLUDED
+#define OSS_JSTASKMANAGER_H_INCLUDED
+
+#include "OSS/build.h"
+#if ENABLE_FEATURE_V8
+
+#include <v8.h>
+#include <queue>
+#include "OSS/JS/JSTask.h"
+#include "OSS/UTL/Thread.h"
 
 
 namespace OSS {
 namespace JS {
 
+class JSEventLoop;
 
-JSEventLoop::JSEventLoop() :
-  _fdManager(this),
-  _queueManager(this),
-  _eventEmitter(this),
-  _taskManager(this)
+class JSTaskManager : protected std::queue<JSTask::Ptr>
 {
-}
-
-JSEventLoop::~JSEventLoop()
-{
-}
-
-void JSEventLoop::processEvents()
-{
-}
-
-void JSEventLoop::terminate()
-{
-}
-
-void JSEventLoop::wakeup()
-{
-}
-
-} } 
+public:
+  JSTaskManager(JSEventLoop* pEventLoop);
+  ~JSTaskManager();
+  
+  void queueTask(const JSTaskBase& task, void* userData, const JSTaskBase& completionCallback = JSTaskBase());
+  void queueTask(const JSTask::Ptr& pTask);
+  void doOneWork();
+  
+private:
+  JSEventLoop* _pEventLoop;
+  OSS::mutex_critic_sec _mutex;
+};
 
 
+} } // OSS::JS
+
+
+#endif // ENABLE_FEATURE_V8
+#endif // OSS_JSTASKMANAGER_H_INCLUDED
 
