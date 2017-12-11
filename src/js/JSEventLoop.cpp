@@ -27,7 +27,8 @@ namespace JS {
 JSEventLoop::JSEventLoop() :
   _fdManager(this),
   _queueManager(this),
-  _eventEmitter(this)
+  _eventEmitter(this),
+  _taskManager(this)
 {
 }
 

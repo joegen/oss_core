@@ -75,6 +75,7 @@ inline JSTask::JSTask(const JSTask& task)
 {
   _userData = task._userData;
   _func = task._func;
+  _callback = task._callback;
 }
 
 inline JSTask::JSTask(const JSTaskBase& task)
@@ -101,12 +102,15 @@ inline JSTask& JSTask::operator = (const JSTask& task)
   }
   _func = task._func;
   _userData = task._userData;
+  _callback = task._callback;
+  return *this;
 }
 
 inline JSTask& JSTask::operator = (const JSTaskBase& task)
 {
   _userData = 0;
   _func = task;
+  return *this;
 }
 
 inline void JSTask::execute()
