@@ -95,14 +95,21 @@ var verifyInvalidCertificate = function(cert)
   return true;
 }
 
-http.ssl.registerClientContext(
-  cert,
-  function(){console.log("Password Verification")}, 
-  cert,
-  verifyInvalidCertificate,
-  caLoc
-);
-
+try
+{
+  http.ssl.registerClientContext(
+    cert,
+    function(){console.log("Password Verification")}, 
+    cert,
+    verifyInvalidCertificate,
+    caLoc
+  );
+}
+catch(e)
+{
+  console.log(e);
+  exit(-1);
+}
 var secureClient = new HttpClient(true);
 secureClient.setHost("github.com");
 secureClient.setPort(443);
