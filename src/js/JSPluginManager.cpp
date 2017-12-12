@@ -86,12 +86,6 @@ void JSPluginManager::releaseAllPlugins()
   _pluginsLoaders.clear();
 }
 
-JSPluginManager& JSPluginManager::instance()
-{
-  static JSPluginManager instance;
-  return instance;
-}
-
 
 } }
 

@@ -36,6 +36,7 @@ namespace JS {
   
 class JSEventLoop;
 class JSModule;
+class JSPluginManager;
   
 class JSIsolate
 {
@@ -59,6 +60,7 @@ public:
   void setExitValue(int value);
   int getExitValue() const;
   JSModule* getModuleManager();
+  JSPluginManager* getPluginManager();
   
   bool isThreadSelf();
     /// returns true if the current thread is the isolate thread
@@ -94,6 +96,7 @@ protected:
   
   v8::Isolate* _pIsolate;
   JSModule* _pModuleManager;
+  JSPluginManager* _pPluginManager;
   int _exitValue;
   pthread_t _threadId;
   pthread_t _parentThreadId;

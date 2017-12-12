@@ -269,7 +269,8 @@ static v8::Handle<v8::Value> js_load_plugin(const v8::Arguments& args)
   v8::TryCatch try_catch;
   try_catch.SetVerbose(true);
   std::string fileName = string_from_js_value(args[0]);
-  JSPlugin* pPlugin = JSPluginManager::instance().loadPlugin(fileName);
+  js_method_declare_isolate(pIsolate);
+  JSPlugin* pPlugin = pIsolate->getPluginManager()->loadPlugin(fileName);
   if (!pPlugin)
   {
     return v8::Undefined();

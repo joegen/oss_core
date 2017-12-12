@@ -28,6 +28,7 @@
 #include "OSS/JS/modules/Async.h"
 #include "OSS/JS/JSUtil.h"
 #include "OSS/UTL/Logger.h"
+#include "OSS/JS/JSPluginManager.h"
 
 
 namespace OSS {
@@ -56,6 +57,7 @@ JSIsolate::JSIsolate(pthread_t parentThreadId) :
   _pEventLoop(0),
   _isRoot(false)
 {
+  _pPluginManager = new JSPluginManager();
   _pModuleManager = new JSModule();
   _pEventLoop = new JSEventLoop();
 }
@@ -96,8 +98,8 @@ int JSIsolate::run(const boost::filesystem::path& script)
   try_catch.SetVerbose(true);
   
     
-  JSPluginManager::instance().setContext(&_context.value());
-  JSPluginManager::instance().setGlobal(&_globalTemplate.value());
+  _pPluginManager->setContext(&_context.value());
+  _pPluginManager->setGlobal(&_globalTemplate.value());
 
   if (!_pModuleManager->initialize(try_catch, global))
   {
@@ -151,6 +153,10 @@ void JSIsolate::terminate()
   _pEventLoop->terminate();
   delete _pEventLoop;
   _pEventLoop = 0;
+  delete _pModuleManager;
+  _pModuleManager = 0;
+  delete _pPluginManager;
+  _pPluginManager = 0;
 }
 
 bool JSIsolate::isThreadSelf()
@@ -171,6 +177,11 @@ JSEventLoop* JSIsolate::eventLoop()
 JSModule* JSIsolate::getModuleManager()
 {
   return _pModuleManager;
+}
+
+JSPluginManager* JSIsolate::getPluginManager()
+{
+  return _pPluginManager;
 }
 
 } } 

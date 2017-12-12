@@ -34,7 +34,6 @@ public:
   typedef std::map<std::string, JSPlugin*> PluginMap;
   JSPlugin* loadPlugin(const std::string& path);
   void releaseAllPlugins();
-  static JSPluginManager& instance();
   void setContext(v8::Persistent<v8::Context>* pContext);
   v8::Persistent<v8::Context>* getContext();
   
@@ -49,6 +48,8 @@ private:
 protected:
   JSPluginManager();
   ~JSPluginManager();
+  
+  friend class JSIsolate;
 };
 
 
