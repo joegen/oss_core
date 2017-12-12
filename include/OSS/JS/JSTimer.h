@@ -40,6 +40,7 @@ public:
   
 protected:
   JSTimer(JSTimerManager* pManager, int id, int expire, const v8::Handle<v8::Value>& callback, const v8::Handle<v8::Value>& args);
+  JSTimer(JSTimerManager* pManager, int id, int expire, const v8::Handle<v8::Value>& callback);
   void onTimerExpire();
   void cancel();
   int getIdentifier() const;

@@ -78,7 +78,7 @@ public:
     }
     
     request["arguments"] = certificate;
-    if (Async::json_execute_promise(request, result))
+    if (Async::json_execute_promise(_pContext->getIsolate(), request, result))
     {
       OSS::JSON::Object::iterator iter = result.Find("result");
       if (iter != result.End())
@@ -114,7 +114,7 @@ public:
   {
     OSS::JSON::Object request, result;
     request["method"] = OSS::JSON::String(_pContext->_passPhraseHandlerId);
-    if (Async::json_execute_promise(request, result))
+    if (Async::json_execute_promise(_pContext->getIsolate(), request, result))
     {
    
       OSS::JSON::Object::iterator iter = result.Find("result");

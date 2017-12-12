@@ -17,36 +17,74 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#include "OSS/JS/JSEventLoop.h"
+#ifndef OSS_JSWAKEUPPIPE_H_INCLUDED
+#define OSS_JSWAKEUPPIPE_H_INCLUDED
+
+
+#include "OSS/build.h"
+#if ENABLE_FEATURE_V8
+
+#include "v8.h"
+
+
+#include <unistd.h>
+#include <boost/noncopyable.hpp>
 
 
 namespace OSS {
 namespace JS {
 
-
-JSEventLoop::JSEventLoop() :
-  _fdManager(this),
-  _queueManager(this),
-  _eventEmitter(this),
-  _taskManager(this),
-  _functionCallback(this),
-  _timerManager(this)
+class JSWakeupPipe : boost::noncopyable
 {
+public:
+  JSWakeupPipe();
+  ~JSWakeupPipe();
+  void wakeup();
+  void clearOne();
+  int getFd();
+  
+protected:
+  int _wakeupPipe[2];
+};
+
+//
+// Inlines
+//
+
+inline JSWakeupPipe::JSWakeupPipe()
+{
+  pipe(_wakeupPipe);
 }
 
-JSEventLoop::~JSEventLoop()
+inline JSWakeupPipe::~JSWakeupPipe()
 {
+  close(_wakeupPipe[0]);
+  close(_wakeupPipe[1]);
 }
 
-void JSEventLoop::processEvents()
+inline int JSWakeupPipe::getFd()
 {
+  return _wakeupPipe[0];
 }
 
-void JSEventLoop::terminate()
+inline void JSWakeupPipe::wakeup()
 {
+  std::size_t w = 0;
+  w = write(_wakeupPipe[1], " ", 1);
+  (void)w;
 }
 
-} } 
+inline void JSWakeupPipe::clearOne()
+{
+  std::size_t r = 0;
+  char buf[1];
+  r = read(_wakeupPipe[0], buf, 1);
+  (void)r;
+}
+
+} } // OSS::JS
 
 
+#endif // ENABLE_FEATURE_V8
+#endif // OSS_JSWAKEUPPIPE_H_INCLUDED
 

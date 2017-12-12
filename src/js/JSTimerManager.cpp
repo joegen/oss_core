@@ -37,6 +37,15 @@ JSTimerManager::~JSTimerManager()
 {
 }
 
+int JSTimerManager::scheduleTimer(int expire, const v8::Handle<v8::Value>& callback)
+{
+  OSS::mutex_critic_sec_lock lock(_timersMutex);
+  int id = ++_timerIdCounter;
+  JSTimer::Ptr pTimer = JSTimer::Ptr(new JSTimer(this, id, expire,  callback));
+  _timers[id] = pTimer;
+  return id;
+}
+
 int JSTimerManager::scheduleTimer(int expire, const v8::Handle<v8::Value>& callback, const v8::Handle<v8::Value>& args)
 {
   OSS::mutex_critic_sec_lock lock(_timersMutex);

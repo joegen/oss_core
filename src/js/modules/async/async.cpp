@@ -79,47 +79,6 @@ public:
 typedef OSS::BlockingQueue<FunctionCallInfo::Ptr> CallQueue;
 static CallQueue _callQueue(true);
 
-class Timer : public boost::enable_shared_from_this<Timer>
-{
-public:
-  typedef boost::shared_ptr<Timer> Ptr;
-  typedef OSS::BlockingQueue<Timer::Ptr> TimerQueue;
-  typedef std::map<int, Timer::Ptr> TimerMap;
-  OSS::NET_TIMER_HANDLE timer;
-  ArgumentVector timerArgs;
-  PersistentFunction timerCallback;
-  int identifier;
-  Timer(int id, int expire) 
-  {
-    timer = OSS::net_io_timer_create(expire, boost::bind(&Timer::onTimer, this));
-    identifier = id;
-  }
-  ~Timer()
-  {
-    timerCallback.Dispose();
-  }
-  
-  void onTimer()
-  {
-    if (!_isTerminating)
-    {
-      queue.enqueue(shared_from_this());
-    }
-  }
-  
-  void cancel()
-  {
-     OSS::net_io_timer_cancel(timer);
-  }
-  static TimerQueue queue;
-  static TimerMap timers;
-  static int timerId;
-};
-Timer::TimerQueue Timer::queue(true);
-Timer::TimerMap Timer::timers;
-int Timer::timerId = 0;
-
-
 static void handle_to_arg_vector(v8::Handle<v8::Value> input, ArgumentVector& output)
 {
   if (input->IsArray())
@@ -174,16 +133,20 @@ static v8::Handle<v8::Value> __schedule_one_shot_timer(const v8::Arguments& args
     return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument")));
   }
   int expire = args[1]->ToInt32()->Value();
-  Timer::Ptr pTimer = Timer::Ptr(new Timer(++Timer::timerId, expire));
-  pTimer->timerCallback = v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(args[0]));
   
+  js_method_declare_isolate(pIsolate);
+  int timerId = 0;
   if (args.Length() >= 3)
   {
-    handle_to_arg_vector(args[2], pTimer->timerArgs);
+    timerId = pIsolate->eventLoop()->timerManager().scheduleTimer(expire, args[0], args[2]);
   }
-  Timer::timers[Timer::timerId] = pTimer;
+  else
+  {
+    timerId = pIsolate->eventLoop()->timerManager().scheduleTimer(expire, args[0]);
+  }
   _enableAsync = true;
-  return v8::Int32::New(Timer::timerId);
+  
+  return v8::Int32::New(timerId);
 }
 
 static v8::Handle<v8::Value> __cancel_one_shot_timer(const v8::Arguments& args)
@@ -200,30 +163,30 @@ static v8::Handle<v8::Value> __cancel_one_shot_timer(const v8::Arguments& args)
 
 void Async::clear_timer(int timerId)
 {
-  Timer::TimerMap::iterator iter = Timer::timers.find(timerId);
-  if (iter != Timer::timers.end())
+  OSS::JS::JSIsolate::Ptr pIsolate = OSS::JS::JSIsolateManager::instance().getIsolate();
+  pIsolate->eventLoop()->timerManager().cancelTimer(timerId);
+}
+
+WakeupTaskQueue Async::_wakeupTaskQueue;
+OSS::mutex_critic_sec Async::_wakeupTaskQueueMutex;
+void Async::__wakeup_pipe(OSS::JS::JSIsolate* pIsolate)
+{
+  if (!pIsolate)
   {
-    iter->second->cancel();
-    Timer::timers.erase(iter);
+    OSS::JS::JSIsolateManager::instance().getIsolate()->eventLoop()->wakeup();
+  }
+  else
+  {
+    pIsolate->eventLoop()->wakeup();
   }
 }
 
-static int _wakeupPipe[2];
-WakeupTaskQueue Async::_wakeupTaskQueue;
-OSS::mutex_critic_sec Async::_wakeupTaskQueueMutex;
-void Async::__wakeup_pipe()
-{
-  std::size_t w = 0;
-  w = write(_wakeupPipe[1], " ", 1);
-  (void)w;
-}
-
-void Async::__insert_wakeup_task(const WakeupTask& task)
+void Async::__insert_wakeup_task(OSS::JS::JSIsolate* pIsolate, const WakeupTask& task)
 {
   OSS::mutex_critic_sec_lock lock(_wakeupTaskQueueMutex);
   Async::_wakeupTaskQueue.push(task);
   _enableAsync = true;
-  Async::__wakeup_pipe();
+  Async::__wakeup_pipe(pIsolate);
 }
 
 bool Async::__do_one_wakeup_task()
@@ -339,7 +302,7 @@ bool Async::__execute_one_promise()
   return true;
 }
 
-bool Async::json_execute_promise(const OSS::JSON::Object& request, OSS::JSON::Object& reply, uint32_t timeout, void* promiseData)
+bool Async::json_execute_promise(OSS::JS::JSIsolate* pIsolate, const OSS::JSON::Object& request, OSS::JSON::Object& reply, uint32_t timeout, void* promiseData)
 {
   if (Async::_promiseHandler.IsEmpty())
   {
@@ -363,7 +326,7 @@ bool Async::json_execute_promise(const OSS::JSON::Object& request, OSS::JSON::Ob
   
   if (!OSS::JS::JSIsolateManager::instance().rootIsolate()->isThreadSelf())
   {
-    Async::__wakeup_pipe();
+    Async::__wakeup_pipe(pIsolate);
   }
   else
   {
@@ -439,7 +402,8 @@ JS_METHOD_IMPL(emit_json_string)
   js_enter_scope();
   js_method_arg_declare_uint32(fd, 0);
   js_method_arg_declare_string(json, 1);
-  QueueObject::json_enqueue(fd, json);
+  js_method_declare_isolate(pIsolate);
+  QueueObject::json_enqueue(pIsolate.get(), fd, json);
   return JSUndefined();
 }
 
@@ -453,6 +417,7 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
   OSS::JS::JSEventLoop* pEventLoop = pIsolate->eventLoop();
   OSS::JS::JSEventQueueManager& queueManager = pEventLoop->queueManager();
   OSS::JS::JSFileDescriptorManager& fdManager = pEventLoop->fdManager();
+  OSS::JS::JSTimerManager& timerManager = pEventLoop->timerManager();
   
   if (queueManager.getSize() > 0)
   {
@@ -466,13 +431,13 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
   // Static Descriptors
   //
   pollfd pfds[3];
-  pfds[0].fd = _wakeupPipe[0];
+  pfds[0].fd = pEventLoop->getFd();
   pfds[0].events = POLLIN;
   pfds[0].revents = 0;
   pfds[1].fd = _callQueue.getFd();
   pfds[1].events = POLLIN;
   pfds[1].revents = 0;
-  pfds[2].fd = Timer::queue.getFd();
+  pfds[2].fd = timerManager.getFd();
   pfds[2].events = POLLIN;
   pfds[2].revents = 0;
   while (_enableAsync && !_isTerminating)
@@ -549,11 +514,7 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
     reconstructFdSet = false;
     if (descriptors[0].revents & POLLIN)
     {
-      
-      std::size_t r = 0;
-      char buf[1];
-      r = read(_wakeupPipe[0], buf, 1);
-      (void)r;
+      pEventLoop->clearOne();
       if (_isTerminating)
       {
         break;
@@ -585,13 +546,7 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
     }
     else if (descriptors[2].revents & POLLIN)
     {
-      Timer::Ptr pTimer;
-      Timer::queue.dequeue(pTimer);
-      if (pTimer)
-      {
-        Timer::timers.erase(pTimer->identifier);
-        pTimer->timerCallback->Call(js_get_global(), pTimer->timerArgs.size(), pTimer->timerArgs.data());
-      }
+      timerManager.doOneWork();
     }
     else
     {
@@ -644,8 +599,6 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
 
 JS_EXPORTS_INIT()
 {
-  ::pipe(_wakeupPipe);
-
   js_export_method("call", __call);
   js_export_method("processEvents", __process_events);
   js_export_method("setTimeout", __schedule_one_shot_timer);

@@ -84,7 +84,7 @@ JS_METHOD_IMPL(QueueObject::getFd)
 
 
   
-void QueueObject::json_enqueue(int fd, const std::string& json)
+void QueueObject::json_enqueue(OSS::JS::JSIsolate* pIsolate, int fd, const std::string& json)
 {
   _jsonQueueMutex->lock();
   JsonEvent event;
@@ -92,15 +92,15 @@ void QueueObject::json_enqueue(int fd, const std::string& json)
   event.json = json;
   _jsonQueue.push(event);
   _jsonQueueMutex->unlock();
-  Async::__insert_wakeup_task(boost::bind(&QueueObject::on_json_dequeue));
+  Async::__insert_wakeup_task(pIsolate, boost::bind(&QueueObject::on_json_dequeue));
 }
 
-void QueueObject::json_enqueue_object(int fd, const OSS::JSON::Array& object)
+void QueueObject::json_enqueue_object(OSS::JS::JSIsolate* pIsolate, int fd, const OSS::JSON::Array& object)
 {
   std::string json;
   if (OSS::JSON::json_to_string<OSS::JSON::Array>(object, json))
   {
-    QueueObject::json_enqueue(fd, json);
+    QueueObject::json_enqueue(pIsolate, fd, json);
   }
 }
 

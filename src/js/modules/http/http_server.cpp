@@ -222,7 +222,7 @@ void HttpServerObject::handleRequest(HTTPServerRequest& request, HTTPServerRespo
   jsonParams["serverAddress"] = OSS::JSON::String(request.serverAddress().toString());
   jsonRequest["arguments"] = jsonParams;
   
-  if (Async::json_execute_promise(jsonRequest, jsonReply))
+  if (Async::json_execute_promise(_pIsolate, jsonRequest, jsonReply))
   {
     OSS::JSON::Object::iterator errorIter = jsonReply.Find("error");
     if (errorIter != jsonReply.End())

@@ -39,6 +39,7 @@ public:
   typedef std::vector< v8::Persistent<v8::Value> > ArgumentVector;
   typedef boost::shared_ptr<JSFunctionCallback> Ptr;
   
+  JSFunctionCallback(v8::Handle<v8::Value> func);
   JSFunctionCallback(v8::Handle<v8::Value> func, v8::Handle<v8::Value>  args);
   JSFunctionCallback(v8::Handle<v8::Value> func, v8::Handle<v8::Value>  args, v8::Handle<v8::Value> resultHandler);
   virtual ~JSFunctionCallback();
@@ -49,6 +50,11 @@ private:
   ArgumentVector _args;
   v8::Persistent<v8::Function> _resultHandler;
 };
+
+inline JSFunctionCallback::JSFunctionCallback(v8::Handle<v8::Value> func)
+{
+  _function =  v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(func));
+}
 
 inline JSFunctionCallback::JSFunctionCallback(v8::Handle<v8::Value> func, v8::Handle<v8::Value>  args)
 {

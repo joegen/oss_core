@@ -70,7 +70,7 @@ struct Async
   static void clear_timer(int timerId);
     // Cancel a running timer
   
-  static bool json_execute_promise(const OSS::JSON::Object& request, OSS::JSON::Object& reply, uint32_t timeout = 0, void* promiseData = 0);
+  static bool json_execute_promise(OSS::JS::JSIsolate* pIsolate, const OSS::JSON::Object& request, OSS::JSON::Object& reply, uint32_t timeout = 0, void* promiseData = 0);
     // This method is called from the C++ side to execute an RPC style function call towards ossjs.
     // The request object must have a (1) method property containing the name of the callback function
     // (2) and an argument property containing any structure.  The promiseData parameter may 
@@ -94,10 +94,10 @@ struct Async
   static bool __execute_one_promise();
     // Execute a promise queued by json_execute_promise 
   
-  static void __wakeup_pipe();
+  static void __wakeup_pipe(OSS::JS::JSIsolate* pIsolate = 0);
     // Wakes up the event loop and reset the poll fd set
   
-  static void __insert_wakeup_task(const WakeupTask& task);
+  static void __insert_wakeup_task(OSS::JS::JSIsolate* pIsolate, const WakeupTask& task);
     // Wakes up the event loop and perform a specific task
   
   static bool __do_one_wakeup_task();

@@ -52,7 +52,7 @@ public:
   void appendDescriptors(Descriptors& descriptors);
   
 private:
-  OSS::mutex_critic_sec _queuesMutex;
+  OSS::mutex _queuesMutex;
   QueueObjectMap _queues;
   JSEventLoop* _pEventLoop;
 };

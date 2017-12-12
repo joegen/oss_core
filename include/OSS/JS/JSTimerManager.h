@@ -40,6 +40,7 @@ public:
   JSTimerManager(JSEventLoop* pEventLoop);
   ~JSTimerManager();
   int scheduleTimer(int expire, const v8::Handle<v8::Value>& callback, const v8::Handle<v8::Value>& args);
+  int scheduleTimer(int expire, const v8::Handle<v8::Value>& callback);
   void cancelTimer(int timerId);
   
 protected:

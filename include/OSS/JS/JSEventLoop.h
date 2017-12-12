@@ -34,6 +34,9 @@
 #include "OSS/JS/JSEventQueueManager.h"
 #include "OSS/JS/JSEventEmitter.h"
 #include "OSS/JS/JSTaskManager.h"
+#include "OSS/JS/JSFunctionCallbackQueue.h"
+#include "OSS/JS/JSTimerManager.h"
+#include "OSS/JS/JSWakeupPipe.h"
 
 #include <queue>
 
@@ -41,7 +44,7 @@
 namespace OSS {
 namespace JS {
 
-class JSEventLoop : boost::noncopyable
+class JSEventLoop : public JSWakeupPipe
 {
 public:
   typedef OSS::BlockingQueue<std::string> StringQueue;
@@ -61,22 +64,17 @@ public:
   typedef std::queue<AsyncPromise*> PromiseQueue;
 
   JSEventLoop();
-  
   ~JSEventLoop();
   
   void processEvents();
-  
   void terminate();
   
-  void wakeup();
-  
   JSFileDescriptorManager& fdManager();
-  
   JSEventQueueManager& queueManager();
-  
   JSEventEmitter& eventEmitter();
-  
   JSTaskManager& taskManager();
+  JSFunctionCallbackQueue& functionCallback();
+  JSTimerManager& timerManager();
   
 protected:
   JSPersistentFunctionHandle _jsonParser;
@@ -88,6 +86,8 @@ protected:
   JSEventQueueManager _queueManager;
   JSEventEmitter _eventEmitter;
   JSTaskManager _taskManager;
+  JSFunctionCallbackQueue _functionCallback;
+  JSTimerManager _timerManager;
 };
 
 //
@@ -112,6 +112,16 @@ inline JSEventEmitter& JSEventLoop::eventEmitter()
 inline JSTaskManager& JSEventLoop::taskManager()
 {
   return _taskManager;
+}
+
+inline JSFunctionCallbackQueue& JSEventLoop::functionCallback()
+{
+  return _functionCallback;
+}
+
+inline JSTimerManager& JSEventLoop::timerManager()
+{
+  return _timerManager;
 }
 
 

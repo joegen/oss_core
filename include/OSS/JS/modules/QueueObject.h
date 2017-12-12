@@ -63,8 +63,8 @@ public:
   JS_METHOD_DECLARE(enqueue);
   JS_METHOD_DECLARE(getFd);
   
-  static void json_enqueue_object(int fd, const OSS::JSON::Array& object);
-  static void json_enqueue(int fd, const std::string& json);
+  static void json_enqueue_object(OSS::JS::JSIsolate* pIsolate, int fd, const OSS::JSON::Array& object);
+  static void json_enqueue(OSS::JS::JSIsolate* pIsolate, int fd, const std::string& json);
   static void on_json_dequeue();
   
 

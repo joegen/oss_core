@@ -25,6 +25,13 @@
 namespace OSS {
 namespace JS {
 
+JSTimer::JSTimer(JSTimerManager* pManager, int id, int expire, const v8::Handle<v8::Value>& callback) :
+  JSFunctionCallback(callback),
+  _pManager(pManager)
+{
+  _timer = OSS::net_io_timer_create(expire, boost::bind(&JSTimer::onTimerExpire, this));
+  _id = id;
+}
 
 JSTimer::JSTimer(JSTimerManager* pManager, int id, int expire, const v8::Handle<v8::Value>& callback, const v8::Handle<v8::Value>& args) :
   JSFunctionCallback(callback, args),

@@ -21,12 +21,13 @@
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/JS/modules/Async.h"
+#include "OSS/JS/JSIsolateManager.h"
 
-static void test_ping()
+static void test_ping(OSS::JS::JSIsolate::Ptr pIsolate)
 {
   OSS::JSON::Object ping, pong;
   ping["method"] = OSS::JSON::String("ping");
-  if (!Async::json_execute_promise(ping, pong))
+  if (!Async::json_execute_promise(pIsolate.get(), ping, pong))
   {
     OSS_LOG_ERROR("json_execute_promise failed for method ping");
   }
@@ -45,15 +46,10 @@ static void test_ping()
   }
 }
 
-static void run_test()
-{
-  test_ping();
-}
-
 JS_METHOD_IMPL(start_test)
 {
   js_enter_scope();
-  new boost::thread(run_test);
+  new boost::thread(test_ping, OSS::JS::JSIsolateManager::instance().getIsolate());
   return JSUndefined();
 }
 

@@ -28,7 +28,6 @@ var EventEmitter = function()
   {
     _this._handlers[event] = func;
   }
-  
   this._queue = new _async.Queue(this._on_event);
   this._fd = this._queue.getFd();
   
