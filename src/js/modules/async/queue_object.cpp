@@ -24,6 +24,8 @@
 #include "OSS/JS/modules/QueueObject.h"
 #include "OSS/JS/JSEventLoop.h"
 #include "OSS/JS/JSIsolate.h"
+#include "OSS/JS/JSIsolateManager.h"
+
 
 using OSS::JS::JSObjectWrap;
 
@@ -120,6 +122,6 @@ void QueueObject::on_json_dequeue()
   
   Event::Ptr pEvent = Event::Ptr(new QueueObject::Event());
   js_assign_persistent_arg_vector(pEvent->_eventData, v8::Local<v8::Value>::New(Async::__json_parse(event.json)));
-  getCurrentIsolate()->eventLoop()->queueManager().enqueue(event.fd, pEvent);
+  OSS::JS::JSIsolateManager::instance().getIsolate()->eventLoop()->queueManager().enqueue(event.fd, pEvent);
 
 }

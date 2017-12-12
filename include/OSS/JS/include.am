@@ -17,7 +17,11 @@ nobase_include_HEADERS += \
     OSS/JS/JSPersistentValue.h \
     OSS/JS/JSEventQueueManager.h \
     OSS/JS/JSTask.h \
-    OSS/JS/JSTaskManager.h
+    OSS/JS/JSTaskManager.h \
+    OSS/JS/JSFunctionCallback.h \
+    OSS/JS/JSFunctionCallbackQueue.h \
+    OSS/JS/JSTimer.h \
+    OSS/JS/JSTimerManager.h
 
 include OSS/JS/modules/include.am
 

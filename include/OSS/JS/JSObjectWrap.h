@@ -23,33 +23,18 @@
 #define SRC_NODE_OBJECT_WRAP_H_
 
 #include <v8.h>
-#include "OSS/JS/JSIsolate.h"
 #include <assert.h>
 
 
 namespace OSS {
 namespace JS {
 
+class JSIsolate;
+
 class JSObjectWrap {
  public:
-  JSObjectWrap ( ) 
-  {
-    refs_ = 0;
-    _pIsolate = JSIsolate::getIsolate();
-  }
-
-
-  virtual ~JSObjectWrap ( ) 
-  {
-    if (!handle_.IsEmpty()) 
-    {
-      assert(handle_.IsNearDeath());
-      handle_.ClearWeak();
-      handle_->SetInternalField(0, v8::Undefined());
-      handle_.Dispose();
-      handle_.Clear();
-    }
-  }
+  JSObjectWrap ();
+  virtual ~JSObjectWrap ();
 
 
   template <class T>
@@ -91,45 +76,19 @@ class JSObjectWrap {
     tpl->PrototypeTemplate()->SetIndexedPropertyHandler(getter, setter);
   }
  
-  const JSIsolate::Ptr& getIsolate()
-  {
-    return _pIsolate;
-  }
-  
-  static JSIsolate::Ptr getCurrentIsolate()
-  {
-    return JSIsolate::getIsolate();
-  }
+  JSIsolate* getIsolate();
 
   v8::Persistent<v8::Object> handle_; // ro
 
  protected:
-  inline void Wrap (v8::Handle<v8::Object> handle) 
-  {
-    assert(handle_.IsEmpty());
-    assert(handle->InternalFieldCount() > 0);
-    handle_ = v8::Persistent<v8::Object>::New(handle);
-    handle_->SetPointerInInternalField(0, this);
-    MakeWeak();
-  }
-
-
-  inline void MakeWeak (void) 
-  {
-    handle_.MakeWeak(this, WeakCallback);
-    handle_.MarkIndependent();
-  }
+  void Wrap (v8::Handle<v8::Object> handle);
+  void MakeWeak (void);
 
   /* Ref() marks the object as being attached to an event loop.
    * Refed objects will not be garbage collected, even if
    * all references are lost.
    */
-  virtual void Ref() 
-  {
-    assert(!handle_.IsEmpty());
-    refs_++;
-    handle_.ClearWeak();
-  }
+  virtual void Ref();
 
   /* Unref() marks an object as detached from the event loop.  This is its
    * default state.  When an object with a "weak" reference changes from
@@ -140,31 +99,25 @@ class JSObjectWrap {
    *
    * DO NOT CALL THIS FROM DESTRUCTOR
    */
-  virtual void Unref() 
-  {
-    assert(!handle_.IsEmpty());
-    assert(!handle_.IsWeak());
-    assert(refs_ > 0);
-    if (--refs_ == 0) 
-    { 
-      MakeWeak(); 
-    }
-  }
+  virtual void Unref();
 
 
   int refs_; // ro
-  JSIsolate::Ptr _pIsolate;
+  JSIsolate* _pIsolate;
+  void* _pIsolatePtr;
 
  private:
-  static void WeakCallback (v8::Persistent<v8::Value> value, void *data) 
-  {
-    JSObjectWrap *obj = static_cast<JSObjectWrap*>(data);
-    assert(value == obj->handle_);
-    assert(!obj->refs_);
-    assert(value.IsNearDeath());
-    delete obj;
-  }
+  static void WeakCallback (v8::Persistent<v8::Value> value, void *data);
 };
+
+//
+// Inlines
+//
+inline JSIsolate* JSObjectWrap::getIsolate()
+{
+  return _pIsolate;
+}
+
 
 } } // OSS::JS
 

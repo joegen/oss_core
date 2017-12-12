@@ -3,6 +3,7 @@ liboss_core_la_SOURCES +=  \
     b2bua/SIPB2BScriptableHandler.cpp \
     js/JSBase.cpp \
     js/JSSIPMessage.cpp \
+    js/JSObjectWrap.cpp \
     js/JSUtil.cpp \
     js/JSModule.cpp \
     js/JSPluginManager.cpp \
@@ -12,7 +13,10 @@ liboss_core_la_SOURCES +=  \
     js/JSFileDescriptorManager.cpp \
     js/JSEventEmitter.cpp \
     js/JSEventQueueManager.cpp \
-    js/JSTaskManager.cpp
+    js/JSTaskManager.cpp \
+    js/JSFunctionCallbackQueue.cpp \
+    js/JSTimer.cpp \
+    js/JSTimerManager.cpp
 endif
 
 JAVASCRIPT_SRC = \
