@@ -35,6 +35,9 @@
 #include "OSS/UTL/Thread.h"
 #include "OSS/UTL/BlockingQueue.h"
 
+#include "OSS/ABNF/ABNF.h"
+#include "OSS/SIP/SIPParser.h"
+
 #include "v8.h"
 
 namespace OSS {
