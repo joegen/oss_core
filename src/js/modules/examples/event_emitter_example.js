@@ -28,8 +28,3 @@ myEmitter.on('exit', function()
 //
 myEmitter.emit('event', 'a', 'b');
 
-//
-// Use the async emitter.  You may also emit from C++ directly using QueueObject::json_enqueue
-// and receive the event in JS layer.
-//
-async.emit_json_string(myEmitter._fd,'["exit"]');

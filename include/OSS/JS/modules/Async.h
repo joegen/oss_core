@@ -51,7 +51,6 @@ struct Async
   typedef std::queue<AsyncPromise*> PromiseQueue;
   static WakeupTaskQueue _wakeupTaskQueue;
   static OSS::mutex_critic_sec _wakeupTaskQueueMutex;
-  static JSPersistentFunctionHandle _jsonParser;
   static JSPersistentFunctionHandle _promiseHandler;
   static pthread_t _threadId;
   static PromiseQueue _promises;
@@ -96,9 +95,6 @@ struct Async
   
   static void __wakeup_pipe(OSS::JS::JSIsolate* pIsolate = 0);
     // Wakes up the event loop and reset the poll fd set
-  
-  static JSValueHandle __json_parse(const std::string& json);
-    // Helper function to convert a JSON string to a v8 handle
   
   
   

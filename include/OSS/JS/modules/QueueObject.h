@@ -26,6 +26,8 @@
 #include <OSS/JS/JSPlugin.h>
 #include <OSS/UTL/BlockingQueue.h>
 #include "OSS/JSON/Json.h"
+#include "OSS/JS/JSEventArgument.h"
+
 
 class QueueObject : public OSS::JS::JSObjectWrap
 {
@@ -63,13 +65,6 @@ public:
   JS_METHOD_DECLARE(enqueue);
   JS_METHOD_DECLARE(getFd);
   
-  static void json_enqueue_object(OSS::JS::JSIsolate* pIsolate, int fd, const OSS::JSON::Array& object);
-  static void json_enqueue(OSS::JS::JSIsolate* pIsolate, int fd, const std::string& json);
-  static void on_json_dequeue(void* userData);
-  
-
-  static OSS::mutex_critic_sec* _jsonQueueMutex;
-  static JsonQueue _jsonQueue;
   
   EventQueue _queue;
   EventCallback _eventCallback;

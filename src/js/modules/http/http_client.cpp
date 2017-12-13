@@ -26,6 +26,8 @@
 #include "OSS/JS/modules/BufferObject.h"
 #include "OSS/JSON/Json.h"
 #include "OSS/JS/modules/QueueObject.h"
+#include "OSS/JS/JSEventArgument.h"
+#include "OSS/JS/JSEventLoop.h"
 
 using OSS::JS::JSObjectWrap;
 
@@ -225,16 +227,14 @@ public:
     try
     {
       _client->_output = &(_client->_session->sendRequest(*(_request->request())));
-      OSS::JSON::Array json;
-      json[0] = OSS::JSON::String("request_sent");
-      QueueObject::json_enqueue_object(_client->getIsolate(), _client->getEventFd(), json);
+      OSS::JS::JSEventArgument json("request_sent", _client->getEventFd());
+      _client->getIsolate()->eventLoop()->eventEmitter().emit(json);
     }
     catch(const Poco::Exception& e)
     {
-      OSS::JSON::Array json;
-      json[0] = OSS::JSON::String("error");
-      json[1] = OSS::JSON::String(e.message().c_str());
-      QueueObject::json_enqueue_object(_client->getIsolate(), _client->getEventFd(), json);
+      OSS::JS::JSEventArgument json("error", _client->getEventFd());
+      json.addString(e.message());
+      _client->getIsolate()->eventLoop()->eventEmitter().emit(json);
     }
     
     delete this;
@@ -292,23 +292,20 @@ public:
     {
       _client->setOutputStream(0);
       _client->setInputStream(&(_client->_session->receiveResponse((*_response->response()))));
-      OSS::JSON::Array json;
-      json[0] = OSS::JSON::String("response_ready");
-      QueueObject::json_enqueue_object(_client->getIsolate(), _client->getEventFd(), json);
+      OSS::JS::JSEventArgument  json("response_ready", _client->getEventFd());
+      _client->getIsolate()->eventLoop()->eventEmitter().emit(json);
     }
     catch(const HttpClientObject::MessageException& e)
     {
-      OSS::JSON::Array json;
-      json[0] = OSS::JSON::String("error");
-      json[1] = OSS::JSON::String(e.message().c_str());
-      QueueObject::json_enqueue_object(_client->getIsolate(), _client->getEventFd(), json);
+      OSS::JS::JSEventArgument  json("error", _client->getEventFd());
+      json.addString(e.message());
+      _client->getIsolate()->eventLoop()->eventEmitter().emit(json);
     }
     catch(const std::exception& e)
     {
-      OSS::JSON::Array json;
-      json[0] = OSS::JSON::String("error");
-      json[1] = OSS::JSON::String(e.what());
-      QueueObject::json_enqueue_object(_client->getIsolate(), _client->getEventFd(), json);
+      OSS::JS::JSEventArgument  json("error", _client->getEventFd());
+      json.addString(e.what());
+      _client->getIsolate()->eventLoop()->eventEmitter().emit(json);
     }
     
     delete this;
@@ -380,25 +377,22 @@ public:
     {
       std::istream& strm = *_client->getInputStream();
       strm.read((char*)_buf->buffer().data(), _size);
-      OSS::JSON::Array json;
-      json[0] = OSS::JSON::String("read_ready");
-      json[1] = OSS::JSON::Number(strm.gcount());
-      QueueObject::json_enqueue_object(_client->getIsolate(), _client->getEventFd(), json);
+      OSS::JS::JSEventArgument json("read_ready", _client->getEventFd());
+      json.addUInt32(strm.gcount());
+      _client->getIsolate()->eventLoop()->eventEmitter().emit(json);
     }
     catch(const HttpClientObject::MessageException& e)
     {
       OSS_LOG_ERROR(e.message().c_str());
-      OSS::JSON::Array json;
-      json[0] = OSS::JSON::String("error");
-      json[1] = OSS::JSON::String(e.message().c_str());
-      QueueObject::json_enqueue_object(_client->getIsolate(), _client->getEventFd(), json);
+      OSS::JS::JSEventArgument json("error", _client->getEventFd());
+      json.addString(e.message());
+      _client->getIsolate()->eventLoop()->eventEmitter().emit(json);
     }
     catch(const std::exception& e)
     {
-      OSS::JSON::Array json;
-      json[0] = OSS::JSON::String("error");
-      json[1] = OSS::JSON::String(e.what());
-      QueueObject::json_enqueue_object(_client->getIsolate(), _client->getEventFd(), json);
+      OSS::JS::JSEventArgument json("error", _client->getEventFd());
+      json.addString(e.what());
+      _client->getIsolate()->eventLoop()->eventEmitter().emit(json);
     }
     
     delete this;
@@ -433,10 +427,9 @@ JS_METHOD_IMPL(HttpClientObject::read)
   }
   else
   {
-    OSS::JSON::Array json;
-    json[0] = OSS::JSON::String("error");
-    json[1] = OSS::JSON::String("Input Stream Not Set");
-    QueueObject::json_enqueue_object(self->getIsolate(), self->getEventFd(), json);
+    OSS::JS::JSEventArgument json("error", self->getEventFd());
+    json.addString("Input Stream Not Set");
+    self->getIsolate()->eventLoop()->eventEmitter().emit(json);
   }
   return JSUndefined();
 }

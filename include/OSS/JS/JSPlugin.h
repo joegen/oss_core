@@ -27,6 +27,7 @@
 #include <Poco/ThreadPool.h>
 #include <Poco/Runnable.h>
 #include "OSS/JS/JSObjectWrap.h"
+#include "OSS/JS/JSIsolateManager.h"
 #include <iostream>
 
 class JSPlugin

@@ -30,9 +30,6 @@
 using OSS::JS::JSObjectWrap;
 
 
-OSS::mutex_critic_sec* QueueObject::_jsonQueueMutex = new OSS::mutex_critic_sec();
-QueueObject::JsonQueue QueueObject::_jsonQueue;
-
 JS_CLASS_INTERFACE(QueueObject, "Queue") 
 {
   JS_CLASS_METHOD_DEFINE(QueueObject, "enqueue", enqueue);
@@ -80,49 +77,4 @@ JS_METHOD_IMPL(QueueObject::getFd)
   js_enter_scope();
   js_method_arg_declare_self(QueueObject, self);
   return JSInt32(self->_queue.getFd());
-}
-
-
-  
-void QueueObject::json_enqueue(OSS::JS::JSIsolate* pIsolate, int fd, const std::string& json)
-{
-  _jsonQueueMutex->lock();
-  JsonEvent event;
-  event.fd = fd;
-  event.json = json;
-  _jsonQueue.push(event);
-  _jsonQueueMutex->unlock();
-  
-  pIsolate->eventLoop()->taskManager().queueTask(boost::bind(&QueueObject::on_json_dequeue, _1),0);
-}
-
-void QueueObject::json_enqueue_object(OSS::JS::JSIsolate* pIsolate, int fd, const OSS::JSON::Array& object)
-{
-  std::string json;
-  if (OSS::JSON::json_to_string<OSS::JSON::Array>(object, json))
-  {
-    QueueObject::json_enqueue(pIsolate, fd, json);
-  }
-}
-
-//
-// This method is called from the event loop thread
-//
-void QueueObject::on_json_dequeue(void* userData)
-{
-  JsonEvent event;
-  _jsonQueueMutex->lock();
-  if (_jsonQueue.empty())
-  {
-     _jsonQueueMutex->unlock();
-     return;
-  }
-  event = _jsonQueue.front();
-  _jsonQueue.pop();
-  _jsonQueueMutex->unlock();
-  
-  Event::Ptr pEvent = Event::Ptr(new QueueObject::Event());
-  js_assign_persistent_arg_vector(pEvent->_eventData, v8::Local<v8::Value>::New(Async::__json_parse(event.json)));
-  OSS::JS::JSIsolateManager::instance().getIsolate()->eventLoop()->queueManager().enqueue(event.fd, pEvent);
-
 }

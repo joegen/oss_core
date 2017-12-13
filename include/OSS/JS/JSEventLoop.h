@@ -38,12 +38,15 @@
 #include "OSS/JS/JSTimerManager.h"
 #include "OSS/JS/JSWakeupPipe.h"
 
+
 #include <queue>
 
 
 namespace OSS {
 namespace JS {
 
+class JSIsolate;
+  
 class JSEventLoop : public JSWakeupPipe
 {
 public:
@@ -63,12 +66,13 @@ public:
   
   typedef std::queue<AsyncPromise*> PromiseQueue;
 
-  JSEventLoop();
+  JSEventLoop(JSIsolate* pIsolate);
   ~JSEventLoop();
   
   void processEvents();
   void terminate();
   
+  JSIsolate* getIsolate();
   JSFileDescriptorManager& fdManager();
   JSEventQueueManager& queueManager();
   JSEventEmitter& eventEmitter();
@@ -77,6 +81,7 @@ public:
   JSTimerManager& timerManager();
   
 protected:
+  JSIsolate* _pIsolate;
   JSPersistentFunctionHandle _jsonParser;
   JSPersistentFunctionHandle _promiseHandler;
   PromiseQueue _promises;

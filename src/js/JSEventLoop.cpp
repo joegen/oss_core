@@ -18,13 +18,14 @@
 //
 
 #include "OSS/JS/JSEventLoop.h"
-
+#include "OSS/JS/JSIsolate.h"
 
 namespace OSS {
 namespace JS {
 
 
-JSEventLoop::JSEventLoop() :
+JSEventLoop::JSEventLoop(JSIsolate* pIsolate) :
+  _pIsolate(pIsolate),
   _fdManager(this),
   _queueManager(this),
   _eventEmitter(this),
@@ -36,6 +37,11 @@ JSEventLoop::JSEventLoop() :
 
 JSEventLoop::~JSEventLoop()
 {
+}
+
+JSIsolate* JSEventLoop::getIsolate()
+{
+  return _pIsolate;
 }
 
 void JSEventLoop::processEvents()

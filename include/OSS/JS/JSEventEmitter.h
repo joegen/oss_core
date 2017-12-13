@@ -42,10 +42,10 @@ public:
   JSEventEmitter(JSEventLoop* eventLoop);
   ~JSEventEmitter();
   
-  void emit(JSEventArgument& event);
+  void emit(const JSEventArgument& event);
   
 protected:
-  void onEmitEvent();
+  void onEmitEvent(void* userData);
   JSEventLoop* _pEventLoop;
   friend class JSEventLoop;
   OSS::mutex_critic_sec _eventQueueMutex;

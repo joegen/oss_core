@@ -59,7 +59,7 @@ JSIsolate::JSIsolate(pthread_t parentThreadId) :
 {
   _pPluginManager = new JSPluginManager();
   _pModuleManager = new JSModule();
-  _pEventLoop = new JSEventLoop();
+  _pEventLoop = new JSEventLoop(this);
 }
 
 JSIsolate::~JSIsolate()
@@ -87,7 +87,7 @@ int JSIsolate::run(const boost::filesystem::path& script)
   //
   // Initialize global and assign it to the context
   //
-  _pModuleManager->setGlobals(global);
+  _pModuleManager->initGlobalExports(global);
   _pModuleManager->setMainScript(script);
   
   v8::Handle<v8::Context> context = v8::Context::New(0, global);
@@ -98,9 +98,6 @@ int JSIsolate::run(const boost::filesystem::path& script)
   try_catch.SetVerbose(true);
   
     
-  _pPluginManager->setContext(&_context.value());
-  _pPluginManager->setGlobal(&_globalTemplate.value());
-
   if (!_pModuleManager->initialize(try_catch, global))
   {
     report_js_exception(try_catch, true);
@@ -182,6 +179,25 @@ JSModule* JSIsolate::getModuleManager()
 JSPluginManager* JSIsolate::getPluginManager()
 {
   return _pPluginManager;
+}
+
+JSObjectHandle JSIsolate::getGlobal()
+{
+  return _context.value()->Global();
+}
+
+JSValueHandle JSIsolate::parseJSON(const std::string& json)
+{
+  js_enter_scope();
+  v8::Local<v8::Object> JSON = getGlobal()->Get(JSLiteral("JSON"))->ToObject();
+  v8::Handle<v8::Value> parseFunc = JSON->Get(JSLiteral("parse"));
+  v8::Handle<v8::Function> parse = v8::Handle<v8::Function>::Cast(parseFunc);
+
+  JSValueHandle val = JSString(json);
+  JSArgumentVector args;
+  args.push_back(val);
+  
+  return parse->Call(getGlobal(), args.size(), args.data());
 }
 
 } } 

@@ -15,7 +15,7 @@ function bufferToString(buf)
 
 const BUF_SIZE = 100;
 
-var server = new TcpSocketServer("127.0.0.1", "50001");
+var server = new TcpSocketServer("127.0.0.1", "50002");
 server.on("accept", function(connection)
 {
   connection.on("read", function(socket)
@@ -28,7 +28,7 @@ server.on("accept", function(connection)
   return true;
 });
 
-var client = new TcpSocketClient("127.0.0.1", "50001");
+var client = new TcpSocketClient("127.0.0.1", "50002");
 client.on("read", function(socket)
 {
   var result = socket.read(BUF_SIZE);

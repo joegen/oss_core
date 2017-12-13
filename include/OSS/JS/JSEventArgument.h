@@ -46,7 +46,9 @@ public:
   
   JSEventArgument();
   
-  JSEventArgument(JSEventArgument& event);
+  JSEventArgument(const std::string& eventName, int queueFd);
+  
+  JSEventArgument(const JSEventArgument& event);
   
   ~JSEventArgument();
   
@@ -88,7 +90,7 @@ public:
   bool getObject(Object& argument, std::size_t index);
   bool getArray(Array& argument, std::size_t index);
   
-  std::string json();
+  std::string json() const;
 private:
   int _queueFd;
 };
@@ -102,7 +104,13 @@ inline JSEventArgument::JSEventArgument() :
 {
 }
 
-inline JSEventArgument::JSEventArgument(JSEventArgument& event) :
+inline JSEventArgument::JSEventArgument(const std::string& eventName, int queueFd) :
+  _queueFd(queueFd)
+{
+  setEventName(eventName);
+}
+
+inline JSEventArgument::JSEventArgument(const JSEventArgument& event) :
   OSS::JSON::Array(event),
   _queueFd(event._queueFd)
 {
@@ -265,7 +273,7 @@ inline bool JSEventArgument::getArray(Array& argument, std::size_t index)
   return true;
 }
 
-inline std::string JSEventArgument::json()
+inline std::string JSEventArgument::json() const
 {
   std::string result;
   OSS::JSON::json_to_string<Array>(*this, result);

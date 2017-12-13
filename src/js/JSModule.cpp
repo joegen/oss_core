@@ -454,7 +454,7 @@ JS_METHOD_IMPL(__parent_path)
   return JSString(OSS::boost_path(parent).c_str());
 }
 
-bool JSModule::setGlobals(v8::Handle<v8::ObjectTemplate>& global)
+bool JSModule::initGlobalExports(v8::Handle<v8::ObjectTemplate>& global)
 {
   global->Set(v8::String::New("__include"), v8::FunctionTemplate::New(js_include));
   global->Set(v8::String::New("__compile"), v8::FunctionTemplate::New(js_compile));

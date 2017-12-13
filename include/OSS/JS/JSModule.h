@@ -50,7 +50,7 @@ public:
   JSModule();
   ~JSModule();
   
-  bool setGlobals(v8::Handle<v8::ObjectTemplate>& global);
+  bool initGlobalExports(v8::Handle<v8::ObjectTemplate>& global);
   bool initialize(v8::TryCatch& try_catch, v8::Handle<v8::ObjectTemplate>& global);
   
   InternalModules& getInternalModules();

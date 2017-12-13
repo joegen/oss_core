@@ -25,7 +25,7 @@
 #include "OSS/build.h"
 #if ENABLE_FEATURE_V8
 
-#include "v8.h"
+#include "JS.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/JSON/Json.h"
 #include "OSS/JS/JSPersistentValue.h"
@@ -81,6 +81,14 @@ public:
   
   JSEventLoop* eventLoop();
     /// Returns a reference to the event loop
+  
+  JSObjectHandle getGlobal();
+    /// Returns the global object.  Must be called in the vent loop thread
+  
+  JSValueHandle parseJSON(const std::string& json);
+    /// returns an object from the json string.  This
+    /// function must be called from the event loop thread
+  
 protected:
   JSIsolate(pthread_t parentThreadId);
     /// Creates a new isolate.  You MUST not create isolate directly.

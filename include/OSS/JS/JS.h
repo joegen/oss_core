@@ -128,7 +128,7 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define js_throw(What) return JSException(What)
 #define js_assert(Expression, What) if (!(Expression)) { js_throw(What); }
 #define js_is_function(Handle) Handle->IsFunction()
-#define js_get_global() v8::Context::GetCalling()->Global()
+#define js_get_global() OSS::JS::JSIsolateManager::instance().getIsolate()->getGlobal()
 #define js_get_global_method(Name) js_get_global()->Get(JSLiteral(Name))
 #define js_enter_scope() v8::HandleScope _scope_
 #define js_unwrap_object(Class, Object) OSS::JS::JSObjectWrap::Unwrap<Class>(Object)

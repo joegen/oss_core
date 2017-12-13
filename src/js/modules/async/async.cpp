@@ -265,7 +265,7 @@ bool Async::__execute_one_promise()
   AsyncPromise* promise = Async::_promises.front();
   Async::_promises.pop();
   
-  JSValueHandle request = Async::__json_parse(promise->_data);
+  JSValueHandle request = OSS::JS::JSIsolateManager::instance().getIsolate()->parseJSON(promise->_data);
   //v8::Handle<v8::Object> request_obj;
   //OSS::JS::wrap_external_object(v8::Context::GetCurrent(), &Async::_externalPointerTemplate, request_obj, promise->_userData);
 
@@ -353,37 +353,6 @@ static v8::Handle<v8::Value> __set_garbage_collection_frequency(const v8::Argume
   }
   _garbageCollectionFrequency = args[0]->ToInt32()->Value();
   return v8::Undefined();
-}
-
-JSPersistentFunctionHandle Async::_jsonParser;
-JSValueHandle Async::__json_parse(const std::string& json)
-{
-  if (Async::_jsonParser.IsEmpty())
-  {
-    js_throw("JSON parser function is not set");
-  }
-  JSValueHandle val = JSString(json);
-  JSArgumentVector jsonArg;
-  jsonArg.push_back(val);
-  return Async::_jsonParser->Call(js_get_global(), jsonArg.size(), jsonArg.data());
-}
-
-JS_METHOD_IMPL(__set_json_parser)
-{
-  js_enter_scope();
-  js_method_arg_declare_persistent_function(func, 0);
-  Async::_jsonParser = func;
-  return JSUndefined();
-}
-
-JS_METHOD_IMPL(emit_json_string)
-{
-  js_enter_scope();
-  js_method_arg_declare_uint32(fd, 0);
-  js_method_arg_declare_string(json, 1);
-  js_method_declare_isolate(pIsolate);
-  QueueObject::json_enqueue(pIsolate.get(), fd, json);
-  return JSUndefined();
 }
 
 static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
@@ -586,10 +555,8 @@ JS_EXPORTS_INIT()
   js_export_method("monitorFd", __monitor_descriptor);
   js_export_method("unmonitorFd", __unmonitor_descriptor);
   js_export_method("setGCFrequency", __set_garbage_collection_frequency);
-  js_export_method("emit_json_string", emit_json_string);
   
   js_export_method("__stop_event_loop", __stop_event_loop);
-  js_export_method("__set_json_parser", __set_json_parser);
   js_export_method("__set_promise_callback", __set_promise_callback);
   
   js_export_class(QueueObject);
