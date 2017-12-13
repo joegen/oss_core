@@ -181,27 +181,6 @@ void Async::__wakeup_pipe(OSS::JS::JSIsolate* pIsolate)
   }
 }
 
-void Async::__insert_wakeup_task(OSS::JS::JSIsolate* pIsolate, const WakeupTask& task)
-{
-  OSS::mutex_critic_sec_lock lock(_wakeupTaskQueueMutex);
-  Async::_wakeupTaskQueue.push(task);
-  _enableAsync = true;
-  Async::__wakeup_pipe(pIsolate);
-}
-
-bool Async::__do_one_wakeup_task()
-{
-  OSS::mutex_critic_sec_lock lock(Async::_wakeupTaskQueueMutex);
-  if (Async::_wakeupTaskQueue.empty())
-  {
-    return false;
-  }
-  Async::_wakeupTaskQueue.front()();
-  Async::_wakeupTaskQueue.pop();
-  return true;
-}
-
-
 static v8::Handle<v8::Value> __monitor_descriptor(const v8::Arguments& args)
 {
   v8::HandleScope scope;
@@ -418,6 +397,7 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
   OSS::JS::JSEventQueueManager& queueManager = pEventLoop->queueManager();
   OSS::JS::JSFileDescriptorManager& fdManager = pEventLoop->fdManager();
   OSS::JS::JSTimerManager& timerManager = pEventLoop->timerManager();
+  OSS::JS::JSTaskManager& taskManager = pEventLoop->taskManager();
   
   if (queueManager.getSize() > 0)
   {
@@ -499,7 +479,7 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
     //
     // Check if C++ just wants to execute a task in the event loop
     //
-    if (Async::__do_one_wakeup_task() || Async::__execute_one_promise())
+    if (taskManager.doOneWork() || Async::__execute_one_promise())
     {
       //
       // Do not reconstruct fdset if we did some tasks

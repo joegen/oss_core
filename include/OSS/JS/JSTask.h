@@ -35,30 +35,31 @@
 namespace OSS {
 namespace JS {
 
-typedef boost::function<void(void*)> JSTaskBase;
+
 
 class JSTask
 {
 public:
+  typedef boost::function<void(void*)> Task;
   typedef boost::shared_ptr<JSTask> Ptr;
   
   JSTask();
   JSTask(const JSTask& task);
-  JSTask(const JSTaskBase& task);
-  JSTask(const JSTaskBase& task, void* userData);
+  JSTask(const JSTask::Task& task);
+  JSTask(const JSTask::Task& task, void* userData);
   ~JSTask();
   JSTask& operator = (const JSTask& task);
-  JSTask& operator = (const JSTaskBase& task);
+  JSTask& operator = (const JSTask::Task& task);
   void setUserData(void* userData);
   void* getUserData() const;
-  void setCompletionCallback(const JSTaskBase& callback);
+  void setCompletionCallback(const JSTask::Task& callback);
   
 protected:
   void execute();
 private:
   void* _userData;
-  JSTaskBase _func;
-  JSTaskBase _callback;
+  JSTask::Task _func;
+  JSTask::Task _callback;
   friend class JSTaskManager;
 };
 
@@ -78,13 +79,13 @@ inline JSTask::JSTask(const JSTask& task)
   _callback = task._callback;
 }
 
-inline JSTask::JSTask(const JSTaskBase& task)
+inline JSTask::JSTask(const JSTask::Task& task)
 {
   _userData = 0;
   _func = task;
 }
 
-inline JSTask::JSTask(const JSTaskBase& task, void* userData)
+inline JSTask::JSTask(const JSTask::Task& task, void* userData)
 {
   _func = task;
   _userData = userData;
@@ -106,7 +107,7 @@ inline JSTask& JSTask::operator = (const JSTask& task)
   return *this;
 }
 
-inline JSTask& JSTask::operator = (const JSTaskBase& task)
+inline JSTask& JSTask::operator = (const JSTask::Task& task)
 {
   _userData = 0;
   _func = task;
@@ -133,7 +134,7 @@ inline void* JSTask::getUserData() const
   return _userData;
 }
 
-inline void JSTask::setCompletionCallback(const JSTaskBase& callback)
+inline void JSTask::setCompletionCallback(const JSTask::Task& callback)
 {
   _callback = callback;
 }

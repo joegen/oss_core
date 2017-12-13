@@ -92,7 +92,8 @@ void QueueObject::json_enqueue(OSS::JS::JSIsolate* pIsolate, int fd, const std::
   event.json = json;
   _jsonQueue.push(event);
   _jsonQueueMutex->unlock();
-  Async::__insert_wakeup_task(pIsolate, boost::bind(&QueueObject::on_json_dequeue));
+  
+  pIsolate->eventLoop()->taskManager().queueTask(boost::bind(&QueueObject::on_json_dequeue, _1),0);
 }
 
 void QueueObject::json_enqueue_object(OSS::JS::JSIsolate* pIsolate, int fd, const OSS::JSON::Array& object)
@@ -107,7 +108,7 @@ void QueueObject::json_enqueue_object(OSS::JS::JSIsolate* pIsolate, int fd, cons
 //
 // This method is called from the event loop thread
 //
-void QueueObject::on_json_dequeue()
+void QueueObject::on_json_dequeue(void* userData)
 {
   JsonEvent event;
   _jsonQueueMutex->lock();

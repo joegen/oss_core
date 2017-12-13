@@ -36,7 +36,7 @@ JSTaskManager::~JSTaskManager()
   
 }
 
-void JSTaskManager::queueTask(const JSTaskBase& task, void* userData, const JSTaskBase& completionCallback)
+void JSTaskManager::queueTask(const JSTask::Task& task, void* userData, const JSTask::Task& completionCallback)
 {
   JSTask::Ptr pTask(new JSTask(task, userData));
   if (completionCallback)
@@ -48,11 +48,13 @@ void JSTaskManager::queueTask(const JSTaskBase& task, void* userData, const JSTa
 
 void JSTaskManager::queueTask(const JSTask::Ptr& pTask)
 {
-  OSS::mutex_critic_sec_lock lock(_mutex);
+  _mutex.lock();
   push(pTask);
+  _mutex.unlock();
+  _pEventLoop->wakeup();
 }
 
-void JSTaskManager::doOneWork()
+bool JSTaskManager::doOneWork()
 {
   _mutex.lock();
   if (!empty())
@@ -61,9 +63,10 @@ void JSTaskManager::doOneWork()
     pop();
     _mutex.unlock();
     pTask->execute();
-    return;
+    return true;
   }
   _mutex.unlock();
+  return false;
 }
   
 

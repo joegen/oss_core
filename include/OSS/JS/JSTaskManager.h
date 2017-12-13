@@ -40,9 +40,9 @@ public:
   JSTaskManager(JSEventLoop* pEventLoop);
   ~JSTaskManager();
   
-  void queueTask(const JSTaskBase& task, void* userData, const JSTaskBase& completionCallback = JSTaskBase());
+  void queueTask(const JSTask::Task& task, void* userData, const JSTask::Task& completionCallback = JSTask::Task());
   void queueTask(const JSTask::Ptr& pTask);
-  void doOneWork();
+  bool doOneWork();
   
 private:
   JSEventLoop* _pEventLoop;

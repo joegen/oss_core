@@ -97,12 +97,6 @@ struct Async
   static void __wakeup_pipe(OSS::JS::JSIsolate* pIsolate = 0);
     // Wakes up the event loop and reset the poll fd set
   
-  static void __insert_wakeup_task(OSS::JS::JSIsolate* pIsolate, const WakeupTask& task);
-    // Wakes up the event loop and perform a specific task
-  
-  static bool __do_one_wakeup_task();
-    // Called by the event loop to execute a task queued by __insert_wakeup_task
-  
   static JSValueHandle __json_parse(const std::string& json);
     // Helper function to convert a JSON string to a v8 handle
   
