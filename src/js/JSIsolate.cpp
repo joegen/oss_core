@@ -135,14 +135,10 @@ bool JSIsolate::call(const OSS::JSON::Object& request, OSS::JSON::Object& reply,
   return false;
 }
 
-bool JSIsolate::notify(const std::string& method, const OSS::JSON::Object& arguments, void* userData)
+void JSIsolate::notify(const std::string& eventName, const OSS::JSON::Array& args, int queueFd)
 {
-  return false;
-}
-
-bool JSIsolate::notify(const OSS::JSON::Object& request, void* userData)
-{
-  return false;
+  JSEventArgument event(eventName, args, queueFd);
+  _pEventLoop->eventEmitter().emit(event);
 }
 
 void JSIsolate::terminate()

@@ -48,6 +48,8 @@ public:
   
   JSEventArgument(const std::string& eventName, int queueFd);
   
+  JSEventArgument(const std::string& eventName, const OSS::JSON::Array& args, int queueFd);
+  
   JSEventArgument(const JSEventArgument& event);
   
   ~JSEventArgument();
@@ -108,6 +110,16 @@ inline JSEventArgument::JSEventArgument(const std::string& eventName, int queueF
   _queueFd(queueFd)
 {
   setEventName(eventName);
+}
+
+inline JSEventArgument::JSEventArgument(const std::string& eventName, const OSS::JSON::Array& args, int queueFd) :
+  _queueFd(queueFd)
+{
+  setEventName(eventName);
+  for (OSS::JSON::Array::const_iterator iter = args.Begin(); iter != args.End(); iter++)
+  {
+    addArgument(*iter);
+  }
 }
 
 inline JSEventArgument::JSEventArgument(const JSEventArgument& event) :

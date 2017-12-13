@@ -26,9 +26,11 @@
 #if ENABLE_FEATURE_V8
 
 #include "JS.h"
+#include "OSS/JSON/Json.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/JSON/Json.h"
 #include "OSS/JS/JSPersistentValue.h"
+
 
 
 namespace OSS {
@@ -54,8 +56,7 @@ public:
   
   bool call(const std::string& method, const OSS::JSON::Object& arguments, OSS::JSON::Object& reply, uint32_t timeout = 0, void* userData = 0);
   bool call(const OSS::JSON::Object& request, OSS::JSON::Object& reply, uint32_t timeout = 0, void* userData = 0);
-  bool notify(const std::string& method, const OSS::JSON::Object& arguments, void* userData = 0);
-  bool notify(const OSS::JSON::Object& request, void* userData = 0);
+  void notify(const std::string& eventName, const OSS::JSON::Array& args, int queueFd);
   void terminate();
   void setExitValue(int value);
   int getExitValue() const;
