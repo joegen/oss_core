@@ -161,7 +161,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %attr(755,root,root) %{_libdir}/oss_modules/dns
 %dir %attr(755,root,root) %{_libdir}/oss_modules/http
 %dir %attr(755,root,root) %{_libdir}/oss_modules/json_rpc
-%dir %attr(755,root,root) %{_libdir}/oss_modules/json_rpc
+%dir %attr(755,root,root) %{_libdir}/oss_modules/logger
 
 %{_libdir}/oss_modules/*.js*
 %{_libdir}/oss_modules/examples/*

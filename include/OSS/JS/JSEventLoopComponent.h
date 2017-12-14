@@ -17,92 +17,36 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#ifndef OSS_JSEPERSISTENT_H_INCLUDED
-#define OSS_JSEPERSISTENT_H_INCLUDED
+#ifndef OSS_JSEVENTLOOPCOMPONENT_H_INCLUDED
+#define OSS_JSEVENTLOOPCOMPONENT_H_INCLUDED
 
 #include "OSS/build.h"
 #if ENABLE_FEATURE_V8
-
-
-#include <v8.h>
-
+#include "OSS/JS/JS.h"
 
 namespace OSS {
 namespace JS {
+  
+  
+class JSEventLoop;
+class JSIsolate;
 
-
-template <typename T>
-class JSPersistentValue
+class JSEventLoopComponent
 {
 public:
-  typedef v8::Persistent<T> Value;
+  JSEventLoopComponent(JSEventLoop* pEventLoop);
+  ~JSEventLoopComponent();
   
-  JSPersistentValue()
-  {
-  }
-
-  JSPersistentValue(const JSPersistentValue& value)
-  {
-    _value = value._value;
-  }
-
-  JSPersistentValue(const Value& value)
-  {
-    _value = value;
-  }
-
-  ~JSPersistentValue()
-  {
-    dispose();
-  }
-
-  JSPersistentValue& operator=(const JSPersistentValue& value)
-  {
-    if (&value == this)
-    {
-      return *this;
-    }
-    dispose();
-    _value = value._value;
-    return *this;
-  }
-
-  JSPersistentValue& operator=(const Value& value)
-  {
-    dispose();
-    _value = value;
-    return *this;
-  }
-  
-  const Value& value() const
-  {
-    return _value;
-  }
-
-  Value& value()
-  {
-    return _value;
-  }
-
-  void dispose()
-  {
-    if (!_value.IsEmpty())
-    {
-      _value.Dispose();
-    }
-  }
-  
-  bool empty()
-  {
-    return _value.IsEmpty();
-  }
-private:
-  Value _value;
+  JSEventLoop* getEventLoop();
+  JSIsolate* getIsolate();
+  JSObjectHandle getGlobal();
+protected:
+  JSEventLoop* _pEventLoop;
 };
 
 
-} }
+} } // OSS::JS
 
 #endif // ENABLE_FEATURE_V8
-#endif // JSPERSISTENTVALUE_H
+#endif // OSS_JSEVENTLOOPCOMPONENT_H_INCLUDED
 

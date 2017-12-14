@@ -25,7 +25,6 @@
 
 
 #include <v8.h>
-#include <boost/core/addressof.hpp>
 #include <OSS/JS/JSPlugin.h>
 #include "OSS/JSON/Json.h"
 #include "OSS/JS/JSPersistentValue.h"
@@ -134,7 +133,7 @@ inline JSEventArgument::~JSEventArgument()
 
 inline JSEventArgument& JSEventArgument::operator = (const JSEventArgument& event)
 {
-  if (boost::addressof(event) == this)
+  if (&event == this)
   {
     return *this;
   }

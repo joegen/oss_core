@@ -22,7 +22,10 @@ nobase_include_HEADERS += \
     OSS/JS/JSFunctionCallbackQueue.h \
     OSS/JS/JSTimer.h \
     OSS/JS/JSTimerManager.h \
-    OSS/JS/JSWakeupPipe.h
+    OSS/JS/JSWakeupPipe.h \
+    OSS/JS/JSEventLoopComponent.h \
+    OSS/JS/JSInterIsolateCall.h \
+    OSS/JS/JSInterIsolateCallManager.h
 
 include OSS/JS/modules/include.am
 

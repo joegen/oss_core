@@ -28,7 +28,6 @@
 
 
 #include <boost/function.hpp>
-#include <boost/core/addressof.hpp>
 #include <boost/shared_ptr.hpp>
 
 
@@ -97,7 +96,7 @@ inline JSTask::~JSTask()
 
 inline JSTask& JSTask::operator = (const JSTask& task)
 {
-  if (boost::addressof(task) == this)
+  if (&task == this)
   {
     return *this;
   }

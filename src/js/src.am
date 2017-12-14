@@ -16,7 +16,9 @@ liboss_core_la_SOURCES +=  \
     js/JSTaskManager.cpp \
     js/JSFunctionCallbackQueue.cpp \
     js/JSTimer.cpp \
-    js/JSTimerManager.cpp
+    js/JSTimerManager.cpp \
+    js/JSEventLoopComponent.cpp \
+    js/JSInterIsolateCallManager.cpp
 endif
 
 JAVASCRIPT_SRC = \

@@ -17,92 +17,45 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#ifndef OSS_JSEPERSISTENT_H_INCLUDED
-#define OSS_JSEPERSISTENT_H_INCLUDED
+#ifndef OSS_JSINTERISOLATECALLMANAGER_H_INCLUDED
+#define OSS_JSINTERISOLATECALLMANAGER_H_INCLUDED
 
 #include "OSS/build.h"
 #if ENABLE_FEATURE_V8
-
-
-#include <v8.h>
+#include <queue>
+#include "OSS/UTL/Thread.h"
+#include "OSS/JS/JS.h"
+#include "OSS/JS/JSInterIsolateCall.h"
+#include "OSS/JS/JSEventLoopComponent.h"
+#include "OSS/JS/JSPersistentValue.h"
 
 
 namespace OSS {
 namespace JS {
 
 
-template <typename T>
-class JSPersistentValue
+class JSInterIsolateCallManager : public JSEventLoopComponent
 {
 public:
-  typedef v8::Persistent<T> Value;
-  
-  JSPersistentValue()
-  {
-  }
+  typedef std::queue<JSInterIsolateCall::Ptr> CallQueue;
+  typedef JSPersistentValue<v8::Function> Handler;
+  JSInterIsolateCallManager(JSEventLoop* pEventLoop);
+  ~JSInterIsolateCallManager();
+  bool execute(const JSInterIsolateCall::Request& request, JSInterIsolateCall::Result& result, uint32_t timeout, void* userData);
 
-  JSPersistentValue(const JSPersistentValue& value)
-  {
-    _value = value._value;
-  }
-
-  JSPersistentValue(const Value& value)
-  {
-    _value = value;
-  }
-
-  ~JSPersistentValue()
-  {
-    dispose();
-  }
-
-  JSPersistentValue& operator=(const JSPersistentValue& value)
-  {
-    if (&value == this)
-    {
-      return *this;
-    }
-    dispose();
-    _value = value._value;
-    return *this;
-  }
-
-  JSPersistentValue& operator=(const Value& value)
-  {
-    dispose();
-    _value = value;
-    return *this;
-  }
-  
-  const Value& value() const
-  {
-    return _value;
-  }
-
-  Value& value()
-  {
-    return _value;
-  }
-
-  void dispose()
-  {
-    if (!_value.IsEmpty())
-    {
-      _value.Dispose();
-    }
-  }
-  
-  bool empty()
-  {
-    return _value.IsEmpty();
-  }
-private:
-  Value _value;
+protected:
+  bool doOneWork();
+  void enqueue(const JSInterIsolateCall::Ptr& pCall);
+  JSInterIsolateCall::Ptr dequeue();
+  OSS::mutex_critic_sec _queueMutex;
+  CallQueue _queue;
+  Handler _handler;
+  friend class JSEventLoop;
 };
 
 
 } }
 
 #endif // ENABLE_FEATURE_V8
-#endif // JSPERSISTENTVALUE_H
+#endif // OSS_JSINTERISOLATECALLMANAGER_H_INCLUDED
 
