@@ -74,6 +74,7 @@ public:
   JSInterIsolateCallManager& interIsolate();
   
 protected:
+  bool _isTerminated;
   JSIsolate* _pIsolate;
   JSPersistentFunctionHandle _jsonParser;
   JSPersistentFunctionHandle _promiseHandler;
@@ -85,6 +86,7 @@ protected:
   JSFunctionCallbackQueue _functionCallback;
   JSTimerManager _timerManager;
   JSInterIsolateCallManager _interIsolate;
+  OSS::UInt64  _garbageCollectionFrequency; 
 };
 
 //

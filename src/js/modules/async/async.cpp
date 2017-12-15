@@ -42,57 +42,6 @@ static OSS::UInt64  _garbageCollectionFrequency = 30; /// 30 seconds default
 pthread_t Async::_threadId = 0;
 v8::Persistent<v8::ObjectTemplate> Async::_externalPointerTemplate;
 
-struct MonitoredFdData
-{
-  pollfd pfd;
-  PersistentFunction *pCallback;
-};
-
-
-class FunctionCallInfo
-{
-public:
-  typedef boost::shared_ptr<FunctionCallInfo> Ptr;
-  PersistentFunction call;
-  ArgumentVector args;
-  PersistentFunction result;
-  bool isDirectCall;
-  FunctionCallInfo()
-  {
-    isDirectCall = false;
-  }
-  ~FunctionCallInfo()
-  {
-    if (!isDirectCall)
-    {
-      call.Dispose();
-    }
-    result.Dispose();
-    for (ArgumentVector::iterator iter = args.begin(); iter != args.end(); iter++)
-    {
-      iter->Dispose();
-    }
-  }
-};
-typedef OSS::BlockingQueue<FunctionCallInfo::Ptr> CallQueue;
-static CallQueue _callQueue(true);
-
-static void handle_to_arg_vector(v8::Handle<v8::Value> input, ArgumentVector& output)
-{
-  if (input->IsArray())
-  {
-    v8::Handle<v8::Array> arrayArg = v8::Handle<v8::Array>::Cast(input);
-    for (std::size_t i = 0; i <arrayArg->Length(); i++)
-    {
-      output.push_back(v8::Persistent<v8::Value>::New(arrayArg->Get(i)));
-    }
-  }
-  else
-  {
-    output.push_back(v8::Persistent<v8::Value>::New(input));
-  }
-}
-
 static v8::Handle<v8::Value> __call(const v8::Arguments& args)
 {
   v8::HandleScope scope;
@@ -101,26 +50,10 @@ static v8::Handle<v8::Value> __call(const v8::Arguments& args)
     return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Invalid Argument")));
   }
   
-  FunctionCallInfo::Ptr pCallInfo(new FunctionCallInfo());
-  
-  pCallInfo->call = v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(args[0]));
-  handle_to_arg_vector(args[1], pCallInfo->args);
-  pCallInfo->result = v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(args[2]));
-  
-  _callQueue.enqueue(pCallInfo);
-  
+  js_method_declare_isolate(pIsolate);
+  pIsolate->eventLoop()->functionCallback().execute(args[0], args[1], args[2]);
   _enableAsync = true;
   return v8::Undefined();
-}
-
-void Async::async_execute(const JSPersistentFunctionHandle& func, const JSPersistentArgumentVector& args)
-{
-  FunctionCallInfo::Ptr pCallInfo(new FunctionCallInfo());
-  pCallInfo->isDirectCall = true;
-  pCallInfo->call = func;
-  pCallInfo->args = args;
-  _enableAsync = true;
-  _callQueue.enqueue(pCallInfo);
 }
 
 static v8::Handle<v8::Value> __schedule_one_shot_timer(const v8::Arguments& args)
@@ -165,8 +98,6 @@ void Async::clear_timer(int timerId)
   pIsolate->eventLoop()->timerManager().cancelTimer(timerId);
 }
 
-WakeupTaskQueue Async::_wakeupTaskQueue;
-OSS::mutex_critic_sec Async::_wakeupTaskQueueMutex;
 void Async::__wakeup_pipe(OSS::JS::JSIsolate* pIsolate)
 {
   if (!pIsolate)
@@ -216,31 +147,6 @@ static v8::Handle<v8::Value> __unmonitor_descriptor(const v8::Arguments& args)
   return v8::Undefined();
 }
 
-struct MonitoredStringQueueData
-{
-  AsyncStringQueue* queue;
-  AsyncStringQueueCallback cb;
-};
-
-typedef std::map<int, MonitoredStringQueueData> MonitoredStringQueue;
-static MonitoredStringQueue _monitoredStringQueue;
-
-void Async::register_string_queue(AsyncStringQueue* pQueue, AsyncStringQueueCallback cb)
-{
-  MonitoredStringQueueData data;
-  data.queue = pQueue;
-  data.cb = cb;
-  _monitoredStringQueue[pQueue->getFd()] = data;
-  _enableAsync = true;
-  Async::__wakeup_pipe();
-}
-
-void Async::unregister_string_queue(int fd)
-{
-  _monitoredStringQueue.erase(fd);
-  Async::__wakeup_pipe();
-}
-
 JS_METHOD_IMPL(__set_promise_callback)
 {
   js_enter_scope();
@@ -262,6 +168,7 @@ static v8::Handle<v8::Value> __stop_event_loop(const v8::Arguments& args)
   if (!_isTerminating)
   {
     _isTerminating = true;
+    OSS::JS::JSIsolate::getIsolate()->eventLoop()->terminate();
     Async::__wakeup_pipe();
     //
     // Perform the rest of the cleanup here
@@ -283,189 +190,24 @@ static v8::Handle<v8::Value> __set_garbage_collection_frequency(const v8::Argume
 
 static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
 {
-  v8::HandleScope scope;
-  OSS::UInt64 lastGarbageCollectionTime = 0;
+  js_enter_scope();
+  
   Async::_threadId = pthread_self();
   
   OSS::JS::JSIsolate::Ptr pIsolate = OSS::JS::JSIsolate::getIsolate();
   OSS::JS::JSEventLoop* pEventLoop = pIsolate->eventLoop();
   OSS::JS::JSEventQueueManager& queueManager = pEventLoop->queueManager();
-  OSS::JS::JSFileDescriptorManager& fdManager = pEventLoop->fdManager();
-  OSS::JS::JSTimerManager& timerManager = pEventLoop->timerManager();
-  OSS::JS::JSTaskManager& taskManager = pEventLoop->taskManager();
-  OSS::JS::JSInterIsolateCallManager& interIsolate = pEventLoop->interIsolate();
   
   if (queueManager.getSize() > 0)
   {
     _enableAsync = true;
   }
 
-  std::vector<pollfd> descriptors;
-  bool reconstructFdSet = true;
-  
-  //
-  // Static Descriptors
-  //
-  pollfd pfds[3];
-  pfds[0].fd = pEventLoop->getFd();
-  pfds[0].events = POLLIN;
-  pfds[0].revents = 0;
-  pfds[1].fd = _callQueue.getFd();
-  pfds[1].events = POLLIN;
-  pfds[1].revents = 0;
-  pfds[2].fd = timerManager.getFd();
-  pfds[2].events = POLLIN;
-  pfds[2].revents = 0;
-  while (_enableAsync && !_isTerminating)
+  if (_enableAsync)
   {
-    if (reconstructFdSet)
-    {
-      descriptors.clear();
-      descriptors.reserve(queueManager.getSize() + 3);
-      descriptors.push_back(pfds[0]);
-      descriptors.push_back(pfds[1]);
-      descriptors.push_back(pfds[2]);
-      
-      queueManager.appendDescriptors(descriptors);
-
-
-      for (MonitoredStringQueue::iterator iter = _monitoredStringQueue.begin(); iter != _monitoredStringQueue.end(); iter++)
-      {
-        pollfd fd;
-        fd.fd = iter->first;
-        fd.events = POLLIN;
-        fd.revents = 0;
-        descriptors.push_back(fd);
-      }
-
-      fdManager.appendDescriptors(descriptors);
-
-    }
-    int ret = ::poll(descriptors.data(), descriptors.size(), 100);
-    v8::HandleScope scope;
-    if (ret == -1)
-    {
-      break;
-    }
-    else if (ret == 0)
-    {
-      //
-      // Use the timeout to let V8 perform internal garbage collection tasks
-      //
-      OSS::UInt64 now = OSS::getTime();
-      if (now - lastGarbageCollectionTime > _garbageCollectionFrequency * 1000)
-      {
-        v8::V8::LowMemoryNotification();
-        lastGarbageCollectionTime = now;
-      }
-      while(!v8::V8::IdleNotification());
-      continue;
-    }
-    
-    //
-    // Perform garbage collection every 30 seconds
-    //
-    OSS::UInt64 now = OSS::getTime();
-    if (now - lastGarbageCollectionTime > _garbageCollectionFrequency * 1000)
-    {
-      v8::V8::LowMemoryNotification();
-      lastGarbageCollectionTime = now;
-    }
-    
-    //
-    // Check if C++ just wants to execute a task in the event loop
-    //
-    if (taskManager.doOneWork() || interIsolate.doOneWork())
-    {
-      //
-      // Do not reconstruct fdset if we did some tasks
-      //
-      reconstructFdSet = false;
-      continue;
-    }
-    
-    //
-    // From this point onwards, we only reconstruct the FD set if we are waken up via the wakeup pipe
-    //
-    reconstructFdSet = false;
-    if (descriptors[0].revents & POLLIN)
-    {
-      pEventLoop->clearOne();
-      if (_isTerminating)
-      {
-        break;
-      }
-      else
-      {
-        reconstructFdSet = true;
-        continue;
-      }
-    }
-    else if (descriptors[1].revents & POLLIN)
-    {
-      FunctionCallInfo::Ptr pCallInfo;
-      _callQueue.dequeue(pCallInfo);
-      if (pCallInfo)
-      {
-        if (pCallInfo->isDirectCall)
-        {
-          pCallInfo->call->Call(js_get_global(), pCallInfo->args.size(), pCallInfo->args.data());
-        }
-        else
-        {
-          v8::Handle<v8::Value> result = pCallInfo->call->Call(js_get_global(), pCallInfo->args.size(), pCallInfo->args.data());
-          ArgumentVector resultArg;
-          handle_to_arg_vector(result, resultArg);
-          pCallInfo->result->Call(js_get_global(), resultArg.size(), resultArg.data());
-        }
-      }
-    }
-    else if (descriptors[2].revents & POLLIN)
-    {
-      timerManager.doOneWork();
-    }
-    else
-    {
-      bool found = false;
-      std::size_t fdsize = descriptors.size();
-
-      for (std::size_t i = 3; i < fdsize; i++)
-      {
-        pollfd& pfd = descriptors[i];
-        int revents = pfd.revents;
-        if (revents & POLLIN)
-        {
-
-          found = queueManager.dequeue(pfd.fd);
-          
-          if (!found)
-          {
-            MonitoredStringQueue::iterator iter = _monitoredStringQueue.find(pfd.fd);
-            if (iter != _monitoredStringQueue.end())
-            {
-              std::string message;
-              iter->second.queue->dequeue(message);
-              if (!message.empty())
-              {
-                iter->second.cb(message);
-              }
-              found = true;
-            }
-          }
-          
-          if (!found)
-          {
-            found = fdManager.signalIO(pfd);
-          }
-        }
-        
-        if (found)
-        {
-          break;
-        }
-      }
-    }
+    pEventLoop->processEvents();
   }
+  
   if (_exitSem)
   {
     _exitSem->signal();

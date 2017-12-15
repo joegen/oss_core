@@ -41,17 +41,8 @@ typedef boost::future<std::string> AsyncFuture;
 
 struct Async
 {
-  static WakeupTaskQueue _wakeupTaskQueue;
-  static OSS::mutex_critic_sec _wakeupTaskQueueMutex;
-  static JSPersistentFunctionHandle _promiseHandler;
   static pthread_t _threadId;
   static v8::Persistent<v8::ObjectTemplate> _externalPointerTemplate;
-  
-  static void register_string_queue(AsyncStringQueue* pQueue, AsyncStringQueueCallback cb);
-    // This is a utility function that allows the C++ side to receive event strings from ossjs plugins
-  
-  static void unregister_string_queue(int fd);
-    // Removes the C++ string queue
   
   static void unmonitor_fd(const OSS::JS::JSIsolate::Ptr& pIsolate, int fd);
     // Forcibly unmonitor a particular file handle.  Use with extreme caution.
@@ -68,12 +59,6 @@ struct Async
     // CAVEAT: timeout will be ignored if promiseData is not null.  This makes sure that the js side
     // will not end up with an invalid pointer if it was not done processing the data yet
 
-  static void async_execute(const JSPersistentFunctionHandle& handle, const JSPersistentArgumentVector& args);
-    // Execute a persistent function object within the event loop.  This is another
-    // way to call ossjs functions from the C++ side.  The C++ should own a persistent handle to both
-    // the function and the arguments.  
-    // There is no data returned by the JS side.
-    // This function will not block 
   
   //
   // Methods intended to be called within the event loop and are not safe 

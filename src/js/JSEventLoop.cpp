@@ -25,6 +25,7 @@ namespace JS {
 
 
 JSEventLoop::JSEventLoop(JSIsolate* pIsolate) :
+  _isTerminated(false),
   _pIsolate(pIsolate),
   _fdManager(this),
   _queueManager(this),
@@ -32,7 +33,8 @@ JSEventLoop::JSEventLoop(JSIsolate* pIsolate) :
   _taskManager(this),
   _functionCallback(this),
   _timerManager(this),
-  _interIsolate(this)
+  _interIsolate(this),
+  _garbageCollectionFrequency(30)
 {
 }
 
@@ -47,10 +49,150 @@ JSIsolate* JSEventLoop::getIsolate()
 
 void JSEventLoop::processEvents()
 {
+  OSS::UInt64 lastGarbageCollectionTime = 0;
+  
+  OSS::JS::JSIsolate::Ptr pIsolate = OSS::JS::JSIsolate::getIsolate();
+  OSS::JS::JSEventLoop* pEventLoop = pIsolate->eventLoop();
+  OSS::JS::JSEventQueueManager& queueManager = pEventLoop->queueManager();
+  OSS::JS::JSFileDescriptorManager& fdManager = pEventLoop->fdManager();
+  OSS::JS::JSTimerManager& timerManager = pEventLoop->timerManager();
+  OSS::JS::JSTaskManager& taskManager = pEventLoop->taskManager();
+  OSS::JS::JSInterIsolateCallManager& interIsolate = pEventLoop->interIsolate();
+  OSS::JS::JSFunctionCallbackQueue& functionCallback =  pEventLoop->functionCallback();
+  
+  //if (queueManager.getSize() > 0)
+  //{
+  //  _enableAsync = true;
+  //}
+
+  std::vector<pollfd> descriptors;
+  bool reconstructFdSet = true;
+  
+  //
+  // Static Descriptors
+  //
+  pollfd pfds[3];
+  pfds[0].fd = pEventLoop->getFd();
+  pfds[0].events = POLLIN;
+  pfds[0].revents = 0;
+  pfds[1].fd = functionCallback.getFd();
+  pfds[1].events = POLLIN;
+  pfds[1].revents = 0;
+  pfds[2].fd = timerManager.getFd();
+  pfds[2].events = POLLIN;
+  pfds[2].revents = 0;
+  while (!_isTerminated)
+  {
+    if (reconstructFdSet)
+    {
+      descriptors.clear();
+      descriptors.reserve(queueManager.getSize() + 3);
+      descriptors.push_back(pfds[0]);
+      descriptors.push_back(pfds[1]);
+      descriptors.push_back(pfds[2]);
+      
+      queueManager.appendDescriptors(descriptors);
+      fdManager.appendDescriptors(descriptors);
+    }
+    int ret = ::poll(descriptors.data(), descriptors.size(), 100);
+    v8::HandleScope scope;
+    if (ret == -1)
+    {
+      break;
+    }
+    else if (ret == 0)
+    {
+      //
+      // Use the timeout to let V8 perform internal garbage collection tasks
+      //
+      OSS::UInt64 now = OSS::getTime();
+      if (now - lastGarbageCollectionTime > _garbageCollectionFrequency * 1000)
+      {
+        v8::V8::LowMemoryNotification();
+        lastGarbageCollectionTime = now;
+      }
+      while(!v8::V8::IdleNotification());
+      continue;
+    }
+    
+    //
+    // Perform garbage collection every 30 seconds
+    //
+    OSS::UInt64 now = OSS::getTime();
+    if (now - lastGarbageCollectionTime > _garbageCollectionFrequency * 1000)
+    {
+      v8::V8::LowMemoryNotification();
+      lastGarbageCollectionTime = now;
+    }
+    
+    //
+    // Check if C++ just wants to execute a task in the event loop
+    //
+    if (taskManager.doOneWork() || interIsolate.doOneWork())
+    {
+      //
+      // Do not reconstruct fdset if we did some tasks
+      //
+      reconstructFdSet = false;
+      continue;
+    }
+    
+    //
+    // From this point onwards, we only reconstruct the FD set if we are waken up via the wakeup pipe
+    //
+    reconstructFdSet = false;
+    if (descriptors[0].revents & POLLIN)
+    {
+      pEventLoop->clearOne();
+      if (_isTerminated)
+      {
+        break;
+      }
+      else
+      {
+        reconstructFdSet = true;
+        continue;
+      }
+    }
+    else if (descriptors[1].revents & POLLIN)
+    {
+      functionCallback.doOneWork();
+    }
+    else if (descriptors[2].revents & POLLIN)
+    {
+      timerManager.doOneWork();
+    }
+    else
+    {
+      bool found = false;
+      std::size_t fdsize = descriptors.size();
+
+      for (std::size_t i = 3; i < fdsize; i++)
+      {
+        pollfd& pfd = descriptors[i];
+        int revents = pfd.revents;
+        if (revents & POLLIN)
+        {
+
+          found = queueManager.dequeue(pfd.fd);
+          if (!found)
+          {
+            found = fdManager.signalIO(pfd);
+          }
+        }
+        
+        if (found)
+        {
+          break;
+        }
+      }
+    }
+  }
 }
 
 void JSEventLoop::terminate()
 {
+  _isTerminated = true;
 }
 
 } } 
