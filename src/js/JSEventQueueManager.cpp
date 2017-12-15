@@ -27,7 +27,7 @@ namespace JS {
 
 
 JSEventQueueManager::JSEventQueueManager(JSEventLoop* pEventLoop) :
-  _pEventLoop(pEventLoop)
+  JSEventLoopComponent(pEventLoop)
 {
 }
 

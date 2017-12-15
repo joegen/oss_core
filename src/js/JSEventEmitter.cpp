@@ -17,17 +17,18 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#include "OSS/JS/JSEventLoop.h"
 #include "OSS/JS/modules/QueueObject.h"
 #include "OSS/JS/modules/Async.h"
-
+#include "OSS/JS/JSEventEmitter.h"
+#include "OSS/JS/JSIsolate.h"
+#include "OSS/JS/JSEventLoop.h"
 
 namespace OSS {
 namespace JS {
 
 
 JSEventEmitter::JSEventEmitter(JSEventLoop* pEventLoop) :
-  _pEventLoop(pEventLoop)
+  JSEventLoopComponent(pEventLoop)
 {
 }
 

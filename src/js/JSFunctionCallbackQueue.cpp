@@ -19,6 +19,8 @@
 
 
 #include "OSS/JS/JSFunctionCallbackQueue.h"
+#include "OSS/JS/JSEventLoop.h"
+#include "OSS/JS/JSIsolate.h"
 
 
 namespace OSS {
@@ -26,6 +28,7 @@ namespace JS {
 
 
 JSFunctionCallbackQueue::JSFunctionCallbackQueue(JSEventLoop* pEventLoop) :
+  JSEventLoopComponent(pEventLoop),
   OSS::BlockingQueue<JSFunctionCallback::Ptr>(true)
 {
 }

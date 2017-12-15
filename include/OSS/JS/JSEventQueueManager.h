@@ -24,8 +24,9 @@
 #if ENABLE_FEATURE_V8
 
 
-#include <v8.h>
-#include <OSS/JS/modules/QueueObject.h>
+#include "OSS/JS/JS.h"
+#include "OSS/JS/modules/QueueObject.h"
+#include "OSS/JS/JSEventLoopComponent.h"
 
 
 namespace OSS {
@@ -33,7 +34,7 @@ namespace JS {
 
 class JSEventLoop;
   
-class JSEventQueueManager
+class JSEventQueueManager : public JSEventLoopComponent
 {
 public:
   typedef std::map<int, QueueObject*> QueueObjectMap;
@@ -54,7 +55,6 @@ public:
 private:
   OSS::mutex _queuesMutex;
   QueueObjectMap _queues;
-  JSEventLoop* _pEventLoop;
 };
 
 inline std::size_t JSEventQueueManager::getSize()

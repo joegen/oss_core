@@ -25,6 +25,7 @@
 
 #include "OSS/UTL/Thread.h"
 #include "OSS/JS/JSFileDescriptor.h"
+#include "OSS/JS/JSEventLoopComponent.h"
 
 
 namespace OSS {
@@ -32,7 +33,7 @@ namespace JS {
 
 class JSEventLoop;
 
-class JSFileDescriptorManager
+class JSFileDescriptorManager : public JSEventLoopComponent
 {
 public:
   typedef std::map<int, JSFileDescriptor::Ptr> DescriptorMap;
@@ -56,7 +57,6 @@ public:
 private:
   OSS::mutex_critic_sec _descriptorsMutex;
   DescriptorMap _descriptors;
-  JSEventLoop* _pEventLoop;
 };
 
 } } // OSS::JS

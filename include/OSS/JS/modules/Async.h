@@ -38,23 +38,13 @@ typedef std::queue<WakeupTask> WakeupTaskQueue;
 typedef boost::promise<std::string> StringPromise;
 typedef boost::future<std::string> AsyncFuture;
 
-class AsyncPromise : public StringPromise
-{
-public:
-  AsyncPromise(const std::string& data) : _data(data) {}
-  std::string _data;
-  void* _userData;
-};
 
 struct Async
 {
-  typedef std::queue<AsyncPromise*> PromiseQueue;
   static WakeupTaskQueue _wakeupTaskQueue;
   static OSS::mutex_critic_sec _wakeupTaskQueueMutex;
   static JSPersistentFunctionHandle _promiseHandler;
   static pthread_t _threadId;
-  static PromiseQueue _promises;
-  static OSS::mutex* _promisesMutex;
   static v8::Persistent<v8::ObjectTemplate> _externalPointerTemplate;
   
   static void register_string_queue(AsyncStringQueue* pQueue, AsyncStringQueueCallback cb);

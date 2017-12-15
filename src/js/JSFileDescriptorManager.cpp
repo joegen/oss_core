@@ -18,18 +18,19 @@
 //
 
 
-
-#include "OSS/JS/JSEventLoop.h"
+#include "OSS/JS/JS.h"
 #include "OSS/JS/JSIsolateManager.h"
-#include "OSS/JS/JSPlugin.h"
 #include "OSS/UTL/Logger.h"
+#include "OSS/JS/JSEventLoop.h"
+#include "OSS/JS/JSIsolate.h"
+
 
 
 namespace OSS {
 namespace JS {
 
 JSFileDescriptorManager::JSFileDescriptorManager(JSEventLoop* pEventLoop) :
-  _pEventLoop(pEventLoop)
+  JSEventLoopComponent(pEventLoop)
 {
 }
 

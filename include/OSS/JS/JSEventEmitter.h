@@ -25,7 +25,9 @@
 
 
 #include <queue>
+#include "OSS/JS/JS.h"
 #include "OSS/JS/JSEventArgument.h"
+#include "OSS/JS/JSEventLoopComponent.h"
 
 
 namespace OSS {
@@ -34,7 +36,7 @@ namespace JS {
 
 class JSEventLoop;
 
-class JSEventEmitter
+class JSEventEmitter : public JSEventLoopComponent
 {
 public:
   typedef std::queue<JSEventArgument> EventQueue;
@@ -46,7 +48,6 @@ public:
   
 protected:
   void onEmitEvent(void* userData);
-  JSEventLoop* _pEventLoop;
   friend class JSEventLoop;
   OSS::mutex_critic_sec _eventQueueMutex;
   EventQueue _eventQueue;

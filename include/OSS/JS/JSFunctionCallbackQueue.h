@@ -26,6 +26,7 @@
 #include "OSS/JS/JS.h"
 #include "OSS/UTL/BlockingQueue.h"
 #include "OSS/JS/JSFunctionCallback.h"
+#include "OSS/JS/JSEventLoopComponent.h"
 
 
 namespace OSS {
@@ -33,7 +34,7 @@ namespace JS {
 
 class JSEventLoop;
 
-class JSFunctionCallbackQueue : protected OSS::BlockingQueue<JSFunctionCallback::Ptr>
+class JSFunctionCallbackQueue : public JSEventLoopComponent, protected OSS::BlockingQueue<JSFunctionCallback::Ptr>
 {
 public:
   JSFunctionCallbackQueue(JSEventLoop* pEventLoop);

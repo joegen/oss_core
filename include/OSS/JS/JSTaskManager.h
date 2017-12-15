@@ -23,10 +23,11 @@
 #include "OSS/build.h"
 #if ENABLE_FEATURE_V8
 
-#include <v8.h>
+#include "OSS/JS/JS.h"
 #include <queue>
 #include "OSS/JS/JSTask.h"
 #include "OSS/UTL/Thread.h"
+#include "OSS/JS/JSEventLoopComponent.h"
 
 
 namespace OSS {
@@ -34,7 +35,7 @@ namespace JS {
 
 class JSEventLoop;
 
-class JSTaskManager : protected std::queue<JSTask::Ptr>
+class JSTaskManager : public JSEventLoopComponent, protected std::queue<JSTask::Ptr>
 {
 public:
   JSTaskManager(JSEventLoop* pEventLoop);
@@ -45,7 +46,6 @@ public:
   bool doOneWork();
   
 private:
-  JSEventLoop* _pEventLoop;
   OSS::mutex_critic_sec _mutex;
 };
 

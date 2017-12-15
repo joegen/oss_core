@@ -87,7 +87,7 @@ bool JSInterIsolateCallManager::doOneWork()
   return true;
 }
 
-bool JSInterIsolateCallManager::execute(const JSInterIsolateCall::Request& request, JSInterIsolateCall::Result& result, uint32_t timeout, void* userData)
+bool JSInterIsolateCallManager::execute(const Request& request, Result& result, uint32_t timeout, void* userData)
 {
   bool delegateToSelf = getIsolate()->isThreadSelf();
   JSInterIsolateCall::Ptr pCall(new JSInterIsolateCall(request, timeout, userData));

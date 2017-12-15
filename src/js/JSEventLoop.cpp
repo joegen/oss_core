@@ -31,7 +31,8 @@ JSEventLoop::JSEventLoop(JSIsolate* pIsolate) :
   _eventEmitter(this),
   _taskManager(this),
   _functionCallback(this),
-  _timerManager(this)
+  _timerManager(this),
+  _interIsolate(this)
 {
 }
 

@@ -39,12 +39,16 @@ class JSInterIsolateCallManager : public JSEventLoopComponent
 public:
   typedef std::queue<JSInterIsolateCall::Ptr> CallQueue;
   typedef JSPersistentValue<v8::Function> Handler;
+  typedef JSInterIsolateCall::Request Request;
+  typedef JSInterIsolateCall::Result Result;
+  
   JSInterIsolateCallManager(JSEventLoop* pEventLoop);
   ~JSInterIsolateCallManager();
-  bool execute(const JSInterIsolateCall::Request& request, JSInterIsolateCall::Result& result, uint32_t timeout, void* userData);
+  bool execute(const Request& request, Result& result, uint32_t timeout, void* userData);
+  void setHandler(const JSPersistentFunctionHandle& handler);
+  bool doOneWork();
 
 protected:
-  bool doOneWork();
   void enqueue(const JSInterIsolateCall::Ptr& pCall);
   JSInterIsolateCall::Ptr dequeue();
   OSS::mutex_critic_sec _queueMutex;
@@ -53,6 +57,14 @@ protected:
   friend class JSEventLoop;
 };
 
+//
+// Inlines
+//
+
+inline void JSInterIsolateCallManager::setHandler(const JSPersistentFunctionHandle& handler)
+{
+  _handler = handler;
+}
 
 } }
 

@@ -40,8 +40,6 @@ static bool _enableAsync = false;
 static OSS::Semaphore* _exitSem = 0;
 static OSS::UInt64  _garbageCollectionFrequency = 30; /// 30 seconds default
 pthread_t Async::_threadId = 0;
-Async::PromiseQueue Async::_promises;
-OSS::mutex* Async::_promisesMutex = new OSS::mutex();
 v8::Persistent<v8::ObjectTemplate> Async::_externalPointerTemplate;
 
 struct MonitoredFdData
@@ -243,90 +241,18 @@ void Async::unregister_string_queue(int fd)
   Async::__wakeup_pipe();
 }
 
-JSPersistentFunctionHandle Async::_promiseHandler;
-
 JS_METHOD_IMPL(__set_promise_callback)
 {
   js_enter_scope();
   js_method_arg_declare_persistent_function(func, 0);
-  Async::_promiseHandler = func;
+  OSS::JS::JSIsolate::getIsolate()->eventLoop()->interIsolate().setHandler(func);
   _enableAsync = true;
   return JSUndefined();
 }
 
-bool Async::__execute_one_promise()
-{
-  OSS::mutex_lock lock(*Async::_promisesMutex);
-  if (Async::_promises.empty())
-  {
-    return false;
-  }
-  
-  AsyncPromise* promise = Async::_promises.front();
-  Async::_promises.pop();
-  
-  JSValueHandle request = OSS::JS::JSIsolateManager::instance().getIsolate()->parseJSON(promise->_data);
-  //v8::Handle<v8::Object> request_obj;
-  //OSS::JS::wrap_external_object(v8::Context::GetCurrent(), &Async::_externalPointerTemplate, request_obj, promise->_userData);
-
-  JSArgumentVector jsonArg;
-  jsonArg.push_back(request);
-  JSValueHandle result =  Async::_promiseHandler->Call(js_get_global(), jsonArg.size(), jsonArg.data());
-  std::string theFuture;
-  if (!result.IsEmpty() && result->IsString())
-  {
-    theFuture = js_handle_as_std_string(result);
-  }
-  promise->set_value(theFuture);
-  return true;
-}
-
 bool Async::json_execute_promise(OSS::JS::JSIsolate* pIsolate, const OSS::JSON::Object& request, OSS::JSON::Object& reply, uint32_t timeout, void* promiseData)
 {
-  if (Async::_promiseHandler.IsEmpty())
-  {
-    return false;
-  }
-  std::string requestJson;
-  if (!OSS::JSON::json_object_to_string(request, requestJson))
-  {
-    OSS_LOG_ERROR("Unable to execute promise. Parser error");
-    return false;
-  }
-  
-  AsyncPromise promise = (requestJson);
-  promise._userData = promiseData;
-  AsyncFuture future = promise.get_future();
-
-  Async::_promisesMutex->lock();
-  Async::_promises.push(&promise);
-  Async::_promisesMutex->unlock();
-
-  
-  if (!OSS::JS::JSIsolateManager::instance().rootIsolate()->isThreadSelf())
-  {
-    Async::__wakeup_pipe(pIsolate);
-  }
-  else
-  {
-    Async::__execute_one_promise();
-  }
-
-  if (timeout != 0)
-  {
-    boost::system_time const future_timeout = boost::get_system_time() + boost::posix_time::milliseconds(timeout);
-    if (!future.timed_wait_until(future_timeout))
-    {
-      return false;
-    }
-  }
-  
-  std::string replyJson = future.get();
-  if (!OSS::JSON::json_parse_string(replyJson, reply))
-  {
-    return false;
-  }
-  return true;
+  return pIsolate->eventLoop()->interIsolate().execute(request, reply, timeout, promiseData);
 }
 
 
@@ -367,6 +293,7 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
   OSS::JS::JSFileDescriptorManager& fdManager = pEventLoop->fdManager();
   OSS::JS::JSTimerManager& timerManager = pEventLoop->timerManager();
   OSS::JS::JSTaskManager& taskManager = pEventLoop->taskManager();
+  OSS::JS::JSInterIsolateCallManager& interIsolate = pEventLoop->interIsolate();
   
   if (queueManager.getSize() > 0)
   {
@@ -448,7 +375,7 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
     //
     // Check if C++ just wants to execute a task in the event loop
     //
-    if (taskManager.doOneWork() || Async::__execute_one_promise())
+    if (taskManager.doOneWork() || interIsolate.doOneWork())
     {
       //
       // Do not reconstruct fdset if we did some tasks

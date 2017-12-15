@@ -18,6 +18,7 @@
 //
 
 #include "OSS/JS/JSEventLoop.h"
+#include "OSS/JS/JSIsolate.h"
 #include "OSS/JS/JSTaskManager.h"
 
 
@@ -27,7 +28,7 @@ namespace JS {
 
 
 JSTaskManager::JSTaskManager(JSEventLoop* pEventLoop) :
-  _pEventLoop(pEventLoop)
+  JSEventLoopComponent(pEventLoop)
 {
 }
 

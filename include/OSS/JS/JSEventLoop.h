@@ -37,6 +37,7 @@
 #include "OSS/JS/JSFunctionCallbackQueue.h"
 #include "OSS/JS/JSTimerManager.h"
 #include "OSS/JS/JSWakeupPipe.h"
+#include "OSS/JS/JSInterIsolateCallManager.h"
 
 
 #include <queue>
@@ -55,16 +56,7 @@ public:
   typedef boost::promise<std::string> Promise;
   typedef boost::future<std::string> Future;
   typedef std::vector<pollfd> Descriptors;
-  
-  class AsyncPromise : public Promise
-  {
-  public:
-    AsyncPromise(const std::string& data) : _data(data) {}
-    std::string _data;
-    void* _userData;
-  };
-  
-  typedef std::queue<AsyncPromise*> PromiseQueue;
+
 
   JSEventLoop(JSIsolate* pIsolate);
   ~JSEventLoop();
@@ -79,13 +71,12 @@ public:
   JSTaskManager& taskManager();
   JSFunctionCallbackQueue& functionCallback();
   JSTimerManager& timerManager();
+  JSInterIsolateCallManager& interIsolate();
   
 protected:
   JSIsolate* _pIsolate;
   JSPersistentFunctionHandle _jsonParser;
   JSPersistentFunctionHandle _promiseHandler;
-  PromiseQueue _promises;
-  OSS::mutex _promisesMutex;
   JSPersistentObjectHandle _externalPointerTemplate;
   JSFileDescriptorManager _fdManager;
   JSEventQueueManager _queueManager;
@@ -93,6 +84,7 @@ protected:
   JSTaskManager _taskManager;
   JSFunctionCallbackQueue _functionCallback;
   JSTimerManager _timerManager;
+  JSInterIsolateCallManager _interIsolate;
 };
 
 //
@@ -127,6 +119,11 @@ inline JSFunctionCallbackQueue& JSEventLoop::functionCallback()
 inline JSTimerManager& JSEventLoop::timerManager()
 {
   return _timerManager;
+}
+
+inline JSInterIsolateCallManager& JSEventLoop::interIsolate()
+{
+  return _interIsolate;
 }
 
 
