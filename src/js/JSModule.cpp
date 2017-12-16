@@ -21,7 +21,7 @@
 #include "OSS/UTL/CoreUtils.h"
 #if ENABLE_FEATURE_V8
 
-#include "v8.h"
+#include "OSS/JS/JS.h"
 #include "OSS/JS/JSBase.h"
 #include "OSS/JS/JSModule.h"
 #include "OSS/JS/JSPlugin.h"
@@ -373,6 +373,18 @@ static v8::Handle<v8::Value> js_compile_module(const v8::Arguments& args)
   return result;
 }
 
+JS_METHOD_IMPL(js_lock_isolate)
+{
+  JSIsolateManager::instance().modulesMutex().lock();
+  return JSUndefined();
+}
+
+JS_METHOD_IMPL(js_unlock_isolate)
+{
+  JSIsolateManager::instance().modulesMutex().unlock();
+  return JSUndefined();
+}
+
 JSModule::JSModule()
 {
   _modulesDir = OSS::system_libdir() + "/oss_modules";
@@ -393,26 +405,6 @@ bool JSModule::initialize(v8::TryCatch& try_catch, v8::Handle<v8::ObjectTemplate
     #include "js/OSSJS_modules.js.h"
   );
   registerModuleHelper(modules_js);
-
-#if 0
-  //
-  // Register internal modules
-  //
-  Module module;
-  
-  module.name = "object";
-  module.script = std::string(
-    #include "js/OSSJS_object.js.h"
-  );
-  registerInternalModule(module);
-  
-  module.name = "assert";
-  module.script = std::string(
-    #include "js/OSSJS_assert.js.h"
-  );
-  registerInternalModule(module);
-#endif
-  
   return compileModuleHelpers(try_catch, global);
 }
 
@@ -465,6 +457,8 @@ bool JSModule::initGlobalExports(v8::Handle<v8::ObjectTemplate>& global)
   global->Set(v8::String::New("__current_path"), v8::FunctionTemplate::New(__current_path));
   global->Set(v8::String::New("__parent_path"), v8::FunctionTemplate::New(__parent_path));
   global->Set(v8::String::New("__chdir"), v8::FunctionTemplate::New(__chdir));
+  global->Set(v8::String::New("__lock_isolate"), v8::FunctionTemplate::New(js_lock_isolate));
+  global->Set(v8::String::New("__unlock_isolate"), v8::FunctionTemplate::New(js_unlock_isolate));
   return true;
 }
 
@@ -478,6 +472,7 @@ bool JSModule::compileModuleHelpers(v8::TryCatch& try_catch, v8::Handle<v8::Obje
     v8::Handle<v8::Value> result = compiled->Run();
     if (result.IsEmpty())
     {
+      OSS_LOG_ERROR("JSModule::compileModuleHelpers is unable to compile " << iter->name);
       // The TryCatch above is still in effect and will have caught the error.
       report_js_exception(try_catch, true);
       return false;

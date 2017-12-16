@@ -1,8 +1,12 @@
+#include <unistd.h>
+#include <pthread.h>
+
 #include "OSS/JS/JSPlugin.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/Logger.h"
-#include <unistd.h>
 #include "OSS/JS/modules/BufferObject.h"
+
+
 
 
 JS_METHOD_IMPL(__close)
@@ -185,6 +189,12 @@ JS_METHOD_IMPL(__getppid)
   return JSInt32(getppid());
 }
 
+JS_METHOD_IMPL(__thread_self)
+{
+  js_enter_scope();
+  return JSUInt32(pthread_self());
+}
+
 
 JS_EXPORTS_INIT()
 {
@@ -204,6 +214,7 @@ JS_EXPORTS_INIT()
   js_export_method("endl", __oendl);
   js_export_method("cerr", __cerr);
   js_export_method("eendl", __eendl);
+  js_export_method("thread_self", __thread_self);
   
 
   //

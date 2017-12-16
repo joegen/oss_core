@@ -25,9 +25,11 @@
 #include "OSS/build.h"
 #if ENABLE_FEATURE_V8
 
+#include <boost/enable_shared_from_this.hpp>
 #include "JS.h"
 #include "OSS/JSON/Json.h"
 #include "OSS/UTL/CoreUtils.h"
+#include "OSS/UTL/Thread.h"
 #include "OSS/JSON/Json.h"
 #include "OSS/JS/JSPersistentValue.h"
 
@@ -40,7 +42,7 @@ class JSEventLoop;
 class JSModule;
 class JSPluginManager;
   
-class JSIsolate
+class JSIsolate : public boost::enable_shared_from_this<JSIsolate>
 {
 public:
   typedef boost::shared_ptr<JSIsolate> Ptr;
@@ -58,6 +60,7 @@ public:
   bool call(const OSS::JSON::Object& request, OSS::JSON::Object& reply, uint32_t timeout = 0, void* userData = 0);
   void notify(const std::string& eventName, const OSS::JSON::Array& args, int queueFd);
   void terminate();
+  void join();
   void setExitValue(int value);
   int getExitValue() const;
   JSModule* getModuleManager();
@@ -90,14 +93,19 @@ public:
     /// returns an object from the json string.  This
     /// function must be called from the event loop thread
   
+  const boost::filesystem::path getScript() const;
 protected:
   JSIsolate(pthread_t parentThreadId);
     /// Creates a new isolate.  You MUST not create isolate directly.
   
   void setRoot();
   
-  int run(const boost::filesystem::path& script);
+  void run(const boost::filesystem::path& script);
     /// Run the script using this isolate
+  
+  void runSource(const std::string& source);
+  
+  void internal_run();
   
   Context _context;
   ObjectTemplate _objectTemplate;
@@ -112,6 +120,9 @@ protected:
   std::string _name;
   JSEventLoop* _pEventLoop;
   bool _isRoot;
+  boost::thread* _pThread;
+  std::string _source;
+  boost::filesystem::path _script;
   friend class JSIsolateManager;
 };
   
@@ -149,7 +160,10 @@ inline bool  JSIsolate::isRoot() const
    _isRoot = true;
  }
  
-
+inline const boost::filesystem::path JSIsolate::getScript() const
+{
+  return _script;
+}
 
   
 } } 

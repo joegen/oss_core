@@ -52,18 +52,6 @@ void JSEventLoop::processEvents()
   OSS::UInt64 lastGarbageCollectionTime = 0;
   
   OSS::JS::JSIsolate::Ptr pIsolate = OSS::JS::JSIsolate::getIsolate();
-  OSS::JS::JSEventLoop* pEventLoop = pIsolate->eventLoop();
-  OSS::JS::JSEventQueueManager& queueManager = pEventLoop->queueManager();
-  OSS::JS::JSFileDescriptorManager& fdManager = pEventLoop->fdManager();
-  OSS::JS::JSTimerManager& timerManager = pEventLoop->timerManager();
-  OSS::JS::JSTaskManager& taskManager = pEventLoop->taskManager();
-  OSS::JS::JSInterIsolateCallManager& interIsolate = pEventLoop->interIsolate();
-  OSS::JS::JSFunctionCallbackQueue& functionCallback =  pEventLoop->functionCallback();
-  
-  //if (queueManager.getSize() > 0)
-  //{
-  //  _enableAsync = true;
-  //}
 
   std::vector<pollfd> descriptors;
   bool reconstructFdSet = true;
@@ -72,13 +60,13 @@ void JSEventLoop::processEvents()
   // Static Descriptors
   //
   pollfd pfds[3];
-  pfds[0].fd = pEventLoop->getFd();
+  pfds[0].fd = this->getFd();
   pfds[0].events = POLLIN;
   pfds[0].revents = 0;
-  pfds[1].fd = functionCallback.getFd();
+  pfds[1].fd = _functionCallback.getFd();
   pfds[1].events = POLLIN;
   pfds[1].revents = 0;
-  pfds[2].fd = timerManager.getFd();
+  pfds[2].fd = _timerManager.getFd();
   pfds[2].events = POLLIN;
   pfds[2].revents = 0;
   while (!_isTerminated)
@@ -86,13 +74,13 @@ void JSEventLoop::processEvents()
     if (reconstructFdSet)
     {
       descriptors.clear();
-      descriptors.reserve(queueManager.getSize() + 3);
+      descriptors.reserve(_queueManager.getSize() + 3);
       descriptors.push_back(pfds[0]);
       descriptors.push_back(pfds[1]);
       descriptors.push_back(pfds[2]);
       
-      queueManager.appendDescriptors(descriptors);
-      fdManager.appendDescriptors(descriptors);
+      _queueManager.appendDescriptors(descriptors);
+      _fdManager.appendDescriptors(descriptors);
     }
     int ret = ::poll(descriptors.data(), descriptors.size(), 100);
     v8::HandleScope scope;
@@ -128,7 +116,7 @@ void JSEventLoop::processEvents()
     //
     // Check if C++ just wants to execute a task in the event loop
     //
-    if (taskManager.doOneWork() || interIsolate.doOneWork())
+    if (_taskManager.doOneWork() || _interIsolate.doOneWork())
     {
       //
       // Do not reconstruct fdset if we did some tasks
@@ -143,7 +131,7 @@ void JSEventLoop::processEvents()
     reconstructFdSet = false;
     if (descriptors[0].revents & POLLIN)
     {
-      pEventLoop->clearOne();
+      this->clearOne();
       if (_isTerminated)
       {
         break;
@@ -156,11 +144,11 @@ void JSEventLoop::processEvents()
     }
     else if (descriptors[1].revents & POLLIN)
     {
-      functionCallback.doOneWork();
+      _functionCallback.doOneWork();
     }
     else if (descriptors[2].revents & POLLIN)
     {
-      timerManager.doOneWork();
+      _timerManager.doOneWork();
     }
     else
     {
@@ -174,10 +162,10 @@ void JSEventLoop::processEvents()
         if (revents & POLLIN)
         {
 
-          found = queueManager.dequeue(pfd.fd);
+          found = _queueManager.dequeue(pfd.fd);
           if (!found)
           {
-            found = fdManager.signalIO(pfd);
+            found = _fdManager.signalIO(pfd);
           }
         }
         

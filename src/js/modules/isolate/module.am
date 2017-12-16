@@ -1,0 +1,16 @@
+isolate-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/isolate
+	cp ${srcdir}/js/modules/isolate/*.js ${DESTDIR}${libdir}/oss_modules/isolate
+	cp ${DESTDIR}${libdir}/liboss_jsisolate.so ${DESTDIR}${libdir}/oss_modules/isolate/_isolate.jso
+
+
+INSTALL_PROCEDURES += isolate-install
+
+EXTRA_DIST += \
+    js/modules/isolate/index.js \
+    js/modules/isolate/isolate.js
+
+lib_LTLIBRARIES += liboss_jsisolate.la
+liboss_jsisolate_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsisolate_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsisolate_la_SOURCES = js/modules/isolate/isolate.cpp

@@ -102,9 +102,12 @@ JSIsolate::Ptr JSIsolateManager::rootIsolate()
 
 void JSIsolateManager::run(const JSIsolate::Ptr& pIsolate, const boost::filesystem::path& script)
 {
-  pIsolate->_threadId  = pthread_self();
-  registerIsolate(pIsolate);
   pIsolate->run(script);
+}
+
+void JSIsolateManager::runSource(const JSIsolate::Ptr& pIsolate, const std::string source)
+{
+  pIsolate->runSource(source);
 }
 
   

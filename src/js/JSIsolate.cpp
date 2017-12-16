@@ -55,7 +55,8 @@ JSIsolate::JSIsolate(pthread_t parentThreadId) :
   _threadId(0),
   _parentThreadId(parentThreadId),
   _pEventLoop(0),
-  _isRoot(false)
+  _isRoot(false),
+  _pThread(0)
 {
   _pPluginManager = new JSPluginManager();
   _pModuleManager = new JSModule();
@@ -65,17 +66,28 @@ JSIsolate::JSIsolate(pthread_t parentThreadId) :
 JSIsolate::~JSIsolate()
 {
   terminate();
+  join();
+  delete _pEventLoop;
+  _pEventLoop = 0;
+  delete _pModuleManager;
+  _pModuleManager = 0;
+  delete _pPluginManager;
+  _pPluginManager = 0;
 }
 
-int JSIsolate::run(const boost::filesystem::path& script)
+void JSIsolate::internal_run()
 {
-  v8::V8::AddMessageListener(V8ErrorMessageCallback);
+  if (isRoot())
+  {
+    v8::V8::AddMessageListener(V8ErrorMessageCallback);
+  }
+  
   _pIsolate = v8::Isolate::New();
   v8::Isolate::Scope global_scope(_pIsolate);
-  
+  _threadId  = pthread_self();
+  JSIsolateManager::instance().registerIsolate(shared_from_this());
   v8::HandleScope handle_scope;
 
-  
   v8::Handle<v8::ObjectTemplate> global = v8::ObjectTemplate::New();
   _globalTemplate = v8::Persistent<v8::ObjectTemplate>::New(global);
   
@@ -83,46 +95,91 @@ int JSIsolate::run(const boost::filesystem::path& script)
   // Set the thread id and update the manager
   //
   _threadId = pthread_self();
-  
+
   //
   // Initialize global and assign it to the context
   //
+  JSIsolateManager::instance().modulesMutex().lock();
   _pModuleManager->initGlobalExports(global);
-  _pModuleManager->setMainScript(script);
-  
+  JSIsolateManager::instance().modulesMutex().unlock();
+
+  if (isRoot())
+  {
+    _pModuleManager->setMainScript(_script);
+  }
+
   v8::Handle<v8::Context> context = v8::Context::New(0, global);
   _context = v8::Persistent<v8::Context>::New(context);
   v8::Context::Scope context_scope(context);
-  
   v8::TryCatch try_catch;
   try_catch.SetVerbose(true);
   
-    
+  JSIsolateManager::instance().modulesMutex().lock();
   if (!_pModuleManager->initialize(try_catch, global))
   {
+    OSS_LOG_ERROR("Unable to initialize module manager");
     report_js_exception(try_catch, true);
-    _exitValue = -1;
-    return _exitValue;
+    return;
   }
+  JSIsolateManager::instance().modulesMutex().unlock();
   
-  v8::Handle<v8::String> scriptSource = read_file_skip_shebang(OSS::boost_path(script), true);
-  v8::Handle<v8::Script> compiledScript = v8::Script::Compile(scriptSource, v8::String::New(OSS::boost_path(script).c_str()));
+  v8::Handle<v8::Script> compiledScript ;
+  if (_source.empty())
+  {
+    v8::Handle<v8::String> scriptSource = read_file_skip_shebang(OSS::boost_path(_script), true);
+    compiledScript = v8::Script::Compile(scriptSource, v8::String::New(OSS::boost_path(_script).c_str()));
+  }
+  else
+  {
+    std::ostringstream strm;
+    strm << "try { " << _source << " } catch(e) {console.printStackTrace(e); _exit(-1); } ;async.processEvents();";
+    v8::Handle<v8::String> scriptSource = JSString(strm.str());
+    compiledScript = v8::Script::Compile(scriptSource);
+  }
   
   if (compiledScript.IsEmpty())
   {
+    OSS_LOG_ERROR("Unable to compile script");
     report_js_exception(try_catch, true);
     _exitValue = -1;
-    return _exitValue;
+    return;
   }
   
   v8::Handle<v8::Value> result = compiledScript->Run();
   if (result.IsEmpty())
   {
+    OSS_LOG_ERROR("Unbale to run script");
     report_js_exception(try_catch, true);
     _exitValue = -1;
   }
-  
-  return _exitValue;
+}
+
+void JSIsolate::run(const boost::filesystem::path& script)
+{
+  _script = script;
+  _source = std::string();
+  if (isRoot())
+  {
+    internal_run();
+  }
+  else
+  {
+    _pThread = new boost::thread(boost::bind(&JSIsolate::internal_run, this));
+  }
+}
+
+void JSIsolate::runSource(const std::string& source)
+{
+  _source = source;
+  _script = boost::filesystem::path();
+  if (isRoot())
+  {
+    internal_run();
+  }
+  else
+  {
+    _pThread = new boost::thread(boost::bind(&JSIsolate::internal_run, this));
+  }
 }
 
 bool JSIsolate::call(const std::string& method, const OSS::JSON::Object& arguments, OSS::JSON::Object& reply, uint32_t timeout, void* userData)
@@ -144,12 +201,6 @@ void JSIsolate::notify(const std::string& eventName, const OSS::JSON::Array& arg
 void JSIsolate::terminate()
 {
   _pEventLoop->terminate();
-  delete _pEventLoop;
-  _pEventLoop = 0;
-  delete _pModuleManager;
-  _pModuleManager = 0;
-  delete _pPluginManager;
-  _pPluginManager = 0;
 }
 
 bool JSIsolate::isThreadSelf()
@@ -194,6 +245,16 @@ JSValueHandle JSIsolate::parseJSON(const std::string& json)
   args.push_back(val);
   
   return parse->Call(getGlobal(), args.size(), args.data());
+}
+
+void JSIsolate::join()
+{
+  if (_pThread)
+  {
+    _pThread->join();
+    delete _pThread;
+    _pThread = 0;
+  }
 }
 
 } } 

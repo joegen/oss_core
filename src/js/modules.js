@@ -21,14 +21,17 @@ function __cache_module(name, module)
 
 function require(path)
 {
+  __lock_isolate();
   var modulePath = __get_module_cononical_file_name(path);
   if (typeof modulePath === "undefined")
   {
+    __unlock_isolate();
     throw new ReferenceError("Unable to resolve canonical file name for module " + modulePath);
   }
   var cached = __get_cached_module(modulePath);
   if (typeof cached !== "undefined")
   {
+    __unlock_isolate();
     return cached;
   }
   
@@ -40,6 +43,7 @@ function require(path)
     var script = __get_module_script(module.path);
     if (typeof script === "undefined")
     {
+      __unlock_isolate();
       throw new ReferenceError("Unable to load javascript exports for " + modulePath);
     }
     
@@ -58,6 +62,7 @@ function require(path)
     }
     else
     {
+      __unlock_isolate();
       throw new ReferenceError("Unable to load plugin exports for " + modulePath);
     }
   }
@@ -66,6 +71,8 @@ function require(path)
   {
     __cache_module(module.path, module.exports);
   }
+  
+  __unlock_isolate();
   
   return module.exports;
 }
@@ -156,6 +163,7 @@ const logger = require("logger");
 const system = require("system");
 const async = require("async");
 const assert = require("assert");
+const utils = require("utils");
 const ossjs = async;
 
 

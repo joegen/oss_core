@@ -21,7 +21,7 @@
 
 #include <Poco/ClassLoader.h>
 #include <Poco/ThreadPool.h>
-
+#include "OSS/UTL/Logger.h"
 #include "OSS/JS/JSPluginManager.h"
 
 v8::Persistent<v8::Context>* JSPlugin::_pContext;
@@ -61,6 +61,7 @@ JSPlugin* JSPluginManager::loadPlugin(const std::string& path)
     JSPlugin* pPlugin = pLoader->create("oss_module");
     if (!pPlugin)
     {
+      OSS_LOG_ERROR("JSPluginManager::loadPlugin is unable to load " << path);
       delete pLoader;
       return 0;
     }

@@ -8,6 +8,7 @@ http-install:
 	cp ${DESTDIR}${libdir}/liboss_jshttpresponse.so ${DESTDIR}${libdir}/oss_modules/http/_http_response.jso
 	cp ${DESTDIR}${libdir}/liboss_jshttpsslcontext.so ${DESTDIR}${libdir}/oss_modules/http/_http_ssl_context.jso
 
+INSTALL_PROCEDURES += http-install
 
 EXTRA_DIST += \
     js/modules/http/index.js \

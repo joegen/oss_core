@@ -59,17 +59,21 @@ public:
     /// with a specific thread identifier
   
   void run(const JSIsolate::Ptr& pIsolate, const boost::filesystem::path& script);
+  void runSource(const JSIsolate::Ptr& pIsolate, const std::string source);
   
   bool hasIsolate(pthread_t threadId);
   
   JSIsolate::Ptr rootIsolate();
     /// Returns a pointer to the root isolate.   The root isolate
     /// is automatically created by the manahaer
+
+  OSS::mutex& modulesMutex();
 private:
   JSIsolateManager();
   ~JSIsolateManager();
   
   OSS::mutex_critic_sec _mapMutex;
+  OSS::mutex _modulesMutex;
   MapByName _byName;
   MapByThreadId _byThreadId;
   JSIsolate::Ptr _rootIsolate;
@@ -82,6 +86,11 @@ private:
 inline JSIsolate::Ptr JSIsolateManager::getIsolate()
 {
   return findIsolate(pthread_self());
+}
+
+inline OSS::mutex& JSIsolateManager::modulesMutex()
+{
+  return _modulesMutex;
 }
   
 } } // OSS::JS

@@ -63,6 +63,7 @@ public:
   
   void processEvents();
   void terminate();
+  void join();
   
   JSIsolate* getIsolate();
   JSFileDescriptorManager& fdManager();

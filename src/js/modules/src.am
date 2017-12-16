@@ -11,8 +11,11 @@ js_helper-install-hook:
 	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/logger
 	cp ${srcdir}/js/modules/logger/*.js ${DESTDIR}${libdir}/oss_modules/logger
 
+INSTALL_PROCEDURES = js_helper-install-hook
+
 include js/modules/examples/src.am
 include js/modules/http/module.am
+include js/modules/isolate/module.am
 
 EXTRA_DIST += \
     js/modules/object.js \
@@ -130,7 +133,7 @@ liboss_jscpprpc_tester_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
 liboss_jscpprpc_tester_la_SOURCES = js/modules/cpp_rpc_tester.cpp
 EXTRA_DIST += js/modules/cpp_rpc.js
 
-js_module-install-hook: js_helper-install-hook http-install
+js_module-install-hook: ${INSTALL_PROCEDURES}
 	cp ${DESTDIR}${libdir}/liboss_jsconst.so ${DESTDIR}${libdir}/oss_modules/consts.jso
 	cp ${DESTDIR}${libdir}/liboss_jserror.so ${DESTDIR}${libdir}/oss_modules/error.jso
 	cp ${DESTDIR}${libdir}/liboss_jslogger.so ${DESTDIR}${libdir}/oss_modules/logger/_logger.jso
