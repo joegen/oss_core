@@ -26,6 +26,8 @@
 namespace OSS {
 namespace JS {
 
+  
+class JSIsolate;
 
 class JSPluginManager
 {
@@ -34,14 +36,15 @@ public:
   typedef std::map<std::string, JSPlugin*> PluginMap;
   JSPlugin* loadPlugin(const std::string& path);
   void releaseAllPlugins();
-
+  JSIsolate* getIsolate();
+  
 private:
   OSS::mutex_critic_sec _pluginMutex;
   LoaderMap _pluginsLoaders;
   PluginMap _plugins;
-  
+  JSIsolate* _pIsolate;
 protected:
-  JSPluginManager();
+  JSPluginManager(JSIsolate* pIsolate);
   ~JSPluginManager();
   
   friend class JSIsolate;

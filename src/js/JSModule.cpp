@@ -385,7 +385,8 @@ JS_METHOD_IMPL(js_unlock_isolate)
   return JSUndefined();
 }
 
-JSModule::JSModule()
+JSModule::JSModule(JSIsolate* pIsolate) :
+  _pIsolate(pIsolate)
 {
   _modulesDir = OSS::system_libdir() + "/oss_modules";
 }
@@ -480,6 +481,13 @@ bool JSModule::compileModuleHelpers(v8::TryCatch& try_catch, v8::Handle<v8::Obje
   } 
   return true;
 }
+
+JSIsolate* JSModule::getIsolate()
+{
+  return _pIsolate;
+}
+
+
 
 
 } }

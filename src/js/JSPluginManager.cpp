@@ -23,6 +23,7 @@
 #include <Poco/ThreadPool.h>
 #include "OSS/UTL/Logger.h"
 #include "OSS/JS/JSPluginManager.h"
+#include "OSS/JS/JSIsolate.h"
 
 v8::Persistent<v8::Context>* JSPlugin::_pContext;
 v8::Persistent<v8::ObjectTemplate>* JSPlugin::_pGlobal;
@@ -31,7 +32,8 @@ Poco::ThreadPool* JSPlugin::_pThreadPool = 0;
 namespace OSS {
 namespace JS {
 
-JSPluginManager::JSPluginManager()
+JSPluginManager::JSPluginManager(JSIsolate* pIsolate) :
+  _pIsolate(pIsolate)
 {
   if (!JSPlugin::_pThreadPool)
   {
@@ -85,6 +87,11 @@ void JSPluginManager::releaseAllPlugins()
     delete iter->second;
   }
   _pluginsLoaders.clear();
+}
+
+JSIsolate* JSPluginManager::getIsolate()
+{
+  return _pIsolate;
 }
 
 

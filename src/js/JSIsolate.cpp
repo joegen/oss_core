@@ -58,8 +58,8 @@ JSIsolate::JSIsolate(pthread_t parentThreadId) :
   _isRoot(false),
   _pThread(0)
 {
-  _pPluginManager = new JSPluginManager();
-  _pModuleManager = new JSModule();
+  _pPluginManager = new JSPluginManager(this);
+  _pModuleManager = new JSModule(this);
   _pEventLoop = new JSEventLoop(this);
 }
 

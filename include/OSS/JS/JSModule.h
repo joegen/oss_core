@@ -34,6 +34,7 @@ namespace OSS {
 namespace JS {
 
 class JSBase;
+class JSIsolate;
 
 class JSModule
 {
@@ -47,7 +48,7 @@ public:
   typedef std::map<std::string, Module> InternalModules;
   typedef std::vector<Module> ModuleHelpers;
   
-  JSModule();
+  JSModule(JSIsolate* pIsolate);
   ~JSModule();
   
   bool initGlobalExports(v8::Handle<v8::ObjectTemplate>& global);
@@ -59,6 +60,7 @@ public:
   void setModulesDir(const std::string& modulesDir);
   void setMainScript(const boost::filesystem::path& script);
   const boost::filesystem::path& getMainScript() const;
+  JSIsolate* getIsolate();
 protected:
   void registerInternalModule(const Module& module);
   void registerModuleHelper(const Module& module);
@@ -67,6 +69,7 @@ protected:
   InternalModules _modules;
   ModuleHelpers _moduleHelpers;
   std::string _modulesDir;
+  JSIsolate* _pIsolate;
 public:
   static boost::filesystem::path _mainScript;
 };
