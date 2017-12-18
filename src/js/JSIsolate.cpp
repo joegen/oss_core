@@ -52,6 +52,7 @@ static void V8ErrorMessageCallback(v8::Handle<v8::Message> message, v8::Handle<v
 JSIsolate::JSIsolate(pthread_t parentThreadId) :
   _pIsolate(0),
   _pModuleManager(0),
+  _exitValue(0),
   _threadId(0),
   _parentThreadId(parentThreadId),
   _pEventLoop(0),
@@ -148,10 +149,13 @@ void JSIsolate::internal_run()
   v8::Handle<v8::Value> result = compiledScript->Run();
   if (result.IsEmpty())
   {
-    OSS_LOG_ERROR("Unbale to run script");
+    OSS_LOG_ERROR("Unable to run script");
     report_js_exception(try_catch, true);
     _exitValue = -1;
+    return;
   }
+
+  _exitValue = 0;
 }
 
 void JSIsolate::run(const boost::filesystem::path& script)
