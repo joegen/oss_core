@@ -94,11 +94,13 @@ public:
     /// function must be called from the event loop thread
   
   const boost::filesystem::path getScript() const;
+  
+  v8::Isolate* getV8Isolate() const;
+  
+  const JSIsolate::Ptr& getParentIsolate() const;
 protected:
   JSIsolate(pthread_t parentThreadId);
     /// Creates a new isolate.  You MUST not create isolate directly.
-  
-  void setRoot();
   
   void run(const boost::filesystem::path& script);
     /// Run the script using this isolate
@@ -123,6 +125,7 @@ protected:
   boost::thread* _pThread;
   std::string _source;
   boost::filesystem::path _script;
+  JSIsolate::Ptr _pParentIsolate;
   friend class JSIsolateManager;
 };
   
@@ -155,14 +158,19 @@ inline bool  JSIsolate::isRoot() const
   return _isRoot;
 }
 
- inline void JSIsolate::setRoot() 
- {
-   _isRoot = true;
- }
- 
 inline const boost::filesystem::path JSIsolate::getScript() const
 {
   return _script;
+}
+
+inline v8::Isolate* JSIsolate::getV8Isolate() const
+{
+  return _pIsolate;
+}
+
+inline const JSIsolate::Ptr& JSIsolate::getParentIsolate() const
+{
+  return _pParentIsolate;
 }
 
   

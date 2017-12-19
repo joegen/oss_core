@@ -44,10 +44,11 @@ public:
   
   JSInterIsolateCallManager(JSEventLoop* pEventLoop);
   ~JSInterIsolateCallManager();
+  bool execute(const std::string& request, std::string& result, uint32_t timeout, void* userData);
   bool execute(const Request& request, Result& result, uint32_t timeout, void* userData);
   void setHandler(const JSPersistentFunctionHandle& handler);
   bool doOneWork();
-
+  bool isEnabled();
 protected:
   void enqueue(const JSInterIsolateCall::Ptr& pCall);
   JSInterIsolateCall::Ptr dequeue();
@@ -64,6 +65,11 @@ protected:
 inline void JSInterIsolateCallManager::setHandler(const JSPersistentFunctionHandle& handler)
 {
   _handler = handler;
+}
+
+inline bool JSInterIsolateCallManager::isEnabled()
+{
+  return !_handler.empty();
 }
 
 } }

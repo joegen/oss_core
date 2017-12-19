@@ -1,13 +1,11 @@
 "use-strict";
 
-var console = require("console");
-var async = require("async");
-var CPPRPC = require("cpp_rpc").CPPRPC;
+var isolate = require("isolate");
 var cpp_rpc_tester = require("cpp_rpc_tester");
-var system = require("system");
 
 
-CPPRPC.on("ping", function()
+
+isolate.on("ping", function()
 {
   console.log("got ping");
   var result = new Object();

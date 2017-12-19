@@ -35,19 +35,7 @@ namespace OSS {
 namespace JS {
 
 
-static void V8ErrorMessageCallback(v8::Handle<v8::Message> message, v8::Handle<v8::Value> data)
-{
-  v8::HandleScope handle_scope;
-  
-  if (message->GetSourceLine()->IsString())
-  {
-    std::string error =
-            + "Javascript error on line : "
-            + string_from_js_string(message->GetSourceLine());
-    OSS::log_error(error);
-    OSS::log_error(get_stack_trace(message, 1024));
-  }
-}
+
 
 JSIsolate::JSIsolate(pthread_t parentThreadId) :
   _pIsolate(0),
@@ -62,6 +50,15 @@ JSIsolate::JSIsolate(pthread_t parentThreadId) :
   _pPluginManager = new JSPluginManager(this);
   _pModuleManager = new JSModule(this);
   _pEventLoop = new JSEventLoop(this);
+  if (parentThreadId)
+  {
+    _pParentIsolate = OSS::JS::JSIsolateManager::instance().findIsolate(_parentThreadId);
+    assert(_pParentIsolate);
+  }
+  else
+  {
+    _isRoot = true;
+  }
 }
 
 JSIsolate::~JSIsolate()
@@ -78,11 +75,6 @@ JSIsolate::~JSIsolate()
 
 void JSIsolate::internal_run()
 {
-  if (isRoot())
-  {
-    v8::V8::AddMessageListener(V8ErrorMessageCallback);
-  }
-  
   _pIsolate = v8::Isolate::New();
   v8::Isolate::Scope global_scope(_pIsolate);
   _threadId  = pthread_self();

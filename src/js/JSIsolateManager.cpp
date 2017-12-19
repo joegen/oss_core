@@ -24,6 +24,7 @@
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/JSON/Json.h"
 #include "OSS/UTL/Logger.h"
+#include "OSS/JS/JSUtil.h"
 #include "OSS/JS/JSIsolateManager.h"
 
 
@@ -33,6 +34,19 @@ namespace JS {
 //
 // Static globals
 //
+static void V8ErrorMessageCallback(v8::Handle<v8::Message> message, v8::Handle<v8::Value> data)
+{
+  v8::HandleScope handle_scope;
+  
+  if (message->GetSourceLine()->IsString())
+  {
+    std::string error =
+            + "Javascript error on line : "
+            + string_from_js_string(message->GetSourceLine());
+    OSS::log_error(error);
+    OSS::log_error(get_stack_trace(message, 1024));
+  }
+}
 
 JSIsolateManager& JSIsolateManager::instance()
 {
@@ -47,11 +61,12 @@ JSIsolateManager::JSIsolateManager()
   //
   v8::V8::AdjustAmountOfExternalAllocatedMemory(1024 * 1024 * 20);
   
+  v8::V8::AddMessageListener(V8ErrorMessageCallback);
+  
   //
   // Create the root isolate
   //
   _rootIsolate = JSIsolate::Ptr(new JSIsolate(0));
-  _rootIsolate->setRoot();
 }  
 
 JSIsolateManager::~JSIsolateManager()

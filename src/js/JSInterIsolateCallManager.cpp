@@ -76,8 +76,9 @@ bool JSInterIsolateCallManager::doOneWork()
   JSValueHandle request = getIsolate()->parseJSON(pCall->json());
   JSArgumentVector jsonArg;
   jsonArg.push_back(request);
+
   JSValueHandle result =  _handler.value()->Call(getGlobal(), jsonArg.size(), jsonArg.data());
-  
+
   std::string value;
   if (!result.IsEmpty() && result->IsString())
   {
@@ -92,7 +93,7 @@ bool JSInterIsolateCallManager::execute(const Request& request, Result& result, 
   bool delegateToSelf = getIsolate()->isThreadSelf();
   JSInterIsolateCall::Ptr pCall(new JSInterIsolateCall(request, timeout, userData));
   enqueue(pCall);
-  
+
   if (delegateToSelf)
   {
     doOneWork();
@@ -110,7 +111,15 @@ bool JSInterIsolateCallManager::execute(const Request& request, Result& result, 
   return true;
 }
 
-
+bool JSInterIsolateCallManager::execute(const std::string& requestStr, std::string& resultStr, uint32_t timeout, void* userData)
+{
+  Request request; Result result;
+  if (!OSS::JSON::json_parse_string(requestStr, request) || !execute(request, result, timeout, userData))
+  {
+    return false;
+  }
+  return OSS::JSON::json_object_to_string(result, resultStr);
+}
 
 } }
 
