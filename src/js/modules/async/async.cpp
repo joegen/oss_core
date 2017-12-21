@@ -35,7 +35,6 @@
 typedef v8::Persistent<v8::Function> PersistentFunction;
 typedef std::vector< v8::Persistent<v8::Value> > ArgumentVector;
 
-static bool _isTerminating = false;
 static bool _enableAsync = false;
 static OSS::Semaphore* _exitSem = 0;
 static OSS::UInt64  _garbageCollectionFrequency = 30; /// 30 seconds default
@@ -165,15 +164,8 @@ bool Async::json_execute_promise(OSS::JS::JSIsolate* pIsolate, const OSS::JSON::
 static v8::Handle<v8::Value> __stop_event_loop(const v8::Arguments& args)
 {
   v8::HandleScope scope;
-  if (!_isTerminating)
-  {
-    _isTerminating = true;
-    OSS::JS::JSIsolate::getIsolate()->eventLoop()->terminate();
-    Async::__wakeup_pipe();
-    //
-    // Perform the rest of the cleanup here
-    //
-  }
+  OSS::JS::JSIsolate::getIsolate()->eventLoop()->terminate();
+  Async::__wakeup_pipe();
   return v8::Undefined();
 }
 

@@ -2,6 +2,7 @@
 
 var _isolate = require("./_isolate.jso");
 const _Isolate = _isolate.Isolate;
+const EventEmitter = async.EventEmitter;
 
 var inter_isolate_handler = function(request, handler)
 {
@@ -50,13 +51,26 @@ exports.remove = function(name)
   delete exports._handler[name];
 }
 
+var IsolateEventEmitter = function()
+{
+  EventEmitter.call(this);
+  this.onAnyEvent(function(){
+    var request = new Object();
+    request.method = arguments[0];
+    request.argument = Array.prototype.slice.call(arguments, 1);
+    inter_isolate_handler(request, exports._handler);
+  });
+}
+IsolateEventEmitter.prototype = Object.create(EventEmitter.prototype);
+exports._eventEmitter = new IsolateEventEmitter();
+
 if (_isolate.isRootIsolate())
 {
-  _isolate.setRootInterIsolateHandler(exports.interIsolateHandler);
+  _isolate.setRootInterIsolateHandler(exports.interIsolateHandler, exports._eventEmitter._fd);
 }
 else
 {
-  _isolate.setChildInterIsolateHandler(exports.interIsolateHandler);
+  _isolate.setChildInterIsolateHandler(exports.interIsolateHandler, exports._eventEmitter._fd);
 }
 
 var Isolate = function(threadId)
@@ -97,4 +111,5 @@ var Isolate = function(threadId)
 }
 
 exports.Isolate = Isolate;
+
 

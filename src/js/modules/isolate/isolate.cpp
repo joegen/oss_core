@@ -100,6 +100,8 @@ JS_METHOD_IMPL(setChildInterIsolateHandler)
 {
   js_enter_scope();
   js_method_arg_declare_persistent_function(func, 0);
+  js_method_arg_declare_uint32(eventEmitterFd, 1);
+  OSS::JS::JSIsolateManager::instance().getIsolate()->setEventEmitterFd(eventEmitterFd);
   OSS::JS::JSIsolateManager::instance().getIsolate()->eventLoop()->interIsolate().setHandler(func);
   return JSUndefined();
 }
@@ -108,6 +110,8 @@ JS_METHOD_IMPL(setRootInterIsolateHandler)
 {
   js_enter_scope();
   js_method_arg_declare_persistent_function(func, 0);
+  js_method_arg_declare_uint32(eventEmitterFd, 1);
+  OSS::JS::JSIsolateManager::instance().rootIsolate()->setEventEmitterFd(eventEmitterFd);
   OSS::JS::JSIsolateManager::instance().rootIsolate()->eventLoop()->interIsolate().setHandler(func);
   return JSUndefined();
 }

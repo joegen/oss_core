@@ -84,7 +84,7 @@ void JSEventLoop::processEvents()
     }
     int ret = ::poll(descriptors.data(), descriptors.size(), 100);
     v8::HandleScope scope;
-    if (ret == -1)
+    if (ret == -1 || _isTerminated)
     {
       break;
     }
@@ -93,24 +93,30 @@ void JSEventLoop::processEvents()
       //
       // Use the timeout to let V8 perform internal garbage collection tasks
       //
+      if (_pIsolate->isRoot())
+      {
+        OSS::UInt64 now = OSS::getTime();
+        if (now - lastGarbageCollectionTime > _garbageCollectionFrequency * 1000)
+        {
+          v8::V8::LowMemoryNotification();
+          lastGarbageCollectionTime = now;
+        }
+        while(!v8::V8::IdleNotification());
+        continue;
+      }
+    }
+    
+    //
+    // Perform garbage collection every 30 seconds
+    //
+    if (_pIsolate->isRoot())
+    {
       OSS::UInt64 now = OSS::getTime();
       if (now - lastGarbageCollectionTime > _garbageCollectionFrequency * 1000)
       {
         v8::V8::LowMemoryNotification();
         lastGarbageCollectionTime = now;
       }
-      while(!v8::V8::IdleNotification());
-      continue;
-    }
-    
-    //
-    // Perform garbage collection every 30 seconds
-    //
-    OSS::UInt64 now = OSS::getTime();
-    if (now - lastGarbageCollectionTime > _garbageCollectionFrequency * 1000)
-    {
-      v8::V8::LowMemoryNotification();
-      lastGarbageCollectionTime = now;
     }
     
     //

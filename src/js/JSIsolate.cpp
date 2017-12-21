@@ -45,7 +45,8 @@ JSIsolate::JSIsolate(pthread_t parentThreadId) :
   _parentThreadId(parentThreadId),
   _pEventLoop(0),
   _isRoot(false),
-  _pThread(0)
+  _pThread(0),
+  _eventEmitterFd(0)
 {
   _pPluginManager = new JSPluginManager(this);
   _pModuleManager = new JSModule(this);
@@ -63,14 +64,27 @@ JSIsolate::JSIsolate(pthread_t parentThreadId) :
 
 JSIsolate::~JSIsolate()
 {
-  terminate();
-  join();
-  delete _pEventLoop;
-  _pEventLoop = 0;
-  delete _pModuleManager;
-  _pModuleManager = 0;
-  delete _pPluginManager;
-  _pPluginManager = 0;
+  dispose();
+}
+
+void JSIsolate::dispose()
+{
+  if (_pIsolate)
+  {
+    terminate();
+    join();
+    delete _pEventLoop;
+    _pEventLoop = 0;
+    delete _pModuleManager;
+    _pModuleManager = 0;
+    delete _pPluginManager;
+    _pPluginManager = 0;
+    _pIsolate->Dispose();
+    //
+    // V8 will delete the isolate.  No need to delete it here
+    //
+    _pIsolate = 0;
+  }
 }
 
 void JSIsolate::internal_run()
@@ -166,6 +180,7 @@ void JSIsolate::run(const boost::filesystem::path& script)
 
 void JSIsolate::runSource(const std::string& source)
 {
+  assert(_pIsolate);
   _source = source;
   _script = boost::filesystem::path();
   if (isRoot())
@@ -196,6 +211,7 @@ void JSIsolate::notify(const std::string& eventName, const OSS::JSON::Array& arg
 
 void JSIsolate::terminate()
 {
+  assert(_pIsolate);
   _pEventLoop->terminate();
 }
 

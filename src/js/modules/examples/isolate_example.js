@@ -11,7 +11,9 @@ var script = utils.multiline(function(){ /*
     console.log( msg + " elapsed: " + elapsed + " milliseconds");
     if (++count == 10)
     {
-      exit(0);
+      console.log("Stopping event loop");
+      async.__stop_event_loop();
+      return;
     }
     async.setTimeout(on_timer, 100, ["Hello Timers!", new Date()]);
   }
@@ -41,8 +43,12 @@ thread1.runSource(script);
 thread2.runSource(script);
 
 
+console.log("Joining thread 1");
 thread1.join();
+console.log("Joining thread 2");
 thread2.join();
+
+exit(0);
 
 
 

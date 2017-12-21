@@ -98,6 +98,13 @@ public:
   v8::Isolate* getV8Isolate() const;
   
   const JSIsolate::Ptr& getParentIsolate() const;
+  
+  void setEventEmitterFd(int fd);
+  
+  void dispose();
+    /// Dispose the isloate.  This can never be undone.
+    /// This must be called from outside of the isolate thread
+  
 protected:
   JSIsolate(pthread_t parentThreadId);
     /// Creates a new isolate.  You MUST not create isolate directly.
@@ -126,6 +133,7 @@ protected:
   std::string _source;
   boost::filesystem::path _script;
   JSIsolate::Ptr _pParentIsolate;
+  int _eventEmitterFd;
   friend class JSIsolateManager;
 };
   
@@ -173,7 +181,12 @@ inline const JSIsolate::Ptr& JSIsolate::getParentIsolate() const
   return _pParentIsolate;
 }
 
-  
+inline void JSIsolate::setEventEmitterFd(int fd)
+{
+  _eventEmitterFd = fd;
+}
+
+
 } } 
 
 #endif  //ENABLE_FEATURE_V8

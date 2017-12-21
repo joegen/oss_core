@@ -18,6 +18,11 @@ myEmitter.on('event', function(a, b)
   console.log(a, b);
 });
 
+myEmitter.onAnyEvent(function(event, c, d) 
+{
+  console.log(event, c, d);
+});
+
 myEmitter.on('exit', function() 
 {
   system.exit(0);
@@ -27,4 +32,6 @@ myEmitter.on('exit', function()
 // Use the emit function
 //
 myEmitter.emit('event', 'a', 'b');
+myEmitter.emit('any', 'c', 'd');
+myEmitter.emit('exit');
 
