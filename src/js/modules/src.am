@@ -17,18 +17,23 @@ include js/modules/examples/src.am
 include js/modules/http/module.am
 include js/modules/isolate/module.am
 
+if ENABLE_FEATURE_INOTIFY
+include js/modules/inotify/module.am
+endif
+
 EXTRA_DIST += \
     js/modules/object.js \
     js/modules/assert.js \
     js/modules/console.js \
     js/modules/fifo.js \
-    js/modules/monitored_file.js \
     js/modules/socket.js \
     js/modules/xml-parser.js \
     js/modules/utils.js \
     js/modules/async/async.js \
     js/modules/json_rpc/*.js \
     js/modules/logger/*.js
+
+
 
 lib_LTLIBRARIES += liboss_jsconst.la
 liboss_jsconst_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
@@ -111,11 +116,6 @@ liboss_jsprocess_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
 liboss_jsprocess_la_SOURCES = js/modules/process.cpp
 EXTRA_DIST += js/modules/process.js
 
-lib_LTLIBRARIES += liboss_jsinotify.la
-liboss_jsinotify_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
-liboss_jsinotify_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
-liboss_jsinotify_la_SOURCES = js/modules/inotify.cpp
-
 lib_LTLIBRARIES += liboss_jsinetsocket.la
 liboss_jsinetsocket_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
 liboss_jsinetsocket_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
@@ -148,7 +148,6 @@ js_module-install-hook: ${INSTALL_PROCEDURES}
 	cp ${DESTDIR}${libdir}/liboss_jsfilesystem.so ${DESTDIR}${libdir}/oss_modules/filesystem.jso
 	cp ${DESTDIR}${libdir}/liboss_jsfile.so ${DESTDIR}${libdir}/oss_modules/_file.jso
 	cp ${DESTDIR}${libdir}/liboss_jsprocess.so ${DESTDIR}${libdir}/oss_modules/_process.jso
-	cp ${DESTDIR}${libdir}/liboss_jsinotify.so ${DESTDIR}${libdir}/oss_modules/inotify.jso
 	cp ${DESTDIR}${libdir}/liboss_jsinetsocket.so ${DESTDIR}${libdir}/oss_modules/inet_socket.jso
 	cp ${DESTDIR}${libdir}/liboss_jsdns.so ${DESTDIR}${libdir}/oss_modules/dns/_dns.jso
 	cp ${DESTDIR}${libdir}/liboss_jscpprpc_tester.so ${DESTDIR}${libdir}/oss_modules/cpp_rpc_tester.jso

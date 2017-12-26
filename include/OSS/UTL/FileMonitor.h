@@ -21,6 +21,8 @@
 #ifndef OSS_FILEMONITOR_H_INCLUDED
 #define OSS_FILEMONITOR_H_INCLUDED
 
+#include "OSS/build.h"
+#if OSS_HAVE_INOTIFY
 
 #include <string>
 #include <boost/function.hpp>
@@ -72,5 +74,6 @@ inline int FileMonitor::addWatch(const boost::filesystem::path& path, EventHandl
 } }
 
 
-#endif /* FILEMONITOR_H */
+#endif // OSS_HAVE_INOTIFY
+#endif // FILEMONITOR_H 
 

@@ -24,6 +24,8 @@
 #if ENABLE_FEATURE_V8
 
 
+#include <poll.h>
+
 #include "OSS/JS/JS.h"
 #include "OSS/JS/modules/QueueObject.h"
 #include "OSS/JS/JSEventLoopComponent.h"

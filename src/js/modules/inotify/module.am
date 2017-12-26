@@ -1,0 +1,17 @@
+
+inotify-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/inotify
+	cp ${srcdir}/js/modules/inotify/*.js ${DESTDIR}${libdir}/oss_modules/inotify
+	cp ${DESTDIR}${libdir}/liboss_jsinotify.so ${DESTDIR}${libdir}/oss_modules/inotify/_inotify.jso
+
+
+INSTALL_PROCEDURES += inotify-install
+
+EXTRA_DIST += \
+    js/modules/inotify/index.js \
+    js/modules/inotify/monitored_file.js
+
+lib_LTLIBRARIES += liboss_jsinotify.la
+liboss_jsinotify_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsinotify_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsinotify_la_SOURCES = js/modules/inotify/inotify.cpp

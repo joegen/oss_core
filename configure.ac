@@ -109,6 +109,7 @@ AC_ARG_ENABLE([all-features],
         ENABLE_FEATURE(MCRYPT)
         ENABLE_FEATURE(CONFIG)
         ENABLE_FEATURE(NET_EXTRA)
+        ENABLE_FEATURE(INOTIFY)
     ],
     [
         #
@@ -130,16 +131,16 @@ AC_ARG_ENABLE([all-features],
         # Enable UCARP compilation
         #
         AC_ARG_ENABLE([carp],
-            AC_HELP_STRING([--enable-carp], [Enable CARP-HA Feature]),
-            [ENABLE_FEATURE(CARP)],
-            [DISABLE_FEATURE(CARP)])
+            AC_HELP_STRING([--disable-carp], [Disable CARP-HA Feature]),
+            [DISABLE_FEATURE(CARP)],
+            [ENABLE_FEATURE(CARP)])
         #
         # Enable V8 compilation
         #
         AC_ARG_ENABLE([v8],
-            AC_HELP_STRING([--enable-v8], [Enable V8 JavaScript Feature]),
-            [ENABLE_FEATURE(V8)],
-            [DISABLE_FEATURE(V8)])
+            AC_HELP_STRING([--disable-v8], [Disable V8 JavaScript Feature]),
+            [DISABLE_FEATURE(V8)],
+            [ENABLE_FEATURE(V8)])
         #
         # Enable REST KV compilation
         #
@@ -151,23 +152,23 @@ AC_ARG_ENABLE([all-features],
         # Enable ZeroMQ compilation
         #
         AC_ARG_ENABLE([zmq],
-            AC_HELP_STRING([--enable-zmq], [Enable ZeroMQ Feature]),
-            [ENABLE_FEATURE(ZMQ)],
-            [DISABLE_FEATURE(ZMQ)])
+            AC_HELP_STRING([--disable-zmq], [Disable ZeroMQ Feature]),
+            [DISABLE_FEATURE(ZMQ)],
+            [ENABLE_FEATURE(ZMQ)])
         #
         # Enable Redis compilation
         #
         AC_ARG_ENABLE([redis],
-            AC_HELP_STRING([--enable-redis], [Enable Redis Feature]),
-            [ENABLE_FEATURE(REDIS)],
-            [DISABLE_FEATURE(REDIS)])
+            AC_HELP_STRING([--disable-redis], [Disable Redis Feature]),
+            [DISABLE_FEATURE(REDIS)],
+            [ENABLE_FEATURE(REDIS)])
         #
         # Enable Websocket compilation
         #
         AC_ARG_ENABLE([websockets],
-            AC_HELP_STRING([--enable-websockets], [Enable Websockets Feature]),
-            [ENABLE_FEATURE(WEBSOCKETS)],
-            [DISABLE_FEATURE(WEBSOCKETS)])
+            AC_HELP_STRING([--disable-websockets], [Disable Websockets Feature]),
+            [DISABLE_FEATURE(WEBSOCKETS)],
+            [ENABLE_FEATURE(WEBSOCKETS)])
         #
         # Enable XOR compilation
         #
@@ -186,24 +187,32 @@ AC_ARG_ENABLE([all-features],
         # Enable Configpp Wrapper compilation
         #
         AC_ARG_ENABLE([config],
-            AC_HELP_STRING([--enable-config], [Enable Configuration File Feature]),
-            [ENABLE_FEATURE(CONFIG)],
-            [DISABLE_FEATURE(CONFIG)])
+            AC_HELP_STRING([--disable-config], [Disable Configuration File Feature]),
+            [DISABLE_FEATURE(CONFIG)],
+            [ENABLE_FEATURE(CONFIG)])
         #
         # Enable STUN compilation
         #
         AC_ARG_ENABLE([stun],
-            AC_HELP_STRING([--enable-stun], [Enable STUN Feature]),
-            [ENABLE_FEATURE(STUN)],
-            [DISABLE_FEATURE(STUN)])
+            AC_HELP_STRING([--disable-stun], [Disable STUN Feature]),
+            [DISABLE_FEATURE(STUN)],
+            [ENABLE_FEATURE(STUN)])
 
         #
         # Enable NET compilation
         #
         AC_ARG_ENABLE([net-extra],
-            AC_HELP_STRING([--enable-net-extra], [Enable NET Extra Feature]),
-            [ENABLE_FEATURE(NET_EXTRA)],
-            [DISABLE_FEATURE(NET_EXTRA)])
+            AC_HELP_STRING([--disable-net-extra], [Disable NET Extra Feature]),
+            [DISABLE_FEATURE(NET_EXTRA)],
+            [ENABLE_FEATURE(NET_EXTRA)])
+
+         #
+        # Enable NET compilation
+        #
+        AC_ARG_ENABLE([inotify],
+            AC_HELP_STRING([--disable-inotify], [Disable inotify]),
+            [DISABLE_FEATURE(INOTIFY)],
+            [ENABLE_FEATURE(INOTIFY)])
     ])
 
 #
@@ -372,6 +381,17 @@ AC_CHECK_HEADER(mcrypt.h,
 else
     AM_CONDITIONAL(OSS_HAVE_MCRYPT, false)
     AC_SUBST(OSS_HAVE_MCRYPT, 0)
+fi
+#
+# INOTIFY
+#
+if test "x$FEATURE_INOTIFY" == "xenabled"; then
+AC_CHECK_HEADER(sys/inotify.h,
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_INOTIFY, )], 
+    [FLAG_MISSING_DEP(OSS_HAVE_INOTIFY, "inotify feature is not available")])
+else
+    AM_CONDITIONAL(OSS_HAVE_INOTIFY, false)
+    AC_SUBST(OSS_HAVE_INOTIFY, 0)
 fi
 #
 # Config file support

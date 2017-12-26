@@ -84,6 +84,7 @@ void JSIsolate::dispose()
     // V8 will delete the isolate.  No need to delete it here
     //
     _pIsolate = 0;
+    _source = std::string();
   }
 }
 
@@ -180,7 +181,6 @@ void JSIsolate::run(const boost::filesystem::path& script)
 
 void JSIsolate::runSource(const std::string& source)
 {
-  assert(_pIsolate);
   _source = source;
   _script = boost::filesystem::path();
   if (isRoot())

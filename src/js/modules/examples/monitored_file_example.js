@@ -1,4 +1,4 @@
-const MonitoredFile = require("monitored_file").MonitoredFile;
+const MonitoredFile = require("inotify").MonitoredFile;
 const File = require("file").File;
 const console = require("console");
 const assert = require("assert");

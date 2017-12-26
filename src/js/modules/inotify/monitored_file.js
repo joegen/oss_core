@@ -1,7 +1,7 @@
 "use-strict"
 
 const system = require("system");
-const inotify = require("inotify");
+const inotify = require("./_inotify.jso");
 const async = require("async");
 
 var MonitoredFile = function(path)
