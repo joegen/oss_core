@@ -162,6 +162,8 @@ rm -rf $RPM_BUILD_ROOT
 %dir %attr(755,root,root) %{_libdir}/oss_modules/http
 %dir %attr(755,root,root) %{_libdir}/oss_modules/json_rpc
 %dir %attr(755,root,root) %{_libdir}/oss_modules/logger
+%dir %attr(755,root,root) %{_libdir}/oss_modules/isolate
+%dir %attr(755,root,root) %{_libdir}/oss_modules/inotify
 
 %{_libdir}/oss_modules/*.js*
 %{_libdir}/oss_modules/examples/*
@@ -170,6 +172,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/oss_modules/dns/*
 %{_libdir}/oss_modules/json_rpc/*
 %{_libdir}/oss_modules/logger/*
+%{_libdir}/oss_modules/isolate/*
+%{_libdir}/oss_modules/inotify/*
 
 
 %files devel
