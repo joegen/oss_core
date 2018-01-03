@@ -16,7 +16,8 @@ before_install:
   - sudo apt-get install -y libv8-dev
   - sudo apt-get install -y libhiredis-dev
   - sudo apt-get install -y libconfig++-dev
-script: autoreconf -if && ./configure --disable-carp && make deb
+  - sudo apt-get install -y libpcap-dev
+script: autoreconf -if && ./configure && make deb
 notifications:
   email:
     recipients:
