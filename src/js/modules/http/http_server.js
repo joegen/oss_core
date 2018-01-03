@@ -2,7 +2,7 @@
 
 const console = require("console");
 const async = require("async");
-const CPPRPC = require("cpp_rpc").CPPRPC;
+const isolate = require("isolate");
 const system = require("system");
 const HttpServerBase = require("./_http_server.jso").HttpServer;  
 const buffer = require("buffer");
@@ -76,7 +76,7 @@ RequestHandler.find = function(serverId)
   return undefined;
 }
 
-CPPRPC.on("HttpServerObject__handleRequest", RequestHandler);
+isolate.on("HttpServerObject__handleRequest", RequestHandler);
 
 var IncomingMessage = function(headers, inputStreamId, server)
 {

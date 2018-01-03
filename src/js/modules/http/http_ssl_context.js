@@ -3,7 +3,7 @@
 const _http_ssl_context = require("./_http_ssl_context.jso");
 const SSLContext = _http_ssl_context.HttpSSLContext;
 const EventEmitter = async.EventEmitter;
-const CPPRPC = require("cpp_rpc").CPPRPC;
+const isolate = require("isolate");
 
 ///   * usage specifies whether the context is used by a client or server.
 ///   * privateKeyFile contains the path to the private key file used for encryption.
@@ -89,14 +89,14 @@ var HttpSSLContext = function(
     _passphraseHandlerCb = passpharaseHandler;
     _invalidCertificateHandlerCb = invalidCertificateHandler;
     
-    CPPRPC.on(_passphraseHandlerId, passphraseHandlerCb);
-    CPPRPC.on(_invalidCertificateHandlerId, invalidCertificateHandlerCb);
+    isolate.on(_passphraseHandlerId, passphraseHandlerCb);
+    isolate.on(_invalidCertificateHandlerId, invalidCertificateHandlerCb);
   }
   
   this.unregisterContext = function()
   {
-    CPPRPC.remove(_passphraseHandlerId);
-    CPPRPC.remove(_invalidCertificateHandlerId);
+    isolate.remove(_passphraseHandlerId);
+    isolate.remove(_invalidCertificateHandlerId);
   }
 }
 HttpSSLContext._INSTANCE_COUNTER = 0;
