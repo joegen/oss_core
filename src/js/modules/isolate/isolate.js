@@ -108,6 +108,24 @@ var Isolate = function(threadId)
       return undefined;
     }
   }
+  
+  _this.notify = function(method, args)
+  {
+    var request = new Object();
+    request.method = method;
+    request.arguments = args;
+    var json = JSON.stringify(request);
+    isolate.notify(json);
+  }
+}
+
+exports.notifyParentIsolate = function(method, args)
+{
+  var request = new Object();
+  request.method = method;
+  request.arguments = args;
+  var json = JSON.stringify(request);
+  _isolate.notifyParentIsolate(json);
 }
 
 exports.Isolate = Isolate;

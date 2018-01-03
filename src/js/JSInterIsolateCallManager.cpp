@@ -121,6 +121,31 @@ bool JSInterIsolateCallManager::execute(const std::string& requestStr, std::stri
   return OSS::JSON::json_object_to_string(result, resultStr);
 }
 
+void JSInterIsolateCallManager::notify(const std::string& requestStr, void* userData)
+{
+  Request request;
+  if (OSS::JSON::json_parse_string(requestStr, request))
+  {
+    notify(request, userData);
+  }
+}
+
+void JSInterIsolateCallManager::notify(const Request& request, void* userData)
+{
+  bool delegateToSelf = getIsolate()->isThreadSelf();
+  JSInterIsolateCall::Ptr pCall(new JSInterIsolateCall(request, 0, userData));
+  enqueue(pCall);
+
+  if (delegateToSelf)
+  {
+    doOneWork();
+  }
+  else
+  {
+    getEventLoop()->wakeup();
+  }
+}
+
 } }
 
 

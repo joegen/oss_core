@@ -193,17 +193,27 @@ void JSIsolate::runSource(const std::string& source)
   }
 }
 
-bool JSIsolate::call(const std::string& method, const OSS::JSON::Object& arguments, OSS::JSON::Object& reply, uint32_t timeout, void* userData)
+void JSIsolate::notify(const std::string& request, void* userData)
 {
-  return false;
+  _pEventLoop->interIsolate().notify(request, userData);
 }
 
-bool JSIsolate::call(const OSS::JSON::Object& request, OSS::JSON::Object& reply, uint32_t timeout, void* userData)
+void JSIsolate::notify(const Request& request, void* userData)
 {
-  return false;
+  _pEventLoop->interIsolate().notify(request, userData);
 }
 
-void JSIsolate::notify(const std::string& eventName, const OSS::JSON::Array& args, int queueFd)
+bool JSIsolate::execute(const std::string& request, std::string& result, uint32_t timeout, void* userData)
+{
+  return _pEventLoop->interIsolate().execute(request, result, timeout, userData);
+}
+
+bool JSIsolate::execute(const Request& request, Result& result, uint32_t timeout, void* userData)
+{
+  return _pEventLoop->interIsolate().execute(request, result, timeout, userData);
+}
+
+void JSIsolate::emit(const std::string& eventName, const OSS::JSON::Array& args, int queueFd)
 {
   JSEventArgument event(eventName, args, queueFd);
   _pEventLoop->eventEmitter().emit(event);

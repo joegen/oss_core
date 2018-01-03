@@ -132,6 +132,22 @@ JS_METHOD_IMPL(IsolateObject::execute)
 
 JS_METHOD_IMPL(IsolateObject::notify)
 {
+  js_enter_scope();
+  js_method_arg_declare_self(IsolateObject, pSelf);
+  js_method_arg_declare_string(request, 0);
+  pSelf->_pIsolate->eventLoop()->interIsolate().notify(request, 0);
+  return JSUndefined();
+}
+
+JS_METHOD_IMPL(notifyParentIsolate)
+{
+  js_enter_scope();
+  js_method_arg_declare_string(request, 0);
+  OSS::JS::JSIsolate::Ptr pIsolate = OSS::JS::JSIsolateManager::instance().getIsolate(); 
+  if (pIsolate && !pIsolate->isRoot())
+  {
+    pIsolate->getParentIsolate()->notify(request, 0);
+  }
   return JSUndefined();
 }
 
@@ -145,6 +161,7 @@ JS_EXPORTS_INIT()
   js_export_method("isRootIsolate", isRootIsolate);
   js_export_method("setRootInterIsolateHandler", setRootInterIsolateHandler);
   js_export_method("setChildInterIsolateHandler", setChildInterIsolateHandler);
+  js_export_method("notifyParentIsolate", notifyParentIsolate);
   js_export_class(IsolateObject);
   js_export_finalize();
 }

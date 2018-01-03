@@ -32,6 +32,7 @@
 #include "OSS/UTL/Thread.h"
 #include "OSS/JSON/Json.h"
 #include "OSS/JS/JSPersistentValue.h"
+#include "OSS/JS/JSInterIsolateCall.h"
 
 
 
@@ -50,15 +51,19 @@ public:
   typedef JSPersistentValue<v8::ObjectTemplate> ObjectTemplate;
   typedef JSPersistentValue<v8::ObjectTemplate> Global;
   typedef JSPersistentValue<v8::ObjectTemplate> GlobalTemplate;
+  typedef JSInterIsolateCall::Request Request;
+  typedef JSInterIsolateCall::Result Result;
   
   ~JSIsolate();
     /// Destructor.  This is intentially made public so isolates can be used
     /// with shared_ptr
   
   
-  bool call(const std::string& method, const OSS::JSON::Object& arguments, OSS::JSON::Object& reply, uint32_t timeout = 0, void* userData = 0);
-  bool call(const OSS::JSON::Object& request, OSS::JSON::Object& reply, uint32_t timeout = 0, void* userData = 0);
-  void notify(const std::string& eventName, const OSS::JSON::Array& args, int queueFd);
+  void notify(const std::string& request, void* userData);
+  void notify(const Request& request, void* userData);
+  bool execute(const std::string& request, std::string& result, uint32_t timeout, void* userData);
+  bool execute(const Request& request, Result& result, uint32_t timeout, void* userData);
+  void emit(const std::string& eventName, const OSS::JSON::Array& args, int queueFd);
   void terminate();
   void join();
   void setExitValue(int value);
