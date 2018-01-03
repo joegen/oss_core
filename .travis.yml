@@ -13,7 +13,10 @@ before_install:
   - sudo apt-get install -y libpoco-dev
   - sudo apt-get install -y libboost-all-dev
   - sudo apt-get install -y libzmq-dev
-script: autoreconf -if && ./configure --enable-zmq && make deb
+  - sudo apt-get install -y libv8-dev
+  - sudo apt-get install -y libhiredis-dev
+  - sudo apt-get install -y libconfig++-dev
+script: autoreconf -if && ./configure && make deb
 notifications:
   email:
     recipients:
