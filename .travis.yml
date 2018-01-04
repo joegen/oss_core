@@ -3,11 +3,6 @@ dist: trusty
 language: cpp
 compiler:
   - gcc
-addons:
-  artifacts:
-    debug: true
-    paths:
-    - $(ls DEBBUILD/*.deb | tr "\n" ":")
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libpoco-dev
@@ -17,7 +12,7 @@ before_install:
   - sudo apt-get install -y libhiredis-dev
   - sudo apt-get install -y libconfig++-dev
   - sudo apt-get install -y libpcap-dev
-script: autoreconf -if && ./configure && make deb
+script: autoreconf -if && ./configure && make
 notifications:
   email:
     recipients:
