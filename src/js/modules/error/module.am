@@ -1,0 +1,14 @@
+
+error-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/error
+	cp ${srcdir}/js/modules/error/*.js ${DESTDIR}${libdir}/oss_modules/error
+	cp ${DESTDIR}${libdir}/liboss_jserror.so ${DESTDIR}${libdir}/oss_modules/error/_error.jso
+
+INSTALL_PROCEDURES += error-install
+
+EXTRA_DIST += js/modules/error/index.js
+
+lib_LTLIBRARIES += liboss_jserror.la
+liboss_jserror_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jserror_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jserror_la_SOURCES = js/modules/error/error.cpp

@@ -1,0 +1,7 @@
+timer-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/timer
+	cp ${srcdir}/js/modules/timer/*.js ${DESTDIR}${libdir}/oss_modules/timer
+
+INSTALL_PROCEDURES += timer-install
+
+EXTRA_DIST += js/modules/timer/index.js

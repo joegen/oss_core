@@ -139,6 +139,7 @@ HttpSSLContextObject::HttpSSLContextObject()
   _verificationMode = Context::VERIFY_RELAXED;
   _verificationDepth = 9;
   _loadDefaultCAs = false;
+  _pContext = 0;
 }
 
 HttpSSLContextObject::~HttpSSLContextObject()

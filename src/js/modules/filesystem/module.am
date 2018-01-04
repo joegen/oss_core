@@ -1,0 +1,14 @@
+
+filesystem-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/filesystem
+	cp ${srcdir}/js/modules/filesystem/*.js ${DESTDIR}${libdir}/oss_modules/filesystem
+	cp ${DESTDIR}${libdir}/liboss_jsfilesystem.so ${DESTDIR}${libdir}/oss_modules/filesystem/_filesystem.jso
+
+INSTALL_PROCEDURES += filesystem-install
+
+EXTRA_DIST += js/modules/filesystem/index.js
+
+lib_LTLIBRARIES += liboss_jsfilesystem.la
+liboss_jsfilesystem_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsfilesystem_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsfilesystem_la_SOURCES = js/modules/filesystem/filesystem.cpp

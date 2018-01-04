@@ -3,7 +3,7 @@
 
 var system = require("system");
 var assert = require("assert");
-var consts = require("consts");
+var consts = require("constants");
 
 var pipefd = system.pipe();
 assert.ok(typeof pipefd === "object");

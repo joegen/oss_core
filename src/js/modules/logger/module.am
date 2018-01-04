@@ -1,0 +1,14 @@
+logger-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/logger
+	cp ${srcdir}/js/modules/logger/*.js ${DESTDIR}${libdir}/oss_modules/logger
+	cp ${DESTDIR}${libdir}/liboss_jslogger.so ${DESTDIR}${libdir}/oss_modules/logger/_logger.jso
+
+INSTALL_PROCEDURES += logger-install
+
+EXTRA_DIST += js/modules/logger/*.js
+
+lib_LTLIBRARIES += liboss_jslogger.la
+liboss_jslogger_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jslogger_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jslogger_la_SOURCES = js/modules/logger/logger.cpp
+

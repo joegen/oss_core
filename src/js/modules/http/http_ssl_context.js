@@ -39,7 +39,7 @@ var HttpSSLContext = function(
   }
   if (loadDefaultCAs === undefined)
   {
-    loadDefaultCAs = false;
+    loadDefaultCAs = true;
   }
   if (cipherList === undefined)
   {
@@ -206,5 +206,5 @@ exports.registerServerContext = function(
     verificationDepth, 
     loadDefaultCAs, 
     cipherList);
-    _ssl_client_context.registerContext(passphraseFunction, validateCertFunction);
+  _ssl_server_context.registerContext(passphraseFunction, validateCertFunction);
 }

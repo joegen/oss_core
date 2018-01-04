@@ -3,6 +3,7 @@ var isolate = require("isolate");
 
 var script = utils.multiline(function(){ /*
   "use-strict";
+  var timer = require("timer");
   var isolate = require("isolate");
   var count = 0;
   
@@ -28,9 +29,9 @@ var script = utils.multiline(function(){ /*
       isolate.notifyParentIsolate("isolateTerminated", threadName);
       return;
     }
-    async.setTimeout(on_timer, 100, ["Hello Timers!", new Date()]);
+    timer.setTimeout(on_timer, 100, ["Hello Timers!", new Date()]);
   }
-  async.setTimeout(on_timer, 100, ["Hello Timers!", new Date()]);
+  timer.setTimeout(on_timer, 100, ["Hello Timers!", new Date()]);
 */ });
 
 

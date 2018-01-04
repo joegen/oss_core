@@ -1,0 +1,13 @@
+config-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/config
+	cp ${srcdir}/js/modules/config/*.js ${DESTDIR}${libdir}/oss_modules/config
+	cp ${DESTDIR}${libdir}/liboss_jsconfig.so ${DESTDIR}${libdir}/oss_modules/config/_config.jso
+
+INSTALL_PROCEDURES += config-install
+
+EXTRA_DIST += js/modules/config/index.js
+
+lib_LTLIBRARIES += liboss_jsconfig.la
+liboss_jsconfig_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsconfig_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsconfig_la_SOURCES = js/modules/config/config.cpp

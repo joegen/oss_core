@@ -1,0 +1,8 @@
+json_rpc-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/json_rpc
+	cp ${srcdir}/js/modules/json_rpc/*.js ${DESTDIR}${libdir}/oss_modules/json_rpc
+
+INSTALL_PROCEDURES += json_rpc-install
+
+EXTRA_DIST += js/modules/json_rpc/*.js
+

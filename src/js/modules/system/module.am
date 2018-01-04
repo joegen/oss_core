@@ -1,0 +1,13 @@
+system-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/system
+	cp ${srcdir}/js/modules/system/*.js ${DESTDIR}${libdir}/oss_modules/system
+	cp ${DESTDIR}${libdir}/liboss_jssystem.so ${DESTDIR}${libdir}/oss_modules/system/_system.jso
+
+INSTALL_PROCEDURES += system-install
+
+EXTRA_DIST += js/modules/system/index.js
+
+lib_LTLIBRARIES += liboss_jssystem.la
+liboss_jssystem_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jssystem_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jssystem_la_SOURCES = js/modules/system/system.cpp

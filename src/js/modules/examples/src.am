@@ -1,20 +1,13 @@
-EXTRA_DIST += \
-    js/modules/examples/pipe_example.js \
-    js/modules/examples/buffer_example.js \
-    js/modules/examples/async_example.js \
-    js/modules/examples/timer_example.js \
-    js/modules/examples/queue_example.js \
-    js/modules/examples/zmq_example.js \
-    js/modules/examples/getopt_example.js \
-    js/modules/examples/config_example.js \
-    js/modules/examples/data/config_example.cfg \
-    js/modules/examples/zmq_json_rpc_example.js \
-    js/modules/examples/daemon_example.js \
-    js/modules/examples/udp_socket_example.js \
-    js/modules/examples/tcp_socket_example.js \
-    js/modules/examples/xmlparser_example.js \
-    js/modules/examples/dns_example.js \
-    js/modules/examples/http_client_example.js \
-    js/modules/examples/event_emitter_example.js \
-    js/modules/examples/cpp_rpc_example.js \
-    js/modules/examples/http_server_example.js
+EXTRA_DIST += js/modules/examples/*.js js/modules/examples/data/*
+
+lib_LTLIBRARIES += liboss_jscpprpc_tester.la
+liboss_jscpprpc_tester_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jscpprpc_tester_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jscpprpc_tester_la_SOURCES = js/modules/examples/cpp_rpc_tester.cpp
+
+examples-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/examples
+	cp ${srcdir}/js/modules/examples/*.js ${DESTDIR}${libdir}/oss_modules/examples
+	cp ${DESTDIR}${libdir}/liboss_jscpprpc_tester.so ${DESTDIR}${libdir}/oss_modules/examples/cpp_rpc_tester.jso
+
+INSTALL_PROCEDURES += examples-install

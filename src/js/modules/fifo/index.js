@@ -1,3 +1,4 @@
+
 // Based on Queue implemention from Stephen Morley - http://code.stephenmorley.org/ 
 
 "use-strict"

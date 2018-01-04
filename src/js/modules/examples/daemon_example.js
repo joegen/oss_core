@@ -3,9 +3,9 @@ var console = require("console");
 var opt = require("getopt");
 var File = require("file").File;
 
-const STDIN_FILENO = require("consts").STDIN_FILENO;
-const STDOUT_FILENO = require("consts").STDOUT_FILENO;
-const STDERR_FILENO = require("consts").STDERR_FILENO;
+const STDIN_FILENO = require("constants").STDIN_FILENO;
+const STDOUT_FILENO = require("constants").STDOUT_FILENO;
+const STDERR_FILENO = require("constants").STDERR_FILENO;
 
 var daemonize = function()
 {

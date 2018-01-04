@@ -1,7 +1,7 @@
 "use-strict";
 
 var isolate = require("isolate");
-var cpp_rpc_tester = require("cpp_rpc_tester");
+var cpp_rpc_tester = require("examples/cpp_rpc_tester.jso");
 
 
 

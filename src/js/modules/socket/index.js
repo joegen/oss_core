@@ -1,6 +1,6 @@
 "use-strict";
 
-const sock = require("inet_socket");
+const sock = require("./_inet_socket.jso");
 const system = require("system");
 const async = require("async");
 const error = require("error");

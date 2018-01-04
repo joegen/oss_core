@@ -1,0 +1,8 @@
+fifo-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/fifo
+	cp ${srcdir}/js/modules/fifo/*.js ${DESTDIR}${libdir}/oss_modules/fifo
+
+INSTALL_PROCEDURES += fifo-install
+
+EXTRA_DIST += js/modules/fifo/index.js
+

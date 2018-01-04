@@ -72,17 +72,25 @@ JS_CLASS_INTERFACE(HttpServerObject, "HttpServer")
 JS_CONSTRUCTOR_IMPL(HttpServerObject)
 {
   js_enter_scope();
-  HttpServerObject* pServer = new HttpServerObject();
+  bool useHttps = false;
+  if (js_method_arg_length() > 0)
+  {
+    js_method_arg_declare_bool(isSecure, 0);
+    useHttps = isSecure;
+  }
+  
+  HttpServerObject* pServer = new HttpServerObject(useHttps);
   pServer->Wrap(js_method_arg_self());
   return js_method_arg_self();
 }
 
-HttpServerObject::HttpServerObject() :
+HttpServerObject::HttpServerObject(bool secure) :
   _pParams(0),
   _pSocket(0),
   _pHttpServer(0),
   _inputStreamId(0),
-  _responseId(0)
+  _responseId(0),
+  _secure(secure)
 {
   _pParams = new HTTPServerParams();
   _pParams->setMaxQueued(100);
@@ -374,7 +382,14 @@ JS_METHOD_IMPL(HttpServerObject::_listen)
     {
       IPAddress wildcardAddr;
       SocketAddress address(wildcardAddr, port);
-      self->_pSocket = new ServerSocket(address);
+      if (!self->_secure)
+      {
+        self->_pSocket = new ServerSocket(address);
+      }
+      else
+      {
+        self->_pSocket = new SecureServerSocket(address);
+      }
     }
     else
     {

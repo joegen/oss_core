@@ -1,9 +1,9 @@
 "use-strict"
 
-var _system = require("_system");
+var _system = require("./_system.jso");
 var pipe = require("pipe");
 var fork = require("fork");
-var consts = require("consts");
+var consts = require("constants");
 var async = require("async");
 
 __copy_exports(_system, exports);

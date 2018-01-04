@@ -1,8 +1,8 @@
 "use-strict"
 
-const _proc = require("_process");
+const _proc = require("./_process.jso");
 const async = require("async");
-const SIGKILL = require("consts").SIGKILL;
+const SIGKILL = require("constants").SIGKILL;
 
 var Process = function(name, startupCmd, shutdownCmd, pidFile)
 {

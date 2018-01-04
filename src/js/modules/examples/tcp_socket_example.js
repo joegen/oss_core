@@ -5,7 +5,7 @@ const TcpSocketClient = require("socket").TcpSocketClient;
 const async = require("async");
 const system = require("system");
 const console = require("console");
-const sock = require("inet_socket");
+const sock = require("socket/_inet_socket");
 const assert = require("assert");
 
 function bufferToString(buf)

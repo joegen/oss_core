@@ -4,7 +4,7 @@ const http = require("http");
 const JsonRpcServer = require("./json_rpc_server.js").JsonRpcServer;
 const utils = require("utils");
 
-var JsonRpcHttpServer = function()
+var JsonRpcHttpServer = function(secure)
 {
   var _this = this;
   
@@ -57,7 +57,7 @@ var JsonRpcHttpServer = function()
   // This is meant to be overriden
   var onNewRequest = function() { assert(false); }
   
-  this._server = http.createServer(this.requestHandler);
+  this._server = http.createServer(this.requestHandler, secure);
   this.listen = function()
   {
     if (arguments.length == 1)

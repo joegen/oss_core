@@ -1,0 +1,14 @@
+
+getopt-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/getopt
+	cp ${srcdir}/js/modules/getopt/*.js ${DESTDIR}${libdir}/oss_modules/getopt
+	cp ${DESTDIR}${libdir}/liboss_jsgetopt.so ${DESTDIR}${libdir}/oss_modules/getopt/_getopt.jso
+
+INSTALL_PROCEDURES += getopt-install
+
+EXTRA_DIST += js/modules/getopt/index.js
+
+lib_LTLIBRARIES += liboss_jsgetopt.la
+liboss_jsgetopt_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsgetopt_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsgetopt_la_SOURCES = js/modules/getopt/getopt.cpp

@@ -1,0 +1,9 @@
+console-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/console
+	cp ${srcdir}/js/modules/console/*.js ${DESTDIR}${libdir}/oss_modules/console
+
+INSTALL_PROCEDURES += console-install
+
+EXTRA_DIST += js/modules/console/index.js
+
+

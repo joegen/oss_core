@@ -164,17 +164,36 @@ rm -rf $RPM_BUILD_ROOT
 %dir %attr(755,root,root) %{_libdir}/oss_modules/logger
 %dir %attr(755,root,root) %{_libdir}/oss_modules/isolate
 %dir %attr(755,root,root) %{_libdir}/oss_modules/inotify
+%dir %attr(755,root,root) %{_libdir}/oss_modules/config
+%dir %attr(755,root,root) %{_libdir}/oss_modules/assert
+%dir %attr(755,root,root) %{_libdir}/oss_modules/buffer
+%dir %attr(755,root,root) %{_libdir}/oss_modules/console
+%dir %attr(755,root,root) %{_libdir}/oss_modules/constants
+%dir %attr(755,root,root) %{_libdir}/oss_modules/error
+%dir %attr(755,root,root) %{_libdir}/oss_modules/fifo
+%dir %attr(755,root,root) %{_libdir}/oss_modules/file
+%dir %attr(755,root,root) %{_libdir}/oss_modules/filesystem
+%dir %attr(755,root,root) %{_libdir}/oss_modules/getopt
+%dir %attr(755,root,root) %{_libdir}/oss_modules/socket
+%dir %attr(755,root,root) %{_libdir}/oss_modules/object
+%dir %attr(755,root,root) %{_libdir}/oss_modules/pipe
+%dir %attr(755,root,root) %{_libdir}/oss_modules/poll
+%dir %attr(755,root,root) %{_libdir}/oss_modules/process
+%dir %attr(755,root,root) %{_libdir}/oss_modules/system
+%dir %attr(755,root,root) %{_libdir}/oss_modules/zmq
+%dir %attr(755,root,root) %{_libdir}/oss_modules/timer
+%dir %attr(755,root,root) %{_libdir}/oss_modules/url-parser
+%dir %attr(755,root,root) %{_libdir}/oss_modules/utils
+%dir %attr(755,root,root) %{_libdir}/oss_modules/xml-parser
+%dir %attr(755,root,root) %{_libdir}/oss_modules/dns
+%dir %attr(755,root,root) %{_libdir}/oss_modules/async
+%dir %attr(755,root,root) %{_libdir}/oss_modules/logger
+%dir %attr(755,root,root) %{_libdir}/oss_modules/json_rpc
 
-%{_libdir}/oss_modules/*.js*
-%{_libdir}/oss_modules/examples/*
-%{_libdir}/oss_modules/http/*
-%{_libdir}/oss_modules/async/*
-%{_libdir}/oss_modules/dns/*
-%{_libdir}/oss_modules/json_rpc/*
-%{_libdir}/oss_modules/logger/*
-%{_libdir}/oss_modules/isolate/*
-%{_libdir}/oss_modules/inotify/*
-
+%{_libdir}/oss_modules/*.js
+%{_libdir}/oss_modules/*.jso
+%{_libdir}/oss_modules/*/*.js
+%{_libdir}/oss_modules/*/*.jso
 
 %files devel
 %defattr(644,root,root,755)

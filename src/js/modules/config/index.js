@@ -1,6 +1,6 @@
 "use-strict";
 
-const _config = require("_config");
+const _config = require("./_config.jso");
 const fs = require("filesystem");
 
 //

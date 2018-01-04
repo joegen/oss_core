@@ -1,0 +1,14 @@
+
+fork-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/fork
+	cp ${srcdir}/js/modules/fork/*.js ${DESTDIR}${libdir}/oss_modules/fork
+	cp ${DESTDIR}${libdir}/liboss_jsfork.so ${DESTDIR}${libdir}/oss_modules/fork/_fork.jso
+
+INSTALL_PROCEDURES += fork-install
+
+EXTRA_DIST += js/modules/fork/index.js
+
+lib_LTLIBRARIES += liboss_jsfork.la
+liboss_jsfork_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsfork_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsfork_la_SOURCES = js/modules/fork/fork.cpp

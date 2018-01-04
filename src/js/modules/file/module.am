@@ -1,0 +1,14 @@
+file-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/file
+	cp ${srcdir}/js/modules/file/*.js ${DESTDIR}${libdir}/oss_modules/file
+	cp ${DESTDIR}${libdir}/liboss_jsfile.so ${DESTDIR}${libdir}/oss_modules/file/_file.jso
+
+INSTALL_PROCEDURES += file-install
+
+EXTRA_DIST += js/modules/file/index.js
+
+lib_LTLIBRARIES += liboss_jsfile.la
+liboss_jsfile_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsfile_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsfile_la_SOURCES = js/modules/file/file.cpp
+

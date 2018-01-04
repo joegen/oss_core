@@ -1,0 +1,14 @@
+dns-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/dns
+	cp ${srcdir}/js/modules/dns/*.js ${DESTDIR}${libdir}/oss_modules/dns
+	cp ${DESTDIR}${libdir}/liboss_jsdns.so ${DESTDIR}${libdir}/oss_modules/dns/_dns.jso
+
+INSTALL_PROCEDURES += dns-install
+
+EXTRA_DIST += js/modules/dns/index.js
+
+lib_LTLIBRARIES += liboss_jsdns.la
+liboss_jsdns_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsdns_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsdns_la_SOURCES = js/modules/dns/dns.cpp
+

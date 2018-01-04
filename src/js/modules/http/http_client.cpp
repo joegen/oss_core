@@ -227,8 +227,17 @@ public:
     try
     {
       _client->_output = &(_client->_session->sendRequest(*(_request->request())));
-      OSS::JS::JSEventArgument json("request_sent", _client->getEventFd());
-      _client->getIsolate()->eventLoop()->eventEmitter().emit(json);
+      if (*(_client->_output ))
+      {
+        OSS::JS::JSEventArgument json("request_sent", _client->getEventFd());
+        _client->getIsolate()->eventLoop()->eventEmitter().emit(json);
+      }
+      else
+      {
+        OSS::JS::JSEventArgument json("error", _client->getEventFd());
+        json.addString("Bad Input Stream");
+        _client->getIsolate()->eventLoop()->eventEmitter().emit(json);
+      }
     }
     catch(const Poco::Exception& e)
     {

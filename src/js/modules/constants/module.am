@@ -1,0 +1,14 @@
+
+constants-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/constants
+	cp ${srcdir}/js/modules/constants/*.js ${DESTDIR}${libdir}/oss_modules/constants
+	cp ${DESTDIR}${libdir}/liboss_jsconstants.so ${DESTDIR}${libdir}/oss_modules/constants/_constants.jso
+
+INSTALL_PROCEDURES += constants-install
+
+EXTRA_DIST += js/modules/constants/index.js
+
+lib_LTLIBRARIES += liboss_jsconstants.la
+liboss_jsconstants_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsconstants_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsconstants_la_SOURCES = js/modules/constants/constants.cpp

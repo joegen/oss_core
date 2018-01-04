@@ -1,0 +1,8 @@
+
+assert-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/assert
+	cp ${srcdir}/js/modules/assert/*.js ${DESTDIR}${libdir}/oss_modules/assert
+
+INSTALL_PROCEDURES += assert-install
+
+EXTRA_DIST += js/modules/assert/index.js

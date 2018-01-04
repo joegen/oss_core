@@ -221,10 +221,17 @@ var HttpServerResponse = function(outputStreamId, server)
   }
 }
 
-var HttpServer = function(requestHandler)
+var HttpServer = function(requestHandler, secure)
 {
   this._handler = requestHandler;
-  this._base = new HttpServerBase();
+  
+  if (typeof secure !== "boolean")
+  {
+    secure = false;
+  }
+
+  this._base = new HttpServerBase(secure);
+
   
   this.handleRequest = function(request, inputStreamId, outputStreamId)
   {
@@ -305,9 +312,9 @@ var HttpServer = function(requestHandler)
   }
 }
 
-var createServer = function(requestHandler)
+var createServer = function(requestHandler, secure)
 {
-  var server = new HttpServer(requestHandler);
+  var server = new HttpServer(requestHandler, secure);
   RequestHandler.register(server);
   return server;
 }

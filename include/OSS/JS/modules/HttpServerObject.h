@@ -27,7 +27,7 @@
 #include "Poco/Net/HTTPServerRequest.h"
 #include "Poco/Net/HTTPServerResponse.h"
 #include "Poco/Net/HTTPServerParams.h"
-#include "Poco/Net/ServerSocket.h"
+#include "Poco/Net/SecureServerSocket.h"
 #include <Poco/Exception.h>
 #include <Poco/Net/NetException.h>
 #include "OSS/JS/JSPlugin.h"
@@ -40,6 +40,7 @@ public:
   typedef Poco::Net::MessageException MessageException;
   typedef Poco::NoThreadAvailableException NoThreadAvailableException;
   typedef Poco::Net::ServerSocket ServerSocket;
+  typedef Poco::Net::SecureServerSocket SecureServerSocket;
   typedef Poco::Net::SocketAddress SocketAddress;
   typedef Poco::Net::IPAddress IPAddress;
   typedef Poco::Net::HTTPRequestHandler HTTPRequestHandler;
@@ -80,7 +81,7 @@ public:
   HTTPServerResponse* findResponse(int id);
   void removeResponse(int id);
 private:
-  HttpServerObject();
+  HttpServerObject(bool secure = false);
   virtual ~HttpServerObject();
   HTTPServerParams* _pParams;
   ServerSocket* _pSocket;
@@ -95,6 +96,7 @@ private:
   ResponseMap _responses;
   OSS::mutex_critic_sec _responsesMutex;
   int _responseId;
+  bool _secure;
 };
 
 #endif // OSS_JS_HTTPSERVEROBJECT_H_INCLUDED

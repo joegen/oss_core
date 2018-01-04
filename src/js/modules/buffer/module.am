@@ -1,0 +1,13 @@
+buffer-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/buffer
+	cp ${srcdir}/js/modules/buffer/*.js ${DESTDIR}${libdir}/oss_modules/buffer
+	cp ${DESTDIR}${libdir}/liboss_jsbuffer.so ${DESTDIR}${libdir}/oss_modules/buffer/_buffer.jso
+
+INSTALL_PROCEDURES += buffer-install
+
+EXTRA_DIST += js/modules/buffer/index.js
+
+lib_LTLIBRARIES += liboss_jsbuffer.la
+liboss_jsbuffer_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsbuffer_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsbuffer_la_SOURCES = js/modules/buffer/buffer.cpp

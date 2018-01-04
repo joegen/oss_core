@@ -1,0 +1,13 @@
+pipe-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/pipe
+	cp ${srcdir}/js/modules/pipe/*.js ${DESTDIR}${libdir}/oss_modules/pipe
+	cp ${DESTDIR}${libdir}/liboss_jspipe.so ${DESTDIR}${libdir}/oss_modules/pipe/_pipe.jso
+
+INSTALL_PROCEDURES += pipe-install
+
+EXTRA_DIST += js/modules/pipe/index.js
+
+lib_LTLIBRARIES += liboss_jspipe.la
+liboss_jspipe_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jspipe_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jspipe_la_SOURCES = js/modules/pipe/pipe.cpp

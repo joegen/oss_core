@@ -1,5 +1,3 @@
-#!/usr/bin/oss_js
-
 "use-strict";
 
 const cfg = require("config");
@@ -13,7 +11,7 @@ var example1 = function()
   // some of its contents.
 
   var config = new cfg.Config();
-  assert(config.open(opt.argv[2]));
+  assert(config.open("./data/config_example.cfg"));
   var name = config.getString("name");
   assert(typeof name === "string")
 
@@ -51,7 +49,7 @@ var example2 = function()
 {
   const output_file = "updated.cfg";
   var config = new cfg.Config();
-  assert(config.open(opt.argv[2]));
+  assert(config.open("./data/config_example.cfg"));
   
   var root = config.self();
   assert(typeof root === "object");

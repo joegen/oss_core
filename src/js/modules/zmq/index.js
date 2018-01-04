@@ -1,5 +1,5 @@
 "use-strict";
-const _zmq = require("_zmq");
+const _zmq = require("./_zmq.jso");
 const async = require("async");
 const poll = require("poll");
 const log = require("logger");

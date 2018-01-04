@@ -1,6 +1,6 @@
 const system = require("system");
 const object = require("object");
-const defines = require("consts");
+const defines = require("constants");
 
 var dump_log = function(out, args)
 {

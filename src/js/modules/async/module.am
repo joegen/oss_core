@@ -1,0 +1,13 @@
+async-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/async
+	cp ${srcdir}/js/modules/async/*.js ${DESTDIR}${libdir}/oss_modules/async
+	cp ${DESTDIR}${libdir}/liboss_jsasync.so ${DESTDIR}${libdir}/oss_modules/async/_async.jso
+
+INSTALL_PROCEDURES += async-install
+
+EXTRA_DIST += js/modules/async/*.js
+
+lib_LTLIBRARIES += liboss_jsasync.la
+liboss_jsasync_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsasync_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsasync_la_SOURCES = js/modules/async/queue_object.cpp js/modules/async/async.cpp

@@ -1,0 +1,7 @@
+url-parser-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/url-parser
+	cp ${srcdir}/js/modules/url-parser/*.js ${DESTDIR}${libdir}/oss_modules/url-parser
+
+INSTALL_PROCEDURES += url-parser-install
+
+EXTRA_DIST += js/modules/url-parser/index.js
