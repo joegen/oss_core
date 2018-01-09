@@ -40,6 +40,7 @@ class JSIsolateManager : boost::noncopyable
 public:
   typedef std::map<std::string, JSIsolate::Ptr> MapByName;
   typedef std::map<pthread_t, JSIsolate::Ptr> MapByThreadId;
+  typedef std::map<std::string, intptr_t> ExternalData;
   
   static JSIsolateManager& instance();
   
@@ -68,14 +69,21 @@ public:
     /// is automatically created by the manahaer
 
   OSS::mutex& modulesMutex();
+  
+  void setExternalData(const std::string& name, intptr_t data);
+  intptr_t getExternalData(const std::string& name) const;
+    /// Attach a named pointer to the isolate manager.
+    /// This is used internally to expose global C++ objects to plugins
+  
 private:
   JSIsolateManager();
   ~JSIsolateManager();
   
-  OSS::mutex_critic_sec _mapMutex;
-  OSS::mutex _modulesMutex;
+  mutable OSS::mutex_critic_sec _mapMutex;
+  mutable OSS::mutex _modulesMutex;
   MapByName _byName;
   MapByThreadId _byThreadId;
+  ExternalData _externalData;
   JSIsolate::Ptr _rootIsolate;
 };
 

@@ -39,8 +39,6 @@ public:
   virtual std::string name() const = 0;
   virtual bool initExportFunc(std::string& funcName) = 0;
 
-  static v8::Persistent<v8::Context>* _pContext;
-  static v8::Persistent<v8::ObjectTemplate>* _pGlobal;
   static Poco::ThreadPool* _pThreadPool;
 };
 

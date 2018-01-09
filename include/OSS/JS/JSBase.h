@@ -29,9 +29,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/tuple/tuple.hpp>
 
-#include "OSS/JS/JS.h"
 #include "OSS/JS/JSUtil.h"
-#include "OSS/JS/JSModule.h"
 #include "OSS/UTL/Thread.h"
 #include "OSS/UTL/BlockingQueue.h"
 

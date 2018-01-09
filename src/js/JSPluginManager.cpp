@@ -25,8 +25,6 @@
 #include "OSS/JS/JSPluginManager.h"
 #include "OSS/JS/JSIsolate.h"
 
-v8::Persistent<v8::Context>* JSPlugin::_pContext;
-v8::Persistent<v8::ObjectTemplate>* JSPlugin::_pGlobal;
 Poco::ThreadPool* JSPlugin::_pThreadPool = 0;
 
 namespace OSS {

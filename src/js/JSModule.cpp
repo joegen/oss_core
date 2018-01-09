@@ -113,41 +113,50 @@ static bool module_path_exists(const std::string& canonicalName, std::string& ab
   //
   // Check the global module directory
   //
-  std::string modulesDir = get_current_module_manager()->getModulesDir();
-  boost::filesystem::path modDir(modulesDir.c_str());
-  absPath = OSS::boost_path_concatenate(modDir, canonicalName);
+  const JSModule::ModulesDir& modulesDir = get_current_module_manager()->getModulesDir();
+  for (JSModule::ModulesDir::const_iterator iter = modulesDir.begin(); iter != modulesDir.end(); iter++)
+  {
+    boost::filesystem::path modDir(iter->c_str());
+    absPath = OSS::boost_path_concatenate(modDir, canonicalName);
+    if (boost::filesystem::exists(absPath))
+    {
+      absolutePath = OSS::boost_path(absPath);
+      return true;
+    }
+  }
+
+  //
+  // check it against the directory of the main script
+  //
+  boost::filesystem::path parent_path = JSModule::_mainScript.parent_path();
+  absPath = OSS::boost_path_concatenate(parent_path, canonicalName);
   if (boost::filesystem::exists(absPath))
   {
     absolutePath = OSS::boost_path(absPath);
     return true;
   }
   else
-  { 
+  {
+    // Check it against current path
     //
-    // check it against the directory of the main script
-    //
-    boost::filesystem::path parent_path = JSModule::_mainScript.parent_path();
-    absPath = OSS::boost_path_concatenate(parent_path, canonicalName);
+    boost::filesystem::path current_path = boost::filesystem::current_path();
+    absPath = OSS::boost_path_concatenate(current_path, canonicalName);
     if (boost::filesystem::exists(absPath))
     {
       absolutePath = OSS::boost_path(absPath);
       return true;
     }
-    else
-    {
-      // Check it against current path
-      //
-      boost::filesystem::path current_path = boost::filesystem::current_path();
-      absPath = OSS::boost_path_concatenate(current_path, canonicalName);
-      if (boost::filesystem::exists(absPath))
-      {
-        absolutePath = OSS::boost_path(absPath);
-        return true;
-      }
-    }
   }
 
   return false;
+}
+
+JS_METHOD_IMPL(__add_module_directory) 
+{
+  v8::HandleScope scope;
+  js_method_arg_declare_string(path, 0);
+  get_current_module_manager()->setModulesDir(path);
+  return JSUndefined();
 }
 
 static std::string get_plugin_canonical_file_name(const std::string& fileName)
@@ -388,7 +397,7 @@ JS_METHOD_IMPL(js_unlock_isolate)
 JSModule::JSModule(JSIsolate* pIsolate) :
   _pIsolate(pIsolate)
 {
-  _modulesDir = OSS::system_libdir() + "/oss_modules";
+  _modulesDir.push_back(OSS::system_libdir() + "/oss_modules");
 }
 
 JSModule::~JSModule()
@@ -460,6 +469,7 @@ bool JSModule::initGlobalExports(v8::Handle<v8::ObjectTemplate>& global)
   global->Set(v8::String::New("__chdir"), v8::FunctionTemplate::New(__chdir));
   global->Set(v8::String::New("__lock_isolate"), v8::FunctionTemplate::New(js_lock_isolate));
   global->Set(v8::String::New("__unlock_isolate"), v8::FunctionTemplate::New(js_unlock_isolate));
+  global->Set(v8::String::New("__add_module_directory"), v8::FunctionTemplate::New(__add_module_directory));
   return true;
 }
 

@@ -67,7 +67,6 @@ static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
   v8::Persistent<v8::Object> exports = v8::Persistent<v8::Object>::New(v8::Object::New());
   __init_argv(exports);
   exports->Set(v8::String::New("getopt"), v8::FunctionTemplate::New(__getopt)->GetFunction());
-  optind = 2;
   exports->SetAccessor(v8::String::New("opterr"), __opterr_get, __opterr_set);
   exports->SetAccessor(v8::String::New("optind"), __optind_get, __optind_set);
   exports->SetAccessor(v8::String::New("optarg"), __optarg_get, 0);

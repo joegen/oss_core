@@ -190,8 +190,8 @@ rm -rf $RPM_BUILD_ROOT
 %dir %attr(755,root,root) %{_libdir}/oss_modules/logger
 %dir %attr(755,root,root) %{_libdir}/oss_modules/json_rpc
 
-%{_libdir}/oss_modules/*.js
-%{_libdir}/oss_modules/*.jso
+#%{_libdir}/oss_modules/*.js
+#%{_libdir}/oss_modules/*.jso
 %{_libdir}/oss_modules/*/*.js
 %{_libdir}/oss_modules/*/*.jso
 

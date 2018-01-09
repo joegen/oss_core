@@ -47,6 +47,7 @@ public:
   
   typedef std::map<std::string, Module> InternalModules;
   typedef std::vector<Module> ModuleHelpers;
+  typedef std::vector<std::string> ModulesDir;
   
   JSModule(JSIsolate* pIsolate);
   ~JSModule();
@@ -56,7 +57,7 @@ public:
   
   InternalModules& getInternalModules();
   ModuleHelpers& getModuleHelpers();
-  const std::string& getModulesDir() const;
+  const ModulesDir& getModulesDir() const;
   void setModulesDir(const std::string& modulesDir);
   void setMainScript(const boost::filesystem::path& script);
   const boost::filesystem::path& getMainScript() const;
@@ -68,7 +69,7 @@ protected:
   
   InternalModules _modules;
   ModuleHelpers _moduleHelpers;
-  std::string _modulesDir;
+  ModulesDir _modulesDir;
   JSIsolate* _pIsolate;
 public:
   static boost::filesystem::path _mainScript;
@@ -89,14 +90,14 @@ inline JSModule::ModuleHelpers& JSModule::getModuleHelpers()
   return _moduleHelpers;
 }
 
-inline const std::string& JSModule::getModulesDir() const
+inline const JSModule::ModulesDir& JSModule::getModulesDir() const
 {
   return _modulesDir;
 }
 
 inline void JSModule::setModulesDir(const std::string& modulesDir)
 {
-  _modulesDir = modulesDir;
+  _modulesDir.push_back(modulesDir);
 }
 
 inline void JSModule::setMainScript(const boost::filesystem::path& script)

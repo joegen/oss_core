@@ -1,6 +1,8 @@
 #include <execinfo.h>
 #include <sys/resource.h>
 #include <signal.h>
+#include <getopt.h>
+#include <unistd.h>
 
 #include "OSS/UTL/Application.h"
 #include "OSS/UTL/ServiceDaemon.h"
@@ -42,10 +44,33 @@ int main(int argc, char** argv)
     _exit(1);
   }
   
-  boost::filesystem::path path = boost::filesystem::path(argv[1]);
+  bool isDaemon = strcmp(argv[1], "-d") == 0;
+  if (isDaemon)
+  {
+    if (argc < 3)
+    {
+      std::cerr << "Usage:  ossjs -d [script] [script_options]" << std::endl;
+      _exit(1);
+    }
+    //
+    // fork the process
+    //
+    pid_t pid;
+    if ((pid = fork()) < 0)
+      _exit(0);
+    else if (pid != 0)
+      _exit(0);
+    setpgrp();
+    int h = open("/dev/null",O_RDWR); dup(h); dup(h); /* handle standard I/O */
+    ::close(STDIN_FILENO);
+  }
+  
+  int scriptIndex = isDaemon ? 2 : 1;
+  
+  boost::filesystem::path path = boost::filesystem::path(argv[scriptIndex]);
   if (!boost::filesystem::exists(path))
   {
-    std::cerr << "Script " << argv[1] << " not found." << std::endl;
+    std::cerr << "Script " << argv[scriptIndex] << " not found." << std::endl;
     _exit(1);
   }
   
@@ -55,6 +80,10 @@ int main(int argc, char** argv)
 
   OSS::OSS_init(argc, argv);
   
+  //
+  // Set optind so getopt knows the correct index where to find scrip params
+  //
+  optind = isDaemon ? 3 : 2;
 
   JS::JSIsolate::Ptr pIsolate = JS::JSIsolateManager::instance().rootIsolate();
   JS::JSIsolateManager::instance().run(pIsolate, path);

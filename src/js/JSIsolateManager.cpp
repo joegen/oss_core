@@ -125,6 +125,23 @@ void JSIsolateManager::runSource(const JSIsolate::Ptr& pIsolate, const std::stri
   pIsolate->runSource(source);
 }
 
+void JSIsolateManager::setExternalData(const std::string& name, intptr_t data)
+{
+  OSS::mutex_critic_sec_lock lock(_mapMutex);
+  _externalData[name] = data;
+}
+
+intptr_t JSIsolateManager::getExternalData(const std::string& name) const
+{
+  OSS::mutex_critic_sec_lock lock(_mapMutex);
+  ExternalData::const_iterator iter = _externalData.find(name);
+  if (iter == _externalData.end())
+  {
+    return 0;
+  }
+  return iter->second;
+}
+
   
 } } // OSS::JS
 
