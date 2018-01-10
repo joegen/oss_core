@@ -4,23 +4,29 @@ var _isolate = require("./_isolate.jso");
 const _Isolate = _isolate.Isolate;
 const EventEmitter = async.EventEmitter;
 
-var inter_isolate_handler = function(request, handler)
+var inter_isolate_handler = function(request, userData, handler, defaultHandler)
 {
   var method = request.method;
   var arguments = request.arguments;
   if (!handler.hasOwnProperty(method))
   {
-    var response = new Object();
-    response.error = new Object();
-    response.error.code = -32601;
-    response.error.message = "Method not found";
-    return response;
+    if (!defaultHandler)
+    {
+      var response = new Object();
+      response.error = new Object();
+      response.error.code = -32601;
+      response.error.message = "Method not found";
+      return JSON.stringify(response);
+    }
+    else
+    {
+      result = defaultHandler(request, userData);
+    }
   }
-  
   var result;
   try
   {
-    result = handler[method](arguments);
+    result = handler[method](arguments, userData);
   }
   catch(e)
   {
@@ -29,20 +35,28 @@ var inter_isolate_handler = function(request, handler)
     response.error = new Object();
     response.error.code = -32603;
     response.error.message = e;
-    return response;
+    return JSON.stringify(response);
   }
   return JSON.stringify(result);
 }
 
-exports.interIsolateHandler = function(request)
+exports.interIsolateHandler = function(request, userData)
 {
-  return inter_isolate_handler(request, exports._handler);
+  return inter_isolate_handler(request, userData, exports._handler, exports._global_handler);
 }
 
 exports._handler = {}
+exports._global_handler = undefined;
 exports.on = function(name, func)
 {
-  exports._handler[name] = func;
+  if (name !== "*")
+  {
+    exports._handler[name] = func;
+  }
+  else
+  {
+    exports._global_handler = func;
+  }
 }
 
 exports.remove = function(name)

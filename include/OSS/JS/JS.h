@@ -94,6 +94,7 @@
 #define JSObjectHandle v8::Handle<v8::Object>
 #define JSLocalObjectHandle v8::Local<v8::Object>
 #define JSLocalObjectTemplateHandle v8::Local<v8::ObjectTemplate>
+#define JSObjectTemplateHandle v8::Local<v8::ObjectTemplate>
 #define JSPersistentObjectHandle v8::Persistent<v8::Object>
 #define JSLiteral(Text) v8::String::NewSymbol(Text)
 #define JSExternalHandle v8::Handle<v8::External> 

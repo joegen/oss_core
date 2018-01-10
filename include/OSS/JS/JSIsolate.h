@@ -110,6 +110,8 @@ public:
     /// Dispose the isloate.  This can never be undone.
     /// This must be called from outside of the isolate thread
   
+  JSLocalObjectHandle wrapExternalPointer(void* ptr);
+  
 protected:
   JSIsolate(pthread_t parentThreadId);
     /// Creates a new isolate.  You MUST not create isolate directly.

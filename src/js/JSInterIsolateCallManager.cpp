@@ -73,9 +73,11 @@ bool JSInterIsolateCallManager::doOneWork()
   }
   
   js_enter_scope();
+  JSLocalObjectHandle pUserData = getIsolate()->wrapExternalPointer(pCall->getUserData());
   JSValueHandle request = getIsolate()->parseJSON(pCall->json());
   JSArgumentVector jsonArg;
   jsonArg.push_back(request);
+  jsonArg.push_back(pUserData);
 
   JSValueHandle result =  _handler.value()->Call(getGlobal(), jsonArg.size(), jsonArg.data());
 

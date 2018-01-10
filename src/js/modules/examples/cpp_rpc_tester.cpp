@@ -22,12 +22,16 @@
 #include "OSS/UTL/Logger.h"
 #include "OSS/JS/modules/Async.h"
 #include "OSS/JS/JSIsolateManager.h"
+#include "OSS/JS/JSEventLoop.h"
 
 static void test_ping(OSS::JS::JSIsolate::Ptr pIsolate)
 {
-  OSS::JSON::Object ping, pong;
+  OSS::JSON::Object ping, arguments, pong;
   ping["method"] = OSS::JSON::String("ping");
-  if (!Async::json_execute_promise(pIsolate.get(), ping, pong))
+  arguments["message"] = OSS::JSON::String("Hello Inter Isolate");
+  ping["arguments"] = arguments;
+  
+  if (!pIsolate->eventLoop()->interIsolate().execute(ping, pong, 0, new std::string("Sample User Data")))
   {
     OSS_LOG_ERROR("json_execute_promise failed for method ping");
   }
@@ -53,10 +57,18 @@ JS_METHOD_IMPL(start_test)
   return JSUndefined();
 }
 
+JS_METHOD_IMPL(parse_user_data)
+{
+  js_enter_scope();
+  std::string* userData = js_method_arg_unwrap_object(std::string, 0);
+  return JSString(userData->c_str());
+}
+
 JS_EXPORTS_INIT()
 {
   js_enter_scope();
   js_export_method("start_test", start_test);
+  js_export_method("parse_user_data", parse_user_data);
   js_export_finalize();
 }
 

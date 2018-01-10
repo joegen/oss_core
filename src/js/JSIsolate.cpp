@@ -99,6 +99,10 @@ void JSIsolate::internal_run()
   v8::Handle<v8::ObjectTemplate> global = v8::ObjectTemplate::New();
   _globalTemplate = v8::Persistent<v8::ObjectTemplate>::New(global);
   
+  v8::Handle<v8::ObjectTemplate> objectTemplate = v8::ObjectTemplate::New();
+  objectTemplate->SetInternalFieldCount(1);
+  _objectTemplate = v8::Persistent<v8::ObjectTemplate>::New(objectTemplate);
+  
   //
   // Set the thread id and update the manager
   //
@@ -277,6 +281,13 @@ void JSIsolate::join()
     delete _pThread;
     _pThread = 0;
   }
+}
+
+JSLocalObjectHandle JSIsolate::wrapExternalPointer(void* ptr)
+{
+  JSLocalObjectHandle pObject = _objectTemplate.value()->NewInstance();
+  pObject->SetInternalField(0, JSExternal(ptr));
+  return pObject;
 }
 
 } } 
