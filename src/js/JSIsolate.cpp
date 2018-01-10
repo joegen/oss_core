@@ -225,7 +225,6 @@ void JSIsolate::emit(const std::string& eventName, const OSS::JSON::Array& args,
 
 void JSIsolate::terminate()
 {
-  assert(_pIsolate);
   _pEventLoop->terminate();
 }
 

@@ -187,6 +187,7 @@ void JSEventLoop::processEvents()
 void JSEventLoop::terminate()
 {
   _isTerminated = true;
+  wakeup();
 }
 
 } } 
