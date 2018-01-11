@@ -1,5 +1,8 @@
 "use-strict"
 
+const _utils = require("./_utils.jso");
+__copy_exports(_utils, exports);
+
 exports.bufferToString =  function(buf)
 {
   return buf.map(function(i){return String.fromCharCode(i)}).join("")

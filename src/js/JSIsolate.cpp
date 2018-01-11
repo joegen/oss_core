@@ -112,6 +112,7 @@ void JSIsolate::internal_run()
   // Initialize global and assign it to the context
   //
   JSIsolateManager::instance().modulesMutex().lock();
+  JSIsolateManager::instance().initGlobalExports(global);
   _pModuleManager->initGlobalExports(global);
   JSIsolateManager::instance().modulesMutex().unlock();
 

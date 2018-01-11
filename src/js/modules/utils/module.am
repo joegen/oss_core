@@ -1,7 +1,13 @@
 utils-install:
 	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/utils
 	cp ${srcdir}/js/modules/utils/*.js ${DESTDIR}${libdir}/oss_modules/utils
+	cp ${DESTDIR}${libdir}/liboss_jsutils.so ${DESTDIR}${libdir}/oss_modules/utils/_utils.jso
 
 INSTALL_PROCEDURES += utils-install
 
 EXTRA_DIST += js/modules/utils/index.js
+
+lib_LTLIBRARIES += liboss_jsutils.la
+liboss_jsutils_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsutils_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsutils_la_SOURCES = js/modules/utils/utils.cpp

@@ -41,6 +41,7 @@ public:
   typedef std::map<std::string, JSIsolate::Ptr> MapByName;
   typedef std::map<pthread_t, JSIsolate::Ptr> MapByThreadId;
   typedef std::map<std::string, intptr_t> ExternalData;
+  typedef std::map<std::string, JS_METHOD_FUNC> GlobalExports;
   
   static JSIsolateManager& instance();
   
@@ -75,6 +76,11 @@ public:
     /// Attach a named pointer to the isolate manager.
     /// This is used internally to expose global C++ objects to plugins
   
+  void exportMethod(const std::string& funcName, JS_METHOD_FUNC method);
+    /// Add a method to be exported globally for all isolates
+  
+  void initGlobalExports(JSObjectTemplateHandle& global);
+    /// Register all exported methods
 private:
   JSIsolateManager();
   ~JSIsolateManager();
@@ -85,6 +91,7 @@ private:
   MapByThreadId _byThreadId;
   ExternalData _externalData;
   JSIsolate::Ptr _rootIsolate;
+  GlobalExports _exports;
 };
 
 //
@@ -100,6 +107,12 @@ inline OSS::mutex& JSIsolateManager::modulesMutex()
 {
   return _modulesMutex;
 }
+
+inline void JSIsolateManager::exportMethod(const std::string& funcName, JS_METHOD_FUNC method)
+{
+  _exports[funcName] = method;
+}
+
   
 } } // OSS::JS
 

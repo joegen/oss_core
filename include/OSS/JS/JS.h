@@ -44,6 +44,8 @@
   static void Init(JSObjectHandle exports); \
   static v8::Handle<v8::Value> New(const v8::Arguments& _args_);
 
+typedef v8::Handle<v8::Value> (*JS_METHOD_FUNC)(const v8::Arguments&);
+
 #define JS_METHOD_DECLARE(Method) static v8::Handle<v8::Value> Method(const v8::Arguments& _args_)
 #define JS_INDEX_GETTER_DECLARE(Method) static v8::Handle<v8::Value> Method(uint32_t index, const v8::AccessorInfo& _args_);
 #define JS_INDEX_SETTER_DECLARE(Method) static v8::Handle<v8::Value> Method(uint32_t index, v8::Local<v8::Value> value, const v8::AccessorInfo& _args_);
@@ -92,9 +94,10 @@
 #define JSArrayHandle v8::Handle<v8::Array>
 #define JSLocalArrayHandle v8::Local<v8::Array>
 #define JSObjectHandle v8::Handle<v8::Object>
+#define JSObjectTemplateHandle v8::Handle<v8::ObjectTemplate>
 #define JSLocalObjectHandle v8::Local<v8::Object>
 #define JSLocalObjectTemplateHandle v8::Local<v8::ObjectTemplate>
-#define JSObjectTemplateHandle v8::Local<v8::ObjectTemplate>
+#define JSLocalObjectTemplateHandle v8::Local<v8::ObjectTemplate>
 #define JSPersistentObjectHandle v8::Persistent<v8::Object>
 #define JSLiteral(Text) v8::String::NewSymbol(Text)
 #define JSExternalHandle v8::Handle<v8::External> 

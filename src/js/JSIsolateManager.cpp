@@ -142,6 +142,14 @@ intptr_t JSIsolateManager::getExternalData(const std::string& name) const
   return iter->second;
 }
 
+void JSIsolateManager::initGlobalExports(JSObjectTemplateHandle& global)
+{
+  for(GlobalExports::iterator iter = _exports.begin(); iter != _exports.end(); iter++)
+  {
+    global->Set(v8::String::New(iter->first.c_str()), v8::FunctionTemplate::New(iter->second));
+  }
+}
+
   
 } } // OSS::JS
 
