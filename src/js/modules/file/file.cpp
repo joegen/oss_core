@@ -68,7 +68,6 @@ FileObject::~FileObject()
 
 JS_CONSTRUCTOR_IMPL(FileObject) 
 {
-  js_enter_scope();
   FileObject* pFile = new FileObject();
   pFile->Wrap(js_method_arg_self());
   return js_method_arg_self();
@@ -76,7 +75,6 @@ JS_CONSTRUCTOR_IMPL(FileObject)
 
 JS_METHOD_IMPL(FileObject::_fopen)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_string(0);
   js_method_arg_assert_string(1);
@@ -89,7 +87,6 @@ JS_METHOD_IMPL(FileObject::_fopen)
 
 JS_METHOD_IMPL(FileObject::_fmemopen)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_uint32(0);
   js_method_arg_assert_string(1);
@@ -109,7 +106,6 @@ JS_METHOD_IMPL(FileObject::_fmemopen)
 
 JS_METHOD_IMPL(FileObject::_fclose)
 {
-  js_enter_scope();
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   if (pFile->_pFile)
   {
@@ -122,7 +118,6 @@ JS_METHOD_IMPL(FileObject::_fclose)
 
 JS_METHOD_IMPL(FileObject::_fseek)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_int32(0);
   js_method_arg_assert_int32(1);
@@ -135,7 +130,6 @@ JS_METHOD_IMPL(FileObject::_fseek)
 
 JS_METHOD_IMPL(FileObject::_rewind)
 {
-  js_enter_scope();
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   js_assert(pFile->_pFile, "Invalid Argument");
   ::rewind(pFile->_pFile);
@@ -144,7 +138,6 @@ JS_METHOD_IMPL(FileObject::_rewind)
 
 JS_METHOD_IMPL(FileObject::_fflush)
 {
-  js_enter_scope();
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   js_assert(pFile->_pFile, "Invalid Argument");
   return JSInt32(::fflush(pFile->_pFile));
@@ -152,7 +145,6 @@ JS_METHOD_IMPL(FileObject::_fflush)
 
 JS_METHOD_IMPL(FileObject::_feof)
 {
-  js_enter_scope();
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   js_assert(pFile->_pFile, "Invalid Argument");
   return JSBoolean(::feof(pFile->_pFile) != 0);
@@ -160,7 +152,6 @@ JS_METHOD_IMPL(FileObject::_feof)
 
 JS_METHOD_IMPL(FileObject::_ferror)
 {
-  js_enter_scope();
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   js_assert(pFile->_pFile, "Invalid Argument");
   return JSInt32(::ferror(pFile->_pFile));
@@ -168,7 +159,6 @@ JS_METHOD_IMPL(FileObject::_ferror)
 
 JS_METHOD_IMPL(FileObject::_fread)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_uint32(0);
   int len = js_method_arg_as_int32(0);
@@ -188,7 +178,6 @@ JS_METHOD_IMPL(FileObject::_fread)
 
 JS_METHOD_IMPL(FileObject::_fwrite)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   js_assert(pFile->_pFile, "Invalid Argument");
@@ -219,7 +208,6 @@ JS_METHOD_IMPL(FileObject::_fwrite)
 
 JS_METHOD_IMPL(FileObject::_fgets)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_uint32(0);
   int len = js_method_arg_as_int32(0);
@@ -241,7 +229,6 @@ JS_METHOD_IMPL(FileObject::_fgets)
 
 JS_METHOD_IMPL(FileObject::_fileno)
 {
-  js_enter_scope();
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   js_assert(pFile->_pFile, "Invalid State");
   return  JSInt32(::fileno(pFile->_pFile));
@@ -249,7 +236,6 @@ JS_METHOD_IMPL(FileObject::_fileno)
 
 JS_METHOD_IMPL(FileObject::_fputc)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_int32(0);
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
@@ -260,7 +246,6 @@ JS_METHOD_IMPL(FileObject::_fputc)
 
 JS_METHOD_IMPL(FileObject::_fputs)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   std::string data = js_method_arg_as_std_string(0);
@@ -271,7 +256,6 @@ JS_METHOD_IMPL(FileObject::_fputs)
 
 JS_METHOD_IMPL(FileObject::_ftell)
 {
-  js_enter_scope();
   FileObject* pFile = js_method_arg_unwrap_self(FileObject);
   js_assert(pFile->_pFile, "Invalid State");
   return JSInt32(::ftell(pFile->_pFile));
@@ -279,7 +263,6 @@ JS_METHOD_IMPL(FileObject::_ftell)
 
 JS_METHOD_IMPL(FileObject::_flock)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_int32(0);
   int32_t operation = js_method_arg_as_int32(0);
@@ -290,7 +273,6 @@ JS_METHOD_IMPL(FileObject::_flock)
 
 JS_EXPORTS_INIT()
 {
-  js_enter_scope();
   js_export_class(FileObject);
   js_export_global_constructor("File", FileObject::_constructor);
   

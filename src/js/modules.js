@@ -37,6 +37,7 @@ function require(path)
   
   var module = new Module();
   module.path = modulePath;
+  module.exports = {};
   
   if (module.path.search(".jso") != module.path.length - 4)
   {
@@ -50,7 +51,20 @@ function require(path)
     var current_path = __current_path();
     var parent_path = __parent_path(module.path);
     __chdir(parent_path);
-    __compile_module(script, module.path)(module, module.exports);
+    try {
+      var compiled = __compile_module(script, module.path);
+      if (typeof compiled === "function")
+      {
+        compiled(module, module.exports)
+      }
+      else
+      {
+        module.exports = undefined;
+      }
+    } catch (e) {
+      module.exports = undefined;
+    }
+    
     __chdir(current_path);
   }
   else

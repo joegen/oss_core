@@ -1,8 +1,10 @@
 "use-strict";
 
-const system = require("system");
-const console = require("console");
+console.log(1);
+try {
 const opt = require("getopt");
+} catch(e) {console.log(e);}
+console.log(2);
 
 var aflag = 0;
 var bflag = 0;

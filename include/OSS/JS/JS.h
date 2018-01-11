@@ -78,7 +78,7 @@ typedef v8::Handle<v8::Value> (*JS_METHOD_FUNC)(const v8::Arguments&);
 
 #define JS_INDEX_SETTER_IMPL(Method)  JSValueHandle Method(uint32_t index,v8::Local<v8::Value> value, const v8::AccessorInfo& _args_)
 
-#define JS_EXPORTS_INIT() static v8::Handle<v8::Value> init_exports(const v8::Arguments& _args_) { js_enter_scope(); \
+#define JS_EXPORTS_INIT() static v8::Handle<v8::Value> init_exports(const v8::Arguments& _args_) { \
   v8::Local<v8::Object> exports = v8::Local<v8::Object>::New(v8::Object::New());
 
 #define js_export_finalize() } return exports;

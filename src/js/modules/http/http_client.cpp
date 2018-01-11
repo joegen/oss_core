@@ -84,7 +84,6 @@ HttpClientObject::~HttpClientObject()
 
 JS_CONSTRUCTOR_IMPL(HttpClientObject)
 {
-  js_enter_scope();
   js_method_arg_declare_bool(isSecure, 0);
   HttpClientObject* pClient = 0;
   try
@@ -108,7 +107,6 @@ JS_CONSTRUCTOR_IMPL(HttpClientObject)
 
 JS_METHOD_IMPL(HttpClientObject::setHost)
 {
-  js_enter_scope();
   HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
   assert_session(pClient);
   js_method_arg_assert_size_eq(1);
@@ -120,7 +118,6 @@ JS_METHOD_IMPL(HttpClientObject::setHost)
 
 JS_METHOD_IMPL(HttpClientObject::getHost)
 {
-  js_enter_scope();
   HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
   assert_session(pClient);
   return JSString(pClient->_session->getHost());
@@ -128,7 +125,6 @@ JS_METHOD_IMPL(HttpClientObject::getHost)
 
 JS_METHOD_IMPL(HttpClientObject::setPort)
 {
-  js_enter_scope();
   HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
   assert_session(pClient);
   js_method_arg_assert_size_eq(1);
@@ -140,7 +136,6 @@ JS_METHOD_IMPL(HttpClientObject::setPort)
 
 JS_METHOD_IMPL(HttpClientObject::getPort)
 {
-  js_enter_scope();
   HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
   assert_session(pClient);
   return JSUInt32(pClient->_session->getPort());
@@ -148,7 +143,6 @@ JS_METHOD_IMPL(HttpClientObject::getPort)
 
 JS_METHOD_IMPL(HttpClientObject::setProxyHost)
 {
-  js_enter_scope();
   HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
   assert_session(pClient);
   js_method_arg_assert_size_eq(1);
@@ -160,7 +154,6 @@ JS_METHOD_IMPL(HttpClientObject::setProxyHost)
 
 JS_METHOD_IMPL(HttpClientObject::setProxyPort)
 {
-  js_enter_scope();
   HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
   assert_session(pClient);
   js_method_arg_assert_size_eq(1);
@@ -172,7 +165,6 @@ JS_METHOD_IMPL(HttpClientObject::setProxyPort)
 
 JS_METHOD_IMPL(HttpClientObject::getProxyHost)
 {
-  js_enter_scope();
   HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
   assert_session(pClient);
   return JSString(pClient->_session->getProxyHost());
@@ -180,7 +172,6 @@ JS_METHOD_IMPL(HttpClientObject::getProxyHost)
 
 JS_METHOD_IMPL(HttpClientObject::getProxyPort)
 {
-  js_enter_scope();
   HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
   assert_session(pClient);
   return JSUInt32(pClient->_session->getProxyPort());
@@ -188,7 +179,6 @@ JS_METHOD_IMPL(HttpClientObject::getProxyPort)
 
 JS_METHOD_IMPL(HttpClientObject::setKeepAliveTimeout)
 {
-  js_enter_scope();
   HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
   assert_session(pClient);
   js_method_arg_assert_size_eq(1);
@@ -202,7 +192,6 @@ JS_METHOD_IMPL(HttpClientObject::setKeepAliveTimeout)
 
 JS_METHOD_IMPL(HttpClientObject::getKeepAliveTimeout)
 {
-  js_enter_scope();
   HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
   assert_session(pClient);
   const Poco::Timespan& timespan = pClient->_session->getKeepAliveTimeout();
@@ -252,7 +241,6 @@ public:
 
 JS_METHOD_IMPL(HttpClientObject::sendRequest)
 {
-  js_enter_scope();
   js_method_arg_declare_self(HttpClientObject, self);
   assert_session(self);
   js_method_arg_declare_external_object(HttpRequestObject, pRequest, 0);
@@ -323,7 +311,6 @@ public:
 
 JS_METHOD_IMPL(HttpClientObject::receiveResponse)
 {
-  js_enter_scope();
   js_method_arg_declare_self(HttpClientObject, self);
   assert_session(self);
   js_method_arg_declare_external_object(HttpResponseObject, pResponse, 0);
@@ -353,7 +340,6 @@ JS_METHOD_IMPL(HttpClientObject::receiveResponse)
 
 JS_METHOD_IMPL(HttpClientObject::connected)
 {
-  js_enter_scope();
   HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
   assert_session(pClient);
   return JSBoolean(pClient->_session->connected());
@@ -361,7 +347,6 @@ JS_METHOD_IMPL(HttpClientObject::connected)
 
 JS_METHOD_IMPL(HttpClientObject::secure)
 {
-  js_enter_scope();
   HttpClientObject* pClient = js_method_arg_unwrap_self(HttpClientObject);
   assert_session(pClient);
   return JSBoolean(pClient->_isSecure);
@@ -410,7 +395,6 @@ public:
 
 JS_METHOD_IMPL(HttpClientObject::read)
 {
-  js_enter_scope();
   js_method_arg_declare_self(HttpClientObject, self);
   assert_session(self);
   js_method_arg_declare_external_object(BufferObject, buf, 0);
@@ -445,7 +429,6 @@ JS_METHOD_IMPL(HttpClientObject::read)
 
 JS_METHOD_IMPL(HttpClientObject::write)
 {
-  js_enter_scope();
   js_method_arg_declare_self(HttpClientObject, self);
   assert_session(self);
   js_method_arg_declare_external_object(BufferObject, buf, 0);
@@ -462,7 +445,6 @@ JS_METHOD_IMPL(HttpClientObject::write)
 
 JS_METHOD_IMPL(HttpClientObject::setEventFd)
 {
-  js_enter_scope();
   js_method_arg_declare_self(HttpClientObject, self);
   assert_session(self);
   js_method_arg_declare_int32(fd, 0);
@@ -472,7 +454,6 @@ JS_METHOD_IMPL(HttpClientObject::setEventFd)
 
 JS_METHOD_IMPL(HttpClientObject::dispose)
 {
-  js_enter_scope();
   js_method_arg_declare_self(HttpClientObject, self);
   assert_session(self);
   delete self->_session;
@@ -482,7 +463,6 @@ JS_METHOD_IMPL(HttpClientObject::dispose)
 
 JS_EXPORTS_INIT()
 {
-  js_enter_scope();
   js_export_class(HttpClientObject);
   js_export_finalize(); 
 }

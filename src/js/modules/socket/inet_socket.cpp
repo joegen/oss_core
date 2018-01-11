@@ -34,7 +34,6 @@ static char SERVICE_BUF[SERVICE_BUF_SIZE];
 
 JS_METHOD_IMPL(__create_inet_stream_socket)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(4);
   js_method_arg_assert_string(0);
   js_method_arg_assert_string(1);
@@ -53,7 +52,6 @@ JS_METHOD_IMPL(__create_inet_stream_socket)
 
 JS_METHOD_IMPL(__create_inet_dgram_socket)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_uint32(0);
   js_method_arg_assert_int32(1);
@@ -68,7 +66,6 @@ JS_METHOD_IMPL(__create_inet_dgram_socket)
 
 JS_METHOD_IMPL(__sendto_inet_dgram_socket)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(6);
   
   js_method_arg_assert_int32(0);
@@ -92,7 +89,6 @@ JS_METHOD_IMPL(__sendto_inet_dgram_socket)
 
 JS_METHOD_IMPL(__recvfrom_inet_dgram_socket)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(4);
   js_method_arg_assert_int32(0);
   js_method_arg_assert_buffer(1);
@@ -119,7 +115,6 @@ JS_METHOD_IMPL(__recvfrom_inet_dgram_socket)
 
 JS_METHOD_IMPL(__connect_inet_dgram_socket)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(3);
   js_method_arg_assert_int32(0);
   js_method_arg_assert_string(1);
@@ -136,7 +131,6 @@ JS_METHOD_IMPL(__connect_inet_dgram_socket)
 
 JS_METHOD_IMPL(__destroy_inet_socket)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_int32(0);
   int32_t fd = js_method_arg_as_int32(0);
@@ -146,7 +140,6 @@ JS_METHOD_IMPL(__destroy_inet_socket)
 
 JS_METHOD_IMPL(__shutdown_inet_stream_socket)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_int32(0);
   js_method_arg_assert_int32(1);
@@ -158,7 +151,6 @@ JS_METHOD_IMPL(__shutdown_inet_stream_socket)
 
 JS_METHOD_IMPL(__create_inet_server_socket)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(5);
   js_method_arg_assert_string(0);
   js_method_arg_assert_string(1);
@@ -179,7 +171,6 @@ JS_METHOD_IMPL(__create_inet_server_socket)
 
 JS_METHOD_IMPL(__accept_inet_stream_socket)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_int32(0);
   js_method_arg_assert_int32(1);
@@ -203,7 +194,6 @@ JS_METHOD_IMPL(__accept_inet_stream_socket)
 
 JS_METHOD_IMPL(__get_address_family)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   std::string host = js_method_arg_as_std_string(0);
@@ -213,7 +203,6 @@ JS_METHOD_IMPL(__get_address_family)
 
 JS_METHOD_IMPL(__create_multicast_socket)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(3);
   js_method_arg_assert_string(0);
   js_method_arg_assert_string(1);
@@ -231,7 +220,6 @@ JS_METHOD_IMPL(__create_multicast_socket)
 
 JS_METHOD_IMPL(__getpeername)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_int32(0);
   int32_t fd = js_method_arg_as_int32(0);
@@ -268,7 +256,6 @@ JS_METHOD_IMPL(__getpeername)
 
 JS_METHOD_IMPL(__getsockname)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_int32(0);
   int32_t fd = js_method_arg_as_int32(0);
@@ -305,8 +292,6 @@ JS_METHOD_IMPL(__getsockname)
 
 JS_EXPORTS_INIT()
 {
-  js_enter_scope();
-
   js_export_method("create_inet_stream_socket", __create_inet_stream_socket);
   js_export_method("create_inet_dgram_socket", __create_inet_dgram_socket);
   js_export_method("sendto_inet_dgram_socket", __sendto_inet_dgram_socket);

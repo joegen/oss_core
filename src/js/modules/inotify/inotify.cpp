@@ -27,13 +27,11 @@
 
 JS_METHOD_IMPL(__inotify_init)
 {
-  js_enter_scope();
   return JSInt32(inotify_init());
 }
 
 JS_METHOD_IMPL(__inotify_add_watch)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(3);
   js_method_arg_assert_int32(0);
   js_method_arg_assert_string(1);
@@ -48,7 +46,6 @@ JS_METHOD_IMPL(__inotify_add_watch)
 
 JS_METHOD_IMPL(__inotify_rm_watch)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_int32(0);
   js_method_arg_assert_int32(1);
@@ -62,7 +59,6 @@ JS_METHOD_IMPL(__inotify_rm_watch)
 
 JS_METHOD_IMPL(__inotify_get_events)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_int32(0);
   int32_t fd = js_method_arg_as_int32(0);
@@ -100,7 +96,6 @@ JS_METHOD_IMPL(__inotify_get_events)
 
 JS_EXPORTS_INIT()
 {
-  js_enter_scope();
   js_export_method("inotify_init", __inotify_init);
   js_export_method("inotify_add_watch", __inotify_add_watch);
   js_export_method("inotify_rm_watch", __inotify_rm_watch);

@@ -25,13 +25,11 @@
 
 JS_METHOD_IMPL(__fork)
 {
-  js_enter_scope();
   return JSInt32(fork());
 }
 
 JS_METHOD_IMPL(__wait)
 {
-  js_enter_scope();
   int status = 0;
   pid_t pid = ::wait(&status);
   JSObjectHandle result = JSObject();
@@ -42,7 +40,6 @@ JS_METHOD_IMPL(__wait)
 
 JS_EXPORTS_INIT()
 {
-  js_enter_scope();
   js_export_method("fork", __fork);
   js_export_method("wait", __wait);
   js_export_finalize();

@@ -53,7 +53,6 @@ QueueObject::~QueueObject()
 
 JS_CONSTRUCTOR_IMPL(QueueObject)
 {
-  js_enter_scope();
   js_method_arg_declare_persistent_function(handler, 0);
   QueueObject* pQueue = new QueueObject();
   pQueue->_eventCallback = handler;
@@ -63,7 +62,6 @@ JS_CONSTRUCTOR_IMPL(QueueObject)
 
 JS_METHOD_IMPL(QueueObject::enqueue)
 {
-  js_enter_scope();
   js_method_arg_declare_array(items, 0);
   js_method_arg_declare_self(QueueObject, pQueue);
   Event::Ptr pEvent = Event::Ptr(new QueueObject::Event());
@@ -74,7 +72,6 @@ JS_METHOD_IMPL(QueueObject::enqueue)
 
 JS_METHOD_IMPL(QueueObject::getFd)
 {
-  js_enter_scope();
   js_method_arg_declare_self(QueueObject, self);
   return JSInt32(self->_queue.getFd());
 }

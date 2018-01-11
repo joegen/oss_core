@@ -211,7 +211,6 @@ bool HttpParserObject::getHeaderAt(uint32_t index, std::string& name, std::strin
 
 JS_CONSTRUCTOR_IMPL(HttpParserObject) 
 {
-  js_enter_scope();
   HttpParserObject* pFile = new HttpParserObject();
   pFile->Wrap(js_method_arg_self());
   return js_method_arg_self();
@@ -219,7 +218,6 @@ JS_CONSTRUCTOR_IMPL(HttpParserObject)
 
 JS_METHOD_IMPL(HttpParserObject::getMethod)
 {
-  js_enter_scope();
   HttpParserObject* pParser = js_method_arg_unwrap_self(HttpParserObject);
   if (pParser->getUrl().empty())
   {
@@ -230,7 +228,6 @@ JS_METHOD_IMPL(HttpParserObject::getMethod)
 
 JS_METHOD_IMPL(HttpParserObject::getUrl)
 {
-  js_enter_scope();
   HttpParserObject* pParser = js_method_arg_unwrap_self(HttpParserObject);
   if (pParser->getUrl().empty())
   {
@@ -241,7 +238,6 @@ JS_METHOD_IMPL(HttpParserObject::getUrl)
 
 JS_METHOD_IMPL(HttpParserObject::getStatus)
 {
-  js_enter_scope();
   HttpParserObject* pParser = js_method_arg_unwrap_self(HttpParserObject);
   if (pParser->getStatus().empty())
   {
@@ -252,7 +248,6 @@ JS_METHOD_IMPL(HttpParserObject::getStatus)
 
 JS_METHOD_IMPL(HttpParserObject::getStatusCode)
 {
-  js_enter_scope();
   HttpParserObject* pParser = js_method_arg_unwrap_self(HttpParserObject);
   if (!pParser->getStatusCode())
   {
@@ -263,21 +258,18 @@ JS_METHOD_IMPL(HttpParserObject::getStatusCode)
 
 JS_METHOD_IMPL(HttpParserObject::getMajorVersion)
 {
-  js_enter_scope();
   HttpParserObject* pParser = js_method_arg_unwrap_self(HttpParserObject);
   return JSInt32(pParser->getMajorVersion());
 }
 
 JS_METHOD_IMPL(HttpParserObject::getMinorVersion)
 {
-  js_enter_scope();
   HttpParserObject* pParser = js_method_arg_unwrap_self(HttpParserObject);
   return JSInt32(pParser->getMinorVersion());
 }
 
 JS_METHOD_IMPL(HttpParserObject::getHeader)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_is_string(0);
   std::string header = js_method_arg_as_std_string(0);
@@ -292,14 +284,12 @@ JS_METHOD_IMPL(HttpParserObject::getHeader)
 
 JS_METHOD_IMPL(HttpParserObject::getHeaderCount)
 {
-  js_enter_scope();
   HttpParserObject* pParser = js_method_arg_unwrap_self(HttpParserObject);
   return JSUInt32(pParser->getHeaderCount());
 }
 
 JS_METHOD_IMPL(HttpParserObject::getHeaderAt)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_uint32(0);
   uint32_t index = js_method_arg_as_uint32(0);
@@ -318,7 +308,6 @@ JS_METHOD_IMPL(HttpParserObject::getHeaderAt)
 
 JS_METHOD_IMPL(HttpParserObject::getBody)
 {
-  js_enter_scope();
   HttpParserObject* pParser = js_method_arg_unwrap_self(HttpParserObject);
   if (pParser->getBody().empty())
   {
@@ -329,35 +318,30 @@ JS_METHOD_IMPL(HttpParserObject::getBody)
 
 JS_METHOD_IMPL(HttpParserObject::isRequest)
 {
-  js_enter_scope();
   HttpParserObject* pParser = js_method_arg_unwrap_self(HttpParserObject);
   return JSBoolean(pParser->isRequest());
 }
 
 JS_METHOD_IMPL(HttpParserObject::isReponse)
 {
-  js_enter_scope();
   HttpParserObject* pParser = js_method_arg_unwrap_self(HttpParserObject);
   return JSBoolean(pParser->isResponse());
 }
 
 JS_METHOD_IMPL(HttpParserObject::isMessageComplete)
 {
-  js_enter_scope();
   HttpParserObject* pParser = js_method_arg_unwrap_self(HttpParserObject);
   return JSBoolean(pParser->isMessageComplete());
 }
 
 JS_METHOD_IMPL(HttpParserObject::isHeadersComplete)
 {
-  js_enter_scope();
   HttpParserObject* pParser = js_method_arg_unwrap_self(HttpParserObject);
   return JSBoolean(pParser->isHeadersComplete());
 }
 
 JS_METHOD_IMPL(HttpParserObject::parse)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_buffer(0);
   BufferObject* pBuffer = js_method_arg_as_buffer(0);
@@ -367,8 +351,6 @@ JS_METHOD_IMPL(HttpParserObject::parse)
 
 JS_EXPORTS_INIT()
 {
-  js_enter_scope();
-  
   memset(&HttpParserObject::_settings, 0, sizeof(HttpParserObject::_settings));
   HttpParserObject::_settings.on_message_begin = HttpParserObject::on_message_begin;
   HttpParserObject::_settings.on_url = HttpParserObject::on_url;

@@ -71,7 +71,6 @@ JS_CLASS_INTERFACE(HttpServerObject, "HttpServer")
 
 JS_CONSTRUCTOR_IMPL(HttpServerObject)
 {
-  js_enter_scope();
   bool useHttps = false;
   if (js_method_arg_length() > 0)
   {
@@ -246,7 +245,6 @@ void HttpServerObject::handleRequest(HTTPServerRequest& request, HTTPServerRespo
 
 JS_METHOD_IMPL(HttpServerObject::_sendResponse)
 {
-  js_enter_scope();
   js_method_arg_declare_self(HttpServerObject, self);
   js_method_arg_declare_uint32(responseId, 0);
   js_method_arg_declare_object(response, 1);
@@ -315,7 +313,6 @@ JS_METHOD_IMPL(HttpServerObject::_sendResponse)
 
 JS_METHOD_IMPL(HttpServerObject::setMaxQueued)
 {
-  js_enter_scope();
   js_method_arg_declare_self(HttpServerObject, self);
   js_method_arg_declare_uint32(value, 0);
   self->_pParams->setMaxQueued(value);
@@ -324,7 +321,6 @@ JS_METHOD_IMPL(HttpServerObject::setMaxQueued)
 
 JS_METHOD_IMPL(HttpServerObject::setMaxThreads)
 {
-  js_enter_scope();
   js_method_arg_declare_self(HttpServerObject, self);
   js_method_arg_declare_uint32(value, 0);
   self->_pParams->setMaxThreads(value);
@@ -333,7 +329,6 @@ JS_METHOD_IMPL(HttpServerObject::setMaxThreads)
 
 JS_METHOD_IMPL(HttpServerObject::_setRpcId)
 {
-  js_enter_scope();
   js_method_arg_declare_self(HttpServerObject, self);
   js_method_arg_declare_string(rpcId, 0);
   self->_rpcId = rpcId;
@@ -342,7 +337,6 @@ JS_METHOD_IMPL(HttpServerObject::_setRpcId)
 
 JS_METHOD_IMPL(HttpServerObject::_read)
 {
-  js_enter_scope();
   js_method_arg_declare_self(HttpServerObject, self);
   js_method_arg_declare_int32(streamId, 0);
   js_method_arg_declare_external_object(BufferObject, buf, 1);
@@ -352,7 +346,6 @@ JS_METHOD_IMPL(HttpServerObject::_read)
 
 JS_METHOD_IMPL(HttpServerObject::_write)
 {
-  js_enter_scope();
   js_method_arg_declare_self(HttpServerObject, self);
   js_method_arg_declare_int32(streamId, 0);
   js_method_arg_declare_external_object(BufferObject, buf, 1);
@@ -362,8 +355,6 @@ JS_METHOD_IMPL(HttpServerObject::_write)
 
 JS_METHOD_IMPL(HttpServerObject::_listen)
 {
-  js_enter_scope();
-  
   js_method_arg_declare_self(HttpServerObject, self);
   
   if (self->_pSocket)
@@ -419,7 +410,6 @@ JS_METHOD_IMPL(HttpServerObject::_listen)
 
 JS_EXPORTS_INIT()
 {
-  js_enter_scope();
   js_export_class(HttpServerObject);
   js_export_finalize(); 
 }

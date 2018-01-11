@@ -55,7 +55,6 @@ IsolateObject::~IsolateObject()
 
 JS_CONSTRUCTOR_IMPL(IsolateObject) 
 {
-  js_enter_scope();
   IsolateObject* pObject = new IsolateObject(pthread_self());
   pObject->Wrap(js_method_arg_self());
   return js_method_arg_self();
@@ -82,7 +81,6 @@ JS_METHOD_IMPL(IsolateObject::runSource)
 
 JS_METHOD_IMPL(IsolateObject::stop)
 {
-  js_enter_scope();
   js_method_arg_declare_self(IsolateObject, pSelf);
   pSelf->_pIsolate->terminate();
   return JSUndefined();
@@ -90,7 +88,6 @@ JS_METHOD_IMPL(IsolateObject::stop)
 
 JS_METHOD_IMPL(IsolateObject::join)
 {
-  js_enter_scope();
   js_method_arg_declare_self(IsolateObject, pSelf);
   pSelf->_pIsolate->join();
   return JSUndefined();
@@ -98,7 +95,6 @@ JS_METHOD_IMPL(IsolateObject::join)
 
 JS_METHOD_IMPL(setChildInterIsolateHandler)
 {
-  js_enter_scope();
   js_method_arg_declare_persistent_function(func, 0);
   js_method_arg_declare_uint32(eventEmitterFd, 1);
   OSS::JS::JSIsolateManager::instance().getIsolate()->setEventEmitterFd(eventEmitterFd);
@@ -108,7 +104,6 @@ JS_METHOD_IMPL(setChildInterIsolateHandler)
 
 JS_METHOD_IMPL(setRootInterIsolateHandler)
 {
-  js_enter_scope();
   js_method_arg_declare_persistent_function(func, 0);
   js_method_arg_declare_uint32(eventEmitterFd, 1);
   OSS::JS::JSIsolateManager::instance().rootIsolate()->setEventEmitterFd(eventEmitterFd);

@@ -65,7 +65,6 @@ BufferObject::~BufferObject()
 
 JSValueHandle BufferObject::createNew(uint32_t size)
 {
-  js_enter_scope();
   JSValueHandle funcArgs[1];
   funcArgs[0] = JSUInt32(size);
   return BufferObject::createNewFunc->Call(js_get_global(), 1, funcArgs);
@@ -73,7 +72,6 @@ JSValueHandle BufferObject::createNew(uint32_t size)
 
 bool BufferObject::isBuffer(JSValueHandle value)
 {
-  js_enter_scope();
   return !value.IsEmpty() && value->IsObject() &&
     value->ToObject()->Has(JSLiteral("ObjectType")) &&
     value->ToObject()->Get(JSLiteral("ObjectType"))->ToString()->Equals(JSLiteral("Buffer"));
@@ -81,7 +79,6 @@ bool BufferObject::isBuffer(JSValueHandle value)
 
 JS_CONSTRUCTOR_IMPL(BufferObject)
 {
-  js_enter_scope();
   BufferObject* pBuffer = 0;
   
   if (js_method_arg_length() == 1 && js_method_arg_is_number(0))
@@ -102,7 +99,7 @@ JS_CONSTRUCTOR_IMPL(BufferObject)
   {
     JSArrayHandle array = js_method_arg_as_array(0);
     pBuffer = new BufferObject();
-    if (!js_int_array_to_byte_array(array, pBuffer->_buffer))
+    if (!js_int_array_to_byte_array(array, pBuffer->_buffer, true))
     {
       delete pBuffer;
       js_throw("Invalid Array Elements");
@@ -133,13 +130,11 @@ JS_CONSTRUCTOR_IMPL(BufferObject)
 
 JS_METHOD_IMPL(BufferObject::size)
 {
-  js_enter_scope();
   return JSInteger(js_method_arg_unwrap_self(BufferObject)->_buffer.size());
 }
 
 JS_METHOD_IMPL(BufferObject::fromArray)
 {
-  js_enter_scope();
   js_method_arg_assert_size_gteq(1);
   js_method_arg_assert_array(0);
   JSArrayHandle array = js_method_arg_as_array(0);
@@ -159,7 +154,6 @@ JS_METHOD_IMPL(BufferObject::fromArray)
 
 JS_METHOD_IMPL(BufferObject::fromString)
 {
-  js_enter_scope();
   js_method_arg_assert_size_gteq(1);
   js_method_arg_assert_string(0);
   std::string str = js_method_arg_as_std_string(0);
@@ -179,7 +173,6 @@ JS_METHOD_IMPL(BufferObject::fromString)
 
 JS_METHOD_IMPL(BufferObject::fromBuffer)
 {
-  js_enter_scope();
   js_method_arg_assert_size_gteq(1);
   js_method_arg_assert_object(0);
   if (!BufferObject::isBuffer(js_method_arg_as_object(0)))
@@ -220,7 +213,6 @@ JS_METHOD_IMPL(BufferObject::fromBuffer)
 
 JS_METHOD_IMPL(BufferObject::toArray)
 {
-  js_enter_scope();
   BufferObject* pBuffer = js_method_arg_unwrap_self(BufferObject);
   
   uint32_t size = 0;
@@ -236,7 +228,6 @@ JS_METHOD_IMPL(BufferObject::toArray)
 
 JS_METHOD_IMPL(BufferObject::toString) 
 {
-  js_enter_scope();
   BufferObject* pBuffer = js_method_arg_unwrap_self(BufferObject);
   
   uint32_t size = pBuffer->_buffer.size();
@@ -250,7 +241,6 @@ JS_METHOD_IMPL(BufferObject::toString)
 
 JS_METHOD_IMPL(BufferObject::equals) 
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_object(0);
   
@@ -265,7 +255,6 @@ JS_METHOD_IMPL(BufferObject::equals)
 
 JS_METHOD_IMPL(BufferObject::resize)
 {
-  js_enter_scope();
   BufferObject* buf = js_method_arg_unwrap_self(BufferObject);
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_uint32(0);
@@ -276,7 +265,6 @@ JS_METHOD_IMPL(BufferObject::resize)
 
 JS_METHOD_IMPL(BufferObject::clear)
 {
-  js_enter_scope();
   BufferObject* buf = js_method_arg_unwrap_self(BufferObject);
   buf->buffer().clear();
   return JSUndefined();
@@ -284,7 +272,6 @@ JS_METHOD_IMPL(BufferObject::clear)
 
 JS_METHOD_IMPL(BufferObject::isBufferObject)
 {
-  js_enter_scope();
   return JSBoolean(BufferObject::isBuffer(js_method_arg(0)));
 }
 
@@ -293,7 +280,6 @@ JS_METHOD_IMPL(BufferObject::isBufferObject)
 //
 JS_INDEX_GETTER_IMPL(BufferObject::getAt)
 {
-  js_enter_scope();
   BufferObject* pBuffer = js_getter_info_unwrap_self(BufferObject);
   if (index >= pBuffer->_buffer.size())
   {
@@ -304,7 +290,6 @@ JS_INDEX_GETTER_IMPL(BufferObject::getAt)
 
 JS_INDEX_SETTER_IMPL(BufferObject::setAt)
 {
-  js_enter_scope();
   BufferObject* pBuffer = js_setter_info_unwrap_self(BufferObject);
   
   if (js_setter_index() >= pBuffer->_buffer.size())
@@ -323,7 +308,6 @@ JS_INDEX_SETTER_IMPL(BufferObject::setAt)
 
 JS_EXPORTS_INIT()
 {
-  js_enter_scope();
   js_export_method("isBuffer", BufferObject::isBufferObject);
   js_export_class(BufferObject);
   js_export_global_constructor("Buffer", BufferObject::_constructor);

@@ -38,7 +38,6 @@ JS_METHOD_IMPL(md5Hash)
 
 JS_EXPORTS_INIT()
 {
-  js_enter_scope();
   js_export_method("cidrVerify", cidrVerify);
   js_export_method("wildCardCompare", wildCardCompare);
   js_export_method("isIpInRange", isIpInRange);

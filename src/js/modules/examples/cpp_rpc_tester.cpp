@@ -52,21 +52,18 @@ static void test_ping(OSS::JS::JSIsolate::Ptr pIsolate)
 
 JS_METHOD_IMPL(start_test)
 {
-  js_enter_scope();
   new boost::thread(test_ping, OSS::JS::JSIsolateManager::instance().getIsolate());
   return JSUndefined();
 }
 
 JS_METHOD_IMPL(parse_user_data)
 {
-  js_enter_scope();
   std::string* userData = js_method_arg_unwrap_object(std::string, 0);
   return JSString(userData->c_str());
 }
 
 JS_EXPORTS_INIT()
 {
-  js_enter_scope();
   js_export_method("start_test", start_test);
   js_export_method("parse_user_data", parse_user_data);
   js_export_finalize();

@@ -202,7 +202,6 @@ JS_METHOD_IMPL(__lookup_a)
 {
   static DNSARecordV4CB resolver_cb = boost::bind(on_a_lookup, _1, _2);
   
-  js_enter_scope();
   js_method_arg_assert_size_eq(3);
   js_method_arg_assert_string(0);
   js_method_arg_assert_function(1);
@@ -222,8 +221,7 @@ JS_METHOD_IMPL(__lookup_a)
 JS_METHOD_IMPL(__lookup_aaaa)
 {
   static DNSARecordV6CB resolver_cb = boost::bind(on_aaaa_lookup, _1, _2);
-  
-  js_enter_scope();
+
   js_method_arg_assert_size_eq(3);
   js_method_arg_assert_string(0);
   js_method_arg_assert_function(1);
@@ -243,8 +241,7 @@ JS_METHOD_IMPL(__lookup_aaaa)
 JS_METHOD_IMPL(__lookup_srv)
 {
    static DNSSRVRecordCB resolver_cb = boost::bind(on_srv_lookup, _1, _2);
-  
-  js_enter_scope();
+
   js_method_arg_assert_size_eq(3);
   js_method_arg_assert_string(0);
   js_method_arg_assert_function(1);
@@ -264,8 +261,7 @@ JS_METHOD_IMPL(__lookup_srv)
 JS_METHOD_IMPL(__lookup_ptr4)
 {
   static DNSPTRRecordCB resolver_cb = boost::bind(on_ptr_lookup, _1, _2);
-  
-  js_enter_scope();
+
   js_method_arg_assert_size_eq(3);
   js_method_arg_assert_string(0);
   js_method_arg_assert_function(1);
@@ -285,8 +281,7 @@ JS_METHOD_IMPL(__lookup_ptr4)
 JS_METHOD_IMPL(__lookup_ptr6)
 {
   static DNSPTRRecordCB resolver_cb = boost::bind(on_ptr_lookup, _1, _2);
-  
-  js_enter_scope();
+
   js_method_arg_assert_size_eq(3);
   js_method_arg_assert_string(0);
   js_method_arg_assert_function(1);
@@ -306,8 +301,7 @@ JS_METHOD_IMPL(__lookup_ptr6)
 JS_METHOD_IMPL(__lookup_naptr)
 {
   static DNSNAPTRRecordCB resolver_cb = boost::bind(on_naptr_lookup, _1, _2);
-  
-  js_enter_scope();
+
   js_method_arg_assert_size_eq(3);
   js_method_arg_assert_string(0);
   js_method_arg_assert_function(1);
@@ -327,8 +321,7 @@ JS_METHOD_IMPL(__lookup_naptr)
 JS_METHOD_IMPL(__lookup_txt)
 {
   static DNSTXTRecordCB resolver_cb = boost::bind(on_txt_lookup, _1, _2);
-  
-  js_enter_scope();
+
   js_method_arg_assert_size_eq(3);
   js_method_arg_assert_string(0);
   js_method_arg_assert_function(1);
@@ -348,8 +341,7 @@ JS_METHOD_IMPL(__lookup_txt)
 JS_METHOD_IMPL(__lookup_mx)
 {
   static DNSMXRecordCB resolver_cb = boost::bind(on_mx_lookup, _1, _2);
-  
-  js_enter_scope();
+
   js_method_arg_assert_size_eq(3);
   js_method_arg_assert_string(0);
   js_method_arg_assert_function(1);
@@ -368,7 +360,6 @@ JS_METHOD_IMPL(__lookup_mx)
 
 JS_METHOD_IMPL(__relinquish_context)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_object(0);
   JSLocalObjectHandle obj = js_method_arg_as_object(0);
@@ -379,7 +370,6 @@ JS_METHOD_IMPL(__relinquish_context)
 
 JS_METHOD_IMPL(__acquire_context)
 {
-  js_enter_scope();
   
   DNSResolver* resolver;
   _pool.dequeue(resolver);
@@ -396,13 +386,11 @@ JS_METHOD_IMPL(__acquire_context)
 
 JS_METHOD_IMPL(__get_context_count)
 {
-  js_enter_scope();
   return JSUInt32(_pool.size());
 }
 
 JS_METHOD_IMPL(__process_io_events)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_uint32(0);
   uint32_t fd = js_method_arg_as_uint32(0);
@@ -417,7 +405,6 @@ JS_METHOD_IMPL(__process_io_events)
 
 JS_METHOD_IMPL(__set_work_callback)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_function(0);
   _work_cb = new JSPersistentFunctionHandle; 
@@ -427,7 +414,6 @@ JS_METHOD_IMPL(__set_work_callback)
 
 JS_METHOD_IMPL(__get_next_context_timeout)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_object(0);
   JSLocalObjectHandle obj = js_method_arg_as_object(0);
@@ -442,7 +428,6 @@ JS_METHOD_IMPL(__get_next_context_timeout)
 
 JS_EXPORTS_INIT()
 {
-  js_enter_scope();
   initialize_pool(POOL_SIZE);
   js_export_method("_acquire_context", __acquire_context);
   js_export_method("_relinquish_context", __relinquish_context);

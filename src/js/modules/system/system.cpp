@@ -11,7 +11,6 @@
 
 JS_METHOD_IMPL(__close)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_int32(0);
   int fd = js_method_arg_as_int32(0);
@@ -20,7 +19,6 @@ JS_METHOD_IMPL(__close)
 
 JS_METHOD_IMPL(__exit)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_int32(0);
   ::exit(js_method_arg_as_int32(0));
@@ -29,7 +27,6 @@ JS_METHOD_IMPL(__exit)
 
 JS_METHOD_IMPL(___exit)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_int32(0);
   ::_exit(js_method_arg_as_int32(0));
@@ -38,7 +35,6 @@ JS_METHOD_IMPL(___exit)
 
 JS_METHOD_IMPL(__write)
 {
-  js_enter_scope();
   js_method_arg_assert_size_gteq(2);
   js_method_arg_assert_int32(0);
   int32_t fd = js_method_arg_as_int32(0);
@@ -75,7 +71,6 @@ JS_METHOD_IMPL(__write)
 
 JS_METHOD_IMPL(__cout)
 {
-  js_enter_scope();
   js_method_arg_declare_string(msg, 0);
   std::cout << msg;
   return JSUndefined();
@@ -83,14 +78,12 @@ JS_METHOD_IMPL(__cout)
 
 JS_METHOD_IMPL(__oendl)
 {
-  js_enter_scope();
   std::cout << std::endl;
   return JSUndefined();
 }
 
 JS_METHOD_IMPL(__cerr)
 {
-  js_enter_scope();
   js_method_arg_declare_string(msg, 0);
   std::cerr << msg;
   return JSUndefined();
@@ -98,14 +91,12 @@ JS_METHOD_IMPL(__cerr)
 
 JS_METHOD_IMPL(__eendl)
 {
-  js_enter_scope();
   std::cerr << std::endl;
   return JSUndefined();
 }
 
 JS_METHOD_IMPL(__read)
 {
-  js_enter_scope();
   js_method_arg_assert_size_gteq(2);
   js_method_arg_assert_int32(0);
   js_method_arg_assert_uint32(1);
@@ -150,7 +141,6 @@ JS_METHOD_IMPL(__read)
 
 JS_METHOD_IMPL(__sleep)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_uint32(0);
   ::sleep(js_method_arg_as_uint32(0));
@@ -159,7 +149,6 @@ JS_METHOD_IMPL(__sleep)
 
 JS_METHOD_IMPL(__gc)
 {
-  js_enter_scope();
   v8::V8::LowMemoryNotification();
   while(!v8::V8::IdleNotification());
   return JSUndefined();
@@ -167,38 +156,32 @@ JS_METHOD_IMPL(__gc)
 
 JS_METHOD_IMPL(__setsid)
 {
-  js_enter_scope();
   return JSInt32(setsid());
 }
 
 JS_METHOD_IMPL(__getdtablesize)
 {
-  js_enter_scope();
   return JSInt32(getdtablesize());
 }
 
 JS_METHOD_IMPL(__getpid)
 {
-  js_enter_scope();
   return JSInt32(getpid());
 }
 
 JS_METHOD_IMPL(__getppid)
 {
-  js_enter_scope();
   return JSInt32(getppid());
 }
 
 JS_METHOD_IMPL(__thread_self)
 {
-  js_enter_scope();
   return JSUInt32(pthread_self());
 }
 
 
 JS_EXPORTS_INIT()
 {
-  js_enter_scope();
   js_export_method("read", __read);
   js_export_method("write", __write);
   js_export_method("close", __close);

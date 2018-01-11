@@ -1,9 +1,6 @@
 "use-strict";
 
 const cfg = require("config");
-const assert = require("assert");
-const opt = require("getopt");
-const console = require("console");
 
 var example1 = function()
 {

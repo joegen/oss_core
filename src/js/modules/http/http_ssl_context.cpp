@@ -148,7 +148,6 @@ HttpSSLContextObject::~HttpSSLContextObject()
 
 JS_CONSTRUCTOR_IMPL(HttpSSLContextObject)
 {
-  js_enter_scope();
   HttpSSLContextObject* pObject = new HttpSSLContextObject();
   pObject->Wrap(js_method_arg_self());
   return js_method_arg_self();
@@ -156,7 +155,6 @@ JS_CONSTRUCTOR_IMPL(HttpSSLContextObject)
 
 JS_METHOD_IMPL(HttpSSLContextObject::setUsage)
 {
-  js_enter_scope();
   HttpSSLContextObject* self = js_method_arg_unwrap_self(HttpSSLContextObject);
   js_method_arg_declare_int32(usage, 0);
   self->_usage = (Context::Usage)usage;
@@ -165,14 +163,12 @@ JS_METHOD_IMPL(HttpSSLContextObject::setUsage)
 
 JS_METHOD_IMPL(HttpSSLContextObject::getUsage)
 {
-  js_enter_scope();
   HttpSSLContextObject* self = js_method_arg_unwrap_self(HttpSSLContextObject);
   return JSInt32(self->_usage);
 }
 
 JS_METHOD_IMPL(HttpSSLContextObject::setPrivateKeyFile)
 {
-  js_enter_scope();
   HttpSSLContextObject* self = js_method_arg_unwrap_self(HttpSSLContextObject);
   js_method_arg_declare_string(privateKeyFile, 0);
   self->_privateKeyFile = privateKeyFile;
@@ -180,13 +176,11 @@ JS_METHOD_IMPL(HttpSSLContextObject::setPrivateKeyFile)
 }
 JS_METHOD_IMPL(HttpSSLContextObject::getPrivateKeyFile)
 {
-  js_enter_scope();
   HttpSSLContextObject* self = js_method_arg_unwrap_self(HttpSSLContextObject);
   return JSString(self->_privateKeyFile);
 }
 JS_METHOD_IMPL(HttpSSLContextObject::setCertificateKeyFile)
 {
-  js_enter_scope();
   HttpSSLContextObject* self = js_method_arg_unwrap_self(HttpSSLContextObject);
   js_method_arg_declare_string(certificateFile, 0);
   self->_certificateFile = certificateFile;
@@ -194,14 +188,12 @@ JS_METHOD_IMPL(HttpSSLContextObject::setCertificateKeyFile)
 }
 JS_METHOD_IMPL(HttpSSLContextObject::getCertificateKeyFile)
 {
-  js_enter_scope();
   HttpSSLContextObject* self = js_method_arg_unwrap_self(HttpSSLContextObject);
   return JSString(self->_certificateFile);
 }
 
 JS_METHOD_IMPL(HttpSSLContextObject::setCaLocation)
 {
-  js_enter_scope();
   HttpSSLContextObject* self = js_method_arg_unwrap_self(HttpSSLContextObject);
   js_method_arg_declare_string(caLocation, 0);
   self->_caLocation = caLocation;
@@ -209,14 +201,12 @@ JS_METHOD_IMPL(HttpSSLContextObject::setCaLocation)
 }
 JS_METHOD_IMPL(HttpSSLContextObject::getCaLocation)
 {
-  js_enter_scope();
   HttpSSLContextObject* self = js_method_arg_unwrap_self(HttpSSLContextObject);
   return JSString(self->_caLocation);
 }
 
 JS_METHOD_IMPL(HttpSSLContextObject::setCipherList)
 {
-  js_enter_scope();
   HttpSSLContextObject* self = js_method_arg_unwrap_self(HttpSSLContextObject);
   js_method_arg_declare_string(cipherList, 0);
   self->_cipherList = cipherList;
@@ -225,14 +215,12 @@ JS_METHOD_IMPL(HttpSSLContextObject::setCipherList)
 
 JS_METHOD_IMPL(HttpSSLContextObject::getCipherList)
 {
-  js_enter_scope();
   HttpSSLContextObject* self = js_method_arg_unwrap_self(HttpSSLContextObject);
   return JSString(self->_cipherList);
 }
 
 JS_METHOD_IMPL(HttpSSLContextObject::setVerificationMode)
 {
-  js_enter_scope();
   HttpSSLContextObject* self = js_method_arg_unwrap_self(HttpSSLContextObject);
   js_method_arg_declare_int32(verificationMode, 0);
   self->_verificationMode = (Context::VerificationMode)verificationMode;
@@ -241,14 +229,12 @@ JS_METHOD_IMPL(HttpSSLContextObject::setVerificationMode)
 
 JS_METHOD_IMPL(HttpSSLContextObject::getVerificationMode)
 {
-  js_enter_scope();
   HttpSSLContextObject* self = js_method_arg_unwrap_self(HttpSSLContextObject);
   return JSInt32(self->_verificationMode);
 }
 
 JS_METHOD_IMPL(HttpSSLContextObject::setVerificationDepth)
 {
-  js_enter_scope();
   HttpSSLContextObject* self = js_method_arg_unwrap_self(HttpSSLContextObject);
   js_method_arg_declare_int32(verificationDepth, 0);
   self->_verificationDepth = verificationDepth;
@@ -257,14 +243,12 @@ JS_METHOD_IMPL(HttpSSLContextObject::setVerificationDepth)
 
 JS_METHOD_IMPL(HttpSSLContextObject::getVerificationDepth)
 {
-  js_enter_scope();
   HttpSSLContextObject* self = js_method_arg_unwrap_self(HttpSSLContextObject);
   return JSInt32(self->_verificationDepth);
 }
 
 JS_METHOD_IMPL(HttpSSLContextObject::setLoadDefaultCa)
 {
-  js_enter_scope();
   HttpSSLContextObject* self = js_method_arg_unwrap_self(HttpSSLContextObject);
   js_method_arg_declare_bool(loadDefaultCa, 0);
   self->_loadDefaultCAs = loadDefaultCa;
@@ -273,14 +257,12 @@ JS_METHOD_IMPL(HttpSSLContextObject::setLoadDefaultCa)
 
 JS_METHOD_IMPL(HttpSSLContextObject::getLoadDefaultCa)
 {
-  js_enter_scope();
   HttpSSLContextObject* self = js_method_arg_unwrap_self(HttpSSLContextObject);
   return JSBoolean(self->_loadDefaultCAs);
 }
 
 JS_METHOD_IMPL(HttpSSLContextObject::setInvalidCertificateHandlerId)
 {
-  js_enter_scope();
   HttpSSLContextObject* self = js_method_arg_unwrap_self(HttpSSLContextObject);
   js_method_arg_declare_string(invalidCertHandlerId, 0);
   self->_invalidCertHandlerId = invalidCertHandlerId;
@@ -289,7 +271,6 @@ JS_METHOD_IMPL(HttpSSLContextObject::setInvalidCertificateHandlerId)
 
 JS_METHOD_IMPL(HttpSSLContextObject::setPassphraseHandlerId)
 {
-  js_enter_scope();
   HttpSSLContextObject* self = js_method_arg_unwrap_self(HttpSSLContextObject);
   js_method_arg_declare_string(passPhraseHandlerId, 0);
   self->_passPhraseHandlerId = passPhraseHandlerId;
@@ -298,7 +279,6 @@ JS_METHOD_IMPL(HttpSSLContextObject::setPassphraseHandlerId)
 
 JS_METHOD_IMPL(HttpSSLContextObject::registerContext)
 {
-  js_enter_scope();
   HttpSSLContextObject* self = js_method_arg_unwrap_self(HttpSSLContextObject);
   
   if (self->_pContext)
@@ -338,7 +318,6 @@ JS_METHOD_IMPL(HttpSSLContextObject::registerContext)
 
 JS_EXPORTS_INIT()
 {
-  js_enter_scope();
   js_export_class(HttpSSLContextObject);
   
   js_export_int32("CLIENT_USE", HttpSSLContextObject::Context::CLIENT_USE);

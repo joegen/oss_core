@@ -148,7 +148,6 @@ static v8::Handle<v8::Value> __unmonitor_descriptor(const v8::Arguments& args)
 
 JS_METHOD_IMPL(__set_promise_callback)
 {
-  js_enter_scope();
   js_method_arg_declare_persistent_function(func, 0);
   OSS::JS::JSIsolate::getIsolate()->eventLoop()->interIsolate().setHandler(func);
   _enableAsync = true;
@@ -182,8 +181,6 @@ static v8::Handle<v8::Value> __set_garbage_collection_frequency(const v8::Argume
 
 static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
 {
-  js_enter_scope();
-  
   Async::_threadId = pthread_self();
   
   OSS::JS::JSIsolate::Ptr pIsolate = OSS::JS::JSIsolate::getIsolate();

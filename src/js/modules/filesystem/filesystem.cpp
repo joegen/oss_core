@@ -23,7 +23,6 @@
 
 JS_METHOD_IMPL(__exists)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   std::string filename = js_method_arg_as_std_string(0);
@@ -33,7 +32,6 @@ JS_METHOD_IMPL(__exists)
 
 JS_METHOD_IMPL(__remove)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   std::string filename = js_method_arg_as_std_string(0);
@@ -44,7 +42,6 @@ JS_METHOD_IMPL(__remove)
 
 JS_METHOD_IMPL(__remove_all)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   std::string filename = js_method_arg_as_std_string(0);
@@ -55,7 +52,6 @@ JS_METHOD_IMPL(__remove_all)
 
 JS_METHOD_IMPL(__chdir)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   std::string dir = js_method_arg_as_std_string(0);
@@ -64,14 +60,12 @@ JS_METHOD_IMPL(__chdir)
 
 JS_METHOD_IMPL(__current_path)
 {
-  js_enter_scope();
   boost::filesystem::path path = boost::filesystem::current_path();
   return JSString(OSS::boost_path(path).c_str());
 }
 
 JS_METHOD_IMPL(__is_directory)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   std::string dir = js_method_arg_as_std_string(0);
@@ -81,7 +75,6 @@ JS_METHOD_IMPL(__is_directory)
 
 JS_METHOD_IMPL(__get_directory)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   std::string pathStr = js_method_arg_as_std_string(0);

@@ -91,7 +91,6 @@ uint32_t ConfigObject::findSetting(config_setting_t* pSetting)
 
 JS_CONSTRUCTOR_IMPL(ConfigObject) 
 {
-  js_enter_scope();
   ConfigObject* pConfig = new ConfigObject();
   pConfig->Wrap(js_method_arg_self());
   return js_method_arg_self();
@@ -99,7 +98,6 @@ JS_CONSTRUCTOR_IMPL(ConfigObject)
 
 JS_METHOD_IMPL(ConfigObject::readFile)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   ConfigObject* pConfig = js_method_arg_unwrap_self(ConfigObject);
@@ -109,7 +107,6 @@ JS_METHOD_IMPL(ConfigObject::readFile)
 
 JS_METHOD_IMPL(ConfigObject::writeFile)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   ConfigObject* pConfig = js_method_arg_unwrap_self(ConfigObject);
@@ -119,7 +116,6 @@ JS_METHOD_IMPL(ConfigObject::writeFile)
 
 JS_METHOD_IMPL(ConfigObject::toString)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_uint32(0);
   uint32_t bufLen = js_method_arg_as_uint32(0);
@@ -147,7 +143,6 @@ JS_METHOD_IMPL(ConfigObject::toString)
 
 JS_METHOD_IMPL(ConfigObject::lookupString)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   
@@ -163,7 +158,6 @@ JS_METHOD_IMPL(ConfigObject::lookupString)
 
 JS_METHOD_IMPL(ConfigObject::lookupFloat)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   
@@ -179,7 +173,6 @@ JS_METHOD_IMPL(ConfigObject::lookupFloat)
 
 JS_METHOD_IMPL(ConfigObject::lookupInteger)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   
@@ -195,7 +188,6 @@ JS_METHOD_IMPL(ConfigObject::lookupInteger)
 
 JS_METHOD_IMPL(ConfigObject::lookupBoolean)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   
@@ -211,7 +203,6 @@ JS_METHOD_IMPL(ConfigObject::lookupBoolean)
 
 JS_METHOD_IMPL(ConfigObject::lookupSetting)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_string(0);
   
@@ -235,7 +226,6 @@ JS_METHOD_IMPL(ConfigObject::lookupSetting)
 
 JS_METHOD_IMPL(ConfigObject::rootSetting)
 {
-  js_enter_scope();
   ConfigObject* pConfig = js_method_arg_unwrap_self(ConfigObject);
   if (pConfig->_rootSettingId)
   {
@@ -255,7 +245,6 @@ JS_METHOD_IMPL(ConfigObject::rootSetting)
 
 JS_METHOD_IMPL(ConfigObject::settingLength)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_uint32(0);
   
@@ -274,7 +263,6 @@ JS_METHOD_IMPL(ConfigObject::settingLength)
 
 JS_METHOD_IMPL(ConfigObject::settingType)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(1);
   js_method_arg_assert_uint32(0);
   
@@ -293,7 +281,6 @@ JS_METHOD_IMPL(ConfigObject::settingType)
 
 JS_METHOD_IMPL(ConfigObject::settingLookupString)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_uint32(0);
   js_method_arg_assert_string(1);
@@ -325,7 +312,6 @@ JS_METHOD_IMPL(ConfigObject::settingLookupString)
 
 JS_METHOD_IMPL(ConfigObject::settingLookupInteger)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_uint32(0);
   js_method_arg_assert_string(1);
@@ -355,7 +341,6 @@ JS_METHOD_IMPL(ConfigObject::settingLookupInteger)
 
 JS_METHOD_IMPL(ConfigObject::settingLookupFloat)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_uint32(0);
   js_method_arg_assert_string(1);
@@ -385,7 +370,6 @@ JS_METHOD_IMPL(ConfigObject::settingLookupFloat)
 
 JS_METHOD_IMPL(ConfigObject::settingLookupBoolean)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_uint32(0);
   js_method_arg_assert_string(1);
@@ -415,7 +399,6 @@ JS_METHOD_IMPL(ConfigObject::settingLookupBoolean)
 
 JS_METHOD_IMPL(ConfigObject::settingLookupSetting)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_uint32(0);
   js_method_arg_assert_string(1);
@@ -442,7 +425,6 @@ JS_METHOD_IMPL(ConfigObject::settingLookupSetting)
 
 JS_METHOD_IMPL(ConfigObject::settingLookupElement)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_uint32(0);
   js_method_arg_assert_uint32(1);
@@ -472,7 +454,6 @@ JS_METHOD_IMPL(ConfigObject::settingLookupElement)
 
 JS_METHOD_IMPL(ConfigObject::settingAddSetting)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(3);
   js_method_arg_assert_uint32(0);
   js_method_arg_assert_string(1);
@@ -491,7 +472,6 @@ JS_METHOD_IMPL(ConfigObject::settingAddSetting)
 
 JS_METHOD_IMPL(ConfigObject::settingSetAsString)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_uint32(0);
   js_method_arg_assert_string(1);
@@ -511,7 +491,6 @@ JS_METHOD_IMPL(ConfigObject::settingSetAsString)
 
 JS_METHOD_IMPL(ConfigObject::settingSetAsInteger)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_uint32(0);
   js_method_arg_assert_int32(1);
@@ -531,7 +510,6 @@ JS_METHOD_IMPL(ConfigObject::settingSetAsInteger)
 
 JS_METHOD_IMPL(ConfigObject::settingSetAsBoolean)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_uint32(0);
   js_method_arg_assert_bool(1);
@@ -551,7 +529,6 @@ JS_METHOD_IMPL(ConfigObject::settingSetAsBoolean)
 
 JS_METHOD_IMPL(ConfigObject::settingSetAsFloat)
 {
-  js_enter_scope();
   js_method_arg_assert_size_eq(2);
   js_method_arg_assert_uint32(0);
   js_method_arg_assert_number(1);
@@ -572,7 +549,6 @@ JS_METHOD_IMPL(ConfigObject::settingSetAsFloat)
 
 JS_EXPORTS_INIT()
 {
-  js_enter_scope();
   js_export_class(ConfigObject);
   js_export_const(CONFIG_TYPE_GROUP);
   js_export_const(CONFIG_TYPE_INT);
