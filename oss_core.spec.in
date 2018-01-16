@@ -189,6 +189,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %attr(755,root,root) %{_libdir}/oss_modules/async
 %dir %attr(755,root,root) %{_libdir}/oss_modules/logger
 %dir %attr(755,root,root) %{_libdir}/oss_modules/json_rpc
+%dir %attr(755,root,root) %{_libdir}/oss_modules/sip-parser
 
 #%{_libdir}/oss_modules/*.js
 #%{_libdir}/oss_modules/*.jso
