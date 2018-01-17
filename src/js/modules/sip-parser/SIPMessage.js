@@ -198,6 +198,14 @@ SIPMessage.prototype.getInterfacePort = function()
   return msgGetInterfacePort(this._request);
 }
 
+SIPMessage.prototype.getMethod = function()
+  //
+  // Return the request METHOD
+  //
+{
+  return msgGetMethod(this._request);
+}
+
 SIPMessage.prototype.getRequestUri = function()
   //
   // This function returns the request-uri of a SIP request message.
