@@ -50,8 +50,6 @@
 #include "OSS/Net/TurnServer.h"
 #endif
 
-#include "OSS/JS/JSBase.h"
-
 #define TCP_PORT_BASE 20000
 #define TCP_PORT_MAX  30000
 #define RTP_PROXY_THREAD_COUNT 10
@@ -88,7 +86,6 @@ struct Config
   TargetType targetType;
   bool allowRelay;
   int targetInterfacePort;
-  std::string routeScript;
   std::string tlsCertFile;
   std::string tlsPrivateKey;
   std::string tlsPeerCa;
@@ -138,27 +135,6 @@ public:
     _config(config),
     _carpEnabled(false)
   {
-    //
-    // Initialize route script if specified
-    //
-    if (!_config.routeScript.empty())
-    {
-      boost::filesystem::path script(_config.routeScript);
-      if (boost::filesystem::exists(script))
-      {
-        if (!loadRouteScript(script, 0, "", ""))
-        {
-          OSS_LOG_ERROR("Unable to load route script " << script);
-          _exit(-1);
-        }
-      }
-      else
-      {
-        OSS_LOG_ERROR("File not found - " << script);
-        _exit(-1);
-      }
-    }
-    
     //
     // Check if CARP is enabled
     //
@@ -397,52 +373,7 @@ public:
     {
       pRequest->setProperty(OSS::PropertyMap::PROP_AuthAction, "accept");
     }
-    if (type == SIPB2BScriptableHandler::TYPE_INBOUND)
-    {
-      if (!_config.routeScript.empty() && !pRequest->isMidDialog())
-      {
-        //
-        //  Set the variables so that the route script knows about our configuration
-        //
-        pRequest->setProperty("var_listener_ip", _config.address);
-        pRequest->setProperty("var_listener_port", OSS::string_from_number<int>(_config.port));
-        if (!_config.externalAddress.empty())
-          pRequest->setProperty("var_listener_ip_external", _config.externalAddress);
-        
-        if (!_config.target.empty())
-        {
-          std::vector<std::string> tokens = OSS::string_tokenize(_config.target, ":");
-          if (tokens.size() == 2)
-          {
-            pRequest->setProperty("var_default_target_address", tokens[0]);
-            pRequest->setProperty("var_default_target_port", tokens[1]);
-          }
-          else
-          {
-            pRequest->setProperty("var_default_target_address", _config.target);
-          }
-          
-          if (!_config.targetTransport.empty())
-            pRequest->setProperty("var_default_target_transport", _config.targetTransport);
-        }
-        
-        if (!_config.targetInterface.empty())
-        {
-          pRequest->setProperty("var_default_target_interface", _config.targetInterface);
-          pRequest->setProperty("var_default_target_interface_port", OSS::string_from_number<int>(_config.targetInterfacePort));
-        }
-        
-        if (_config.allowRelay)
-        {
-          pRequest->setProperty("var_allow_relay", "true");
-        }
-        else
-        {
-          pRequest->setProperty("var_allow_relay", "false");
-        }
-      }
-    }
-    else if (type == SIPB2BScriptableHandler::TYPE_ROUTE)
+    if (type == SIPB2BScriptableHandler::TYPE_ROUTE)
     {
       std::string transportAlias;
       if (!pRequest->getProperty(OSS::PropertyMap::PROP_TransportAlias, transportAlias) || transportAlias.empty())
@@ -621,8 +552,6 @@ void prepareTargetInfo(Config& config, ServiceOptions& options)
     config.allowRelay = true;
   }
   
-  options.getOption("route-script", config.routeScript);
-
   //
   // Check if we need to rewrite the call-id.
   // The default is to reuse the call-id
@@ -667,7 +596,6 @@ bool prepareOptions(ServiceOptions& options)
   options.addOptionFlag('n', "no-rtp-proxy", "Disable built in media relay.");
   options.addOptionInt('R', "rtp-port-low", "Lowest port used for RTP");
   options.addOptionInt('H', "rtp-port-high", "Highest port used for RTP");
-  options.addOptionString('J', "route-script", "Path for the route script");
   options.addOptionFlag("rewrite-call-id", "Use a different call-id for outbound legs");
   options.addOptionFlag("test-loopback-iteration-count", "Emulate traffic by looping the call back to the sender");
   options.addOptionFlag("test-loopback-target-uri", "Final URI where the loopback will be sent after the designated iteration has completed");
@@ -703,6 +631,7 @@ int main(int argc, char** argv)
     _exit(-1);
   }
 
+#if 0
   static std::string gAccessList(
   #include "apps/AccessList.js.h"
   );
@@ -732,7 +661,8 @@ int main(int argc, char** argv)
     #include "apps/TransactionProfile.js.h"
   );
   OSS::JS::JSBase::addGlobalScript(gTransactionProfile);
-
+#endif
+  
   saveProcessId(options);
   Config config;
   prepareListenerInfo(config, options);

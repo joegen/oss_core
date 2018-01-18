@@ -18,7 +18,6 @@
 //
 
 
-#include "OSS/JS/JSBase.h"
 #include "OSS/Net/DNS.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/SIP/SIPFrom.h"
@@ -39,234 +38,11 @@ namespace SIP {
 namespace B2BUA {
 
 
-
-OSS::SIP::SIPMessage* unwrapRequest(const v8::Arguments& args)
-{
-  if (args.Length() < 1)
-    return 0;
-  v8::Handle<v8::Value> obj = args[0];
-  if (!obj->IsObject())
-    return 0;
-  v8::Handle<v8::External> field = v8::Handle<v8::External>::Cast(obj->ToObject()->GetInternalField(0));
-  void* ptr = field->Value();
-  return static_cast<OSS::SIP::SIPMessage*>(ptr);
-}
-
-std::string jsvalToString(const v8::Handle<v8::Value>& str)
-{
-  if (!str->IsString())
-    return "";
-  v8::String::Utf8Value value(str);
-  return *value;
-}
-
-bool jsvalToBoolean(const v8::Handle<v8::Value>& str)
-{
-  if (!str->IsBoolean())
-    return false;
-  return str->IsTrue();;
-}
-
-int jsvalToInt(const v8::Handle<v8::Value>& str)
-{
-  if (!str->IsNumber())
-    return 0;
-  return str->Int32Value();
-}
-
-static v8::Handle<v8::Value> msgSetProperty(const v8::Arguments& args)
-{
-  if (args.Length() < 3)
-    return v8::Boolean::New(false);
-
-  v8::HandleScope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
-  if (!pMsg)
-    return v8::Boolean::New(false);
-
-
-  std::string name = jsvalToString(args[1]);
-  std::string value = jsvalToString(args[2]);
-
-  if (name.empty() || value.empty())
-    return v8::Boolean::New(false);
-
-  pMsg->setProperty(name, value);
-
-  return v8::Boolean::New(true);
-}
-
-static v8::Handle<v8::Value> msgGetProperty(const v8::Arguments& args)
-{
-  if (args.Length() < 2)
-    return v8::Undefined();
-
-  v8::HandleScope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
-  if (!pMsg)
-    return v8::Undefined();
-
-  std::string name = jsvalToString(args[1]);
-
-  if (name.empty())
-    return v8::Undefined();
-
-  std::string value;
-  pMsg->getProperty(name, value);
-
-  return v8::String::New(value.c_str());
-}
-
-static v8::Handle<v8::Value> msgSetTransactionProperty(const v8::Arguments& args)
-{
-  if (args.Length() < 3)
-    return v8::Boolean::New(false);
-
-  v8::HandleScope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
-  if (!pMsg)
-    return v8::Boolean::New(false);
-
-  SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
-  if (!pTrn)
-    return v8::Boolean::New(false);
-
-  std::string name = jsvalToString(args[1]);
-  std::string value = jsvalToString(args[2]);
-
-  if (name.empty() || value.empty())
-    return v8::Boolean::New(false);
-
-  pTrn->setProperty(name, value);
-
-  return v8::Boolean::New(true);
-}
-
-static v8::Handle<v8::Value> msgGetTransactionProperty(const v8::Arguments& args)
-{
-  if (args.Length() < 2)
-    return v8::Undefined();
-
-  v8::HandleScope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
-  if (!pMsg)
-    return v8::Undefined();
-
-  SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
-  if (!pTrn)
-    return v8::Undefined();
-
-  std::string name = jsvalToString(args[1]);
-
-  if (name.empty())
-    return v8::Undefined();
-  std::string value;
-  if (name == "log-id")
-    value = pTrn->getLogId();
-  else
-    pTrn->getProperty(name, value);
-
-  return v8::String::New(value.c_str());
-}
-
-static v8::Handle<v8::Value> msgGetSourceAddress(const v8::Arguments& args)
-{
-  if (args.Length() < 1)
-    return v8::Undefined();
-
-  v8::HandleScope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
-  if (!pMsg)
-    return v8::Undefined();
-
-  SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
-  if (!pTrn || !pTrn->serverTransport())
-    return v8::Undefined();
-
-  OSS::Net::IPAddress addr = pTrn->serverTransport()->getRemoteAddress();
-
-  return v8::String::New(addr.toString().c_str());
-}
-
-static v8::Handle<v8::Value> msgGetSourcePort(const v8::Arguments& args)
-{
-  if (args.Length() < 1)
-    return v8::Undefined();
-
-  v8::HandleScope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
-  if (!pMsg)
-    return v8::Undefined();
-
-  SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
-  if (!pTrn || !pTrn->serverTransport())
-    return v8::Undefined();
-
-  OSS::Net::IPAddress addr = pTrn->serverTransport()->getRemoteAddress();
-
-  return v8::Integer::New(addr.getPort());
-}
-
-static v8::Handle<v8::Value> msgGetInterfaceAddress(const v8::Arguments& args)
-{
-  if (args.Length() < 1)
-    return v8::Undefined();
-
-  v8::HandleScope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
-  if (!pMsg)
-    return v8::Undefined();
-
-  SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
-  if (!pTrn || !pTrn->serverTransport())
-    return v8::Undefined();
-
-  OSS::Net::IPAddress addr = pTrn->serverTransport()->getLocalAddress();
-  return v8::String::New(addr.toString().c_str());
-}
-
-static v8::Handle<v8::Value> msgGetInterfacePort(const v8::Arguments& args)
-{
-  if (args.Length() < 1)
-    return v8::Undefined();
-
-  v8::HandleScope scope;
-  OSS::SIP::SIPMessage* pMsg = unwrapRequest(args);
-  if (!pMsg)
-    return v8::Undefined();
-
-  SIPB2BTransaction* pTrn = static_cast<SIPB2BTransaction*>(pMsg->userData());
-  if (!pTrn || !pTrn->serverTransport())
-    return v8::Undefined();
-
-  OSS::Net::IPAddress addr = pTrn->serverTransport()->getLocalAddress();
-
-  return v8::Integer::New(addr.getPort());
-}
-
-static void msgRegisterGlobals(OSS_HANDLE objectTemplate)
-{
-  v8::Handle<v8::ObjectTemplate>& global = *(static_cast<v8::Handle<v8::ObjectTemplate>*>(objectTemplate));
-  global->Set(v8::String::New("msgSetProperty"), v8::FunctionTemplate ::New(msgSetProperty));
-  global->Set(v8::String::New("msgGetProperty"), v8::FunctionTemplate ::New(msgGetProperty));
-  global->Set(v8::String::New("msgSetTransactionProperty"), v8::FunctionTemplate ::New(msgSetTransactionProperty));
-  global->Set(v8::String::New("msgGetTransactionProperty"), v8::FunctionTemplate ::New(msgGetTransactionProperty));
-  global->Set(v8::String::New("msgGetSourceAddress"), v8::FunctionTemplate ::New(msgGetSourceAddress));
-  global->Set(v8::String::New("msgGetSourcePort"), v8::FunctionTemplate ::New(msgGetSourcePort));
-  global->Set(v8::String::New("msgGetInterfaceAddress"), v8::FunctionTemplate ::New(msgGetInterfaceAddress));
-  global->Set(v8::String::New("msgGetInterfacePort"), v8::FunctionTemplate ::New(msgGetInterfacePort));
-}
-
 SIPB2BScriptableHandler::SIPB2BScriptableHandler(
   SIPB2BTransactionManager* pTransactionManager,
   SIPB2BDialogStateManager* pDialogState,
   const std::string& contextName) :
   OSS::SIP::B2BUA::SIPB2BHandler(OSS::SIP::B2BUA::SIPB2BHandler::TYPE_ANY),
-  _inboundScript(contextName),
-  _authScript(contextName),
-  _routeScript(contextName),
-  _outboundScript(contextName),
-  _outboundResponseScript(contextName),
   _pTransactionManager(pTransactionManager),
   _pDialogState(pDialogState),
   _2xxRetransmitCache(32),
@@ -333,15 +109,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onTransactionCreated(
 
   pRequest->userData() = static_cast<OSS_HANDLE>(pTransaction.get());
 
-  if (_inboundScript.isInitialized())
-  {
-    if (!_inboundScript.processRequest(pRequest))
-    {
-      SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_500_InternalServerError);
-      return serverError;
-    }
-  }
-  else if (!onProcessRequest(pTransaction, TYPE_INBOUND, pRequest))
+  if (!onProcessRequest(pTransaction, TYPE_INBOUND, pRequest))
   {
     SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_500_InternalServerError);
     return serverError;
@@ -376,77 +144,34 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onAuthenticateTransaction(
   /// by the transaction.  It is the responsibility of the application
   /// to maintain the authentication state.
 {
-  if (_authScript.isInitialized())
+  if (!onProcessRequest(pTransaction, TYPE_AUTH, pRequest))
   {
-    std::string authMethod;
-    pTransaction->getProperty(OSS::PropertyMap::PROP_AuthMethod, authMethod);
+    SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_500_InternalServerError);
+    return serverError;
+  }
 
-    if (authMethod != "none")
+  std::string authAction;
+  if (!pRequest->getProperty(OSS::PropertyMap::PROP_AuthAction, authAction))
+  {
+    return SIPMessage::Ptr();
+  }
+  else if (authAction == "reject")
+  {
+    SIPMessage::Ptr reject = pRequest->createResponse(SIPMessage::CODE_403_Forbidden);
+    std::string authResponse;
+    if (pRequest->getProperty(OSS::PropertyMap::PROP_AuthResponse, authResponse) && !authResponse.empty())
     {
-      if (!_authScript.processRequest(pRequest))
-      {
-        SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_500_InternalServerError);
-        return serverError;
-      }
+      reject->setStartLine(authResponse);
+      reject->commitData();
+      return reject;
     }
     else
     {
-      pRequest->setProperty(OSS::PropertyMap::PROP_AuthAction, "accept");
-      return OSS::SIP::SIPMessage::Ptr();
-    }
-
-    std::string authAction;
-    if (!pRequest->getProperty(OSS::PropertyMap::PROP_AuthAction, authAction))
-    {
-      return SIPMessage::Ptr();
-    }
-    else if (authAction == "reject")
-    {
-      SIPMessage::Ptr reject = pRequest->createResponse(SIPMessage::CODE_403_Forbidden);
-      std::string authResponse;
-      if (pRequest->getProperty(OSS::PropertyMap::PROP_AuthResponse, authResponse) && !authResponse.empty())
-      {
-        reject->setStartLine(authResponse);
-        reject->commitData();
-        return reject;
-      }
-      else
-      {
-        reject->commitData();
-        return reject;
-      }
+      reject->commitData();
+      return reject;
     }
   }
-  else 
-  {
-    if (!onProcessRequest(pTransaction, TYPE_AUTH, pRequest))
-    {
-      SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_500_InternalServerError);
-      return serverError;
-    }
 
-    std::string authAction;
-    if (!pRequest->getProperty(OSS::PropertyMap::PROP_AuthAction, authAction))
-    {
-      return SIPMessage::Ptr();
-    }
-    else if (authAction == "reject")
-    {
-      SIPMessage::Ptr reject = pRequest->createResponse(SIPMessage::CODE_403_Forbidden);
-      std::string authResponse;
-      if (pRequest->getProperty(OSS::PropertyMap::PROP_AuthResponse, authResponse) && !authResponse.empty())
-      {
-        reject->setStartLine(authResponse);
-        reject->commitData();
-        return reject;
-      }
-      else
-      {
-        reject->commitData();
-        return reject;
-      }
-    }
-  }
   return OSS::SIP::SIPMessage::Ptr();
 }
 
@@ -706,15 +431,7 @@ SIPMessage::Ptr SIPB2BScriptableHandler::onRouteOutOfDialogTransaction(
   
   if (!_pTransactionManager->postRetargetTransaction(pRequest, pTransaction))
   {
-    if (_routeScript.isInitialized())
-    {
-      if (!_routeScript.processRequest(pRequest))
-      {
-        SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_500_InternalServerError);
-        return serverError;
-      }
-    }
-    else if (!onProcessRequest(pTransaction, TYPE_ROUTE, pRequest))
+    if (!onProcessRequest(pTransaction, TYPE_ROUTE, pRequest))
     {
       SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_500_InternalServerError);
       return serverError;
@@ -1316,13 +1033,10 @@ void SIPB2BScriptableHandler::onProcessOutbound(
 #endif
   }
 
-  if (_outboundScript.isInitialized())
-    _outboundScript.processRequest(pRequest);
-  else
-    onProcessRequest(pTransaction, TYPE_OUTBOUND_REQUEST, pRequest);
+  onProcessRequest(pTransaction, TYPE_OUTBOUND_REQUEST, pRequest);
 
-   if (!_pTransactionManager->getUserAgentName().empty())
-     pRequest->hdrSet(OSS::SIP::HDR_USER_AGENT, _pTransactionManager->getUserAgentName().c_str());
+  if (!_pTransactionManager->getUserAgentName().empty())
+    pRequest->hdrSet(OSS::SIP::HDR_USER_AGENT, _pTransactionManager->getUserAgentName().c_str());
 
 
 }
@@ -1453,11 +1167,7 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
   /// headers to the desired application-specific values for as long
   /// as it wont conflict with dialog creation states.
 {
-
-  if (_outboundResponseScript.isInitialized())
-    _outboundResponseScript.processRequest(pResponse);
-  else
-    onProcessRequest(pTransaction, TYPE_OUTBOUND_RESPONSE, pResponse);
+  onProcessRequest(pTransaction, TYPE_OUTBOUND_RESPONSE, pResponse);
 
   std::string logId = pTransaction->getLogId();
   //
@@ -1465,12 +1175,6 @@ void SIPB2BScriptableHandler::onProcessResponseOutbound(
   //
   pResponse->userData() = static_cast<OSS_HANDLE>(pTransaction.get());
   
-  //
-  // Give the scripting layer a chance to process the outbound response
-  //
-  if (_outboundResponseScript.isInitialized())
-    _outboundResponseScript.processRequest(pResponse);
-
   if (!_pTransactionManager->getUserAgentName().empty())
      pResponse->hdrSet(OSS::SIP::HDR_SERVER, _pTransactionManager->getUserAgentName().c_str());
 
@@ -1915,59 +1619,6 @@ void SIPB2BScriptableHandler::onTransactionError(
       }catch(...){}
     }
 #endif
-  }
-}
-
-bool SIPB2BScriptableHandler::loadScript(OSS::JS::JSSIPMessage& script, const boost::filesystem::path& scriptFile, void(*extensionGlobals)(OSS_HANDLE), const std::string& globals, const std::string& helpers)
-{
-  script.setGlobalScriptsDirectory(globals);
-  script.setHelperScriptsDirectory(helpers);
-  
-  bool ok = true;
-  if (script.isInitialized())
-    ok = script.recompile();
-  else
-    ok = script.initialize(scriptFile, "handle_request", extensionGlobals ? extensionGlobals : msgRegisterGlobals);
-  return ok;
-}
-    /// Generic script loader
-
-void SIPB2BScriptableHandler::recompileScripts()
-{
-  if (_inboundScript.isInitialized())
-  {
-    std::ostringstream logMsg;
-    logMsg << "Recompiling script " << _inboundScript.getScriptFilePath();
-    OSS::log_information(logMsg.str());
-    _inboundScript.recompile();
-  }
-  if (_authScript.isInitialized())
-  {
-    std::ostringstream logMsg;
-    logMsg << "Recompiling script " << _authScript.getScriptFilePath();
-    OSS::log_information(logMsg.str());
-    _authScript.recompile();
-  }
-  if (_routeScript.isInitialized())
-  {
-    std::ostringstream logMsg;
-    logMsg << "Recompiling script " << _routeScript.getScriptFilePath();
-    OSS::log_information(logMsg.str());
-    _routeScript.recompile();
-  }
-  if (_outboundScript.isInitialized())
-  {
-    std::ostringstream logMsg;
-    logMsg << "Recompiling script " << _outboundScript.getScriptFilePath();
-    OSS::log_information(logMsg.str());
-    _outboundScript.recompile();
-  }
-  if (_outboundResponseScript.isInitialized())
-  {
-    std::ostringstream logMsg;
-    logMsg << "Recompiling script " << _outboundResponseScript.getScriptFilePath();
-    OSS::log_information(logMsg.str());
-    _outboundResponseScript.recompile();
   }
 }
 

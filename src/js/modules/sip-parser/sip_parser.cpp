@@ -20,7 +20,6 @@
 
 #include <OSS/SIP/SIPHeaderTokens.h>
 
-#include "OSS/JS/JSSIPMessage.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/Net/Net.h"
 #include "OSS/UTL/Logger.h"
@@ -37,6 +36,7 @@
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 
 #include "OSS/JS/JSModule.h"
+#include "OSS/JS/JSUtil.h"
 
 
 using namespace OSS::SIP;

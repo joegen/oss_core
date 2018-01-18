@@ -56,12 +56,14 @@ JSIsolateManager& JSIsolateManager::instance()
 
 JSIsolateManager::JSIsolateManager()
 {
-  //
-  // Set the external heap to 20mb before attempting to garbage collect
-  //
-  v8::V8::AdjustAmountOfExternalAllocatedMemory(1024 * 1024 * 20);
-  
-  v8::V8::AddMessageListener(V8ErrorMessageCallback);
+  if (v8::V8::Initialize())
+  {
+    //
+    // Set the external heap to 20mb before attempting to garbage collect
+    //
+    v8::V8::AdjustAmountOfExternalAllocatedMemory(1024 * 1024 * 20);
+    v8::V8::AddMessageListener(V8ErrorMessageCallback);
+  }
   
   //
   // Create the root isolate

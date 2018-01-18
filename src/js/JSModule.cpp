@@ -22,9 +22,9 @@
 #if ENABLE_FEATURE_V8
 
 #include "OSS/JS/JS.h"
-#include "OSS/JS/JSBase.h"
 #include "OSS/JS/JSModule.h"
 #include "OSS/JS/JSPlugin.h"
+#include "OSS/JS/JSUtil.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/JS/JSIsolate.h"
 #include "OSS/JS/JSIsolateManager.h"

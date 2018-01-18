@@ -8,7 +8,6 @@
 #include "OSS/UTL/ServiceDaemon.h"
 #include "OSS/UTL/Thread.h"
 #include "OSS/UTL/Console.h"
-#include "OSS/JS/JSBase.h"
 #include "OSS/JS/JSIsolateManager.h"
 
 

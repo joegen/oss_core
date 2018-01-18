@@ -33,7 +33,6 @@
 namespace OSS {
 namespace JS {
 
-class JSBase;
 class JSIsolate;
 
 class JSModule
