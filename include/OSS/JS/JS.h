@@ -29,6 +29,7 @@
 
 
 #include "OSS/OSS.h"
+#include <vector>
 
 #include "OSS/JS/JSObjectWrap.h"
 
