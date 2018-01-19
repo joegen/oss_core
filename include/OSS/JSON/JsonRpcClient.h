@@ -348,7 +348,7 @@ public:
   {
     if (!_isConnected)
     {
-      return false;
+      return;
     }
     
     try
@@ -363,13 +363,12 @@ public:
     }
     catch(json::Exception& e)
     {
-      return false;
+      return;
     }
     catch(std::exception& e)
     {
-      return false;
+      return;
     }
-    return true;
   }
   
   int generateId()

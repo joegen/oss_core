@@ -47,9 +47,11 @@ CLEANFILES = boost_pch.hpp.gch
 
 liboss_core_la_SOURCES = boost_pch.hpp OSS.cpp
 
+#
+# Non-SIP sources
+#
 include zmq/src.am
 include crypto/src.am
-
 include persistent/src.am
 include raft/src.am
 include lmdb/src.am
@@ -61,6 +63,9 @@ include utl/src.am
 include bson/src.am
 include json/src.am
 
+#
+# SIP Implementation
+#
 include abnf/src.am
 include sdp/src.am
 include sipparser/src.am
