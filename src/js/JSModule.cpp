@@ -73,11 +73,14 @@ static v8::Handle<v8::Value> js_include(const v8::Arguments& args)
 
 static bool module_path_exists(const std::string& canonicalName, std::string& absolutePath)
 {
-  if (OSS::string_starts_with(canonicalName, "/") && boost::filesystem::exists(boost::filesystem::path(canonicalName.c_str())))
+  if (OSS::string_starts_with(canonicalName, "/"))
   {
-    
-    absolutePath = canonicalName;
-    return true;
+    if (boost::filesystem::exists(boost::filesystem::path(canonicalName.c_str())))
+    {
+      absolutePath = canonicalName;
+      return true;
+    }
+    return false;
   }
 
   if (OSS::string_starts_with(canonicalName, "~/"))
@@ -89,6 +92,7 @@ static bool module_path_exists(const std::string& canonicalName, std::string& ab
       absolutePath = OSS::boost_path(currentPath);
       return true;
     }
+    return false;
   }
 
   if (OSS::string_starts_with(canonicalName, "./"))
@@ -100,6 +104,7 @@ static bool module_path_exists(const std::string& canonicalName, std::string& ab
       absolutePath = OSS::boost_path(currentPath);
       return true;
     }
+    return false;
   }
 
   boost::filesystem::path path(canonicalName.c_str());

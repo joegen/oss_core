@@ -1,5 +1,7 @@
 "use-strict";
 
+var _parser = require("./_sipparser.jso");
+
 function SIPMessage(request)
   //
   // The SIPMessage class is a utility wrapper for the javascript API exposed by
@@ -38,7 +40,7 @@ SIPMessage.prototype.getLogId = function()
   //  log_info(logId, "this is a sample javascript log entry");
   //
 {
-  return msgGetTransactionProperty(this._request, "log-id");
+  return _parser.msgGetTransactionProperty(this._request, "log-id");
 }
 
 SIPMessage.prototype.setProperty = function(propertyName, propertyValue)
@@ -60,7 +62,7 @@ SIPMessage.prototype.setProperty = function(propertyName, propertyValue)
   if (typeof propertyValue == "undefined")
     propertyValue = "?";
   log_debug(this.getLogId(), "Setting property " + propertyName + "=" + propertyValue);
-  msgSetProperty(this._request, propertyName, propertyValue);
+  _parser.msgSetProperty(this._request, propertyName, propertyValue);
 }
 
 SIPMessage.prototype.getProperty = function(propertyName)
@@ -77,7 +79,7 @@ SIPMessage.prototype.getProperty = function(propertyName)
   //  var someProp = msg.getProperty("some-property");
   //
 {
-  return msgGetProperty(this._request, propertyName);
+  return _parser.msgGetProperty(this._request, propertyName);
 }
 
 SIPMessage.prototype.setTransactionProperty = function(propertyName, propertyValue)
@@ -97,7 +99,7 @@ SIPMessage.prototype.setTransactionProperty = function(propertyName, propertyVal
   //
 {
   log_debug(this.getLogId(), "Setting transaction property " + propertyName + "=" + propertyValue);
-  msgSetTransactionProperty(this._request, propertyName, propertyValue);
+  _parser.msgSetTransactionProperty(this._request, propertyName, propertyValue);
 }
 
 SIPMessage.prototype.getTransactionProperty = function(propertyName)
@@ -114,7 +116,7 @@ SIPMessage.prototype.getTransactionProperty = function(propertyName)
   //  var someProp = msg.getTransactionProperty("some-property");
   //
 {
-  return msgGetTransactionProperty(this._request, propertyName);
+  return _parser.msgGetTransactionProperty(this._request, propertyName);
 }
 
 SIPMessage.prototype.getSourceAddress = function()
@@ -134,7 +136,7 @@ SIPMessage.prototype.getSourceAddress = function()
   //  var src = msg.getSourceAddress();
   //
 {
-  return msgGetSourceAddress(this._request);
+  return _parser.msgGetSourceAddress(this._request);
 }
 
 SIPMessage.prototype.getSourcePort = function()
@@ -154,7 +156,7 @@ SIPMessage.prototype.getSourcePort = function()
   //  var port = msg.getSourcePort();
   //
 {
-  return msgGetSourcePort(this._request);
+  return _parser.msgGetSourcePort(this._request);
 }
 
 SIPMessage.prototype.getSourceAddressAndPort = function()
@@ -178,7 +180,7 @@ SIPMessage.prototype.getInterfaceAddress = function()
   //  var port = msg.getInterfacePort();
   //
 {
-  return msgGetInterfaceAddress(this._request);
+  return _parser.msgGetInterfaceAddress(this._request);
 }
 
 SIPMessage.prototype.getInterfacePort = function()
@@ -195,7 +197,7 @@ SIPMessage.prototype.getInterfacePort = function()
   //  var port = msg.getInterfacePort();
   //
 {
-  return msgGetInterfacePort(this._request);
+  return _parser.msgGetInterfacePort(this._request);
 }
 
 SIPMessage.prototype.getMethod = function()
@@ -203,7 +205,7 @@ SIPMessage.prototype.getMethod = function()
   // Return the request METHOD
   //
 {
-  return msgGetMethod(this._request);
+  return _parser.msgGetMethod(this._request);
 }
 
 SIPMessage.prototype.getRequestUri = function()
@@ -219,7 +221,7 @@ SIPMessage.prototype.getRequestUri = function()
   //  var uri = msg.getRequestUri();
   //
 {
-  return msgGetRequestUri(this._request);
+  return _parser.msgGetRequestUri(this._request);
 }
 
 SIPMessage.prototype.setRequestUri = function(requestUri)
@@ -238,7 +240,7 @@ SIPMessage.prototype.setRequestUri = function(requestUri)
   //  msg.setRequestUri(uri);
   //
 {
-  msgSetRequestUri(this._request, requestUri);
+  _parser.msgSetRequestUri(this._request, requestUri);
 }
 
 SIPMessage.prototype.getRequestUriUser = function()
@@ -255,7 +257,7 @@ SIPMessage.prototype.getRequestUriUser = function()
   //  var user = msg.getRequestUriUser();
   //
 {
-  return msgGetRequestUriUser(this._request);
+  return _parser.msgGetRequestUriUser(this._request);
 }
 
 SIPMessage.prototype.setRequestUriUser = function(user)
@@ -274,7 +276,7 @@ SIPMessage.prototype.setRequestUriUser = function(user)
   //  msg.setRequestUriUser(user);
   //
 {
-  msgSetRequestUriUser(this._request, user);
+  _parser.msgSetRequestUriUser(this._request, user);
 }
 
 SIPMessage.prototype.getRequestUriHostPort = function()
@@ -291,7 +293,7 @@ SIPMessage.prototype.getRequestUriHostPort = function()
   //  var hostPort = msg.getRequestUriHostPort();
   //
 {
-  return msgGetRequestUriHostPort(this._request);
+  return _parser.msgGetRequestUriHostPort(this._request);
 }
 
 SIPMessage.prototype.setRequestUriHostPort = function(hostPort)
@@ -311,7 +313,7 @@ SIPMessage.prototype.setRequestUriHostPort = function(hostPort)
   //  msg.setRequestUriHostPort(hostPort);
   //
 {
-  msgSetRequestUriHostPort(this._request, hostPort);
+  _parser.msgSetRequestUriHostPort(this._request, hostPort);
 }
 
 SIPMessage.prototype.getRequestUriHost = function()
@@ -328,7 +330,7 @@ SIPMessage.prototype.getRequestUriHost = function()
   //  var host = msg.getRequestUriHost();
   //
 {
-  return msgGetRequestUriHost(this._request);
+  return _parser.msgGetRequestUriHost(this._request);
 }
 
 SIPMessage.prototype.getToUser = function()
@@ -348,7 +350,7 @@ SIPMessage.prototype.getToUser = function()
   //  var user = msg.getToUser();
   //
 {
- return msgGetToUser(this._request);
+ return _parser.msgGetToUser(this._request);
 }
 
 SIPMessage.prototype.setToUser = function(user)
@@ -367,7 +369,7 @@ SIPMessage.prototype.setToUser = function(user)
   //  msg.setToUser(newUser);
   //
 {
- msgSetToUser(this._request, user);
+  _parser.msgSetToUser(this._request, user);
 }
 
 SIPMessage.prototype.getToHostPort = function()
@@ -384,7 +386,7 @@ SIPMessage.prototype.getToHostPort = function()
   //  var hostPort = msg.getToHostPort();
   //
 {
- return msgGetToHostPort(this._request);
+  return _parser.msgGetToHostPort(this._request);
 }
 
 SIPMessage.prototype.getToHost = function()
@@ -400,7 +402,7 @@ SIPMessage.prototype.getToHost = function()
   //  var host = msg.getToHost();
   //
 {
- return msgGetToHost(this._request);
+  return _parser.msgGetToHost(this._request);
 }
 
 
@@ -420,7 +422,7 @@ SIPMessage.prototype.setToHostPort = function(hostPort)
   //  msg.setToHostPort("atlanta.com");
   //
 {
-  msgSetToHostPort(this._request, hostPort);
+  _parser.msgSetToHostPort(this._request, hostPort);
 }
 
 SIPMessage.prototype.getFromUser = function()
@@ -436,7 +438,7 @@ SIPMessage.prototype.getFromUser = function()
   //  var user = msg.getFromUser();
   //
 {
-  return msgGetFromUser(this._request);
+  return _parser.msgGetFromUser(this._request);
 }
 
 SIPMessage.prototype.setFromUser = function(user)
@@ -455,7 +457,7 @@ SIPMessage.prototype.setFromUser = function(user)
   //  msg.setFromUser(user);
   //
 {
-  msgSetFromUser(this._request, user);
+  _parser.msgSetFromUser(this._request, user);
 }
 
 SIPMessage.prototype.setFromUriUser = function(user)
@@ -477,7 +479,7 @@ SIPMessage.prototype.getFromHostPort = function()
   //  var hostPort = msg.getFromHostPort();
   //
 {
-  return msgGetFromHostPort(this._request);
+  return _parser.msgGetFromHostPort(this._request);
 }
 
 SIPMessage.prototype.getFromHost = function()
@@ -493,7 +495,7 @@ SIPMessage.prototype.getFromHost = function()
   //  var host = msg.getFromHost();
   //
 {
-  return msgGetFromHost(this._request);
+  return _parser.msgGetFromHost(this._request);
 }
 
 SIPMessage.prototype.setFromHostPort = function(hostPort)
@@ -512,7 +514,7 @@ SIPMessage.prototype.setFromHostPort = function(hostPort)
   //  msg.setFromHostPort("proxy.atlanta.com:5060");
   //
 {
- msgSetFromHostPort(this._request, hostPort);
+  _parser.msgSetFromHostPort(this._request, hostPort);
 }
 
 SIPMessage.prototype.hdrPresent = function(headerName)
@@ -529,7 +531,7 @@ SIPMessage.prototype.hdrPresent = function(headerName)
   //  var hasExpires = msg.hdrPresent("expires");
   //
 {
-  return msgHdrPresent(this._request, headerName);
+  return _parser.msgHdrPresent(this._request, headerName);
 }
 
 SIPMessage.prototype.hdrGetSize = function(headerName)
@@ -547,7 +549,7 @@ SIPMessage.prototype.hdrGetSize = function(headerName)
   //  var viaCount = msg.hdrGetSize("via");
   //
 {
-  return msgHdrGetSize(this._request, headerName);
+  return _parser.msgHdrGetSize(this._request, headerName);
 }
 
 SIPMessage.prototype.hdrGet = function(headerName)
@@ -565,7 +567,7 @@ SIPMessage.prototype.hdrGet = function(headerName)
   //  var from = msg.hdrGet("from");
   //
 {
-  return msgHdrGet(this._request, headerName);
+  return _parser.msgHdrGet(this._request, headerName);
 }
 
 SIPMessage.prototype.hdrSet = function(headerName, hdrValue)
@@ -585,7 +587,7 @@ SIPMessage.prototype.hdrSet = function(headerName, hdrValue)
   //  msg.hdrSet("RemoteIP", srcAddr);
   //
 {
-  msgHdrSet(this._request, headerName, hdrValue);
+  _parser.msgHdrSet(this._request, headerName, hdrValue);
 }
 
 SIPMessage.prototype.hdrRemove = function(headerName)
@@ -605,7 +607,7 @@ SIPMessage.prototype.hdrRemove = function(headerName)
   //  msg.hdrSet("User-Agent", "My own cool user agent");
   //
 {
-  msgHdrRemove(this._request, headerName);
+  _parser.msgHdrRemove(this._request, headerName);
 }
 
 SIPMessage.prototype.hdrListAppend = function(headerName, headerValue)
@@ -625,7 +627,7 @@ SIPMessage.prototype.hdrListAppend = function(headerName, headerValue)
   //  msg.hdrListAppend("Record-Route", "<sip:myhost:5060;lr>");
   //
 {
-  msgHdrListAppend(this._request, headerName, headerValue);
+  _parser.msgHdrListAppend(this._request, headerName, headerValue);
 }
 
 SIPMessage.prototype.hdrListPrepend = function(headerName, headerValue)
@@ -645,7 +647,7 @@ SIPMessage.prototype.hdrListPrepend = function(headerName, headerValue)
   //  msg.hdrListAppend("Record-Route", "<sip:myhost:5060;lr>");
   //
 {
-  msgHdrListPrepend(this._request, headerName, headerValue);
+  _parser.msgHdrListPrepend(this._request, headerName, headerValue);
 }
 
 SIPMessage.prototype.hdrListPopFront = function(headerName)
@@ -665,7 +667,7 @@ SIPMessage.prototype.hdrListPopFront = function(headerName)
   //  var topRR = msg.hdrListPopFront("Record-Route");
   //
 {
-  return msgHdrListPopFront(this._request, headerName);
+  return _parser.msgHdrListPopFront(this._request, headerName);
 }
 
 SIPMessage.prototype.hdrListRemove = function(headerName)
@@ -683,7 +685,7 @@ SIPMessage.prototype.hdrListRemove = function(headerName)
   //  msg.hdrListRemove("Record-Route");
   //
 {
-  return msgHdrListRemove(this._request, headerName);
+  return _parser.msgHdrListRemove(this._request, headerName);
 }
 
 SIPMessage.prototype.isRequest = function(method)
@@ -705,7 +707,7 @@ SIPMessage.prototype.isRequest = function(method)
   //  }
   //
 {
-  return msgIsRequest(this._request, method);
+  return _parser.msgIsRequest(this._request, method);
 }
 
 SIPMessage.prototype.isResponse = function()
@@ -725,7 +727,7 @@ SIPMessage.prototype.isResponse = function()
   //  }
   //
 {
-  return msgIsResponse(this._request);
+  return _parser.msgIsResponse(this._request);
 }
 
 SIPMessage.prototype.is1xx = function()
@@ -744,7 +746,7 @@ SIPMessage.prototype.is1xx = function()
   //  }
   //
 {
-  return msgIs1xx(this._request);
+  return _parser.msgIs1xx(this._request);
 }
 
 SIPMessage.prototype.is2xx = function()
@@ -763,7 +765,7 @@ SIPMessage.prototype.is2xx = function()
   //  }
   //
 {
-  return msgIs2xx(this._request);
+  return _parser.msgIs2xx(this._request);
 }
 
 SIPMessage.prototype.is3xx = function()
@@ -782,7 +784,7 @@ SIPMessage.prototype.is3xx = function()
   //  }
   //
 {
-  return msgIs3xx(this._request);
+  return _parser.msgIs3xx(this._request);
 }
 
 SIPMessage.prototype.is4xx = function()
@@ -801,7 +803,7 @@ SIPMessage.prototype.is4xx = function()
   //  }
   //
 {
-  return msgIs4xx(this._request);
+  return _parser.msgIs4xx(this._request);
 }
 
 SIPMessage.prototype.is5xx = function()
@@ -820,7 +822,7 @@ SIPMessage.prototype.is5xx = function()
   //  }
   //
 {
-  return msgIs5xx(this._request);
+  return _parser.msgIs5xx(this._request);
 }
 
 SIPMessage.prototype.is6xx = function()
@@ -839,7 +841,7 @@ SIPMessage.prototype.is6xx = function()
   //  }
   //
 {
-  return msgIs6xx(this._request);
+  return _parser.msgIs6xx(this._request);
 }
 
 
@@ -859,7 +861,7 @@ SIPMessage.prototype.isErrorResponse = function()
   //  }
   //
 {
-  return msgIsErrorResponse(this._request);
+  return _parser.msgIsErrorResponse(this._request);
 }
 
 SIPMessage.prototype.isMidDialog = function()
@@ -878,7 +880,7 @@ SIPMessage.prototype.isMidDialog = function()
   //  }
   //
 {
-  return msgIsMidDialog(this._request);
+  return _parser.msgIsMidDialog(this._request);
 }
 
 SIPMessage.prototype.getBody = function()
@@ -898,7 +900,7 @@ SIPMessage.prototype.getBody = function()
   //    sdp = msg.getBody();
   //
 {
-  return msgGetBody(this._request);
+  return _parser.msgGetBody(this._request);
 }
 
 SIPMessage.prototype.setBody = function(body)
@@ -917,7 +919,7 @@ SIPMessage.prototype.setBody = function(body)
   //  msg.setBody("This is a simple plain text body");
   //
 {
-  msgSetBody(this._request, body);
+  _parser.msgSetBody(this._request, body);
 }
 
 SIPMessage.prototype.getStartLine = function()
@@ -933,7 +935,7 @@ SIPMessage.prototype.getStartLine = function()
   //  var startLine = msg.getStartLine();
   //
 {
-  return msgGetStartLine(this._request);
+  return _parser.msgGetStartLine(this._request);
 }
 
 SIPMessage.prototype.setStartLine = function(sline)
@@ -950,7 +952,7 @@ SIPMessage.prototype.setStartLine = function(sline)
   //  msg.setStartLine("INVITE sip:1234@192.168.0.10:5060 SIP/2.0");
   //
 {
-  msgSetStartLine(this._request, sline);
+  _parser.msgSetStartLine(this._request, sline);
 }
 
 SIPMessage.prototype.getContactUri = function()
@@ -966,7 +968,7 @@ SIPMessage.prototype.getContactUri = function()
   //  var contactUri = msg.getContactUri();
   //
 {
-    return msgGetContactUri(this._request);
+    return _parser.msgGetContactUri(this._request);
 }
 
 SIPMessage.prototype.getContactParameter = function(parameter)
@@ -984,7 +986,7 @@ SIPMessage.prototype.getContactParameter = function(parameter)
   //  var expires = msg.getContactParameter("expires");
   //
 {
-    return msgGetContactParameter(this._request, parameter);
+    return _parser.msgGetContactParameter(this._request, parameter);
 }
 
 SIPMessage.prototype.getAuthenticator = function(realm)
@@ -1007,7 +1009,7 @@ SIPMessage.prototype.getAuthenticator = function(realm)
   //  var expires = msg.getContactParameter("expires");
   //
 {
-    return msgGetAuthenticator(this._request, realm);
+    return _parser.msgGetAuthenticator(this._request, realm);
 }
 
 SIPMessage.prototype.routeByAOR = function(userComparisonOnly)
@@ -1019,7 +1021,7 @@ SIPMessage.prototype.routeByAOR = function(userComparisonOnly)
   //
   // Return Type: String
 {
-    return msgRouteByAOR(this._request, userComparisonOnly);
+  return _parser.msgRouteByAOR(this._request, userComparisonOnly);
 }
 
 SIPMessage.prototype.resetMaxForwards = function(maxForwards)
@@ -1039,7 +1041,7 @@ SIPMessage.prototype.resetMaxForwards = function(maxForwards)
   //  msg.resetMaxForwards("20");
   //
 {
-    return msgResetMaxForwards(this._request, maxForwards);
+  return _parser.msgResetMaxForwards(this._request, maxForwards);
 }
 
 exports.SIPMessage = SIPMessage;

@@ -200,8 +200,17 @@ const log_fatal = logger.log_fatal;
 //
 // Overrides
 //
+Error.LOG_STACK_TRACE = false;
+
 Error.prototype.printStackTrace = function()
 {
-  console.error(this + "\n" + this.stack);
+  if (!Error.LOG_STACK_TRACE)
+  {
+    console.error(this + "\n" + this.stack);
+  }
+  else
+  {
+    log_error(this + "\n" + this.stack);
+  }
 }
 
