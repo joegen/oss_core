@@ -366,7 +366,10 @@ static v8::Handle<v8::Value> js_compile_module(const v8::Arguments& args)
   
   std::ostringstream strm;
   strm << "( function(module, exports) {";
+  strm << "\"use-strict\";";
+  strm << "try {";
   strm << string_from_js_value(args[0]);
+  strm << "} catch(e) { e.printStackTrace(); }";
   strm << "});";
 
   v8::Handle<v8::String> script(v8::String::New(strm.str().c_str())); 

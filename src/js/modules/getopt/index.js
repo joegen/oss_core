@@ -1,6 +1,8 @@
 "use-strict";
 var _opt = require("./_getopt.jso");
 exports.getopt = _opt.getopt;
+exports.argc = _opt.argc;
+exports.argv = _opt.argv;
 
   
 Object.defineProperties(exports, {

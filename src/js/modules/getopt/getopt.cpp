@@ -61,7 +61,6 @@ static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
   exports->SetAccessor(v8::String::New("optind"), __optind_get, __optind_set);
   exports->SetAccessor(v8::String::New("optarg"), __optarg_get, 0);
   exports->SetAccessor(v8::String::New("optopt"), __optopt_get, 0);
-  OSS_LOG_INFO("Got HERE");
   return exports;
 }
 
