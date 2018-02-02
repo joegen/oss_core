@@ -41,6 +41,9 @@ Requires: libpcap
 BuildRequires: libdnet-devel
 Requires: libdnet
 
+BuildRequires: zeromq3-devel
+Requires: zeromq3
+
 BuildRequires: poco-devel
 Requires: poco-crypto
 Requires: poco-data
