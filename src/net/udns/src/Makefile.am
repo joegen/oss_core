@@ -1,11 +1,13 @@
 SUBDIRS = . 
 AM_CPPFLAGS = \
 	-Wall \
+	-DHAVE_POLL \
 	-DHAVE_BOOSTLIBS \
 	-DHAVE_INET_PTON_NTOP \
 	-I$(top_srcdir)/include
 	
 AM_CFLAGS = \
+	-DHAVE_POLL \
 	-DHAVE_INET_PTON_NTOP \
 	-I$(top_srcdir)/include
 
