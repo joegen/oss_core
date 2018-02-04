@@ -15,11 +15,13 @@ lib_LTLIBRARIES = $(corelibs)
 localedir = $(datadir)/locale
 
 AM_CFLAGS = \
+    -DHAVE_POLL \
     -DHAVE_INET_PTON_NTOP \
     -I@OSS_CORE_SRCDIR@/src/utl/linux/pidfile \
     -I$(top_builddir)/include
 
 AM_CPPFLAGS = \
+    -DHAVE_POLL \
     -DBOOST_THREAD_PROVIDES_FUTURE \
     -I$(top_builddir)/include \
     -I$(top_builddir)/src \
