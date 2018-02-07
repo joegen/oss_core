@@ -39,7 +39,7 @@ typedef ABNFAnyOf<ABNF_SIP_alphanum, _pvar3> Parser; // domainlabel =  alphanum 
 static Parser _parser;
 #endif
 
-typedef ABNFLoopUntil< ABNFAnyOf< ABNF_SIP_alphanum, ABNFCharDash >, ABNFLoopExitIfNul, 0, 1024> Parser;
+typedef ABNFLoopUntil< ABNFAnyOfMultiple3< ABNF_SIP_alphanum, ABNFCharDash, ABNFCharUnderscore >, ABNFLoopExitIfNul, 0, 1024> Parser;
 static Parser _parser;
 
 ABNFSIPDomainLabel::ABNFSIPDomainLabel()
