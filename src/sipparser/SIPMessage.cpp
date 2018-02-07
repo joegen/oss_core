@@ -330,7 +330,10 @@ bool SIPMessage::headerTokenize(
         boost::trim(previousLine);
         boost::trim(currentLine);
         currentLine =  previousLine + " " + currentLine;
-        lines.pop_back();///erase the previous line so that the slot gets reused by the wrapped header
+        if (!lines.empty())
+        {
+          lines.pop_back();///erase the previous line so that the slot gets reused by the wrapped header
+        }
       }
       lines.push_back( currentLine );
       previousLine = currentLine;
