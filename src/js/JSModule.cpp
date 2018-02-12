@@ -116,21 +116,6 @@ static bool module_path_exists(const std::string& canonicalName, std::string& ab
   }
 
   //
-  // Check the global module directory
-  //
-  const JSModule::ModulesDir& modulesDir = get_current_module_manager()->getModulesDir();
-  for (JSModule::ModulesDir::const_iterator iter = modulesDir.begin(); iter != modulesDir.end(); iter++)
-  {
-    boost::filesystem::path modDir(iter->c_str());
-    absPath = OSS::boost_path_concatenate(modDir, canonicalName);
-    if (boost::filesystem::exists(absPath))
-    {
-      absolutePath = OSS::boost_path(absPath);
-      return true;
-    }
-  }
-
-  //
   // check it against the directory of the main script
   //
   boost::filesystem::path parent_path = JSModule::_mainScript.parent_path();
@@ -140,12 +125,38 @@ static bool module_path_exists(const std::string& canonicalName, std::string& ab
     absolutePath = OSS::boost_path(absPath);
     return true;
   }
-  else
+  
+  //
+  // check it against the oss_modules directory of the main script
+  //
+  parent_path = JSModule::_mainScript.parent_path();
+  boost::filesystem::path module_path = OSS::boost_path_concatenate(parent_path, "oss_modules");
+  absPath = OSS::boost_path_concatenate(module_path, canonicalName);
+  if (boost::filesystem::exists(absPath))
   {
-    // Check it against current path
-    //
-    boost::filesystem::path current_path = boost::filesystem::current_path();
-    absPath = OSS::boost_path_concatenate(current_path, canonicalName);
+    absolutePath = OSS::boost_path(absPath);
+    return true;
+  }
+
+  //
+  // Check it against current path
+  //
+  absPath = OSS::boost_path_concatenate(boost::filesystem::current_path(), canonicalName);
+  if (boost::filesystem::exists(absPath))
+  {
+    absolutePath = OSS::boost_path(absPath);
+    return true;
+  }
+
+  
+  //
+  // Check the global module directory
+  //
+  const JSModule::ModulesDir& modulesDir = get_current_module_manager()->getModulesDir();
+  for (JSModule::ModulesDir::const_iterator iter = modulesDir.begin(); iter != modulesDir.end(); iter++)
+  {
+    boost::filesystem::path modDir(iter->c_str());
+    absPath = OSS::boost_path_concatenate(modDir, canonicalName);
     if (boost::filesystem::exists(absPath))
     {
       absolutePath = OSS::boost_path(absPath);
