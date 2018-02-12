@@ -34,11 +34,13 @@ var JsonRpcHttpClient = function(host, port, secure)
       else
       {
         _this.onReadCompleted(utils.bufferToString(_this._readBuffer));
+        _this._readBuffer = [];
       }
     }
     else
     {
       _this.onReadCompleted(utils.bufferToString(_this._readBuffer));
+      _this._readBuffer = [];
     }
   });
   

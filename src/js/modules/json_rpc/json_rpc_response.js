@@ -66,7 +66,7 @@ var JsonRpcResponse = function(result, error)
     return true;
   }
   
-  this.toJSON = function()
+  this.toJSON = function(replacer, space)
   {
     if (!_this._version || !_this._id)
     {
@@ -108,7 +108,7 @@ var JsonRpcResponse = function(result, error)
       }
       response.error = error;
     }
-    return JSON.stringify(response);
+    return JSON.stringify(response, replacer, space);
   }
 }
 
