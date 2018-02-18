@@ -48,6 +48,7 @@ struct PropertyMap
     "interface-address", \
     "interface-port", \
     "transaction-timeout", \
+    "reliable-transport-transaction-timeout", \
     "rtp-resizer-samples", \
     "max-channel", \
     "response-target", \
@@ -106,6 +107,7 @@ struct PropertyMap
     PROP_InterfaceAddress,
     PROP_InterfacePort,
     PROP_TransactionTimeout,
+    PROP_ReliableTransportTransactionTimeout,
     PROP_RTPResizerSamples,
     PROP_MaxChannel,
     PROP_ResponseTarget,

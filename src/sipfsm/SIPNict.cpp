@@ -76,7 +76,15 @@ bool SIPNict::onSendMessage(SIPMessage::Ptr pMsg)
     }
     else
     {
-      startTimerF(RELIABLE_TIMER_F_VALUE);
+      std::string customTimeout;
+      if (pMsg->getProperty(OSS::PropertyMap::PROP_ReliableTransportTransactionTimeout, customTimeout) && !customTimeout.empty())
+      {
+        startTimerF(OSS::string_to_number<unsigned long>(customTimeout.c_str()) );
+      }
+      else
+      {
+        startTimerF(RELIABLE_TIMER_F_VALUE);
+      }
     }
     
     return true;
