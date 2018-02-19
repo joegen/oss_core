@@ -193,11 +193,19 @@ rm -rf $RPM_BUILD_ROOT
 %dir %attr(755,root,root) %{_libdir}/oss_modules/logger
 %dir %attr(755,root,root) %{_libdir}/oss_modules/json_rpc
 %dir %attr(755,root,root) %{_libdir}/oss_modules/sip-parser
+%dir %attr(755,root,root) %{_libdir}/oss_modules/parser
+%dir %attr(755,root,root) %{_libdir}/oss_modules/lexer
 
 #%{_libdir}/oss_modules/*.js
 #%{_libdir}/oss_modules/*.jso
 %{_libdir}/oss_modules/*/*.js
 %{_libdir}/oss_modules/*/*.jso
+
+#
+# parser module
+#
+%{_libdir}/oss_modules/parser/lib/*.js
+%{_libdir}/oss_modules/parser/transformers/*.js
 
 %files devel
 %defattr(644,root,root,755)
