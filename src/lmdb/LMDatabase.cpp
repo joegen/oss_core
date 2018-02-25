@@ -96,10 +96,6 @@ LMDatabase::TransactionLock::~TransactionLock()
   {
     _transaction.cancel();
   }
-  else if (!_transaction.end())
-  {
-    throw OSS::Exception("TransactionLock - end transaction failed");
-  }
 }
 
 LMDatabase::Cursor::Cursor() :
