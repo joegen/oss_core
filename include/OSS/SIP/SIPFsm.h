@@ -173,6 +173,10 @@ public:
     /// 
     /// This timer makes sure that the transaction doesnt end up staying forever.
     /// This function will most likely call terminate() function
+  
+  void startRequestThrottleTimer(unsigned long expire);
+    /// Starts the Call Throttle expiration timer extracted from the Expires header.  
+    ///
 
   void cancelTimerA();
     /// Cancels Timer A execution.
@@ -209,6 +213,9 @@ public:
   
   void cancelTimerClientExpires();
     /// Cancels Timer K execution.
+  
+  void cancelRequestThrottleTimer();
+    /// Cancels the call throttle timer execution.
 
   void cancelAllTimers();
     /// Cancels all existing timers
@@ -250,6 +257,7 @@ protected:
   boost::asio::deadline_timer _timerK;
   boost::asio::deadline_timer _timerClientExpires;
   boost::asio::deadline_timer _timerMaxLifetime;
+  boost::asio::deadline_timer _timerRequestThrottle;
 
   TimerCallback _timerAFunc;
   TimerCallback _timerBFunc;
@@ -264,6 +272,7 @@ protected:
   TimerCallback _timerKFunc;
   TimerCallback _timerClientExpiresFunc;
   TimerCallback _timerMaxLifetimeFunc;
+  TimerCallback _timerRequestThrottleFunc;
 
 private:
   void handleTimerA(const boost::system::error_code& e);
@@ -304,6 +313,9 @@ private:
 
   void handleTimerMaxLifetime(const boost::system::error_code& e);
     /// Handler for Timer MaxLifetime expiration
+  
+  void handleRequestThrottle(const boost::system::error_code& e);
+    /// Handler for Timer Call Throttle expiration
 
   friend class SIPTransaction;
   friend class SIPTransactionPool;

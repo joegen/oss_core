@@ -50,8 +50,8 @@ SIPFsm::SIPFsm(
   _timerJ(_ioService, boost::posix_time::milliseconds(0)),
   _timerK(_ioService, boost::posix_time::milliseconds(0)),
   _timerClientExpires(_ioService, boost::posix_time::milliseconds(0)),
-  _timerMaxLifetime(_ioService, boost::posix_time::milliseconds(0))
-  
+  _timerMaxLifetime(_ioService, boost::posix_time::milliseconds(0)),
+  _timerRequestThrottle(_ioService, boost::posix_time::milliseconds(0))
 {
 }
 
@@ -162,6 +162,13 @@ void SIPFsm::startTimerMaxLifetime(unsigned long expire)
   _timerMaxLifetime.async_wait(boost::bind(&SIPFsm::handleTimerMaxLifetime, shared_from_this(), boost::asio::placeholders::error));
 }
 
+void SIPFsm::startRequestThrottleTimer(unsigned long expire)
+{
+  _timerRequestThrottle.cancel();
+  _timerRequestThrottle.expires_from_now(boost::posix_time::milliseconds(expire));
+  _timerRequestThrottle.async_wait(boost::bind(&SIPFsm::handleRequestThrottle, shared_from_this(), boost::asio::placeholders::error));
+}
+
 void SIPFsm::handleTimerA(const boost::system::error_code& e)
 {
   if (!e)_timerAFunc();
@@ -227,6 +234,11 @@ void SIPFsm::handleTimerMaxLifetime(const boost::system::error_code& e)
   if (!e)_timerMaxLifetimeFunc();
 }
 
+void SIPFsm::handleRequestThrottle(const boost::system::error_code& e)
+{
+  if (!e)_timerRequestThrottleFunc();
+}
+
 void SIPFsm::cancelAllTimers()
 {
   _timerA.cancel();
@@ -242,6 +254,7 @@ void SIPFsm::cancelAllTimers()
   _timerK.cancel();
   _timerClientExpires.cancel();
   _timerMaxLifetime.cancel();
+  _timerRequestThrottle.cancel();
 }
 
 void SIPFsm::onTerminate()

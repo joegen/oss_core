@@ -40,7 +40,8 @@ class OSS_API SIPNist:
 public:
   enum State
   {
-    TRYING=1,
+    QUEUED=1,
+    TRYING,
     PROCEEDING,
     COMPLETED
   };
@@ -67,9 +68,14 @@ public:
     /// coming from the core layer. 
 
   virtual bool isCompleted() const;
+  
+  void handleDelayedDispatch();
 private: 
   SIPMessage::Ptr _pResponse;
   OSS::mutex_critic_sec _responseMutex;
+  SIPMessage::Ptr _queuedMsg; 
+  SIPTransportSession::Ptr _queuedTransport;
+  int _queuedRequestCounter;
   friend class SIPTransaction;
   friend class SIPTransactionPool;
   friend class SIPFSMPool;

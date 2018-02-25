@@ -105,6 +105,8 @@ public:
 
   SIPTransaction::RequestCallback& requestHandler();
     /// Handler for incoming server transaction requests
+  
+  SIPTransaction::ThrottleRequestCallback& throttleRequestHandler();
 
   UnknownTransactionCallback& ackOr2xxTransactionHandler();
     /// Handler for SIP messages not linked to a transaction
@@ -135,6 +137,7 @@ private:
   SIPIstPool _ist;
   SIPNistPool _nist;
   SIPTransaction::RequestCallback _requestHandler;
+  SIPTransaction::ThrottleRequestCallback _throttleRequestHandler;
   UnknownTransactionCallback _ackOr2xxTransactionHandler;
   StringPairCache _istBlocker;
   bool _enableIctForking;
@@ -163,6 +166,11 @@ inline SIPTransportService& SIPFSMDispatch::transport()
 inline SIPTransaction::RequestCallback& SIPFSMDispatch::requestHandler()
 {
   return _requestHandler;
+}
+
+inline SIPTransaction::ThrottleRequestCallback& SIPFSMDispatch::throttleRequestHandler()
+{
+  return _throttleRequestHandler;
 }
 
 inline SIPFSMDispatch::UnknownTransactionCallback& SIPFSMDispatch::ackOr2xxTransactionHandler()

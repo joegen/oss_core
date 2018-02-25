@@ -68,6 +68,7 @@ public:
   typedef boost::function<void(const SIPTransaction::Error&, const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> Callback;
 	typedef boost::function<void(const SIPTransaction::Ptr&)> TerminateCallback;
   typedef boost::function<void(const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> RequestCallback;
+  typedef boost::function<unsigned long(const SIPMessage::Ptr&, const SIPTransportSession::Ptr&, const SIPTransaction::Ptr&)> ThrottleRequestCallback;
   typedef std::map<std::string, SIPTransaction::Ptr> Branches;
   typedef boost::weak_ptr<OSS::SIP::B2BUA::SIPB2BTransaction> B2BTransactionWeakPtr;
   typedef boost::shared_ptr<OSS::SIP::B2BUA::SIPB2BTransaction> B2BTransactionSharedPtr;

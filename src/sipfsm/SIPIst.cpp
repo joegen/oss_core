@@ -27,6 +27,9 @@
 #include "OSS/SIP/SIPVia.h"
 #include "OSS/UTL/Logger.h"
 
+
+#define IST_QUEUE_RETRY_MAX 3
+
 namespace OSS {
 namespace SIP {
 
@@ -42,6 +45,8 @@ SIPIst::SIPIst(
   _timerHFunc = boost::bind(&SIPIst::handleACKTimeout, this);
   _timerIFunc = boost::bind(&SIPIst::handleDelayedTerminate, this);
   _timerMaxLifetimeFunc = boost::bind(&SIPIst::handleDelayedTerminate, this);
+  _timerRequestThrottleFunc = boost::bind(&SIPIst::handleDelayedDispatch, this);
+  _queuedRequestCounter = 0;
 }
 
 SIPIst::~SIPIst()
@@ -56,11 +61,59 @@ void SIPIst::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
 
   if (_transactionId.empty())
     _transactionId = pTransaction->getId();
-
-  if (pMsg->isRequest() && pTransaction->getState() == SIPTransaction::TRN_STATE_IDLE)
+  
+  //
+  // If the state is QUEUED, ignore request retransmissions
+  //
+  if (pTransaction->getState() == QUEUED)
   {
-     startTimerMaxLifetime(300000); /// five minutes
-    _pRequest = pMsg;
+    std::string queuedRequest;
+    if (!pMsg->getProperty("queued-request", queuedRequest))
+    {
+      return;
+    }
+    if (++_queuedRequestCounter > IST_QUEUE_RETRY_MAX)
+    {
+      pTransaction->sendResponse(_queuedMsg->createResponse(
+        SIPMessage::CODE_503_ServiceUnavailable, "Resource/Channels Depleted"),
+        pTransport->getRemoteAddress());
+      return;
+    }
+  }
+
+  if (pMsg->isRequest() && (pTransaction->getState() == SIPTransaction::TRN_STATE_IDLE  || pTransaction->getState() == QUEUED))
+  {
+    if (pTransaction->getState() == SIPTransaction::TRN_STATE_IDLE)
+    {
+      _pRequest = pMsg;
+      startTimerMaxLifetime(300000); /// five minutes
+    }
+    
+    unsigned long dispatchDelay = 0;
+    if (dispatch()->throttleRequestHandler())
+    {
+      dispatchDelay = dispatch()->throttleRequestHandler()(pMsg, pTransport, pTransaction->shared_from_this());
+      if (dispatchDelay)
+      {
+        if (pTransaction->getState() == SIPTransaction::TRN_STATE_IDLE)
+        {
+          _queuedMsg = pMsg;
+          _queuedTransport = pTransport;
+          _queuedMsg->setProperty("queued-request", "1");
+          pTransaction->setState(QUEUED);
+          
+          pTransaction->sendResponse(_queuedMsg->createResponse(
+            SIPMessage::CODE_100_Trying, "Allocating Channel"),
+            pTransport->getRemoteAddress());
+        }
+        //
+        // Start the dispatch timer here
+        //
+        startRequestThrottleTimer(dispatchDelay);
+        return;
+      }
+    }
+     
     pTransaction->setState(PROCEEDING);
     if (dispatch()->requestHandler())
     {
@@ -112,6 +165,11 @@ void SIPIst::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pT
       }
     }
   }
+}
+
+void SIPIst::handleDelayedDispatch()
+{
+  onReceivedMessage(_queuedMsg, _queuedTransport);
 }
 
 bool SIPIst::onSendMessage(SIPMessage::Ptr pMsg)

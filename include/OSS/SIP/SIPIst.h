@@ -41,7 +41,8 @@ class OSS_API SIPIst:
 public:
   enum State
   {
-    PROCEEDING=1,
+    QUEUED=1,
+    PROCEEDING,
     COMPLETED,
     CONFIRMED
   };
@@ -80,6 +81,8 @@ public:
   void onTerminate();
 
   virtual bool isCompleted() const;
+  
+  void handleDelayedDispatch();
 private: 
   SIPMessage::Ptr _pResponse;
   unsigned long _timerGValue;
@@ -87,6 +90,9 @@ private:
   SIPIstPool* _istPool;
   std::string _ackId;
   std::string _transactionId;
+  SIPMessage::Ptr _queuedMsg; 
+  SIPTransportSession::Ptr _queuedTransport;
+  int _queuedRequestCounter;
 
   friend class SIPTransaction;
   friend class SIPTransactionPool;
