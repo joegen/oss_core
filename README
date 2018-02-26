@@ -47,7 +47,7 @@ To install build dependencies
   apt-get install -y libconfig++-dev
   apt-get install -y libpcap-dev
 
-## Optional prerequisites for Ubuntu
+## Optional dependencies for Ubuntu
   libleveldb-dev
   libmcrypt-dev
   
