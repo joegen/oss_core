@@ -47,6 +47,7 @@ SIPEndpoint::SIPEndpoint() :
   _endpointEventQueue(true/*enable pipe */)
 {
   _stack.setRequestHandler(boost::bind(&SIPEndpoint::handleRequest, this, _1, _2, _3));
+  _stack.setThrottleRequestHandler(boost::bind(&SIPEndpoint::handleThrottleRequest, this, _1, _2, _3));
   _stack.setAckOr2xxTransactionHandler(boost::bind(&SIPEndpoint::handleAckOr2xxTransaction, this, _1, _2));
 }
 
@@ -213,6 +214,14 @@ void SIPEndpoint::handleRequest(
   pEvent->transportSession = pTransport;
   pEvent->transaction = pTransaction;
   _endpointEventQueue.enqueue(pEvent);
+}
+
+unsigned long SIPEndpoint::handleThrottleRequest(
+  const OSS::SIP::SIPMessage::Ptr& pMsg, 
+  const OSS::SIP::SIPTransportSession::Ptr& pTransport, 
+  const OSS::SIP::SIPTransaction::Ptr& pTransaction)
+{
+  return 0;
 }
 
 void SIPEndpoint::handleAckOr2xxTransaction(

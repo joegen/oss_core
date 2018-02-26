@@ -264,6 +264,9 @@ public:
     /// the request to the application layer via this callback.
     ///
     /// If this callback is not set, the request will be silently dropped.
+  
+  void setThrottleRequestHandler(const SIPTransaction::ThrottleRequestCallback& handler);
+    /// This function set a handler to allow applications to delay transacton handling
 
   void setAckOr2xxTransactionHandler(const SIPFSMDispatch::UnknownTransactionCallback& handler);
     /// This function sets the callback handler for ACK and 200 OK retranmissions.
@@ -365,6 +368,11 @@ inline OSS::socket_address_list& SIPStack::tlsListeners()
 inline void SIPStack::setRequestHandler(const SIPTransaction::RequestCallback& handler)
 {
   _fsmDispatch.requestHandler() = handler;
+}
+
+inline void SIPStack::setThrottleRequestHandler(const SIPTransaction::ThrottleRequestCallback& handler)
+{
+  _fsmDispatch.throttleRequestHandler() = handler;
 }
 
 inline void SIPStack::setAckOr2xxTransactionHandler(const SIPFSMDispatch::UnknownTransactionCallback& handler)

@@ -162,6 +162,12 @@ protected:
     const OSS::SIP::SIPTransportSession::Ptr& pTransport, 
     const OSS::SIP::SIPTransaction::Ptr& pTransaction);
     /// This is the incoming request callback that will be attached to the stack
+  
+  virtual unsigned long handleThrottleRequest(
+    const OSS::SIP::SIPMessage::Ptr& pMsg, 
+    const OSS::SIP::SIPTransportSession::Ptr& pTransport, 
+    const OSS::SIP::SIPTransaction::Ptr& pTransaction);
+    /// This is the incoming request callback that will be attached to the stack
 
   virtual void handleAckOr2xxTransaction(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
