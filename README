@@ -36,6 +36,20 @@ To list runtime dependencies
 To install build dependencies
   
   sudo yum install -y `grep '^BuildRequires' oss_core/oss_core.spec.in | awk '{print $2}'`
+
+## Prerequisites for Ubuntu
+  apt-get -qq update
+  apt-get install -y libpoco-dev
+  apt-get install -y libboost-all-dev
+  apt-get install -y libzmq3-dev
+  apt-get install -y libv8-dev
+  apt-get install -y libhiredis-dev
+  apt-get install -y libconfig++-dev
+  apt-get install -y libpcap-dev
+
+## Optional prerequisites for Ubuntu
+  libleveldb-dev
+  libmcrypt-dev
   
 ## Building From Source (Mac and Linux)
 ------------------------------------------
