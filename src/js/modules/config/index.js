@@ -7,74 +7,59 @@ const fs = require("filesystem");
 // Config file prototype
 //
 
-var ConfigFile = function()
-{
+var ConfigFile = function() {
   this._config = new _config.Config();
 }
 
-ConfigFile.prototype.open = function(path)
-{
-  if (!fs.exists(path))
-  {
+ConfigFile.prototype.open = function(path) {
+  if (!fs.exists(path)) {
     return false;
   }
   return this._config.readFile(path);
 }
 
-ConfigFile.prototype.save = function(path)
-{
+ConfigFile.prototype.save = function(path) {
   return this._config.writeFile(path);
 }
 
-ConfigFile.prototype.toString = function(bufLen)
-{
-  if (typeof bufLen === "undefined")
-  {
+ConfigFile.prototype.toString = function(bufLen) {
+  if (typeof bufLen === "undefined") {
     bufLen = 1024 * 1024;
   }
   return this._config.toString(bufLen);
 }
 
-ConfigFile.prototype.getString = function(key)
-{
+ConfigFile.prototype.getString = function(key) {
   return this._config.lookupString(key);
 }
 
-ConfigFile.prototype.getInt = function(key)
-{
+ConfigFile.prototype.getInt = function(key) {
   return this._config.lookupInteger(key);
 }
 
-ConfigFile.prototype.getFloat = function(key)
-{
+ConfigFile.prototype.getFloat = function(key) {
   return this._config.lookupFloat(key);
 }
 
-ConfigFile.prototype.getBool = function(key)
-{
+ConfigFile.prototype.getBool = function(key) {
   return this._config.lookupBoolean(key);
 }
 
-ConfigFile.prototype.getSetting = function(key)
-{
+ConfigFile.prototype.getSetting = function(key) {
   var id = this._config.lookupSetting(key);
-  if (typeof id !== "undefined")
-  {
+  if (typeof id !== "undefined") {
     return new ConfigSetting(id, this);
   }
 }
 
-ConfigFile.prototype.exists = function(key)
-{
+ConfigFile.prototype.exists = function(key) {
   var id = this._config.lookupSetting(key);
-  return  (typeof id !== "undefined");
+  return (typeof id !== "undefined");
 }
 
-ConfigFile.prototype.self = function()
-{
+ConfigFile.prototype.self = function() {
   var id = this._config.rootSetting();
-  if (typeof id !== "undefined")
-  {
+  if (typeof id !== "undefined") {
     return new ConfigSetting(id, this);
   }
 }
@@ -82,70 +67,57 @@ ConfigFile.prototype.self = function()
 //
 // Setting Prototype
 //
-var ConfigSetting = function(id, config)
-{
+var ConfigSetting = function(id, config) {
   this._id = id;
   this._configFile = config;
   this._config = config._config;
   this._type = this._config.settingType(this._id);
 }
 
-ConfigSetting.prototype.size = function()
-{
+ConfigSetting.prototype.size = function() {
   return this._config.settingLength(this._id);
 }
 
-ConfigSetting.prototype.getType = function()
-{
+ConfigSetting.prototype.getType = function() {
   return this._type;
 }
 
-ConfigSetting.prototype.getElement = function(index)
-{
+ConfigSetting.prototype.getElement = function(index) {
   var childId = this._config.settingLookupElement(this._id, index);
-  if (typeof childId !== "undefined")
-  {
+  if (typeof childId !== "undefined") {
     return new ConfigSetting(childId, this._configFile);
   }
 }
 
-ConfigSetting.prototype.getString = function(key)
-{
+ConfigSetting.prototype.getString = function(key) {
   var name = typeof key === "undefined" ? "" : key;
   return this._config.settingLookupString(this._id, name);
 }
 
-ConfigSetting.prototype.getInt = function(key)
-{
+ConfigSetting.prototype.getInt = function(key) {
   var name = typeof key === "undefined" ? "" : key;
   return this._config.settingLookupInteger(this._id, name);
 }
 
-ConfigSetting.prototype.getFloat = function(key)
-{
+ConfigSetting.prototype.getFloat = function(key) {
   var name = typeof key === "undefined" ? "" : key;
   return this._config.settingLookupFloat(this._id, name);
 }
 
-ConfigSetting.prototype.getBool = function(key)
-{
+ConfigSetting.prototype.getBool = function(key) {
   var name = typeof key === "undefined" ? "" : name;
   return this._config.settingLookupBoolean(this._id, key);
 }
 
-ConfigSetting.prototype.getSetting = function(key)
-{
+ConfigSetting.prototype.getSetting = function(key) {
   var id = this._config.settingLookupSetting(this._id, key);
-  if (typeof id !== "undefined")
-  {
+  if (typeof id !== "undefined") {
     return new ConfigSetting(id, this._configFile);
   }
 }
 
-ConfigSetting.prototype.get = function(key)
-{
-  switch (this._type)
-  {
+ConfigSetting.prototype.get = function(key) {
+  switch (this._type) {
     case _config.CONFIG_TYPE_STRING:
       return this.getString(key);
     case _config.CONFIG_TYPE_BOOL:
@@ -159,14 +131,12 @@ ConfigSetting.prototype.get = function(key)
   }
 }
 
-ConfigSetting.prototype.exists = function(key)
-{
+ConfigSetting.prototype.exists = function(key) {
   var id = this._config.settingLookupSetting(this._id, key);
   return (typeof id !== "undefined")
 }
 
-ConfigSetting.prototype.addGroup = function(key)
-{
+ConfigSetting.prototype.addGroup = function(key) {
   var name = typeof key === "undefined" ? "" : key;
   return new ConfigSetting(
     this._config.settingAddSetting(this._id, name, _config.CONFIG_TYPE_GROUP),
@@ -174,8 +144,7 @@ ConfigSetting.prototype.addGroup = function(key)
   );
 }
 
-ConfigSetting.prototype.addInt = function(key)
-{
+ConfigSetting.prototype.addInt = function(key) {
   var name = typeof key === "undefined" ? "" : key;
   return new ConfigSetting(
     this._config.settingAddSetting(this._id, name, _config.CONFIG_TYPE_INT),
@@ -183,8 +152,7 @@ ConfigSetting.prototype.addInt = function(key)
   );
 }
 
-ConfigSetting.prototype.addFloat = function(key)
-{
+ConfigSetting.prototype.addFloat = function(key) {
   var name = typeof key === "undefined" ? "" : key;
   return new ConfigSetting(
     this._config.settingAddSetting(this._id, name, _config.CONFIG_TYPE_FLOAT),
@@ -192,8 +160,7 @@ ConfigSetting.prototype.addFloat = function(key)
   );
 }
 
-ConfigSetting.prototype.addString = function(key)
-{
+ConfigSetting.prototype.addString = function(key) {
   var name = typeof key === "undefined" ? "" : key;
   return new ConfigSetting(
     this._config.settingAddSetting(this._id, name, _config.CONFIG_TYPE_STRING),
@@ -201,8 +168,7 @@ ConfigSetting.prototype.addString = function(key)
   );
 }
 
-ConfigSetting.prototype.addBool = function(key)
-{
+ConfigSetting.prototype.addBool = function(key) {
   var name = typeof key === "undefined" ? "" : key;
   return new ConfigSetting(
     this._config.settingAddSetting(this._id, name, _config.CONFIG_TYPE_BOOL),
@@ -210,8 +176,7 @@ ConfigSetting.prototype.addBool = function(key)
   );
 }
 
-ConfigSetting.prototype.addArray = function(key)
-{
+ConfigSetting.prototype.addArray = function(key) {
   var name = typeof key === "undefined" ? "" : key;
   return new ConfigSetting(
     this._config.settingAddSetting(this._id, name, _config.CONFIG_TYPE_ARRAY),
@@ -219,8 +184,7 @@ ConfigSetting.prototype.addArray = function(key)
   );
 }
 
-ConfigSetting.prototype.addList = function(key)
-{
+ConfigSetting.prototype.addList = function(key) {
   var name = typeof key === "undefined" ? "" : key;
   return new ConfigSetting(
     this._config.settingAddSetting(this._id, name, _config.CONFIG_TYPE_LIST),
@@ -228,42 +192,33 @@ ConfigSetting.prototype.addList = function(key)
   );
 }
 
-ConfigSetting.prototype.setAsString = function(value)
-{
+ConfigSetting.prototype.setAsString = function(value) {
   return this._config.settingSetAsString(this._id, value);
 }
 
-ConfigSetting.prototype.setAsInt = function(value)
-{
+ConfigSetting.prototype.setAsInt = function(value) {
   return this._config.settingSetAsInteger(this._id, value);
 }
 
-ConfigSetting.prototype.setAsFloat = function(value)
-{
+ConfigSetting.prototype.setAsFloat = function(value) {
   return this._config.settingSetAsFloat(this._id, value);
 }
 
-ConfigSetting.prototype.setAsBool = function(value)
-{
+ConfigSetting.prototype.setAsBool = function(value) {
   return this._config.settingSetAsBoolean(this._id, value);
 }
 
-ConfigSetting.prototype.set = function(value)
-{
+ConfigSetting.prototype.set = function(value) {
   var type = typeof value;
-  switch (type)
-  {
+  switch (type) {
     case "string":
       return this.setAsString(value);
     case "boolean":
       return this.setAsBool(value);
     case "number":
-      if (this._type === _config.CONFIG_TYPE_FLOAT)
-      {
+      if (this._type === _config.CONFIG_TYPE_FLOAT) {
         return this.setAsFloat(value);
-      }
-      else
-      {
+      } else {
         return this.setAsInt(value);
       }
     default:

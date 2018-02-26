@@ -2,7 +2,6 @@
 // Buffer is exported as a global object 
 // so no need to save the exports into a variable
 //
-
 //
 // Create a buffer with preallocated size
 //
@@ -13,14 +12,13 @@ console.log("Create buffer of size " + buf1.size());
 //
 // Create a buffer from an array of bytes
 //
-var buf2 = new Buffer([0,1,2,3,4,5,6,7,8,9]);
+var buf2 = new Buffer([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
 assert.ok(buf2.size() === 10);
 console.log("Create buffer of size " + buf2.size());
 //
 // Check content
 //
-for (var i = 0; i < 10; i++)
-{
+for (var i = 0; i < 10; i++) {
   assert.ok(i == buf2[i]);
 }
 console.log("Buffer content checked");
@@ -48,7 +46,7 @@ console.log("Buffer fromString checked");
 //
 // Assign to a buffer from an array
 //
-buf4.fromArray([1,2,3,4,5,6,7,8,9,0]);
+buf4.fromArray([1, 2, 3, 4, 5, 6, 7, 8, 9, 0]);
 assert.ok(buf4.size() === 10);
 console.log("Buffer fromArray checked");
 

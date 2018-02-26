@@ -1,7 +1,8 @@
 "use-strict";
 var isolate = require("isolate");
 
-var script = utils.multiline(function(){ /*
+var script = utils.multiline(function() {
+  /*
   "use-strict";
   var timer = require("timer");
   var isolate = require("isolate");
@@ -32,31 +33,27 @@ var script = utils.multiline(function(){ /*
     timer.setTimeout(on_timer, 100, ["Hello Timers!", new Date()]);
   }
   timer.setTimeout(on_timer, 100, ["Hello Timers!", new Date()]);
-*/ });
+*/
+});
 
 
-isolate.on("timerFire", function(args)
-{
+isolate.on("timerFire", function(args) {
   console.log(args);
 });
 
-isolate.on("isolateTerminated", function(args){
+isolate.on("isolateTerminated", function(args) {
   console.log(args, "terminated");
-  if (args === "thread1")
-  {
+  if (args === "thread1") {
     thread1.notify("terminate");
     thread1.join();
     thread1 = null;
-  }
-  else
-  {
+  } else {
     thread2.notify("terminate");
     thread2.join();
     thread2 = null;
   }
-  
-  if (!thread1 && !thread2)
-  {
+
+  if (!thread1 && !thread2) {
     exit(0);
   }
 });
@@ -70,9 +67,3 @@ thread1.execute("setThreadName", "thread1");
 
 thread2.runSource(script);
 thread2.execute("setThreadName", "thread2");
-
-
-
-
-
-

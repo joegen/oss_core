@@ -4,32 +4,24 @@ var _isolate = require("./_isolate.jso");
 const _Isolate = _isolate.Isolate;
 const EventEmitter = async.EventEmitter;
 
-var inter_isolate_handler = function(request, userData, handler, defaultHandler)
-{
+var inter_isolate_handler = function(request, userData, handler, defaultHandler) {
   var method = request.method;
   var arguments = request.arguments;
-  if (!handler.hasOwnProperty(method))
-  {
-    if (!defaultHandler)
-    {
+  if (!handler.hasOwnProperty(method)) {
+    if (!defaultHandler) {
       var response = new Object();
       response.error = new Object();
       response.error.code = -32601;
       response.error.message = "Method not found";
       return JSON.stringify(response);
-    }
-    else
-    {
+    } else {
       result = defaultHandler(request, userData);
     }
   }
   var result;
-  try
-  {
+  try {
     result = handler[method](arguments, userData);
-  }
-  catch(e)
-  {
+  } catch (e) {
     e.printStackTrace();
     var response = new Object();
     response.error = new Object();
@@ -40,35 +32,28 @@ var inter_isolate_handler = function(request, userData, handler, defaultHandler)
   return JSON.stringify(result);
 }
 
-exports.interIsolateHandler = function(request, userData)
-{
+exports.interIsolateHandler = function(request, userData) {
   return inter_isolate_handler(request, userData, exports._handler, exports._global_handler);
 }
 
 exports._handler = {}
 exports._global_handler = undefined;
-exports.on = function(name, func)
-{
-  if (name !== "*")
-  {
+exports.on = function(name, func) {
+  if (name !== "*") {
     exports._handler[name] = func;
-  }
-  else
-  {
+  } else {
     exports._global_handler = func;
   }
 }
 
-exports.remove = function(name)
-{
+exports.remove = function(name) {
   exports._handler[name] = null;
   delete exports._handler[name];
 }
 
-var IsolateEventEmitter = function()
-{
+var IsolateEventEmitter = function() {
   EventEmitter.call(this);
-  this.onAnyEvent(function(){
+  this.onAnyEvent(function() {
     var request = new Object();
     request.method = arguments[0];
     request.argument = Array.prototype.slice.call(arguments, 1);
@@ -78,53 +63,41 @@ var IsolateEventEmitter = function()
 IsolateEventEmitter.prototype = Object.create(EventEmitter.prototype);
 exports._eventEmitter = new IsolateEventEmitter();
 
-if (_isolate.isRootIsolate())
-{
+if (_isolate.isRootIsolate()) {
   _isolate.setRootInterIsolateHandler(exports.interIsolateHandler, exports._eventEmitter._fd);
-}
-else
-{
+} else {
   _isolate.setChildInterIsolateHandler(exports.interIsolateHandler, exports._eventEmitter._fd);
 }
 
-var Isolate = function(threadId)
-{
+var Isolate = function(threadId) {
   var isolate = new _Isolate(threadId);
   var _this = this;
   var hadRegisteredHandler = false;
-  _this.runSource = function(src)
-  {
+  _this.runSource = function(src) {
     return isolate.runSource(src);
   }
-  
-  _this.join = function()
-  {
+
+  _this.join = function() {
     return isolate.join();
   }
-  
-  _this.execute = function(method, args, timeout)
-  {
+
+  _this.execute = function(method, args, timeout) {
     var request = new Object();
     request.method = method;
     request.arguments = args;
-    if (!timeout)
-    {
+    if (!timeout) {
       timeout = 0;
     }
     var json = JSON.stringify(request);
     var result = isolate.execute(json, timeout);
-    if (result)
-    {
+    if (result) {
       return JSON.parse(result);
-    }
-    else
-    {
+    } else {
       return undefined;
     }
   }
-  
-  _this.notify = function(method, args)
-  {
+
+  _this.notify = function(method, args) {
     var request = new Object();
     request.method = method;
     request.arguments = args;
@@ -133,8 +106,7 @@ var Isolate = function(threadId)
   }
 }
 
-exports.notifyParentIsolate = function(method, args)
-{
+exports.notifyParentIsolate = function(method, args) {
   var request = new Object();
   request.method = method;
   request.arguments = args;
@@ -143,5 +115,3 @@ exports.notifyParentIsolate = function(method, args)
 }
 
 exports.Isolate = Isolate;
-
-

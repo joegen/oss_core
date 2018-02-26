@@ -4,7 +4,7 @@ const console = require("console");
 const async = require("async");
 const isolate = require("isolate");
 const system = require("system");
-const HttpServerBase = require("./_http_server.jso").HttpServer;  
+const HttpServerBase = require("./_http_server.jso").HttpServer;
 const buffer = require("buffer");
 
 const READ_BUFFER_SIZE = 1024 * 16;
@@ -13,10 +13,8 @@ var READ_BUFFER = new Buffer(READ_BUFFER_SIZE);
 const WRITE_BUFFER_SIZE = 1024 * 16;
 var WRITE_BUFFER = new Buffer(WRITE_BUFFER_SIZE);
 
-var RequestHandler = function(rpc)
-{  
-  if (rpc )
-  {
+var RequestHandler = function(rpc) {
+  if (rpc) {
     var params = rpc;
     var request = params.request;
     var rpcId = params.rpcId;
@@ -24,53 +22,41 @@ var RequestHandler = function(rpc)
     var outputStreamId = params.outputStreamId;
     request.serverAddress = params.serverAddress;
     request.clientAddress = params.clientAddress;
-    
-    if (rpcId && request && inputStreamId && outputStreamId)
-    {
+
+    if (rpcId && request && inputStreamId && outputStreamId) {
       var server = RequestHandler.find(rpcId);
-      if (server)
-      {
+      if (server) {
         return server.handleRequest(request, inputStreamId, outputStreamId);
-      }
-      else
-      {
+      } else {
         return RequestHandler.error(-32603, "Server Gone");
       }
-    }
-    else
-    {
+    } else {
       return RequestHandler.error(-32602, "Invalid Request");
     }
-  }
-  else
-  {
-    
+  } else {
+
   }
 }
 
 RequestHandler.servers = new Object();
 RequestHandler.idCounter = 0;
 
-RequestHandler.error = function(code, message)
-{
+RequestHandler.error = function(code, message) {
   var err = new Object();
   err.code = code;
   err.message = message;
   return err;
 }
 
-RequestHandler.register = function(server)
-{
+RequestHandler.register = function(server) {
   var serverId = "srv-" + RequestHandler.idCounter++;
   server._rpcId = serverId;
   server._base._setRpcId(serverId);
   RequestHandler.servers[serverId] = server;
 }
 
-RequestHandler.find = function(serverId)
-{
-  if (RequestHandler.servers.hasOwnProperty(serverId))
-  {
+RequestHandler.find = function(serverId) {
+  if (RequestHandler.servers.hasOwnProperty(serverId)) {
     return RequestHandler.servers[serverId];
   }
   return undefined;
@@ -78,68 +64,52 @@ RequestHandler.find = function(serverId)
 
 isolate.on("HttpServerObject__handleRequest", RequestHandler);
 
-var IncomingMessage = function(headers, inputStreamId, server)
-{
+var IncomingMessage = function(headers, inputStreamId, server) {
   this.uri = headers.uri;
   this._headers = headers;
   this._inputStreamId = inputStreamId;
   this._server = server;
   this.serverAddress = headers.serverAddress;
   this.clientAddress = headers.clientAddress;
-  
+
   var _this = this;
-  
-  this.read = function(size)
-  {
+
+  this.read = function(size) {
     return _this._server.read(this._inputStreamId, size);
   }
-  
-  this.getHeader = function(name)
-  {
-    if (typeof name !== "string")
-    {
+
+  this.getHeader = function(name) {
+    if (typeof name !== "string") {
       return undefined;
     }
     var headerName = name.toLowerCase();
-    for (var key in this._headers) 
-    {
-      if (key.toLowerCase() === headerName)
-      {
+    for (var key in this._headers) {
+      if (key.toLowerCase() === headerName) {
         return _this._headers[key];
       }
     }
   }
-  
-  
-  this.getContentLength = function()
-  {
+
+
+  this.getContentLength = function() {
     return parseInt(_this.getHeader("Content-Length"));
   }
-  
-  this.getContentType = function()
-  {
+
+  this.getContentType = function() {
     return _this.getHeader("Content-Type");
   }
-  
-  this.getBody = function()
-  {
+
+  this.getBody = function() {
     var contentLength = _this.getContentLength();
     var body = [];
-    if (contentLength)
-    {
+    if (contentLength) {
       body = _this.read(contentLength);
-    }
-    else
-    {
-      while (true)
-      {
+    } else {
+      while (true) {
         var buf = _this.read(256);
-        if (buf && buf.length > 0)
-        {
+        if (buf && buf.length > 0) {
           body.concat(buf);
-        }
-        else
-        {
+        } else {
           break;
         }
       }
@@ -148,8 +118,7 @@ var IncomingMessage = function(headers, inputStreamId, server)
   }
 }
 
-var HttpServerResponse = function(outputStreamId, server)
-{
+var HttpServerResponse = function(outputStreamId, server) {
   this._outputStreamId = outputStreamId;
   this._server = server;
   this._status = 200;
@@ -160,40 +129,65 @@ var HttpServerResponse = function(outputStreamId, server)
   this._chunkedTransferEncoding = null;
   this._keepAlive = null;
   this._hasSentHeaders = false;
-  
-  this.setStatus = function(value) { this._status = value; }
-  this.getStatus = function() { return this._status; }
-  
-  this.setReason = function(value) { this._reason = value; }
-  this.getReason = function() { return this._reason; }
-  
-  this.setContentType = function(value) { this._contentType = value; }
-  this.getContentType = function() { return this._contentType; }
-  
-  this.setContentLength = function(value) { this._contentLength = value; }
-  this.getContentLength = function() { return this._contentLength; }
-  
-  this.setTransferEncoding = function(value) { this._transferEncoding = value; }
-  this.getTransferEncoding = function() { return this._transferEncoding; }
-  
-  this.setChunkedTransferEncoding = function(value) { this._chunkedTransferEncoding = value; }
-  this.getChunkedTransferEncoding = function() { return this._chunkedTransferEncoding; }
-  
-  this.setKeepAlive = function(value) { this._keepAlive = value; }
-  this.getKeepAlive = function() { return this._keepAlive; }
-  
-  this.send = function(data)
-  {
-    if (data != undefined)
-    {
+
+  this.setStatus = function(value) {
+    this._status = value;
+  }
+  this.getStatus = function() {
+    return this._status;
+  }
+
+  this.setReason = function(value) {
+    this._reason = value;
+  }
+  this.getReason = function() {
+    return this._reason;
+  }
+
+  this.setContentType = function(value) {
+    this._contentType = value;
+  }
+  this.getContentType = function() {
+    return this._contentType;
+  }
+
+  this.setContentLength = function(value) {
+    this._contentLength = value;
+  }
+  this.getContentLength = function() {
+    return this._contentLength;
+  }
+
+  this.setTransferEncoding = function(value) {
+    this._transferEncoding = value;
+  }
+  this.getTransferEncoding = function() {
+    return this._transferEncoding;
+  }
+
+  this.setChunkedTransferEncoding = function(value) {
+    this._chunkedTransferEncoding = value;
+  }
+  this.getChunkedTransferEncoding = function() {
+    return this._chunkedTransferEncoding;
+  }
+
+  this.setKeepAlive = function(value) {
+    this._keepAlive = value;
+  }
+  this.getKeepAlive = function() {
+    return this._keepAlive;
+  }
+
+  this.send = function(data) {
+    if (data != undefined) {
       return this.write(data);
     }
-    
-    if (this._hasSentHeaders)
-    {
+
+    if (this._hasSentHeaders) {
       return;
     }
-    
+
     this._hasSentHeaders = true;
     var response = new Object();
     response.status = this._status;
@@ -206,114 +200,86 @@ var HttpServerResponse = function(outputStreamId, server)
 
     return this._server.sendResponse(response, this._outputStreamId);
   }
-  
-  this.write = function(data)
-  {
+
+  this.write = function(data) {
     this.send(); // Send the headers if need
     return this._server.write(this._outputStreamId, data);
   }
-  
-  this.reject = function(status, reason)
-  {
+
+  this.reject = function(status, reason) {
     this.setStatus(status);
     this.setReason(reason);
     this.send();
   }
 }
 
-var HttpServer = function(requestHandler, secure)
-{
+var HttpServer = function(requestHandler, secure) {
   this._handler = requestHandler;
-  
-  if (typeof secure !== "boolean")
-  {
+
+  if (typeof secure !== "boolean") {
     secure = false;
   }
 
   this._base = new HttpServerBase(secure);
 
-  
-  this.handleRequest = function(request, inputStreamId, outputStreamId)
-  {
+
+  this.handleRequest = function(request, inputStreamId, outputStreamId) {
     var request = new IncomingMessage(request, inputStreamId, this);
     var response = new HttpServerResponse(outputStreamId, this);
-    try
-    {
+    try {
       this._handler(request, response);
       var result = new Object();
-    }
-    catch(e)
-    {
+    } catch (e) {
       console.printStackTrace(e);
     }
     result.result = "Ok";
     return result;
   }
-  
-  this.listen = function()
-  {
-    if (arguments.length == 1)
-    {
-      this._base._listen("*", arguments[0], function(){});
-    }
-    else if (arguments.length == 2)
-    {
+
+  this.listen = function() {
+    if (arguments.length == 1) {
+      this._base._listen("*", arguments[0], function() {});
+    } else if (arguments.length == 2) {
       this._base._listen("*", arguments[0], arguments[1]);
-    }
-    else if (arguments.length == 3)
-    {
+    } else if (arguments.length == 3) {
       this._base._listen(arguments[0], arguments[1], arguments[2]);
-    }
-    else
-    {
+    } else {
       return false;
     }
     return true;
   }
-  
-  this.read = function(inputStreamId, size)
-  {
+
+  this.read = function(inputStreamId, size) {
     var len = this._base._read(inputStreamId, READ_BUFFER, size);
-    if (!len)
-    {
+    if (!len) {
       return [];
     }
     return READ_BUFFER.toArray(len);
   }
-  
-  this.write = function(outputStreamId, data)
-  {
+
+  this.write = function(outputStreamId, data) {
     var size = 0;
-    if (buffer.isBuffer(data))
-    {
+    if (buffer.isBuffer(data)) {
       WRITE_BUFFER.fromBuffer(data, false);
       size = data.size();
-    }
-    else if (typeof data === "string")
-    {
+    } else if (typeof data === "string") {
       WRITE_BUFFER.fromString(data, false);
       size = data.length;
-    }
-    else if (typeof data === "array" || typeof data === "object")
-    {
+    } else if (typeof data === "array" || typeof data === "object") {
       WRITE_BUFFER.fromArray(data, false);
       size = data.length;
-    }
-    else
-    {
+    } else {
       throw new Error("Invalid data argument.  Must be buffer, array or string");
     }
     return this._base._write(outputStreamId, WRITE_BUFFER, size);
   }
-  
-  this.sendResponse = function(response, outputStreamId)
-  {
+
+  this.sendResponse = function(response, outputStreamId) {
     return this._base._sendResponse(outputStreamId, response);
   }
 }
 
-var createServer = function(requestHandler, secure)
-{
+var createServer = function(requestHandler, secure) {
   var server = new HttpServer(requestHandler, secure);
   RequestHandler.register(server);
   return server;

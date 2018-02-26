@@ -4,48 +4,38 @@ const http = require("http");
 const JsonRpcServer = require("./json_rpc_server.js").JsonRpcServer;
 const utils = require("utils");
 
-var JsonRpcHttpServer = function(secure)
-{
+var JsonRpcHttpServer = function(secure) {
   var _this = this;
-  
-  this.nonRpcHandler = function(request, response)
-  {
+
+  this.nonRpcHandler = function(request, response) {
     //
     // Send out an empty response
     //
     response.send();
     return;
   }
-  
-  this.requestHandler = function(request, response)
-  {
+
+  this.requestHandler = function(request, response) {
     _this._request = request;
     _this._response = response;
-    
+
     var contentType = request.getContentType();
-    if (!contentType)
-    {
+    if (!contentType) {
       _this.nonRpcHandler(request, response);
       return;
-    }
-    else
-    {
+    } else {
       contentType = contentType.toLowerCase();
-      if (contentType !== "application/json-rpc" && contentType !== "application/json" && contentType !== "application/jsonrequest")
-      {
+      if (contentType !== "application/json-rpc" && contentType !== "application/json" && contentType !== "application/jsonrequest") {
         _this.nonRpcHandler(request, response);
         return;
       }
     }
-    
+
     var body = request.getBody();
-    
-    if (body.length > 0)
-    {
+
+    if (body.length > 0) {
       _this.onNewRequest(utils.bufferToString(body));
-    }
-    else
-    {
+    } else {
       //
       // Send out an empty response
       //
@@ -53,29 +43,24 @@ var JsonRpcHttpServer = function(secure)
       return;
     }
   }
-  
+
   // This is meant to be overriden
-  var onNewRequest = function() { assert(false); }
-  
+  var onNewRequest = function() {
+    assert(false);
+  }
+
   this._server = http.createServer(this.requestHandler, secure);
-  this.listen = function()
-  {
-    if (arguments.length == 1)
-    {
+  this.listen = function() {
+    if (arguments.length == 1) {
       _this._server.listen(arguments[0]);
-    }
-    else if(arguments.length == 2)
-    {
+    } else if (arguments.length == 2) {
       _this._server.listen(arguments[0], arguments[1]);
-    }
-    else if(arguments.length == 3)
-    {
+    } else if (arguments.length == 3) {
       _this._server.listen(arguments[0], arguments[1], arguments[2]);
     }
   }
-  
-  this.send = function(body)
-  {
+
+  this.send = function(body) {
     _this._response.setContentType("application/json-rpc");
     _this._response.setContentLength(body.length);
     _this._response.send(body);

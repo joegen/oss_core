@@ -5,15 +5,13 @@ const log = require("logger");
 const async = require("async");
 const system = require("system");
 
-function example1()
-{
+function example1() {
   var requester = new zmq.ZMQSocket(zmq.REQ);
   var responder = new zmq.ZMQSocket(zmq.REP);
 
   assert(responder.bind("tcp://127.0.0.1:50000"));
   assert(requester.connect("tcp://127.0.0.1:50000"));
-  responder.start(function()
-  {
+  responder.start(function() {
     var msg = new Buffer(1024);
     responder.receive(msg);
     log.log(log.INFO, msg.toString());
@@ -21,8 +19,7 @@ function example1()
     assert(responder.send(response));
   });
 
-  requester.start(function()
-  {
+  requester.start(function() {
     var msg = new Buffer(1024);
     requester.receive(msg);
     log.log(log.INFO, msg.toString());
@@ -35,21 +32,16 @@ function example1()
   assert(requester.send(request));
 }
 
-function example2()
-{
+function example2() {
   zmq.zmq_rpc_server(
-    "tcp://127.0.0.1:50001",
-    {
-      "ping" : function(args)
-      {
+    "tcp://127.0.0.1:50001", {
+      "ping": function(args) {
         return "pong";
       },
-      "hello" : function(args)
-      {
+      "hello": function(args) {
         return "Hi there!";
       },
-      "bye" : function(args)
-      {
+      "bye": function(args) {
         return "See you!";
       }
     }
@@ -57,8 +49,3 @@ function example2()
 }
 
 example1();
-
-
-
-
-

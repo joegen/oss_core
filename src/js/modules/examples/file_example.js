@@ -11,11 +11,9 @@ writer.close();
 
 var reader = new File("test_file.txt", "r");
 var content = "";
-while (!reader.eof())
-{
+while (!reader.eof()) {
   var line = reader.readLine();
-  if (typeof line !== "undefined")
-  {
+  if (typeof line !== "undefined") {
     console.log("LINE: " + line);
     content += line;
   }
