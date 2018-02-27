@@ -1939,6 +1939,7 @@ void OSSApp::initialize(OSSApplication& self)
   std::string libLoggerCompress = config().getString("library.logger.compress", "true");
   std::string libLoggerPurgeCount = config().getString("library.logger.purgeCount", "7");
   std::string libLoggerPriorityCache = config().getString("library.logger.priority.cache", "");
+  std::string libLoggerTimes = config().getString("library.logger.times.cache", "");
 
   if (!libLoggerPriorityCache.empty())
   {
@@ -1983,7 +1984,7 @@ void OSSApp::initialize(OSSApplication& self)
   else if ("trace" == libLoggerPriority)
     logPriority = OSS::PRIO_TRACE;
 
-  OSS::logger_init(libLogger, logPriority, libLoggerPattern, libLoggerCompress, libLoggerPurgeCount);
+  OSS::logger_init(libLogger, logPriority, libLoggerPattern, libLoggerCompress, libLoggerPurgeCount, libLoggerTimes);
 
   if (_initHandler)
     _initHandler();

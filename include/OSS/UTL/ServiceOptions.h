@@ -115,6 +115,15 @@ public:
   bool getOption(const std::string& optionName, int& value, int defValue) const;
   bool getOption(const std::string& optionName, std::vector<int>& value) const;
   bool getOption(const std::string& optionName, bool& value, bool defValue) const;
+  
+  void setLogFormat(const std::string& logFormat);
+  const std::string& getLogFormat() const;
+  
+  void setLogTimes(const std::string& logTimes);
+  const std::string& getLogTimes() const;
+  
+  void setLogPurgeCount(int purgeCount);
+  int getLogPurgeCount();
 
   virtual bool onParseUnknownOptions(int argc, char** argv) {return false;};
   void waitForTerminationRequest();
@@ -148,6 +157,9 @@ protected:
   bool _isConfigOnly;
   std::vector<std::string> _required;
   ProcType _procType;
+  std::string _logFormat;
+  std::string _logTimes;
+  int _logPurgeCount;
 };
 
 inline ServiceOptions::ServiceOptions(int argc, char** argv,
@@ -167,7 +179,8 @@ inline ServiceOptions::ServiceOptions(int argc, char** argv,
   _isDaemon(false),
   _hasConfig(false),
   _isConfigOnly(false),
-  _procType(procType)
+  _procType(procType),
+  _logPurgeCount(7)
 {
 }
 
@@ -188,7 +201,8 @@ inline ServiceOptions::ServiceOptions(int argc, char** argv,
   _isDaemon(false),
   _hasConfig(false),
   _isConfigOnly(false),
-  _procType(procType)
+  _procType(procType),
+  _logPurgeCount(7)
 {
 }
 
@@ -258,7 +272,8 @@ inline bool ServiceOptions::parseOptions(bool verbose)
               , GeneralOption);
       addOptionFlag("log-no-compress", ": Specify if logs will be compressed after rotation.", GeneralOption);
       addOptionInt("log-purge-count", ": Specify the number of archive to maintain.", GeneralOption);
-      addOptionString("log-pattern", ": Specify the pattern of the log headers. Default is \"%h-%M-%S.%i: %t\"", GeneralOption);
+      addOptionString("log-pattern", ": Specify the pattern of the log headers. Default is \"%Y-%m-%d %H:%M:%S %s: [%p] %t\"", GeneralOption);
+      addOptionString("log-times", ": Specifies whether times are adjusted for local time or taken as they are in UTC. Supported values are \"local\" and \"UTC\"", GeneralOption);
     }
 
     _optionItems.add(_GeneralOptions);
@@ -374,20 +389,22 @@ inline void ServiceOptions::prepareLogger()
   std::string logFile;
   int priorityLevel = 6;
   bool compress = true;
-  int purgeCount = 7;
-  std::string pattern = "%h-%M-%S.%i: %t";
+  int purgeCount = _logPurgeCount;
+  std::string pattern = _logFormat.empty() ? "%Y-%m-%d %H:%M:%S %s: [%p] %t" : _logFormat;
+  std::string times = _logTimes.empty() ? "UTC" : _logTimes;
   
   if (hasOption("log-no-compress", true))
     compress = false;
 
   getOption("log-purge-count", purgeCount, purgeCount);
   getOption("log-pattern", pattern, pattern);
+  getOption("log-times", times, times);
 
   if (getOption("log-file", logFile) && !logFile.empty())
   {
     if (!getOption("log-level", priorityLevel))
       priorityLevel = 6;
-    OSS::logger_init(logFile, (OSS::LogPriority)priorityLevel, pattern, compress ? "true" : "false", boost::lexical_cast<std::string>(purgeCount));
+    OSS::logger_init(logFile, (OSS::LogPriority)priorityLevel, pattern, compress ? "true" : "false", boost::lexical_cast<std::string>(purgeCount), times);
   }
   else
   {
@@ -835,6 +852,36 @@ inline int ServiceOptions::argc()
 inline char** ServiceOptions::argv()
 {
   return _argv;
+}
+
+inline void ServiceOptions::setLogFormat(const std::string& logFormat)
+{
+  _logFormat = logFormat;
+}
+
+inline const std::string&  ServiceOptions::getLogFormat() const
+{
+  return _logFormat;
+}
+
+inline void ServiceOptions::setLogTimes(const std::string& logTimes)
+{
+  _logTimes = logTimes;
+}
+
+inline const std::string& ServiceOptions::getLogTimes() const
+{
+  return _logTimes;
+}
+
+inline void ServiceOptions::setLogPurgeCount(int purgeCount)
+{
+  _logPurgeCount = purgeCount;
+}
+
+inline int ServiceOptions::getLogPurgeCount()
+{
+  return _logPurgeCount;
 }
 
 } // OSS

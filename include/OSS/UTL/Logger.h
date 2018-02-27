@@ -47,9 +47,10 @@ enum LogPriority
 void OSS_API logger_init(
   const std::string& path,
   LogPriority level = OSS::PRIO_INFORMATION,
-  const std::string& format = "%h-%M-%S.%i: %t",
+  const std::string& format = "%Y-%m-%d %H:%M:%S %s: [%p] %t",
   const std::string& compress = "true",
-  const std::string& purgeCount = "7");
+  const std::string& purgeCount = "7",
+  const std::string& times = "UTC");
   /// Initialize the logging subsystem from the config specified
 
 void OSS_API logger_deinit();
