@@ -22,4 +22,5 @@ nobase_include_HEADERS += \
     OSS/UTL/LogFile.h \
     OSS/UTL/Console.h \
     OSS/UTL/termcolor.h \
-    OSS/UTL/FileMonitor.h
+    OSS/UTL/FileMonitor.h \
+    OSS/UTL/AutoExpireSet.h
