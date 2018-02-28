@@ -295,7 +295,7 @@ int SIPContact::msgGetContacts(SIPMessage* pMsg, std::vector<std::string>& conta
       for (int j = 0; j < sz; j++)
       {
         ContactURI curi;
-        if (getAt(contact,curi, i))
+        if (getAt(contact,curi, j))
         {
           contacts.push_back(curi);
         }
