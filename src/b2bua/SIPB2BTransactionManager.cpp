@@ -127,6 +127,14 @@ void SIPB2BTransactionManager::handleRequest(
   }
 }
 
+unsigned long SIPB2BTransactionManager::handleThrottleRequest(
+    const OSS::SIP::SIPMessage::Ptr& pMsg, 
+    const OSS::SIP::SIPTransportSession::Ptr& pTransport, 
+    const OSS::SIP::SIPTransaction::Ptr& pTransaction)
+{
+  return 0;
+}
+
 void SIPB2BTransactionManager::handleAckOr2xxTransaction(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport)
