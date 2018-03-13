@@ -3,10 +3,10 @@ AC_PREREQ(2.57)
 #
 # Init library version
 #
-AC_INIT(oss_core, 2.0.3, info@ossapp.com)
-OSS_CORE_VERSION_CURRENT="2"
+AC_INIT(oss_core, 3.0.0, info@ossapp.com)
+OSS_CORE_VERSION_CURRENT="3"
 OSS_CORE_VERSION_AGE="0"
-OSS_CORE_VERSION_REVISION="3"
+OSS_CORE_VERSION_REVISION="0"
 
 AC_CONFIG_AUX_DIR(config)
 AM_INIT_AUTOMAKE([subdir-objects foreign] )
