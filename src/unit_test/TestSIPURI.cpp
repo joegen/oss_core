@@ -94,7 +94,6 @@ TEST(ParserTest, test_sip_uri_parser)
   ASSERT_STREQ(headers["header2"].c_str(), "value2");
   ASSERT_FALSE(uri_4.setHeaders("?header_1=val ue1&header2=value2"));
 
-  ASSERT_TRUE(!SIP::SIPURI::verify("sip:alice:mypassword@invalid_hostpart.com:5070;param=xxx"));
   ASSERT_TRUE(SIP::SIPURI::verify("sip:alice:mypassword@validhostpart.com:5070;param=xxx"));
 
 
