@@ -25,6 +25,7 @@
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/SIP/Parser.h"
 #include "OSS/SIP/SIPParser.h"
+#include "OSS/Net/IPAddress.h"
 
 
 namespace OSS {
@@ -70,8 +71,15 @@ public:
   std::string getSentBy() const;
     /// Returns the value of the via sent-by (host [ COLON port ])
     /// if present.
-
+  
   static bool getSentBy(const std::string& via, std::string& sentBy);
+    /// Returns the value of the via sent-by (host [ COLON port ])
+    /// if present.
+  
+  bool getSentByAddress(OSS::Net::IPAddress& sentBy);
+    /// Return sentBy as an IP address and port tuple
+
+  static bool getSentByAddress(const std::string& via, OSS::Net::IPAddress& sentBy);
     /// Returns the value of the via sent-by (host [ COLON port ])
     /// if present.
 
@@ -194,6 +202,9 @@ public:
 
   static bool msgGetTopViaSentBy(SIPMessage* pMsg, std::string& sentBy);
     /// Get the top most via of of a SIPMessage
+  
+  static bool msgGetTopViaSentByAddress(SIPMessage* pMsg, OSS::Net::IPAddress& sentBy);
+    /// Get the top most via of of a SIPMessage
 
   static bool msgGetTopViaTransport(SIPMessage* pMsg, std::string& transport);
     /// Get the top most via of of a SIPMessage
@@ -202,6 +213,9 @@ public:
     /// Get the bottom most via
 
   static bool msgGetBottomViaSentBy(SIPMessage* pMsg, std::string& sentBy);
+    /// Get the sent-by of bottom most via of of a SIPMessage
+  
+  static bool msgGetBottomViaSentByAddress(SIPMessage* pMsg, OSS::Net::IPAddress& sentBy);
     /// Get the sent-by of bottom most via of of a SIPMessage
 
   static bool msgGetBottomViaReceived(SIPMessage* pMsg, std::string& received);
