@@ -91,6 +91,56 @@ bool SIPVia::getSentBy(const std::string& via, std::string& sentBy)
   return true;
 }
 
+bool SIPVia::getSentByAddress(OSS::Net::IPAddress& sentBy)
+{
+  return SIPVia::getSentByAddress(_data, sentBy);
+}
+
+bool SIPVia::getSentByAddress(const std::string& via, OSS::Net::IPAddress& sentBy)
+{
+  std::string address;
+  if (!SIPVia::getSentBy(via, address))
+  {
+    return false;
+  }
+  sentBy = OSS::Net::IPAddress::fromV4IPPort(address.c_str());
+  
+  if (!sentBy.isValid())
+  {
+    return false;
+  }
+  
+  std::string transport;
+  SIPVia::getTransport(via, transport);
+  
+  if (transport == "UDP")
+  {
+    sentBy.setProtocol(OSS::Net::IPAddress::UDP);
+  }
+  else if (transport == "TCP")
+  {
+    sentBy.setProtocol(OSS::Net::IPAddress::TCP);
+  }
+  else if (transport == "TLS")
+  {
+    sentBy.setProtocol(OSS::Net::IPAddress::TLS);
+  }
+  else if (transport == "WS")
+  {
+    sentBy.setProtocol(OSS::Net::IPAddress::WS);
+  }
+  else if (transport == "WSS")
+  {
+    sentBy.setProtocol(OSS::Net::IPAddress::WSS);
+  }
+  else if (transport == "SCTP")
+  {
+    sentBy.setProtocol(OSS::Net::IPAddress::SCTP);
+  }
+  
+  return true;
+}
+
  bool SIPVia::setSentBy(const char* hostPort)
  {
    return setSentBy(_data, hostPort);
@@ -143,6 +193,7 @@ bool SIPVia::getTransport(const std::string& via, std::string& transport)
   if (tokens.size() != 5)
     return false;
   transport = tokens[4];
+  OSS::string_to_upper(transport);
   return true;
 }
 
@@ -400,6 +451,14 @@ bool SIPVia::msgGetTopViaSentBy(SIPMessage* pMsg, std::string& sentBy)
   return getSentBy(topVia, sentBy);
 }
 
+bool SIPVia::msgGetTopViaSentByAddress(SIPMessage* pMsg, OSS::Net::IPAddress& sentBy)
+{
+  std::string topVia;
+  if (!msgGetTopVia(pMsg, topVia))
+    return false;
+  return getSentByAddress(topVia, sentBy);
+}
+
 bool SIPVia::msgGetTopViaTransport(SIPMessage* pMsg, std::string& transport)
 {
   std::string topVia;
@@ -450,6 +509,14 @@ bool SIPVia::msgGetBottomViaSentBy(SIPMessage* pMsg, std::string& sentBy)
   if (!msgGetBottomVia(pMsg, hVia))
     return false;
   return getSentBy(hVia, sentBy);
+}
+
+bool SIPVia::msgGetBottomViaSentByAddress(SIPMessage* pMsg, OSS::Net::IPAddress& sentBy)
+{
+  std::string hVia;
+  if (!msgGetBottomVia(pMsg, hVia))
+    return false;
+  return getSentByAddress(hVia, sentBy);
 }
 
 bool SIPVia::msgGetBottomViaReceived(SIPMessage* pMsg, std::string& received)
