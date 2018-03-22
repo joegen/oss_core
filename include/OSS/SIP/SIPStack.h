@@ -110,6 +110,15 @@ public:
     /// a tuple object of type OSS::OSS::Net::IPAddress.
     ///
     /// This must be set before calling the SIPStack::run() method
+  
+  OSS::socket_address_list& wssListeners();
+    /// Returns the WebSocket Listener vector.
+    ///
+    /// All interfaces where the WebSocket listener should bind to
+    /// must be push_back()ed into this vector.  The vector accepts
+    /// a tuple object of type OSS::OSS::Net::IPAddress.
+    ///
+    /// This must be set before calling the SIPStack::run() method
 
   OSS::socket_address_list& tlsListeners();
     /// Returns the TLS Listener vector.
@@ -357,6 +366,11 @@ inline OSS::socket_address_list& SIPStack::tcpListeners()
 inline OSS::socket_address_list& SIPStack::wsListeners()
 {
   return _wsListeners;
+}
+
+inline OSS::socket_address_list& SIPStack::wssListeners()
+{
+  return _wssListeners;
 }
 
 inline OSS::socket_address_list& SIPStack::tlsListeners()

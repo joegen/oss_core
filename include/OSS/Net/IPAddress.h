@@ -40,6 +40,7 @@ public:
     TLS,
     WS,
     WSS,
+    SCTP,
     UnknownTransport
   };
   

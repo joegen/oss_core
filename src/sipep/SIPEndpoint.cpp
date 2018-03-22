@@ -81,8 +81,10 @@ bool SIPEndpoint::addTransport(const OSS::Net::IPAddress& address)
       _stack.wsListeners().push_back(address);
       break;
     case OSS::Net::IPAddress::WSS:
-      return false; /// We do not support WSS just yet.
+      _stack.wssListeners().push_back(address);
       break;
+    case OSS::Net::IPAddress::SCTP:
+      return false; /// We do not support SCTP just yet.
   }
   return true;
 }
