@@ -48,7 +48,6 @@ SIPTransaction::SIPTransaction():
   _pParent(),
   _isParent(true),
   _hasTerminated(false),
-  _reconnectOnResponse(false),
   _hasSent2xx(false)
 {
 }
@@ -66,7 +65,6 @@ SIPTransaction::SIPTransaction(SIPTransaction::Ptr pParent) :
   _pParent(pParent),
   _isParent(false),
   _hasTerminated(false),
-  _reconnectOnResponse(false),
   _hasSent2xx(false)
 {
   _id = pParent->getId();
@@ -98,7 +96,6 @@ SIPTransaction::SIPTransaction(const SIPTransaction&) :
   _pParent(),
   _isParent(false),
   _hasTerminated(false),
-  _reconnectOnResponse(false),
   _hasSent2xx(false)
 {
 }
@@ -379,37 +376,40 @@ void SIPTransaction::sendResponse(
       {
         writeMessage(pResponse);
       }
-      else if (_reconnectOnResponse)
+      else
       {
+        SIPVia::msgGetBottomViaSentByAddress(pResponse.get(), _sendAddress);
         //
         // Keep-alive failed so create a new transport
         //
-        if (_localAddress.isValid() && _sendAddress.isValid())
+        if (_localAddress.isValid() && _sendAddress.isValid() && _sendAddress.getProtocol() == OSS::Net::IPAddress::TCP)
         {
           //
           // According to RFC 3261, if there is any transport failure, we must try to
           // re-estabish a connectoin to the via sentby parameter instead
           //
-          std::string transport;
-          if (SIPVia::msgGetTopViaTransport(pResponse.get(), transport))
+          if (_sendAddress.getPort() == 0)
           {
-            _transport = _transportService->createClientTransport(pResponse, _localAddress, _sendAddress, transport);
-            if (_transport)
-            {
-              writeMessage(pResponse);
-            }
-            else
-            {
-              terminate();
-              return;
-            }
+            _sendAddress.setPort(5060);
+          }
+          _transport = _transportService->createClientTransport(pResponse, _localAddress, _sendAddress, "TCP");
+          if (_transport && _transport->writeKeepAlive())
+          {
+            writeMessage(pResponse);
+          }
+          else
+          {
+            OSS_LOG_ERROR(pResponse->createContextId(true) << "SIPTransaction::sendResponse - Unable to re-establish transport to send response.");
+            terminate();
+            return;
           }
         }
         else
         {
-          OSS_LOG_ERROR("SIPTransaction::sendResponse - Unable to re-establish transport to send response.");
+          OSS_LOG_ERROR(pResponse->createContextId(true) << "SIPTransaction::sendResponse - Unable to re-establish transport to send response. Invalid send address");
+          terminate();
+          return;
         }
-
       }
     }
     else if (_transport)
@@ -421,7 +421,7 @@ void SIPTransaction::sendResponse(
     }
     else
     {
-      OSS_LOG_ERROR("SIPTransaction::sendResponse - Transport is NULL.");
+      OSS_LOG_ERROR(pResponse->createContextId(true) << "SIPTransaction::sendResponse - Transport is NULL.");
       terminate();
       return;
     }
