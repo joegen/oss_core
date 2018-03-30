@@ -378,12 +378,14 @@ void SIPTransaction::sendResponse(
       }
       else
       {
+        OSS_LOG_INFO(pResponse->createContextId(true) << "SIPTransaction::sendResponse - TCP transport cannot write to address " << _sendAddress.toIpPortString());
         SIPVia::msgGetTopViaSentByAddress(pResponse.get(), _sendAddress);
         //
         // Keep-alive failed so create a new transport
         //
         if (_localAddress.isValid() && _sendAddress.isValid() && _sendAddress.getProtocol() == OSS::Net::IPAddress::TCP)
         {
+          OSS_LOG_INFO(pResponse->createContextId(true) << "SIPTransaction::sendResponse - TCP transport reconnecting to address " << _sendAddress.toIpPortString());
           //
           // According to RFC 3261, if there is any transport failure, we must try to
           // re-estabish a connectoin to the via sentby parameter instead
