@@ -378,7 +378,7 @@ void SIPTransaction::sendResponse(
       }
       else
       {
-        SIPVia::msgGetBottomViaSentByAddress(pResponse.get(), _sendAddress);
+        SIPVia::msgGetTopViaSentByAddress(pResponse.get(), _sendAddress);
         //
         // Keep-alive failed so create a new transport
         //
