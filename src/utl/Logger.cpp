@@ -184,7 +184,7 @@ void log(const std::string& log, LogPriority priority)
 
 void log_fatal(const std::string& log)
 {
-  if (!_enableLogging)
+  if (!_enableLogging || log.empty())
     return;
 
   if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_FATAL)
@@ -201,7 +201,7 @@ void log_fatal(const std::string& log)
 
 void log_critical(const std::string& log)
 {
-  if (!_enableLogging)
+  if (!_enableLogging || log.empty())
     return;
 
   if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_CRITICAL)
@@ -218,7 +218,7 @@ void log_critical(const std::string& log)
 
 void log_error(const std::string& log)
 {
-  if (!_enableLogging)
+  if (!_enableLogging || log.empty())
     return;
 
   if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_ERROR)
@@ -235,7 +235,7 @@ void log_error(const std::string& log)
 
 void log_warning(const std::string& log)
 {
-  if (!_enableLogging)
+  if (!_enableLogging || log.empty())
     return;
 
   if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_WARNING)
@@ -252,7 +252,7 @@ void log_warning(const std::string& log)
 
 void log_notice(const std::string& log)
 {
-  if (!_enableLogging)
+  if (!_enableLogging || log.empty())
     return;
 
   if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_NOTICE)
@@ -269,7 +269,7 @@ void log_notice(const std::string& log)
 
 void log_information(const std::string& log)
 {
-  if (!_enableLogging)
+  if (!_enableLogging || log.empty())
     return;
 
   if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_INFORMATION)
@@ -286,7 +286,7 @@ void log_information(const std::string& log)
 
 void log_debug(const std::string& log)
 {
-  if (!_enableLogging)
+  if (!_enableLogging || log.empty())
     return;
 
   if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_DEBUG)
@@ -303,7 +303,7 @@ void log_debug(const std::string& log)
 
 void log_trace(const std::string& log)
 {
-  if (!_enableLogging)
+  if (!_enableLogging || log.empty())
     return;
 
   if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_TRACE)
