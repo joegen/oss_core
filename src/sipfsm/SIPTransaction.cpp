@@ -352,7 +352,7 @@ void SIPTransaction::sendResponse(
   
   if (!_localAddress.isValid())
   {
-    _localAddress = _localAddress = _transport->getLocalAddress();
+    _localAddress = _transport->getLocalAddress();
   }
 
   SIPTransaction::Ptr pBranch = findBranch(pResponse);
@@ -400,6 +400,12 @@ void SIPTransaction::sendResponse(
             _sendAddress.setPort(5060);
           }
           _transport = _transportService->createClientTransport(pResponse, _localAddress, _sendAddress, "TCP");
+          
+          if (_transport)
+          {
+            _localAddress = _transport->getLocalAddress();
+          }
+          
           if (_transport && _transport->writeKeepAlive())
           {
             writeMessage(pResponse);
