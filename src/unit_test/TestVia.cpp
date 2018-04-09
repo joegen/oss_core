@@ -15,7 +15,7 @@ TEST(ParserTest, test_via_parser)
   msg << "From: 9011<sip:9011@192.168.0.103>;tag=6657e067" << CRLF;
   msg << "Via: SIP/2.0/UDP 192.168.0.1;branch=001;rport, SIP/2.0/UDP 192.168.0.2;branch=002, SIP/2.0/UDP 192.168.0.3;branch=003" << CRLF;
   msg << "Via: SIP/2.0/UDP 192.168.0.4;branch=004" << CRLF;
-  msg << "Via: SIP/2.0/UDP 192.168.0.5;branch=005;rport=9090;received=54.242.115.5" << CRLF;
+  msg << "Via: SIP/2.0/UDP 192.168.0.5:5060;branch=005;rport=9090;received=54.242.115.5" << CRLF;
   msg << "Call-ID: 885e5e180c04c509" << CRLF;
   msg << "CSeq: 1 INVITE" << CRLF;
   msg << "Contact: <sip:9011@192.168.0.152:9644>" << CRLF;
@@ -92,7 +92,7 @@ TEST(ParserTest, test_via_parser)
 
   std::string bottomSentBy;
   ASSERT_TRUE(SIP::SIPVia::msgGetBottomViaSentBy(&message, bottomSentBy));
-  ASSERT_STREQ(bottomSentBy.c_str(), "192.168.0.5");
+  ASSERT_STREQ(bottomSentBy.c_str(), "192.168.0.5:5060");
 
   //
   // Test popping top vias
@@ -120,7 +120,7 @@ TEST(ParserTest, test_via_parser)
   //std::cout << message.data() << std::endl;
   ASSERT_TRUE(message.hdrGetSize(OSS::SIP::HDR_VIA) == 1);
   ASSERT_TRUE(SIP::SIPVia::msgGetTopVia(&message, msgTopVia));
-  ASSERT_TRUE(msgTopVia == "SIP/2.0/UDP 192.168.0.5;branch=005;rport=9090;received=54.242.115.5");
+  ASSERT_TRUE(msgTopVia == "SIP/2.0/UDP 192.168.0.5:5060;branch=005;rport=9090;received=54.242.115.5");
 
   SIP::SIPVia::msgAddVia(&message, "SIP/2.0/UDP 192.168.0.4;branch=004");
   ASSERT_TRUE(message.hdrGetSize(OSS::SIP::HDR_VIA) == 2);
@@ -158,4 +158,30 @@ TEST(ParserTest, test_via_parser)
   SIP::SIPVia::getRPort(blankRPORT, rportBuff);
   ASSERT_TRUE(rportBuff.empty());
 
+}
+
+TEST(ParserTest, test_get_send_by_address)
+{
+  std::ostringstream msg;
+  msg << "SIP/2.0 180 Ringing\r\n";
+  msg << "From: \"Clark TesT extension\" <sip:1084@skyswitch.15611.service>;tag=zYoURbT9yrK0wYxB1B1ADE\r\n";
+  msg << "Call-ID: 20180406191159046745-2173db79dcd9efd42e888e6778e2b31e\r\n";
+  msg << "CSeq: 201 INVITE\r\n";
+  msg << "To: <sip:1002m@skyswitch.15611.service>;tag=1419452C7D074446B67316FE4B6B5CDD\r\n";
+  msg << "Allow: OPTIONS, INVITE, ACK, REFER, CANCEL, BYE, NOTIFY\r\n";
+  msg << "Supported: replaces, path\r\n";
+  msg << "Content-Length: 0\r\n";
+  msg << "Via: SIP/2.0/TCP 1.1.44.204:5060;branch=z9hG4bK5e74.2422b85.1\r\n";
+  msg << "Via: SIP/2.0/UDP 1.1.50.46:5060;branch=z9hG4bKzYoURbT9yrK0wYxB1B1ADE\r\n";
+  msg << "Record-Route: <sip:1.1.44.204;transport=tcp;r2=on;lr>\r\n";
+  msg << "Record-Route: <sip:1.1.44.204:6050;r2=on;lr>\r\n";
+  msg << "Server: OSS Karoo Bridge\r\n";
+  msg << "Contact: 1002m <sip:1002m@216.24.144.35:5060;transport=tcp;sbc-session-id=11308331799393385544253490130;\r\n";
+  SIP::SIPMessage message(msg.str());
+  message.parse();
+  OSS::Net::IPAddress sendAddress;
+  ASSERT_TRUE(SIP::SIPVia::msgGetTopViaSentByAddress(&message, sendAddress));
+  ASSERT_TRUE(sendAddress.isValid());
+  ASSERT_TRUE(sendAddress.getProtocol() == OSS::Net::IPAddress::TCP);
+  ASSERT_TRUE(sendAddress.getPort() == 5060);
 }
