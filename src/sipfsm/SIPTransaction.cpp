@@ -349,6 +349,11 @@ void SIPTransaction::sendResponse(
 
   if (_sendAddress.getPort() == 0)
     _sendAddress = sendAddress;
+  
+  if (!_localAddress.isValid())
+  {
+    _localAddress = _localAddress = _transport->getLocalAddress();
+  }
 
   SIPTransaction::Ptr pBranch = findBranch(pResponse);
 
@@ -401,14 +406,42 @@ void SIPTransaction::sendResponse(
           }
           else
           {
-            OSS_LOG_ERROR(pResponse->createContextId(true) << "SIPTransaction::sendResponse - Unable to re-establish transport to send response.");
+            OSS_LOG_ERROR(pResponse->createContextId(true) << "SIPTransaction::sendResponse - Unable to re-establish transport to send response to " << _sendAddress.toIpPortString());
+            if (!_transport->isEndpoint())
+            {
+              std::ostringstream logMsg;
+              logMsg << _logId << "!!!>>>!!! " << pResponse->startLine()
+              << " LEN: " << pResponse->data().size()
+              << " SRC: " << _transport->getLocalAddress().toIpPortString()
+              << " DST: " << _transport->getRemoteAddress().toIpPortString()
+              << " ENC: " << _isXOREncrypted
+              << " PROT: " << _transport->getTransportScheme();
+              OSS::log_notice(logMsg.str());
+
+              if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
+                OSS::log_debug(pResponse->createLoggerData());
+            }
             terminate();
             return;
           }
         }
         else
         {
-          OSS_LOG_ERROR(pResponse->createContextId(true) << "SIPTransaction::sendResponse - Unable to re-establish transport to send response. Invalid send address");
+          OSS_LOG_ERROR(pResponse->createContextId(true) << "SIPTransaction::sendResponse - Unable to re-establish transport. Invalid send address " << _sendAddress.toIpPortString());
+          if (!_transport->isEndpoint())
+          {
+            std::ostringstream logMsg;
+            logMsg << _logId << "!!!>>>!!! " << pResponse->startLine()
+            << " LEN: " << pResponse->data().size()
+            << " SRC: " << _transport->getLocalAddress().toIpPortString()
+            << " DST: " << _transport->getRemoteAddress().toIpPortString()
+            << " ENC: " << _isXOREncrypted
+            << " PROT: " << _transport->getTransportScheme();
+            OSS::log_notice(logMsg.str());
+
+            if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
+              OSS::log_debug(pResponse->createLoggerData());
+          }
           terminate();
           return;
         }
@@ -424,6 +457,13 @@ void SIPTransaction::sendResponse(
     else
     {
       OSS_LOG_ERROR(pResponse->createContextId(true) << "SIPTransaction::sendResponse - Transport is NULL.");
+      std::ostringstream logMsg;
+      logMsg << _logId << "!!!>>>!!! " << pResponse->startLine()
+      << " LEN: " << pResponse->data().size();
+      OSS::log_notice(logMsg.str());
+
+      if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
+        OSS::log_debug(pResponse->createLoggerData());
       terminate();
       return;
     }
