@@ -52,5 +52,41 @@ SIPTransportSession::~SIPTransportSession()
 {
 }
 
+void SIPTransportSession::dispatchMessage(const SIPMessage::Ptr& pMsg, const SIPTransportSession::Ptr& pTransport)
+{
+  if (_messageDispatch)
+  {
+    if (_pListener && !_pListener->getTransportAlias().empty())
+    {
+      pMsg->setProperty(OSS::PropertyMap::PROP_TransportAlias, _pListener->getTransportAlias());
+    }
+    _messageDispatch(pMsg, pTransport);
+  }
+}
+
+void SIPTransportSession::linkTransacton(const std::string& id)
+{
+  OSS::mutex_critic_sec_lock lock(_linkedTransactionsMutex);
+  _linkedTransactions.insert(id);
+}
+
+void SIPTransportSession::unlinkTransaction(const std::string& id)
+{
+  OSS::mutex_critic_sec_lock lock(_linkedTransactionsMutex);
+  _linkedTransactions.erase(id);
+}
+
+void SIPTransportSession::dispatchError(ErrorType type, const boost::system::error_code& e)
+{
+  OSS::mutex_critic_sec_lock lock(_linkedTransactionsMutex);
+  if (_errorHandler)
+  {
+    for (LinkedTransactions::const_iterator iter = _linkedTransactions.begin(); iter != _linkedTransactions.end(); iter++)
+    {
+      _errorHandler(*iter, type, e);
+    }
+  }
+}
+
 
 } } // OSS::SIP

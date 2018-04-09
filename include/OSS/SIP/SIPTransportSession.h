@@ -31,6 +31,7 @@
 #include "OSS/Net/AccessControl.h"
 #include "OSS/UTL/Semaphore.h"
 #include "SIPListener.h"
+#include "OSS/UTL/Thread.h"
 
 namespace OSS {
 namespace SIP {
@@ -52,9 +53,21 @@ class OSS_API SIPTransportSession : boost::noncopyable
   /// of SIP messages.
 {
 public:
+  enum ErrorType
+  {
+    READ_ERROR,
+    WRITE_ERROR,
+    CONNECT_ERROR,
+    TIMEOUT_ERROR,
+    HANDSHAKE_ERROR,
+    GENERAL_ERROR
+  };
+  
   typedef boost::shared_ptr<SIPTransportSession> Ptr;
   typedef OSS::Net::AccessControl SIPTransportRateLimitStrategy;
   typedef boost::function<void(SIPMessage::Ptr, SIPTransportSession::Ptr)> Dispatch;
+  typedef std::set<std::string> LinkedTransactions;
+  typedef boost::function<void(const std::string& transactionId, ErrorType type, const boost::system::error_code& e)> ErrorHandler;
 
   SIPTransportSession(SIPListener* pListener);
     /// Creates a new SIPTransportSession
@@ -184,6 +197,11 @@ public:
   SIPListener* getListener() const;
     /// Return the associated listener for this connection
   
+  void linkTransacton(const std::string& id);
+  void unlinkTransaction(const std::string& id);
+  void setErrorHandler(const ErrorHandler& errorHandler);
+  void dispatchError(ErrorType type, const boost::system::error_code& e);
+  
 protected:
   static SIPTransportRateLimitStrategy _rateLimit;
 
@@ -204,6 +222,9 @@ protected:
   SIPTransactionPool* _pTransactionPool;
   bool _isConnected;
   SIPListener* _pListener;
+  LinkedTransactions _linkedTransactions;
+  OSS::mutex_critic_sec _linkedTransactionsMutex;
+  ErrorHandler _errorHandler;
 };
 
 //
@@ -286,18 +307,6 @@ inline void SIPTransportSession::setMessageDispatch(const Dispatch& dispatch)
   _messageDispatch = dispatch;
 }
   
-inline void SIPTransportSession::dispatchMessage(const SIPMessage::Ptr& pMsg, const SIPTransportSession::Ptr& pTransport)
-{
-  if (_messageDispatch)
-  {
-    if (_pListener && !_pListener->getTransportAlias().empty())
-    {
-      pMsg->setProperty(OSS::PropertyMap::PROP_TransportAlias, _pListener->getTransportAlias());
-    }
-    _messageDispatch(pMsg, pTransport);
-  }
-}
-
 inline bool& SIPTransportSession::isClient()
 {
   return _isClient;
@@ -346,6 +355,11 @@ inline void SIPTransportSession::setConnected(bool connected)
 inline SIPListener* SIPTransportSession::getListener() const
 {
   return _pListener;
+}
+
+inline void SIPTransportSession::setErrorHandler(const ErrorHandler& errorHandler)
+{
+  _errorHandler = errorHandler;
 }
 
 } } // OSS::SIP

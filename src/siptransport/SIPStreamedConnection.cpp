@@ -472,6 +472,7 @@ void SIPStreamedConnection::handleRead(const boost::system::error_code& e, std::
     else
     {
       OSS_LOG_WARNING("SIPStreamedConnection::handleRead() Exception " << e.message());
+      dispatchError(READ_ERROR, e);
       boost::system::error_code ignored_ec;
       _pTcpSocket->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
       _isStopping = true;
@@ -491,6 +492,7 @@ void SIPStreamedConnection::handleWrite(const boost::system::error_code& e, std:
   {
     // Initiate graceful connection closure.
     OSS_LOG_WARNING("SIPStreamedConnection::handleWrite() Exception " << e.message());
+    dispatchError(WRITE_ERROR, e);
     boost::system::error_code ignored_ec;
     _pTcpSocket->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
     _isStopping = true;
@@ -521,6 +523,7 @@ void SIPStreamedConnection::handleConnectTimeout(const boost::system::error_code
     boost::system::error_code ignored_ec;
     socket().cancel(ignored_ec);
     OSS_LOG_DEBUG("SIPStreamedConnection::handleConnectTimeout - Socket I/O TIMEOUT");
+    dispatchError(TIMEOUT_ERROR, e);
   }
 }
 
@@ -595,6 +598,7 @@ void SIPStreamedConnection::handleConnect(const boost::system::error_code& e, bo
   }
   else
   {
+    dispatchError(CONNECT_ERROR, e);
     _isConnected = false;
     OSS_LOG_WARNING("SIPStreamedConnection::handleConnect() Exception " << e.message());
     socket().close();
@@ -636,7 +640,7 @@ void SIPStreamedConnection::handleServerHandshake(const boost::system::error_cod
         char buf[128];
         ::ERR_error_string_n(e.value(), buf, sizeof(buf));
         err += buf;
-        
+        dispatchError(HANDSHAKE_ERROR, e);
         OSS_LOG_ERROR("SIPStreamedConnection::handleServerHandshake() Exception " << err);
     }
     
@@ -657,6 +661,7 @@ void SIPStreamedConnection::handleClientHandshake(const boost::system::error_cod
   else
   {
     OSS_LOG_ERROR("SIPStreamedConnection::handleClientHandshake() Exception " << e.message() << " - " << ERR_GET_REASON(e.value()));
+    dispatchError(HANDSHAKE_ERROR, e);
     socket().close();
     _isStopping = true;
     _connectionManager.stop(shared_from_this());

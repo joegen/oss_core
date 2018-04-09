@@ -68,6 +68,8 @@ public:
     /// Take note that this is called directly from the 
     /// transport proactor thread and should therefore
     /// not block and result to a transport sleep.
+  
+  void onTransportError(const std::string& transactionId, SIPTransportSession::ErrorType type, const boost::system::error_code& e);
 
   SIPTransaction::Ptr createClientTransaction(const SIPMessage::Ptr& pRequest);
     /// Create a new transaction for a new non-ACK outgoing request
