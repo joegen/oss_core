@@ -14,4 +14,6 @@ liboss_core_la_SOURCES +=  \
     utl/StackTrace.cpp \
     utl/LogFile.cpp \
     utl/Console.cpp \
-    utl/FileMonitor.cpp
+    utl/FileMonitor.cpp \
+    utl/PropertyMapObject.cpp
+
