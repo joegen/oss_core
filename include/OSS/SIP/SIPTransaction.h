@@ -28,6 +28,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/Thread.h"
+#include "OSS/UTL/PropertyMapObject.h"
 #include "OSS/Net/Net.h"
 #include "OSS/SIP/SIPTransportSession.h"
 #include "OSS/SIP/SIPMessage.h"
@@ -55,13 +56,13 @@ class SIPTransportService;
 class SIPTransactionPool;
 class SIPFsm;
 
-class OSS_API SIPTransaction: public boost::enable_shared_from_this<SIPTransaction>
+class OSS_API SIPTransaction: public OSS::PropertyMapObject, public boost::enable_shared_from_this<SIPTransaction>
 	/// Base class for ICT, IST, NICT, NIST state machines
 {
 public:
   static const int TRN_STATE_CHILD = 0xFC;
   static const int TRN_STATE_IDLE = 0x00;
-   static const int TRN_STATE_TERMINATED = 0xFF;
+  static const int TRN_STATE_TERMINATED = 0xFF;
   typedef boost::shared_ptr<SIPTransaction> Ptr;
   typedef boost::weak_ptr<SIPTransaction> WeakPtr;
   typedef boost::shared_ptr<OSS::Exception> Error;
