@@ -354,6 +354,16 @@ void SIPTransaction::sendResponse(
   {
     _localAddress = _transport->getLocalAddress();
   }
+  
+  if (!isParent() && pParent && !_transportService)
+  {
+    _transportService = pParent->_transportService;
+  }
+  
+  if (!isParent() && pParent && !_responseCallback && pParent->_responseCallback)
+  {
+    _responseCallback = pParent->_responseCallback;
+  }
 
   SIPTransaction::Ptr pBranch = findBranch(pResponse);
 
