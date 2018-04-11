@@ -415,8 +415,21 @@ void SIPTransaction::sendResponse(
           {
             _localAddress = _transport->getLocalAddress();
           }
+          else
+          {
+            OSS_LOG_ERROR(pResponse->createContextId(true) << "SIPTransaction::sendResponse - Unable to re-create transport to send response to " << _sendAddress.toIpPortString());
+            std::ostringstream logMsg;
+            logMsg << _logId << "!!!>>>!!! " << pResponse->startLine()
+            << " LEN: " << pResponse->data().size();
+            OSS::log_notice(logMsg.str());
+
+            if (OSS::log_get_level() >= OSS::PRIO_DEBUG)
+              OSS::log_debug(pResponse->createLoggerData());
+            terminate();
+            return;
+          }
           
-          if (_transport && _transport->writeKeepAlive())
+          if (_transport->writeKeepAlive())
           {
             writeMessage(pResponse);
           }
