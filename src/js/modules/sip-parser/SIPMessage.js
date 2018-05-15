@@ -1042,4 +1042,14 @@ SIPMessage.prototype.resetMaxForwards = function(maxForwards)
   return _parser.msgResetMaxForwards(this._request, maxForwards);
 }
 
+SIPMessage.prototype.getData = function()
+{
+  return _parser.msgGetData(this._request);
+}
+
+SIPMessage.prototype.getSize = function()
+{
+  return _parser.msgGetSize(this._request);
+}
+
 exports.SIPMessage = SIPMessage;

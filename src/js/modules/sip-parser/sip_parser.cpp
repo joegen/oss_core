@@ -664,6 +664,17 @@ static v8::Handle<v8::Value> msgGetData(const v8::Arguments& args)
   return v8::String::New(pMsg->data().c_str());
 }
 
+static v8::Handle<v8::Value> msgGetSize(const v8::Arguments& args)
+{
+  if (args.Length() < 1)
+    return v8::Undefined();
+  v8::HandleScope scope;
+  OSS::SIP::SIPMessage* pMsg = OSS::JS::unwrap_external_object<OSS::SIP::SIPMessage>(args);
+  if (!pMsg)
+    return v8::Integer::New(0);
+  return v8::Integer::New(pMsg->data().size());
+}
+
 static v8::Handle<v8::Value> msgCommitData(const v8::Arguments& args)
 {
   if (args.Length() < 1)
@@ -1943,6 +1954,7 @@ JS_EXPORTS_INIT()
   js_export_method("msgGetStartLine", msgGetStartLine);
   js_export_method("msgSetStartLine", msgSetStartLine);
   js_export_method("msgGetData", msgGetData);
+  js_export_method("msgGetData", msgGetSize);
   js_export_method("msgCommitData", msgCommitData);
   js_export_method("msgGetRequestUri", msgGetRequestUri);
   js_export_method("msgSetRequestUri", msgSetRequestUri);
