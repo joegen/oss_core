@@ -1,0 +1,24 @@
+#!/usr/bin/make -f
+
+DEB_BUILD_MAINT_OPTIONS = hardening=+all
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
+DEB_DH_INSTALL_ARGS := --sourcedir=debian/tmp
+CFG_ARGS := --enable-all-features
+
+
+override_dh_auto_configure:
+	dh_auto_configure -- $(CFG_ARGS)
+
+override_dh_auto_build:
+	dh_auto_build --parallel
+
+# force building in the pkgroot or it won't build
+%:
+	dh $@ --with autoreconf --builddirectory=.
+
+override_dh_auto_test:
+	/bin/true
+
+override_dh_auto_clean:
+	/bin/true

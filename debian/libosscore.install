@@ -1,0 +1,3 @@
+usr/lib/*/liboss_*.*
+usr/lib/*/oss_modules/*/*
+usr/bin/ossjs

@@ -11,7 +11,7 @@
     * SIPCapture (HEP3)
     * REST Persistence Store
     * BSON/JSON Parser
-    * RAFT Concensus
+    * RAFT Consensus
 
 ## Minimal Prerequisites (Mac and Linux)
 ### Mac build is tested using homebrew installed packages
@@ -75,3 +75,10 @@ To install build dependencies
     ../configure --enable-all-features --disable-dep-check
     make dist
     rpmbuild -ta oss_core-*tar.gz
+
+## Building DEB (Debian or Ubuntu)
+-----------------------------------
+    cd oss_core
+    apt-get install -y debhelper pkg-config dh-autoreconf devscripts
+    debuild -uc -us
+

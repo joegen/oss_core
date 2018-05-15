@@ -1,0 +1,45 @@
+Source: osscore
+Section: libs
+Priority: extra
+Maintainer: Debian VoIP Team <pkg-voip-maintainers@lists.alioth.debian.org>
+Uploaders: Joegen Baclor <joegen@ossapp.com>
+Build-Depends: libpoco-dev, libboost-all-dev, libzmq5-dev, libv8-dev, libhiredis-dev, libconfig++-dev, libpcap-dev, libmcrypt-dev, libleveldb-dev, libssl-dev, debhelper (>= 9.0.0), pkg-config, dh-autoreconf, devscripts
+Homepage: http://www.ossapp.com/
+Standards-Version: 3.9.5
+Vcs-Git: https://github.com/joegen/oss_core.git
+Vcs-Browser: https://github.com/joegen/oss_core
+
+Package: libosscore
+Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: osscore SIP stack - shared libraries
+ osscore is a framework that aims to fully implement the SIP protocol
+ with main focus on B2BUA type applications.
+ .
+ This package provides the following features
+ SIP ABNF Parser
+ SIP Finite State Machines
+ SIP B2B User Agent
+ CommonJS Java Script Engine using Google V8
+ SIP Over Websockets
+ STUN server
+ RTP Proxy
+ CARP High Availability
+ SIPCapture (HEP3)
+ REST Persistence Store
+ BSON/JSON Parser
+ RAFT Concensus
+ 
+
+Package: libosscore-dev
+Section: libdevel
+Architecture: any
+Depends: libosscore (= ${binary:Version}), ${misc:Depends}, libpoco-dev, libboost-all-dev, libzmq5-dev, libv8-dev, libhiredis-dev, libconfig++-dev, libpcap-dev, libmcrypt-dev, libleveldb-dev, libssl-dev
+Provides: libosscore-dev
+Conflicts: libosscore-dev
+Replaces: libosscore-dev
+Description: osscore SIP stack - development files
+ This package provides header files needed for developing applications
+ based on the osscore library.
+
