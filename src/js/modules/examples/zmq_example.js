@@ -5,7 +5,7 @@ const log = require("logger");
 const async = require("async");
 const system = require("system");
 
-function example1() {
+function req_rep_example() {
   var requester = new zmq.ZMQSocket(zmq.REQ);
   var responder = new zmq.ZMQSocket(zmq.REP);
 
@@ -32,7 +32,7 @@ function example1() {
   assert(requester.send(request));
 }
 
-function example2() {
+function rpc_server_example() {
   zmq.zmq_rpc_server(
     "tcp://127.0.0.1:50001", {
       "ping": function(args) {
@@ -48,4 +48,26 @@ function example2() {
   );
 }
 
-example1();
+function pub_sub_example() {
+  var publisher = new zmq.ZMQSocket(zmq.PUB);
+  var subscriber = new zmq.ZMQSocket(zmq.SUB);
+
+  assert(publisher.bind("tcp://127.0.0.1:50001"));
+  assert(subscriber.connect("tcp://127.0.0.1:50001"));
+  assert(subscriber.subscribe("test-event"));
+  
+  subscriber.start(function() {
+    var msg = new Buffer(1024);
+    subscriber.receive(msg);
+    log.log(log.INFO, msg.toString());
+    subscriber.close();
+    publisher.close();
+    system.exit(0);
+  });
+  system.sleep(1);
+  log.log(log.INFO, "Sending event");
+  publisher.publish("test-event: Hello World!");
+}
+  
+pub_sub_example();
+
