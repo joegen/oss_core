@@ -28,6 +28,7 @@ AM_CPPFLAGS = \
     -I@OSS_CORE_SRCDIR@/include \
     -I@OSS_CORE_SRCDIR@/src/utl/linux/pidfile \
     -I@OSS_CORE_SRCDIR@/src/net/udns/include \
+    -I@OSS_CORE_SRCDIR@/src/net/esl/include \
     @OSS_CORE_ADDITIONAL_INCLUDES@
 
 

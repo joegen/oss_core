@@ -133,3 +133,25 @@ liboss_core_la_SOURCES += \
     net/FramedTcpConnection.cpp \
     net/FramedTcpListener.cpp
 endif
+
+liboss_core_la_SOURCES += \
+    net/esl/include/cc.h \
+    net/esl/include/esl_cJSON_Utils.h \
+    net/esl/include/esl_buffer.h \
+    net/esl/include/esl_threadmutex.h \
+    net/esl/include/esl_oop.h \
+    net/esl/include/esl.h \
+    net/esl/include/esl_config.h \
+    net/esl/include/esl_config_auto.h \
+    net/esl/include/esl_cJSON.h \
+    net/esl/include/esl_json.h \
+    net/esl/include/esl_event.h \
+    net/esl/esl.c \
+    net/esl/esl_event.c \
+    net/esl/esl_threadmutex.c \
+    net/esl/esl_config.c \
+    net/esl/esl_json.c \
+    net/esl/esl_buffer.c \
+    net/esl/cJSON.c \
+    net/esl/cJSON_Utils.c \
+    net/ESLEvent.cpp

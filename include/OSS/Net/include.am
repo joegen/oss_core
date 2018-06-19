@@ -19,4 +19,5 @@ nobase_include_HEADERS += \
     OSS/Net/WebSocketTlsServer.h \
     OSS/Net/ServerTransport.h \
     OSS/Net/ZMQSocketServer.h \
-    OSS/Net/TlsContext.h
+    OSS/Net/TlsContext.h \
+    OSS/Net/ESLEvent.h
