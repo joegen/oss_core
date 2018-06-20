@@ -1,6 +1,6 @@
 #!BuildIgnore: post-build-checks
 
-%if 0%{?fedora} >= 16
+%if 0%{?fedora} >= 16 || 0%{?rhel} >= 7
 %define build_turn 1
 %else
 %define build_turn 0
@@ -155,7 +155,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_libdir}/liboss_core.so*
 %attr(755,root,root) %{_libdir}/liboss_carp.so*
 
-%if %{build_turn}
+%if ! %{build_turn}
 %attr(755,root,root) %{_libdir}/liboss_turn.so*
 %endif
 
@@ -170,7 +170,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_prefix}/opt/ossapp/librem/lib/librem.a
 %{_prefix}/opt/ossapp/librem/lib/librem.so
 
-%if %{build_turn}
+%if ! %{build_turn}
 %attr(755,root,root) %{_libdir}/liboss_turn.la
 %attr(755,root,root) %{_libdir}/liboss_turn.a
 %endif
