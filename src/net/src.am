@@ -154,4 +154,5 @@ liboss_core_la_SOURCES += \
     net/esl/esl_buffer.c \
     net/esl/cJSON.c \
     net/esl/cJSON_Utils.c \
-    net/ESLEvent.cpp
+    net/ESLEvent.cpp \
+    net/ESLConnection.cpp

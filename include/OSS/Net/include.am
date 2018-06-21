@@ -20,4 +20,5 @@ nobase_include_HEADERS += \
     OSS/Net/ServerTransport.h \
     OSS/Net/ZMQSocketServer.h \
     OSS/Net/TlsContext.h \
-    OSS/Net/ESLEvent.h
+    OSS/Net/ESLEvent.h \
+    OSS/Net/ESLConnection.h

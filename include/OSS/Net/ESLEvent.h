@@ -68,6 +68,7 @@ public:
   const char *next();
   bool setPriority(Priority priority);
   bool isValid() const;
+  intptr_t getEvent() const;
   
 private:
   void cleanUp();
@@ -83,6 +84,11 @@ private:
 inline bool ESLEvent::isValid() const
 {
   return !!_event;
+}
+
+inline intptr_t ESLEvent::getEvent() const
+{
+  return _event;
 }
 
 
