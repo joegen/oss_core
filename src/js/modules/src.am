@@ -12,6 +12,7 @@ include js/modules/buffer/module.am
 include js/modules/console/module.am
 include js/modules/constants/module.am
 include js/modules/error/module.am
+include js/modules/esl/module.am
 include js/modules/fifo/module.am
 include js/modules/file/module.am
 include js/modules/filesystem/module.am
