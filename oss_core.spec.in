@@ -70,8 +70,8 @@ Requires: poco-zip
 
 BuildRequires: libconfig-devel
 Requires: libconfig
-BuildRequires: hiredis-devel
-Requires: hiredis
+BuildRequires: hiredis-devel = 0.10.1
+Requires: hiredis = 0.10.1
 BuildRequires: gtest-devel
 Requires: gtest
 
