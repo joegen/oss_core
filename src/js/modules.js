@@ -36,7 +36,7 @@ function require(path) {
     var script = __get_module_script(module.path);
     if (typeof script === "undefined") {
       __unlock_isolate();
-      throw new ReferenceError("Unable to load javascript exports for " + modulePath);
+      throw new ReferenceError("Unable to load javascript exports for " + module.path);
     }
 
     var current_path = __current_path();
@@ -81,11 +81,6 @@ function __copy_exports(src, dst) {
     dst[key] = src[key]
   }
 }
-
-var __create_buffer_object = function(arg) {
-  return new Buffer(arg);
-}
-require("buffer");
 
 //
 // Clean up exports
@@ -148,14 +143,16 @@ Error.prepareStackTrace = function(error, stack) {
 //
 // Built in modules
 //
+require("buffer");
 const console = require("console");
 const logger = require("logger");
 const system = require("system");
 const async = require("async");
 const assert = require("assert");
 const utils = require("utils");
-const utils = require("timer");
+const timer = require("timer");
 const ossjs = async;
+
 
 
 //

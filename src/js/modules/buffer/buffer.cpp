@@ -25,8 +25,6 @@
 using OSS::JS::JSObjectWrap;
 
 
-JSPersistentFunctionHandle BufferObject::createNewFunc;
-
 //
 // Define the Interface
 //
@@ -67,7 +65,7 @@ JSValueHandle BufferObject::createNew(uint32_t size)
 {
   JSValueHandle funcArgs[1];
   funcArgs[0] = JSUInt32(size);
-  return BufferObject::createNewFunc->Call(js_get_global(), 1, funcArgs);
+  return BufferObject::_constructor->CallAsConstructor(1, funcArgs);
 }
 
 bool BufferObject::isBuffer(JSValueHandle value)
@@ -311,14 +309,6 @@ JS_EXPORTS_INIT()
   js_export_method("isBuffer", BufferObject::isBufferObject);
   js_export_class(BufferObject);
   js_export_global_constructor("Buffer", BufferObject::_constructor);
-  //
-  // Export the createNew function
-  //
-  JSValueHandle newBufferFunc = js_get_global_method("__create_buffer_object");
-  if (js_is_function(newBufferFunc))
-  {
-    BufferObject::createNewFunc = JSPersistentFunctionCast(newBufferFunc);
-  }
   
   // Must always be called last or code won't compile
   js_export_finalize(); 

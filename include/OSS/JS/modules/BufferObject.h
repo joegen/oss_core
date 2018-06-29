@@ -56,7 +56,6 @@ public:
   // Helpers
   //
   static JSValueHandle createNew(uint32_t size);
-  static JSPersistentFunctionHandle createNewFunc;
   static bool isBuffer(JSValueHandle value);
   static JSValueHandle  isBufferObject(JSArguments& args);
   
