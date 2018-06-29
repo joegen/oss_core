@@ -74,12 +74,21 @@ JS_METHOD_IMPL(ESLEventObject::create)
 JS_METHOD_IMPL(ESLEventObject::data)
 {
   ESLEventObject* pObject = js_method_arg_unwrap_self(ESLEventObject);
+  if (!pObject->_event)
+  {
+    return JSUndefined();
+  }
   return JSString(pObject->_event->data());
 }
 
 JS_METHOD_IMPL(ESLEventObject::getHeader)
 {
   ESLEventObject* pObject = js_method_arg_unwrap_self(ESLEventObject);
+  if (!pObject->_event)
+  {
+    return JSUndefined();
+  }
+  
   js_method_arg_assert_size_gteq(1);
   js_method_arg_assert_string(0);
   
@@ -101,6 +110,11 @@ JS_METHOD_IMPL(ESLEventObject::getHeader)
 JS_METHOD_IMPL(ESLEventObject::getBody)
 {
   ESLEventObject* pObject = js_method_arg_unwrap_self(ESLEventObject);
+  if (!pObject->_event)
+  {
+    return JSUndefined();
+  }
+  
   std::string body;
   if (pObject->_event->getBody(body))
   {
@@ -112,6 +126,10 @@ JS_METHOD_IMPL(ESLEventObject::getBody)
 JS_METHOD_IMPL(ESLEventObject::getEventName)
 {
   ESLEventObject* pObject = js_method_arg_unwrap_self(ESLEventObject);
+  if (!pObject->_event)
+  {
+    return JSUndefined();
+  }
   std::string name;
   if (pObject->_event->getEventName(name))
   {
@@ -123,6 +141,10 @@ JS_METHOD_IMPL(ESLEventObject::getEventName)
 JS_METHOD_IMPL(ESLEventObject::setBody)
 {
   ESLEventObject* pObject = js_method_arg_unwrap_self(ESLEventObject);
+  if (!pObject->_event)
+  {
+    return JSBoolean(false);
+  }
   js_method_arg_assert_size_gteq(1);
   js_method_arg_assert_string(0);
   std::string value = js_method_arg_as_std_string(0);
@@ -132,6 +154,10 @@ JS_METHOD_IMPL(ESLEventObject::setBody)
 JS_METHOD_IMPL(ESLEventObject::addHeader)
 {
   ESLEventObject* pObject = js_method_arg_unwrap_self(ESLEventObject);
+  if (!pObject->_event)
+  {
+    return JSBoolean(false);
+  }
   js_method_arg_assert_size_gteq(2);
   js_method_arg_assert_string(0);
   js_method_arg_assert_string(1);
@@ -144,6 +170,10 @@ JS_METHOD_IMPL(ESLEventObject::addHeader)
 JS_METHOD_IMPL(ESLEventObject::pushHeader)
 {
   ESLEventObject* pObject = js_method_arg_unwrap_self(ESLEventObject);
+  if (!pObject->_event)
+  {
+    return JSBoolean(false);
+  }
   js_method_arg_assert_size_gteq(2);
   js_method_arg_assert_string(0);
   js_method_arg_assert_string(1);
@@ -156,6 +186,10 @@ JS_METHOD_IMPL(ESLEventObject::pushHeader)
 JS_METHOD_IMPL(ESLEventObject::unshiftHeader)
 {
   ESLEventObject* pObject = js_method_arg_unwrap_self(ESLEventObject);
+  if (!pObject->_event)
+  {
+    return JSBoolean(false);
+  }
   js_method_arg_assert_size_gteq(2);
   js_method_arg_assert_string(0);
   js_method_arg_assert_string(1);
@@ -168,6 +202,10 @@ JS_METHOD_IMPL(ESLEventObject::unshiftHeader)
 JS_METHOD_IMPL(ESLEventObject::removeHeader)
 {
   ESLEventObject* pObject = js_method_arg_unwrap_self(ESLEventObject);
+  if (!pObject->_event)
+  {
+    return JSBoolean(false);
+  }
   js_method_arg_assert_size_gteq(1);
   js_method_arg_assert_string(0);
   std::string name = js_method_arg_as_std_string(0);
@@ -177,6 +215,10 @@ JS_METHOD_IMPL(ESLEventObject::removeHeader)
 JS_METHOD_IMPL(ESLEventObject::first)
 {
   ESLEventObject* pObject = js_method_arg_unwrap_self(ESLEventObject);
+  if (!pObject->_event)
+  {
+    return JSUndefined();
+  }
   const char* iter = pObject->_event->first();
   if (iter)
   {
@@ -188,6 +230,10 @@ JS_METHOD_IMPL(ESLEventObject::first)
 JS_METHOD_IMPL(ESLEventObject::next)
 {
   ESLEventObject* pObject = js_method_arg_unwrap_self(ESLEventObject);
+  if (!pObject->_event)
+  {
+    return JSUndefined();
+  }
   const char* iter = pObject->_event->next();
   if (iter)
   {
@@ -199,6 +245,10 @@ JS_METHOD_IMPL(ESLEventObject::next)
 JS_METHOD_IMPL(ESLEventObject::setPriority)
 {
   ESLEventObject* pObject = js_method_arg_unwrap_self(ESLEventObject);
+  if (!pObject->_event)
+  {
+    return JSBoolean(false);
+  }
   js_method_arg_assert_size_gteq(1);
   js_method_arg_assert_int32(0);
   int32_t priority = js_method_arg_as_int32(0);
@@ -213,6 +263,10 @@ JS_METHOD_IMPL(ESLEventObject::setPriority)
 JS_METHOD_IMPL(ESLEventObject::isValid)
 {
   ESLEventObject* pObject = js_method_arg_unwrap_self(ESLEventObject);
+  if (!pObject->_event)
+  {
+    return JSBoolean(false);
+  }
   return JSBoolean(pObject->_event->isValid());
 }
 

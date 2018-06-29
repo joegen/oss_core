@@ -55,7 +55,7 @@ public:
   ESLEvent& operator=(void* event);
   
   bool create(const std::string& type, const std::string& subclass_name);
-  const std::string& data(MessageFormat format = FMT_TEXT) const; 
+  const std::string& data(MessageFormat format = FMT_JSON) const; 
   bool getHeader(const std::string& name, std::string& value, std::size_t index = 0) const;
   bool getBody(std::string& body) const;
   bool getEventName(std::string& name) const;

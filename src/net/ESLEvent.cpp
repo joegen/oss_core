@@ -135,7 +135,7 @@ const std::string& ESLEvent::data(MessageFormat format) const
   char* serialized = 0;
   esl_event_t* event = reinterpret_cast<esl_event_t*>(_event);
   _data = std::string();
-  if (!event)
+  if (event)
   {
     if (format == FMT_JSON && esl_event_serialize_json(event, &serialized) == ESL_SUCCESS)
     {

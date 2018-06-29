@@ -125,6 +125,9 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define JSExternal(Ptr) v8::External::New(Ptr)
 #define JSException(What) v8::ThrowException(v8::Exception::Error(JSLiteral(What)))
 
+#define JSFalse JSBoolean(false)
+#define JSTrue JSBoolean(false)
+
 
 
 //

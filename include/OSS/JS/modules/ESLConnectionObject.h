@@ -16,44 +16,40 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-
-#ifndef OSS_JS_ESLEVENTOBJECT_H_INCLUDED
-#define OSS_JS_ESLEVENTOBJECT_H_INCLUDED
+#ifndef OSS_ESLCONNECTIONOBJECT_H_INCLUDED
+#define OSS_ESLCONNECTIONOBJECT_H_INCLUDED
 
 
 #include "OSS/JS/JSPlugin.h"
-#include "OSS/Net/ESLEvent.h"
+#include "OSS/Net/ESLConnection.h"
 
-#define js_method_arg_as_esl_event(Index) js_method_arg_unwrap_object(ESLEventObject, Index)
 
-class ESLEventObject: public OSS::JS::JSObjectWrap
+class ESLConnectionObject: public OSS::JS::JSObjectWrap
 {
 public:
   JS_CONSTRUCTOR_DECLARE();
    
-  JS_METHOD_DECLARE(create);
-  JS_METHOD_DECLARE(data);
-  JS_METHOD_DECLARE(getHeader);
-  JS_METHOD_DECLARE(getBody);
-  JS_METHOD_DECLARE(getEventName);
-  JS_METHOD_DECLARE(setBody);
-  JS_METHOD_DECLARE(addHeader);
-  JS_METHOD_DECLARE(pushHeader);
-  JS_METHOD_DECLARE(unshiftHeader);
-  JS_METHOD_DECLARE(removeHeader);
-  JS_METHOD_DECLARE(first);
-  JS_METHOD_DECLARE(next);
-  JS_METHOD_DECLARE(setPriority);
-  JS_METHOD_DECLARE(isValid);
+  JS_METHOD_DECLARE(connect);
+  JS_METHOD_DECLARE(getInfo);
+  JS_METHOD_DECLARE(send);
+  JS_METHOD_DECLARE(sendRecv);
+  JS_METHOD_DECLARE(api);
+  JS_METHOD_DECLARE(bgapi);
+  JS_METHOD_DECLARE(sendEvent);
+  JS_METHOD_DECLARE(sendMsg);
+  JS_METHOD_DECLARE(recvEvent);
+  JS_METHOD_DECLARE(recvEventTimed);
+  JS_METHOD_DECLARE(filter);
+  JS_METHOD_DECLARE(events);
+  JS_METHOD_DECLARE(execute);
+  JS_METHOD_DECLARE(disconnect);
+  JS_METHOD_DECLARE(connected);
   
 protected:
-  ESLEventObject();
-  virtual ~ESLEventObject();
-  OSS::Net::ESLEvent::Ptr _event;  
-  
-  friend class ESLConnectionObject;
+  ESLConnectionObject();
+  virtual ~ESLConnectionObject();
+  OSS::Net::ESLConnection::Ptr _connection; 
 };
 
-
-#endif // OSS_JS_ESLEVENTOBJECT_H_INCLUDED
+#endif // OSS_ESLCONNECTIONOBJECT_H_INCLUDED
 

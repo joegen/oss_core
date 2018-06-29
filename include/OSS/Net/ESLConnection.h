@@ -31,6 +31,8 @@ namespace Net {
 class ESLConnection : boost::noncopyable
 {
 public:
+  typedef boost::shared_ptr<ESLConnection> Ptr;
+  
   ESLConnection();
   ~ESLConnection();
   
