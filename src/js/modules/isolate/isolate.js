@@ -76,6 +76,10 @@ var Isolate = function(threadId) {
   _this.runSource = function(src) {
     return isolate.runSource(src);
   }
+  
+  _this.runFile = function(file) {
+    return isolate.run(file);
+  }
 
   _this.join = function() {
     return isolate.join();
@@ -106,10 +110,13 @@ var Isolate = function(threadId) {
   }
 }
 
-exports.notifyParentIsolate = function(method, args) {
+exports.notifyParentIsolate = function(method, args, id) {
   var request = new Object();
   request.method = method;
   request.arguments = args;
+  if (id) {
+      request.id = id;
+  }
   var json = JSON.stringify(request);
   _isolate.notifyParentIsolate(json);
 }

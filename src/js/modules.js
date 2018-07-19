@@ -15,6 +15,13 @@ function __cache_module(name, module) {
   __registered_modules[name] = module;
 }
 
+function resolve_path(path) {
+  __lock_isolate();
+  var modulePath = __get_module_cononical_file_name(path);
+  __unlock_isolate();
+  return modulePath;
+}
+
 function require(path) {
   __lock_isolate();
   var modulePath = __get_module_cononical_file_name(path);
