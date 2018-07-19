@@ -26,11 +26,31 @@
 #include <Poco/Net/NetException.h>
 #include "OSS/JS/JSPlugin.h"
 
+
+
 class HttpClientObject: public OSS::JS::JSObjectWrap
 {
 public:
-  typedef Poco::Net::HTTPClientSession Session;
-  typedef Poco::Net::HTTPSClientSession SecureSession;
+  
+  class HTTPClientSession : public Poco::Net::HTTPClientSession
+  {
+  public:
+    HTTPClientSession() {};
+    virtual ~HTTPClientSession() {};
+    void resetSession() { close(); };
+  };
+  
+  class HTTPSClientSession : public Poco::Net::HTTPSClientSession
+  {
+  public:
+    HTTPSClientSession() {};
+    virtual ~HTTPSClientSession() {};
+    void resetSession() { close(); };
+  };
+  
+  typedef Poco::Net::HTTPClientSession BaseSession;
+  typedef HTTPClientSession Session;
+  typedef HTTPSClientSession SecureSession;
   typedef Poco::Net::MessageException MessageException;
   typedef Poco::NoThreadAvailableException NoThreadAvailableException;
   
@@ -69,7 +89,7 @@ public:
 protected:
   HttpClientObject(bool isSecure);
   virtual ~HttpClientObject();
-  Session* _session;
+  BaseSession* _session;
   std::istream* _input;
   std::ostream* _output;
   int _eventFd;
@@ -111,7 +131,12 @@ inline void HttpClientObject::reset()
 {
   _input = 0;
   _output = 0;
-  _session->reset();
+  
+  if (_isSecure) {
+    dynamic_cast<SecureSession*>(_session)->resetSession();
+  } else {
+    dynamic_cast<Session*>(_session)->resetSession();
+  }
 }
 
 #endif //OSS_JS_HTTPCLIENTOBJECT_H_INCLUDED

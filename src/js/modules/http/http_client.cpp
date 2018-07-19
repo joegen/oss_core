@@ -232,7 +232,7 @@ public:
     catch(const Poco::Exception& e)
     {
       OSS::JS::JSEventArgument json("error", _client->getEventFd());
-      _client->_session->reset();
+      _client->reset();
       json.addString(e.message());
       _client->getIsolate()->eventLoop()->eventEmitter().emit(json);
     }
