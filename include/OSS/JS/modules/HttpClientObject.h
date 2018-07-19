@@ -64,6 +64,7 @@ public:
   std::ostream* getOutputStream();
   void setInputStream(std::istream* strm);
   void setOutputStream(std::ostream* strm);
+  void reset();
 
 protected:
   HttpClientObject(bool isSecure);
@@ -104,6 +105,13 @@ inline void HttpClientObject::setOutputStream(std::ostream* strm)
 inline std::ostream* HttpClientObject::getOutputStream()
 {
   return _output;
+}
+
+inline void HttpClientObject::reset()
+{
+  _input = 0;
+  _output = 0;
+  _session->reset();
 }
 
 #endif //OSS_JS_HTTPCLIENTOBJECT_H_INCLUDED

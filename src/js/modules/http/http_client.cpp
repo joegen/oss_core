@@ -225,12 +225,14 @@ public:
       {
         OSS::JS::JSEventArgument json("error", _client->getEventFd());
         json.addString("Bad Input Stream");
+        _client->reset();
         _client->getIsolate()->eventLoop()->eventEmitter().emit(json);
       }
     }
     catch(const Poco::Exception& e)
     {
       OSS::JS::JSEventArgument json("error", _client->getEventFd());
+      _client->_session->reset();
       json.addString(e.message());
       _client->getIsolate()->eventLoop()->eventEmitter().emit(json);
     }
@@ -296,12 +298,14 @@ public:
     {
       OSS::JS::JSEventArgument  json("error", _client->getEventFd());
       json.addString(e.message());
+      _client->reset();
       _client->getIsolate()->eventLoop()->eventEmitter().emit(json);
     }
     catch(const std::exception& e)
     {
       OSS::JS::JSEventArgument  json("error", _client->getEventFd());
       json.addString(e.what());
+      _client->reset();
       _client->getIsolate()->eventLoop()->eventEmitter().emit(json);
     }
     
