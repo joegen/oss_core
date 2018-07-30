@@ -179,6 +179,49 @@ JS_METHOD_IMPL(__thread_self)
   return JSUInt32(pthread_self());
 }
 
+JS_METHOD_IMPL(__write_pid_file)
+{
+  std::string pidFile;
+  bool exclusive = false;
+  
+  int argc = js_method_arg_length();
+  if (argc < 1)
+  {
+    return JSFalse;
+  } 
+  else if (argc == 1)
+  {
+    pidFile = js_method_arg_as_std_string(0);
+  } 
+  else if (argc == 2)
+  {
+    pidFile = js_method_arg_as_std_string(0);
+    exclusive = js_method_arg_as_bool(1);
+  }
+  
+  int handle = open(pidFile.c_str(), O_RDWR|O_CREAT, 0600);
+  if (handle == -1)
+  {
+    return JSFalse;
+  }
+  
+  if (exclusive && lockf(handle,F_TLOCK,0) == -1)
+  {
+    return JSFalse;
+  }
+  
+  pid_t pid = getpid();
+  
+  char pidStr[10];
+  sprintf(pidStr,"%d\n", pid);
+  if (write(handle, pidStr, strlen(pidStr)) == -1)
+  {
+    pid = 0;
+  }
+  
+  return JSTrue;
+}
+
 
 JS_EXPORTS_INIT()
 {
@@ -198,6 +241,7 @@ JS_EXPORTS_INIT()
   js_export_method("cerr", __cerr);
   js_export_method("eendl", __eendl);
   js_export_method("thread_self", __thread_self);
+  js_export_method("write_pid_file", __write_pid_file);
   
 
   //
