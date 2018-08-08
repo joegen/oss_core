@@ -216,7 +216,11 @@ JS_METHOD_IMPL(__write_pid_file)
   sprintf(pidStr,"%d\n", pid);
   if (write(handle, pidStr, strlen(pidStr)) == -1)
   {
-    pid = 0;
+    return JSFalse;
+  }
+  
+  if (!exclusive) {
+    close(handle);
   }
   
   return JSTrue;
