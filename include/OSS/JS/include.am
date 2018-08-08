@@ -12,6 +12,7 @@ nobase_include_HEADERS += \
     OSS/JS/JSFileDescriptor.h \
     OSS/JS/JSFileDescriptorManager.h \
     OSS/JS/JSEventArgument.h \
+    OSS/JS/JSEventEmitter.h \
     OSS/JS/JSPersistentValue.h \
     OSS/JS/JSEventQueueManager.h \
     OSS/JS/JSTask.h \

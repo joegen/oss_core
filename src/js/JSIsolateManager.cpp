@@ -26,6 +26,7 @@
 #include "OSS/UTL/Logger.h"
 #include "OSS/JS/JSUtil.h"
 #include "OSS/JS/JSIsolateManager.h"
+#include "OSS/JS/JSEventLoop.h"
 
 
 namespace OSS {
@@ -69,10 +70,16 @@ JSIsolateManager::JSIsolateManager()
   // Create the root isolate
   //
   _rootIsolate = JSIsolate::Ptr(new JSIsolate(0));
-}  
+}
 
 JSIsolateManager::~JSIsolateManager()
 {
+}
+
+void JSIsolateManager::resetRootIsolate()
+{
+  assert(_rootIsolate->eventLoop()->isTerminated());
+  _rootIsolate.reset(new JSIsolate(0));
 }
 
 JSIsolate::Ptr JSIsolateManager::createIsolate(pthread_t parentThreadId)

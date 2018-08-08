@@ -81,6 +81,8 @@ public:
   
   void initGlobalExports(JSObjectTemplateHandle& global);
     /// Register all exported methods
+  
+  void resetRootIsolate();
 private:
   JSIsolateManager();
   ~JSIsolateManager();

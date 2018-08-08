@@ -74,6 +74,7 @@ public:
   JSTimerManager& timerManager();
   JSInterIsolateCallManager& interIsolate();
   
+  bool isTerminated() const;
 protected:
   bool _isTerminated;
   JSIsolate* _pIsolate;
@@ -127,6 +128,11 @@ inline JSTimerManager& JSEventLoop::timerManager()
 inline JSInterIsolateCallManager& JSEventLoop::interIsolate()
 {
   return _interIsolate;
+}
+
+inline bool JSEventLoop::isTerminated() const
+{
+  return _isTerminated;
 }
 
 
