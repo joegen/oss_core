@@ -60,12 +60,14 @@ public:
 protected:
   JSInterIsolateCall();
   JSInterIsolateCall(const Request& request, uint32_t timeout, void* userData);
+  JSInterIsolateCall(const Request& request, uint32_t timeout, void* userData, JSPersistentFunctionHandle* cb);
   void setValue(const std::string& value);
   Request _request;
   Result _result;
   void* _userData;
   uint32_t _timeout;
   Future _future;
+  JSPersistentFunctionHandle* _cb;
   friend class JSInterIsolateCallManager;
 };
 
@@ -76,15 +78,26 @@ protected:
 
 inline JSInterIsolateCall::JSInterIsolateCall() :
   _userData(0),
-  _timeout(0)
+  _timeout(0),
+  _cb(0)
 {
   _future = get_future();
+}
+
+inline JSInterIsolateCall::JSInterIsolateCall(const Request& request, uint32_t timeout, void* userData, JSPersistentFunctionHandle* cb) :
+  _request(request),
+  _userData(userData),
+  _timeout(timeout),
+  _cb(cb)
+{
+   _future = get_future();
 }
 
 inline JSInterIsolateCall::JSInterIsolateCall(const Request& request, uint32_t timeout, void* userData) :
   _request(request),
   _userData(userData),
-  _timeout(timeout)
+  _timeout(timeout),
+  _cb(0)
 {
    _future = get_future();
 }

@@ -208,6 +208,16 @@ void JSIsolate::notify(const Request& request, void* userData)
   _pEventLoop->interIsolate().notify(request, userData);
 }
 
+void JSIsolate::notify(const std::string& request, void* userData, JSPersistentFunctionHandle* cb)
+{
+  _pEventLoop->interIsolate().notify(request, userData, cb);
+}
+
+void JSIsolate::notify(const Request& request, void* userData, JSPersistentFunctionHandle* cb)
+{
+  _pEventLoop->interIsolate().notify(request, userData, cb);
+}
+
 bool JSIsolate::execute(const std::string& request, std::string& result, uint32_t timeout, void* userData)
 {
   return _pEventLoop->interIsolate().execute(request, result, timeout, userData);

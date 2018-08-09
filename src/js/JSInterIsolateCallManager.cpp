@@ -63,6 +63,24 @@ bool JSInterIsolateCallManager::doOneWork()
     return false;
   }
   
+  js_enter_scope();
+  JSLocalObjectHandle pUserData = getIsolate()->wrapExternalPointer(pCall->getUserData());
+  JSValueHandle request = getIsolate()->parseJSON(pCall->json());
+  JSArgumentVector jsonArg;
+  jsonArg.push_back(request);
+  jsonArg.push_back(pUserData);
+  //
+  // Check if this is a callback notification
+  //
+  if (pCall->_cb) {
+    _handler.value()->Call(getGlobal(), jsonArg.size(), jsonArg.data());
+    pCall->setValue("{}");
+    pCall->_cb->Dispose();
+    delete pCall->_cb;
+    pCall->_cb = 0;
+    return true;
+  }
+  
   if (_handler.empty())
   {
     //
@@ -72,12 +90,6 @@ bool JSInterIsolateCallManager::doOneWork()
     return true;
   }
   
-  js_enter_scope();
-  JSLocalObjectHandle pUserData = getIsolate()->wrapExternalPointer(pCall->getUserData());
-  JSValueHandle request = getIsolate()->parseJSON(pCall->json());
-  JSArgumentVector jsonArg;
-  jsonArg.push_back(request);
-  jsonArg.push_back(pUserData);
 
   JSValueHandle result =  _handler.value()->Call(getGlobal(), jsonArg.size(), jsonArg.data());
 
@@ -136,6 +148,31 @@ void JSInterIsolateCallManager::notify(const Request& request, void* userData)
 {
   bool delegateToSelf = getIsolate()->isThreadSelf();
   JSInterIsolateCall::Ptr pCall(new JSInterIsolateCall(request, 0, userData));
+  enqueue(pCall);
+
+  if (delegateToSelf)
+  {
+    doOneWork();
+  }
+  else
+  {
+    getEventLoop()->wakeup();
+  }
+}
+
+void JSInterIsolateCallManager::notify(const std::string& requestStr, void* userData, JSPersistentFunctionHandle* cb)
+{
+  Request request;
+  if (OSS::JSON::json_parse_string(requestStr, request))
+  {
+    notify(request, userData, cb);
+  }
+}
+
+void JSInterIsolateCallManager::notify(const Request& request, void* userData, JSPersistentFunctionHandle* cb)
+{
+  bool delegateToSelf = getIsolate()->isThreadSelf();
+  JSInterIsolateCall::Ptr pCall(new JSInterIsolateCall(request, 0, userData, cb));
   enqueue(pCall);
 
   if (delegateToSelf)

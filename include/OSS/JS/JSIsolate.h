@@ -61,6 +61,8 @@ public:
   
   void notify(const std::string& request, void* userData);
   void notify(const Request& request, void* userData);
+  void notify(const std::string& request, void* userData, JSPersistentFunctionHandle* cb);
+  void notify(const Request& request, void* userData, JSPersistentFunctionHandle* cb);
   bool execute(const std::string& request, std::string& result, uint32_t timeout, void* userData);
   bool execute(const Request& request, Result& result, uint32_t timeout, void* userData);
   void emit(const std::string& eventName, const OSS::JSON::Array& args, int queueFd);
