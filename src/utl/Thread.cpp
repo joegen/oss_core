@@ -121,16 +121,24 @@ public:
   }
   void run()
   {
-    if (_task)
-      _task();
-    else if (_argTask)
-      _argTask(_arg);
-
+    if (_voidArgTask)
+    {
+      _voidArgTask(_voidArg);
+    } 
+    else
+    {
+      if (_task)
+        _task();
+      else if (_argTask)
+        _argTask(_arg);
+    }
     delete this;
   }
   boost::function<void()> _task;
   thread_pool::argument_place_holder _arg;
   boost::function<void(thread_pool::argument_place_holder)> _argTask;
+  void* _voidArg;
+  boost::function<void(void*)> _voidArgTask;
 };
 
 thread_pool::thread_pool(
@@ -179,6 +187,24 @@ int thread_pool::schedule_with_arg(boost::function<void(argument_place_holder)> 
   thread_pool_runnable* runnable = new thread_pool_runnable();
   runnable->_argTask = task;
   runnable->_arg = arg;
+  try
+  {
+    static_cast<Poco::ThreadPool*>(_threadPool)->start(*runnable);
+    return static_cast<Poco::ThreadPool*>(_threadPool)->used();
+  }
+  catch(...)
+  {
+    delete runnable;
+    return -1;
+  }
+  return 0;
+}
+
+int thread_pool::schedule_with_arg(boost::function<void(void*)> task, void* arg)
+{
+  thread_pool_runnable* runnable = new thread_pool_runnable();
+  runnable->_voidArgTask = task;
+  runnable->_voidArg = arg;
   try
   {
     static_cast<Poco::ThreadPool*>(_threadPool)->start(*runnable);

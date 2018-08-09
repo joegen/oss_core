@@ -149,6 +149,10 @@ public:
   int schedule_with_arg(boost::function<void(argument_place_holder)> task, argument_place_holder arg);
     /// Schedule a task with a placeholder argument.  Returns the number of
     /// currently used thread if successful or -1 if unsuccessful.
+  
+  int schedule_with_arg(boost::function<void(void*)> task, void* arg);
+    /// Schedule a task with a void* argument.  Returns the number of
+    /// currently used thread if successful or -1 if unsuccessful.
 
   static void static_join();
     /// Waits for all threads in the deafult thread pool to complete.
