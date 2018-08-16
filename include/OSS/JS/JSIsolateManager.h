@@ -42,6 +42,8 @@ public:
   typedef std::map<pthread_t, JSIsolate::Ptr> MapByThreadId;
   typedef std::map<std::string, intptr_t> ExternalData;
   typedef std::map<std::string, JS_METHOD_FUNC> GlobalExports;
+  typedef boost::function<void(JSObjectTemplateHandle&)> GlobalExportFunc;
+  typedef std::vector<GlobalExportFunc> GlobalExportVector;
   
   static JSIsolateManager& instance();
   
@@ -83,6 +85,8 @@ public:
     /// Register all exported methods
   
   void resetRootIsolate();
+  
+  void addExportHandler(GlobalExportFunc func);
 private:
   JSIsolateManager();
   ~JSIsolateManager();
@@ -94,6 +98,7 @@ private:
   ExternalData _externalData;
   JSIsolate::Ptr _rootIsolate;
   GlobalExports _exports;
+  GlobalExportVector _exportHandlers;
 };
 
 //
@@ -113,6 +118,11 @@ inline OSS::mutex& JSIsolateManager::modulesMutex()
 inline void JSIsolateManager::exportMethod(const std::string& funcName, JS_METHOD_FUNC method)
 {
   _exports[funcName] = method;
+}
+
+inline void JSIsolateManager::addExportHandler(GlobalExportFunc func)
+{
+  _exportHandlers.push_back(func);
 }
 
   

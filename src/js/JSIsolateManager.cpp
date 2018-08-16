@@ -157,6 +157,11 @@ void JSIsolateManager::initGlobalExports(JSObjectTemplateHandle& global)
   {
     global->Set(v8::String::New(iter->first.c_str()), v8::FunctionTemplate::New(iter->second));
   }
+  
+  for (GlobalExportVector::iterator iter = _exportHandlers.begin(); iter != _exportHandlers.end(); iter++)
+  {
+    (*iter)(global);
+  }
 }
 
   

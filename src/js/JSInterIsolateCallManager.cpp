@@ -73,7 +73,7 @@ bool JSInterIsolateCallManager::doOneWork()
   // Check if this is a callback notification
   //
   if (pCall->_cb) {
-    _handler.value()->Call(getGlobal(), jsonArg.size(), jsonArg.data());
+    (*pCall->_cb)->Call(getGlobal(), jsonArg.size(), jsonArg.data());
     pCall->setValue("{}");
     pCall->_cb->Dispose();
     delete pCall->_cb;
@@ -174,7 +174,6 @@ void JSInterIsolateCallManager::notify(const Request& request, void* userData, J
   bool delegateToSelf = getIsolate()->isThreadSelf();
   JSInterIsolateCall::Ptr pCall(new JSInterIsolateCall(request, 0, userData, cb));
   enqueue(pCall);
-
   if (delegateToSelf)
   {
     doOneWork();
