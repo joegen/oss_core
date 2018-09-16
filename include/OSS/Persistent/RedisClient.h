@@ -109,13 +109,15 @@ protected:
 public:
   void execute(const std::vector<std::string>& args, std::ostream& strm) const;
   
-  bool set(const std::string& key, const json::Object& value, int expires = -1);
+  bool set(const std::string& key, const json::Object& value, int seconds = -1);
 
-  bool set(const std::string& key, const std::string& value, int expires = -1);
+  bool set(const std::string& key, const std::string& value, int seconds = -1);
   
   bool incrby(const std::string& key, int increment, long long& result);
   
   bool decrby(const std::string& key, int increment, long long& result);
+  
+  bool expire(const std::string& key, int seconds);
 
   bool hset(const std::string& key, const std::string& name, const std::string& value);
 

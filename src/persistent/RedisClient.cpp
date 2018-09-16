@@ -712,6 +712,24 @@ bool RedisClient::decrby(const std::string& key, int increment, long long& resul
   }
 }
 
+bool RedisClient::expire(const std::string& key, int seconds)
+{
+  try
+  {
+    std::vector<std::string> args;
+    args.push_back("EXPIRE");
+    args.push_back(key);
+    args.push_back(boost::lexical_cast<std::string>(seconds));
+    long long result = 0;
+    getReplyInt(args, result);
+    return !!result;
+  }
+  catch(...)
+  {
+    return false;
+  }
+}
+
 bool RedisClient::hset(const std::string& key, const std::string& name, const std::string& value)
 {
   std::vector<std::string> args;
