@@ -25,6 +25,7 @@
 #include <sstream>
 #include <string>
 #include <boost/filesystem.hpp>
+#include <boost/function.hpp>
 
 #include "OSS/OSS.h"
 
@@ -44,6 +45,8 @@ enum LogPriority
 	PRIO_TRACE        /// A tracing message. This is the lowest priority.
 };
 
+typedef boost::function<void(const std::string&, LogPriority)> ExternalLogger;
+
 void OSS_API logger_init(
   const std::string& path,
   LogPriority level = OSS::PRIO_INFORMATION,
@@ -52,6 +55,8 @@ void OSS_API logger_init(
   const std::string& purgeCount = "7",
   const std::string& times = "UTC");
   /// Initialize the logging subsystem from the config specified
+
+void logger_init_external(const ExternalLogger& externalLogger);
 
 void OSS_API logger_deinit();
   /// Deinitialize the logger

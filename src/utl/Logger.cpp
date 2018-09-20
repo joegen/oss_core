@@ -56,6 +56,7 @@ static OSS::mutex_critic_sec _consoleMutex;
 static bool _enableConsoleLogging = true;
 static bool _enableLogging = true;
 static LogPriority _consoleLogLevel = PRIO_INFORMATION;
+static ExternalLogger _externalLogger;
   /*
 enum LogPriority
 {
@@ -125,6 +126,13 @@ void log_enable_console(bool yes)
 void log_enable_logging(bool yes)
 {
   _enableLogging = yes;
+}
+
+void logger_init_external(const ExternalLogger& externalLogger)
+{
+  _consoleMutex.lock();
+  _externalLogger = externalLogger;
+  _consoleMutex.unlock();
 }
 
 void logger_init(
@@ -236,6 +244,18 @@ void log_fatal(const std::string& log)
 {
   if (!_enableLogging || log.empty())
     return;
+  
+  if (_externalLogger)
+  {
+    // the inner check is guaranteed becasue of the mutex
+    _consoleMutex.lock();
+    if (_externalLogger)
+    {
+	_externalLogger(log, PRIO_FATAL);
+    }
+    _consoleMutex.unlock();
+    return;
+  }
 
   if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_FATAL)
   {
@@ -253,6 +273,18 @@ void log_critical(const std::string& log)
 {
   if (!_enableLogging || log.empty())
     return;
+  
+  if (_externalLogger)
+  {
+    // the inner check is guaranteed becasue of the mutex
+    _consoleMutex.lock();
+    if (_externalLogger)
+    {
+	_externalLogger(log, PRIO_FATAL);
+    }
+    _consoleMutex.unlock();
+    return;
+  }
 
   if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_CRITICAL)
   {
@@ -271,6 +303,18 @@ void log_error(const std::string& log)
   if (!_enableLogging || log.empty())
     return;
 
+  if (_externalLogger)
+  {
+    // the inner check is guaranteed becasue of the mutex
+    _consoleMutex.lock();
+    if (_externalLogger)
+    {
+	_externalLogger(log, PRIO_FATAL);
+    }
+    _consoleMutex.unlock();
+    return;
+  }
+  
   if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_ERROR)
   {
     _consoleMutex.lock();
@@ -288,6 +332,18 @@ void log_warning(const std::string& log)
   if (!_enableLogging || log.empty())
     return;
 
+  if (_externalLogger)
+  {
+    // the inner check is guaranteed becasue of the mutex
+    _consoleMutex.lock();
+    if (_externalLogger)
+    {
+	_externalLogger(log, PRIO_FATAL);
+    }
+    _consoleMutex.unlock();
+    return;
+  }
+  
   if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_WARNING)
   {
     _consoleMutex.lock();
@@ -305,6 +361,18 @@ void log_notice(const std::string& log)
   if (!_enableLogging || log.empty())
     return;
 
+  if (_externalLogger)
+  {
+    // the inner check is guaranteed becasue of the mutex
+    _consoleMutex.lock();
+    if (_externalLogger)
+    {
+	_externalLogger(log, PRIO_FATAL);
+    }
+    _consoleMutex.unlock();
+    return;
+  }
+  
   if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_NOTICE)
   {
     _consoleMutex.lock();
@@ -321,6 +389,18 @@ void log_information(const std::string& log)
 {
   if (!_enableLogging || log.empty())
     return;
+  
+  if (_externalLogger)
+  {
+    // the inner check is guaranteed becasue of the mutex
+    _consoleMutex.lock();
+    if (_externalLogger)
+    {
+	_externalLogger(log, PRIO_FATAL);
+    }
+    _consoleMutex.unlock();
+    return;
+  }
 
   if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_INFORMATION)
   {
@@ -339,6 +419,18 @@ void log_debug(const std::string& log)
   if (!_enableLogging || log.empty())
     return;
 
+  if (_externalLogger)
+  {
+    // the inner check is guaranteed becasue of the mutex
+    _consoleMutex.lock();
+    if (_externalLogger)
+    {
+	_externalLogger(log, PRIO_FATAL);
+    }
+    _consoleMutex.unlock();
+    return;
+  }
+  
   if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_DEBUG)
   {
     _consoleMutex.lock();
@@ -356,6 +448,18 @@ void log_trace(const std::string& log)
   if (!_enableLogging || log.empty())
     return;
 
+  if (_externalLogger)
+  {
+    // the inner check is guaranteed becasue of the mutex
+    _consoleMutex.lock();
+    if (_externalLogger)
+    {
+	_externalLogger(log, PRIO_FATAL);
+    }
+    _consoleMutex.unlock();
+    return;
+  }
+  
   if(!_pLogger && _enableConsoleLogging && _consoleLogLevel >= PRIO_TRACE)
   {
     _consoleMutex.lock();
