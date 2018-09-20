@@ -34,7 +34,7 @@ RedisClient::RedisClient() :
     _db(0),
     _connected(false)
 {
-  OSS_LOG_INFO("[REDIS] << Redis client CREATED - " << _tcpHost << ":" << _tcpPort);
+  OSS_LOG_TRACE("[REDIS] << Redis client CREATED");
 }
 
 RedisClient::RedisClient(const std::string& tcpHost, int tcpPort) :
@@ -45,7 +45,7 @@ RedisClient::RedisClient(const std::string& tcpHost, int tcpPort) :
     _db(0),
     _connected(false)
 {
-  OSS_LOG_INFO("[REDIS] << Redis client CREATED - " << _tcpHost << ":" << _tcpPort);
+  OSS_LOG_TRACE("[REDIS] << Redis client CREATED - " << _tcpHost << ":" << _tcpPort);
 }
 
 RedisClient::RedisClient(const std::string& unixSocketPath) :
