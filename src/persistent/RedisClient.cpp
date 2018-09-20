@@ -107,7 +107,7 @@ bool RedisClient::connect(const std::string& password_, int db)
     }
     return false;
   }
-  else
+  else if (!_context->err)
   {
     if (_type == TCP)
     {
