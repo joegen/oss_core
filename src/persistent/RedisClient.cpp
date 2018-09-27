@@ -554,10 +554,39 @@ bool RedisClient::set(const std::string& key, const std::string& value, int expi
   OSS::string_to_lower(status);
   if (!status.empty() && status != "ok")
   {
-    OSS_LOG_ERROR("[REDIS]  RedisClient::Get ERROR: " << status);
+    OSS_LOG_ERROR("[REDIS]  RedisClient::set ERROR: " << status);
   }
 
   return status == "ok";
+}
+
+bool RedisClient::sadd(const std::string& key, std::string& value)
+{
+  std::vector<std::string> args;
+  args.push_back("SADD");
+    args.push_back(key);
+    args.push_back(value);
+  long long result = 0;
+  return getReplyInt(args, result) && !!result;
+ }
+  
+bool RedisClient::smembers(const std::string& key, std::vector<std::string>& values)
+{
+  std::vector<std::string> args;
+  args.push_back("SMEMBERS");
+  args.push_back(key);
+  values = getReplyStringArray(args);
+  return !values.empty();
+}
+
+bool RedisClient::srem(const std::string& key, std::string& value)
+{
+  std::vector<std::string> args;
+  args.push_back("SREM");
+    args.push_back(key);
+    args.push_back(value);
+  long long result = 0;
+  return getReplyInt(args, result) && !!result;
 }
 
 bool RedisClient::incrby(const std::string& key, int increment, long long& result)

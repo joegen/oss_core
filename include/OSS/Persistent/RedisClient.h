@@ -151,6 +151,12 @@ public:
   
   bool subscribe(const std::string& channelName, std::vector<std::string>& reply);
   
+  bool sadd(const std::string& key, std::string& value);
+  
+  bool smembers(const std::string& key, std::vector<std::string>& values);
+  
+  bool srem(const std::string& key, std::string& value);
+  
 };
 
 class RedisBroadcastClient
