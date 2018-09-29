@@ -24,4 +24,5 @@ nobase_include_HEADERS += \
     OSS/UTL/termcolor.h \
     OSS/UTL/FileMonitor.h \
     OSS/UTL/AutoExpireSet.h \
-    OSS/UTL/PropertyMapObject.h
+    OSS/UTL/PropertyMapObject.h \
+    OSS/UTL/CrashHandler.h
