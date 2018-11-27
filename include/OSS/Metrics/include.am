@@ -1,0 +1,2 @@
+nobase_include_HEADERS += \
+    OSS/Metrics/influxdb_cpp/influxdb.hpp
