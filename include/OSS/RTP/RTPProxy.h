@@ -66,7 +66,6 @@ public:
     typedef std::map<std::string, std::string> CustomAttributes;
     bool verbose;
     bool forceCreate;
-    bool enableTranscoding;
     bool forcePEAEncryption;
     bool allowHairPin;
     std::string callId;
@@ -83,7 +82,6 @@ public:
     {
       verbose = false;
       forceCreate = false;
-      enableTranscoding = false;
       forcePEAEncryption = false;
       resizerSamplesLeg1 = 0;
       resizerSamplesLeg2 = 0;
