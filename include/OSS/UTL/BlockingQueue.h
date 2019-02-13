@@ -36,9 +36,10 @@ class BlockingQueue : boost::noncopyable
 public:
   typedef boost::function<bool(BlockingQueue<T>&, const T&)> QueueObserver;
   
-  BlockingQueue(bool usePipe = false) :
-    _sem(0, 0xFFFF),
-    _usePipe(usePipe)
+  BlockingQueue(bool usePipe = false, std::size_t maxSize = 0) :
+    _sem(0, SEM_VALUE_MAX),
+    _usePipe(usePipe),
+    _maxSize(maxSize)
   {
     if (_usePipe)
     {
@@ -58,6 +59,13 @@ public:
   bool enqueue(T data)
   {
     _cs.lock();
+    
+    if (_maxSize && _queue.size() >= _maxSize)
+    {
+      _cs.unlock();
+      return false;
+    }
+    
     if (_enqueueObserver && !_enqueueObserver(*this, data))
     {
       _cs.unlock();
@@ -169,6 +177,18 @@ public:
       dequeue(data);
     }
   }
+  
+  void setMaxSize(std::size_t maxSize)
+  {
+    _cs.lock();
+    _maxSize = maxSize;
+    _cs.unlock();
+  }
+  
+  std::size_t getMaxSize() const
+  {
+    return _maxSize;
+  }
 private:
   OSS::semaphore _sem;
   mutable OSS::mutex_critic_sec _cs;
@@ -177,6 +197,7 @@ private:
   bool _usePipe;
   QueueObserver _enqueueObserver;
   QueueObserver _dequeueObserver;
+  std::size_t _maxSize;
 };
 
 } // OSS
