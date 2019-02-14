@@ -188,16 +188,22 @@ bool nextKey(std::string& nextKey, bool first)
   return true;
 }
 
-void clear()
+void getKeys(std::vector<std::string>& keys)
 {
   bool first = true;
   std::string key;
-  std::vector<std::string> keys;
   while(nextKey(key, first))
   {
     first = false;
     keys.push_back(key);
   }
+}
+
+void clear()
+{
+  std::string key;
+  std::vector<std::string> keys;
+  getKeys(keys);
 
   for (std::vector<std::string>::const_iterator iter = keys.begin(); iter != keys.end(); iter++)
     erase(*iter);
