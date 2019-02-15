@@ -196,7 +196,8 @@ bool ZMQSocket::bind(const std::string& bindAddress)
     return false;
   }
   
-  
+  int linger = 0;
+  _socket->setsockopt(ZMQ_LINGER, &linger, sizeof (linger));
 
   try
   {

@@ -101,6 +101,10 @@ public:
   int pollForEvents();
   
   int getFd() const;
+  
+  const std::string& getBindAddress() const;
+  
+  const std::string& getConnectAddress() const;
 protected:
   void internal_close();
   bool internal_connect(const std::string& peerAddress);
@@ -153,6 +157,16 @@ inline bool ZMQSocket::receiveReply(std::string& reply)
 inline zmq::socket_t* ZMQSocket::socket()
 {
   return _socket;
+}
+
+inline const std::string& ZMQSocket::getBindAddress() const
+{
+  return _bindAddress;
+}
+  
+inline const std::string& ZMQSocket::getConnectAddress() const
+{
+  return _peerAddress;
 }
 
 } } // OSS::ZMQ
