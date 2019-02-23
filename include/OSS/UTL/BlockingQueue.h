@@ -36,7 +36,7 @@ class BlockingQueue : boost::noncopyable
 public:
   typedef boost::function<bool(BlockingQueue<T>&, const T&)> QueueObserver;
   
-  BlockingQueue(bool usePipe = false, std::size_t maxSize = 0) :
+  BlockingQueue(bool usePipe = false, std::size_t maxSize = SEM_VALUE_MAX - 1) :
     _sem(0, SEM_VALUE_MAX),
     _usePipe(usePipe),
     _maxSize(maxSize)
