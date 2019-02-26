@@ -173,6 +173,12 @@ int OSS_API getRandom();
 OSS::UInt64 OSS_API getTime();
   /// Return milliseconds since epoch
 
+tm* OSS_API getTimeTS(OSS::UInt64 millis = getTime());
+  /// Convert miliisecond to struct tm
+
+std::string OSS_API formatTime(tm* time, const char* fmt);
+  /// See strftime man pages for the format eg "%d %m %Y %H:%M"
+
 bool OSS_API isFileOlderThan(const boost::filesystem::path& file, int minutes);
   /// Utility function to check the modified date of the file
 

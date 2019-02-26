@@ -255,6 +255,22 @@ OSS::UInt64 getTime()
 #endif
 }
 
+tm* getTimeTS(OSS::UInt64 millis)
+{
+  tm* ret = 0;
+  time_t seconds = (time_t)(millis/1000);
+  if ((unsigned long long)seconds*1000 == millis)
+    ret = localtime(&seconds);
+  return ret; // milliseconds >= 4G*1000
+}
+
+std::string formatTime(tm* time, const char* fmt)
+{
+  char buff[256];
+  strftime(buff, sizeof(buff)-1, fmt, time);
+  return buff;
+}
+
 std::string boost_format_time(boost::posix_time::ptime now, const std::string& format)
 {
   static std::locale loc(std::cout.getloc(), new boost::posix_time::time_facet(format.c_str()));
