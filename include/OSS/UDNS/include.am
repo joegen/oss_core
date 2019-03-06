@@ -1,12 +1,12 @@
 nobase_include_HEADERS += \
     OSS/UDNS/udns.h \
-    OSS/UDNS/udnspp/dnsarecord.h  \
-    OSS/UDNS/udnspp/dnscache.h  \
-    OSS/UDNS/udnspp/dnscontext.h  \
-    OSS/UDNS/udnspp/dnsmxrecord.h  \
-    OSS/UDNS/udnspp/dnsnaptrrecord.h  \
-    OSS/UDNS/udnspp/dnsptrrecord.h  \
-    OSS/UDNS/udnspp/dnsresolver.h  \
-    OSS/UDNS/udnspp/dnsrrcommon.h  \
-    OSS/UDNS/udnspp/dnssrvrecord.h  \
-    OSS/UDNS/udnspp/dnstxtrecord.h
+    OSS/UDNS/dnsarecord.h  \
+    OSS/UDNS/dnscache.h  \
+    OSS/UDNS/dnscontext.h  \
+    OSS/UDNS/dnsmxrecord.h  \
+    OSS/UDNS/dnsnaptrrecord.h  \
+    OSS/UDNS/dnsptrrecord.h  \
+    OSS/UDNS/dnsresolver.h  \
+    OSS/UDNS/dnsrrcommon.h  \
+    OSS/UDNS/dnssrvrecord.h  \
+    OSS/UDNS/dnstxtrecord.h

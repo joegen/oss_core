@@ -22,7 +22,7 @@
 #include "OSS/UTL/Thread.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/BlockingQueue.h"
-#include "udnspp/dnsresolver.h"
+#include "OSS/UDNS/dnsresolver.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/JS/modules/Async.h"
 #include "OSS/JS/JSIsolate.h"
@@ -30,7 +30,7 @@
 
 #include <poll.h>
 
-using namespace udnspp;
+using namespace OSS::UDNS;
 
 #define POOL_SIZE 10
 #define MAX_TIMEOUT_SEC 1

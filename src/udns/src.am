@@ -1,0 +1,25 @@
+liboss_core_la_SOURCES +=  \
+	udns/udns_bl.c \
+	udns/udns_dn.c \
+	udns/udns_init.c  \
+	udns/udns_misc.c   \
+	udns/udns_resolver.c  \
+	udns/udns_rr_mx.c     \
+	udns/udns_rr_ptr.c  \
+	udns/udns_rr_txt.c \
+	udns/udns_codes.c  \
+	udns/udns_dntosp.c  \
+	udns/udns_jran.c  \
+	udns/udns_parse.c  \
+	udns/udns_rr_a.c      \
+	udns/udns_rr_naptr.c  \
+	udns/udns_rr_srv.c  \
+	udns/udns_XtoX.c \
+	udns/dnsarecord.cpp  \
+	udns/dnscontext.cpp  \
+	udns/dnsmxrecord.cpp  \
+	udns/dnsnaptrrecord.cpp  \
+	udns/dnsptrrecord.cpp  \
+	udns/dnsresolver.cpp  \
+	udns/dnssrvrecord.cpp  \
+	udns/dnstxtrecord.cpp

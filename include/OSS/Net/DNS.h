@@ -28,20 +28,18 @@
 #include <boost/tuple/tuple.hpp>
 #include "OSS/OSS.h"
 
-#include "OSS/UDNS/udnspp/dnsnaptrrecord.h"
-#include "OSS/UDNS/udnspp/dnssrvrecord.h"
-#include "OSS/UDNS/udnspp/dnsptrrecord.h"
-#include "OSS/UDNS/udnspp/dnsrrcommon.h"
-#include "OSS/UDNS/udnspp/dnstxtrecord.h"
-#include "OSS/UDNS/udnspp/dnsresolver.h"
-#include "OSS/UDNS/udnspp/dnscontext.h"
-#include "OSS/UDNS/udnspp/dnsmxrecord.h"
-#include "OSS/UDNS/udnspp/dnsarecord.h"
-#include "OSS/UDNS/udnspp/dnscache.h"
+#include "OSS/UDNS/dnsnaptrrecord.h"
+#include "OSS/UDNS/dnssrvrecord.h"
+#include "OSS/UDNS/dnsptrrecord.h"
+#include "OSS/UDNS/dnsrrcommon.h"
+#include "OSS/UDNS/dnstxtrecord.h"
+#include "OSS/UDNS/dnsresolver.h"
+#include "OSS/UDNS/dnscontext.h"
+#include "OSS/UDNS/dnsmxrecord.h"
+#include "OSS/UDNS/dnsarecord.h"
+#include "OSS/UDNS/dnscache.h"
 
 namespace OSS {
-
-  namespace UDNS = udnspp;
   //
   // A Record Types
   //

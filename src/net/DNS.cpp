@@ -516,13 +516,13 @@ dns_srv_record_list dns_lookup_srv(const std::string& query)
 
 #else //DNS_USE_UDNSPP
 
-#include <udnspp/dnsresolver.h>
+#include <OSS/UDNS/dnsresolver.h>
 #include "OSS/Net/IPAddress.h"
 
 namespace OSS {
 
   
-using namespace udnspp;
+using namespace OSS::UDNS;
 
 static DNSResolver gResolver;  
   
