@@ -23,5 +23,6 @@ include OSS/UTL/include.am
 include OSS/wsinclude.am
 include OSS/ZMQ/include.am
 include OSS/Metrics/include.am
+include OSS/UDNS/include.am
 
 DISTCLEANFILES = Makefile.in
