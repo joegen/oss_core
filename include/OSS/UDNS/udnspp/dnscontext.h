@@ -49,6 +49,11 @@ public:
   dns_ctx* context(bool autoOpen);
 
   static DNSContext* defaultContext();
+  
+  bool clearServers();
+  
+  bool addServer(const std::string& server);
+  
 protected:
   dns_ctx* _pCtx;
   bool _canFreeCtx;
@@ -87,6 +92,16 @@ inline bool DNSContext::setFlags(int flags)
 inline dns_ctx* DNSContext::context()
 {
   return context(true);
+}
+
+inline bool DNSContext::clearServers()
+{
+  return dns_add_serv(_pCtx, 0) == 0;
+}
+  
+inline bool DNSContext::addServer(const std::string& server)
+{
+  return dns_add_serv(_pCtx, server.c_str()) == 0;
 }
 
 
