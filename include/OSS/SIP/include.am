@@ -49,7 +49,6 @@ nobase_include_HEADERS += \
     OSS/SIP/B2BUA/B2BUA.h \
     OSS/SIP/B2BUA/SIPB2BClientTransaction.h \
     OSS/SIP/B2BUA/SIPB2BHandler.h \
-    OSS/SIP/B2BUA/SIPB2BScriptableHandler.h \
     OSS/SIP/B2BUA/SIPB2BTransaction.h \
     OSS/SIP/B2BUA/SIPB2BTransactionManager.h \
     OSS/SIP/B2BUA/SIPB2BContact.h \
@@ -67,5 +66,53 @@ nobase_include_HEADERS += \
     OSS/SIP/SIPWebSocketTlsConnection.h \
     OSS/SIP/SIPWebSocketTlsConnectionManager.h \
     OSS/SIP/SIPWebSocketTlsListener.h \
-    OSS/SIP/core_hep.h
-
+    OSS/SIP/core_hep.h \
+    OSS/SIP/SBC/SBCRegistrar.h \
+    OSS/SIP/SBC/SBCInfoBehavior.h \
+    OSS/SIP/SBC/SBCContact.h \
+    OSS/SIP/SBC/SBCRegistrationRecord.h \
+    OSS/SIP/SBC/SBCException.h \
+    OSS/SIP/SBC/SBCNotifyBehavior.h \
+    OSS/SIP/SBC/SBCReferBehavior.h \
+    OSS/SIP/SBC/SBCManager.h \
+    OSS/SIP/SBC/SBCPlugin.h \
+    OSS/SIP/SBC/SBCExec.h \
+    OSS/SIP/SBC/SBCPluginManager.h \
+    OSS/SIP/SBC/SBCSDPBehavior.h \
+    OSS/SIP/SBC/SBCPrackBehavior.h \
+    OSS/SIP/SBC/SBCDefaultBehavior.h \
+    OSS/SIP/SBC/SBCRegisterBehavior.h \
+    OSS/SIP/SBC/SBCRFC2543HoldFix.h \
+    OSS/SIP/SBC/SBCExecBehavior.h \
+    OSS/SIP/SBC/SBCSubscribeBehavior.h \
+    OSS/SIP/SBC/SBCCancelBehavior.h \
+    OSS/SIP/SBC/SBCPublishBehavior.h \
+    OSS/SIP/SBC/SBCMessageBehavior.h \
+    OSS/SIP/SBC/SBCInviteBehavior.h \
+    OSS/SIP/SBC/SBCOptionsBehavior.h \
+    OSS/SIP/SBC/SBCUpdateBehavior.h \
+    OSS/SIP/SBC/SBCDialogStateManager.h \
+    OSS/SIP/SBC/SBCMediaProxyClient.h \
+    OSS/SIP/SBC/SBCMediaProxy.h \
+    OSS/SIP/SBC/SBC.h \
+    OSS/SIP/SBC/SBCPersistent.h \
+    OSS/SIP/SBC/SBCByeBehavior.h \
+    OSS/SIP/SBC/SBCStaticRouter.h \
+    OSS/SIP/SBC/SBCCDREvent.h \
+    OSS/SIP/SBC/SBCCDRManager.h \
+    OSS/SIP/SBC/SBCCDRRecord.h \
+    OSS/SIP/SBC/SBCRedisConfig.h \
+    OSS/SIP/SBC/SBCRedisManager.h \
+    OSS/SIP/SBC/SBCRedisEventHandler.h \
+    OSS/SIP/SBC/SBCChannelLimits.h \
+    OSS/SIP/SBC/SBCAliasMap.h \
+    OSS/SIP/SBC/SBCAccounts.h \
+    OSS/SIP/SBC/SBCAccountRecord.h \
+    OSS/SIP/SBC/SBCAuthenticator.h \
+    OSS/SIP/SBC/SBCAutoBanRules.h \
+    OSS/SIP/SBC/SBCAuxiliarySocket.h \
+    OSS/SIP/SBC/SBCConsole.h \
+    OSS/SIP/SBC/SBCJsonRpcConnector.h \
+    OSS/SIP/SBC/SBCDomainLimits.h \
+    OSS/SIP/SBC/SBCJSModuleManager.h \
+    OSS/SIP/SBC/SBCJsonRpcHandler.h

@@ -1,0 +1,53 @@
+liboss_core_la_SOURCES +=  \
+  sbc/SBCRegistrar.cpp \
+  sbc/SBCDefaultBehavior.cpp \
+  sbc/SBCContact.cpp \
+  sbc/SBCOptionsBehavior.cpp \
+  sbc/SBCPublishBehavior.cpp \
+  sbc/SBCDialogStateManager.cpp \
+  sbc/SBCSDPBehavior.cpp \
+  sbc/SBCNotifyBehavior.cpp \
+  sbc/SBCSubscribeBehavior.cpp \
+  sbc/SBCCancelBehavior.cpp \
+  sbc/SBCInviteBehavior.cpp \
+  sbc/SBCExec.cpp \
+  sbc/SBCReferBehavior.cpp \
+  sbc/SBCUpdateBehavior.cpp \
+  sbc/SBCExecBehavior.cpp \
+  sbc/SBCPluginManager.cpp \
+  sbc/SBCRFC2543HoldFix.cpp \
+  sbc/SBCPrackBehavior.cpp \
+  sbc/SBCInfoBehavior.cpp \
+  sbc/SBCManager.cpp \
+  sbc/SBCRegistrationRecord.cpp \
+  sbc/SBCByeBehavior.cpp \
+  sbc/SBCPersistent.cpp \
+  sbc/SBCRegisterBehavior.cpp \
+  sbc/SBCMediaProxyClient.cpp \
+  sbc/SBCMediaProxy.cpp \
+  sbc/SBCMessageBehavior.cpp \
+  sbc/SBCStaticRouter.cpp \
+  sbc/SBCCDRRecord.cpp \
+  sbc/SBCCDRManager.cpp \
+  sbc/SBCRedisConfig.cpp \
+  sbc/SBCRedisManager.cpp \
+  sbc/SBCRedisEventHandler.cpp \
+  sbc/SBCChannelLimits.cpp \
+  sbc/SBCAliasMap.cpp \
+  sbc/SBCAccounts.cpp \
+  sbc/SBCAccountRecord.cpp \
+  sbc/SBCAuthenticator.cpp \
+  sbc/SBCAutoBanRules.cpp \
+  sbc/SBCAuxiliarySocket.cpp \
+  sbc/SBCConsole.cpp \
+  sbc/SBCJsonRpcConnector.cpp \
+  sbc/SBCDomainLimits.cpp \
+  sbc/SBCJSModuleManager.cpp  \
+  sbc/SBCJsonRpcHandler.cpp
+
+
+
+
+
+
+

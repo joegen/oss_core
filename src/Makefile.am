@@ -79,6 +79,7 @@ include sipep/src.am
 include ep/src.am
 include rtp/src.am
 include b2bua/src.am
+include sbc/src.am
 
 
 DISTCLEANFILES = Makefile.in

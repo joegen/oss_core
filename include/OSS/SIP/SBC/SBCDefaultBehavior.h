@@ -1,6 +1,10 @@
-// Library: OSS_CORE - Foundation API for SIP B2BUA
+// OSS Software Solutions Application Programmer Interface
+// 
+// Author: Joegen E. Baclor - mailto:joegen@ossapp.com
+//
+// Package: SBC
+//
 // Copyright (c) OSS Software Solutions
-// Contributor: Joegen Baclor - mailto:joegen@ossapp.com
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
@@ -16,55 +20,40 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-#ifndef SIPB2BSCRIPTABLEHANDLER_H_INCLUDED
-#define SIPB2BSCRIPTABLEHANDLER_H_INCLUDED
+#ifndef SIP_SBCDFBEHAV_INCLUDED
+#define SIP_SBCDFBEHAV_INCLUDED
 
-#include "OSS/build.h"
-#if ENABLE_FEATURE_B2BUA
-#if ENABLE_FEATURE_V8
-
-#include <map>
-#include "OSS/UTL/Cache.h"
+#include "OSS/SIP/SBC/SBC.h"
+#include "OSS/SIP/SBC/SBCException.h"
+#include "OSS/SIP/B2BUA/SIPB2BHandler.h"
+#include "OSS/Persistent/ClassType.h"
 #include "OSS/SIP/SIPMessage.h"
 #include "OSS/SIP/SIPRequestLine.h"
 #include "OSS/SIP/SIPURI.h"
 #include "OSS/SIP/SIPFrom.h"
 #include "OSS/SIP/SIPContact.h"
 #include "OSS/SIP/SIPRoute.h"
-#include "OSS/SIP/B2BUA/SIPB2BHandler.h"
-#include "OSS/SIP/B2BUA/SIPB2BContact.h"
-#include "OSS/SIP/B2BUA/SIPB2BDialogData.h"
-#include "OSS/RTP/RTPProxyManager.h"
+#include "OSS/Persistent/ClassType.h"
+#include "OSS/Persistent/DataType.h"
+#include "OSS/UTL/Cache.h"
+#include "OSS/SIP/SBC/SBCContact.h"
 
 namespace OSS {
 namespace SIP {
-namespace B2BUA {
+namespace SBC {
 
-class SIPB2BTransactionManager;
-class SIPB2BDialogStateManager;
+class SBCManager;
 
-class OSS_API SIPB2BScriptableHandler : public OSS::SIP::B2BUA::SIPB2BHandler
+class OSS_API SBCDefaultBehavior : public OSS::SIP::B2BUA::SIPB2BHandler
 {
 public:
+  SBCDefaultBehavior(SBCManager* pManager, 
+    OSS::SIP::B2BUA::SIPB2BHandler::MessageType type = OSS::SIP::B2BUA::SIPB2BHandler::TYPE_ANY,
+    const std::string& contextName = "SBC Default Request Handler");
+    /// Creates a new SBC default behavior
+    /// This is the base class of all SBC behaviors
 
-  enum MessageType
-  {
-    TYPE_INBOUND,
-    TYPE_AUTH,
-    TYPE_ROUTE,
-    TYPE_ROUTE_FAILOVER,
-    TYPE_OUTBOUND_REQUEST,
-    TYPE_OUTBOUND_RESPONSE
-  };
-
-  SIPB2BScriptableHandler(
-    SIPB2BTransactionManager* pManager,
-    SIPB2BDialogStateManager* pDialogState,
-    const std::string& contextName = "B2BUA Scriptable Handler");
-    /// Creates a new B2BUA default behavior
-    /// This is the base class of all B2BUA behaviors
-
-  virtual ~SIPB2BScriptableHandler();
+  virtual ~SBCDefaultBehavior();
     /// Destroys the default behavior
 
   virtual void initialize();
@@ -74,13 +63,13 @@ public:
     /// Called by the B2BUA before a handler is destroyed
 
   virtual SIPMessage::Ptr onTransactionCreated(
-    const SIPMessage::Ptr& pRequest, OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction);
+    const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction);
     /// Called by runtask signalling the creation of the transaction.
     /// This precedes any other transaction callbacks and therefore is the best place
     /// to initialize anything that would be needed by the transaction processing
 
   virtual SIPMessage::Ptr onAuthenticateTransaction(
-    const SIPMessage::Ptr& pRequest, OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction);
+    const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction);
     /// Authenticate the new Transaction request,
     ///
     /// This method is called from the B2B Transaction runTask().
@@ -96,7 +85,7 @@ public:
 
   virtual SIPMessage::Ptr onRouteTransaction(
     SIPMessage::Ptr& pRequest,
-    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
+    SIPB2BTransaction::Ptr pTransaction,
     OSS::Net::IPAddress& localInterface,
     OSS::Net::IPAddress& target);
     /// Route the new request.
@@ -116,20 +105,26 @@ public:
 
   SIPMessage::Ptr onRouteOutOfDialogTransaction(
     SIPMessage::Ptr& pRequest,
-    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
+    SIPB2BTransaction::Ptr pTransaction,
     OSS::Net::IPAddress& localInterface,
     OSS::Net::IPAddress& target);
 
 
   SIPMessage::Ptr onRouteUpperReg(
     SIPMessage::Ptr& pRequest,
-    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
+    SIPB2BTransaction::Ptr pTransaction,
     OSS::Net::IPAddress& localInterface,
     OSS::Net::IPAddress& target);
 
+  SIPMessage::Ptr onRouteLocalReg(
+    SIPMessage::Ptr& pRequest,
+    SIPB2BTransaction::Ptr pTransaction,
+    std::vector<OSS::Net::IPAddress>& localInterfaces,
+    std::vector<OSS::Net::IPAddress>& targets);
+
   virtual SIPMessage::Ptr onProcessRequestBody(
     SIPMessage::Ptr& pRequest,
-    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction);
+    SIPB2BTransaction::Ptr pTransaction);
     /// This method allows the application to
     /// process the body of the request
     /// before it gets sent out.
@@ -146,7 +141,7 @@ public:
 
   virtual void onProcessResponseBody(
     SIPMessage::Ptr& pRequest,
-    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction);
+    SIPB2BTransaction::Ptr pTransaction);
     /// This method allows the application to
     /// process the body of the response
     /// before it gets sent out.
@@ -159,7 +154,7 @@ public:
 
   virtual void onProcessOutbound(
     SIPMessage::Ptr& pRequest,
-    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction);
+    SIPB2BTransaction::Ptr pTransaction);
     /// This is the last chance for the application to process
     /// the outbound request before it gets sent out to the transport.
     ///
@@ -171,7 +166,7 @@ public:
   bool onRouteResponse(
     const OSS::SIP::SIPMessage::Ptr& pRequest,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport,
-    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
+    SIPB2BTransaction::Ptr pTransaction,
     OSS::Net::IPAddress& target);
    /// This is normally the place where the application can specify the
    /// target for a reponse.
@@ -179,7 +174,7 @@ public:
   virtual SIPMessage::Ptr onGenerateLocalResponse(
     const OSS::SIP::SIPMessage::Ptr& pRequest,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport,
-    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction);
+    SIPB2BTransaction::Ptr pTransaction);
     /// This will be called by the B2BUA if the transaction property "generate-local-response"
     /// is set to 1 by the route handler.  This is used by the applicaiton layer to allow
     /// transactions to directly respond to the request without waiting for the remote
@@ -187,12 +182,12 @@ public:
 
   virtual void onProcessResponseInbound(
     SIPMessage::Ptr& pResponse,
-    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction);
+    SIPB2BTransaction::Ptr pTransaction);
     /// Process the newly received response
 
   virtual void onProcessResponseOutbound(
     SIPMessage::Ptr& pResponse,
-    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction);
+    SIPB2BTransaction::Ptr pTransaction);
     /// This is the last chance for the application to process
     /// the outbound response before it gets sent out to the transport.
     ///
@@ -204,12 +199,12 @@ public:
   virtual void onTransactionError(
     OSS::SIP::SIPTransaction::Error e,
     SIPMessage::Ptr pErrorResponse,
-    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction);
+    SIPB2BTransaction::Ptr pTransaction);
     /// Signals that an error occured on the transaction
     ///
     /// The transaction will be destroyed automatically after this function call
 
-  virtual void onDestroyTransaction(OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction);
+  virtual void onDestroyTransaction(SIPB2BTransaction::Ptr pTransaction);
     /// Signals that trhe transaction is about to be destroyed.
     /// This function will not invalidate the shared pointers
     /// to the transaction.  It is a mere indication that the transaction
@@ -218,25 +213,33 @@ public:
   virtual SIPMessage::Ptr onInvokeLocalHandler(
     const OSS::SIP::SIPMessage::Ptr& pRequest,
     const OSS::SIP::SIPTransportSession::Ptr& pTransport,
-    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction);
+    SIPB2BTransaction::Ptr pTransaction);
     /// This will be called by the B2BUA if the transaction property "invoke-local-handler"
     /// is set to 1 by the route handler.  This is used by the applicaiton layer to allow
     /// transactions to process a request locally.  Example is local registration.
 
-  
-  SIPB2BTransactionManager* getManager() const;
-    /// Return a pointer to the SIPB2BTransactionManager
+  SBCManager* getManager() const;
+    /// Return a pointer to the SBCManager
 
+  void sendUDPKeepAlive(const OSS::Net::IPAddress& localInterface,
+    const OSS::Net::IPAddress& target);
+    /// Send CRLF/CRLF keep-alive
+  
+  void pauseKeepAlive(bool pause);
+    /// Pause sending of keep-alive
+  
+  void startKeepAlive();
+    /// Start sending of keep-alive
 
   virtual bool onClientTransactionCreated(
-    const SIPMessage::Ptr& pRequest, OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction);
+    const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction);
     /// Called by runtask signalling the creation of the transaction.
     /// This precedes any other transaction callbacks and therefore is the best place
     /// to initialize anything that would be needed by the transaction processing
 
   virtual bool onRouteClientTransaction(
     SIPMessage::Ptr& pRequest,
-    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
+    SIPB2BTransaction::Ptr pTransaction,
     OSS::Net::IPAddress& localInterface,
     OSS::Net::IPAddress& target);
     /// Route the new request.
@@ -255,91 +258,30 @@ public:
 
   void onProcessClientResponse(
     SIPMessage::Ptr& pResponse,
-    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction);
+    SIPB2BTransaction::Ptr pTransaction);
     /// Process the newly received response
 
   virtual void onClientTransactionError(
     OSS::SIP::SIPTransaction::Error e,
     SIPMessage::Ptr pErrorResponse,
-    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction);
+    SIPB2BTransaction::Ptr pTransaction);
     /// Signals that an error occured on the transaction
     ///
     /// The transaction will be destroyed automatically after this function call
-
-  virtual bool onProcessRequest(
-    OSS::SIP::B2BUA::SIPB2BTransaction::Ptr pTransaction,
-    MessageType type, 
-    const OSS::SIP::SIPMessage::Ptr& request);
-    /// Send the SIPRequest to the application.  This means that the scripting
-    /// engine is not initialized for this message type. Otherwise, the javascript engine
-    /// will handle the request
-
-  //
-  // INVITE handlers
-  //
-  virtual void onProcessAckOr2xxRequest(
-    const OSS::SIP::SIPMessage::Ptr& pMsg,
-    const OSS::SIP::SIPTransportSession::Ptr& pTransport);
-    /// Callback for ACK and 200 OK retransmission for INVITE
-
-  //
-  // REGISTER handlers
-  //
-  void sendOptionsKeepAlive(RegData& regData);
-  void handleOptionsResponse(
-    const OSS::SIP::SIPTransaction::Error& e,
-    const OSS::SIP::SIPMessage::Ptr& pMsg,
-    const OSS::SIP::SIPTransportSession::Ptr& pTransport,
-    const OSS::SIP::SIPTransaction::Ptr& pTransacion);
-    /// This callback handles responses to the OPTIONS keep-alive
-
-  bool getRegistrationId(const ContactURI& curi, std::string& regId) const;
-  bool getRegistrationId(const SIPURI& binding, std::string& regId) const;
-
-#if ENABLE_FEATURE_RTP
-  OSS::RTP::RTPProxyManager& rtpProxy();
-#endif
   
-  bool getExternalAddress(
-    const OSS::Net::IPAddress& internalIp,
-    std::string& externalIp) const;
-    /// Return the external interface for a given internal listener
+  unsigned long logPacketRate(const SIPMessage::Ptr& pRequest, SIPB2BTransaction::Ptr pTransaction);
+  unsigned long getPacketsPerSecond() const;
+  void setMaxPacketsPerSecond(unsigned long packetsPerSecond);
+  unsigned long getMaxPacketsPerSecond() const;
+  
 protected:
-  void runOptionsThread();
-    /// This method runs the OPTIONS keep-alive loop
-
-  void runOptionsResponseThread();
-    /// This method runs the OPTIONS keep-alive response loop
-
-protected:
-  SIPB2BTransactionManager* _pTransactionManager;
-  SIPB2BDialogStateManager* _pDialogState;
-
-  //
-  // INVITE related variables
-  //
-  OSS::CacheManager _2xxRetransmitCache;
-  OSS::mutex_read_write _rwInvitePoolMutex;
-  std::map<std::string, SIPMessage::Ptr> _invitePool;
-  //
-  // REGISTER related variables
-  //
-  boost::thread* _pOptionsThread;
-  OSS::semaphore _optionsThreadExit;
-  OSS::BlockingQueue<std::string> _optionsResponseQueue;
-  boost::thread* _pOptionsResponseThread;
-  OSS::semaphore _optionsResponseThreadExit;
-  OSS::SIP::SIPTransaction::Callback _keepAliveResponseCb;
-  OSS::mutex_read_write _rwKeepAliveListMutex;
-  typedef std::map<OSS::Net::IPAddress, OSS::Net::IPAddress> KeepAliveList;
-  KeepAliveList _keepAliveList;
-  OSS::thread_pool _threadPool;
-#if ENABLE_FEATURE_RTP
-  //
-  // RTP Proxy
-  //
-  OSS::RTP::RTPProxyManager _rtpProxy;
-#endif
+  SBCManager* _pManager;
+  bool _pauseKeepAlive;
+  
+  mutable OSS::mutex_critic_sec _packetRateMutex;
+  unsigned long _packetsPerSecond;
+  OSS::UInt64 _lastPacketRateMarker;
+  unsigned long _maxPacketsPerSecond;
 };
 
 //
@@ -347,28 +289,31 @@ protected:
 //
 
 
-inline SIPB2BTransactionManager* SIPB2BScriptableHandler::getManager() const
+inline SBCManager* SBCDefaultBehavior::getManager() const
 {
-  return _pTransactionManager;
+  return _pManager;
 }
 
-#if ENABLE_FEATURE_RTP
-inline OSS::RTP::RTPProxyManager& SIPB2BScriptableHandler::rtpProxy()
+inline void SBCDefaultBehavior::pauseKeepAlive(bool pause)
 {
-  return _rtpProxy;
-}
-#endif
-
-inline bool SIPB2BScriptableHandler::getExternalAddress(
-    const OSS::Net::IPAddress& internalIp,
-    std::string& externalIp) const
-{
-  return _pTransactionManager->stack().transport().getExternalAddress(internalIp, externalIp);
+  _pauseKeepAlive = pause;
 }
 
-} } } // OSS::SIP::B2BUA
+inline void SBCDefaultBehavior::startKeepAlive()
+{
+  pauseKeepAlive(false);
+}
 
-#endif // ENABLE_FEATURE_V8
-#endif // ENABLE_FEATURE_B2BUA
+inline void SBCDefaultBehavior::setMaxPacketsPerSecond(unsigned long packetsPerSecond)
+{
+  _maxPacketsPerSecond = packetsPerSecond;
+}
 
-#endif // SIPB2BSCRIPTABLEHANDLER_H_INCLUDED
+inline unsigned long SBCDefaultBehavior::getMaxPacketsPerSecond() const
+{
+  return _maxPacketsPerSecond;
+}
+
+} } } // OSS::SIP::SBC
+
+#endif // SIP_SBCDFBEHAV_INCLUDED
