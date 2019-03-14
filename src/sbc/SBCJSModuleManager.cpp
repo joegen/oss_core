@@ -62,10 +62,18 @@ SBCJSModuleManager::~SBCJSModuleManager()
   stop();
 }
 
-void SBCJSModuleManager::run()
+void SBCJSModuleManager::run(const std::string& scriptFile, bool threaded)
 {
-  assert(!_pThread);
-  _pThread = new boost::thread(boost::bind(&SBCJSModuleManager::internal_run, this));
+  _scriptFile = scriptFile;
+  if (threaded)
+  {
+    assert(!_pThread);
+    _pThread = new boost::thread(boost::bind(&SBCJSModuleManager::internal_run, this));
+  }
+  else
+  {
+    internal_run();
+  }
 }
 
 void SBCJSModuleManager::stop()
@@ -87,8 +95,7 @@ void SBCJSModuleManager::internal_run()
 {
   OSS_LOG_INFO("SBCModuleManager - Running root isolate");
   _pIsolate = JSIsolateManager::instance().rootIsolate();
-  std::string path = OSS::system_libdir() + "/oss_modules/karoo/_karoo_modules.js";
-  boost::filesystem::path script(path);
+  boost::filesystem::path script(_scriptFile);
   JSIsolateManager::instance().run(
     _pIsolate,
     script

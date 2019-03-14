@@ -22,17 +22,18 @@
 
 
 #include "OSS/Persistent/RedisClient.h"
-#include "OSS/SIP/SBC/SBCRedisConfig.h"
+#include "OSS/SIP/SBC/SBCWorkSpaceConfig.h"
 #include "OSS/UTL/BlockingQueue.h"
 #include "OSS/JSON/reader.h"
 #include "OSS/JSON/writer.h"
+#include "OSS/SIP/SBC/SBCWorkSpace.h"
 
 
 namespace OSS {
 namespace SIP {
 namespace SBC {
 
-class SBCRedisManager
+class SBCWorkSpaceManager
 {
 public:
 
@@ -49,19 +50,19 @@ public:
     SBC_ROUTEDB = 8        
   };
   
-  typedef boost::shared_ptr<Persistent::RedisBroadcastClient> WorkSpace;
+  typedef boost::shared_ptr<SBCWorkSpace> WorkSpace;
   typedef boost::shared_ptr<Persistent::RedisClient> Subscriber;
   typedef BlockingQueue<json::Object*> EventQueue;
   typedef boost::function<void(const std::string& /*eventName*/, json::Object& /*eventObject*/)> EventCallback;
   typedef std::map<std::string, EventCallback> EventHandlers; 
   
-  SBCRedisManager();
+  SBCWorkSpaceManager();
   
-  ~SBCRedisManager();
+  ~SBCWorkSpaceManager();
   
   void initialize(const boost::filesystem::path& configFile);
   
-  void initialize(SBCRedisConfig& config);
+  void initialize(SBCWorkSpaceConfig& config);
   
   void stop();
    
@@ -89,13 +90,7 @@ public:
   
   void addEventHandler(const std::string& eventName, const EventCallback& handler);
   
-protected:
-  void handleSubscription();
-  
-  bool subscribe();
-  
-  void dispatchEvent(json::Object& pEvent);
-  
+ 
 private:
   
   WorkSpace _systemDb;
@@ -120,57 +115,57 @@ private:
 // Inlines
 //
 
-inline const SBCRedisManager::WorkSpace& SBCRedisManager::getSystemDb() const
+inline const SBCWorkSpaceManager::WorkSpace& SBCWorkSpaceManager::getSystemDb() const
 {
   return getWorkSpace(SBC_SYSTEMDB);
 }
   
-inline const SBCRedisManager::WorkSpace& SBCRedisManager::getRegDb() const
+inline const SBCWorkSpaceManager::WorkSpace& SBCWorkSpaceManager::getRegDb() const
 {
   return getWorkSpace(SBC_REGDB);
 }
 
-inline const SBCRedisManager::WorkSpace& SBCRedisManager::getDialogDb() const
+inline const SBCWorkSpaceManager::WorkSpace& SBCWorkSpaceManager::getDialogDb() const
 {
   return getWorkSpace(SBC_DIALOGDB);
 }
 
-inline const SBCRedisManager::WorkSpace& SBCRedisManager::getRTPDb() const
+inline const SBCWorkSpaceManager::WorkSpace& SBCWorkSpaceManager::getRTPDb() const
 {
   return getWorkSpace(SBC_RTPDB);
 }
 
-inline const SBCRedisManager::WorkSpace& SBCRedisManager::getCDRDb() const
+inline const SBCWorkSpaceManager::WorkSpace& SBCWorkSpaceManager::getCDRDb() const
 {
   return getWorkSpace(SBC_CDRDB);
 }
 
-inline const SBCRedisManager::WorkSpace& SBCRedisManager::getAccountDb() const
+inline const SBCWorkSpaceManager::WorkSpace& SBCWorkSpaceManager::getAccountDb() const
 {
   return getWorkSpace(SBC_ACCOUNTDB);
 }
 
-inline const SBCRedisManager::WorkSpace& SBCRedisManager::getLocalRegDb() const
+inline const SBCWorkSpaceManager::WorkSpace& SBCWorkSpaceManager::getLocalRegDb() const
 {
   return getWorkSpace(SBC_LOCAL_REGDB);
 }
 
-inline const SBCRedisManager::WorkSpace& SBCRedisManager::getBannedAddressDb() const
+inline const SBCWorkSpaceManager::WorkSpace& SBCWorkSpaceManager::getBannedAddressDb() const
 {
   return getWorkSpace(SBC_BANNED_ADDRESSDB);
 }
 
-inline const SBCRedisManager::WorkSpace& SBCRedisManager::getRouteDb() const
+inline const SBCWorkSpaceManager::WorkSpace& SBCWorkSpaceManager::getRouteDb() const
 {
   return getWorkSpace(SBC_ROUTEDB);
 }
 
-inline const std::string& SBCRedisManager::getChannelName() const
+inline const std::string& SBCWorkSpaceManager::getChannelName() const
 {
   return _channelName;
 }
 
-inline void SBCRedisManager::addEventHandler(const std::string& eventName, const EventCallback& handler)
+inline void SBCWorkSpaceManager::addEventHandler(const std::string& eventName, const EventCallback& handler)
 {
   _handlers[eventName] = handler;
 }

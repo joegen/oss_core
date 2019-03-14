@@ -53,11 +53,11 @@ SBCStaticRouter::~SBCStaticRouter()
 bool SBCStaticRouter::loadStaticRoutes()
 {
   
-  SBCRedisManager::WorkSpace pRedis = _pManager->redis().getSystemDb();
+  SBCWorkSpaceManager::WorkSpace pWorkSpace = _pManager->workspace().getSystemDb();
 
   json::Object staticRoutes;
   json::Array routes;
-  if (pRedis->get("static-routes", staticRoutes))
+  if (pWorkSpace->get("static-routes", staticRoutes))
   {
     routes = staticRoutes["routes"];
   }

@@ -36,6 +36,7 @@ include js/modules/json_rpc/module.am
 include js/modules/sip-parser/module.am
 include js/modules/lexer/module.am
 include js/modules/parser/module.am
+include js/modules/sbc-hook/module.am
 
 if ENABLE_FEATURE_INOTIFY
 include js/modules/inotify/module.am

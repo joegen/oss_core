@@ -85,7 +85,7 @@ void SBCAccountRecord::toJson(json::Object& object)
   }
 }
 
-bool SBCAccountRecord::readFromRedis(const SBCRedisManager::WorkSpace& workspace, const std::string& key)
+bool SBCAccountRecord::readFromWorkSpace(const SBCWorkSpaceManager::WorkSpace& workspace, const std::string& key)
 {
   json::Object response;
   if (!workspace->get(key, response))
@@ -147,7 +147,7 @@ bool SBCAccountRecord::readFromRedis(const SBCRedisManager::WorkSpace& workspace
   return true;
 }
   
-bool SBCAccountRecord::writeToRedis(const SBCRedisManager::WorkSpace& workspace, const std::string& key)
+bool SBCAccountRecord::writeToWorkSpace(const SBCWorkSpaceManager::WorkSpace& workspace, const std::string& key)
 {
   json::Object params;
   toJson(params);

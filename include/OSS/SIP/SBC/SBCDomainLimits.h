@@ -24,7 +24,7 @@
 #define	SBCDOMAINLIMITS_H_INCLUDED
 
 
-#include "OSS/SIP/SBC/SBCRedisManager.h"
+#include "OSS/SIP/SBC/SBCWorkSpaceManager.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 #include "OSS/UTL/BlockingQueue.h"
 #include "OSS/UTL/LogFile.h"
@@ -59,7 +59,7 @@ public:
   
   std::size_t removeCall(const std::string& sessionId, const std::string& domain);
   
-  void setSystemDb(const SBCRedisManager::WorkSpace& systemDb);
+  void setSystemDb(const SBCWorkSpaceManager::WorkSpace& systemDb);
   
   std::size_t getCallCount(const std::string& domain);
   
@@ -70,13 +70,13 @@ private:
   Poco::Timestamp::TimeDiff _cacheExpire;
   Limits _limits;
   SBCManager* _pManager;
-  SBCRedisManager::WorkSpace _systemDb;
+  SBCWorkSpaceManager::WorkSpace _systemDb;
 };
 
 //
 // Inlines
 //
-inline void SBCDomainLimits::setSystemDb(const SBCRedisManager::WorkSpace& systemDb)
+inline void SBCDomainLimits::setSystemDb(const SBCWorkSpaceManager::WorkSpace& systemDb)
 {
   _systemDb = systemDb;
 }

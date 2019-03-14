@@ -280,7 +280,7 @@ void log_critical(const std::string& log)
     _consoleMutex.lock();
     if (_externalLogger)
     {
-	_externalLogger(log, PRIO_FATAL);
+	_externalLogger(log, PRIO_CRITICAL);
     }
     _consoleMutex.unlock();
     return;
@@ -309,7 +309,7 @@ void log_error(const std::string& log)
     _consoleMutex.lock();
     if (_externalLogger)
     {
-	_externalLogger(log, PRIO_FATAL);
+	_externalLogger(log, PRIO_ERROR);
     }
     _consoleMutex.unlock();
     return;
@@ -338,7 +338,7 @@ void log_warning(const std::string& log)
     _consoleMutex.lock();
     if (_externalLogger)
     {
-	_externalLogger(log, PRIO_FATAL);
+	_externalLogger(log, PRIO_WARNING);
     }
     _consoleMutex.unlock();
     return;
@@ -367,7 +367,7 @@ void log_notice(const std::string& log)
     _consoleMutex.lock();
     if (_externalLogger)
     {
-	_externalLogger(log, PRIO_FATAL);
+	_externalLogger(log, PRIO_NOTICE);
     }
     _consoleMutex.unlock();
     return;
@@ -396,7 +396,7 @@ void log_information(const std::string& log)
     _consoleMutex.lock();
     if (_externalLogger)
     {
-	_externalLogger(log, PRIO_FATAL);
+	_externalLogger(log, PRIO_INFORMATION);
     }
     _consoleMutex.unlock();
     return;
@@ -425,7 +425,7 @@ void log_debug(const std::string& log)
     _consoleMutex.lock();
     if (_externalLogger)
     {
-	_externalLogger(log, PRIO_FATAL);
+	_externalLogger(log, PRIO_DEBUG);
     }
     _consoleMutex.unlock();
     return;
@@ -454,7 +454,7 @@ void log_trace(const std::string& log)
     _consoleMutex.lock();
     if (_externalLogger)
     {
-	_externalLogger(log, PRIO_FATAL);
+	_externalLogger(log, PRIO_TRACE);
     }
     _consoleMutex.unlock();
     return;

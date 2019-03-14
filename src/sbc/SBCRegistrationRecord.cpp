@@ -62,7 +62,7 @@ SBCRegistrationRecord& SBCRegistrationRecord::operator=(const SBCRegistrationRec
   return *this;
 }
 
-bool SBCRegistrationRecord::readFromRedis(Persistent::RedisBroadcastClient& client, const std::string& key)
+bool SBCRegistrationRecord::readFromWorkSpace(SBCWorkSpace& client, const std::string& key)
 {
   _key = key;
   json::Object response;
@@ -104,7 +104,7 @@ bool SBCRegistrationRecord::readFromRedis(Persistent::RedisBroadcastClient& clie
   return true;
 }
 
-bool SBCRegistrationRecord::writeToRedis(Persistent::RedisBroadcastClient& client, const std::string& key) const
+bool SBCRegistrationRecord::writeToWorkSpace(SBCWorkSpace& client, const std::string& key) const
 {
   _key = key;
  
@@ -148,12 +148,12 @@ bool SBCRegistrationRecord::writeToRedis(Persistent::RedisBroadcastClient& clien
 }
 
 
-void SBCRegistrationRecord::eraseRedisRecord(Persistent::RedisBroadcastClient& client)
+void SBCRegistrationRecord::eraseWorkSpaceRecord(SBCWorkSpace& client)
 {
-  eraseRedisRecord(client, _key);
+  eraseWorkSpaceRecord(client, _key);
 }
 
-void SBCRegistrationRecord::eraseRedisRecord(Persistent::RedisBroadcastClient& client, const std::string& key)
+void SBCRegistrationRecord::eraseWorkSpaceRecord(SBCWorkSpace& client, const std::string& key)
 {
   client.del(key);
 }

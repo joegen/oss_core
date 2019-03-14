@@ -63,8 +63,8 @@ namespace SIP {
 namespace SBC {
 
 
-SBCManager::SBCManager(int minThreadCount, int maxThreadCount) :
-  _transactionManager(minThreadCount, maxThreadCount),
+SBCManager::SBCManager() :
+  _transactionManager(2, 8120),
   _rtpProxy(this),
   _sipConfigFile("sip.cfg"),
   _dialogs(3600*24),
@@ -95,7 +95,7 @@ SBCManager::SBCManager(int minThreadCount, int maxThreadCount) :
 
 SBCManager::~SBCManager()
 {
-  _redis.stop();
+  _workspace.stop();
 }
 
 void SBCManager::initializePaths(const boost::filesystem::path& cfgDirectory)
@@ -276,11 +276,9 @@ void SBCManager::initializeUserAgent(const boost::filesystem::path& cfgDirectory
 
   SBCContact::initialize(configFile);
 
-  _redis.initialize(configFile);
+  _workspace.initialize(configFile);
   
-  _redisEventHandler.initialize(this);
-  
-  _authenticator.accounts().initialize(_redis.getAccountDb());
+  _authenticator.accounts().initialize(_workspace.getAccountDb());
   
   _staticRouter.loadStaticRoutes();
   
@@ -293,7 +291,7 @@ void SBCManager::initializeUserAgent(const boost::filesystem::path& cfgDirectory
   // Initialize the registrar endpoint
   //
   _registrar.attachSBCManager(this);
-  _registrar.setDatabase(_redis.getLocalRegDb());
+  _registrar.setDatabase(_workspace.getLocalRegDb());
   transactionManager().stack().transport().addEndpoint(&_registrar);
   _registrar.setAddress("127.0.0.1");
   _registrar.setPort("0");
@@ -302,8 +300,6 @@ void SBCManager::initializeUserAgent(const boost::filesystem::path& cfgDirectory
   _cdr.initialize(this);
   
   _jsonRpcHandler.listen();
-  
-  _jsModules.run();
 }
 
 void SBCManager::onLocalRegistrationStopped()
@@ -355,6 +351,24 @@ void SBCManager::initializeSTUNServer(const boost::filesystem::path& cfgDirector
   _stunServer.initialize(primaryAddress, secondaryAddress);
 }
 
+ bool SBCManager::initialize()
+ {
+   boost::filesystem::path configDir(SBCDirectories::instance()->getConfigDirectory().c_str());
+   if (!boost::filesystem::exists(configDir))
+   {
+     return false;
+   }
+   
+   try
+   {
+     initialize(configDir);
+     return true;
+   }
+   catch(...)
+   {
+     return false;
+   }
+ }
 void SBCManager::initialize(const boost::filesystem::path& cfgDirectory)
 {
   _configurationDirectory = boost::filesystem::system_complete(cfgDirectory);
@@ -493,75 +507,36 @@ void SBCManager::deinitialize()
   _transactionManager.deinitialize();
 }
 
-void SBCManager::run()
+bool SBCManager::run()
 {
-  _transactionManager.stack().run();
-  _dialogStateManager.run(_dialogStateDirectory);
+  try
+  {
+    _transactionManager.stack().run();
+    _dialogStateManager.run(_dialogStateDirectory);
 
-  OSS_LOG_INFO("Starting STUN Server ...");
-  if (_enableStunServer)
-  {
-    _stunServer.run();
-    OSS_LOG_INFO("STUN Server STARTED");
-  }else
-  {
-    OSS_LOG_INFO("STUN Server is DISABLED");
-  }
-
-  //
-  // connect to redis if it is configured
-  //
-  //
-  // Initialize redis
-  //
-  std::vector<Persistent::RedisClient::ConnectionInfo> redisConnections;
-  if (_enableRedis)
-  {
-    ClassType config;
-    if (!config.load(getSIPConfigurationFile()))
+    OSS_LOG_INFO("Starting STUN Server ...");
+    if (_enableStunServer)
     {
-      reportCriticalState("Unable to load sip.cfg" + getSIPConfigurationFile().string());
-      return;
+      _stunServer.run();
+      OSS_LOG_INFO("STUN Server STARTED");
+    }else
+    {
+      OSS_LOG_INFO("STUN Server is DISABLED");
     }
 
-    DataType root = config.self();
-    if (root.exists("user-agent"))
-    {
-      try
-      {
-        DataType userAgent = root["user-agent"];
-        DataType dbs = userAgent["redis-database"];
-        int dbCount = dbs.getElementCount();
-        for (int i = 0; i < dbCount; i++)
-        {
-          DataType dbInfo = dbs[i];
-          if (!dbInfo.exists("enabled") || (bool)dbInfo["enabled"])
-          {
-            Persistent::RedisClient::ConnectionInfo conn;
-            conn.host = (const char*)dbInfo["host"];
-            conn.port = (unsigned short)(int)dbInfo["port"];
-            conn.password = (const char*)dbInfo["password"];
-            redisConnections.push_back(conn);
-          }
-        }
-      }
-      catch(...)
-      {
-        reportCriticalState("Unable to load redis configuration.");
-        return;
-      }
-    }
-    _enableRedis = !redisConnections.empty();
-  }
+    _pRegisterHandler->startOptionsThread();
   
-  _pRegisterHandler->startOptionsThread();
-
+  }
+  catch(...)
+  {
+    reportCriticalState("Unable to run SBCManager");
+    return false;
+  }
+  return true;
 }
 
 void SBCManager::stop()
 {
-  _jsModules.stop();
-  
   if (_enableStunServer)
   {
     std::cout << "Stopping STUN Server ..." << std::endl;

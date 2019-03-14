@@ -25,4 +25,5 @@ nobase_include_HEADERS += \
     OSS/UTL/FileMonitor.h \
     OSS/UTL/AutoExpireSet.h \
     OSS/UTL/PropertyMapObject.h \
-    OSS/UTL/CrashHandler.h
+    OSS/UTL/CrashHandler.h \
+    OSS/UTL/Singleton.h

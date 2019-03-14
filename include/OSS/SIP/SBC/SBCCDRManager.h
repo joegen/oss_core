@@ -24,7 +24,7 @@
 #define	SBCCDRMANAGER_H_INCLUDED
 
 
-#include "OSS/SIP/SBC/SBCRedisManager.h"
+#include "OSS/SIP/SBC/SBCWorkSpaceManager.h"
 #include "OSS/SIP/SBC/SBCCDREvent.h"
 #include "OSS/SIP/SBC/SBCCDRRecord.h"
 #include "OSS/UTL/BlockingQueue.h"
@@ -79,7 +79,7 @@ public:
     const SIPTransaction::Ptr& pTransaction
   );
   
-  SBCRedisManager::WorkSpace& cdr();
+  SBCWorkSpaceManager::WorkSpace& cdr();
   
   void setCDRLifeTime(unsigned int cdrLifeTime);
   
@@ -99,8 +99,8 @@ private:
   EventQueue _eventQueue;
   boost::thread* _pEventQueueThread;
   SBCManager* _pManager;
-  SBCRedisManager* _pRedisManager;
-  SBCRedisManager::WorkSpace _pCDRDb;
+  SBCWorkSpaceManager* _pWorkSpaceManager;
+  SBCWorkSpaceManager::WorkSpace _pCDRDb;
   unsigned int _cdrLifeTime;
   OSS::UTL::LogFile _logger;
   SBCChannelLimits _channelLimits;
@@ -112,7 +112,7 @@ private:
 //
 
 
-inline SBCRedisManager::WorkSpace& SBCCDRManager::cdr()
+inline SBCWorkSpaceManager::WorkSpace& SBCCDRManager::cdr()
 {
   return _pCDRDb;
 }

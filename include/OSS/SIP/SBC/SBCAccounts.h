@@ -25,7 +25,7 @@
 #define	SBCACCOUNTS_H_INCLUDED
 
 
-#include "OSS/SIP/SBC/SBCRedisManager.h"
+#include "OSS/SIP/SBC/SBCWorkSpaceManager.h"
 #include "OSS/SIP/SBC/SBCAccountRecord.h"
 
 
@@ -43,9 +43,9 @@ public:
   
   ~SBCAccounts();
   
-  void initialize(const SBCRedisManager::WorkSpace& workspace);
+  void initialize(const SBCWorkSpaceManager::WorkSpace& workspace);
   
-  const SBCRedisManager::WorkSpace& workspace() const;
+  const SBCWorkSpaceManager::WorkSpace& workspace() const;
   
   bool findAccount(const std::string& identity, SBCAccountRecord& account) const;
   
@@ -61,7 +61,7 @@ public:
 protected:
   void determineRealms();
 private:
-  SBCRedisManager::WorkSpace _workspace;
+  SBCWorkSpaceManager::WorkSpace _workspace;
   VolatileAccounts _volatileAccounts;
   mutable OSS::mutex_critic_sec _volatileAccountsMutex;
   Realms _realms;
@@ -74,7 +74,7 @@ private:
 // Inlines
 //
 
-inline const SBCRedisManager::WorkSpace& SBCAccounts::workspace() const
+inline const SBCWorkSpaceManager::WorkSpace& SBCAccounts::workspace() const
 {
   return _workspace;
 }

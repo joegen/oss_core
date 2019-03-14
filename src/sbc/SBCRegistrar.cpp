@@ -221,7 +221,7 @@ bool SBCRegistrar::storeBinding(const std::string& key, const SBCRegistrationRec
   {
     return false;
   }
-  return binding.writeToRedis(*_regDb, key);
+  return binding.writeToWorkSpace(*_regDb, key);
 }
 
 void SBCRegistrar::dispatchContacts(const SIPMessage::Ptr& pRequest, const SIPURI& aor)
@@ -246,7 +246,7 @@ void SBCRegistrar::dispatchContacts(const SIPMessage::Ptr& pRequest, const SIPUR
   for (std::vector<std::string>::iterator iter = keys.begin(); iter != keys.end(); iter++)
   {
     SBCRegistrationRecord binding;
-    if (binding.readFromRedis(*_regDb, *iter))
+    if (binding.readFromWorkSpace(*_regDb, *iter))
     {
       int elapsedTime = (OSS::getTime() - binding.timeStamp()) / 1000;
       int actualExpires = binding.expires() - elapsedTime;
@@ -431,7 +431,7 @@ bool SBCRegistrar::getRegistrations(const std::string& identity, Registrations& 
   for (std::vector<std::string>::iterator iter = keys.begin(); iter != keys.end(); iter++)
   {
     SBCRegistrationRecord registration;
-    if (registration.readFromRedis(*_regDb, *iter))
+    if (registration.readFromWorkSpace(*_regDb, *iter))
     {
       registrations.insert(registration);
     }

@@ -24,7 +24,7 @@
 #include <OSS/SIP/SIPHeaderTokens.h>
 
 #include "OSS/SIP/SBC/SBCCDRManager.h"
-#include "OSS/SIP/SBC/SBCRedisConfig.h"
+#include "OSS/SIP/SBC/SBCWorkSpaceConfig.h"
 #include "OSS/SIP/SBC/SBCCDRRecord.h"
 #include "OSS/SIP/SIPFrom.h"
 #include "OSS/SIP/SIPContact.h"
@@ -60,7 +60,7 @@ static void flush_stale_records(SBCCDRManager* pManager, bool force = false)
     for (std::vector<std::string>::iterator iter = keys.begin(); iter != keys.end(); iter++)
     {
       SBCCDRRecord cdr;
-      if (cdr.readFromRedis(*(pManager->cdr()), *iter))
+      if (cdr.readFromWorkSpace(*(pManager->cdr()), *iter))
       {
         if (!cdr.connectTime() && cdr.setupTime() + 300000 < now)
         {
@@ -89,7 +89,7 @@ static void flush_record(SBCCDRManager* pManager, const std::string& sessionId, 
 static void on_handle_final(SBCCDRManager* pManager, SBCCDREvent* pEvent)
 {
   SBCCDRRecord cdr;
-  if (!cdr.readFromRedis(*(pManager->cdr()), pEvent->getSessionId()))
+  if (!cdr.readFromWorkSpace(*(pManager->cdr()), pEvent->getSessionId()))
   {
     return;
   }
@@ -128,7 +128,7 @@ static void on_handle_final(SBCCDRManager* pManager, SBCCDREvent* pEvent)
     SIP::ContactURI calledUri;
     hContact.getAt(calledUri, 0);
     cdr.calledContact() = calledUri.data();
-    cdr.writeToRedis(*(pManager->cdr()), pEvent->getSessionId(), pManager->getCDRLifeTime());
+    cdr.writeToWorkSpace(*(pManager->cdr()), pEvent->getSessionId(), pManager->getCDRLifeTime());
     
     OSS_LOG_INFO(pEvent->getRequest()->createContextId(true) << "SBCCDRManager::onHandleEvent::on_handle_final CONNECTED" 
       << " connectTime: " <<  cdr.connectTime());
@@ -172,7 +172,7 @@ static void on_handle_transferred(SBCCDRManager* pManager, SBCCDREvent* pEvent)
 static void on_handle_terminated(SBCCDRManager* pManager, SBCCDREvent* pEvent)
 {
   SBCCDRRecord cdr;
-  if (!cdr.readFromRedis(*(pManager->cdr()), pEvent->getSessionId()))
+  if (!cdr.readFromWorkSpace(*(pManager->cdr()), pEvent->getSessionId()))
   {
     OSS_LOG_INFO(pEvent->getRequest()->createContextId(true) << "SBCCDRManager::onHandleEvent::on_handle_terminated " 
       << "Session-ID: " << pEvent->getSessionId() << " not found"); 
@@ -216,7 +216,7 @@ static void on_handle_terminated(SBCCDRManager* pManager, SBCCDREvent* pEvent)
    
 SBCCDRManager::SBCCDRManager() :
   _pEventQueueThread(0),
-  _pRedisManager(0),
+  _pWorkSpaceManager(0),
   _cdrLifeTime(DEFAULT_CDR_LIFETIME),
   _logger("SBCCDRManager")
 {
@@ -238,8 +238,8 @@ void SBCCDRManager::initialize(SBCManager* pSBCManager)
 {
   OSS_ASSERT(!_pEventQueueThread);
   _pManager = pSBCManager;
-  _pRedisManager = &pSBCManager->redis();
-  _pCDRDb = _pRedisManager->getCDRDb();
+  _pWorkSpaceManager = &pSBCManager->workspace();
+  _pCDRDb = _pWorkSpaceManager->getCDRDb();
   
   //
   // Open the logger
@@ -334,7 +334,7 @@ std::size_t SBCCDRManager::onCallSetup(
   //
   cdr.setupTime() = OSS::getTime();
   
-  cdr.writeToRedis(*(_pCDRDb), sessionId, getCDRLifeTime());
+  cdr.writeToWorkSpace(*(_pCDRDb), sessionId, getCDRLifeTime());
   
   _pManager->modules().notifyCdrEvent("CallSetup", cdr);
   

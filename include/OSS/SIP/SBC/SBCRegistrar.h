@@ -29,7 +29,7 @@
 #include "OSS/SIP/SIPContact.h"
 #include "OSS/SIP/SIPFrom.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
-#include "OSS/SIP/SBC/SBCRedisManager.h"
+#include "OSS/SIP/SBC/SBCWorkSpaceManager.h"
 #include "OSS/SIP/SBC/SBCRegistrationRecord.h"
 
 
@@ -67,7 +67,7 @@ public:
   virtual void handleStop();
     /// handle a stop request.  This should not block
 
-  void setDatabase(const SBCRedisManager::WorkSpace& regDb);
+  void setDatabase(const SBCWorkSpaceManager::WorkSpace& regDb);
     /// Set the database/workspace to be used by registrar
   
   bool getBindings(const SIPURI& aor, ContactList& bindings);
@@ -105,7 +105,7 @@ protected:
   
   void dispatchContacts(const SIPMessage::Ptr& pRequest, const SIPURI& aor);
 private:
-  SBCRedisManager::WorkSpace _regDb;
+  SBCWorkSpaceManager::WorkSpace _regDb;
   SBCManager* _pManager;
 };
   
@@ -113,7 +113,7 @@ private:
 // Inlines
 //
 
-inline void SBCRegistrar::setDatabase(const SBCRedisManager::WorkSpace& regDb)
+inline void SBCRegistrar::setDatabase(const SBCWorkSpaceManager::WorkSpace& regDb)
 {
   _regDb = regDb;
 }

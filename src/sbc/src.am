@@ -29,8 +29,8 @@ liboss_core_la_SOURCES +=  \
   sbc/SBCStaticRouter.cpp \
   sbc/SBCCDRRecord.cpp \
   sbc/SBCCDRManager.cpp \
-  sbc/SBCRedisConfig.cpp \
-  sbc/SBCRedisManager.cpp \
+  sbc/SBCWorkSpaceConfig.cpp \
+  sbc/SBCWorkSpaceManager.cpp \
   sbc/SBCRedisEventHandler.cpp \
   sbc/SBCChannelLimits.cpp \
   sbc/SBCAliasMap.cpp \
@@ -43,7 +43,8 @@ liboss_core_la_SOURCES +=  \
   sbc/SBCJsonRpcConnector.cpp \
   sbc/SBCDomainLimits.cpp \
   sbc/SBCJSModuleManager.cpp  \
-  sbc/SBCJsonRpcHandler.cpp
+  sbc/SBCJsonRpcHandler.cpp \
+  sbc/SBCWorkSpace.cpp
 
 
 

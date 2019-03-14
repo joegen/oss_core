@@ -25,7 +25,7 @@
 #define	SBCACCOUNTRECORD_H_INCLUDED
 
 
-#include "OSS/SIP/SBC/SBCRedisManager.h"
+#include "OSS/SIP/SBC/SBCWorkSpaceManager.h"
 #include "OSS/JSON/reader.h"
 #include "OSS/JSON/writer.h"
 #include "OSS/SIP/SIPAuthorization.h"
@@ -64,9 +64,9 @@ public:
   
   const std::string& getA1Hash() const;
   
-  bool readFromRedis(const SBCRedisManager::WorkSpace& workspace, const std::string& key);
+  bool readFromWorkSpace(const SBCWorkSpaceManager::WorkSpace& workspace, const std::string& key);
   
-  bool writeToRedis(const SBCRedisManager::WorkSpace& workspace, const std::string& key);
+  bool writeToWorkSpace(const SBCWorkSpaceManager::WorkSpace& workspace, const std::string& key);
   
   void toJson(json::Object& object);
   

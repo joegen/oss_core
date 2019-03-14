@@ -25,6 +25,8 @@
 #include <string>
 #include <sstream>
 
+#include "OSS/UTL/CoreUtils.h"
+
 
 namespace OSS {
 
@@ -120,7 +122,7 @@ public:
     return true;
   }
 
-  bool get(const std::string& key_, std::string& value)
+  bool get(const std::string& key_, std::string& value) const
   {
     if (!_pDb)
       return false;
@@ -169,7 +171,7 @@ public:
     return true;
   }
 
-bool nextKey(std::string& nextKey, bool first)
+bool nextKey(std::string& nextKey, bool first) const
 {
   if (!_pDb || !_pCursor)
       return false;
@@ -188,7 +190,7 @@ bool nextKey(std::string& nextKey, bool first)
   return true;
 }
 
-void getKeys(std::vector<std::string>& keys)
+bool getKeys(std::vector<std::string>& keys) const
 {
   bool first = true;
   std::string key;
@@ -197,6 +199,22 @@ void getKeys(std::vector<std::string>& keys)
     first = false;
     keys.push_back(key);
   }
+  return !keys.empty();
+}
+
+bool getKeys(const std::string& pattern, std::vector<std::string>& keys) const
+{
+  bool first = true;
+  std::string key;
+  while(nextKey(key, first))
+  {
+    first = false;
+    if (OSS::string_wildcard_compare(pattern.c_str(), key))
+    {
+      keys.push_back(key);
+    }
+  }
+  return !keys.empty();
 }
 
 void clear()
@@ -207,28 +225,6 @@ void clear()
 
   for (std::vector<std::string>::const_iterator iter = keys.begin(); iter != keys.end(); iter++)
     erase(*iter);
-}
-
-static bool decodeString( std::stringstream& s, std::string& value)
-{
-	short len;
-	s.read( (char*)(&len), sizeof(len) );
-
-   if (len > 8192)
-     return false;
-
-	char buf[8192];
-	s.read( buf, len );
-
-	value = std::string(buf, len);
-	return true;
-}
-
-static void encodeString( std::stringstream& s, const std::string& data )
-{
-   short len = (short)data.size();
-   s.write( (char*)(&len) , sizeof( len ) );
-   s.write( data.data(), len );
 }
 
 protected:

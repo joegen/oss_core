@@ -1,6 +1,6 @@
 SUBDIRS = .
 
-EXTRA_DIST = apps/scripts 
+EXTRA_DIST =
 
 corelibs =
 
@@ -49,7 +49,7 @@ BUILT_SOURCES = boost_pch.hpp.gch
 CLEANFILES = boost_pch.hpp.gch
 
 liboss_core_la_SOURCES = boost_pch.hpp OSS.cpp
-
+bin_PROGRAMS =
 #
 # Non-SIP sources
 #
@@ -96,12 +96,6 @@ DISTCLEANFILES = Makefile.in
 # Unit Test
 #
 include unit_test/Makefile.am
-
-#
-# Applications
-#
-bin_PROGRAMS =
-include apps/Makefile.am
 
 #
 # install hook

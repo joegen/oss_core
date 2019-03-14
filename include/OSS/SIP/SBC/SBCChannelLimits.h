@@ -24,7 +24,7 @@
 #define	SBCCHANNELLIMITS_H_INCLUDED
 
 
-#include "OSS/SIP/SBC/SBCRedisManager.h"
+#include "OSS/SIP/SBC/SBCWorkSpaceManager.h"
 #include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
 #include "OSS/UTL/BlockingQueue.h"
 #include "OSS/UTL/LogFile.h"
@@ -60,7 +60,7 @@ public:
   
   std::size_t removeCall(const std::string& sessionId, const std::string& dialString);
   
-  void setSystemDb(const SBCRedisManager::WorkSpace& systemDb);
+  void setSystemDb(const SBCWorkSpaceManager::WorkSpace& systemDb);
   
   std::size_t getCallCount(const std::string& prefix);
   
@@ -75,13 +75,13 @@ private:
   Limits _limits;
   PrefixAliases _aliases;
   SBCManager* _pManager;
-  SBCRedisManager::WorkSpace _systemDb;
+  SBCWorkSpaceManager::WorkSpace _systemDb;
 };
 
 //
 // Inlines
 //
-inline void SBCChannelLimits::setSystemDb(const SBCRedisManager::WorkSpace& systemDb)
+inline void SBCChannelLimits::setSystemDb(const SBCWorkSpaceManager::WorkSpace& systemDb)
 {
   _systemDb = systemDb;
 }

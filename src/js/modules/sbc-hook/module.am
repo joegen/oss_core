@@ -1,0 +1,15 @@
+sbc-hook-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/sbc-hook
+	cp ${srcdir}/js/modules/sbc-hook/*.js ${DESTDIR}${libdir}/oss_modules/sbc-hook
+	cp ${DESTDIR}${libdir}/liboss_jssbchook.so ${DESTDIR}${libdir}/oss_modules/sbc-hook/_sbc_hook.jso
+	rm -f ${DESTDIR}${libdir}/liboss_jssbchook.*
+
+INSTALL_PROCEDURES += sbc-hook-install
+
+lib_LTLIBRARIES += liboss_jssbchook.la
+liboss_jssbchook_la_LDFLAGS = -module -fpic -avoid-version
+liboss_jssbchook_la_LIBADD = $(OSS_CORE_LIBS)
+liboss_jssbchook_la_SOURCES = js/modules/sbc-hook/sbc_hook.cpp
+
+
+

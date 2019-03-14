@@ -182,11 +182,11 @@ void SBCCDRRecord::toJson(json::Object& params)
   }
 }
 
-bool SBCCDRRecord::writeToRedis(Persistent::RedisBroadcastClient& redis, const std::string& key, unsigned int expire)
+bool SBCCDRRecord::writeToWorkSpace(SBCWorkSpace& ws, const std::string& key, unsigned int expire)
 {
   json::Object params;
   toJson(params);
-  return redis.set(key, params, expire);
+  return ws.set(key, params, expire);
 }
 
 bool SBCCDRRecord::writeToLogFile(OSS::UTL::LogFile& logFile)
@@ -210,10 +210,10 @@ bool SBCCDRRecord::writeToLogFile(OSS::UTL::LogFile& logFile)
   return true;
 }
 
-bool SBCCDRRecord::readFromRedis(Persistent::RedisBroadcastClient& redis, const std::string& key)
+bool SBCCDRRecord::readFromWorkSpace(SBCWorkSpace& workspace, const std::string& key)
 {
   json::Object response;
-  if (!redis.get(key, response))
+  if (!workspace.get(key, response))
     return false;
   
   json::Object::iterator date = response.Find("date");

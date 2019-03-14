@@ -68,7 +68,7 @@ SBCRegisterBehavior::~SBCRegisterBehavior()
 
 void SBCRegisterBehavior::initialize()
 {
-  _redisClient = _pManager->redis().getRegDb();
+  _workspace = _pManager->workspace().getRegDb();
   _enableOptionsKeepAlive = _pManager->isOptionsKeepAliveEnabled();
   
   _pManager->console().addCommand("gateway", "gateway status", "Display the gateway status");
@@ -142,10 +142,10 @@ void SBCRegisterBehavior::runOptionsThread()
       if (currentIteration == 1)
       {
         std::vector<std::string> upperReg;
-        _redisClient->getKeys("sbc-reg*", upperReg);
+        _workspace->getKeys("sbc-reg*", upperReg);
 
         std::vector<std::string> localReg;
-        _pManager->redis().getLocalRegDb()->getKeys("*", localReg);
+        _pManager->workspace().getLocalRegDb()->getKeys("*", localReg);
 
         keys.clear();
         keys.reserve(upperReg.size() + localReg.size());
@@ -203,14 +203,14 @@ void SBCRegisterBehavior::sendOptionsKeepAlive(const std::string& regRecord)
     {
       localUser = OSS::string_left(regRecord, atIndex);
       
-      if (!registration.readFromRedis(*(_pManager->redis().getLocalRegDb()), regRecord))
+      if (!registration.readFromWorkSpace(*(_pManager->workspace().getLocalRegDb()), regRecord))
         return;
       aor << "sip:" << registration.aor();
     }
     else
     {
       localUser = regRecord;
-      if (!registration.readFromRedis(*_redisClient, regRecord))
+      if (!registration.readFromWorkSpace(*_workspace, regRecord))
         return;
       aor << registration.aor();
     }
@@ -305,7 +305,7 @@ void SBCRegisterBehavior::runOptionsResponseThread()
         
         std::size_t atIndex = response.find("@");
         
-        if (!registration.readFromRedis(atIndex == std::string::npos ? *_redisClient : *(_pManager->redis().getLocalRegDb()), response))
+        if (!registration.readFromWorkSpace(atIndex == std::string::npos ? *_workspace : *(_pManager->workspace().getLocalRegDb()), response))
           continue;
 
         std::ostringstream logMsg;
@@ -317,7 +317,7 @@ void SBCRegisterBehavior::runOptionsResponseThread()
         OSS::mutex_write_lock writeLock(_rwKeepAliveListMutex);
         _keepAliveList.erase(OSS::Net::IPAddress::fromV4IPPort(registration.packetSource().c_str()));
 
-        registration.eraseRedisRecord(atIndex == std::string::npos ? *_redisClient : *(_pManager->redis().getLocalRegDb()));
+        registration.eraseWorkSpaceRecord(atIndex == std::string::npos ? *_workspace : *(_pManager->workspace().getLocalRegDb()));
       }
       catch(OSS::Exception e)
       {
@@ -487,7 +487,7 @@ void SBCRegisterBehavior::onProcessResponseInbound(
           {
             OSS_LOG_INFO(logId << "Deleting REGISTER state " << regId << " Call-ID: " << pResponse->hdrGet(OSS::SIP::HDR_CALL_ID));
           }
-          SBCRegistrationRecord::eraseRedisRecord(*_redisClient, regId);
+          SBCRegistrationRecord::eraseWorkSpaceRecord(*_workspace, regId);
           //
           // Remove from the keep-alive list
           //
@@ -520,7 +520,7 @@ void SBCRegisterBehavior::updateContactsFromStorage(const std::string& logId, co
         try
         {
           SBCRegistrationRecord registration;
-          if (!registration.readFromRedis(*_redisClient, currentRegId))
+          if (!registration.readFromWorkSpace(*_workspace, currentRegId))
           {
             OSS_LOG_DEBUG(logId << "SBCRegisterBehavior::updateContactsFromStorage - Excluding expired rregistration  " << currentRegId);
             continue;
@@ -736,7 +736,7 @@ void SBCRegisterBehavior::onProcessResponseOutbound(
       }
     
       OSS_LOG_INFO(logId << "Saving persistent REGISTER state - " << curi.data() << " to REG-ID: " << regId << " Call-ID: " << pResponse->hdrGet(OSS::SIP::HDR_CALL_ID));
-      if (registration.writeToRedis(*_redisClient, regId))
+      if (registration.writeToWorkSpace(*_workspace, regId))
       {
         //
         // WE preserve the registration towards this user so that we can use it
@@ -746,7 +746,7 @@ void SBCRegisterBehavior::onProcessResponseOutbound(
         std::string userId;
         OSS::SIP::SIPURI::getUser(toURI, userId);
         OSS_LOG_DEBUG(logId << "Saving persistent REGISTER state - " << curi.data() << " to USER-ID: " << userId);
-        registration.writeToRedis(*_redisClient, userId);
+        registration.writeToWorkSpace(*_workspace, userId);
 
       }
       else
@@ -777,7 +777,7 @@ void SBCRegisterBehavior::onProcessResponseOutbound(
 
 void SBCRegisterBehavior::deleteUpperRegistration(const std::string& regId)
 {
-  if (_redisClient->del(regId))
+  if (_workspace->del(regId))
   {
     OSS_LOG_INFO("Registration " << regId << " DELETED");
   }
@@ -807,7 +807,7 @@ SIPMessage::Ptr SBCRegisterBehavior::onRouteUpperReg(
     SBCRegistrationRecord registration;
 
 
-    if (!registration.readFromRedis(*_redisClient, regId))
+    if (!registration.readFromWorkSpace(*_workspace, regId))
     {
       OSS_LOG_ERROR("Unable to load " << regId << " from Redis database.");
       SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_404_NotFound);
@@ -923,7 +923,7 @@ bool SBCRegisterBehavior::onRouteByAOR(
 
     SBCRegistrationRecord registration;
 
-    if (!registration.readFromRedis(*_redisClient, ruriUser))
+    if (!registration.readFromWorkSpace(*_workspace, ruriUser))
     {
       OSS_LOG_ERROR("SBCRegisterBehavior::onRouteByAOR - Unable to locate user-id " << ruriUser);
     }

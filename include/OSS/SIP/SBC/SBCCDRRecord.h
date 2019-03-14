@@ -30,6 +30,7 @@
 #include "OSS/UTL/LogFile.h"
 #include "OSS/JSON/reader.h"
 #include "OSS/JSON/writer.h"
+#include "OSS/SIP/SBC/SBCWorkSpace.h"
 
 namespace OSS {
 namespace SIP {
@@ -64,8 +65,8 @@ public:
   OSS::UInt64& disconnectTime();
   std::string& sessionId();
   
-  bool writeToRedis(Persistent::RedisBroadcastClient& redis, const std::string& key, unsigned int expire);
-  bool readFromRedis(Persistent::RedisBroadcastClient& redis, const std::string& key);
+  bool writeToWorkSpace(SBCWorkSpace& redis, const std::string& key, unsigned int expire);
+  bool readFromWorkSpace(SBCWorkSpace& redis, const std::string& key);
   bool writeToLogFile(OSS::UTL::LogFile& logFile);
   void toJson(json::Object& object);
   

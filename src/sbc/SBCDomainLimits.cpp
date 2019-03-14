@@ -60,7 +60,7 @@ SBCDomainLimits::~SBCDomainLimits()
 void SBCDomainLimits::initialize(SBCManager* pSBCManager)
 {
   _pManager = pSBCManager;
-  _systemDb = _pManager->redis().getSystemDb();
+  _systemDb = _pManager->workspace().getSystemDb();
   
   const boost::filesystem::path& configFile = _pManager->getSIPConfigurationFile();
   ClassType config;
@@ -122,7 +122,7 @@ void SBCDomainLimits::registerDomain(const std::string& domain, std::size_t chan
   _limits[domain] = channelLimit;
   
   //
-  // Zero out the redis counter
+  // Zero out the workspace counter
   //
   std::ostringstream counterKey;
   counterKey << DOMAIN_COUNT_PREFIX << domain;
@@ -153,7 +153,7 @@ std::size_t SBCDomainLimits::addCall(const std::string& sessionId, const std::st
     channelLimit = _limits[domain];
 
     //
-    // Update the redis counter
+    // Update the workspace counter
     //
     std::ostringstream counterKey;
     counterKey << DOMAIN_COUNT_PREFIX << domain;
@@ -217,7 +217,7 @@ std::size_t SBCDomainLimits::removeCall(const std::string& sessionId, const std:
     count = iter->second->size();
 
     //
-    // Update the redis counter
+    // Update the workspace counter
     //
     int channelLimit = _limits[domain];
     std::ostringstream counterKey;

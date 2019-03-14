@@ -39,7 +39,7 @@ class SBCJSModuleManager
 {
 public:
   typedef OSS::JS::JSIsolate JSIsolate;
-  void run();
+  void run(const std::string& scriptFile, bool threaded = true);
   void stop();
   bool processTransactionEvent(const std::string& eventName, const SIPB2BTransaction::Ptr& pTransaction, OSS::JSON::Object& result);
   bool processRequestEvent(const std::string& eventName, const SIPMessage::Ptr& pMessage, OSS::JSON::Object& result);
@@ -60,6 +60,7 @@ private:
   SBCManager* _pManager;
   JSIsolate::Ptr _pIsolate;
   boost::thread* _pThread;
+  std::string _scriptFile;
 };
 
 //

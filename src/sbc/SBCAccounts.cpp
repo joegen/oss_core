@@ -41,7 +41,7 @@ SBCAccounts::~SBCAccounts()
 {
 }
   
-void SBCAccounts::initialize(const SBCRedisManager::WorkSpace& workspace)
+void SBCAccounts::initialize(const SBCWorkSpaceManager::WorkSpace& workspace)
 {
   _workspace = workspace;
   determineRealms();
@@ -99,7 +99,7 @@ bool SBCAccounts::findAccount(const std::string& identity, SBCAccountRecord& acc
     }
   }
   
-  if (!_workspace || !account.readFromRedis(_workspace, identity))
+  if (!_workspace || !account.readFromWorkSpace(_workspace, identity))
   {
     return false;
   }
@@ -121,7 +121,7 @@ bool SBCAccounts::addAccount(SBCAccountRecord& account)
     return false;
   }
   
-  if(!account.writeToRedis(_workspace, account.getIdentity()))
+  if(!account.writeToWorkSpace(_workspace, account.getIdentity()))
   {
     OSS_LOG_ERROR("SBCAccounts::addAccount - Unable to store account to Redis database");
     return false;

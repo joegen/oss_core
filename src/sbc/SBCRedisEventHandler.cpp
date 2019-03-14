@@ -79,8 +79,8 @@ bool SBCRedisEventHandler::initialize(SBCManager* pManager)
     return false;
   }
   _pManager = pManager;
-  _pManager->redis().addEventHandler("log-level", boost::bind(&SBCRedisEventHandler::setLogLevel, this, _1, _2));
-  _pManager->redis().addEventHandler("user-add", boost::bind(&SBCRedisEventHandler::addLocalAccount, this, _1, _2));
+  _pManager->workspace().addEventHandler("log-level", boost::bind(&SBCRedisEventHandler::setLogLevel, this, _1, _2));
+  _pManager->workspace().addEventHandler("user-add", boost::bind(&SBCRedisEventHandler::addLocalAccount, this, _1, _2));
 
   initializeBlockedSources();
  
@@ -91,25 +91,25 @@ bool SBCRedisEventHandler::initialize(SBCManager* pManager)
 
 void SBCRedisEventHandler::initializeBlockedSources()
 {
-  _pManager->redis().addEventHandler("unblock-source", boost::bind(&SBCRedisEventHandler::unblockSource, this, _1, _2));
-  _pManager->redis().addEventHandler("block-source", boost::bind(&SBCRedisEventHandler::blockSource, this, _1, _2));
-  _pManager->redis().addEventHandler("unblock-network", boost::bind(&SBCRedisEventHandler::unblockNetwork, this, _1, _2));
-  _pManager->redis().addEventHandler("block-network", boost::bind(&SBCRedisEventHandler::blockNetwork, this, _1, _2));
+  _pManager->workspace().addEventHandler("unblock-source", boost::bind(&SBCRedisEventHandler::unblockSource, this, _1, _2));
+  _pManager->workspace().addEventHandler("block-source", boost::bind(&SBCRedisEventHandler::blockSource, this, _1, _2));
+  _pManager->workspace().addEventHandler("unblock-network", boost::bind(&SBCRedisEventHandler::unblockNetwork, this, _1, _2));
+  _pManager->workspace().addEventHandler("block-network", boost::bind(&SBCRedisEventHandler::blockNetwork, this, _1, _2));
   
-  _pManager->redis().addEventHandler("whitelist-source", boost::bind(&SBCRedisEventHandler::whiteListSource, this, _1, _2));
-  _pManager->redis().addEventHandler("whitelist-network", boost::bind(&SBCRedisEventHandler::whiteListNetwork, this, _1, _2));
-  _pManager->redis().addEventHandler("remove-whitelist-source", boost::bind(&SBCRedisEventHandler::removeWhiteListSource, this, _1, _2));
-  _pManager->redis().addEventHandler("remove-whitelist-network", boost::bind(&SBCRedisEventHandler::removeWhiteListNetwork, this, _1, _2));
+  _pManager->workspace().addEventHandler("whitelist-source", boost::bind(&SBCRedisEventHandler::whiteListSource, this, _1, _2));
+  _pManager->workspace().addEventHandler("whitelist-network", boost::bind(&SBCRedisEventHandler::whiteListNetwork, this, _1, _2));
+  _pManager->workspace().addEventHandler("remove-whitelist-source", boost::bind(&SBCRedisEventHandler::removeWhiteListSource, this, _1, _2));
+  _pManager->workspace().addEventHandler("remove-whitelist-network", boost::bind(&SBCRedisEventHandler::removeWhiteListNetwork, this, _1, _2));
   
   SIPTransportSession::rateLimit().setBanCallback(boost::bind(&SBCRedisEventHandler::handleBlockSource, this, _1));
   
   std::string pattern("violator-*");
   std::vector<std::string> keys;
-  _pManager->redis().getBannedAddressDb()->getKeys(pattern, keys);
+  _pManager->workspace().getBannedAddressDb()->getKeys(pattern, keys);
   for (std::vector<std::string> ::iterator iter = keys.begin(); iter != keys.end(); iter++)
   {
     std::string value;
-    _pManager->redis().getBannedAddressDb()->get(*iter, value);
+    _pManager->workspace().getBannedAddressDb()->get(*iter, value);
     if (!value.empty())
     {
       try
@@ -126,11 +126,11 @@ void SBCRedisEventHandler::initializeBlockedSources()
   
   pattern = std::string("ip-blacklist-*");
   keys.clear();
-  _pManager->redis().getBannedAddressDb()->getKeys(pattern, keys);
+  _pManager->workspace().getBannedAddressDb()->getKeys(pattern, keys);
   for (std::vector<std::string> ::iterator iter = keys.begin(); iter != keys.end(); iter++)
   {
     std::string value;
-    _pManager->redis().getBannedAddressDb()->get(*iter, value);
+    _pManager->workspace().getBannedAddressDb()->get(*iter, value);
     if (!value.empty())
     {
       try
@@ -147,11 +147,11 @@ void SBCRedisEventHandler::initializeBlockedSources()
   
   pattern = std::string("network-blacklist-*");
   keys.clear();
-  _pManager->redis().getBannedAddressDb()->getKeys(pattern, keys);
+  _pManager->workspace().getBannedAddressDb()->getKeys(pattern, keys);
   for (std::vector<std::string> ::iterator iter = keys.begin(); iter != keys.end(); iter++)
   {
     std::string value;
-    _pManager->redis().getBannedAddressDb()->get(*iter, value);
+    _pManager->workspace().getBannedAddressDb()->get(*iter, value);
     if (!value.empty())
     {
       try
@@ -303,7 +303,7 @@ void SBCRedisEventHandler::handleBlockSource(const boost::asio::ip::address& add
 {
   std::string key("violator-");
   key += address.to_string();
-  _pManager->redis().getBannedAddressDb()->set(key, address.to_string(), SIPTransportSession::rateLimit().getBanLifeTime());
+  _pManager->workspace().getBannedAddressDb()->set(key, address.to_string(), SIPTransportSession::rateLimit().getBanLifeTime());
   
   if (!_pManager->getExecuteOnBanScript().empty())
   {
@@ -329,7 +329,7 @@ void SBCRedisEventHandler::unblockSource(const std::string& eventName, json::Obj
       SIPTransportSession::rateLimit().clearAddress(address, false);
       std::string key("violator-");
       key += address.to_string();
-       _pManager->redis().getBannedAddressDb()->del(key);
+       _pManager->workspace().getBannedAddressDb()->del(key);
     }
     catch(...)
     {
@@ -349,7 +349,7 @@ void SBCRedisEventHandler::blockSource(const std::string& eventName, json::Objec
       SIPTransportSession::rateLimit().blackListAddress(address, true);
       std::string key("ip-blacklist-");
       key += address.to_string();
-      _pManager->redis().getBannedAddressDb()->set(key, address.to_string());
+      _pManager->workspace().getBannedAddressDb()->set(key, address.to_string());
     }
     catch(...)
     {
@@ -366,7 +366,7 @@ void SBCRedisEventHandler::blockNetwork(const std::string& eventName, json::Obje
     {
       std::string key("network-blacklist-");
       key += cidr;
-      _pManager->redis().getBannedAddressDb()->set(key, cidr);
+      _pManager->workspace().getBannedAddressDb()->set(key, cidr);
       SIPTransportSession::rateLimit().blackListNetwork(cidr);
     }
     catch(...)
@@ -384,7 +384,7 @@ void SBCRedisEventHandler::unblockNetwork(const std::string& eventName, json::Ob
     {
       std::string key("network-blacklist-");
       key += cidr;
-      _pManager->redis().getBannedAddressDb()->del(key);
+      _pManager->workspace().getBannedAddressDb()->del(key);
       SIPTransportSession::rateLimit().clearNetwork(cidr);
     }
     catch(...)
@@ -405,7 +405,7 @@ void SBCRedisEventHandler::whiteListSource(const std::string& eventName, json::O
       SIPTransportSession::rateLimit().whiteListAddress(address, true);
       std::string key("ip-whitelist-");
       key += address.to_string();
-      _pManager->redis().getBannedAddressDb()->set(key, address.to_string());
+      _pManager->workspace().getBannedAddressDb()->set(key, address.to_string());
     }
     catch(...)
     {
@@ -422,7 +422,7 @@ void SBCRedisEventHandler::whiteListNetwork(const std::string& eventName, json::
     {
       std::string key("network-whitelist-");
       key += cidr;
-      _pManager->redis().getBannedAddressDb()->set(key, cidr);
+      _pManager->workspace().getBannedAddressDb()->set(key, cidr);
       SIPTransportSession::rateLimit().whiteListNetwork(cidr);
     }
     catch(...)
@@ -443,7 +443,7 @@ void SBCRedisEventHandler::removeWhiteListSource(const std::string& eventName, j
       SIPTransportSession::rateLimit().clearWhiteList(address);
       std::string key("ip-whitelist-");
       key += address.to_string();
-      _pManager->redis().getBannedAddressDb()->del(key);
+      _pManager->workspace().getBannedAddressDb()->del(key);
     }
     catch(...)
     {
@@ -460,7 +460,7 @@ void SBCRedisEventHandler::removeWhiteListNetwork(const std::string& eventName, 
     {
       std::string key("network-whitelist-");
       key += cidr;
-      _pManager->redis().getBannedAddressDb()->del(key);
+      _pManager->workspace().getBannedAddressDb()->del(key);
       SIPTransportSession::rateLimit().clearWhiteListNetwork(cidr);
     }
     catch(...)

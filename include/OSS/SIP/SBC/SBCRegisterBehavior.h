@@ -40,7 +40,7 @@
 #include "OSS/Persistent/RedisClient.h"
 #include "OSS/Exec/Process.h"
 #include "OSS/SIP/SBC/SBCPlugin.h"
-#include "SBCRedisManager.h"
+#include "SBCWorkSpaceManager.h"
 #include "SBCConsole.h"
 
 
@@ -257,7 +257,7 @@ private:
   OSS::mutex_read_write _rwKeepAliveListMutex;
   typedef std::map<OSS::Net::IPAddress, OSS::Net::IPAddress> KeepAliveList;
   KeepAliveList _keepAliveList;
-  SBCRedisManager::WorkSpace _redisClient;
+  SBCWorkSpaceManager::WorkSpace _workspace;
   OSS::thread_pool _threadPool;
   bool _enableOptionsKeepAlive;
   GatewayList _gateways;

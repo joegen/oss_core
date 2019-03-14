@@ -41,7 +41,7 @@
 #include "OSS/SIP/SBC/SBCStaticRouter.h"
 #include "OSS/SIP/SBC/SBCMediaProxy.h"
 #include "OSS/SIP/SBC/SBCCDRManager.h"
-#include "OSS/SIP/SBC/SBCRedisManager.h"
+#include "OSS/SIP/SBC/SBCWorkSpaceManager.h"
 #include "OSS/SIP/SBC/SBCRedisEventHandler.h"
 #include "OSS/SIP/SBC/SBCAuthenticator.h"
 #include "OSS/SIP/SBC/SBCRegistrar.h"
@@ -49,7 +49,8 @@
 #include "OSS/SIP/SBC/SBCConsole.h"
 #include "OSS/SIP/SBC/SBCJSModuleManager.h"
 #include "OSS/SIP/SBC/SBCJsonRpcHandler.h"
-
+#include "OSS/UTL/Singleton.h"
+#include "OSS/SIP/SBC/SBCDirectories.h"
 
 namespace OSS {
 namespace SIP {
@@ -61,19 +62,20 @@ class SBCInviteBehavior;
 class SBCPrackBehavior;
 
 
-class OSS_API SBCManager
+class OSS_API SBCManager : public OSS::UTL::Singleton<SBCManager>
 {
 public:
   typedef boost::function<bool(const std::string&, std::ostringstream& output)> ExecProc;
   typedef std::map<std::string, ExecProc> ExecProcList;
   typedef std::map<std::string, OSS::UInt64> CallTimers;
-
-  SBCManager(int minThreadCount = 2, int maxThreadCount = 1024);
+  friend class OSS::UTL::Singleton<SBCManager>;
+protected:
+  SBCManager();
     /// Create a new SBC Manager
-
   ~SBCManager();
     /// Destroy the SBC Manager
-  
+public:
+  bool initialize();
   void initialize(const boost::filesystem::path& cfgDirectory);
     /// Initialize the manager configuration using the configuration path specified.
     /// If an error occurs, this method will throw a PersistenceException.
@@ -86,7 +88,7 @@ public:
     /// is about the exit.  This is the place where the manager performs final
     /// trash management.
 
-  void run();
+  bool run();
     /// Starts the SBC event subsytem.
     ///
     /// This will block until a call to stop() received.
@@ -296,7 +298,7 @@ public:
   SBCCDRManager& cdr();
     /// CDR Manager
   
-  SBCRedisManager& redis();
+  SBCWorkSpaceManager& workspace();
     /// Redis Manager
   
   const boost::filesystem::path& getLogDirectory() const;
@@ -388,10 +390,9 @@ protected:
   SBCCDRManager _cdr;
   
   //
-  // RedisManager
+  // Work Space Manager
   //
-  SBCRedisManager _redis;
-  SBCRedisEventHandler _redisEventHandler;
+  SBCWorkSpaceManager _workspace;
    
   //
   // Authenticator for local domain transactions
@@ -586,9 +587,9 @@ inline SBCCDRManager& SBCManager::cdr()
   return _cdr;
 }
 
-inline SBCRedisManager& SBCManager::redis()
+inline SBCWorkSpaceManager& SBCManager::workspace()
 {
-  return _redis;
+  return _workspace;
 }
 
 inline const boost::filesystem::path& SBCManager::getLogDirectory() const

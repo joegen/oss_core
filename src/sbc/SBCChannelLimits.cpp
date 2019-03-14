@@ -61,7 +61,7 @@ SBCChannelLimits::~SBCChannelLimits()
 void SBCChannelLimits::initialize(SBCManager* pSBCManager)
 {
   _pManager = pSBCManager;
-  _systemDb = _pManager->redis().getSystemDb();
+  _systemDb = _pManager->workspace().getSystemDb();
   
   const boost::filesystem::path& configFile = _pManager->getSIPConfigurationFile();
   ClassType config;
@@ -150,7 +150,7 @@ void SBCChannelLimits::registerDialPrefix(const std::string& prefix_, std::size_
   _limits[prefix] = channelLimit;
   
   //
-  // Zero out the redis counter
+  // Zero out the workspace counter
   //
   std::ostringstream counterKey;
   counterKey << CHANNEL_COUNT_PREFIX << prefix;
@@ -228,7 +228,7 @@ std::size_t SBCChannelLimits::addCall(const std::string& sessionId, const std::s
       channelLimit = _limits[lastMatch];
       
       //
-      // Update the redis counter
+      // Update the workspace counter
       //
       std::ostringstream counterKey;
       counterKey << CHANNEL_COUNT_PREFIX << lastMatch;
@@ -320,7 +320,7 @@ std::size_t SBCChannelLimits::removeCall(const std::string& sessionId, const std
       count = iter->second->size();
       
       //
-      // Update the redis counter
+      // Update the workspace counter
       //
       int channelLimit = _limits[lastMatch];
       std::ostringstream counterKey;

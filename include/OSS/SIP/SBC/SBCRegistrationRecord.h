@@ -28,6 +28,7 @@
 #include "OSS/SIP/SBC/SBCPlugin.h"
 #include <boost/filesystem.hpp>
 #include "OSS/UTL/CoreUtils.h"
+#include "OSS/SIP/SBC/SBCWorkSpace.h"
 
 
 namespace OSS {
@@ -64,17 +65,17 @@ public:
   const std::string& callId() const;
   const OSS::UInt64& timeStamp() const;
 
-  bool writeToRedis(Persistent::RedisBroadcastClient& client, const std::string& key) const;
+  bool writeToWorkSpace(SBCWorkSpace& client, const std::string& key) const;
   bool writeToFile(const boost::filesystem::path& file) const;
   bool writeToFile(const std::string& file) const;
-  bool readFromRedis(Persistent::RedisBroadcastClient& client, const std::string& key);
+  bool readFromWorkSpace(SBCWorkSpace& client, const std::string& key);
   bool readFromFile(const boost::filesystem::path& file);
   bool readFromFile(const std::string& file);
 
   void eraseFile();
   static void eraseFile(const boost::filesystem::path& file);
-  void eraseRedisRecord(Persistent::RedisBroadcastClient& client);
-  static void eraseRedisRecord(Persistent::RedisBroadcastClient& client, const std::string& key);
+  void eraseWorkSpaceRecord(SBCWorkSpace& client);
+  static void eraseWorkSpaceRecord(SBCWorkSpace& client, const std::string& key);
   
   bool operator < (const SBCRegistrationRecord& registration) const;
 protected:

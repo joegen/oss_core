@@ -101,8 +101,8 @@ nobase_include_HEADERS += \
     OSS/SIP/SBC/SBCCDREvent.h \
     OSS/SIP/SBC/SBCCDRManager.h \
     OSS/SIP/SBC/SBCCDRRecord.h \
-    OSS/SIP/SBC/SBCRedisConfig.h \
-    OSS/SIP/SBC/SBCRedisManager.h \
+    OSS/SIP/SBC/SBCWorkSpaceConfig.h \
+    OSS/SIP/SBC/SBCWorkSpaceManager.h \
     OSS/SIP/SBC/SBCRedisEventHandler.h \
     OSS/SIP/SBC/SBCChannelLimits.h \
     OSS/SIP/SBC/SBCAliasMap.h \
@@ -115,4 +115,6 @@ nobase_include_HEADERS += \
     OSS/SIP/SBC/SBCJsonRpcConnector.h \
     OSS/SIP/SBC/SBCDomainLimits.h \
     OSS/SIP/SBC/SBCJSModuleManager.h \
-    OSS/SIP/SBC/SBCJsonRpcHandler.h
+    OSS/SIP/SBC/SBCJsonRpcHandler.h \
+    OSS/SIP/SBC/SBCWorkSpace.h \
+    OSS/SIP/SBC/SBCDirectories.h

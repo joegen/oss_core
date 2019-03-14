@@ -27,6 +27,7 @@
 
 #include <boost/filesystem.hpp>
 #include "OSS/Persistent/RedisClient.h"
+#include "OSS/SIP/SBC/SBCWorkSpace.h"
 
 
 namespace OSS {
@@ -34,7 +35,7 @@ namespace SIP {
 namespace SBC {
   
   
-class SBCRedisConfig
+class SBCWorkSpaceConfig
 {
 public:
   struct HostEntry
@@ -46,11 +47,11 @@ public:
   
   typedef std::vector<HostEntry> HostEntries; 
   
-  SBCRedisConfig(const std::string& componentName);
-  SBCRedisConfig(const std::string& componentName, const boost::filesystem::path& configFile);
-  ~SBCRedisConfig();
+  SBCWorkSpaceConfig(const std::string& componentName);
+  SBCWorkSpaceConfig(const std::string& componentName, const boost::filesystem::path& configFile);
+  ~SBCWorkSpaceConfig();
   void addHost(const std::string host, int port, const std::string& password);
-  bool connect(Persistent::RedisBroadcastClient& redis, int workspace, bool allowMultiple = true);
+  bool connect(SBCWorkSpace& redis, int workspace, bool allowMultiple = true);
   bool connect(Persistent::RedisClient& redis, int workspace);
   bool dumpConnectionInfoToFile();
   bool dumpConnectionInfoToFile(const boost::filesystem::path& infoFile);
@@ -58,6 +59,7 @@ protected:
    boost::filesystem::path _configFile;
    std::string _componentName;
    HostEntries _hosts;
+   bool _enableRemoteDb;
 };
   
 } } } // OSS::SIP::SBC

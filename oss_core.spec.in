@@ -156,7 +156,6 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %doc CONTRIBUTORS README NEWS TODO ChangeLog
 %attr(755,root,root) %{_libdir}/liboss_*.so*
-%attr(755,root,root) %{_bindir}/oss_core
 %attr(755,root,root) %{_bindir}/ossjs
 
 %dir %attr(755,root,root) %{_libdir}/oss_modules/examples
@@ -195,6 +194,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %attr(755,root,root) %{_libdir}/oss_modules/sip-parser
 %dir %attr(755,root,root) %{_libdir}/oss_modules/parser
 %dir %attr(755,root,root) %{_libdir}/oss_modules/lexer
+%dir %attr(755,root,root) %{_libdir}/oss_modules/sbc-hook
 
 #%{_libdir}/oss_modules/*.js
 #%{_libdir}/oss_modules/*.jso
@@ -213,10 +213,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/OSS/*
 %{_libdir}/liboss_*.la
 %{_libdir}/liboss_*.a
-
-%files utils
-%attr(755,root,root) %{_bindir}/oss_carp
-%attr(755,root,root) %{_bindir}/oss_garp
 
 
 %post
