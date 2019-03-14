@@ -160,6 +160,9 @@ bool string_format_json(std::string& str);
   /// Will return the unformatted string back if an exception is encountered
   /// and function returning false
 
+std::string string_base64_encode(unsigned char const* , unsigned int len);
+std::string string_base64_decode(std::string const& s);
+
 //
 // Misc functions
 //
