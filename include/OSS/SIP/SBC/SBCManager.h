@@ -42,7 +42,6 @@
 #include "OSS/SIP/SBC/SBCMediaProxy.h"
 #include "OSS/SIP/SBC/SBCCDRManager.h"
 #include "OSS/SIP/SBC/SBCWorkSpaceManager.h"
-#include "OSS/SIP/SBC/SBCRedisEventHandler.h"
 #include "OSS/SIP/SBC/SBCAuthenticator.h"
 #include "OSS/SIP/SBC/SBCRegistrar.h"
 #include "OSS/SIP/SBC/SBCAutoBanRules.h"
@@ -265,8 +264,6 @@ public:
     /// If a STUN server is configured, this will return the IP address of the
     /// NAT/Firewall if it is present
 
-  bool& enableRedis();
-
   void reportCriticalState(const std::string& msg);
 
   SBCRegisterBehavior* registerHandler();
@@ -299,7 +296,7 @@ public:
     /// CDR Manager
   
   SBCWorkSpaceManager& workspace();
-    /// Redis Manager
+    /// Workspace Manager
   
   const boost::filesystem::path& getLogDirectory() const;
     /// Return the log directory configured for the SBC
@@ -373,7 +370,6 @@ protected:
   SBCStaticRouter _staticRouter;
   bool _requireRtpForRegistrations;
   bool _enableBridge;
-  bool _enableRedis;
   int _delayedDisconnectMinConnectTime;
   int _delayedDisconnectYieldTime;
   std::string _executeOnBanScript;
@@ -550,11 +546,6 @@ inline bool SBCManager::getInternalAddress(
 {
   return const_cast<SBCManager*>(this)->transactionManager().stack().transport().getInternalAddress(
     proto, externalIp, internalIp);
-}
-
-inline bool& SBCManager::enableRedis()
-{
-  return _enableRedis;
 }
 
 inline SBCRegisterBehavior* SBCManager::registerHandler()

@@ -37,7 +37,6 @@
 #include "OSS/UTL/BlockingQueue.h"
 #include "OSS/SIP/SBC/SBCDefaultBehavior.h"
 #include "OSS/SIP/SBC/SBCRegistrationRecord.h"
-#include "OSS/Persistent/RedisClient.h"
 #include "OSS/Exec/Process.h"
 #include "OSS/SIP/SBC/SBCPlugin.h"
 #include "SBCWorkSpaceManager.h"

@@ -123,7 +123,7 @@ bool SBCAccounts::addAccount(SBCAccountRecord& account)
   
   if(!account.writeToWorkSpace(_workspace, account.getIdentity()))
   {
-    OSS_LOG_ERROR("SBCAccounts::addAccount - Unable to store account to Redis database");
+    OSS_LOG_ERROR("SBCAccounts::addAccount - Unable to store account to workspace");
     return false;
   }
   OSS::mutex_critic_sec_lock lock(_volatileAccountsMutex);

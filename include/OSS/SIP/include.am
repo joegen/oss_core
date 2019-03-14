@@ -101,9 +101,7 @@ nobase_include_HEADERS += \
     OSS/SIP/SBC/SBCCDREvent.h \
     OSS/SIP/SBC/SBCCDRManager.h \
     OSS/SIP/SBC/SBCCDRRecord.h \
-    OSS/SIP/SBC/SBCWorkSpaceConfig.h \
     OSS/SIP/SBC/SBCWorkSpaceManager.h \
-    OSS/SIP/SBC/SBCRedisEventHandler.h \
     OSS/SIP/SBC/SBCChannelLimits.h \
     OSS/SIP/SBC/SBCAliasMap.h \
     OSS/SIP/SBC/SBCAccounts.h \

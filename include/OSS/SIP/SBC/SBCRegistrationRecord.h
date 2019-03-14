@@ -24,7 +24,6 @@
 #ifndef OSS_REGISTRATIONRECORD_H_INCLUDED
 #define	OSS_REGISTRATIONRECORD_H_INCLUDED
 
-#include "OSS/Persistent/RedisClient.h"
 #include "OSS/SIP/SBC/SBCPlugin.h"
 #include <boost/filesystem.hpp>
 #include "OSS/UTL/CoreUtils.h"

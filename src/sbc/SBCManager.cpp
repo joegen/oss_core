@@ -79,7 +79,6 @@ SBCManager::SBCManager() :
   _enableOptionsKeepAlive(true),
   _staticRouter(this),
   _requireRtpForRegistrations(true),
-  _enableRedis(false),
   _delayedDisconnectMinConnectTime(-1),
   _delayedDisconnectYieldTime(-1),
   _autoBanRules(this),
@@ -276,7 +275,7 @@ void SBCManager::initializeUserAgent(const boost::filesystem::path& cfgDirectory
 
   SBCContact::initialize(configFile);
 
-  _workspace.initialize(configFile);
+  _workspace.initialize();
   
   _authenticator.accounts().initialize(_workspace.getAccountDb());
   

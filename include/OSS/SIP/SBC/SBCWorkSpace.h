@@ -1,7 +1,6 @@
 #ifndef SBCDBWORKSPACE_H
 #define SBCDBWORKSPACE_H
 
-#include "OSS/Persistent/RedisClient.h"
 #include "OSS/Persistent/BerkeleyDb.h"
 #include "OSS/JSON/Json.h"
 #include "OSS/UTL/Thread.h"
@@ -13,7 +12,6 @@ namespace SBC {
 class SBCWorkSpace
 {
 public:
-  typedef OSS::Persistent::RedisBroadcastClient RemoteDb;
   typedef OSS::BerkeleyDb LocalDb;
   SBCWorkSpace(const std::string& name);
   ~SBCWorkSpace();
@@ -24,18 +22,15 @@ public:
   bool get(const std::string& key, json::Object& value) const;
   bool del(const std::string& key);
   bool getKeys(const std::string& pattern, std::vector<std::string>& keys);
-  bool connect(const std::string& tcpHost, int tcpPort, const std::string& password = "", int db = 0, bool allowReconnect = true);
   bool open(const std::string& localDbFile);
   bool open();
-  void disconnect();
+  void close();
   const std::string& getName() const;
   void setName(const std::string& name);
 
 private:
-  bool _useLocalDb;
-  mutable OSS::mutex_critic_sec _localDbMutex;
-  RemoteDb _remote;
-  LocalDb _local;
+  mutable OSS::mutex_critic_sec _dbMutex;
+  LocalDb _db;
   std::string _name;
 };
 

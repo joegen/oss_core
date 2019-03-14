@@ -26,7 +26,6 @@
 
 
 #include "OSS/OSS.h"
-#include "OSS/Persistent/RedisClient.h"
 #include "OSS/UTL/LogFile.h"
 #include "OSS/JSON/reader.h"
 #include "OSS/JSON/writer.h"
@@ -65,8 +64,8 @@ public:
   OSS::UInt64& disconnectTime();
   std::string& sessionId();
   
-  bool writeToWorkSpace(SBCWorkSpace& redis, const std::string& key, unsigned int expire);
-  bool readFromWorkSpace(SBCWorkSpace& redis, const std::string& key);
+  bool writeToWorkSpace(SBCWorkSpace& workspace, const std::string& key, unsigned int expire);
+  bool readFromWorkSpace(SBCWorkSpace& workspace, const std::string& key);
   bool writeToLogFile(OSS::UTL::LogFile& logFile);
   void toJson(json::Object& object);
   

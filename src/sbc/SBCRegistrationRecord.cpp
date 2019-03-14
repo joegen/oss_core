@@ -90,7 +90,7 @@ bool SBCRegistrationRecord::readFromWorkSpace(SBCWorkSpace& client, const std::s
   json::Boolean enc = response["enc"];
   _enc = enc.Value();
 
-  OSS_LOG_DEBUG("[REDIS] Read registration record from database - " <<
+  OSS_LOG_DEBUG("[WORKSPACE] Read registration record from database - " <<
     " key: " << key <<
     " contact: " << _contact <<
     " packetSource: " << _packetSource <<
@@ -133,7 +133,7 @@ bool SBCRegistrationRecord::writeToWorkSpace(SBCWorkSpace& client, const std::st
   
   
 
-  OSS_LOG_DEBUG("[REDIS] Persisting registration record to database - " <<
+  OSS_LOG_DEBUG("[WORKSPACE] Persisting registration record to database - " <<
     " key: " << _key <<
     " contact: " << _contact <<
     " packetSource: " << _packetSource <<

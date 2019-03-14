@@ -17,12 +17,10 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#ifndef SBCREDISMANAGER_H_INCLUDED
-#define	SBCREDISMANAGER_H_INCLUDED
+#ifndef SBCWORKSPACEMANAGER_H_INCLUDED
+#define	SBCWORKSPACEMANAGER_H_INCLUDED
 
 
-#include "OSS/Persistent/RedisClient.h"
-#include "OSS/SIP/SBC/SBCWorkSpaceConfig.h"
 #include "OSS/UTL/BlockingQueue.h"
 #include "OSS/JSON/reader.h"
 #include "OSS/JSON/writer.h"
@@ -36,33 +34,15 @@ namespace SBC {
 class SBCWorkSpaceManager
 {
 public:
-
-  enum RedisWorkspace
-  {
-    SBC_SYSTEMDB = 0,
-    SBC_REGDB = 1,
-    SBC_DIALOGDB = 2,
-    SBC_RTPDB = 3,
-    SBC_CDRDB = 4,
-    SBC_ACCOUNTDB = 5,
-    SBC_LOCAL_REGDB = 6,
-    SBC_BANNED_ADDRESSDB = 7,
-    SBC_ROUTEDB = 8        
-  };
-  
   typedef boost::shared_ptr<SBCWorkSpace> WorkSpace;
-  typedef boost::shared_ptr<Persistent::RedisClient> Subscriber;
   typedef BlockingQueue<json::Object*> EventQueue;
-  typedef boost::function<void(const std::string& /*eventName*/, json::Object& /*eventObject*/)> EventCallback;
-  typedef std::map<std::string, EventCallback> EventHandlers; 
   
   SBCWorkSpaceManager();
   
   ~SBCWorkSpaceManager();
   
-  void initialize(const boost::filesystem::path& configFile);
-  
-  void initialize(SBCWorkSpaceConfig& config);
+
+  void initialize();
   
   void stop();
    
@@ -84,17 +64,11 @@ public:
   
   const WorkSpace& getRouteDb() const;
   
-  const WorkSpace& getWorkSpace(RedisWorkspace workSpace) const;
-  
   const std::string& getChannelName() const;
   
-  void addEventHandler(const std::string& eventName, const EventCallback& handler);
-  
- 
 private:
   
   WorkSpace _systemDb;
-  Subscriber _subscriber;
   WorkSpace _regDb;
   WorkSpace _dialogDb;
   WorkSpace _rtpDb;
@@ -103,11 +77,7 @@ private:
   WorkSpace _localRegDb;
   WorkSpace _bannedAddressDb;
   WorkSpace _routeDb;
-  WorkSpace _undefinedDb;
-  boost::thread* _pSubscribeThread;
   bool _isTerminating;
-  std::string _channelName;
-  EventHandlers _handlers;
 };
 
 
@@ -117,60 +87,50 @@ private:
 
 inline const SBCWorkSpaceManager::WorkSpace& SBCWorkSpaceManager::getSystemDb() const
 {
-  return getWorkSpace(SBC_SYSTEMDB);
+  return _systemDb;
 }
   
 inline const SBCWorkSpaceManager::WorkSpace& SBCWorkSpaceManager::getRegDb() const
 {
-  return getWorkSpace(SBC_REGDB);
+  return _regDb;
 }
 
 inline const SBCWorkSpaceManager::WorkSpace& SBCWorkSpaceManager::getDialogDb() const
 {
-  return getWorkSpace(SBC_DIALOGDB);
+  return _dialogDb;
 }
 
 inline const SBCWorkSpaceManager::WorkSpace& SBCWorkSpaceManager::getRTPDb() const
 {
-  return getWorkSpace(SBC_RTPDB);
+  return _rtpDb;
 }
 
 inline const SBCWorkSpaceManager::WorkSpace& SBCWorkSpaceManager::getCDRDb() const
 {
-  return getWorkSpace(SBC_CDRDB);
+  return _cdrDb;
 }
 
 inline const SBCWorkSpaceManager::WorkSpace& SBCWorkSpaceManager::getAccountDb() const
 {
-  return getWorkSpace(SBC_ACCOUNTDB);
+  return _accountDb;
 }
 
 inline const SBCWorkSpaceManager::WorkSpace& SBCWorkSpaceManager::getLocalRegDb() const
 {
-  return getWorkSpace(SBC_LOCAL_REGDB);
+  return _localRegDb;
 }
 
 inline const SBCWorkSpaceManager::WorkSpace& SBCWorkSpaceManager::getBannedAddressDb() const
 {
-  return getWorkSpace(SBC_BANNED_ADDRESSDB);
+  return _bannedAddressDb;
 }
 
 inline const SBCWorkSpaceManager::WorkSpace& SBCWorkSpaceManager::getRouteDb() const
 {
-  return getWorkSpace(SBC_ROUTEDB);
-}
-
-inline const std::string& SBCWorkSpaceManager::getChannelName() const
-{
-  return _channelName;
-}
-
-inline void SBCWorkSpaceManager::addEventHandler(const std::string& eventName, const EventCallback& handler)
-{
-  _handlers[eventName] = handler;
+  return _routeDb;
 }
 
 } } } // OSS::SIP::SBC
 
-#endif	// SBCREDISMANAGER_H_INCLUDED
+#endif	// SBCWORKSPACEMANAGER_H_INCLUDED
 

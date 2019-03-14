@@ -29,9 +29,7 @@ liboss_core_la_SOURCES +=  \
   sbc/SBCStaticRouter.cpp \
   sbc/SBCCDRRecord.cpp \
   sbc/SBCCDRManager.cpp \
-  sbc/SBCWorkSpaceConfig.cpp \
   sbc/SBCWorkSpaceManager.cpp \
-  sbc/SBCRedisEventHandler.cpp \
   sbc/SBCChannelLimits.cpp \
   sbc/SBCAliasMap.cpp \
   sbc/SBCAccounts.cpp \

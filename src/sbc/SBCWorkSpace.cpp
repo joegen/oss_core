@@ -11,20 +11,13 @@ namespace SBC {
 
 
 SBCWorkSpace::SBCWorkSpace(const std::string& name) :
-  _useLocalDb(true),
   _name(name)
 {
 }
 
 SBCWorkSpace::~SBCWorkSpace()
 {
-  if (_useLocalDb)
-  {
-    _local.close();
-  } else 
-  {
-    _remote.disconnect();
-  }
+    _db.close();
 }
 
 bool SBCWorkSpace::set(const std::string& key, const json::Object& value, int expires)
@@ -35,13 +28,8 @@ bool SBCWorkSpace::set(const std::string& key, const json::Object& value, int ex
 
 bool SBCWorkSpace::set(const std::string& key, const std::string& value, int expires)
 {
-  if (!_useLocalDb) 
-  {
-    return _remote.set(key, value, expires);
-  } else {
-    OSS::mutex_critic_sec_lock lock(_localDbMutex);
-    return _local.set(key, value);
-  }
+    OSS::mutex_critic_sec_lock lock(_dbMutex);
+    return _db.set(key, value);
 }
 
 bool SBCWorkSpace::get(const std::string& key, json::Object& value) const
@@ -52,52 +40,26 @@ bool SBCWorkSpace::get(const std::string& key, json::Object& value) const
 
 bool SBCWorkSpace::get(const std::string& key, std::string& value) const
 {
-  if (!_useLocalDb) 
-  {
-    return _remote.get(key, value);
-  } else {
-    OSS::mutex_critic_sec_lock lock(_localDbMutex);
-    return _local.get(key, value);
-  }
+    OSS::mutex_critic_sec_lock lock(_dbMutex);
+    return _db.get(key, value);
 }
 
 bool SBCWorkSpace::del(const std::string& key)
 {
-  if (!_useLocalDb) 
-  {
-    return _remote.del(key);
-  } else {
-    OSS::mutex_critic_sec_lock lock(_localDbMutex);
-    return _local.erase(key);
-  }
+    OSS::mutex_critic_sec_lock lock(_dbMutex);
+    return _db.erase(key);
 }
 
 bool SBCWorkSpace::getKeys(const std::string& pattern, std::vector<std::string>& keys)
 {
-  if (!_useLocalDb) 
-  {
-    return _remote.getKeys(pattern, keys);
-  } else {
-    OSS::mutex_critic_sec_lock lock(_localDbMutex);
-    return _local.getKeys(pattern, keys);
-  }
-}
-
-bool SBCWorkSpace::connect(const std::string& tcpHost, int tcpPort, const std::string& password, int db, bool allowReconnect )
-{
-  // Disabling remotedb for now
-  assert(false);
-  _useLocalDb = false;
-  _local.close();
-  return _remote.connect(tcpHost, tcpPort, password, db, allowReconnect);
+    OSS::mutex_critic_sec_lock lock(_dbMutex);
+    return _db.getKeys(pattern, keys);
 }
 
 bool SBCWorkSpace::open(const std::string& localDbFile)
 {
-  _useLocalDb = true;
-  _remote.disconnect();
-  OSS::mutex_critic_sec_lock lock(_localDbMutex);
-  return _local.open(localDbFile);
+  OSS::mutex_critic_sec_lock lock(_dbMutex);
+  return _db.open(localDbFile);
 }
 
 bool SBCWorkSpace::open()
@@ -108,15 +70,10 @@ bool SBCWorkSpace::open()
   return open(path.str());
 }
 
-void SBCWorkSpace::disconnect()
+void SBCWorkSpace::close()
 {
-  if (!_useLocalDb) 
-  {
-     _remote.disconnect();
-  } else {
-    OSS::mutex_critic_sec_lock lock(_localDbMutex);
-    _local.close();
-  }
+    OSS::mutex_critic_sec_lock lock(_dbMutex);
+    _db.close();
 }
 
 } } }

@@ -26,12 +26,8 @@ namespace SIP {
 namespace SBC {
 
 
-static const char* REDIS_SUBSCRIPTION_CHANNEL = "SBC-CHANNEL";
-
-
 SBCWorkSpaceManager::SBCWorkSpaceManager() :
-  _isTerminating(false),
-  _channelName(REDIS_SUBSCRIPTION_CHANNEL)
+  _isTerminating(false)
 {
 }
 
@@ -45,109 +41,74 @@ void SBCWorkSpaceManager::stop()
   _isTerminating = true;
 }
 
-void SBCWorkSpaceManager::initialize(const boost::filesystem::path& configFile)
+void SBCWorkSpaceManager::initialize()
 {
-  SBCWorkSpaceConfig connector("SBCWorkSpaceManager", configFile);
-  connector.dumpConnectionInfoToFile();
-  initialize(connector);
-}
-
-void SBCWorkSpaceManager::initialize(SBCWorkSpaceConfig& connector)
-{
-  OSS_LOG_NOTICE("[REDIS] SBCWorkSpaceManager::initialize(SBC_SYSTEMDB) in workspace " << SBC_SYSTEMDB );
+  OSS_LOG_NOTICE("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_SYSTEMDB) in workspace SBC_SYSTEMDB" );
   _systemDb = WorkSpace(new SBCWorkSpace("sbc_system.bdb"));
-  if (!connector.connect(*_systemDb, SBC_SYSTEMDB, false))
+  if (!_systemDb->open())
   {
-    OSS_LOG_WARNING("[REDIS] SBCWorkSpaceManager::initialize(SBC_SYSTEMDB) in workspace " << SBC_SYSTEMDB << " ** Temporary Failure **");
+    OSS_LOG_WARNING("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_SYSTEMDB) in workspace SBC_SYSTEMDB ** Temporary Failure **");
   }
   
 
-  OSS_LOG_NOTICE("[REDIS] SBCWorkSpaceManager::initialize(SBC_REGDB) in workspace " << SBC_REGDB );
+  OSS_LOG_NOTICE("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_REGDB) in workspace SBC_REGDB" );
   _regDb = WorkSpace(new SBCWorkSpace("sbc_reg.bdb"));
-  if (!connector.connect(*_regDb, SBC_REGDB))
+  if (!_regDb->open())
   {
-    OSS_LOG_WARNING("[REDIS] SBCWorkSpaceManager::initialize(SBC_REGDB) in workspace " << SBC_REGDB << " ** Temporary Failure **");
+    OSS_LOG_WARNING("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_REGDB) in workspace SBC_REGDB ** Temporary Failure **");
   }
   
-  OSS_LOG_NOTICE("[REDIS] SBCWorkSpaceManager::initialize(SBC_DIALOGDB) in workspace " << SBC_DIALOGDB );
+  OSS_LOG_NOTICE("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_DIALOGDB) in workspace SBC_DIALOGDB" );
   _dialogDb = WorkSpace(new SBCWorkSpace("sbc_dialog.bdb"));
-  if (!connector.connect(*_dialogDb, SBC_DIALOGDB))
+  if (!_dialogDb->open())
   {
-    OSS_LOG_WARNING("[REDIS] SBCWorkSpaceManager::initialize(SBC_DIALOGDB) in workspace " << SBC_DIALOGDB << " ** Temporary Failure **");
+    OSS_LOG_WARNING("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_DIALOGDB) in workspace SBC_DIALOGDB ** Temporary Failure **");
   }
   
-  OSS_LOG_NOTICE("[REDIS] SBCWorkSpaceManager::initialize(SBC_RTPDB) in workspace " << SBC_RTPDB );
+  OSS_LOG_NOTICE("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_RTPDB) in workspace SBC_RTPDB" );
   _rtpDb = WorkSpace(new SBCWorkSpace("sbc_rtp.bdb"));
-  if (!connector.connect(*_rtpDb, SBC_RTPDB))
+  if (!_rtpDb->open())
   {
-    OSS_LOG_WARNING("[REDIS] SBCWorkSpaceManager::initialize(SBC_RTPDB) in workspace " << SBC_RTPDB << " ** Temporary Failure **");
+    OSS_LOG_WARNING("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_RTPDB) in workspace SBC_RTPDB ** Temporary Failure **");
   }
   
-  OSS_LOG_NOTICE("[REDIS] SBCWorkSpaceManager::initialize(SBC_CDRDB) in workspace " << SBC_CDRDB );
+  OSS_LOG_NOTICE("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_CDRDB) in workspace SBC_CDRDB" );
   _cdrDb = WorkSpace(new SBCWorkSpace("sbc_cdr.bdb"));
-  if (!connector.connect(*_cdrDb, SBC_CDRDB))
+  if (!_cdrDb->open())
   {
-    OSS_LOG_WARNING("[REDIS] SBCWorkSpaceManager::initialize(SBC_CDRDB) in workspace " << SBC_CDRDB << " ** Temporary Failure **");
+    OSS_LOG_WARNING("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_CDRDB) in workspace SBC_CDRDB ** Temporary Failure **");
   }
   
-  OSS_LOG_NOTICE("[REDIS] SBCWorkSpaceManager::initialize(SBC_ACCOUNTDB) in workspace " << SBC_ACCOUNTDB );
+  OSS_LOG_NOTICE("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_ACCOUNTDB) in workspace SBC_ACCOUNTDB" );
   _accountDb = WorkSpace(new SBCWorkSpace("sbc_account.bdb"));
-  if (!connector.connect(*_accountDb, SBC_ACCOUNTDB))
+  if (!_accountDb->open())
   {
-    OSS_LOG_WARNING("[REDIS] SBCWorkSpaceManager::initialize(SBC_ACCOUNTDB) in workspace " << SBC_ACCOUNTDB << " ** Temporary Failure **");
+    OSS_LOG_WARNING("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_ACCOUNTDB) in workspace SBC_ACCOUNTDB ** Temporary Failure **");
   }
   
-  OSS_LOG_NOTICE("[REDIS] SBCWorkSpaceManager::initialize(SBC_LOCAL_REGDB) in workspace " << SBC_LOCAL_REGDB );
+  OSS_LOG_NOTICE("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_LOCAL_REGDB) in workspace SBC_LOCAL_REGDB" );
   _localRegDb = WorkSpace(new SBCWorkSpace("sbc_local_reg.bdb"));
-  if (!connector.connect(*_localRegDb, SBC_LOCAL_REGDB))
+  if (!_localRegDb->open())
   {
-    OSS_LOG_WARNING("[REDIS] SBCWorkSpaceManager::initialize(SBC_LOCAL_REGDB) in workspace " << SBC_LOCAL_REGDB << " ** Temporary Failure **");
+    OSS_LOG_WARNING("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_LOCAL_REGDB) in workspace SBC_LOCAL_REGDB ** Temporary Failure **");
   }
   
-  OSS_LOG_NOTICE("[REDIS] SBCWorkSpaceManager::initialize(SBC_BANNED_ADDRESSDB) in workspace " << SBC_BANNED_ADDRESSDB );
+  OSS_LOG_NOTICE("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_BANNED_ADDRESSDB) in workspace SBC_BANNED_ADDRESSDB" );
   _bannedAddressDb = WorkSpace(new SBCWorkSpace("sbc_banned_address.bdb"));
-  if (!connector.connect(*_bannedAddressDb, SBC_BANNED_ADDRESSDB))
+  if (!_bannedAddressDb->open())
   {
-    OSS_LOG_WARNING("[REDIS] SBCWorkSpaceManager::initialize(SBC_BANNED_ADDRESSDB) in workspace " << SBC_BANNED_ADDRESSDB << " ** Temporary Failure **");
+    OSS_LOG_WARNING("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_BANNED_ADDRESSDB) in workspace SBC_BANNED_ADDRESSDB ** Temporary Failure **");
   }
   
-  OSS_LOG_NOTICE("[REDIS] SBCWorkSpaceManager::initialize(SBC_ROUTEDB) in workspace " << SBC_ROUTEDB );
+  OSS_LOG_NOTICE("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_ROUTEDB) in workspace SBC_ROUTEDB" );
   _routeDb = WorkSpace(new SBCWorkSpace("sbc_route.bdb"));
-  if (!connector.connect(*_routeDb, SBC_ROUTEDB))
+  if (!_routeDb->open())
   {
-    OSS_LOG_WARNING("[REDIS] SBCWorkSpaceManager::initialize(SBC_ROUTEDB) in workspace " << SBC_ROUTEDB << " ** Temporary Failure **");
+    OSS_LOG_WARNING("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_ROUTEDB) in workspace SBC_ROUTEDB ** Temporary Failure **");
   }
 }
 
 
-const SBCWorkSpaceManager::WorkSpace& SBCWorkSpaceManager::getWorkSpace(RedisWorkspace workSpace) const
-{
-  switch(workSpace)
-  {
-  case SBC_SYSTEMDB:
-    return _systemDb;
-  case SBC_REGDB:
-    return _regDb;
-  case SBC_DIALOGDB:
-    return _dialogDb;
-  case SBC_RTPDB:
-    return _rtpDb;
-  case SBC_CDRDB:
-    return _cdrDb;
-  case SBC_ACCOUNTDB:
-    return _accountDb;
-  case SBC_LOCAL_REGDB:
-    return _localRegDb;
-  case SBC_BANNED_ADDRESSDB:
-    return _bannedAddressDb;
-  case SBC_ROUTEDB:
-    return _routeDb;
-  default:
-    return _undefinedDb;
-  }
-}
-
-  
 } } } // OSS::SIP::SBC
 
 

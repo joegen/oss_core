@@ -809,7 +809,7 @@ SIPMessage::Ptr SBCRegisterBehavior::onRouteUpperReg(
 
     if (!registration.readFromWorkSpace(*_workspace, regId))
     {
-      OSS_LOG_ERROR("Unable to load " << regId << " from Redis database.");
+      OSS_LOG_ERROR("Unable to load " << regId << " from workspace.");
       SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_404_NotFound);
       return serverError;
     }
