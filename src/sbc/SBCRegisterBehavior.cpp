@@ -684,8 +684,10 @@ void SBCRegisterBehavior::onProcessResponseOutbound(
       //
       // Set XOR Property if XOR is enabled
       //
+#if ENABLE_FEATURE_XOR
       if (OSS::SIP::SIPXOR::isEnabled() && pTransaction->serverTransaction()->isXOREncrypted())
         registration.enc() = true;
+#endif
       
       //
       // Set expires

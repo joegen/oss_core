@@ -24,7 +24,6 @@
 #include <OSS/SIP/SIPHeaderTokens.h>
 
 #include "OSS/SIP/SBC/SBCCDRManager.h"
-#include "OSS/SIP/SBC/SBCWorkSpaceConfig.h"
 #include "OSS/SIP/SBC/SBCCDRRecord.h"
 #include "OSS/SIP/SIPFrom.h"
 #include "OSS/SIP/SIPContact.h"

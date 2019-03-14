@@ -76,7 +76,6 @@ nobase_include_HEADERS += \
     OSS/SIP/SBC/SBCReferBehavior.h \
     OSS/SIP/SBC/SBCManager.h \
     OSS/SIP/SBC/SBCPlugin.h \
-    OSS/SIP/SBC/SBCExec.h \
     OSS/SIP/SBC/SBCPluginManager.h \
     OSS/SIP/SBC/SBCSDPBehavior.h \
     OSS/SIP/SBC/SBCPrackBehavior.h \

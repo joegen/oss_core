@@ -10,7 +10,6 @@ liboss_core_la_SOURCES +=  \
   sbc/SBCSubscribeBehavior.cpp \
   sbc/SBCCancelBehavior.cpp \
   sbc/SBCInviteBehavior.cpp \
-  sbc/SBCExec.cpp \
   sbc/SBCReferBehavior.cpp \
   sbc/SBCUpdateBehavior.cpp \
   sbc/SBCExecBehavior.cpp \

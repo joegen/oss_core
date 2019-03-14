@@ -207,7 +207,7 @@ bool SBCPluginManager::loadEncryptionPlugin(const boost::filesystem::path& pathC
   
   std::vector<char> buff;
   _pEncryptor = _encryption.plugins().encryption()[0]->createInstance();
-
+#if ENABLE_FEATURE_XOR
   if (_pEncryptor)
   {
     OSS_LOG_INFO( "PEA Encryption Plugin " <<
@@ -224,6 +224,7 @@ bool SBCPluginManager::loadEncryptionPlugin(const boost::filesystem::path& pathC
   {
     OSS_LOG_ERROR("Unable to create PEA Encryption Plugin instance.");
   }
+#endif
 
   return _pEncryptor != 0;
 }

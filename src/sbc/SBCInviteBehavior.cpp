@@ -861,10 +861,12 @@ void SBCInviteBehavior::onProcessAckOr2xxRequest(
   if (!pTransport->isEndpoint())
   {
     std::string isXOREncrypted = "0";
+#if ENABLE_FEATURE_XOR
     if (SIP::SIPXOR::isEnabled())
     {
       pMsg->getProperty("xor", isXOREncrypted);
     }
+#endif
     std::ostringstream logMsg;
     logMsg << logId << "<<< " << pMsg->startLine()
     << " LEN: " << pTransport->getLastReadCount()
@@ -907,10 +909,12 @@ void SBCInviteBehavior::onProcessAckOr2xxRequest(
         if (transport == "udp")
         {
           std::string isXOREncrypted = "0";
+#if ENABLE_FEATURE_XOR
           if (SIP::SIPXOR::isEnabled())
           {
             p2xx->getProperty("xor", isXOREncrypted);
           }
+#endif
 
           if (!_pManager->getUserAgentName().empty())
             p2xx->hdrSet("Server", _pManager->getUserAgentName().c_str());

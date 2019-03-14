@@ -69,7 +69,6 @@ SBCManager::SBCManager() :
   _sipConfigFile("sip.cfg"),
   _dialogs(3600*24),
   _dialogStateManager(this),
-  _enableStunServer(true),
   _pReferHandler(0),
   _pRegisterHandler(0),
   _pInviteHandler(0),
@@ -305,51 +304,6 @@ void SBCManager::onLocalRegistrationStopped()
 {
 }
 
-void SBCManager::initializeSTUNServer(const boost::filesystem::path& cfgDirectory)
-{
-  if (!_enableStunServer)
-    return;
-
-  ClassType config;
-  boost::filesystem::path configFile = operator/(cfgDirectory, _sipConfigFile);
-  if (!config.load(configFile))
-  {
-    OSS_LOG_ERROR("Unable to load " << _sipConfigFile << " while attempting to initialize STUN server.");
-    reportCriticalState("Unable to load sip.cfg");
-    return;
-  }
-  DataType root = config.self();
-  DataType listeners = root["listeners"];
-
-  //stun-primary-ip = "192.168.1.10:3478";
-  //stun-secondary-ip = "192.168.1.11:3479";
-  if (!listeners.exists("stun-primary-ip") || !listeners.exists("stun-secondary-ip"))
-  {
-    _enableStunServer = false;
-    return;
-  }
-
-  std::string primary = listeners["stun-primary-ip"];
-  std::string secondary = listeners["stun-secondary-ip"];
-
-  if (primary.empty() || secondary.empty())
-  {
-    _enableStunServer = false;
-    return;
-  }
-
-  OSS::Net::IPAddress primaryAddress = OSS::Net::IPAddress::fromV4IPPort(primary.c_str());
-  OSS::Net::IPAddress secondaryAddress = OSS::Net::IPAddress::fromV4IPPort(secondary.c_str());
-
-  if (primaryAddress.compare(secondaryAddress, true) || primaryAddress.compare(secondaryAddress, false))
-  {
-    _enableStunServer = false;
-    return;
-  }
-
-  _stunServer.initialize(primaryAddress, secondaryAddress);
-}
-
  bool SBCManager::initialize()
  {
    boost::filesystem::path configDir(SBCDirectories::instance()->getConfigDirectory().c_str());
@@ -408,20 +362,6 @@ void SBCManager::initialize(const boost::filesystem::path& cfgDirectory)
     throw SBCConfigException("Unable to initialize RTP Proxy configuration.");
   }
   OSS_LOG_INFO("RTP Proxy initialized ...");
-  //
-  // Initialize the stun
-  //
-  OSS_LOG_INFO("Initializing STUN Server ...");
-  try
-  {
-    initializeSTUNServer(_configurationDirectory);
-  }
-  catch(...)
-  {
-    OSS::log_fatal("Unable to initialize STUN Server configuration.");
-  }
-  OSS_LOG_INFO("STUN Server intialized.");
-
   //
   // Initialize User agent
   //
@@ -513,16 +453,6 @@ bool SBCManager::run()
     _transactionManager.stack().run();
     _dialogStateManager.run(_dialogStateDirectory);
 
-    OSS_LOG_INFO("Starting STUN Server ...");
-    if (_enableStunServer)
-    {
-      _stunServer.run();
-      OSS_LOG_INFO("STUN Server STARTED");
-    }else
-    {
-      OSS_LOG_INFO("STUN Server is DISABLED");
-    }
-
     _pRegisterHandler->startOptionsThread();
   
   }
@@ -536,14 +466,6 @@ bool SBCManager::run()
 
 void SBCManager::stop()
 {
-  if (_enableStunServer)
-  {
-    std::cout << "Stopping STUN Server ..." << std::endl;
-    _stunServer.stop();
-    std::cout << "STUN Server STOPPED ..." << std::endl;
-  }
-
-
   std::cout << "Stopping Dialog State Manager ..." << std::endl;
   _dialogStateManager.stop();
   std::cout << "Dialog State Manager STOPPED ..." << std::endl;

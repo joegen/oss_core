@@ -32,10 +32,8 @@
 #include "OSS/Persistent/ClassType.h"
 #include "OSS/RTP/RTPProxyManager.h"
 #include "OSS/SIP/SBC/SBCDialogStateManager.h"
-#include "OSS/STUN/STUNClient.h"
 #include "OSS/UTL/Cache.h"
 #include "OSS/UTL/Thread.h"
-#include "OSS/STUN/STUNServer.h"
 #include "OSS/SIP/SBC/SBCPluginManager.h"
 #include "OSS/UTL/IPCQueue.h"
 #include "OSS/SIP/SBC/SBCStaticRouter.h"
@@ -245,9 +243,6 @@ protected:
 
   void initializeUserAgent(const boost::filesystem::path& cfgDirectory);
     /// Initialize User-Agent specific properties
- 
-  void initializeSTUNServer(const boost::filesystem::path& cfgDirectory);
-    /// Initialize the built-in STUN server
 
   void initializePlugins();
     /// Initialize the SBC Plugins
@@ -357,8 +352,6 @@ protected:
   SBCDialogStateManager _dialogStateManager;
   ExecProcList _execProcs;
   OSS::Net::IPAddress _globalAddress;
-  OSS::STUN::STUNServer _stunServer;
-  bool _enableStunServer;
   SBCReferBehavior* _pReferHandler;
   SBCRegisterBehavior* _pRegisterHandler;
   SBCInviteBehavior* _pInviteHandler;
