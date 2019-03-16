@@ -12,6 +12,7 @@ before_install:
   - sudo apt-get install -y libhiredis-dev
   - sudo apt-get install -y libconfig++-dev
   - sudo apt-get install -y libpcap-dev
+  - sudo apt-get install -y libdb++-dev
 script: autoreconf -if && ./configure && make
 notifications:
   email:
