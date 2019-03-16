@@ -56,14 +56,11 @@ bin_PROGRAMS =
 include zmq/src.am
 include crypto/src.am
 include persistent/src.am
-include raft/src.am
-include lmdb/src.am
 include js/src.am
 include net/src.am
 include exec/src.am
 include stun/src.am
 include utl/src.am
-include bson/src.am
 include json/src.am
 include udns/src.am
 

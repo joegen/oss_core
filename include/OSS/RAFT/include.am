@@ -1,5 +1,0 @@
-nobase_include_HEADERS += \
-    OSS/RAFT/libraft.h \
-    OSS/RAFT/RaftConsensus.h \
-    OSS/RAFT/RaftNode.h \
-    OSS/RAFT/RaftConnection.h

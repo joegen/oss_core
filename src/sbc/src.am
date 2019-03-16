@@ -1,3 +1,5 @@
+if ENABLE_FEATURE_SBC
+if ENABLE_FEATURE_B2BUA
 liboss_core_la_SOURCES +=  \
   sbc/SBCRegistrar.cpp \
   sbc/SBCDefaultBehavior.cpp \
@@ -42,8 +44,8 @@ liboss_core_la_SOURCES +=  \
   sbc/SBCJSModuleManager.cpp  \
   sbc/SBCJsonRpcHandler.cpp \
   sbc/SBCWorkSpace.cpp
-
-
+endif
+endif
 
 
 

@@ -1,5 +1,0 @@
-liboss_core_la_SOURCES +=  \
-    raft/libraft.c \
-    raft/RaftConsensus.cpp \
-    raft/RaftNode.cpp \
-    raft/RaftConnection.cpp

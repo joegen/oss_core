@@ -1,3 +1,0 @@
-liboss_core_la_SOURCES +=  \
-    lmdb/liblmdb.c \
-    lmdb/LMDatabase.cpp

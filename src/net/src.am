@@ -88,15 +88,6 @@ liboss_core_la_SOURCES +=  \
     net/ZMQSocketServer.cpp
 endif
 
-if ENABLE_FEATURE_NET_EXTRA
-liboss_core_la_SOURCES += \
-    net/FirewallRule.cpp \
-    net/Firewall.cpp \
-    net/FramedTcpClient.cpp \
-    net/FramedTcpConnection.cpp \
-    net/FramedTcpListener.cpp
-endif
-
 liboss_core_la_SOURCES += \
     net/esl/include/cc.h \
     net/esl/include/esl_cJSON_Utils.h \

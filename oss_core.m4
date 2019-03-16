@@ -66,10 +66,10 @@ AC_DEFUN([FLAG_EXISTING_CXX_DEP],[
 AC_ARG_ENABLE([all-features],
     AC_HELP_STRING([--enable-all-features], [Enable ALL features]),
     [
-        ENABLE_FEATURE(RESTKV)
         ENABLE_FEATURE(CARP)
         ENABLE_FEATURE(V8)
         ENABLE_FEATURE(B2BUA)
+        ENABLE_FEATURE(SBC)
         ENABLE_FEATURE(WEBSOCKETS)
         ENABLE_FEATURE(XOR)
         ENABLE_FEATURE(RTP)
@@ -78,7 +78,6 @@ AC_ARG_ENABLE([all-features],
         ENABLE_FEATURE(REDIS)
         ENABLE_FEATURE(MCRYPT)
         ENABLE_FEATURE(CONFIG)
-        ENABLE_FEATURE(NET_EXTRA)
         ENABLE_FEATURE(INOTIFY)
     ],
     [
@@ -89,6 +88,13 @@ AC_ARG_ENABLE([all-features],
             AC_HELP_STRING([--disable-b2bua], [Disable B2BUA Feature]),
             [DISABLE_FEATURE(B2BUA)],
             [ENABLE_FEATURE(B2BUA)])
+                #
+        # Disable SBC compilation
+        #
+        AC_ARG_ENABLE([sbc],
+            AC_HELP_STRING([--disable-sbc], [Disable SBC Feature]),
+            [DISABLE_FEATURE(SBC)],
+            [ENABLE_FEATURE(SBC)])
         #
         # Disable RTP Proxy compilation
         #
@@ -111,13 +117,6 @@ AC_ARG_ENABLE([all-features],
             AC_HELP_STRING([--disable-v8], [Disable V8 JavaScript Feature]),
             [DISABLE_FEATURE(V8)],
             [ENABLE_FEATURE(V8)])
-        #
-        # Enable REST KV compilation
-        #
-        AC_ARG_ENABLE([restkv],
-            AC_HELP_STRING([--enable-rest], [Enable REST Key Value Store Feature]),
-            [ENABLE_FEATURE(RESTKV)],
-            [DISABLE_FEATURE(RESTKV)])
         #
         # Enable ZeroMQ compilation
         #
@@ -168,16 +167,9 @@ AC_ARG_ENABLE([all-features],
             [DISABLE_FEATURE(STUN)],
             [ENABLE_FEATURE(STUN)])
 
-        #
-        # Enable NET compilation
-        #
-        AC_ARG_ENABLE([net-extra],
-            AC_HELP_STRING([--disable-net-extra], [Disable NET Extra Feature]),
-            [DISABLE_FEATURE(NET_EXTRA)],
-            [ENABLE_FEATURE(NET_EXTRA)])
 
-         #
-        # Enable NET compilation
+        #
+        # Enable iNotify compilation
         #
         AC_ARG_ENABLE([inotify],
             AC_HELP_STRING([--disable-inotify], [Disable inotify]),
