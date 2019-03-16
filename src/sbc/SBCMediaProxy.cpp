@@ -30,6 +30,7 @@ namespace OSS {
 namespace SIP {
 namespace SBC {
   
+#define RTP_PROXY_THREAD_COUNT 30
   
 static int get_node(const std::string& sessionId, bool& spillOver)
 {
@@ -77,7 +78,8 @@ SBCMediaProxy::SBCMediaProxy(SBCManager* pManager) :
   _node2(2),
   _node3(3),
   _node4(4),
-  _pManager(pManager)
+  _pManager(pManager),
+  _remoteRtpEnabled(false)
 {
 }
   
@@ -85,35 +87,46 @@ SBCMediaProxy::~SBCMediaProxy()
 {
 }
 
-bool SBCMediaProxy::initialize()
+bool SBCMediaProxy::initialize(bool remoteRtpEnabled)
 {
-  if (!_node0.initialize())
-    return false;
-  if (!_node1.initialize())
-    return false;
-  if (!_node2.initialize())
-    return false;
-  if (!_node3.initialize())
-    return false;
-  if (!_node4.initialize())
-    return false;
-  
+  _remoteRtpEnabled = remoteRtpEnabled;
+
+  if (_remoteRtpEnabled)
+  {
+    if (!_node0.initialize())
+      return false;
+    if (!_node1.initialize())
+      return false;
+    if (!_node2.initialize())
+      return false;
+    if (!_node3.initialize())
+      return false;
+    if (!_node4.initialize())
+      return false;
+  }
+  else
+  {
+    _rtp.run(RTP_PROXY_THREAD_COUNT);
+  }  
   return true;
 }
 
 SBCMediaProxyClient* SBCMediaProxy::getNode(const std::string& sessionId, bool& spillOver)
 {
-  int node = get_node(sessionId, spillOver);
-  if (node == 0)
-    return &_node0;
-  else if (node == 1)
-    return &_node1;
-  else if (node == 2)
-    return &_node2;
-  else if (node == 3)
-    return &_node3;
-  else if (node == 4)
-    return &_node4;
+  if (_remoteRtpEnabled)
+  {
+    int node = get_node(sessionId, spillOver);
+    if (node == 0)
+      return &_node0;
+    else if (node == 1)
+      return &_node1;
+    else if (node == 2)
+      return &_node2;
+    else if (node == 3)
+      return &_node3;
+    else if (node == 4)
+      return &_node4;
+  }
   return 0;
 }
    
@@ -136,6 +149,18 @@ bool SBCMediaProxy::handleSDP(
   {
     return pNode->handleSDP(logId, sessionId, sentBy, packetSourceIP, packetLocalInterface, route, routeLocalInterface, requestType, sdp, rtpAttribute);
   }
+  else
+  {
+    try
+    {
+      _rtp.handleSDP(logId, sessionId, sentBy, packetSourceIP, packetLocalInterface, route, routeLocalInterface, requestType, sdp, rtpAttribute);
+      return true;
+    }
+    catch (...)
+    {
+      return false;
+    }
+  }
   return false;
 }
 
@@ -146,6 +171,11 @@ bool SBCMediaProxy::getSDP(const std::string& sessionId, std::string& lastOffer,
   if (pNode)
   {
     return pNode->getSDP( sessionId, lastOffer, lastAnswer);
+  }
+  else
+  {
+    _rtp.getSDP(sessionId, lastOffer, lastAnswer);
+    return true;
   }
   return false;
 }
@@ -158,6 +188,11 @@ bool SBCMediaProxy::removeSession(const std::string& sessionId)
   if (pNode)
   {
     return pNode->removeSession(sessionId);
+  }
+  else
+  {
+    _rtp.removeSession(sessionId);
+    return true;
   }
   return false;
 }
@@ -179,11 +214,18 @@ unsigned int SBCMediaProxy::getMaxSession() const
   
 unsigned int SBCMediaProxy::getSessionCount() const
 {
-  return _node0.getSessionCount() +
-    _node1.getSessionCount() +
-    _node2.getSessionCount() +
-    _node3.getSessionCount() +
-    _node4.getSessionCount();
+  if (_remoteRtpEnabled)
+  {
+    return _node0.getSessionCount() +
+      _node1.getSessionCount() +
+      _node2.getSessionCount() +
+      _node3.getSessionCount() +
+      _node4.getSessionCount();
+  }
+  else
+  {
+    return _rtp.getSessionCount();
+  }
 }
 
 } } } //OSS::SIP::SBC

@@ -26,6 +26,7 @@
 
 
 #include "OSS/SIP/SBC/SBCMediaProxyClient.h"
+#include "OSS/RTP/RTPProxyManager.h"
 
 
 namespace OSS {
@@ -55,7 +56,7 @@ public:
   
   bool getSDP(const std::string& sessionId, std::string& lastOffer, std::string& lastAnswer);
   
-  bool initialize();
+  bool initialize(bool remoteRtpEnabled = false);
   
   bool removeSession(const std::string& sessionId);
   
@@ -73,6 +74,8 @@ protected:
   SBCMediaProxyClient _node3;
   SBCMediaProxyClient _node4;
   SBCManager* _pManager;
+  OSS::RTP::RTPProxyManager _rtp;
+  bool _remoteRtpEnabled;
 };
 
 //

@@ -17,8 +17,8 @@ liboss_core_la_SOURCES +=  \
     js/JSInterIsolateCallManager.cpp \
     js/JSFileDescriptorManager.cpp
 
-    bin_PROGRAMS += ossjs
-    ossjs_SOURCES = js/oss_js.cpp
+    bin_PROGRAMS += oss_core
+    oss_core_SOURCES = js/oss_core.cpp
 endif
 
 
