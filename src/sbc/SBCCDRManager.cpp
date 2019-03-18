@@ -31,6 +31,7 @@
 #include "OSS/SIP/SIPStatusLine.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/SIP/SBC/SBCManager.h"
+#include "OSS/SIP/SBC/SBCDirectories.h"
 
 
 namespace OSS {
@@ -244,7 +245,7 @@ void SBCCDRManager::initialize(SBCManager* pSBCManager)
   // Open the logger
   //
   std::ostringstream logFilePath;
-  logFilePath << OSS::boost_path(_pManager->getLogDirectory()) << "/cdr.csv";
+  logFilePath << OSS::SIP::SBC::SBCDirectories::instance()->getLogDirectory() << "/cdr.csv";
   _logger.open(logFilePath.str(), OSS::UTL::LogFile::PRIO_NOTICE, "%t");
   
   //

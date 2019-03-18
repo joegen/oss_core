@@ -9,6 +9,7 @@
 #include "OSS/UTL/Thread.h"
 #include "OSS/UTL/Console.h"
 #include "OSS/JS/JSIsolateManager.h"
+#include "OSS/SIP/SBC/SBCManager.h"
 
 
 using namespace OSS;
@@ -85,6 +86,6 @@ int main(int argc, char** argv)
   optind = isDaemon ? 3 : 2;
 
   JS::JSIsolate::Ptr pIsolate = JS::JSIsolateManager::instance().rootIsolate();
-  JS::JSIsolateManager::instance().run(pIsolate, path);
+  OSS::SIP::SBC::SBCManager::instance()->modules().run(OSS::boost_path(path), false);
   _exit(pIsolate->getExitValue());
 }

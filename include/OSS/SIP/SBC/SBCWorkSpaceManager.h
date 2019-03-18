@@ -42,7 +42,7 @@ public:
   ~SBCWorkSpaceManager();
   
 
-  void initialize();
+  bool initialize();
   
   void stop();
    

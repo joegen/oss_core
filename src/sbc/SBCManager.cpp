@@ -62,6 +62,23 @@ namespace OSS {
 namespace SIP {
 namespace SBC {
 
+SBCManager* SBCManager::_instance = 0;
+
+SBCManager* SBCManager::instance()
+{
+  if (!SBCManager::_instance)
+  {
+    SBCManager::_instance = new SBCManager();
+  }
+  return SBCManager::_instance;
+}
+
+void SBCManager::deleteInstance()
+{
+  delete SBCManager::_instance;
+  SBCManager::_instance = 0;
+}
+
 
 SBCManager::SBCManager() :
   _transactionManager(2, 8120),

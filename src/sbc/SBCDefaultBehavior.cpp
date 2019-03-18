@@ -43,6 +43,8 @@ namespace SBC {
 using OSS::Persistent::ClassType;
 using OSS::Persistent::DataType;
 
+#define DEFAULT_MAX_FORWARDS "30"
+
 SBCDefaultBehavior::SBCDefaultBehavior(
   SBCManager* pManager, 
   OSS::SIP::B2BUA::SIPB2BHandler::MessageType type,
@@ -218,12 +220,28 @@ SIPMessage::Ptr SBCDefaultBehavior::onRouteOutOfDialogTransaction(
       }
     }
     
+    std::string maxForwards = pRequest->hdrGet("max-forwards");
+    if (maxForwards.empty())
+    {
+      maxForwards = DEFAULT_MAX_FORWARDS;
+    }
+    int maxF = OSS::string_to_number<int>(maxForwards.c_str());
+    if (--maxF == 0)
+    {
+      return pRequest->createResponse(SIPMessage::CODE_483_TooManyHops);
+    }
+    pRequest->hdrRemove("max-forwards");
+    pRequest->hdrSet("Max-Forwards", OSS::string_from_number(maxF).c_str());
+    
     //
     // finally let the script route it
     //
     OSS::JSON::Object result;
-    _pManager->modules().processRequestEvent("routeRequest", pRequest, result);
-
+    if (!_pManager->modules().processRequestEvent("routeRequest", pRequest, result))
+    {
+      return pRequest->createResponse(SIPMessage::CODE_500_InternalServerError);
+    }
+ 
     //
     // Check if script would like to forward the call towards a registered user
     //

@@ -46,7 +46,6 @@
 #include "OSS/SIP/SBC/SBCConsole.h"
 #include "OSS/SIP/SBC/SBCJSModuleManager.h"
 #include "OSS/SIP/SBC/SBCJsonRpcHandler.h"
-#include "OSS/UTL/Singleton.h"
 #include "OSS/SIP/SBC/SBCDirectories.h"
 
 namespace OSS {
@@ -59,19 +58,19 @@ class SBCInviteBehavior;
 class SBCPrackBehavior;
 
 
-class OSS_API SBCManager : public OSS::UTL::Singleton<SBCManager>
+class OSS_API SBCManager
 {
 public:
   typedef boost::function<bool(const std::string&, std::ostringstream& output)> ExecProc;
   typedef std::map<std::string, ExecProc> ExecProcList;
   typedef std::map<std::string, OSS::UInt64> CallTimers;
-  friend class OSS::UTL::Singleton<SBCManager>;
-protected:
+
+  static SBCManager* instance();
+  static void deleteInstance();
   SBCManager();
     /// Create a new SBC Manager
   ~SBCManager();
     /// Destroy the SBC Manager
-public:
   bool initialize();
   void initialize(const boost::filesystem::path& cfgDirectory);
     /// Initialize the manager configuration using the configuration path specified.
@@ -293,12 +292,6 @@ public:
   SBCWorkSpaceManager& workspace();
     /// Workspace Manager
   
-  const boost::filesystem::path& getLogDirectory() const;
-    /// Return the log directory configured for the SBC
-  
-  void setLogDirectory(const boost::filesystem::path& logDirectory);
-    /// Set the log directory configured for the SBC
-  
   const boost::filesystem::path& getTempDirectory() const;
     /// Return the temp directory configured for the SBC
   
@@ -343,7 +336,6 @@ protected:
   boost::filesystem::path _rtpStateDirectory;
   boost::filesystem::path _registrationRecordsDirectory;
   boost::filesystem::path _sipConfigurationFile;
-  boost::filesystem::path _logDirectory;
   boost::filesystem::path _tempDirectory;
   std::string _userAgentName;
   std::string _sipConfigFile;
@@ -420,6 +412,7 @@ protected:
   unsigned long _maxRegistersPerSecond;
   unsigned long _maxSubscribesPerSecond;
   
+  static SBCManager* _instance;
 
 };
 
@@ -575,17 +568,7 @@ inline SBCWorkSpaceManager& SBCManager::workspace()
 {
   return _workspace;
 }
-
-inline const boost::filesystem::path& SBCManager::getLogDirectory() const
-{
-  return _logDirectory;
-}
-  
-inline void SBCManager::setLogDirectory(const boost::filesystem::path& logDirectory)
-{
-  _logDirectory = logDirectory;
-}
-  
+ 
 inline const boost::filesystem::path& SBCManager::getTempDirectory() const
 {
   return _tempDirectory;

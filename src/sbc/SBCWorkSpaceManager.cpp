@@ -41,13 +41,14 @@ void SBCWorkSpaceManager::stop()
   _isTerminating = true;
 }
 
-void SBCWorkSpaceManager::initialize()
+bool SBCWorkSpaceManager::initialize()
 {
   OSS_LOG_NOTICE("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_SYSTEMDB) in workspace SBC_SYSTEMDB" );
   _systemDb = WorkSpace(new SBCWorkSpace("sbc_system.bdb"));
   if (!_systemDb->open())
   {
     OSS_LOG_WARNING("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_SYSTEMDB) in workspace SBC_SYSTEMDB ** Temporary Failure **");
+    return false;
   }
   
 
@@ -56,6 +57,7 @@ void SBCWorkSpaceManager::initialize()
   if (!_regDb->open())
   {
     OSS_LOG_WARNING("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_REGDB) in workspace SBC_REGDB ** Temporary Failure **");
+    return false;
   }
   
   OSS_LOG_NOTICE("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_DIALOGDB) in workspace SBC_DIALOGDB" );
@@ -63,6 +65,7 @@ void SBCWorkSpaceManager::initialize()
   if (!_dialogDb->open())
   {
     OSS_LOG_WARNING("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_DIALOGDB) in workspace SBC_DIALOGDB ** Temporary Failure **");
+    return false;
   }
   
   OSS_LOG_NOTICE("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_RTPDB) in workspace SBC_RTPDB" );
@@ -70,6 +73,7 @@ void SBCWorkSpaceManager::initialize()
   if (!_rtpDb->open())
   {
     OSS_LOG_WARNING("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_RTPDB) in workspace SBC_RTPDB ** Temporary Failure **");
+    return false;
   }
   
   OSS_LOG_NOTICE("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_CDRDB) in workspace SBC_CDRDB" );
@@ -77,6 +81,7 @@ void SBCWorkSpaceManager::initialize()
   if (!_cdrDb->open())
   {
     OSS_LOG_WARNING("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_CDRDB) in workspace SBC_CDRDB ** Temporary Failure **");
+    return false;
   }
   
   OSS_LOG_NOTICE("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_ACCOUNTDB) in workspace SBC_ACCOUNTDB" );
@@ -84,6 +89,7 @@ void SBCWorkSpaceManager::initialize()
   if (!_accountDb->open())
   {
     OSS_LOG_WARNING("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_ACCOUNTDB) in workspace SBC_ACCOUNTDB ** Temporary Failure **");
+    return false;
   }
   
   OSS_LOG_NOTICE("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_LOCAL_REGDB) in workspace SBC_LOCAL_REGDB" );
@@ -91,6 +97,7 @@ void SBCWorkSpaceManager::initialize()
   if (!_localRegDb->open())
   {
     OSS_LOG_WARNING("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_LOCAL_REGDB) in workspace SBC_LOCAL_REGDB ** Temporary Failure **");
+    return false;
   }
   
   OSS_LOG_NOTICE("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_BANNED_ADDRESSDB) in workspace SBC_BANNED_ADDRESSDB" );
@@ -98,6 +105,7 @@ void SBCWorkSpaceManager::initialize()
   if (!_bannedAddressDb->open())
   {
     OSS_LOG_WARNING("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_BANNED_ADDRESSDB) in workspace SBC_BANNED_ADDRESSDB ** Temporary Failure **");
+    return false;
   }
   
   OSS_LOG_NOTICE("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_ROUTEDB) in workspace SBC_ROUTEDB" );
@@ -105,7 +113,9 @@ void SBCWorkSpaceManager::initialize()
   if (!_routeDb->open())
   {
     OSS_LOG_WARNING("[WORKSPACE] SBCWorkSpaceManager::initialize(SBC_ROUTEDB) in workspace SBC_ROUTEDB ** Temporary Failure **");
+    return false;
   }
+  return true;
 }
 
 

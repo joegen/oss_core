@@ -67,7 +67,15 @@ bool SBCWorkSpace::open()
   assert(!_name.empty());
   std::ostringstream path;
   path << SBCDirectories::instance()->getDbDirectory() << "/" << _name;
-  return open(path.str());
+  try
+  {
+    return open(path.str());
+  }
+  catch(const std::exception& e)
+  {
+    OSS_LOG_ERROR("Unebale to open " << path.str() << " exception: " << e.what());
+    return false;
+  }
 }
 
 void SBCWorkSpace::close()
