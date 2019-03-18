@@ -189,3 +189,39 @@ Error.prototype.printStackTrace = function() {
     log_error(this + "\n" + this.stack);
   }
 }
+
+//
+// SBC Globals
+//
+const TRN_DENY = 0;
+const TRN_ACCEPT = 1;
+const DIALOG_STATE_IN_CONTACT = "c";
+const DIALOG_STATE_IN_ROUTE = "r";
+const B2B = "b2b";
+
+//
+// Transcoder Constants
+//
+const XCID = "x-cid";
+const PCM = "PCM-16";
+const PCMA = "G.711-ALaw-64k";
+const PCMU = "G.711-uLaw-64k";
+const iLBC = "iLBC";
+const G729 = "G.729";
+const G729A = "G.729A";
+const G7231 = "G.723.1"; // passthrough
+const SpeexNB = "SpeexNB";
+const SpeexWB = "SpeexWB";
+const G722 = "G.722-64k";
+const AMR = "GSM-AMR";
+const LPC10 = "LPC-10";
+const GSM = "GSM-06.10";
+const Opus = "Opus-48";
+const OpusS = "Opus-48S";
+const Silk = "SILK-16";
+const VP8WebM = "VP8-WebM";
+const VP8OM = "VP8-OM";
+const H261 = "H.261";
+const H263 = "H.263"; // passthrough
+const H264_0 = "H.264-0"; // passthrough
+const H264_1 = "H.264-1"; // passthrough

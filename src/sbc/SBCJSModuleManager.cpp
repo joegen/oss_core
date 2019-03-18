@@ -110,9 +110,10 @@ bool SBCJSModuleManager::processTransactionEvent(const std::string& eventName, c
     return false;
   }
   OSS::JSON::Object event, arguments;
-  event["method"] = OSS::JSON::String(eventName);
+  event["method"] = OSS::JSON::String("handle_sip_transaction_event");
   arguments["type"] = OSS::JSON::String("method");
   arguments["dataSource"] = OSS::JSON::String("transaction");
+  arguments["eventName"] = OSS::JSON::String(eventName);
   event["arguments"] = arguments;
   return JS::JSIsolateManager::instance().rootIsolate()->execute(event, result, 0, pTransaction.get());
 }
@@ -124,9 +125,10 @@ bool SBCJSModuleManager::processRequestEvent(const std::string& eventName, const
     return false;
   }
   OSS::JSON::Object event, arguments;
-  event["method"] = OSS::JSON::String(eventName);
+  event["method"] = OSS::JSON::String("handle_sip_request_event");
   arguments["type"] = OSS::JSON::String("method");
   arguments["dataSource"] = OSS::JSON::String("request");
+  arguments["eventName"] = OSS::JSON::String(eventName);
   event["arguments"] = arguments;
   return JS::JSIsolateManager::instance().rootIsolate()->execute(event, result, 0, pMessage.get());
 }
@@ -139,9 +141,10 @@ void SBCJSModuleManager::notifyTransactionEvent(const std::string& eventName, co
   }
   
   OSS::JSON::Object event, arguments;
-  event["method"] = OSS::JSON::String(eventName);
+  event["method"] = OSS::JSON::String("handle_sip_transaction_notification");
   arguments["type"] = OSS::JSON::String("notify");
   arguments["dataSource"] = OSS::JSON::String("transaction");
+  arguments["eventName"] = OSS::JSON::String(eventName);
   event["arguments"] = arguments;
   JS::JSIsolateManager::instance().rootIsolate()->notify(event, pTransaction.get());
 }
