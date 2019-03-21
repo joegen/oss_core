@@ -220,6 +220,9 @@ public:
 
    iterator Find(const std::string& name);
    const_iterator Find(const std::string& name) const;
+   
+   bool Exists(const std::string& name) const;
+
 
    iterator Insert(const Member& member);
    iterator Insert(const Member& member, iterator itWhere);

@@ -51,6 +51,7 @@
 #include "OSS/SIP/SBC/SBCSubscribeBehavior.h"
 #include "OSS/SIP/SBC/SBCSDPBehavior.h"
 #include "OSS/SIP/SBC/SBCUpdateBehavior.h"
+#include "OSS/SIP/SBC/SBCConfiguration.h"
 
 
 using OSS::Persistent::ClassType;
@@ -90,7 +91,6 @@ SBCManager::SBCManager() :
   _pRegisterHandler(0),
   _pInviteHandler(0),
   _pPrackHandler(0),
-  _plugins(this),
   _enableOptionsRouting(false),
   _enableOptionsKeepAlive(true),
   _staticRouter(this),
@@ -103,7 +103,8 @@ SBCManager::SBCManager() :
   _jsonRpcHandler(this),
   _maxInvitesPerSecond(0),
   _maxRegistersPerSecond(0),
-  _maxSubscribesPerSecond(0)
+  _maxSubscribesPerSecond(0),
+	_thread(0)
 {
   _transactionManager.setExternalDispatch(boost::bind(&SBCManager::onDispatchTransaction, this, _1, _2));
 }
@@ -111,37 +112,6 @@ SBCManager::SBCManager() :
 SBCManager::~SBCManager()
 {
   _workspace.stop();
-}
-
-void SBCManager::initializePaths(const boost::filesystem::path& cfgDirectory)
-{
-
-  _pathsConfigurationFile = operator/(cfgDirectory, "paths.cfg");
-  OSS_LOG_INFO("Loading PATHS configuration from " << _pathsConfigurationFile);
-  ClassType pathCfg;
-  if (!pathCfg.load(_pathsConfigurationFile))
-  {
-    reportCriticalState("Unable to load paths.cfg");
-    return;
-  }
-  _dialogStateDirectory = static_cast<const char*>(pathCfg["paths"]["dialog-state-dir"]);
-  _rtpStateDirectory = static_cast<const char*>(pathCfg["paths"]["rtp-state-dir"]);
-  _registrationRecordsDirectory = static_cast<const char*>(pathCfg["paths"]["registration-records-dir"]);
-  boost::filesystem::path logDirectory = OSS::logger_get_path().parent_path();
-
-  try
-  {
-    boost::filesystem::create_directories(_dialogStateDirectory);
-    boost::filesystem::create_directories(_rtpStateDirectory);
-    boost::filesystem::create_directories(_registrationRecordsDirectory);
-  }catch(...){}
-
-  OSS_LOG_INFO("PATHS configuration loaded - " << _pathsConfigurationFile);
-}
-
-void SBCManager::initializePlugins()
-{
-  _plugins.loadPlugins(_pathsConfigurationFile, _sipConfigurationFile);
 }
 
 void SBCManager::initializeHandlers()
@@ -210,91 +180,16 @@ void SBCManager::initializeHandlers()
   dynamic_cast<SBCNotifyBehavior*>(notifyIter->second.get())->_pSubscribeBehavior = dynamic_cast<SBCSubscribeBehavior*>(subscribeIter->second.get());
 }
 
-void SBCManager::initializeRTPProxy(const boost::filesystem::path& cfgDirectory)
+void SBCManager::initializeUserAgent()
 {
-}
-
-void SBCManager::initializeUserAgent(const boost::filesystem::path& cfgDirectory)
-{
-  ClassType config;
-  boost::filesystem::path configFile = operator/(cfgDirectory, _sipConfigFile);
-  if (!config.load(configFile))
+  if (!SBCConfiguration::instance()->initUserAgent())
   {
-    reportCriticalState("Unable to load sip.cfg");
+    reportCriticalState("Unable to reteive user agent configuraiton");
     return;
   }
-  
-  DataType root = config.self();
-  if (!root.exists("user-agent"))
-  {
-    reportCriticalState("Unable to load sip.cfg.  User-Agent section missing.");
-    return;
-  }
-  
-  DataType userAgent = root["user-agent"];
-
-    
-  if (userAgent.exists("user-agent-name"))
-  {
-    _userAgentName = (const char*)userAgent["user-agent-name"];
-  }
-
-  if (userAgent.exists("enable-options-routing"))
-  {
-    _enableOptionsRouting = (bool)userAgent["enable-options-routing"];
-  }
-
-  if (userAgent.exists("disable-options-keep-alive"))
-  {
-    _enableOptionsKeepAlive = !(bool)userAgent["disable-options-keep-alive"];
-  }
-
-  if (userAgent.exists("require-rtp-for-registrations"))
-  {
-    _requireRtpForRegistrations = (bool)userAgent["require-rtp-for-registrations"];
-  }
-  
-  if (userAgent.exists("max-registers-per-second"))
-  {
-    _maxRegistersPerSecond = (int)userAgent["max-registers-per-second"];
-  }
-  
-  if (userAgent.exists("max-invites-per-second"))
-  {
-    _maxInvitesPerSecond = (int)userAgent["max-invites-per-second"];
-  }
-  
-  if (userAgent.exists("max-subscribes-per-second"))
-  {
-    _maxSubscribesPerSecond = (int)userAgent["max-subscribes-per-second"];
-  }
-
-  if (userAgent.exists("delayed-disconnect-min-connect-time"))
-  {
-    _delayedDisconnectMinConnectTime = (int)userAgent["delayed-disconnect-min-connect-time"];
-  }
-
-  if (userAgent.exists("delayed-disconnect-yield-time"))
-  {
-    _delayedDisconnectYieldTime = (int)userAgent["delayed-disconnect-yield-time"];
-    if (_delayedDisconnectYieldTime >= 30 || _delayedDisconnectYieldTime < 1) 
-    {
-      OSS_LOG_WARNING("SBCManager::initializeUserAgent - invalid value for \"delayed-disconnect-yield-time\".");
-      _delayedDisconnectYieldTime = -1;
-    }
-    else
-    {
-      OSS_LOG_INFO("SBCManager::initializeUserAgent - Disconnect yield time set to " << _delayedDisconnectYieldTime << " secs");
-    }
-  }
-
-
-  SBCContact::initialize(configFile);
 
   _workspace.initialize();
-  
   _authenticator.accounts().initialize(_workspace.getAccountDb());
-  
   _staticRouter.loadStaticRoutes();
   
   //
@@ -311,9 +206,7 @@ void SBCManager::initializeUserAgent(const boost::filesystem::path& cfgDirectory
   _registrar.setAddress("127.0.0.1");
   _registrar.setPort("0");
   _registrar.run();
-  
   _cdr.initialize(this);
-  
   _jsonRpcHandler.listen();
 }
 
@@ -321,71 +214,17 @@ void SBCManager::onLocalRegistrationStopped()
 {
 }
 
- bool SBCManager::initialize()
- {
-   boost::filesystem::path configDir(SBCDirectories::instance()->getConfigDirectory().c_str());
-   if (!boost::filesystem::exists(configDir))
-   {
-     return false;
-   }
-   
-   try
-   {
-     initialize(configDir);
-     return true;
-   }
-   catch(...)
-   {
-     return false;
-   }
- }
-void SBCManager::initialize(const boost::filesystem::path& cfgDirectory)
+
+void SBCManager::initialize()
 {
-  _configurationDirectory = boost::filesystem::system_complete(cfgDirectory);
-  OSS_LOG_INFO("Initializing SBC Manager using config data from " << _configurationDirectory);
-
-  _sipConfigurationFile = operator/(_configurationDirectory, _sipConfigFile);
-
-  //
-  // Intialize the paths configuration
-  //
-  try
-  {
-    initializePaths(_configurationDirectory);
-  }
-  catch(...)
-  {
-    OSS::log_fatal("Unable to initialize path configuration.");
-    throw SBCConfigException("Unable to initialize path configuration.");
-  }
-
   
-  //
-  // Initialize RTPProxy
-  //
-  OSS_LOG_INFO("Initializing RTP Proxy ...");
-  try
-  {
-    initializeRTPProxy(_configurationDirectory);
-  }
-  catch(const std::exception& e)
-  {
-    OSS_LOG_FATAL("Unable to initialize RTP Proxy configuration. Exception: " << e.what());
-    throw SBCConfigException("Unable to initialize RTP Proxy configuration.");
-  }
-  catch(...)
-  {
-    OSS::log_fatal("Unable to initialize RTP Proxy configuration.");
-    throw SBCConfigException("Unable to initialize RTP Proxy configuration.");
-  }
-  OSS_LOG_INFO("RTP Proxy initialized ...");
   //
   // Initialize User agent
   //
   OSS_LOG_INFO("Intializing User Agent ...");
   try
   {
-    initializeUserAgent(_configurationDirectory);
+    initializeUserAgent();
   }
   catch(...)
   {
@@ -400,8 +239,7 @@ void SBCManager::initialize(const boost::filesystem::path& cfgDirectory)
   OSS_LOG_INFO("Initilizing Transaction Manager ...");
   try
   {
-    _transactionManager.setSipConfigFile(_sipConfigFile);
-    _transactionManager.initialize(_configurationDirectory);
+	  SBCConfiguration::instance()->initTransport();
   }
   catch(std::exception& e)
   {
@@ -440,15 +278,6 @@ void SBCManager::initialize(const boost::filesystem::path& cfgDirectory)
     throw SBCConfigException("Unknown exception.");
   }
 
-  try
-  {
-    initializePlugins();
-  }
-  catch(...)
-  {
-    OSS::log_fatal("Error encountered while intializing plugins");
-  }
-
   //
   // Initialize the auxiliary socket for CLI operations
   //
@@ -463,26 +292,40 @@ void SBCManager::deinitialize()
   _transactionManager.deinitialize();
 }
 
-bool SBCManager::run()
+void SBCManager::internal_run()
 {
   try
   {
+    SBCDirectories::instance()->prepareDirectories();
+	  initialize();
     _transactionManager.stack().run();
-    _dialogStateManager.run(_dialogStateDirectory);
-
+    _dialogStateManager.run();
     _pRegisterHandler->startOptionsThread();
-  
+    _pRegisterHandler->pauseKeepAlive(false);
   }
   catch(...)
   {
     reportCriticalState("Unable to run SBCManager");
-    return false;
   }
-  return true;
+}
+
+bool SBCManager::run()
+{
+	if (_thread)
+	{
+		return false;
+	}
+	_thread = new boost::thread(boost::bind(&SBCManager::internal_run, this));
+	return true;
 }
 
 void SBCManager::stop()
 {
+	if (!_thread)
+	{
+		return;
+	}
+	
   std::cout << "Stopping Dialog State Manager ..." << std::endl;
   _dialogStateManager.stop();
   std::cout << "Dialog State Manager STOPPED ..." << std::endl;
@@ -492,6 +335,9 @@ void SBCManager::stop()
   _transactionManager.stack().stop();
   std::cout << "SIP Stack Stopped..." << std::endl;
   
+  _thread->join();
+  delete _thread;
+  _thread = 0;
 }
 
 void SBCManager::registerExecProc(const char* cmd, const ExecProc& proc)

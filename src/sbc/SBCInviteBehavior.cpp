@@ -997,7 +997,7 @@ void SBCInviteBehavior::onTransactionError(
         // Do not delete state files for mid-dialog error responses for INVITE!
         // Only a BYE will terminate the dialog
         //
-        boost::filesystem::path stateFile = operator/(_pManager->getDialogStateDirectory(), sessionId);
+        boost::filesystem::path stateFile = operator/(_stateDir, sessionId);
         ClassType::remove(stateFile);
       }
     }catch(...){}

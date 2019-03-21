@@ -75,8 +75,6 @@ nobase_include_HEADERS += \
     OSS/SIP/SBC/SBCNotifyBehavior.h \
     OSS/SIP/SBC/SBCReferBehavior.h \
     OSS/SIP/SBC/SBCManager.h \
-    OSS/SIP/SBC/SBCPlugin.h \
-    OSS/SIP/SBC/SBCPluginManager.h \
     OSS/SIP/SBC/SBCSDPBehavior.h \
     OSS/SIP/SBC/SBCPrackBehavior.h \
     OSS/SIP/SBC/SBCDefaultBehavior.h \
@@ -114,4 +112,5 @@ nobase_include_HEADERS += \
     OSS/SIP/SBC/SBCJSModuleManager.h \
     OSS/SIP/SBC/SBCJsonRpcHandler.h \
     OSS/SIP/SBC/SBCWorkSpace.h \
-    OSS/SIP/SBC/SBCDirectories.h
+    OSS/SIP/SBC/SBCDirectories.h \
+    OSS/SIP/SBC/SBCConfiguration.h

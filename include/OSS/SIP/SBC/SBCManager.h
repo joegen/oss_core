@@ -34,7 +34,6 @@
 #include "OSS/SIP/SBC/SBCDialogStateManager.h"
 #include "OSS/UTL/Cache.h"
 #include "OSS/UTL/Thread.h"
-#include "OSS/SIP/SBC/SBCPluginManager.h"
 #include "OSS/UTL/IPCQueue.h"
 #include "OSS/SIP/SBC/SBCStaticRouter.h"
 #include "OSS/SIP/SBC/SBCMediaProxy.h"
@@ -71,8 +70,7 @@ public:
     /// Create a new SBC Manager
   ~SBCManager();
     /// Destroy the SBC Manager
-  bool initialize();
-  void initialize(const boost::filesystem::path& cfgDirectory);
+  void initialize();
     /// Initialize the manager configuration using the configuration path specified.
     /// If an error occurs, this method will throw a PersistenceException.
     ///
@@ -104,35 +102,6 @@ public:
   OSS::SIP::SBC::SBCMediaProxy& rtpProxy();
     /// Return a reference to the RTP Proxy
   
-  const boost::filesystem::path& getConfigurationDirectory() const;
-    /// Returns the directory where the SBC will store configuration files
-
-  const boost::filesystem::path& getPathsConfigurationFile() const;
-    /// Returns the path of the paths configuration file.
-    /// The paths configuraiton file contains the location of
-    /// the rest of the files and directories that the sbc will
-    /// need for its operation.
-
-  const boost::filesystem::path& getDialogStateDirectory() const;
-    /// Returns the path where the SBC will store dialog states.
-    /// This is normally a hidden directory since state files
-    /// must never be altered by users while the sbc is running.
-
-  const boost::filesystem::path& getRTPStateDirectory() const;
-    /// Returns the path where the SBC will store rtp proxy states.
-    /// This is normally a hidden directory since state files
-    /// must never be altered by users while the sbc is running.
-
-  const boost::filesystem::path& getRegistrationRecordsDirectory() const;
-    /// Returns the path where the SBC will persist registration records.
-    /// This is normally a hidden directory since registration records
-    /// must never be altered by users while the sbc is running.
-    /// Although admin may forcibly delete records if registrations
-    /// are over staying.
-
-  const boost::filesystem::path& getSIPConfigurationFile() const;
-    /// Returns the sip configuration file path
-
   const std::string& getUserAgentName() const;
     /// Return the user agent name
 
@@ -229,26 +198,14 @@ public:
   void onLocalRegistrationStopped();
     // Called when all local registration transactions has completed after closing the UA
 protected:
-  void initializeRTPProxy(const boost::filesystem::path& cfgDirectory);
-    /// Initialize the RTP Proxy
-
-  void initializePaths(const boost::filesystem::path& cfgDirectory);
-    /// Initialize the path configuration
-    /// If an error occurs, this method will throw a PersistenceException.
-
   void initializeHandlers();
     /// Initialize the request handlers
     /// If an error occurs, this method will throw a PersistenceException.
 
-  void initializeUserAgent(const boost::filesystem::path& cfgDirectory);
+  void initializeUserAgent();
     /// Initialize User-Agent specific properties
 
-  void initializePlugins();
-    /// Initialize the SBC Plugins
-
-  void intializeProcessMonitor(const boost::filesystem::path& cfgDirectory);
-    /// Initialize the process monitoring module
-
+  void internal_run();
 public:
   void setSipConfigFile(const std::string& sipConfigFile);
     /// Set the file name of the sip configuration file.
@@ -292,13 +249,7 @@ public:
   SBCWorkSpaceManager& workspace();
     /// Workspace Manager
   
-  const boost::filesystem::path& getTempDirectory() const;
-    /// Return the temp directory configured for the SBC
-  
-  void setTempDirectory(const boost::filesystem::path& tempDirectory);
-    /// Set the temp directory configured for the SBC
-  
-  
+
   SBCAuthenticator& authenticator();
   
   SBCRegistrar& registrar();
@@ -330,13 +281,6 @@ protected:
   friend class SBConfigurationMonitor;
   OSS::SIP::B2BUA::SIPB2BTransactionManager _transactionManager;
   OSS::SIP::SBC::SBCMediaProxy _rtpProxy;
-  boost::filesystem::path _configurationDirectory;
-  boost::filesystem::path _pathsConfigurationFile;
-  boost::filesystem::path _dialogStateDirectory;
-  boost::filesystem::path _rtpStateDirectory;
-  boost::filesystem::path _registrationRecordsDirectory;
-  boost::filesystem::path _sipConfigurationFile;
-  boost::filesystem::path _tempDirectory;
   std::string _userAgentName;
   std::string _sipConfigFile;
   OSS::mutex_critic_sec _csDialogsMutex;
@@ -348,7 +292,6 @@ protected:
   SBCRegisterBehavior* _pRegisterHandler;
   SBCInviteBehavior* _pInviteHandler;
   SBCPrackBehavior* _pPrackHandler;
-  SBCPluginManager _plugins;
   std::set<std::string> _trunkRegistrations;
   bool _enableOptionsRouting;
   bool _enableOptionsKeepAlive;
@@ -414,6 +357,8 @@ protected:
   
   static SBCManager* _instance;
 
+  boost::thread* _thread;
+  friend class SBCConfiguration;
 };
 
 //
@@ -443,36 +388,6 @@ inline OSS::SIP::B2BUA::SIPB2BTransactionManager& SBCManager::transactionManager
 inline OSS::SIP::SBC::SBCMediaProxy& SBCManager::rtpProxy()
 {
   return _rtpProxy;
-}
-
-inline const boost::filesystem::path& SBCManager::getConfigurationDirectory() const
-{
-  return _configurationDirectory;
-}
-
-inline const boost::filesystem::path& SBCManager::getPathsConfigurationFile() const
-{
-  return _pathsConfigurationFile;
-}
-
-inline const boost::filesystem::path& SBCManager::getDialogStateDirectory() const
-{
-  return _dialogStateDirectory;
-}
-
-inline const boost::filesystem::path& SBCManager::getRTPStateDirectory() const
-{
-  return _rtpStateDirectory;
-}
-
-inline const boost::filesystem::path& SBCManager::getRegistrationRecordsDirectory() const
-{
-  return _registrationRecordsDirectory;
-}
-
-inline const boost::filesystem::path& SBCManager::getSIPConfigurationFile() const
-{
-  return _sipConfigurationFile;
 }
 
 inline const std::string& SBCManager::getUserAgentName() const
@@ -569,16 +484,6 @@ inline SBCWorkSpaceManager& SBCManager::workspace()
   return _workspace;
 }
  
-inline const boost::filesystem::path& SBCManager::getTempDirectory() const
-{
-  return _tempDirectory;
-}
-  
-inline void SBCManager::setTempDirectory(const boost::filesystem::path& tempDirectory)
-{
-  _tempDirectory = tempDirectory;
-}
-
 inline SBCAuthenticator& SBCManager::authenticator()
 {
   return _authenticator;

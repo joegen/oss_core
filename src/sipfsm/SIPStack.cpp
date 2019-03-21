@@ -40,7 +40,12 @@ using OSS::Persistent::PersistenceException;
 namespace OSS {
 namespace SIP {
 
-
+typedef OSS::JSON::String JString;
+typedef OSS::JSON::Boolean JBool;
+typedef OSS::JSON::Number JNum;
+typedef OSS::JSON::Array JArray;
+typedef OSS::JSON::Object JObject;
+	
 SIPStack::SIPStack() :
   _fsmDispatch(),
   _enableUDP(true),
@@ -1071,6 +1076,457 @@ void SIPStack::initTransportFromConfig(const boost::filesystem::path& cfgFile)
 }
 
 #endif // ENABLE_FEATURE_CONFIG
+
+void SIPStack::initDefaultInterfaceFromJSON(const OSS::JSON::Object& iface)
+{
+  std::string defaultAddress;
+  if (OSS::Net::IPAddress::getDefaultAddress().isValid())
+  {
+    defaultAddress = OSS::Net::IPAddress::getDefaultAddress().toString();
+  }
+  JString ip = iface["ip_address"];
+  if ((ip.Value() == "auto" || ip.Value() == "AUTO") && defaultAddress.empty())
+  {
+    OSS_LOG_ERROR("SIPStack::initTransportFromConfig - unable to determine default interface address");
+    return;
+  }
+  else if (ip.Value() == "auto" || ip.Value() == "AUTO")
+  {
+    ip = JString(defaultAddress);
+  }
+  
+  bool tlsEnabled = false;
+  bool tcpEnabled = false;
+  bool wsEnabled = false;
+  bool wssEnabled = false;
+  bool udpEnabled = true;
+    
+  if (iface.Exists("tls_enabled"))
+  {
+    JBool enabled = iface["tls_enabled"];
+    tlsEnabled = enabled.Value();
+  }
+    
+  if (iface.Exists("tcp_enabled"))
+  {
+    JBool enabled = iface["tcp_enabled"];
+    tcpEnabled = enabled.Value();
+  }
+    
+  if (iface.Exists("ws_enabled"))
+  {
+    JBool enabled = iface["ws_enabled"];
+    wsEnabled = enabled.Value();
+  }
+    
+  if (iface.Exists("wss_enabled"))
+  {
+    JBool enabled = iface["wss_enabled"];
+    wssEnabled = enabled.Value();
+  }
+  
+  if (iface.Exists("udp_enabled"))
+  {
+    JBool enabled = iface["udp_enabled"];
+    udpEnabled = enabled.Value();
+  }
+  
+  int sipPort = 5060;
+  int tlsPort = 5061;
+  int wsPort = 5062;
+  int wssPort = 5063;
+    
+  if (iface.Exists("sip_port"))
+  {
+    JNum port = iface["sip_port"];
+    sipPort = port.Value();
+  }
+    
+  if (iface.Exists("tls_port"))
+  {
+    JNum port = iface["tls_port"];
+    tlsPort = port.Value();
+  }
+    
+  if (iface.Exists("ws_port"))
+  {
+    JNum port = iface["ws_port"];
+    wsPort = port.Value();
+  }
+    
+  if (iface.Exists("wss_port"))
+  {
+    JNum port = iface["wss_port"];
+    wssPort = port.Value();
+  }
+
+  OSS::Net::IPAddress listener;
+  listener = ip.Value();
+    
+  if (udpEnabled || tcpEnabled)
+  {
+    listener.setPort(sipPort);
+    
+  }
+  else if (wsEnabled)
+  {
+    listener.setPort(wsPort);
+  }
+  else if (wssEnabled)
+  {
+    listener.setPort(wssPort);
+  }
+  else if (tlsEnabled)
+  {
+    listener.setPort(tlsPort);
+  }
+  _fsmDispatch.transport().defaultListenerAddress() = listener;
+}
+
+void SIPStack::initListenersFromJSON(const OSS::JSON::Object& json, bool hasTls)
+{
+  JArray interfaces = json["interfaces"];
+  int ifaceCount = interfaces.Size();
+  bool hasFoundDefault = false;
+  std::string defaultAddress;
+  if (OSS::Net::IPAddress::getDefaultAddress().isValid())
+  {
+    defaultAddress = OSS::Net::IPAddress::getDefaultAddress().toString();
+  }
+  
+  for (int i = 0; i < ifaceCount; i++)
+  {
+    JObject iface = interfaces[i];
+    JString ip = iface["ip_address"];
+    JString external;
+    if (iface.Exists("external_address"))
+    {
+      external = iface["external_address"];
+    }
+
+    if ((ip.Value() == "auto" || ip.Value() == "AUTO") && defaultAddress.empty())
+    {
+      OSS_LOG_ERROR("SIPStack::initTransportFromConfig - unable to determine default interface address");
+      return;
+    }
+    else if (ip.Value() == "auto" || ip.Value() == "AUTO")
+    {
+      ip = JString(defaultAddress);
+      OSS_LOG_NOTICE("SIPStack::initTransportFromConfig - using default address " << defaultAddress);
+    }
+    
+    bool tlsEnabled = false;
+    bool tcpEnabled = false;
+    bool wsEnabled = false;
+    bool wssEnabled = false;
+    bool udpEnabled = true;
+    
+    if (iface.Exists("tls_enabled"))
+    {
+      JBool enabled = iface["tls_enabled"];
+      tlsEnabled = enabled.Value();
+    }
+    
+    if (iface.Exists("tcp_enabled"))
+    {
+      JBool enabled = iface["tcp_enabled"];
+      tcpEnabled = enabled.Value();
+    }
+    
+    if (iface.Exists("ws_enabled"))
+    {
+      JBool enabled = iface["ws_enabled"];
+      wsEnabled = enabled.Value();
+    }
+    
+    if (iface.Exists("wss_enabled"))
+    {
+      JBool enabled = iface["wss_enabled"];
+      wssEnabled = enabled.Value();
+    }
+    
+    if (iface.Exists("udp_enabled"))
+    {
+      JBool enabled = iface["udp_enabled"];
+      udpEnabled = enabled.Value();
+    }
+
+    int sipPort = 5060;
+    int tlsPort = 5061;
+    int wsPort = 5062;
+    int wssPort = 5063;
+    
+    if (iface.Exists("sip_port"))
+    {
+      JNum port = iface["sip_port"];
+      sipPort = port.Value();
+    }
+    
+    if (iface.Exists("tls_port"))
+    {
+      JNum port = iface["tls_port"];
+      tlsPort = port.Value();
+    }
+    
+    if (iface.Exists("ws_port"))
+    {
+      JNum port = iface["ws_port"];
+      wsPort = port.Value();
+    }
+    
+    if (iface.Exists("wss_port"))
+    {
+      JNum port = iface["wss_port"];
+      wssPort = port.Value();
+    }
+
+    std::vector<std::string> subnets;
+    if (iface.Exists("subnets"))
+    {
+      JString strSubnet = iface["subnets"];
+      subnets = OSS::string_tokenize(strSubnet.Value(), ",");
+    }
+    
+    if (!hasFoundDefault)
+    {
+      if (iface.Exists("primary"))
+      {
+        JBool primary = iface["primary"];
+        hasFoundDefault = primary.Value();
+        bool transportEnabled = udpEnabled || tcpEnabled || wsEnabled || tlsEnabled;
+
+        if (hasFoundDefault  && transportEnabled)
+        {
+          OSS::Net::IPAddress listener;
+          listener = ip.Value();
+          if (listener.isInaddrAny())
+          {
+            hasFoundDefault = false;
+          }
+          else
+          {
+            listener.externalAddress() = external.Value();
+            listener.setPort(sipPort);
+            _fsmDispatch.transport().defaultListenerAddress() = listener;
+          }
+        }
+      }
+    }
+
+    if (udpEnabled)
+    {
+      registerConfiguredTransport(_udpListeners, _udpSubnets, ip, sipPort, external, subnets);
+    }
+
+    if (tcpEnabled)
+    {
+      registerConfiguredTransport(_tcpListeners, _tcpSubnets, ip, sipPort, external, subnets);
+    }
+
+    if (wsEnabled)
+    {
+      registerConfiguredTransport(_wsListeners, _wsSubnets, ip, wsPort, external, subnets);
+    }
+    
+    if (wssEnabled && hasTls)
+    {
+      registerConfiguredTransport(_wssListeners, _wssSubnets, ip, wssPort, external, subnets);
+    }
+
+    if (tlsEnabled && hasTls)
+    {      
+      registerConfiguredTransport(_tlsListeners, _tlsSubnets, ip, tlsPort, external, subnets);
+    }
+  }
+
+  if (!hasFoundDefault && ifaceCount > 0)
+  {
+    JObject iface = interfaces[0];
+    initDefaultInterfaceFromJSON(iface);
+  }
+}
+
+void SIPStack::initTransportFromJSON(const OSS::JSON::Object& json)
+{
+  OSS::mutex_lock lock(_transportMutex);
+  
+  _udpListeners.clear();
+  _tcpListeners.clear();
+  _tlsListeners.clear();
+  _wsListeners.clear();
+  _wssListeners.clear();
+  
+  JString tls_ca_file = json["tls_ca_file"];
+  JString tls_ca_path = json["tls_ca_path"];
+  JString tls_certificate_file = json["tls_certificate_file"];
+  JString tls_private_key_file = json["tls_private_key_file"];
+  JString tls_cert_password = json["tls_cert_password"];
+  
+  bool tls_verify_peer = false;
+  if (json.Exists("tls_verify_peer"))
+  {
+    JBool verify = json["tls_verify_peer"];
+    tls_verify_peer = verify.Value();
+  }
+  
+  bool hasTls = initializeTlsContext(tls_certificate_file.Value(), 
+    tls_private_key_file.Value(), 
+    tls_cert_password.Value(),
+    tls_ca_file.Value(),
+    tls_ca_path.Value(), 
+    tls_verify_peer);
+  
+  initListenersFromJSON(json, hasTls);
+  
+  //
+  // Set the TCP port range
+  //
+  if (json.Exists("sip_tcp_port_base") && json.Exists("sip_tcp_port_max"))
+  {
+    JNum tcpPortBase = json["sip_tcp_port_base"];
+    JNum tcpPortMax = json["sip_tcp_port_max"];
+    if (tcpPortBase.Value() < tcpPortMax.Value() && tcpPortBase.Value() > 0)
+    {
+      OSS_LOG_INFO("Setting TCP port range to " << tcpPortBase.Value() << "-" << tcpPortMax.Value());
+      transport().setTCPPortRange((unsigned short)tcpPortBase.Value(), (unsigned short)tcpPortMax.Value());
+    }
+    else
+    {
+      OSS_LOG_ERROR("Unable to set TCP port base " << tcpPortBase.Value() << "-" << tcpPortMax.Value() << " Using default values.");
+    }
+  }
+  
+  //
+  // Set the WS port range
+  //
+#if ENABLE_FEATURE_WEBSOCKETS
+  if (json.Exists("sip_ws_port_base") && json.Exists("sip_ws_port_max"))
+  {
+    JNum wsPortBase = json["sip_ws_port_base"];
+    JNum wsPortMax = json["sip_ws_port_max"];
+    if (wsPortBase.Value() < wsPortMax.Value() && wsPortBase.Value() > 0)
+    {
+      OSS_LOG_INFO("Setting WebSocket port range to " << wsPortBase.Value() << "-" << wsPortMax.Value());
+      transport().setWSPortRange((unsigned short)wsPortBase.Value(), (unsigned short)wsPortMax.Value());
+    }
+    else
+    {
+      OSS_LOG_ERROR("Unable to set WebSocket port base " << wsPortBase.Value() << "-" << wsPortMax.Value() << " Using default values.");
+    }
+  }
+#endif
+  
+  if (json.Exists("packet_rate_ratio"))
+  {
+    JString packetRateRatio = json["packet_rate_ratio"];
+    std::vector<std::string> tokens = OSS::string_tokenize(packetRateRatio.Value(), "/");
+    if (tokens.size() == 3)
+    {
+      unsigned long packetsPerSecondThreshold;
+      unsigned long thresholdViolationRate;
+      int banLifeTime;
+      thresholdViolationRate = OSS::string_to_number<unsigned long>(tokens[0].c_str());
+      packetsPerSecondThreshold = OSS::string_to_number<unsigned long>(tokens[1].c_str());
+      banLifeTime = OSS::string_to_number<int>(tokens[2].c_str());
+      setTransportThreshold(packetsPerSecondThreshold, thresholdViolationRate, banLifeTime);
+    }
+  }
+  
+  if (json.Exists("packet_rate_white_list"))
+  {
+    JArray whiteList = json["packet_rate_white_list"];
+    int count = whiteList.Size();
+    for (int i = 0; i < count; i++)
+    {
+      JObject wl = whiteList[i];
+      JString entry;
+      if (wl.Exists("source_ip"))
+      {
+        entry = wl["source_ip"];
+        if (!entry.Value().empty())
+        {
+          boost::system::error_code ec;
+          boost::asio::ip::address ip = boost::asio::ip::address::from_string(entry.Value(), ec);
+          if (!ec)
+            SIPTransportSession::rateLimit().whiteListAddress(ip);
+        }
+      }
+      else if (wl.Exists("source_network"))
+      {
+        entry = wl["source_network"];
+        if (!entry.Value().empty())
+        SIPTransportSession::rateLimit().whiteListNetwork(entry.Value());
+      }
+    }
+  }
+  
+  if (json.Exists("auto_null_route_on_ban"))
+  {
+    JBool autoNullRouteOnBan = json["auto_null_route_on_ban"];
+    SIPTransportSession::rateLimit().setAutoNullRoute(autoNullRouteOnBan.Value());
+  }
+
+  bool homer_enabled = false;
+  if (json.Exists("homer_enabled"))
+  {
+    JBool enabled = json["homer_enabled"];
+    homer_enabled = enabled.Value();
+  }
+  
+  if (homer_enabled)
+  {
+    int homer_version = 3;
+    if (json.Exists("homer_version"))
+    {
+      JNum version = json["homer_version"];
+      homer_version = version.Value();
+    }
+    
+    bool homer_compression = false;
+    if (json.Exists("homer_compression"))
+    {
+      JBool compression = json["homer_compression"];
+      homer_compression = compression.Value();
+    }
+    
+    std::string homer_host;
+    if (json.Exists("homer_host"))
+    {
+      JString host =  json["homer_host"];
+      homer_host = host.Value();
+    }
+
+    int homer_port = 0;
+    if (json.Exists("homer_port"))
+    {
+      JNum port = json["homer_port"];
+      homer_port = port.Value();
+    }
+
+    std::string homer_password;
+    if (json.Exists("homer_password"))
+    {
+      JString password = json["homer_password"];
+      homer_password = password.Value();
+    }
+
+    int homer_id = 0;
+    if (json.Exists("homer_id"))
+    {
+      JNum id = json["homer_id"];
+      homer_id = id.Value();
+    }
+
+    if (!homer_host.empty() && homer_port)
+    {
+      SIPTransportService::enableHep(true);
+      SIPTransportService::setHepInfo(homer_version, homer_host, OSS::string_from_number<int>(homer_port), homer_password, homer_id);
+      SIPTransportService::enableHepCompression(homer_compression);
+    }
+  }
+  
+  transportInit();
+}
 
 bool SIPStack::initializeTlsContext(
     const std::string& tlsCertFile, // Certificate to be used by this server.  File should be in PEM format

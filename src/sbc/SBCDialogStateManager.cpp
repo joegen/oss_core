@@ -34,6 +34,7 @@
 #include "OSS/SDP/SDPSession.h"
 #include "OSS/SIP/SBC/SBCContact.h"
 #include "OSS/UTL/CoreUtils.h"
+#include "OSS/SIP/SBC/SBCDirectories.h"
 
 
 namespace OSS {
@@ -51,7 +52,6 @@ using OSS::Net::IPAddress;
 SBCDialogStateManager::SBCDialogStateManager(SBCManager* pManager) :
   _exitSync(0, 0xFFF),
   _pThread(0),
-  _stateDirectory(),
   _dialogs(3600*24),
   _pManager(pManager),
   _stateFileMaxLifeTime(60 * 12)
@@ -102,8 +102,7 @@ void SBCDialogStateManager::removeDialog(const SIPB2BTransaction::Ptr& pTransact
   {
     legIndex = "1";
   }
-  
-  boost::filesystem::path stateFile = operator/(_pManager->getDialogStateDirectory(), sessionId);
+  boost::filesystem::path stateFile = operator/(_stateDir, sessionId);
   std::string cid1 = pTransaction->serverRequest()->hdrGet(OSS::SIP::HDR_CALL_ID);
   std::string cid2 = pTransaction->clientRequest()->hdrGet(OSS::SIP::HDR_CALL_ID);
   std::string callId;
@@ -419,10 +418,10 @@ void SBCDialogStateManager::onUpdateInitialUASState(
         //
         // Preserve leg 1 dialog state
         //
-        boost::filesystem::path stateFile = operator/(_pManager->getDialogStateDirectory(), sessionId);
+        boost::filesystem::path stateFile = operator/(_stateDir, sessionId);
 
         ClassType leg1Persistent;
-      
+
         if (!leg1Persistent.load(stateFile))
         {
           OSS_LOG_WARNING("Unable to load state file " << OSS::boost_path(stateFile));
@@ -583,7 +582,7 @@ void SBCDialogStateManager::onUpdateInitialUASState(
       //
       try
       {
-        boost::filesystem::path stateFile = operator/(_pManager->getDialogStateDirectory(), sessionId);
+        boost::filesystem::path stateFile = operator/(_stateDir, sessionId);
         ClassType::remove(stateFile);
       }catch(...){}
     }
@@ -602,7 +601,7 @@ void SBCDialogStateManager::onUpdateInitialUACState(
   {
     try
     {
-      boost::filesystem::path stateFile = operator/(_pManager->getDialogStateDirectory(), sessionId);
+      boost::filesystem::path stateFile = operator/(_stateDir, sessionId);
       //
       // Preserve leg 2 dialog state
       //
@@ -841,7 +840,7 @@ void SBCDialogStateManager::onUpdateReinviteUASState(
         //
         // Preserve leg dialog state
         //
-        boost::filesystem::path stateFile = operator/(_pManager->getDialogStateDirectory(), callerDialogFile);
+        boost::filesystem::path stateFile = operator/(_stateDir, callerDialogFile);
         ClassType legPersistent;
         if (!legPersistent.load(stateFile))
           return;
@@ -927,7 +926,7 @@ void SBCDialogStateManager::onUpdateReinviteUACState(
       //
       // Preserve leg dialog state
       //
-      boost::filesystem::path stateFile = operator/(_pManager->getDialogStateDirectory(), calleeDialogFile);
+      boost::filesystem::path stateFile = operator/(_stateDir, calleeDialogFile);
       ClassType legPersistent;
       if (!legPersistent.load(stateFile))
         return;
@@ -996,11 +995,11 @@ void SBCDialogStateManager::onUpdateReinviteUACState(
   }
 }
 
-void SBCDialogStateManager::run(const boost::filesystem::path& stateDirectory)
+void SBCDialogStateManager::run()
 {
+  _stateDir = boost::filesystem::path(SBCDirectories::instance()->getDialogStateDirectory());
   if (_pThread)
     OSS_VERIFY(false);
-  _stateDirectory = stateDirectory;
   _pThread = new boost::thread(boost::bind(&SBCDialogStateManager::runTask, this));
 }
 
@@ -1031,7 +1030,7 @@ void SBCDialogStateManager::flushStale()
   try
   {
     boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
-    for (boost::filesystem::directory_iterator itr(_stateDirectory);
+    for (boost::filesystem::directory_iterator itr(_stateDir);
           itr != end_itr;
           ++itr)
     {
@@ -1041,7 +1040,7 @@ void SBCDialogStateManager::flushStale()
       }
       else
       {
-        boost::filesystem::path currentFile = operator/(_stateDirectory, boost_file_name(itr->path()));
+        boost::filesystem::path currentFile = operator/(_stateDir, boost_file_name(itr->path()));
         if (boost::filesystem::is_regular(currentFile) && OSS::isFileOlderThan(currentFile, _stateFileMaxLifeTime))
         {
           staleFiles.push_back(currentFile);
@@ -1173,7 +1172,7 @@ const SIPB2BTransaction::Ptr& pTransaction,
       targetLeg = "leg-2";
     else
       targetLeg = "leg-1";
-    stateFile = operator/(_pManager->getDialogStateDirectory(), sessionId);
+    stateFile = operator/(_stateDir, sessionId);
     if (!boost::filesystem::exists(stateFile))
     {
       OSS_LOG_DEBUG(logId << "Found compliant request-uri format but no state file exists for " << stateFile);

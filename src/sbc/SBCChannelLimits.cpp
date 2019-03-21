@@ -29,6 +29,7 @@
 #include "OSS/UTL/Logger.h"
 #include "OSS/JSON/reader.h"
 #include "OSS/JSON/writer.h"
+#include "OSS/SIP/SBC/SBCConfiguration.h"
 
 
 namespace OSS {
@@ -63,17 +64,11 @@ void SBCChannelLimits::initialize(SBCManager* pSBCManager)
   _pManager = pSBCManager;
   _systemDb = _pManager->workspace().getSystemDb();
   
-  const boost::filesystem::path& configFile = _pManager->getSIPConfigurationFile();
-  ClassType config;
-  if (!config.load(configFile))
-  {
-    return;
-  }
-  
   OSS_LOG_NOTICE("SBCChannelLimits::initialize - INVOKED");
   
-  DataType root = config.self();
-  if (root.exists("user-agent"))
+  const OSS::JSON::Object& userAgent = SBCConfiguration::instance()->userAgent();
+  
+  if (userAgent.Exists("channel_limits"))
   {
     //
     // Clear out the previous channel count
@@ -87,27 +82,23 @@ void SBCChannelLimits::initialize(SBCManager* pSBCManager)
     
     try
     {
-      DataType userAgent = root["user-agent"];
-      if (userAgent.exists("channel-limits"))
-      {
-        DataType limits = userAgent["channel-limits"];
-        int dbCount = limits.getElementCount();
+        OSS::JSON::Array limits = userAgent["channel_limits"];
+        int dbCount = limits.Size();
         for (int i = 0; i < dbCount; i++)
         {
-          DataType dbInfo = limits[i];
+          OSS::JSON::Object dbInfo = limits[i];
           
-          if (dbInfo.exists("enabled") && dbInfo.exists("prefix") && dbInfo.exists("max-channels"))
+          if (dbInfo.Exists("enabled") && dbInfo.Exists("prefix") && dbInfo.Exists("max_channels"))
           {
-            bool enabled = (bool)dbInfo["enabled"];
-            if (enabled)
+            OSS::JSON::Boolean enabled = dbInfo["enabled"];
+            if (enabled.Value())
             {
-              std::string prefix = (const char*)dbInfo["prefix"];
-              int maxChannels = (int)dbInfo["max-channels"];
-              registerDialPrefix(prefix, maxChannels);
+              OSS::JSON::String prefix = dbInfo["prefix"];
+              OSS::JSON::Number maxChannels = dbInfo["max_channels"];
+              registerDialPrefix(prefix.Value(), maxChannels.Value());
             }
           }
         }
-      }
     }
     catch(...)
     {

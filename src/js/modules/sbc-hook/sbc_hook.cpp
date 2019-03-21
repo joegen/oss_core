@@ -465,24 +465,6 @@ jsval sbc_ban_user_agent(const jsargs& args)
   return jsvoid();
 }
 
-jsval sbc_initialize(const jsargs& args)
-{
-  if (!_pSBCManager || args.Length() < 1)
-  {
-    return jsbool::New(false);
-  }
-  std::string val = jsvalToString(args[0]);
-  boost::filesystem::path configDir(val.c_str());
-  
-  if (!boost::filesystem::exists(configDir))
-  {
-    return jsbool::New(false);
-  }
-  SBCDirectories::instance()->setConfigDirectory(val);
-  
-  return jsbool::New(_pSBCManager->initialize());
-}
-
 jsval sbc_run(const jsargs& args)
 {
   return jsbool::New(_pSBCManager->run());
@@ -511,7 +493,6 @@ JS_EXPORTS_INIT()
   js_export_method("msgRouteByRURI", msgRouteByRURI);
   js_export_method("msgResetMaxForwards", msgResetMaxForwards);
   
-  js_export_method("sbc_initialize", sbc_initialize);
   js_export_method("sbc_run", sbc_run);
   js_export_method("sbc_jsexec", sbc_jsexec);
   js_export_method("sbc_jsexec_async", sbc_jsexec_async);

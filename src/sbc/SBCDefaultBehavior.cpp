@@ -56,6 +56,7 @@ SBCDefaultBehavior::SBCDefaultBehavior(
   _lastPacketRateMarker(0),
   _maxPacketsPerSecond(0)
 {
+  _stateDir = boost::filesystem::path(SBCDirectories::instance()->getDialogStateDirectory());
 }
 
 SBCDefaultBehavior::~SBCDefaultBehavior()

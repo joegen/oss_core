@@ -38,7 +38,6 @@
 #include "OSS/SIP/SBC/SBCDefaultBehavior.h"
 #include "OSS/SIP/SBC/SBCRegistrationRecord.h"
 #include "OSS/Exec/Process.h"
-#include "OSS/SIP/SBC/SBCPlugin.h"
 #include "SBCWorkSpaceManager.h"
 #include "SBCConsole.h"
 

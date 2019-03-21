@@ -15,7 +15,6 @@ liboss_core_la_SOURCES +=  \
   sbc/SBCReferBehavior.cpp \
   sbc/SBCUpdateBehavior.cpp \
   sbc/SBCExecBehavior.cpp \
-  sbc/SBCPluginManager.cpp \
   sbc/SBCRFC2543HoldFix.cpp \
   sbc/SBCPrackBehavior.cpp \
   sbc/SBCInfoBehavior.cpp \
@@ -44,7 +43,8 @@ liboss_core_la_SOURCES +=  \
   sbc/SBCJSModuleManager.cpp  \
   sbc/SBCJsonRpcHandler.cpp \
   sbc/SBCWorkSpace.cpp \
-  sbc/SBCDirectories.cpp
+  sbc/SBCDirectories.cpp \
+  sbc/SBCConfiguration.cpp
 endif
 endif
 

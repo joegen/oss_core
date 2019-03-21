@@ -287,6 +287,11 @@ inline Object::const_iterator Object::Find(const std::string& name) const
    return std::find_if(m_Members.begin(), m_Members.end(), Finder(name));
 }
 
+inline bool Object::Exists(const std::string& name)  const
+{
+   return Find(name) != End();
+}
+
 inline Object::iterator Object::Insert(const Member& member)
 {
    return Insert(member, End());

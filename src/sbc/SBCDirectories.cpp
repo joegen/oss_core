@@ -1,4 +1,8 @@
+#include <boost/thread/thread_time.hpp>
+
 #include "OSS/SIP/SBC/SBCDirectories.h"
+#include "OSS/UTL/CoreUtils.h"
+
 
 namespace OSS {
 namespace SIP {
@@ -22,7 +26,7 @@ void SBCDirectories::deleteInstance()
 
 const std::string& SBCDirectories::getConfigDirectory() const
 {
-	static std::string conf_dir = OSS::system_confdir() + std::string("/karoo.conf.d/config");
+	static std::string conf_dir = OSS::system_confdir() + std::string("/oss_core/config");
 	return _conf_dir.empty() ? conf_dir : _conf_dir;
 }
 
@@ -44,7 +48,7 @@ void SBCDirectories::setTempDirectory(const std::string& dir)
 
 const std::string& SBCDirectories::getDbDirectory() const
 {
-  static std::string db_dir = OSS::system_confdir() + std::string("/karoo.conf.d/workspace");
+  static std::string db_dir = OSS::system_confdir() + std::string("/oss_core/workspace");
   return _db_dir.empty() ? db_dir : _db_dir;
 }
 
@@ -66,13 +70,42 @@ void SBCDirectories::setLogDirectory(const std::string& dir)
 
 const std::string& SBCDirectories::getStateDirectory() const
 {
-  static std::string state_dir = OSS::system_confdir() + std::string("/karoo.conf.d/states");
+  static std::string state_dir = OSS::system_confdir() + std::string("/oss_core/states");
   return _state_dir.empty() ? state_dir : _state_dir;
 }
 
 void SBCDirectories::setStateDirectory(const std::string& dir)
 {
   _state_dir = dir;
+}
+
+static bool create_directory_if_not_exists(const std::string& path)
+{
+  boost::filesystem::path dir(path);
+  if (!boost::filesystem::exists(dir))
+  {
+    boost::system::error_code ec;
+    boost::filesystem::create_directories(dir, ec);
+    if (!ec)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+void SBCDirectories::prepareDirectories()
+{
+  create_directory_if_not_exists(getTempDirectory());
+  create_directory_if_not_exists(getDbDirectory());
+  create_directory_if_not_exists(getConfigDirectory());
+  create_directory_if_not_exists(getLogDirectory());
+  create_directory_if_not_exists(getStateDirectory());
+
+  _reg_state_dir = getTempDirectory() + "/sbc-reg-states";
+  create_directory_if_not_exists(_reg_state_dir);
+  _dialog_state_dir = getTempDirectory() + "/sbc-dialog-states";
+  create_directory_if_not_exists(_dialog_state_dir);
 }
 
 } } }

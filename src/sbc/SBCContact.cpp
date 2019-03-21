@@ -29,6 +29,7 @@
 #include "OSS/SIP/SBC/SBCContact.h"
 #include "OSS/SIP/SBC/SBCManager.h"
 #include "OSS/Persistent/ClassType.h"
+#include "OSS/SIP/SBC/SBCDirectories.h"
 
 
 namespace OSS {
@@ -80,7 +81,8 @@ bool SBCContact::isFromRegisteredUser(
   SIPFrom from = pRequest->hdrGet("from");
   std::string user =  from.getUser();
   regState << "sbc-reg-" << user << "-" << OSS::string_hash(hostPort.c_str());
-  boost::filesystem::path fn = pSBC->getRegistrationRecordsDirectory();
+  
+  boost::filesystem::path fn(SBCDirectories::instance()->getRegistrationStateDirectory());
   operator/(fn, regState.str());
   bool yes = boost::filesystem::exists(fn);
   if (yes)

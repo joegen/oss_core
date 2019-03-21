@@ -37,6 +37,7 @@
 #include "OSS/Persistent/DataType.h"
 #include "OSS/UTL/Cache.h"
 #include "OSS/SIP/SBC/SBCContact.h"
+#include "OSS/SIP/SBC/SBCDirectories.h"
 
 namespace OSS {
 namespace SIP {
@@ -282,6 +283,7 @@ protected:
   unsigned long _packetsPerSecond;
   OSS::UInt64 _lastPacketRateMarker;
   unsigned long _maxPacketsPerSecond;
+  boost::filesystem::path _stateDir;
 };
 
 //

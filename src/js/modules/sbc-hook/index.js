@@ -1,5 +1,9 @@
 "use-strict";
 
+var isolate = require("isolate");
+var logger = require("logger");
+const SIPMessage = require("sip-parser").SIPMessage;
+
 var _hook = null;
 _hook = require("sbc-hook/_sbc_hook");
 __copy_exports(_hook, exports);
@@ -10,71 +14,77 @@ exports.onEvent = function(arg, userData, result) {
   return TRN_ACCEPT;
 }
 
+exports._on_initialize_transport = null;
+exports._on_initialize_user_agent = null;
+exports._on_route_request = null;
+exports._on_inbound_request = null;
+
 //
 // global sip variables
 //
-exports.sbc_create_global_variables = function(sipMessage) {
-  var global = new Object();
+exports.sbc_create_context_variables = function(sipMessage) {
+  var context = new Object();
 
-  global.sbc_retarget_refer = "";
-  global.sbc_dialog_state_placement = "";
-  global.sbc_log_id = sipMessage.getLogId();
-  global.sbc_disable_rtp_proxy = false;
-  global.sbc_verbose_rtp_logging = false;
-  global.sbc_local_100_rel = false;
-  global.sbc_disable_181_relay = false;
-  global.sbc_local_update = false;
-  global.sbc_reject_code = null;
-  global.sbc_reject_reason = null;
-  global.sbc_ban_source_address = false;
-  global.sbc_patch_ipv6_as_rfc1918_address = false;
-  global.sbc_force_sdp_global_ip = null;
-  global.sbc_force_sdp_audio_ip = null;
-  global.sbc_force_sdp_audio_port = null;
-  global.sbc_force_sdp_video_ip = null;
-  global.sbc_force_sdp_video_port = null;
-  global.sbc_sdp_audio_attributes = null;
-  global.sbc_sdp_video_attributes = null;
-  global.sbc_sdp_remove_audio_attributes = null;
-  global.sbc_sdp_remove_video_attributes = null;
-  global.sbc_bleg_cid = null;
-  global.sbc_bleg_cid_suffix = null;
+  context.sipMessage = sipMessage;
+  context.sbc_retarget_refer = "";
+  context.sbc_dialog_state_placement = "";
+  context.sbc_log_id = sipMessage.getLogId();
+  context.sbc_disable_rtp_proxy = false;
+  context.sbc_verbose_rtp_logging = false;
+  context.sbc_local_100_rel = false;
+  context.sbc_disable_181_relay = false;
+  context.sbc_local_update = false;
+  context.sbc_reject_code = null;
+  context.sbc_reject_reason = null;
+  context.sbc_ban_source_address = false;
+  context.sbc_patch_ipv6_as_rfc1918_address = false;
+  context.sbc_force_sdp_global_ip = null;
+  context.sbc_force_sdp_audio_ip = null;
+  context.sbc_force_sdp_audio_port = null;
+  context.sbc_force_sdp_video_ip = null;
+  context.sbc_force_sdp_video_port = null;
+  context.sbc_sdp_audio_attributes = null;
+  context.sbc_sdp_video_attributes = null;
+  context.sbc_sdp_remove_audio_attributes = null;
+  context.sbc_sdp_remove_video_attributes = null;
+  context.sbc_bleg_cid = null;
+  context.sbc_bleg_cid_suffix = null;
 
   if (typeof sbc_log_id === "undefined" || sbc_log_id.length === 0) {
-    global.sbc_log_id = "[CID=00000000]\t";
+    context.sbc_log_id = "[CID=00000000]\t";
   }
 
   //
   // Transcoder
   //
-  global.sbc_enable_transcoding = false;
-  global.sbc_offer_secure_rtp = false;
-  global.sbc_target_behind_nat = false;
-  global.sbc_caller_behind_nat = false;
-  global.sbc_send_ptime_attribute = null;
-  global.sbc_send_ssrc_attribute = null;
-  global.sbc_inbound_codecs = [];
-  global.sbc_outbound_codecs = [];
+  context.sbc_enable_transcoding = false;
+  context.sbc_offer_secure_rtp = false;
+  context.sbc_target_behind_nat = false;
+  context.sbc_caller_behind_nat = false;
+  context.sbc_send_ptime_attribute = null;
+  context.sbc_send_ssrc_attribute = null;
+  context.sbc_inbound_codecs = [];
+  context.sbc_outbound_codecs = [];
 
-  global.sip_message = sipMessage;
+  context.sip_message = sipMessage;
   var request = sipMessage._request;
 
   //
   // Request URI
   //
-  global.sip_raw_uri = _parser.msgGetRequestUri(request);
-  global.sip_method = _parser.msgGetMethod(request);
-  global.sip_target_user = _parser.msgGetRequestUriUser(request);
-  global.sip_target_host = _parser.msgGetRequestUriHost(request);
-  global.sip_target_port = _parser.msgGetRequestUriPort(request);
-  global.sip_uri_parameters = _parser.msgGetRequestUriParameters(request);
+  context.sip_raw_uri = _parser.msgGetRequestUri(request);
+  context.sip_method = _parser.msgGetMethod(request);
+  context.sip_target_user = _parser.msgGetRequestUriUser(request);
+  context.sip_target_host = _parser.msgGetRequestUriHost(request);
+  context.sip_target_port = _parser.msgGetRequestUriPort(request);
+  context.sip_uri_parameters = _parser.msgGetRequestUriParameters(request);
 
-  global.sip_target_user_value = null;
-  global.sip_target_host_value = null;
-  global.sip_target_port_value = null;
-  global.sip_uri_parameters_value = null;
-  global.sip_custom_headers_value = {};
-  global.sip_local_reg_target_value = {
+  context.sip_target_user_value = null;
+  context.sip_target_host_value = null;
+  context.sip_target_port_value = null;
+  context.sip_uri_parameters_value = null;
+  context.sip_custom_headers_value = {};
+  context.sip_local_reg_target_value = {
     user: "",
     host: "",
     port: ""
@@ -83,142 +93,143 @@ exports.sbc_create_global_variables = function(sipMessage) {
   //
   // User-Agent Header
   //
-  global.sip_remote_user_agent = _parser.msgHdrGet(request, "User-Agent");
+  context.sip_remote_user_agent = _parser.msgHdrGet(request, "User-Agent");
 
   //
   // From Header
   //
-  global.sip_from_raw_header = _parser.msgHdrGet(request, "From");
-  global.sip_from_user = _parser.msgGetFromUser(request);
-  global.sip_from_host = _parser.msgGetFromHost(request);
-  global.sip_from_port = _parser.msgGetFromPort(request);
-  global.sip_from_display_name = _parser.fromGetDisplayName(global.sip_from_raw_header);
+  context.sip_from_raw_header = _parser.msgHdrGet(request, "From");
+  context.sip_from_user = _parser.msgGetFromUser(request);
+  context.sip_from_host = _parser.msgGetFromHost(request);
+  context.sip_from_port = _parser.msgGetFromPort(request);
+  context.sip_from_display_name = _parser.fromGetDisplayName(context.sip_from_raw_header);
 
-  global.sip_from_user_value = null;
-  global.sip_from_host_value = null;
-  global.sip_from_port_value = null;
-  global.sip_from_display_name_value = null;
+  context.sip_from_user_value = null;
+  context.sip_from_host_value = null;
+  context.sip_from_port_value = null;
+  context.sip_from_display_name_value = null;
 
   //
   // To Header
   //
-  global.sip_to_raw_header = _parser.msgHdrGet(request, "To");
-  global.sip_to_user = _parser.msgGetToUser(request);
-  global.sip_to_host = _parser.msgGetToHost(request);
-  global.sip_to_port = _parser.msgGetToPort(request);
-  global.sip_to_display_name = _parser.toGetDisplayName(global.sip_to_raw_header);
+  context.sip_to_raw_header = _parser.msgHdrGet(request, "To");
+  context.sip_to_user = _parser.msgGetToUser(request);
+  context.sip_to_host = _parser.msgGetToHost(request);
+  context.sip_to_port = _parser.msgGetToPort(request);
+  context.sip_to_display_name = _parser.toGetDisplayName(context.sip_to_raw_header);
 
-  global.sip_to_user_value = null;
-  global.sip_to_host_value = null;
-  global.sip_to_port_value = null;
-  global.sip_to_display_name_value = null;
+  context.sip_to_user_value = null;
+  context.sip_to_host_value = null;
+  context.sip_to_port_value = null;
+  context.sip_to_display_name_value = null;
 
   //
   // Transport
   //
-  global.sip_source_address = sipMessage.getSourceAddress();
-  global.sip_source_port = sipMessage.getSourcePort();
-  global.sip_interface_address = sipMessage.getInterfaceAddress();
-  global.sip_interface_port = sipMessage.getInterfacePort();
+  context.sip_source_address = sipMessage.getSourceAddress();
+  context.sip_source_port = sipMessage.getSourcePort();
+  context.sip_interface_address = sipMessage.getInterfaceAddress();
+  context.sip_interface_port = sipMessage.getInterfacePort();
 
-  global.sip_target_address_value = {
+  context.sip_target_address_value = {
     protocol: "",
     address: "",
     port: ""
   };
-  global.sip_local_interface_value = {
+  context.sip_local_interface_value = {
     address: "",
     port: ""
   };
-  global.sip_target_domain_value = "";
+  context.sip_target_domain_value = "";
 
   //
   // Assume rejection.  Modules will set this to accept or banned
   //
-  global.sbc_route_action = "reject";
+  context.sbc_route_action = "reject";
+  sipMessage.setProperty("route-action", context.sbc_route_action);
 
-  return global;
+  return context;
 }
 
-exports.sbc_export_global_vars = function(sipMessage, global) {
+exports.sbc_export_context_variables = function(sipMessage, context) {
   var request = sipMessage._request;
 
-  if (global.sbc_retarget_refer.length > 0) {
-    sipMessage.setProperty("retarget-refer", global.sbc_retarget_refer);
+  if (context.sbc_retarget_refer.length > 0) {
+    sipMessage.setProperty("retarget-refer", context.sbc_retarget_refer);
   }
 
-  if (global.sbc_dialog_state_placement === DIALOG_STATE_IN_CONTACT) {
+  if (context.sbc_dialog_state_placement === DIALOG_STATE_IN_CONTACT) {
     sipMessage.setTransactionProperty("dialog-state-placement", DIALOG_STATE_IN_CONTACT);
-  } else if (global.sbc_dialog_state_placement === DIALOG_STATE_IN_ROUTE) {
+  } else if (context.sbc_dialog_state_placement === DIALOG_STATE_IN_ROUTE) {
     sipMessage.setTransactionProperty("dialog-state-placement", DIALOG_STATE_IN_ROUTE);
   }
 
-  if (global.sbc_disable_rtp_proxy) {
+  if (context.sbc_disable_rtp_proxy) {
     sipMessage.setTransactionProperty("no-rtp-proxy", "1");
   }
 
-  if (global.sbc_verbose_rtp_logging) {
+  if (context.sbc_verbose_rtp_logging) {
     sipMessage.setTransactionProperty("enable-verbose-rtp", "1");
   }
 
-  if (global.sbc_local_100_rel) {
+  if (context.sbc_local_100_rel) {
     sipMessage.setTransactionProperty("local-100-rel", "1");
   }
 
-  if (global.sbc_disable_181_relay) {
+  if (context.sbc_disable_181_relay) {
     sipMessage.setTransactionProperty("disable-181-relay", "1");
   }
 
-  if (global.sbc_local_update) {
+  if (context.sbc_local_update) {
     sipMessage.setTransactionProperty("local-update", "1");
   }
 
-  if (global.sbc_reject_code !== null) {
-    sipMessage.setProperty("reject-code", global.sbc_reject_code);
+  if (context.sbc_reject_code !== null) {
+    sipMessage.setProperty("reject-code", context.sbc_reject_code);
   }
 
-  if (global.sbc_reject_reason !== null) {
-    sipMessage.setProperty("reject-reason", global.sbc_reject_reason);
+  if (context.sbc_reject_reason !== null) {
+    sipMessage.setProperty("reject-reason", context.sbc_reject_reason);
   }
 
-  if (global.sbc_ban_source_address) {
-    global.sbc_route_action = "banned";
+  if (context.sbc_ban_source_address) {
+    context.sbc_route_action = "banned";
   }
 
-  if (global.sbc_route_action) {
-    sipMessage.setProperty("route-action", global.sbc_route_action);
+  if (context.sbc_route_action) {
+    sipMessage.setProperty("route-action", context.sbc_route_action);
   }
 
-  if (global.sbc_patch_ipv6_as_rfc1918_address) {
+  if (context.sbc_patch_ipv6_as_rfc1918_address) {
     sipMessage.setTransactionProperty("patch-ipv6_as-rfc1918-address", "1");
   }
 
-  if (global.sbc_force_sdp_audio_ip !== null) {
-    sipMessage.setTransactionProperty("force-sdp-audio-ip", global.sbc_force_sdp_audio_ip);
+  if (context.sbc_force_sdp_audio_ip !== null) {
+    sipMessage.setTransactionProperty("force-sdp-audio-ip", context.sbc_force_sdp_audio_ip);
   }
 
-  if (global.sbc_force_sdp_audio_port !== null) {
-    sipMessage.setTransactionProperty("force-sdp-audio-port", global.sbc_force_sdp_audio_port);
+  if (context.sbc_force_sdp_audio_port !== null) {
+    sipMessage.setTransactionProperty("force-sdp-audio-port", context.sbc_force_sdp_audio_port);
   }
 
-  if (global.sbc_force_sdp_video_ip !== null) {
-    sipMessage.setTransactionProperty("force-sdp-video-ip", global.sbc_force_sdp_video_ip);
+  if (context.sbc_force_sdp_video_ip !== null) {
+    sipMessage.setTransactionProperty("force-sdp-video-ip", context.sbc_force_sdp_video_ip);
   }
 
-  if (global.sbc_force_sdp_video_port !== null) {
-    sipMessage.setTransactionProperty("force-sdp-video-port", global.sbc_force_sdp_video_port);
+  if (context.sbc_force_sdp_video_port !== null) {
+    sipMessage.setTransactionProperty("force-sdp-video-port", context.sbc_force_sdp_video_port);
   }
 
-  if (global.sbc_force_sdp_global_ip !== null) {
-    sipMessage.setTransactionProperty("force-sdp-global-ip", global.sbc_force_sdp_global_ip);
+  if (context.sbc_force_sdp_global_ip !== null) {
+    sipMessage.setTransactionProperty("force-sdp-global-ip", context.sbc_force_sdp_global_ip);
   }
 
   var attributes = "";
   var i = 0;
-  if (global.sbc_sdp_audio_attributes !== null && global.sbc_sdp_audio_attributes.length) {
-    for (i = 0; i < global.sbc_sdp_audio_attributes.length; i++) {
-      attributes += global.sbc_sdp_audio_attributes[i];
-      if (i < global.sbc_sdp_audio_attributes.length - 1) {
+  if (context.sbc_sdp_audio_attributes !== null && context.sbc_sdp_audio_attributes.length) {
+    for (i = 0; i < context.sbc_sdp_audio_attributes.length; i++) {
+      attributes += context.sbc_sdp_audio_attributes[i];
+      if (i < context.sbc_sdp_audio_attributes.length - 1) {
         attributes += "~";
       }
     }
@@ -226,24 +237,24 @@ exports.sbc_export_global_vars = function(sipMessage, global) {
     sipMessage.setTransactionProperty("sdp-audio-attributes", attributes);
   }
 
-  if (global.sbc_sdp_video_attributes !== null && global.sbc_sdp_video_attributes.length) {
+  if (context.sbc_sdp_video_attributes !== null && context.sbc_sdp_video_attributes.length) {
     attributes = "";
     i = 0;
-    for (i = 0; i < global.sbc_sdp_video_attributes.length; i++) {
-      attributes += global.sbc_sdp_video_attributes[i];
-      if (i < global.sbc_sdp_video_attributes.length - 1) {
+    for (i = 0; i < context.sbc_sdp_video_attributes.length; i++) {
+      attributes += context.sbc_sdp_video_attributes[i];
+      if (i < context.sbc_sdp_video_attributes.length - 1) {
         attributes += "~";
       }
     }
     sipMessage.setTransactionProperty("sdp-video-attributes", attributes);
   }
 
-  if (global.sbc_sdp_remove_audio_attributes !== null && global.sbc_sdp_remove_audio_attributes.length) {
+  if (context.sbc_sdp_remove_audio_attributes !== null && context.sbc_sdp_remove_audio_attributes.length) {
     attributes = "";
     i = 0;
-    for (i = 0; i < global.sbc_sdp_remove_audio_attributes.length; i++) {
-      attributes += global.sbc_sdp_remove_audio_attributes[i];
-      if (i < global.sbc_sdp_remove_audio_attributes.length - 1) {
+    for (i = 0; i < context.sbc_sdp_remove_audio_attributes.length; i++) {
+      attributes += context.sbc_sdp_remove_audio_attributes[i];
+      if (i < context.sbc_sdp_remove_audio_attributes.length - 1) {
         attributes += "~";
       }
     }
@@ -251,12 +262,12 @@ exports.sbc_export_global_vars = function(sipMessage, global) {
     sipMessage.setTransactionProperty("sdp-remove-audio-attributes", attributes);
   }
 
-  if (global.sbc_sdp_remove_video_attributes !== null && global.sbc_sdp_remove_video_attributes.length) {
+  if (context.sbc_sdp_remove_video_attributes !== null && context.sbc_sdp_remove_video_attributes.length) {
     attributes = "";
     i = 0;
-    for (i = 0; i < global.sbc_sdp_remove_video_attributes.length; i++) {
-      attributes += global.sbc_sdp_remove_video_attributes[i];
-      if (i < global.sbc_sdp_remove_video_attributes.length - 1) {
+    for (i = 0; i < context.sbc_sdp_remove_video_attributes.length; i++) {
+      attributes += context.sbc_sdp_remove_video_attributes[i];
+      if (i < context.sbc_sdp_remove_video_attributes.length - 1) {
         attributes += "~";
       }
     }
@@ -264,13 +275,13 @@ exports.sbc_export_global_vars = function(sipMessage, global) {
   }
 
   if (sipMessage.isRequest("INVITE")) {
-    if (global.sbc_bleg_cid !== null && sbc_bleg_cid === B2B) {
+    if (context.sbc_bleg_cid !== null && sbc_bleg_cid === B2B) {
       sipMessage.setTransactionProperty("cid-correlation", B2B);
-      if (global.sbc_bleg_cid_suffix === null) {
-        global.sbc_bleg_cid_suffix = "-leg2";
+      if (context.sbc_bleg_cid_suffix === null) {
+        context.sbc_bleg_cid_suffix = "-leg2";
       }
-      sipMessage.setTransactionProperty("cid-suffix", global.sbc_bleg_cid_suffix);
-    } else if (global.sbc_bleg_cid !== null && global.sbc_bleg_cid === XCID) {
+      sipMessage.setTransactionProperty("cid-suffix", context.sbc_bleg_cid_suffix);
+    } else if (context.sbc_bleg_cid !== null && context.sbc_bleg_cid === XCID) {
       sipMessage.setTransactionProperty("cid-correlation", XCID);
     }
   }
@@ -280,69 +291,69 @@ exports.sbc_export_global_vars = function(sipMessage, global) {
   // Request URI
   //
 
-  if (global.sip_local_reg_target_value.user.length > 0 && global.sip_local_reg_target_value.host.length > 0) {
-    global.sip_target_user_value = global.sip_local_reg_target_value.user;
-    global.sip_target_host_value = global.sip_local_reg_target_value.host;
-    global.sip_target_port_value = global.sip_local_reg_target_value.port;
+  if (context.sip_local_reg_target_value.user.length > 0 && context.sip_local_reg_target_value.host.length > 0) {
+    context.sip_target_user_value = context.sip_local_reg_target_value.user;
+    context.sip_target_host_value = context.sip_local_reg_target_value.host;
+    context.sip_target_port_value = context.sip_local_reg_target_value.port;
     sipMessage.setProperty("local-reg-retarget", "1");
   }
 
-  if (global.sip_target_user_value !== null) {
-    _parser.msgSetRequestUriUser(request, global.sip_target_user_value);
+  if (context.sip_target_user_value !== null) {
+    _parser.msgSetRequestUriUser(request, context.sip_target_user_value);
   }
-  if (global.sip_target_host_value !== null) {
-    if (global.sip_target_port_value !== null) {
-      if (global.sip_target_port_value.length === 0) {
-        _parser.msgSetRequestUriHostPort(request, global.sip_target_host_value);
+  if (context.sip_target_host_value !== null) {
+    if (context.sip_target_port_value !== null) {
+      if (context.sip_target_port_value.length === 0) {
+        _parser.msgSetRequestUriHostPort(request, context.sip_target_host_value);
       } else {
-        _parser.msgSetRequestUriHostPort(request, global.sip_target_host_value + ":" + global.sip_target_port_value);
+        _parser.msgSetRequestUriHostPort(request, context.sip_target_host_value + ":" + context.sip_target_port_value);
       }
-    } else if (typeof global.sip_target_port === "string") {
-      _parser.msgSetRequestUriHostPort(request, global.sip_target_host_value + ":" + global.sip_target_port);
+    } else if (typeof context.sip_target_port === "string") {
+      _parser.msgSetRequestUriHostPort(request, context.sip_target_host_value + ":" + context.sip_target_port);
     } else {
-      _parser.msgSetRequestUriHostPort(request, global.sip_target_host_value);
+      _parser.msgSetRequestUriHostPort(request, context.sip_target_host_value);
     }
   }
-  if (global.sip_target_port_value !== null && global.sip_target_host_value === null) {
-    if (global.sip_target_port_value.length === 0) {
-      _parser.msgSetRequestUriHostPort(request, global.sip_target_host);
+  if (context.sip_target_port_value !== null && context.sip_target_host_value === null) {
+    if (context.sip_target_port_value.length === 0) {
+      _parser.msgSetRequestUriHostPort(request, context.sip_target_host);
     } else {
-      _parser.msgSetRequestUriHostPort(request, global.sip_target_host + ":" + global.sip_target_port_value);
+      _parser.msgSetRequestUriHostPort(request, context.sip_target_host + ":" + context.sip_target_port_value);
     }
   }
-  if (global.sip_uri_parameters_value !== null) {
-    _parser.msgSetRequestUriParameters(request, global.sip_uri_parameters_value);
+  if (context.sip_uri_parameters_value !== null) {
+    _parser.msgSetRequestUriParameters(request, context.sip_uri_parameters_value);
   }
 
   //
   // FROM Header
   //
-  if (global.sip_from_display_name_value !== null) {
+  if (context.sip_from_display_name_value !== null) {
     var from = _parser.msgHdrGet(request, "From");
-    from = _parser.fromSetDisplayName(from, global.sip_from_display_name_value);
+    from = _parser.fromSetDisplayName(from, context.sip_from_display_name_value);
     _parser.msgHdrSet(request, "From", from);
   }
-  if (global.sip_from_user_value !== null) {
-    _parser.msgSetFromUser(request, global.sip_from_user_value)
+  if (context.sip_from_user_value !== null) {
+    _parser.msgSetFromUser(request, context.sip_from_user_value)
   }
-  if (global.sip_from_host_value !== null) {
-    if (global.sip_from_port_value !== null) {
-      if (global.sip_from_port_value.length === 0) {
-        _parser.msgSetFromHostPort(request, global.sip_from_host_value);
+  if (context.sip_from_host_value !== null) {
+    if (context.sip_from_port_value !== null) {
+      if (context.sip_from_port_value.length === 0) {
+        _parser.msgSetFromHostPort(request, context.sip_from_host_value);
       } else {
-        _parser.msgSetFromHostPort(request, global.sip_from_host_value + ":" + global.sip_from_port_value);
+        _parser.msgSetFromHostPort(request, context.sip_from_host_value + ":" + context.sip_from_port_value);
       }
-    } else if (typeof global.sip_from_port === "string") {
-      _parser.msgSetFromHostPort(request, global.sip_from_host_value + ":" + global.sip_from_port);
+    } else if (typeof context.sip_from_port === "string") {
+      _parser.msgSetFromHostPort(request, context.sip_from_host_value + ":" + context.sip_from_port);
     } else {
-      _parser.msgSetFromHostPort(request, global.sip_from_host_value);
+      _parser.msgSetFromHostPort(request, context.sip_from_host_value);
     }
   }
-  if (global.sip_from_port_value !== null && global.sip_from_host_value === null) {
-    if (global.sip_from_port_value.length === 0) {
-      _parser.msgSetFromHostPort(request, global.sip_from_host);
+  if (context.sip_from_port_value !== null && context.sip_from_host_value === null) {
+    if (context.sip_from_port_value.length === 0) {
+      _parser.msgSetFromHostPort(request, context.sip_from_host);
     } else {
-      _parser.msgSetFromHostPort(request, global.sip_from_host + ":" + global.sip_from_port_value);
+      _parser.msgSetFromHostPort(request, context.sip_from_host + ":" + context.sip_from_port_value);
     }
   }
 
@@ -350,60 +361,166 @@ exports.sbc_export_global_vars = function(sipMessage, global) {
   //
   // TO Header
   //
-  if (global.sip_to_display_name_value !== null) {
+  if (context.sip_to_display_name_value !== null) {
     var to = _parser.msgHdrGet(request, "To");
-    to = _parser.toSetDisplayName(to, global.sip_to_display_name_value);
+    to = _parser.toSetDisplayName(to, context.sip_to_display_name_value);
     _parser.msgHdrSet(request, "To", to);
   }
-  if (global.sip_to_user_value !== null) {
-    _parser.msgSetToUser(request, global.sip_to_user_value)
+  if (context.sip_to_user_value !== null) {
+    _parser.msgSetToUser(request, context.sip_to_user_value)
   }
-  if (global.sip_to_host_value !== null) {
-    if (global.sip_to_port_value !== null) {
-      if (global.sip_to_port_value.length === 0) {
-        _parser.msgSetToHostPort(request, global.sip_to_host_value);
+  if (context.sip_to_host_value !== null) {
+    if (context.sip_to_port_value !== null) {
+      if (context.sip_to_port_value.length === 0) {
+        _parser.msgSetToHostPort(request, context.sip_to_host_value);
       } else {
-        _parser.msgSetToHostPort(request, global.sip_to_host_value + ":" + global.sip_to_port_value);
+        _parser.msgSetToHostPort(request, context.sip_to_host_value + ":" + context.sip_to_port_value);
       }
-    } else if (typeof global.sip_to_port === "string") {
-      _parser.msgSetToHostPort(request, global.sip_to_host_value + ":" + global.sip_to_port);
+    } else if (typeof context.sip_to_port === "string") {
+      _parser.msgSetToHostPort(request, context.sip_to_host_value + ":" + context.sip_to_port);
     } else {
-      _parser.msgSetToHostPort(request, global.sip_to_host_value);
+      _parser.msgSetToHostPort(request, context.sip_to_host_value);
     }
   }
-  if (global.sip_to_port_value !== null && global.sip_to_host_value === null) {
-    if (global.sip_to_port_value.length === 0) {
-      _parser.msgSetToHostPort(request, global.sip_to_host);
+  if (context.sip_to_port_value !== null && context.sip_to_host_value === null) {
+    if (context.sip_to_port_value.length === 0) {
+      _parser.msgSetToHostPort(request, context.sip_to_host);
     } else {
-      _parser.msgSetToHostPort(request, global.sip_to_host + ":" + global.sip_to_port_value);
+      _parser.msgSetToHostPort(request, context.sip_to_host + ":" + context.sip_to_port_value);
     }
   }
 
   //
   // Transport
   //
-  if (global.sip_target_domain_value.length > 0) {
-    sipMessage.setRequestUriHostPort(global.sip_target_domain_value);
-    sipMessage.setFromHostPort(global.sip_target_domain_value);
-    sipMessage.setToHostPort(global.sip_target_domain_value);
+  if (context.sip_target_domain_value.length > 0) {
+    sipMessage.setRequestUriHostPort(context.sip_target_domain_value);
+    sipMessage.setFromHostPort(context.sip_target_domain_value);
+    sipMessage.setToHostPort(context.sip_target_domain_value);
   }
 
-  if (global.sip_target_address_value.address.length > 0) {
-    if (global.sip_target_address_value.protocol.length === 0) {
-      global.sip_target_address_value.protocol = "udp";
+  if (context.sip_target_address_value.address.length > 0) {
+    if (context.sip_target_address_value.protocol.length === 0) {
+      context.sip_target_address_value.protocol = "udp";
     }
-    sipMessage.setProperty("target-transport", global.sip_target_address_value.protocol);
-    sipMessage.setProperty("target-address", global.sip_target_address_value.address);
+    sipMessage.setProperty("target-transport", context.sip_target_address_value.protocol);
+    sipMessage.setProperty("target-address", context.sip_target_address_value.address);
 
-    if (global.sip_target_address_value.port.length > 0) {
-      sipMessage.setProperty("target-port", global.sip_target_address_value.port);
+    if (context.sip_target_address_value.port.length > 0) {
+      sipMessage.setProperty("target-port", context.sip_target_address_value.port);
     }
   }
 
-  if (global.sip_local_interface_value.address.length > 0) {
-    sipMessage.setProperty("interface-address", global.sip_local_interface_value.address);
-    if (global.sip_local_interface_value.port.length > 0) {
-      sipMessage.setProperty("interface-port", global.sip_local_interface_value.port);
+  if (context.sip_local_interface_value.address.length > 0) {
+    sipMessage.setProperty("interface-address", context.sip_local_interface_value.address);
+    if (context.sip_local_interface_value.port.length > 0) {
+      sipMessage.setProperty("interface-port", context.sip_local_interface_value.port);
     }
   }
 }
+
+
+//
+// Helper Functions
+//
+exports.set_target_address = function(context, protocol, address, port)
+{
+    context.sip_target_address_value.protocol = protocol;
+    context.sip_target_address_value.address = address;
+    if (typeof(port) == "string") {
+        context.sip_target_address_value.port = port;
+    } else if(typeof(port) == "number") {
+        context.sip_target_address_value.port = port.toString();
+    }
+    context.sbc_route_action = "accept";
+}
+
+exports.reject_request = function(context, status_code, reason_phrase)
+{
+    context.sbc_route_action = "reject";
+    if (typeof(status_code) === "string") {
+          context.sbc_reject_code = status_code;
+    } else if(typeof(status_code) === "number") {
+          context.sbc_reject_code = status_code.toString();
+    }
+    if (typeof(reason_phrase) === "string") {
+        context.sbc_reject_reason = reason_phrase;
+    }
+}
+
+
+//
+// Initialization
+//
+exports.initialize = function(configPath)
+{
+    return exports.sbc_initialize(configPath);
+}
+
+exports.run = function()
+{
+    isolate.on("handle_sip_request_event", function(request, userData) {
+        var sipMessage = new SIPMessage(userData);
+        if (request.eventName === "routeRequest") {
+            var context = exports.sbc_create_context_variables(sipMessage);
+            if (typeof(exports._on_route_request) === "function") {
+                exports._on_route_request(context, sipMessage);
+            } else {
+                exports.reject_request(context, "500", "No Route Handler");
+            }
+            exports.sbc_export_context_variables(context.sipMessage, context);
+        } else if (request.eventName === "inboundRequest") {
+            if (typeof(exports._on_inbound_request) === "function") {
+                exports._on_inbound_request(sipMessage);
+            }
+        }
+        return { result: true };
+    });
+
+    isolate.on("handle_custom_event", function(request, userData) {
+        var sipMessage = new SIPMessage(userData);
+        var handler = null;
+        if (request.eventName === "transportConfig") {
+            handler = exports._on_initialize_transport;
+        } else if (request.eventName === "userAgentConfig") {
+            handler = exports._on_initialize_user_agent;
+        }
+        if (typeof(handler) === "function") {
+            var config = handler();
+            if (typeof(config) === "object") {
+                sipMessage.setProperty("JSONConfig", JSON.stringify(config));
+            }
+        }
+        return { result: true };
+    });
+    exports.sbc_run();
+}
+
+//
+// Event Handlers
+//
+exports.on_route_request = function(handler)
+{
+    exports._on_route_request = handler;
+}
+
+exports.on_inbound_request = function(handler)
+{
+    exports._on_inbound_request = handler;
+}
+
+exports.on_initialize_transport = function(handler)
+{
+    exports._on_initialize_transport = handler;
+}
+
+exports.on_initialize_transport = function(handler)
+{
+    exports._on_initialize_transport = handler;
+}
+
+exports.on_initialize_user_agent = function(handler)
+{
+    exports._on_initialize_user_agent = handler;
+}
+

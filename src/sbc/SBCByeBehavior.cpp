@@ -142,7 +142,7 @@ void SBCByeBehavior::onTransactionError(
 
   try
   {
-    boost::filesystem::path stateFile = operator/(_pManager->getDialogStateDirectory(), sessionId);
+    boost::filesystem::path stateFile = operator/(_stateDir, sessionId);
     if (e && !pErrorResponse)
     {
       //

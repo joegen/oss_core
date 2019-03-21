@@ -93,14 +93,12 @@ void SBCJSModuleManager::stop()
 
 void SBCJSModuleManager::internal_run()
 {
-  OSS_LOG_INFO("SBCModuleManager - Running root isolate");
   _pIsolate = JSIsolateManager::instance().rootIsolate();
   boost::filesystem::path script(_scriptFile);
   JSIsolateManager::instance().run(
     _pIsolate,
     script
   );
-  OSS_LOG_INFO("SBCModuleManager - Root isolate thread ended");
 }
 
 bool SBCJSModuleManager::processTransactionEvent(const std::string& eventName, const SIPB2BTransaction::Ptr& pTransaction, OSS::JSON::Object& result)
@@ -131,6 +129,33 @@ bool SBCJSModuleManager::processRequestEvent(const std::string& eventName, const
   arguments["eventName"] = OSS::JSON::String(eventName);
   event["arguments"] = arguments;
   return JS::JSIsolateManager::instance().rootIsolate()->execute(event, result, 0, pMessage.get());
+}
+
+bool SBCJSModuleManager::processCustomEvent(const std::string& eventName, const CustomEventArgs& args, CustomEventArgs& result)
+{
+  if (!_pIsolate)
+  {
+    return false;
+  }
+  SIP::SIPMessage::Ptr pMsg(new SIP::SIPMessage());
+  OSS::JSON::Object event, arguments, ret;
+  event["method"] = OSS::JSON::String("handle_custom_event");
+  arguments["type"] = OSS::JSON::String("method");
+  arguments["dataSource"] = OSS::JSON::String("custom");
+  arguments["eventName"] = OSS::JSON::String(eventName);
+  for (CustomEventArgs::const_iterator iter = args.begin(); iter != args.end(); iter++)
+  {
+    arguments[iter->first.c_str()] = OSS::JSON::String(iter->second);
+  }
+  event["arguments"] = arguments;
+  if (!JS::JSIsolateManager::instance().rootIsolate()->execute(event, ret, 0, pMsg.get()))
+  {
+    return false;
+  }
+  std::string jsonConfig;
+  pMsg->getProperty("JSONConfig", jsonConfig);
+  result = pMsg->properties();
+  return true;
 }
 
 void SBCJSModuleManager::notifyTransactionEvent(const std::string& eventName, const SIPB2BTransaction::Ptr& pTransaction)

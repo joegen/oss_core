@@ -46,6 +46,7 @@
 #include "OSS/SIP/SIPTransportSession.h"
 #include "OSS/SIP/SIPTransaction.h"
 #include "OSS/SIP/SIPTransportService.h"
+#include "OSS/JSON/Json.h"
 
 
 namespace OSS {
@@ -169,6 +170,11 @@ public:
     /// within the given port ranges.   The transport vectors are
     /// updated accordingly as a successful binding is obtained.
 #endif
+  
+  void initTransportFromJSON(const OSS::JSON::Object& json);
+  void initListenersFromJSON(const OSS::JSON::Object& json, bool hasTls);
+  void initDefaultInterfaceFromJSON(const OSS::JSON::Object& json);
+    /// Initialize trasnport from a JSON object
   
   bool initializeTlsContext(
     const std::string& tlsCertFile, // Certificate to be used by this server.  File should be in PEM format

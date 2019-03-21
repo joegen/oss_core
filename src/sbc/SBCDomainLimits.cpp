@@ -29,6 +29,7 @@
 #include "OSS/UTL/Logger.h"
 #include "OSS/JSON/reader.h"
 #include "OSS/JSON/writer.h"
+#include "OSS/SIP/SBC/SBCConfiguration.h"
 
 
 namespace OSS {
@@ -62,17 +63,10 @@ void SBCDomainLimits::initialize(SBCManager* pSBCManager)
   _pManager = pSBCManager;
   _systemDb = _pManager->workspace().getSystemDb();
   
-  const boost::filesystem::path& configFile = _pManager->getSIPConfigurationFile();
-  ClassType config;
-  if (!config.load(configFile))
-  {
-    return;
-  }
-  
   OSS_LOG_NOTICE("SBCDomainLimits::initialize - INVOKED");
   
-  DataType root = config.self();
-  if (root.exists("user-agent"))
+  const OSS::JSON::Object& userAgent = SBCConfiguration::instance()->userAgent();
+  if (userAgent.Exists("domain_limits"))
   {
     //
     // Clear out the previous domain count
@@ -86,24 +80,20 @@ void SBCDomainLimits::initialize(SBCManager* pSBCManager)
     
     try
     {
-      DataType userAgent = root["user-agent"];
-      if (userAgent.exists("domain-limits"))
+      OSS::JSON::Array limits = userAgent["domain_limits"];
+      int dbCount = limits.Size();
+      for (int i = 0; i < dbCount; i++)
       {
-        DataType limits = userAgent["domain-limits"];
-        int dbCount = limits.getElementCount();
-        for (int i = 0; i < dbCount; i++)
+        OSS::JSON::Object dbInfo = limits[i];
+
+        if (dbInfo.Exists("enabled") && dbInfo.Exists("domain") && dbInfo.Exists("max_channels"))
         {
-          DataType dbInfo = limits[i];
-          
-          if (dbInfo.exists("enabled") && dbInfo.exists("domain") && dbInfo.exists("max-channels"))
+          OSS::JSON::Boolean enabled = dbInfo["enabled"];
+          if (enabled.Value())
           {
-            bool enabled = (bool)dbInfo["enabled"];
-            if (enabled)
-            {
-              std::string domain = (const char*)dbInfo["domain"];
-              int maxChannels = (int)dbInfo["max-channels"];
-              registerDomain(domain, maxChannels);
-            }
+            OSS::JSON::String domain = dbInfo["domain"];
+            OSS::JSON::Number maxChannels = dbInfo["max_channels"];
+            registerDomain(domain.Value(), maxChannels.Value());
           }
         }
       }

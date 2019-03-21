@@ -28,6 +28,9 @@
 #include "OSS/JS/JSIsolateManager.h"
 #include "OSS/UTL/Thread.h"
 #include "OSS/SIP/SBC/SBCCDRRecord.h"
+#include "OSS/JSON/Json.h"
+#include "OSS/SIP/B2BUA/SIPB2BTransaction.h"
+#include "OSS/SIP/SIPMessage.h"
 
 namespace OSS {
 namespace SIP {
@@ -39,13 +42,14 @@ class SBCJSModuleManager
 {
 public:
   typedef OSS::JS::JSIsolate JSIsolate;
+  typedef std::map<std::string, std::string> CustomEventArgs;
   void run(const std::string& scriptFile, bool threaded = true);
   void stop();
-  bool processTransactionEvent(const std::string& eventName, const SIPB2BTransaction::Ptr& pTransaction, OSS::JSON::Object& result);
-  bool processRequestEvent(const std::string& eventName, const SIPMessage::Ptr& pMessage, OSS::JSON::Object& result);
-  void notifyTransactionEvent(const std::string& eventName, const SIPB2BTransaction::Ptr& pTransaction);
+  bool processTransactionEvent(const std::string& eventName, const OSS::SIP::B2BUA::SIPB2BTransaction::Ptr& pTransaction, OSS::JSON::Object& result);
+  bool processRequestEvent(const std::string& eventName, const OSS::SIP::SIPMessage::Ptr& pMessage, OSS::JSON::Object& result);
+  void notifyTransactionEvent(const std::string& eventName, const OSS::SIP::B2BUA::SIPB2BTransaction::Ptr& pTransaction);
   void notifyCdrEvent(const std::string& eventName, const SBCCDRRecord& pCdrEvent);
-  
+  bool processCustomEvent(const std::string& eventName, const CustomEventArgs& args, CustomEventArgs& result);
   SBCManager* getManager();
   static SBCJSModuleManager* createInstance(SBCManager* pManager);
   static SBCJSModuleManager* instance();

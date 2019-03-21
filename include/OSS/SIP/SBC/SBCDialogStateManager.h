@@ -171,7 +171,7 @@ public:
     SIPB2BDialogData::LegInfo& legInfo);
     /// Returns the leg-info being replaced
   
-  void run(const boost::filesystem::path& stateDirectory);
+  void run();
     /// Start the monitor thread
 
   void stop();
@@ -197,11 +197,11 @@ private:
   
   OSS::semaphore _exitSync;
   boost::thread* _pThread;
-  boost::filesystem::path _stateDirectory;
   mutable OSS::mutex_critic_sec _csDialogsMutex;
   CacheManager _dialogs;
   SBCManager* _pManager;
   int _stateFileMaxLifeTime;
+  boost::filesystem::path _stateDir;
 };
 
 
