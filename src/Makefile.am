@@ -86,7 +86,7 @@ DISTCLEANFILES = Makefile.in
 #
 
 %.hpp.gch: %.hpp
-	$(CXX) -D_REENTRANT -D_FILE_OFFSET_BITS=64 -O0 -g -O2 -fmessage-length=0 -Wall -Wformat -Wwrite-strings -Wpointer-arith -fPIC -DPIC -c $<
+	$(CXX) ${CXXFLAGS} -D_REENTRANT -D_FILE_OFFSET_BITS=64 -O0 -g -O2 -fmessage-length=0 -Wall -Wformat -Wwrite-strings -Wpointer-arith -fPIC -DPIC -c $<
 
 	
 #

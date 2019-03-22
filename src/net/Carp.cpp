@@ -115,7 +115,9 @@ Carp* Carp::instance()
 
 bool Carp::getMacAddress(const std::string& ethInterface, unsigned char* hwaddr)
 {
+#ifdef SIOCGIFHWADDR
   const char* interface = ethInterface.c_str();
+#endif
   int s;
 
   if ((s = socket(HWINFO_DOMAIN, HWINFO_TYPE, 0)) == -1)

@@ -68,7 +68,7 @@ bool ZMQSocketClient::connect(const std::string& ipPort)
     std::string localInterface;
     if (rtnl_get_route(routes, true) && rtnl_get_source(routes, localInterface, _remoteAddress.toString(), true))
     {
-      _localAddress == IPAddress::fromV4IPPort(localInterface.c_str());
+      _localAddress = IPAddress::fromV4IPPort(localInterface.c_str());
     }
     _eventQueue.enqueue(EventOpen);
   }

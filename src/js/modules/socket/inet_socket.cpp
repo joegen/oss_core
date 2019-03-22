@@ -201,6 +201,7 @@ JS_METHOD_IMPL(__get_address_family)
   return JSInt32(ret);
 }
 
+#if !defined(__APPLE__)
 JS_METHOD_IMPL(__create_multicast_socket)
 {
   js_method_arg_assert_size_eq(3);
@@ -217,6 +218,7 @@ JS_METHOD_IMPL(__create_multicast_socket)
   
   return JSInt32(ret);
 }
+#endif
 
 JS_METHOD_IMPL(__getpeername)
 {
@@ -302,7 +304,9 @@ JS_EXPORTS_INIT()
   js_export_method("create_inet_server_socket", __create_inet_server_socket);
   js_export_method("accept_inet_stream_socket", __accept_inet_stream_socket);
   js_export_method("get_address_family", __get_address_family);
+#if !defined(__APPLE__)
   js_export_method("create_multicast_socket", __create_multicast_socket);
+#endif
   js_export_method("getpeername", __getpeername);
   js_export_method("getsockname", __getsockname);
   
@@ -315,25 +319,16 @@ JS_EXPORTS_INIT()
   js_export_int32("SOCKET_WRITE", LIBSOCKET_WRITE);
   js_export_int32("SOCKET_NUMERIC", LIBSOCKET_NUMERIC);
   
-  js_export_const(MSG_CONFIRM);
+  
   js_export_const(MSG_DONTROUTE);
   js_export_const(MSG_DONTWAIT);
-  js_export_const(MSG_EOR);
-  js_export_const(MSG_MORE);
-  js_export_const(MSG_NOSIGNAL);
+  js_export_const(MSG_EOR); 
   js_export_const(MSG_OOB);
-  
-  js_export_const(MSG_CMSG_CLOEXEC);
   js_export_const(MSG_DONTWAIT);
-  js_export_const(MSG_ERRQUEUE);
   js_export_const(MSG_PEEK);
   js_export_const(MSG_TRUNC);
   js_export_const(MSG_WAITALL);
   js_export_const(MSG_CTRUNC);
-  
-  js_export_const(SOCK_NONBLOCK);
-  js_export_const(SOCK_CLOEXEC);
-  
   js_export_const(SO_DEBUG);
   js_export_const(SO_BROADCAST);
   js_export_const(SO_REUSEADDR);
@@ -348,6 +343,15 @@ JS_EXPORTS_INIT()
   js_export_const(SO_SNDLOWAT);
   js_export_const(SO_SNDTIMEO);
   
+#if !defined(__APPLE__)
+  js_export_const(MSG_CONFIRM);
+  js_export_const(MSG_MORE);
+  js_export_const(MSG_NOSIGNAL);
+  js_export_const(MSG_CMSG_CLOEXEC);
+  js_export_const(MSG_ERRQUEUE);
+  js_export_const(SOCK_NONBLOCK);
+  js_export_const(SOCK_CLOEXEC);
+#endif
 
   js_export_finalize();
 }

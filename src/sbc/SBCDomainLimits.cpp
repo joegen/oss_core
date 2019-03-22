@@ -39,7 +39,6 @@ namespace SBC {
   
   
 static const Poco::Timestamp::TimeDiff DEFAULT_CACHE_EXPIRE = 60*60*1000;  /// 1 hour lifetime
-static const std::size_t MINIMUM_DIAL_STRING_LENGTH = 7;
 static const char* DOMAIN_COUNT_PREFIX = "sbc.domain-channel-count-";
 static const char* DOMAIN_COUNT_PREFIX_WILD_CARD = "sbc.domain-channel-count-*";
 

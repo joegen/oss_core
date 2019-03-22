@@ -899,6 +899,7 @@ int get_address_family(const char* hostname)
  * @retval >=0 A valid file descriptor.
  *
  */
+#if !defined(__APPLE__)
 # ifdef LIBSOCKET_LINUX
 int create_multicast_socket(const char* group, const char* port, const char* if_name)
 {
@@ -1019,11 +1020,10 @@ int create_multicast_socket(const char* group, const char* port, const char* if_
         }
 
     }
-
     return sfd;
 }
-
 # endif
+#endif
 
 /**
  * @}

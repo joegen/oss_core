@@ -17,6 +17,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+#include "OSS/OSS.h"
 #include "OSS/JS/JSPlugin.h"
 #include "OSS/UTL/CoreUtils.h"
 #include <fcntl.h>
@@ -72,9 +73,6 @@ static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
   CONST_EXPORT(SIGUSR2);  /* User-defined signal 2 (POSIX).  */
   CONST_EXPORT(SIGPIPE);  /* Broken pipe (POSIX).  */
   CONST_EXPORT(SIGALRM);  /* Alarm clock (POSIX).  */
-  CONST_EXPORT(SIGTERM);  /* Termination (ANSI).  */
-  CONST_EXPORT(SIGSTKFLT);/* Stack fault.  */
-  CONST_EXPORT(SIGCLD);   /* Same as SIGCHLD (System V).  */
   CONST_EXPORT(SIGCHLD);  /* Child status has changed (POSIX).  */
   CONST_EXPORT(SIGCONT);  /* Continue (POSIX).  */
   CONST_EXPORT(SIGSTOP);  /* Stop, unblockable (POSIX).  */
@@ -86,12 +84,16 @@ static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
   CONST_EXPORT(SIGXFSZ);  /* File size limit exceeded (4.2 BSD).  */
   CONST_EXPORT(SIGVTALRM);/* Virtual alarm clock (4.2 BSD).  */
   CONST_EXPORT(SIGPROF);  /* Profiling alarm clock (4.2 BSD).  */
-  CONST_EXPORT(SIGWINCH); /* Window size change (4.3 BSD, Sun).  */
-  CONST_EXPORT(SIGPOLL);  /* Pollable event occurred (System V).  */
-  CONST_EXPORT(SIGIO);    /* I/O now possible (4.2 BSD).  */
-  CONST_EXPORT(SIGPWR);   /* Power failure restart (System V).  */
   CONST_EXPORT(SIGSYS);   /* Bad system call.  */
-  
+  CONST_EXPORT(SIGTERM);  /* Termination (ANSI).  */
+  CONST_EXPORT(SIGWINCH); /* Window size change (4.3 BSD, Sun).  */
+  CONST_EXPORT(SIGIO);    /* I/O now possible (4.2 BSD).  */
+#if !OSS_PLATFORM_MAC_OS_X
+  CONST_EXPORT(SIGSTKFLT);/* Stack fault.  */
+  CONST_EXPORT(SIGPWR);   /* Power failure restart (System V).  */
+  CONST_EXPORT(SIGPOLL);  /* Pollable event occurred (System V).  */
+  CONST_EXPORT(SIGCLD);   /* Same as SIGCHLD (System V).  */
+#endif
   return exports;
 }
 

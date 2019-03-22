@@ -35,11 +35,11 @@ JS_CLASS_INTERFACE(IsolateObject, "Isolate")
   JS_CLASS_INTERFACE_END(IsolateObject); 
 }
 
-IsolateObject::IsolateObject(pthread_t parentThreadId)
+IsolateObject::IsolateObject(bool isRoot)
 {
-  if (parentThreadId)
+  if (!isRoot)
   {
-    _pIsolate = JSIsolateManager::instance().createIsolate(parentThreadId);
+    _pIsolate = JSIsolateManager::instance().createIsolate(pthread_self());
   }
   else
   {

@@ -186,7 +186,7 @@ void SBCPrackBehavior::retransmit100Rel()
 
 bool SBCPrackBehavior::send100Rel(ReliableResponse& response)
 {
-  response.timeRemaining =- T1_100_REL; // decrement the remaining time before we send it
+  response.timeRemaining -= T1_100_REL; // decrement the remaining time before we send it
   if (response.timeRemaining <= 0)
   {
     ++response.retransmitCount;

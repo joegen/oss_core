@@ -59,6 +59,20 @@ AC_DEFUN([FLAG_EXISTING_CXX_DEP],[
     OSS_CORE_DEP_LIBS="$2 $OSS_CORE_DEP_LIBS"
 ])
 
+#
+# Custom flags for Mac builds
+# This will probably differ depending on versions of boost and v8 installed
+#
+case $host_os in
+    darwin* )
+    OSS_CORE_DEP_LIBS="-L/usr/local/opt/openssl/lib -L/usr/local/opt/v8@3.15/lib -L/usr/local/opt/boost@1.55/lib $OSS_CORE_DEP_LIBS"
+    LDFLAGS="${LDFLAGS} -L/usr/local/opt/openssl/lib -L/usr/local/opt/v8@3.15/lib -L/usr/local/opt/boost@1.55/lib"
+    CPPFLAGS="${CPPFLAGS} -I/usr/local/opt/openssl/include -I/usr/local/opt/v8@3.15/include -I/usr/local/opt/boost@1.55/include"
+    CXXFLAGS="${CXXFLAGS} -Wno-deprecated -I/usr/local/opt/openssl/include -isystem /usr/local/opt/v8@3.15/include -isystem /usr/local/opt/boost@1.55/include"
+    CFLAGS="${CFLAGS} -I/usr/local/opt/openssl/include"
+        ;;
+esac
+
 
 #
 # Enable ALL features
@@ -113,6 +127,7 @@ AC_ARG_ENABLE([all-features],
         #
         # Enable V8 compilation
         #
+
         AC_ARG_ENABLE([v8],
             AC_HELP_STRING([--disable-v8], [Disable V8 JavaScript Feature]),
             [DISABLE_FEATURE(V8)],
@@ -128,16 +143,16 @@ AC_ARG_ENABLE([all-features],
         # Enable Redis compilation
         #
         AC_ARG_ENABLE([redis],
-            AC_HELP_STRING([--disable-redis], [Disable Redis Feature]),
-            [DISABLE_FEATURE(REDIS)],
-            [ENABLE_FEATURE(REDIS)])
+            AC_HELP_STRING([--enable-redis], [Disable Redis Feature]),
+            [ENABLE_FEATURE(REDIS)],
+            [DISABLE_FEATURE(REDIS)])
         #
         # Enable Websocket compilation
         #
         AC_ARG_ENABLE([websockets],
-            AC_HELP_STRING([--disable-websockets], [Disable Websockets Feature]),
-            [DISABLE_FEATURE(WEBSOCKETS)],
-            [ENABLE_FEATURE(WEBSOCKETS)])
+            AC_HELP_STRING([--enable-websockets], [Disable Websockets Feature]),
+            [ENABLE_FEATURE(WEBSOCKETS)],
+            [DISABLE_FEATURE(WEBSOCKETS)])
         #
         # Enable XOR compilation
         #
@@ -163,18 +178,18 @@ AC_ARG_ENABLE([all-features],
         # Enable STUN compilation
         #
         AC_ARG_ENABLE([stun],
-            AC_HELP_STRING([--disable-stun], [Disable STUN Feature]),
-            [DISABLE_FEATURE(STUN)],
-            [ENABLE_FEATURE(STUN)])
+            AC_HELP_STRING([--enable-stun], [Disable STUN Feature]),
+            [ENABLE_FEATURE(STUN)],
+            [DISABLE_FEATURE(STUN)])
 
 
         #
         # Enable iNotify compilation
         #
         AC_ARG_ENABLE([inotify],
-            AC_HELP_STRING([--disable-inotify], [Disable inotify]),
-            [DISABLE_FEATURE(INOTIFY)],
-            [ENABLE_FEATURE(INOTIFY)])
+            AC_HELP_STRING([--enable-inotify], [Disable inotify]),
+            [ENABLE_FEATURE(INOTIFY)],
+            [DISABLE_FEATURE(INOTIFY)])
     ])
 
 #
@@ -200,11 +215,6 @@ AC_CHECK_LIB(ssl, main,
 AC_CHECK_LIB(crypto, main, 
     [FLAG_EXISTING_CXX_DEP(OSS_HAVE_CRYPTO, -lcrypto)], 
     [ERROR_MISSING_DEP(OSS_HAVE_CRYPTO)])
-case $host_os in
-    darwin* )
-        OSS_CORE_DEP_LIBS="-L/usr/local/opt/openssl/lib $OSS_CORE_DEP_LIBS"
-        ;;
-esac
 
 
 #
@@ -470,5 +480,6 @@ AC_SUBST([OSS_CORE_ADDITIONAL_INCLUDES], [''])
 
 
 AC_SUBST(CXXFLAGS)
+AC_SUBST(CPPFLAGS)
 AC_SUBST(CFLAGS)
 AC_SUBST(OSS_CORE_DEP_LIBS)

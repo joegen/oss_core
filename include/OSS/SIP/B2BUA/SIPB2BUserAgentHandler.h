@@ -26,14 +26,8 @@
 
 #include <boost/noncopyable.hpp>
 #include <boost/function.hpp>
-#include <Poco/ClassLoader.h>
-#include <Poco/ClassLibrary.h>
 #include "OSS/SIP/SIPStack.h"
 
-
-#define BEGIN_MANIFEST POCO_BEGIN_MANIFEST
-#define END_MANIFIEST POCO_END_MANIFEST
-#define EXPORT_CLASS POCO_EXPORT_CLASS
 
 
 namespace OSS {
@@ -56,7 +50,7 @@ public:
 
   SIPB2BUserAgentHandler();
 
-  ~SIPB2BUserAgentHandler();
+  virtual ~SIPB2BUserAgentHandler();
 
   virtual Action handleRequest(
     const OSS::SIP::SIPMessage::Ptr& pMsg,
@@ -98,10 +92,6 @@ inline void SIPB2BUserAgentHandler::setUserAgent(SIPB2BTransactionManager* pB2BU
 {
   _pB2BUA = pB2BUA;
 }
-
-
-typedef Poco::ClassLoader<SIPB2BUserAgentHandler> SIPB2BUserAgentHandlerLoader;
-typedef Poco::Manifest<SIPB2BUserAgentHandler> SIPB2BUserAgentHandlerManifest;
 
 
 } } } // OSS::SIP::B2BUA

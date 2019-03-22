@@ -5,6 +5,7 @@
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/JS/modules/BufferObject.h"
+#include "OSS/Net/Net.h"
 
 
 
@@ -174,10 +175,12 @@ JS_METHOD_IMPL(__getppid)
   return JSInt32(getppid());
 }
 
+#if !defined(__APPLE__)
 JS_METHOD_IMPL(__thread_self)
 {
   return JSUInt32(pthread_self());
 }
+#endif
 
 JS_METHOD_IMPL(__write_pid_file)
 {
@@ -226,7 +229,6 @@ JS_METHOD_IMPL(__write_pid_file)
   return JSTrue;
 }
 
-
 JS_EXPORTS_INIT()
 {
   js_export_method("read", __read);
@@ -244,7 +246,9 @@ JS_EXPORTS_INIT()
   js_export_method("endl", __oendl);
   js_export_method("cerr", __cerr);
   js_export_method("eendl", __eendl);
+#if !defined(__APPLE__)
   js_export_method("thread_self", __thread_self);
+#endif
   js_export_method("write_pid_file", __write_pid_file);
   
 
@@ -261,6 +265,17 @@ JS_EXPORTS_INIT()
   js_export_string("LOCALSTATEDIR", OSS::system_localstatedir().c_str());
   js_export_string("INCLUDEDIR", OSS::system_includedir().c_str());
   js_export_string("LIBDIR", OSS::system_libdir().c_str());
+  
+  //
+  // Export default interface info
+  //
+  std::string iface, local_ipv4, local_ipv6;
+  OSS::net_get_default_interface_name(iface);
+  OSS::net_get_default_interface_address(local_ipv4, AF_INET);
+  OSS::net_get_default_interface_address(local_ipv6, AF_INET6);
+  js_export_string("NET_INTERFACE", iface.c_str());
+  js_export_string("NET_IPV4", local_ipv4.c_str());
+  js_export_string("NET_IPV6", local_ipv6.c_str());
   
   js_export_finalize(); 
 }

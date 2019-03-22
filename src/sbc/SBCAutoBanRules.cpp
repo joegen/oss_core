@@ -32,15 +32,12 @@ namespace SIP {
 namespace SBC {
   
   
-SBCAutoBanRules::SBCAutoBanRules(SBCManager* pManager) :
-  _pManager(pManager)
+SBCAutoBanRules::SBCAutoBanRules(SBCManager* pManager)
 {
-  
 }
   
 SBCAutoBanRules::~SBCAutoBanRules()
-{
-  
+{ 
 }
 
 

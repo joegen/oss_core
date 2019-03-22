@@ -303,16 +303,6 @@ public:
 
   void addUserAgentHandler(SIPB2BUserAgentHandler* pHandler);
     /// Register a user agent handler
-
-  bool registerPlugin(const std::string& name, const std::string& path);
-    /// Register a plugin.
-    ///
-    /// This function registers a UserAgent handler derrived from
-    /// SIPB2BUserAgent handler from a .so file.  Handlers can hijack back to back
-    /// transactions before they get processed by the scripting layer.
-    /// If a handler "handled" the transaction, the scripting layer
-    /// will no longer process the transaction and instead, let the handler
-    /// respond to the transaction.
      
 protected:
   void handleRequest(
@@ -402,8 +392,7 @@ private:
   //
   // Plugins
   //
-  SIPB2BUserAgentHandlerList _userAgentHandler;
-  SIPB2BUserAgentHandlerLoader _pluginLoader;  
+  SIPB2BUserAgentHandlerList _userAgentHandler;  
 };
 
 //

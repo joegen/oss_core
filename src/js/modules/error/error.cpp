@@ -84,49 +84,17 @@ static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
   CONST_EXPORT(EWOULDBLOCK);    /* Operation would block */
   CONST_EXPORT(ENOMSG);         /* No message of desired type */
   CONST_EXPORT(EIDRM);          /* Identifier removed */
-  CONST_EXPORT(ECHRNG);         /* Channel number out of range */
-  CONST_EXPORT(EL2NSYNC);       /* Level 2 not synchronized */
-  CONST_EXPORT(EL3HLT);         /* Level 3 halted */
-  CONST_EXPORT(EL3RST);         /* Level 3 reset */
-  CONST_EXPORT(ELNRNG);         /* Link number out of range */
-  CONST_EXPORT(EUNATCH);        /* Protocol driver not attached */
-  CONST_EXPORT(ENOCSI);         /* No CSI structure available */
-  CONST_EXPORT(EL2HLT);         /* Level 2 halted */
-  CONST_EXPORT(EBADE);          /* Invalid exchange */
-  CONST_EXPORT(EBADR);          /* Invalid request descriptor */
-  CONST_EXPORT(EXFULL);         /* Exchange full */
-  CONST_EXPORT(ENOANO);         /* No anode */
-  CONST_EXPORT(EBADRQC);        /* Invalid request code */
-  CONST_EXPORT(EBADSLT);        /* Invalid slot */
-  CONST_EXPORT(EDEADLOCK);      /* Resource deadlock would occur */
-  CONST_EXPORT(EBFONT);         /* Bad font file format */
   CONST_EXPORT(ENOSTR);         /* Device not a stream */
   CONST_EXPORT(ENODATA);        /* No data available */
   CONST_EXPORT(ETIME);          /* Timer expired */
   CONST_EXPORT(ENOSR);          /* Out of streams resources */
-  CONST_EXPORT(ENONET);         /* Machine is not on the network */
-  CONST_EXPORT(ENOPKG);         /* Package not installed */
   CONST_EXPORT(EREMOTE);        /* Object is remote */
   CONST_EXPORT(ENOLINK);        /* Link has been severed */
-  CONST_EXPORT(EADV);           /* Advertise error */
-  CONST_EXPORT(ESRMNT);         /* Srmount error */
-  CONST_EXPORT(ECOMM);          /* Communication error on send */
   CONST_EXPORT(EPROTO);         /* Protocol error */
   CONST_EXPORT(EMULTIHOP);      /* Multihop attempted */
-  CONST_EXPORT(EDOTDOT);        /* RFS specific error */
   CONST_EXPORT(EBADMSG);        /* Not a data message */
   CONST_EXPORT(EOVERFLOW);      /* Value too large for defined data type */
-  CONST_EXPORT(ENOTUNIQ);       /* Name not unique on network */
-  CONST_EXPORT(EBADFD);         /* File descriptor in bad state */
-  CONST_EXPORT(EREMCHG);        /* Remote address changed */
-  CONST_EXPORT(ELIBACC);        /* Can not access a needed shared library */
-  CONST_EXPORT(ELIBBAD);        /* Accessing a corrupted shared library */
-  CONST_EXPORT(ELIBSCN);        /* lib section in a.out corrupted */
-  CONST_EXPORT(ELIBMAX);        /* Attempting to link in too many shared libraries */
-  CONST_EXPORT(ELIBEXEC);       /* Cannot exec a shared library directly */
   CONST_EXPORT(EILSEQ);         /* Illegal byte sequence */
-  CONST_EXPORT(ERESTART);       /* Interrupted system call should be restarted */
-  CONST_EXPORT(ESTRPIPE);       /* Streams pipe error */
   CONST_EXPORT(EUSERS);         /* Too many users */
   CONST_EXPORT(ENOTSOCK);       /* Socket operation on non-socket */
   CONST_EXPORT(EDESTADDRREQ);   /* Destination address required */
@@ -157,24 +125,59 @@ static v8::Handle<v8::Value> init_exports(const v8::Arguments& args)
   CONST_EXPORT(EALREADY);       /* Operation already in progress */
   CONST_EXPORT(EINPROGRESS);    /* Operation now in progress */
   CONST_EXPORT(ESTALE);         /* Stale file handle */
+  CONST_EXPORT(EDQUOT);         /* Quota exceeded */
+  CONST_EXPORT(ECANCELED);      /* Operation Canceled */
+  CONST_EXPORT(EOWNERDEAD);     /* Owner died */
+  CONST_EXPORT(ENOTRECOVERABLE);/* State not recoverable */
+  
+  
+#if !OSS_PLATFORM_MAC_OS_X
+  CONST_EXPORT(ERFKILL);        /* Operation not possible due to RF-kill */
+  CONST_EXPORT(EHWPOISON);      /* Memory page has hardware error */
+  CONST_EXPORT(ENOKEY);         /* Required key not available */
+  CONST_EXPORT(EKEYEXPIRED);    /* Key has expired */
+  CONST_EXPORT(EKEYREVOKED);    /* Key has been revoked */
+  CONST_EXPORT(EKEYREJECTED);   /* Key was rejected by service */
+  CONST_EXPORT(ENOMEDIUM);      /* No medium found */
+  CONST_EXPORT(EMEDIUMTYPE);    /* Wrong medium type */
+  CONST_EXPORT(ECHRNG);         /* Channel number out of range */
+  CONST_EXPORT(EL2NSYNC);       /* Level 2 not synchronized */
+  CONST_EXPORT(EL3HLT);         /* Level 3 halted */
+  CONST_EXPORT(EL3RST);         /* Level 3 reset */
+  CONST_EXPORT(ELNRNG);         /* Link number out of range */
+  CONST_EXPORT(EUNATCH);        /* Protocol driver not attached */
+  CONST_EXPORT(ENOCSI);         /* No CSI structure available */
+  CONST_EXPORT(EL2HLT);         /* Level 2 halted */
+  CONST_EXPORT(EBADE);          /* Invalid exchange */
+  CONST_EXPORT(EBADR);          /* Invalid request descriptor */
+  CONST_EXPORT(EXFULL);         /* Exchange full */
+  CONST_EXPORT(ENOANO);         /* No anode */
+  CONST_EXPORT(EBADRQC);        /* Invalid request code */
+  CONST_EXPORT(EBADSLT);        /* Invalid slot */
+  CONST_EXPORT(EDEADLOCK);      /* Resource deadlock would occur */
+  CONST_EXPORT(EBFONT);         /* Bad font file format */
+  CONST_EXPORT(ENONET);         /* Machine is not on the network */
+  CONST_EXPORT(ENOPKG);         /* Package not installed */
+  CONST_EXPORT(EADV);           /* Advertise error */
+  CONST_EXPORT(ESRMNT);         /* Srmount error */
+  CONST_EXPORT(ECOMM);          /* Communication error on send */
+  CONST_EXPORT(EDOTDOT);        /* RFS specific error */
+  CONST_EXPORT(ENOTUNIQ);       /* Name not unique on network */
+  CONST_EXPORT(EBADFD);         /* File descriptor in bad state */
+  CONST_EXPORT(EREMCHG);        /* Remote address changed */
+  CONST_EXPORT(ELIBACC);        /* Can not access a needed shared library */
+  CONST_EXPORT(ELIBBAD);        /* Accessing a corrupted shared library */
+  CONST_EXPORT(ELIBSCN);        /* lib section in a.out corrupted */
+  CONST_EXPORT(ELIBMAX);        /* Attempting to link in too many shared libraries */
+  CONST_EXPORT(ELIBEXEC);       /* Cannot exec a shared library directly */
+  CONST_EXPORT(ERESTART);       /* Interrupted system call should be restarted */
+  CONST_EXPORT(ESTRPIPE);       /* Streams pipe error */
   CONST_EXPORT(EUCLEAN);        /* Structure needs cleaning */
   CONST_EXPORT(ENOTNAM);        /* Not a XENIX named type file */
   CONST_EXPORT(ENAVAIL);        /* No XENIX semaphores available */
   CONST_EXPORT(EISNAM);         /* Is a named type file */
   CONST_EXPORT(EREMOTEIO);      /* Remote I/O error */
-  CONST_EXPORT(EDQUOT);         /* Quota exceeded */
-  CONST_EXPORT(ENOMEDIUM);      /* No medium found */
-  CONST_EXPORT(EMEDIUMTYPE);    /* Wrong medium type */
-  CONST_EXPORT(ECANCELED);      /* Operation Canceled */
-  CONST_EXPORT(ENOKEY);         /* Required key not available */
-  CONST_EXPORT(EKEYEXPIRED);    /* Key has expired */
-  CONST_EXPORT(EKEYREVOKED);    /* Key has been revoked */
-  CONST_EXPORT(EKEYREJECTED);   /* Key was rejected by service */
-  CONST_EXPORT(EOWNERDEAD);     /* Owner died */
-  CONST_EXPORT(ENOTRECOVERABLE);/* State not recoverable */
-  CONST_EXPORT(ERFKILL);        /* Operation not possible due to RF-kill */
-  CONST_EXPORT(EHWPOISON);      /* Memory page has hardware error */
-  
+#endif
   return exports;
 }
 

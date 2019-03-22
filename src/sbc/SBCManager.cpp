@@ -25,7 +25,6 @@
 
 #include <exception>
 #include <fstream>
-#include <sys/inotify.h>
 
 #include "OSS/SIP/SBC/SBCManager.h"
 #include "OSS/UTL/Logger.h"
@@ -518,6 +517,10 @@ void SBCManager::onPostRouteMidDialogTransaction(
 
 void SBCManager::reportCriticalState(const std::string& msg)
 {
+  std::string eventName = "criticalState";
+  SBCJSModuleManager::CustomEventArgs args, result;
+  args["error_message"] = msg;
+  SBCJSModuleManager::instance()->processCustomEvent(eventName, args, result);
 }
 
 void SBCManager::onDispatchTransaction(SIPB2BTransactionManager* pManager, SIPB2BTransaction* pTransaction)

@@ -14,10 +14,6 @@ exports.onEvent = function(arg, userData, result) {
   return TRN_ACCEPT;
 }
 
-exports._on_initialize_transport = null;
-exports._on_initialize_user_agent = null;
-exports._on_route_request = null;
-exports._on_inbound_request = null;
 
 //
 // global sip variables
@@ -449,6 +445,12 @@ exports.reject_request = function(context, status_code, reason_phrase)
 }
 
 
+exports._on_initialize_transport = null;
+exports._on_initialize_user_agent = null;
+exports._on_route_request = null;
+exports._on_inbound_request = null;
+exports._on_critical_state = null;
+
 //
 // Initialization
 //
@@ -484,9 +486,12 @@ exports.run = function()
             handler = exports._on_initialize_transport;
         } else if (request.eventName === "userAgentConfig") {
             handler = exports._on_initialize_user_agent;
+        } else if (request.eventName === "criticalState") {
+            handler = exports._on_critical_state;
         }
+        
         if (typeof(handler) === "function") {
-            var config = handler();
+            var config = handler(request);
             if (typeof(config) === "object") {
                 sipMessage.setProperty("JSONConfig", JSON.stringify(config));
             }
@@ -507,6 +512,11 @@ exports.on_route_request = function(handler)
 exports.on_inbound_request = function(handler)
 {
     exports._on_inbound_request = handler;
+}
+
+exports.on_critical_state = function(handler)
+{
+    exports._on_critical_state = handler;
 }
 
 exports.on_initialize_transport = function(handler)

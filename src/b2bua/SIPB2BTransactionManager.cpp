@@ -636,25 +636,6 @@ void SIPB2BTransactionManager::addUserAgentHandler(SIPB2BUserAgentHandler* pHand
   pHandler->setUserAgent(this);
   _userAgentHandler.addHandler(pHandler);
 }
-bool SIPB2BTransactionManager::registerPlugin(const std::string& name, const std::string& path)
-{
-  try
-  {
-    _pluginLoader.loadLibrary(path);
-    SIPB2BUserAgentHandler* _pHandler = _pluginLoader.create(name);
-    if (_pHandler)
-    {
-      addUserAgentHandler(_pHandler);
-    }
-  }
-  catch(std::exception& e)
-  {
-    OSS_LOG_ERROR("SIPB2BTransactionManager::registerPlugin - Unable to load plugin " << path << " Error: " << e.what());
-    return false;
-  }
-
-  return true;
-}
 
 void SIPB2BTransactionManager::addPendingSubscription(const std::string& callId)
 {

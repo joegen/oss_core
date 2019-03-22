@@ -28,6 +28,7 @@
 #include "Poco/Net/ServerSocket.h"
 #include "Poco/Net/DatagramSocket.h"
 #include "Poco/Exception.h"
+#include "Poco/Net/NetworkInterface.h"
 
 #include "OSS/Net/Net.h"
 #include "OSS/UTL/CoreUtils.h"
@@ -36,8 +37,9 @@
 #include "OSS/UTL/Application.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/Net/IPAddress.h"
+#if !defined(__APPLE__)
 #include "OSS/Net/rtnl_get_route.h"
-
+#endif
 #if !defined(OSS_OS_FAMILY_WINDOWS)
 #include <ifaddrs.h>
 #include <stdio.h>
@@ -98,7 +100,7 @@ void net_init()
     _pNetSingletons->_pIoServiceThread = new boost::thread(boost::bind(&boost::asio::io_service::run, &(_pNetSingletons->_ioService)));
   }
 
-#if !defined(OSS_OS_FAMILY_WINDOWS)
+#if !defined(OSS_OS_FAMILY_WINDOWS) && !defined(__APPLE__)
 
 
 	struct ifaddrs *list;
@@ -168,7 +170,11 @@ void net_init()
   {
     OSS::Net::IPAddress::_defaultAddress = OSS::Net::IPAddress(sourceAddress);
   }
-
+#else
+  std::string iface, local_ipv4, local_ipv6;
+  OSS::net_get_default_interface_name(iface);
+  OSS::net_get_default_interface_address(local_ipv4, AF_INET);
+  OSS::Net::IPAddress::_defaultAddress = OSS::Net::IPAddress(local_ipv4);
 #endif
 }
 
@@ -1122,6 +1128,7 @@ void net_io_timer_cancel(NET_TIMER_HANDLE timerHandle)
 
 bool net_get_default_interface_name(std::string& iface)
 {
+#if !defined(__APPLE__)
   /*
    * Iface    Destination Gateway 	Flags	RefCnt	Use	Metric	Mask      MTU	Window	IRTT                                                       
    * enp3s0   00000000    0101A8C0	0003	0       0   100     00000000	0   0       0                                                                           
@@ -1149,6 +1156,18 @@ bool net_get_default_interface_name(std::string& iface)
   }
   fclose(f);
   return false;
+#else
+  try
+  {
+    Poco::Net::NetworkInterface netIf = Poco::Net::NetworkInterface::forIndex(0);
+    std::cout << ">>>>>>>>>>>>>>>>>>" << iface;
+    iface = netIf.name();
+  }
+  catch(...)
+  {
+  }
+  return !iface.empty();
+#endif
 }
 
 bool net_get_interface_address(const std::string iface, std::string& address, int fm)

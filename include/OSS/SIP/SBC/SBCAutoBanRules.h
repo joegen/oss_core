@@ -59,7 +59,6 @@ public:
   );
   
 private:
-  SBCManager* _pManager;
   FromUserMap _user;
   FromDisplayNameMap _display;
   UserAgentMap _agent;

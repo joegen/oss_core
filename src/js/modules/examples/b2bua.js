@@ -2,6 +2,7 @@ var async = require("async");
 var isolate = require("isolate");
 var sbc = require("sbc-hook");
 var logger = require("logger");
+var syste = require("system");
 const SIPMessage = require("sip-parser").SIPMessage;
 
 
@@ -10,10 +11,11 @@ sbc.on_initialize_transport(function(){
         interfaces : [
             {
                 primary : true,                 // Only relevant if there are multiple interfaces.  Indicates default interface to be used if not explicitly set by route script
-                ip_address : "192.168.1.250",   // The Host IP Address
+                ip_address : "192.168.1.13",   // The Host IP Address
                 external_address : "",          // (Optional) External IP address if the virtual IP is behind a port mapped firewall
                 tcp_enabled : true,             // Enable TCP transport
-                udp_enabled : true,             // Enable UDP Transport
+                udp_enabled : true,       
+                // Enable UDP Transport
                 ws_enabled : false,             // Enable WebSocket Transport
                 wss_enabled : false,            // Enable Secure WebSocket Transport
                 tls_enabled : false,            // Enable TLS Transport
@@ -184,6 +186,11 @@ sbc.on_route_request(function(context, sipMessage) {
 
 sbc.on_inbound_request(function(sipMessage) {
     logger.log_info("Incoming request URI=" + sipMessage.getRequestUri());
+});
+
+sbc.on_critical_state(function(event){
+   logger.log(event.error_message);
+   system.exit(-1);
 });
 
 sbc.run();

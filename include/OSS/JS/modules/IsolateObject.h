@@ -36,7 +36,7 @@ public:
   JS_METHOD_DECLARE(join);
   JS_METHOD_DECLARE(execute);
   JS_METHOD_DECLARE(notify);
-  IsolateObject(pthread_t parentThreadId);
+  IsolateObject(bool isRoot = false);
   ~IsolateObject();
 protected:
   JSIsolate::Ptr _pIsolate;

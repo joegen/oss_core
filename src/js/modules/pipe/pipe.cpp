@@ -36,11 +36,12 @@ static v8::Handle<v8::Value> __pipe(const v8::Arguments& args)
   {
     ret = ::pipe(pipefd);
   }
+#if !defined(__APPLE__)
   else
   {
     ret = ::pipe2(pipefd, flags);
   }
-  
+#endif  
   if (ret == 0)
   {
     v8::Handle<v8::Array> result = v8::Array::New(2);
