@@ -440,6 +440,7 @@ bool net_get_interface_address(const std::string iface, std::string& address, in
 bool net_get_default_interface_address(std::string& address, int family = AF_INET);
   /// Return the IP address of a given interface
 
+//void ping_host(const std::string& host, unsigned int ttl, );
 //
 // Inlines
 //

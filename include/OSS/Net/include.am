@@ -16,4 +16,7 @@ nobase_include_HEADERS += \
     OSS/Net/ZMQSocketServer.h \
     OSS/Net/TlsContext.h \
     OSS/Net/ESLEvent.h \
-    OSS/Net/ESLConnection.h
+    OSS/Net/ESLConnection.h \
+    OSS/Net/ipv4_header.h \
+    OSS/Net/icmp_header.h \
+    OSS/Net/pinger.h
