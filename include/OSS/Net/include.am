@@ -19,4 +19,4 @@ nobase_include_HEADERS += \
     OSS/Net/ESLConnection.h \
     OSS/Net/ipv4_header.h \
     OSS/Net/icmp_header.h \
-    OSS/Net/pinger.h
+    OSS/Net/Pinger.h

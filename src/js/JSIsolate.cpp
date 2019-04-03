@@ -29,6 +29,7 @@
 #include "OSS/JS/JSUtil.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/JS/JSPluginManager.h"
+#include "OSS/JS/JSTask.h"
 
 
 namespace OSS {
@@ -232,6 +233,11 @@ void JSIsolate::emit(const std::string& eventName, const OSS::JSON::Array& args,
 {
   JSEventArgument event(eventName, args, queueFd);
   _pEventLoop->eventEmitter().emit(event);
+}
+
+void JSIsolate::doTask(const Task& cb, void* userData)
+{
+  _pEventLoop->taskManager().queueTask(cb, userData);
 }
 
 void JSIsolate::terminate()

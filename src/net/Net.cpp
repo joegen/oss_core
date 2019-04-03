@@ -37,7 +37,6 @@
 #include "OSS/UTL/Application.h"
 #include "OSS/UTL/Logger.h"
 #include "OSS/Net/IPAddress.h"
-#include "OSS/Net/pinger.h"
 #if !defined(__APPLE__)
 #include "OSS/Net/rtnl_get_route.h"
 #endif

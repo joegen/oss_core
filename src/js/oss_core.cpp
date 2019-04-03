@@ -76,7 +76,7 @@ int main(int argc, char** argv)
   
   set_limits();
 
-  std::set_terminate(&ServiceOptions::catch_global);
+  //std::set_terminate(&ServiceOptions::catch_global);
 
   OSS::OSS_init(argc, argv);
   

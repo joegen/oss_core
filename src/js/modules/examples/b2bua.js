@@ -2,16 +2,20 @@ var async = require("async");
 var isolate = require("isolate");
 var sbc = require("sbc-hook");
 var logger = require("logger");
-var syste = require("system");
-const SIPMessage = require("sip-parser").SIPMessage;
+var system = require("system");
+var zmq = require("zmq");
+var SIPMessage = require("sip-parser").SIPMessage;
 
+var sip_ip = system.NET_IPV4;
+var api_ep_ip = system.NET_IPV4;
+var api_ep_port = 9061;
 
 sbc.on_initialize_transport(function(){
     return {
         interfaces : [
             {
                 primary : true,                 // Only relevant if there are multiple interfaces.  Indicates default interface to be used if not explicitly set by route script
-                ip_address : "192.168.1.13",   // The Host IP Address
+                ip_address : sip_ip,   // The Host IP Address
                 external_address : "",          // (Optional) External IP address if the virtual IP is behind a port mapped firewall
                 tcp_enabled : true,             // Enable TCP transport
                 udp_enabled : true,       
@@ -189,12 +193,25 @@ sbc.on_inbound_request(function(sipMessage) {
 });
 
 sbc.on_critical_state(function(event){
-   logger.log(event.error_message);
+   log.log_error(event.error_message);
    system.exit(-1);
 });
 
 sbc.run();
 
+var api_ep = new zmq.ZMQSocket(zmq.REP);
+var api_ep_url = "tcp://" + api_ep_ip + ":" + api_ep_port;
+if (!api_ep.bind(api_ep_url)) {
+    logger.log_error("Unable to bind API endpoint via " + api_ep_url);
+    system.exit(-1);
+} else {
+    logger.log_info("API endpoint started receiving messages via " + api_ep_url);
+}
 
-
-
+api_ep.start(function() {
+    var msg = new Buffer(1024);
+    api_ep.receive(msg);
+    logger.log_info(msg.toString());
+    var response = new Buffer("Bye ZeroMQ!");
+    api_ep.send(response);
+});

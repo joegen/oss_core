@@ -53,6 +53,7 @@ public:
   typedef JSPersistentValue<v8::ObjectTemplate> GlobalTemplate;
   typedef JSInterIsolateCall::Request Request;
   typedef JSInterIsolateCall::Result Result;
+  typedef boost::function<void(void*)> Task;
   
   ~JSIsolate();
     /// Destructor.  This is intentially made public so isolates can be used
@@ -66,6 +67,7 @@ public:
   bool execute(const std::string& request, std::string& result, uint32_t timeout, void* userData);
   bool execute(const Request& request, Result& result, uint32_t timeout, void* userData);
   void emit(const std::string& eventName, const OSS::JSON::Array& args, int queueFd);
+  void doTask(const Task& task, void* userData);
   void terminate();
   void join();
   void setExitValue(int value);
