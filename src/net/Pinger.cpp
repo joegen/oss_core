@@ -62,7 +62,8 @@ Pinger::Pinger(boost::asio::io_service& io_service)
     sequence_number_(0), 
     num_replies_(0),
     user_data_(0),
-    timed_out_(false)
+    timed_out_(false),
+    errored_out_(false)
 {
 }
 
@@ -101,6 +102,11 @@ bool Pinger::start_send(int ttl_ms)
   }
   catch(...)
   {
+    errored_out_ = true;
+    if (handler_) {
+      handler_(destination_.address().to_string(), true, sequence_number_, 0, 0, 0, user_data_);
+    }
+    io_service_.post(boost::bind(Pinger::garbage_collect_socket, this));
     return false;
   }
   return true;
@@ -119,6 +125,11 @@ bool Pinger::start_receive()
   }
   catch(...)
   {
+    errored_out_ = true;
+    if (handler_) {
+      handler_(destination_.address().to_string(), true, sequence_number_, 0, 0, 0, user_data_);
+    }
+    io_service_.post(boost::bind(Pinger::garbage_collect_socket, this));
     return false;
   }
   return true;
@@ -126,6 +137,9 @@ bool Pinger::start_receive()
 
 void Pinger::handle_timeout()
 {
+  if (errored_out_) {
+    return;
+  }
   if (num_replies_)
   {
     io_service_.post(boost::bind(Pinger::garbage_collect_socket, this));
@@ -151,6 +165,9 @@ void Pinger::handle_timeout()
 
 void Pinger::handle_receive(std::size_t length)
 {
+  if (errored_out_) {
+    return;
+  }
   if (timed_out_) {
     io_service_.post(boost::bind(garbage_collect_socket, this));
     return;

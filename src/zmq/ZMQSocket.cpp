@@ -571,7 +571,7 @@ void ZMQSocket::initPollItem(zmq_pollitem_t& item)
   }
 }
 
-int ZMQSocket::pollRead(long timeoutms)
+bool ZMQSocket::pollRead(long timeoutms)
 {
   if (!_socket)
   {

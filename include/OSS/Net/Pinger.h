@@ -44,6 +44,7 @@ private:
   void handle_timeout();
   void handle_receive(std::size_t length);
   static void garbage_collect_socket(Pinger* pinger);
+  static void on_send_error(Pinger* pinger);
 
   boost::asio::io_service& io_service_;
   icmp::resolver resolver_;
@@ -57,6 +58,7 @@ private:
   ping_host_handler handler_;
   void* user_data_;
   bool timed_out_;
+  bool errored_out_;
 };
 
 } } // OSS::Net
