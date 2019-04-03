@@ -571,31 +571,13 @@ void ZMQSocket::initPollItem(zmq_pollitem_t& item)
   }
 }
 
-int ZMQSocket::pollForEvents()
+int ZMQSocket::pollRead(long timeoutms)
 {
-  ZMQSocket::PollItems pfds(1);
-  zmq_pollitem_t item = { (void*)(*_socket), 0, ZMQ_POLLIN, 0 };
-  pfds[0] = item;
-  while (true)
+  if (!_socket)
   {
-    int rc = ZMQSocket::poll(pfds, 0);
-    if (rc < 0) 
-    {
-      if (zmq_errno() == EINTR) 
-      {
-        continue;
-      } 
-      else 
-      {
-        return -1;
-      }
-    } 
-    else 
-    {
-      break;
-    }
+    return false;
   }
-  return pfds[0].revents & pfds[0].events;
+  return zeromq_poll_read(_socket, timeoutms);
 }
 
 

@@ -98,7 +98,7 @@ public:
   
   void initPollItem(zmq_pollitem_t& item);
   
-  int pollForEvents();
+  int pollRead(long timeoutms = 0);
   
   int getFd() const;
   
