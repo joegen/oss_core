@@ -43,6 +43,10 @@ nobase_include_HEADERS += \
     OSS/SIP/SIPReplaces.h \
     OSS/SIP/SIPStreamedConnection.h \
     OSS/SIP/SIPStreamedConnectionManager.h \
+    OSS/SIP/SIPDialog.h \
+    OSS/SIP/SIPDialogSet.h \
+    OSS/SIP/SIPDialogSetPool.h \
+    OSS/SIP/SIPDialogUsageManager.h \
     OSS/SIP/UA/SIPUserAgent.h \
     OSS/SIP/UA/SIPEventLoop.h \
     OSS/SIP/UA/SIPRegistration.h \
@@ -114,3 +118,4 @@ nobase_include_HEADERS += \
     OSS/SIP/SBC/SBCWorkSpace.h \
     OSS/SIP/SBC/SBCDirectories.h \
     OSS/SIP/SBC/SBCConfiguration.h
+

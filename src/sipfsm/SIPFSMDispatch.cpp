@@ -45,16 +45,6 @@ SIPFSMDispatch::~SIPFSMDispatch()
 {
 }
 
-void SIPFSMDispatch::initialize(const boost::filesystem::path& cfgDirectory)
-{
-
-}
-
-void SIPFSMDispatch::deinitialize()
-{
-
-}
-
 void SIPFSMDispatch::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport)
 {
   if (!pTransport->isEndpoint() && pTransport->getLastReadCount() < MIN_DATAGRAM_SIZE && !pTransport->isReliableTransport())

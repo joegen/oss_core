@@ -47,18 +47,6 @@ public:
   ~SIPFSMDispatch();
 		/// Destroys the SIPFSMDispatch
 
-  void initialize(const boost::filesystem::path& cfgDirectory);
-    /// Initialize the dispatch configuration using the configuration path specified.
-    /// If an error occurs, this method will throw a PersistenceException.
-    ///
-    /// Take note that the configuration directory must be both readable and writeble
-    /// by the user that owns the process.
-
-  void deinitialize();
-    /// Deinitialize the dispatch.  This is usually called when the application
-    /// is about the exit.  This is the place where the manager performs final
-    /// trash management.
-
   void onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession::Ptr pTransport);
     /// This method is called when a SIP message is received from the transport.
     ///

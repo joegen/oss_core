@@ -12,4 +12,8 @@ liboss_core_la_SOURCES +=  \
     sipfsm/SIPStack.cpp \
     sipfsm/SIPFsm.cpp \
     sipfsm/SIPNict.cpp \
-    sipfsm/SIPTransaction.cpp
+    sipfsm/SIPTransaction.cpp \
+    sipfsm/SIPDialog.cpp \
+    sipfsm/SIPDialogSet.cpp \
+    sipfsm/SIPDialogSetPool.cpp \
+    sipfsm/SIPDialogUsageManager.cpp
