@@ -48,6 +48,10 @@ if ENABLE_FEATURE_INOTIFY
 include js/modules/inotify/module.am
 endif
 
+if ENABLE_FEATURE_RESIP_UA
+include js/modules/resip_ua/module.am
+endif
+
 
 js_module-install-hook: ${INSTALL_PROCEDURES}
 	rm -f ${DESTDIR}${libdir}/liboss_js*.*

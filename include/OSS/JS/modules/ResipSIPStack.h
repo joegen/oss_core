@@ -4,10 +4,10 @@
 //
 // Permission is hereby granted, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
-// this license (the "Software") to use, execute, and to prepare 
-// derivative works of the Software, all subject to the 
+// this license (the "Software") to use, execute, and to prepare
+// derivative works of the Software, all subject to the
 // "GNU Lesser General Public License (LGPL)".
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT
@@ -17,33 +17,41 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#ifndef OSS_SIPDIALOGUSAGEMANAGER_H_INCLUDED
-#define OSS_SIPDIALOGUSAGEMANAGER_H_INCLUDED
+#ifndef OSS_RESIPSIPSTACK_H_INCLUDED
+#define OSS_RESIPSIPSTACK_H_INCLUDED
 
 
-#include "OSS/SIP/SIPDialogSetPool.h"
+#include <v8.h>
+#include <vector>
+#include "OSS/JS/JSPlugin.h"
+#include "OSS/JSON/Json.h"
+#include "OSS/JS/JSEventArgument.h"
 
-namespace OSS {
-namespace SIP {
+#include <resip/stack/SipStack.hxx>
+#include <resip/stack/StackThread.hxx>
+#include <rutil/SharedPtr.hxx>
 
-class SIPDialogUsageManager
+class ResipSIPStack : public OSS::JS::JSObjectWrap
 {
 public:
-  SIPDialogUsageManager();
-  ~SIPDialogUsageManager();
-  
+  JS_CONSTRUCTOR_DECLARE();
+  JS_METHOD_DECLARE(run);
+  JS_METHOD_DECLARE(shutdown);
+  JS_METHOD_DECLARE(addTransport);
+  resip::SipStack* stack();
 private:
-#if 0
-  SIPDialogSetPool _uacInvite;
-  SIPDialogSetPool _uasInvite;
-  SIPDialogSetPool _uacSubscribe;
-  SIPDialogSetPool _uasSubscribe;
-  SIPDialogSetPool _uacRegister;
-  SIPDialogSetPool _uasRegister;
-#endif
+  ResipSIPStack();
+  virtual ~ResipSIPStack();
+  resip::SipStack* _stack;
 };
 
-} }
+//
+// Inlines
+//
 
-#endif // OSS_SIPDIALOGUSAGEMANAGER_H_INCLUDED
+inline resip::SipStack* ResipSIPStack::stack()
+{
+  return _stack;
+}
 
+#endif // OSS_RESIPSIPSTACK_H_INCLUDED

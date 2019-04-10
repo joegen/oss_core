@@ -217,6 +217,7 @@ inline JSStringHandle JSString(const char* str, std::size_t len) { return v8::St
 #define js_method_arg_declare_string(Var, Index) js_method_arg_type(std::string, Var, Index, js_assign_string, "Invalid Type.  Expecting String")
 #define js_method_arg_declare_array(Var, Index) js_method_arg_type(JSArrayHandle, Var, Index, js_assign_array, "Invalid Type.  Expecting Array")
 #define js_method_arg_declare_object(Var, Index) js_method_arg_type(JSObjectHandle, Var, Index, js_assign_object, "Invalid Type.  Expecting Object")
+#define js_method_arg_declare_unwrapped_object(CLASS, VAR, INDEX) js_method_arg_declare_object(_##VAR##__temp, INDEX); CLASS* VAR = js_unwrap_object(CLASS, _##VAR##__temp->ToObject())
 #define js_method_arg_declare_external_object(Class, Var, Index) js_method_arg_type(Class*, Var, Index, js_assign_external_object<Class>, "Invalid Type.  Expecting External Object")
 #define js_method_arg_declare_function(Var, Index) js_method_arg_type(JSLocalFunctionHandle, Var, Index, js_assign_function, "Invalid Type.  Expecting Function") 
 #define js_method_arg_declare_persistent_function(Var, Index) js_method_arg_type(JSPersistentFunctionHandle, Var, Index, js_assign_persistent_function, "Invalid Type.  Expecting Function") 

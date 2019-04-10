@@ -1,0 +1,18 @@
+
+resip_ua-install:
+	cd ${DESTDIR}${libdir}; mkdir -p oss_modules/resip_ua
+	cp ${srcdir}/js/modules/resip_ua/*.js ${DESTDIR}${libdir}/oss_modules/resip_ua
+	cp ${DESTDIR}${libdir}/liboss_jsresip_ua.so ${DESTDIR}${libdir}/oss_modules/resip_ua/_resip_ua.jso
+
+INSTALL_PROCEDURES += resip_ua-install
+
+EXTRA_DIST += js/modules/resip_ua/index.js
+
+lib_LTLIBRARIES += liboss_jsresip_ua.la
+liboss_jsresip_ua_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
+liboss_jsresip_ua_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsresip_ua_la_SOURCES = \
+    js/modules/resip_ua/resip_ua.cpp \
+    js/modules/resip_ua/reg_event_ua.h \
+    js/modules/resip_ua/reg_event_ua.cpp
+

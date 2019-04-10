@@ -5,6 +5,7 @@ var logger = require("logger");
 var system = require("system");
 var zmq = require("zmq");
 var SIPMessage = require("sip-parser").SIPMessage;
+var resip_ua = require("resip_ua");
 
 var sip_ip = system.NET_IPV4;
 var api_ep_ip = system.NET_IPV4;
@@ -215,3 +216,5 @@ api_ep.start(function() {
     var response = new Buffer("Bye ZeroMQ!");
     api_ep.send(response);
 });
+
+

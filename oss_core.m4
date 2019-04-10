@@ -93,6 +93,7 @@ AC_ARG_ENABLE([all-features],
         ENABLE_FEATURE(MCRYPT)
         ENABLE_FEATURE(CONFIG)
         ENABLE_FEATURE(INOTIFY)
+        ENABLE_FEATURE(RESIP_UA)
     ],
     [
         #
@@ -102,7 +103,7 @@ AC_ARG_ENABLE([all-features],
             AC_HELP_STRING([--disable-b2bua], [Disable B2BUA Feature]),
             [DISABLE_FEATURE(B2BUA)],
             [ENABLE_FEATURE(B2BUA)])
-                #
+        #
         # Disable SBC compilation
         #
         AC_ARG_ENABLE([sbc],
@@ -116,6 +117,13 @@ AC_ARG_ENABLE([all-features],
             AC_HELP_STRING([--disable-rtp], [Disable RTP Proxy Feature]),
             [DISABLE_FEATURE(RTP)],
             [ENABLE_FEATURE(RTP)])
+        #
+        # Enable RESIP_UA compilation
+        #
+        AC_ARG_ENABLE([resip-ua],
+            AC_HELP_STRING([--enable-resip-ua], [Enable ReSIProcate Feature]),
+            [ENABLE_FEATURE(RESIP_UA)],
+            [DISABLE_FEATURE(RESIP_UA)])
 
         #
         # Enable UCARP compilation
@@ -366,6 +374,23 @@ else
     AC_SUBST(OSS_HAVE_INOTIFY, 0)
 fi
 #
+# RESIPROCATE
+#
+AC_LANG_PUSH([C++])
+if test "x$FEATURE_RESIP_UA" == "xenabled"; then
+AC_CHECK_HEADER(resip/stack/SipStack.hxx,
+    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_RESIP, -lrutil -lresipares -ldum -lresip)], 
+    [FLAG_MISSING_DEP(OSS_HAVE_RESIP, "reSIProcate Library is not installed")])
+else
+    AM_CONDITIONAL(OSS_HAVE_RESIP, false)
+    AC_SUBST(OSS_HAVE_RESIP, 0)
+fi
+AC_LANG_POP([C++])
+
+
+
+
+#
 # Config file support
 #
 if test "x$FEATURE_CONFIG" == "xenabled"; then
@@ -377,19 +402,6 @@ AC_LANG_POP([C++])
 else
     AM_CONDITIONAL(OSS_HAVE_CONFIGPP, false)
     AC_SUBST(OSS_HAVE_CONFIGPP, 0)
-fi
-#
-# REST Key/Value Store
-#
-if test "x$FEATURE_RESTKV" == "xenabled"; then
-AC_LANG_PUSH([C++])
-AC_CHECK_HEADER(leveldb/db.h, 
-    [FLAG_EXISTING_CXX_DEP(OSS_HAVE_LEVELDB, -lleveldb)], 
-    [ERROR_MISSING_DEP(OSS_HAVE_LEVELDB,"LevelDB Library is not installed")])
-AC_LANG_POP([C++])
-else
-    AM_CONDITIONAL(OSS_HAVE_LEVELDB, false)
-    AC_SUBST(OSS_HAVE_LEVELDB, 0)
 fi
 
 #

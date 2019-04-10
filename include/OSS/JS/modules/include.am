@@ -15,4 +15,9 @@ nobase_include_HEADERS += \
     OSS/JS/modules/HttpServerObject.h \
     OSS/JS/modules/HttpSSLContextObject.h \
     OSS/JS/modules/ESLEventObject.h \
-    OSS/JS/modules/ESLConnectionObject.h
+    OSS/JS/modules/ESLConnectionObject.h \
+    OSS/JS/modules/ResipSIPStack.h \
+    OSS/JS/modules/ResipDialogUsageManager.h \
+    OSS/JS/modules/ResipMasterProfile.h \
+    OSS/JS/modules/ResipClientRegistrationHandler.h \
+    OSS/JS/modules/ResipClientSubscriptionHandler.h
