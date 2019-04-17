@@ -116,6 +116,8 @@ public:
   
   JSLocalObjectHandle wrapExternalPointer(void* ptr);
   
+  void setForceAsync(bool force);
+  bool getForceAsync() const;
 protected:
   JSIsolate(pthread_t parentThreadId);
     /// Creates a new isolate.  You MUST not create isolate directly.
@@ -145,6 +147,7 @@ protected:
   boost::filesystem::path _script;
   JSIsolate::Ptr _pParentIsolate;
   int _eventEmitterFd;
+  bool _forceAsync;
   friend class JSIsolateManager;
 };
   
@@ -152,6 +155,16 @@ protected:
 // Inlines
 //
 
+inline void JSIsolate::setForceAsync(bool force)
+{
+  _forceAsync = force;
+}
+
+inline bool JSIsolate::getForceAsync() const
+{
+  return _forceAsync;
+}
+  
 inline void JSIsolate::setExitValue(int value)
 {
   _exitValue = value;

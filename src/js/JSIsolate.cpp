@@ -47,7 +47,8 @@ JSIsolate::JSIsolate(pthread_t parentThreadId) :
   _pEventLoop(0),
   _isRoot(false),
   _pThread(0),
-  _eventEmitterFd(0)
+  _eventEmitterFd(0),
+  _forceAsync(false)
 {
   _pPluginManager = new JSPluginManager(this);
   _pModuleManager = new JSModule(this);

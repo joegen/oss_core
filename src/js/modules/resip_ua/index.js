@@ -1,5 +1,6 @@
 const _ua = require("./_resip_ua.jso");
 const assert = require("assert");
+__copy_exports(_ua, exports);
 
 exports.watch_reg_events = _ua._watch_reg_events;
 exports.profile_set_from = _ua._profile_set_from;

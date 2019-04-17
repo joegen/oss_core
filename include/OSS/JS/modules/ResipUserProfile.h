@@ -17,8 +17,8 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
-#ifndef OSS_RESIPSIPSTACK_H_INCLUDED
-#define OSS_RESIPSIPSTACK_H_INCLUDED
+#ifndef OSS_RESIPUSERPROFILE_H_INCLUDED
+#define OSS_RESIPUSERPROFILE_H_INCLUDED
 
 
 #include <v8.h>
@@ -27,40 +27,30 @@
 #include "OSS/JSON/Json.h"
 #include "OSS/JS/JSEventArgument.h"
 
-#include <resip/stack/SipStack.hxx>
-#include <resip/stack/EventStackThread.hxx>
+#include <resip/dum/UserProfile.hxx>
 #include <rutil/SharedPtr.hxx>
 
-
-namespace resip
-{
-  class FdPollGrp;
-}
-
-class ResipSIPStack : public OSS::JS::JSObjectWrap
+class ResipUserProfile : public OSS::JS::JSObjectWrap
 {
 public:
   JS_CONSTRUCTOR_DECLARE();
-  JS_METHOD_DECLARE(run);
-  JS_METHOD_DECLARE(shutdown);
-  JS_METHOD_DECLARE(addTransport);
-  resip::SipStack* stack();
+  JS_METHOD_DECLARE(setDefaultFrom);
+  JS_METHOD_DECLARE(setDigestCredential);
+  const resip::SharedPtr<resip::UserProfile>& profile() const;
 private:
-  ResipSIPStack();
-  virtual ~ResipSIPStack();
-  resip::SipStack* _stack;
-  resip::FdPollGrp* _pollGrp;
-  resip::EventThreadInterruptor* _interruptor;
-  resip::EventStackThread* _thread;
+  ResipUserProfile();
+  virtual ~ResipUserProfile();
+  resip::SharedPtr<resip::UserProfile> _profile;
 };
+
 
 //
 // Inlines
 //
 
-inline resip::SipStack* ResipSIPStack::stack()
+inline const resip::SharedPtr<resip::UserProfile>& ResipUserProfile::profile() const
 {
-  return _stack;
+  return _profile;
 }
 
-#endif // OSS_RESIPSIPSTACK_H_INCLUDED
+#endif // OSS_RESIPUSERPROFILE_H_INCLUDED

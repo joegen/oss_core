@@ -20,4 +20,5 @@ nobase_include_HEADERS += \
     OSS/JS/modules/ResipDialogUsageManager.h \
     OSS/JS/modules/ResipMasterProfile.h \
     OSS/JS/modules/ResipClientRegistrationHandler.h \
-    OSS/JS/modules/ResipClientSubscriptionHandler.h
+    OSS/JS/modules/ResipClientSubscriptionHandler.h \
+    OSS/JS/modules/ResipUserProfile.h

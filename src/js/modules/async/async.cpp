@@ -188,7 +188,7 @@ static v8::Handle<v8::Value> __process_events(const v8::Arguments& args)
   OSS::JS::JSEventQueueManager& queueManager = pEventLoop->queueManager();
   OSS::JS::JSInterIsolateCallManager& interIsolate = pEventLoop->interIsolate();
   
-  if (queueManager.getSize() > 0 || interIsolate.isEnabled())
+  if (pIsolate->getForceAsync() || queueManager.getSize() > 0 || interIsolate.isEnabled())
   {
     _enableAsync = true;
   }

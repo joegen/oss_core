@@ -12,7 +12,10 @@ lib_LTLIBRARIES += liboss_jsresip_ua.la
 liboss_jsresip_ua_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
 liboss_jsresip_ua_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
 liboss_jsresip_ua_la_SOURCES = \
-    js/modules/resip_ua/resip_ua.cpp \
-    js/modules/resip_ua/reg_event_ua.h \
-    js/modules/resip_ua/reg_event_ua.cpp
+    js/modules/resip_ua/ResipSipStack.cpp \
+    js/modules/resip_ua/ResipDialogUsageManager.cpp \
+    js/modules/resip_ua/ResipUserProfile.cpp \
+    js/modules/resip_ua/ResipMasterProfile.cpp \
+    js/modules/resip_ua/ResipClientSubscriptionHandler.cpp \
+    js/modules/resip_ua/resip_ua.cpp
 
