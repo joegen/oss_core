@@ -175,36 +175,64 @@ ResipClientSubscriptionHandler::~ResipClientSubscriptionHandler()
 
 JS_METHOD_IMPL(ResipClientSubscriptionHandler::handleOnUpdatePending)
 {
+  js_method_arg_declare_self(ResipClientSubscriptionHandler, self);
+  js_method_arg_declare_persistent_function(handler, 0);
+  self->_handleOnUpdatePending = new JSPersistentFunctionHandle;
+  *(self->_handleOnUpdatePending) = handler;
   return JSUndefined();
 }
 
 JS_METHOD_IMPL(ResipClientSubscriptionHandler::handleOnUpdateActive)
 {
+  js_method_arg_declare_self(ResipClientSubscriptionHandler, self);
+  js_method_arg_declare_persistent_function(handler, 0);
+  self->_handleOnUpdateActive = new JSPersistentFunctionHandle;
+  *(self->_handleOnUpdateActive) = handler;
   return JSUndefined();
 }
 
 JS_METHOD_IMPL(ResipClientSubscriptionHandler::handleOnUpdateExtension)
 {
+  js_method_arg_declare_self(ResipClientSubscriptionHandler, self);
+  js_method_arg_declare_persistent_function(handler, 0);
+  self->_handleOnUpdateExtension = new JSPersistentFunctionHandle;
+  *(self->_handleOnUpdateExtension) = handler;
   return JSUndefined();
 }
 
 JS_METHOD_IMPL(ResipClientSubscriptionHandler::handleOnTerminated)
 {
+  js_method_arg_declare_self(ResipClientSubscriptionHandler, self);
+  js_method_arg_declare_persistent_function(handler, 0);
+  self->_handleOnTerminated = new JSPersistentFunctionHandle;
+  *(self->_handleOnTerminated) = handler;
   return JSUndefined();
 }
 
 JS_METHOD_IMPL(ResipClientSubscriptionHandler::handleOnNewSubscription)
 {
+  js_method_arg_declare_self(ResipClientSubscriptionHandler, self);
+  js_method_arg_declare_persistent_function(handler, 0);
+  self->_handleOnNewSubscription = new JSPersistentFunctionHandle;
+  *(self->_handleOnNewSubscription) = handler;
   return JSUndefined();
 }
 
 JS_METHOD_IMPL(ResipClientSubscriptionHandler::handleOnNotifyNotReceived)
 {
+  js_method_arg_declare_self(ResipClientSubscriptionHandler, self);
+  js_method_arg_declare_persistent_function(handler, 0);
+  self->_handleOnNotifyNotReceived = new JSPersistentFunctionHandle;
+  *(self->_handleOnNotifyNotReceived) = handler;
   return JSUndefined();
 }
 
 JS_METHOD_IMPL(ResipClientSubscriptionHandler::handleOnFlowTerminated)
 {
+  js_method_arg_declare_self(ResipClientSubscriptionHandler, self);
+  js_method_arg_declare_persistent_function(handler, 0);
+  self->_handleOnFlowTerminated = new JSPersistentFunctionHandle;
+  *(self->_handleOnFlowTerminated) = handler;
   return JSUndefined();
 }
 
