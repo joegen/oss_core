@@ -1,5 +1,6 @@
 #include "OSS/JS/JSPlugin.h"
 #include "OSS/JS/JSIsolate.h"
+#include "OSS/UTL/Logger.h"
 
 #include <rutil/FdPoll.hxx>
 #include <rutil/Logger.hxx>
@@ -14,6 +15,12 @@
 
 using OSS::JS::JSObjectWrap;
 using namespace resip;
+
+#define Log_Crit Log::Crit
+#define Log_Err Log::Err
+#define Log_Warning Log::Warning
+#define Log_Info Log::Info
+#define Log_Debug Log::Debug
 
 /// GLOBAL EXPORTS ///
 
@@ -49,19 +56,66 @@ using namespace resip;
   CONST_EXPORT(PRACK); \
   CONST_EXPORT(PUBLISH); \
   CONST_EXPORT(SERVICE); \
-  CONST_EXPORT(UPDATE);
+  CONST_EXPORT(UPDATE); \
+  CONST_EXPORT(Log_Crit); \
+  CONST_EXPORT(Log_Err); \
+  CONST_EXPORT(Log_Warning); \
+  CONST_EXPORT(Log_Info); \
+  CONST_EXPORT(Log_Debug);
 
-JS_METHOD_IMPL(enable_logging)
+class ResipLogger : public ExternalLogger
 {
-  Log::initialize(Log::Cout, Log::Debug, "oss_core");
+public:
+   virtual ~ResipLogger() {};
+   /** return true to also do default logging, false to suppress default logging. */
+   virtual bool operator()(Log::Level level,
+      const Subsystem& subsystem, 
+      const Data& appName,
+      const char* file,
+      int line,
+      const Data& message,
+      const Data& messageWithHeaders)
+    {
+      switch (level)
+      {
+      case Log::None:
+        break;
+      case Log::Crit:
+        OSS_LOG_CRITICAL(message);
+        break;
+      case Log::Err:
+        OSS_LOG_ERROR(message);
+        break;
+      case Log::Warning:
+        OSS_LOG_WARNING(message);
+        break;
+      case Log::Info:
+        OSS_LOG_INFO(message);
+        break;
+      case Log::Debug:
+        OSS_LOG_DEBUG(message);
+        break;
+      default:
+        OSS_LOG_TRACE(message);
+      }
+      return true;
+    }
+};
+
+static ResipLogger _logger;
+
+JS_METHOD_IMPL(set_log_level)
+{
+  js_method_arg_declare_int32(level, 0);
+  Log::initialize(Log::OnlyExternalNoHeaders, (Log::Level)level, "oss_core", _logger);
   return JSUndefined();
 }
 
 JS_EXPORTS_INIT()
 {
-  Log::initialize(Log::Cout, Log::None, "oss_core");
+  Log::initialize(Log::OnlyExternalNoHeaders, Log::None, "oss_core", _logger);
   EXPORT_GLOBALS();
-  js_export_method("enable_logging", enable_logging);
+  js_export_method("setLogLevel", set_log_level);
   js_export_finalize();
 }
 
