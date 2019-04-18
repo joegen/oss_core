@@ -66,17 +66,24 @@ public:
   }
 
   //subscription can be ended through a notify or a failure response.
-  virtual void onTerminated(ClientSubscriptionHandle, const SipMessage* msg)
+  virtual void onTerminated(ClientSubscriptionHandle h, const SipMessage* msg)
   {
+    std::string key = toString(h->getDocumentKey());
+    _handler->onTerminated(key);
   }
   
   //not sure if this has any value - can be called for either a 200/SUBSCRIBE or a NOTIFY - whichever arrives first
-  virtual void onNewSubscription(ClientSubscriptionHandle, const SipMessage& notify)
+  virtual void onNewSubscription(ClientSubscriptionHandle h, const SipMessage& notify)
   {
+    std::string key = toString(h->getDocumentKey());
+    _handler->onNewSubscription(key);
   }
-  
-  virtual void onNotifyNotReceived(ClientSubscriptionHandle)
+
+  virtual void onNotifyNotReceived(ClientSubscriptionHandle h)
   {
+    std::string key = toString(h->getDocumentKey());
+    _handler->onNotifyNotReceived(key);
+    h->end();
   }
 
   /// Called when a TCP or TLS flow to the server has terminated.  This can be caused by socket
@@ -289,6 +296,21 @@ void ResipClientSubscriptionHandler::onUpdateExtensionIsolated(void* user_data)
   }
   delete data;
 }
+
+void ResipClientSubscriptionHandler::onTerminatedIsolated(void* user_data)
+{
+  update_data* data = (update_data*)user_data;
+  assert(data);
+  if (_handleOnTerminated)
+  {
+    JSLocalValueHandle result = JSObject();
+    result->ToObject()->Set(JSLiteral("key"), JSString(data->key.c_str()));
+    JSLocalArgumentVector args;
+    args.push_back(result);
+    (*_handleOnTerminated)->Call(js_get_global(), args.size(), args.data());
+  }
+  delete data;
+}
   
 void ResipClientSubscriptionHandler::onUpdatePending(const std::string& key, const std::string& eventBody, bool isOutOfOrder)
 {
@@ -315,4 +337,58 @@ void ResipClientSubscriptionHandler::onUpdateExtension(const std::string& key, c
   user_data->eventBody = eventBody;
   user_data->isOutOfOrder = isOutOfOrder;
   _isolate->doTask(boost::bind(&ResipClientSubscriptionHandler::onUpdateExtensionIsolated, this, _1), user_data);
+}
+
+void ResipClientSubscriptionHandler::onTerminated(const std::string& key)
+{
+  update_data* user_data = new update_data();
+  user_data->key = key;
+  user_data->isOutOfOrder = false;
+  _isolate->doTask(boost::bind(&ResipClientSubscriptionHandler::onTerminatedIsolated, this, _1), user_data);
+}
+
+void ResipClientSubscriptionHandler::onNewSubscriptionIsolated(void* user_data)
+{
+  update_data* data = (update_data*)user_data;
+  assert(data);
+  if (_handleOnNewSubscription)
+  {
+    JSLocalValueHandle result = JSObject();
+    result->ToObject()->Set(JSLiteral("key"), JSString(data->key.c_str()));
+    JSLocalArgumentVector args;
+    args.push_back(result);
+    (*_handleOnNewSubscription)->Call(js_get_global(), args.size(), args.data());
+  }
+  delete data;
+}
+
+void ResipClientSubscriptionHandler::onNewSubscription(const std::string& key)
+{
+  update_data* user_data = new update_data();
+  user_data->key = key;
+  user_data->isOutOfOrder = false;
+  _isolate->doTask(boost::bind(&ResipClientSubscriptionHandler::onNewSubscriptionIsolated, this, _1), user_data);
+}
+
+void ResipClientSubscriptionHandler::onNotifyNotReceivedIsolated(void* user_data)
+{
+  update_data* data = (update_data*)user_data;
+  assert(data);
+  if (_handleOnNotifyNotReceived)
+  {
+    JSLocalValueHandle result = JSObject();
+    result->ToObject()->Set(JSLiteral("key"), JSString(data->key.c_str()));
+    JSLocalArgumentVector args;
+    args.push_back(result);
+    (*_handleOnNotifyNotReceived)->Call(js_get_global(), args.size(), args.data());
+  }
+  delete data;
+}
+
+void ResipClientSubscriptionHandler::onNotifyNotReceived(const std::string& key)
+{
+  update_data* user_data = new update_data();
+  user_data->key = key;
+  user_data->isOutOfOrder = false;
+  _isolate->doTask(boost::bind(&ResipClientSubscriptionHandler::onNotifyNotReceivedIsolated, this, _1), user_data);
 }

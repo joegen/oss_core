@@ -77,11 +77,17 @@ public:
   void onUpdatePending(const std::string& key, const std::string& eventBody, bool isOutOfOrder);
   void onUpdateActive(const std::string& key, const std::string& eventBody, bool isOutOfOrder);
   void onUpdateExtension(const std::string& key, const std::string& eventBody, bool isOutOfOrder);
+  void onTerminated(const std::string& key);
+  void onNewSubscription(const std::string& key);
+  void onNotifyNotReceived(const std::string& key);
 
 protected:
   void onUpdatePendingIsolated(void* user_data);
   void onUpdateActiveIsolated(void* user_data);
   void onUpdateExtensionIsolated(void* user_data);
+  void onTerminatedIsolated(void* user_data);
+  void onNewSubscriptionIsolated(void* user_data);
+  void onNotifyNotReceivedIsolated(void* user_data);
   
 private:
   ResipClientSubscriptionHandler();

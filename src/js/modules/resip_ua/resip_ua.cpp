@@ -51,11 +51,17 @@ using namespace resip;
   CONST_EXPORT(SERVICE); \
   CONST_EXPORT(UPDATE);
 
+JS_METHOD_IMPL(enable_logging)
+{
+  Log::initialize(Log::Cout, Log::Debug, "oss_core");
+  return JSUndefined();
+}
 
 JS_EXPORTS_INIT()
 {
+  Log::initialize(Log::Cout, Log::None, "oss_core");
   EXPORT_GLOBALS();
-  Log::initialize(Log::Cout, Log::Debug, "oss_core");
+  js_export_method("enable_logging", enable_logging);
   js_export_finalize();
 }
 
