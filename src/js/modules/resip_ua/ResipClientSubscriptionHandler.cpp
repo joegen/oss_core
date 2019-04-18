@@ -9,15 +9,15 @@ using OSS::JS::JSObjectWrap;
 using namespace resip;
 
 /// ClientSubscriptionHandler ///
-class client_susbcription_handler : public ClientSubscriptionHandler
+class client_subscription_handler : public ClientSubscriptionHandler
 {
 public:
-  client_susbcription_handler(ResipClientSubscriptionHandler* handler) :
+  client_subscription_handler(ResipClientSubscriptionHandler* handler) :
     _handler(handler)
   {
   }
     
-  virtual ~client_susbcription_handler()
+  virtual ~client_subscription_handler()
   {
   }
   
@@ -114,7 +114,7 @@ JS_CLASS_INTERFACE(ResipClientSubscriptionHandler, "ClientSubscriptionHandler")
 JS_CONSTRUCTOR_IMPL(ResipClientSubscriptionHandler)
 {
   ResipClientSubscriptionHandler* object = new ResipClientSubscriptionHandler();
-  object->_handler = new client_susbcription_handler(object);
+  object->_handler = new client_subscription_handler(object);
   object->_isolate = OSS::JS::JSIsolate::getIsolate();
   object->Wrap(js_method_arg_self());
   return js_method_arg_self();

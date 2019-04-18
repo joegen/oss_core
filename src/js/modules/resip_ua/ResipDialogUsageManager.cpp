@@ -11,6 +11,7 @@
 #include "OSS/JS/modules/ResipMasterProfile.h"
 #include "OSS/JS/modules/ResipUserProfile.h"
 #include "OSS/JS/modules/ResipClientSubscriptionHandler.h"
+#include "OSS/JS/modules/ResipClientRegistrationHandler.h"
 
 
 using OSS::JS::JSObjectWrap;
@@ -66,6 +67,48 @@ private:
   int _refreshInterval;
 };
 
+class SendClientRegistration : public resip::DumCommand
+{
+public:
+  SendClientRegistration(ResipDialogUsageManager& dum, const resip::SharedPtr<resip::UserProfile>& profile, const resip::Uri& aor) :
+    _dum(dum),
+    _aor(aor)
+  {
+      _profile = profile;
+  }
+  
+  ~SendClientRegistration()
+  {
+  }
+
+  virtual void executeCommand()
+  {
+    SharedPtr<SipMessage> reg = _dum.dum()->makeRegistration(resip::NameAddr(_aor), _profile);
+    _dum.dum()->send(reg);
+  }
+
+  virtual resip::Message* clone() const
+  {
+    return new SendClientRegistration(_dum, _profile, _aor);
+  }
+
+  virtual std::ostream& encode(std::ostream& strm) const
+  {
+    strm << "Send " <<  " REGISTER for " << _aor;
+    return strm;
+  }
+  
+  virtual std::ostream& encodeBrief(std::ostream& strm) const
+  {
+    return encode(strm);
+  }
+
+private:
+  ResipDialogUsageManager& _dum;
+  resip::SharedPtr<resip::UserProfile> _profile;
+  resip::Uri _aor;
+};
+
 JS_METHOD_IMPL(ResipDialogUsageManager::sendClientSubscription)
 {
   js_method_arg_declare_self(ResipDialogUsageManager, self);  
@@ -82,14 +125,28 @@ JS_METHOD_IMPL(ResipDialogUsageManager::sendClientSubscription)
   return JSUndefined();
 }
 
+JS_METHOD_IMPL(ResipDialogUsageManager::sendClientRegistration)
+{
+  js_method_arg_declare_self(ResipDialogUsageManager, self);  
+  js_method_arg_declare_unwrapped_object(ResipUserProfile, profile, 0);
+  js_method_arg_declare_string(aor, 1);
+  
+  Uri uri(aor.c_str());
+  SendClientRegistration* cmd = new SendClientRegistration(*self, profile->profile(), uri);
+  self->dum()->post(cmd);
+  return JSUndefined();
+}
+
 JS_CLASS_INTERFACE(ResipDialogUsageManager, "DialogUsageManager") 
 {
   JS_CLASS_METHOD_DEFINE(ResipDialogUsageManager, "run", run);
   JS_CLASS_METHOD_DEFINE(ResipDialogUsageManager, "shutdown", shutdown);
   JS_CLASS_METHOD_DEFINE(ResipDialogUsageManager, "setMasterProfile", setMasterProfile);
   JS_CLASS_METHOD_DEFINE(ResipDialogUsageManager, "addClientSubscriptionHandler", addClientSubscriptionHandler);
+  JS_CLASS_METHOD_DEFINE(ResipDialogUsageManager, "setClientRegistrationHandler", setClientRegistrationHandler);
   JS_CLASS_METHOD_DEFINE(ResipDialogUsageManager, "overrideContact", overrideContact);
   JS_CLASS_METHOD_DEFINE(ResipDialogUsageManager, "sendClientSubscription", sendClientSubscription);
+  JS_CLASS_METHOD_DEFINE(ResipDialogUsageManager, "sendClientRegistration", sendClientRegistration);
   JS_CLASS_INTERFACE_END(ResipDialogUsageManager); 
 }
 
@@ -160,6 +217,14 @@ JS_METHOD_IMPL(ResipDialogUsageManager::addClientSubscriptionHandler)
   js_method_arg_declare_string(event, 0);
   js_method_arg_declare_unwrapped_object(ResipClientSubscriptionHandler, handler, 1);
   self->dum()->addClientSubscriptionHandler(event.c_str(), handler->handler());
+  return JSUndefined();
+}
+
+JS_METHOD_IMPL(ResipDialogUsageManager::setClientRegistrationHandler)
+{
+  js_method_arg_declare_self(ResipDialogUsageManager, self);
+  js_method_arg_declare_unwrapped_object(ResipClientRegistrationHandler, handler, 0);
+  self->dum()->setClientRegistrationHandler(handler->handler());
   return JSUndefined();
 }
 

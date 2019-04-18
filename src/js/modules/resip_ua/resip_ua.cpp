@@ -10,6 +10,7 @@
 #include "OSS/JS/modules/ResipMasterProfile.h"
 #include "OSS/JS/modules/ResipUserProfile.h"
 #include "OSS/JS/modules/ResipClientSubscriptionHandler.h"
+#include "OSS/JS/modules/ResipClientRegistrationHandler.h"
 #include "resip/dum/ClientSubscription.hxx"
 
 
@@ -30,6 +31,7 @@ using namespace resip;
   js_export_class(ResipMasterProfile); \
   js_export_class(ResipUserProfile); \
   js_export_class(ResipClientSubscriptionHandler); \
+  js_export_class(ResipClientRegistrationHandler); \
   CONST_EXPORT(UNKNOWN_TRANSPORT); \
   CONST_EXPORT(TLS); \
   CONST_EXPORT(TCP); \

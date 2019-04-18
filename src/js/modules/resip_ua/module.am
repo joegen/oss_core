@@ -17,5 +17,6 @@ liboss_jsresip_ua_la_SOURCES = \
     js/modules/resip_ua/ResipUserProfile.cpp \
     js/modules/resip_ua/ResipMasterProfile.cpp \
     js/modules/resip_ua/ResipClientSubscriptionHandler.cpp \
+    js/modules/resip_ua/ResipClientRegistrationHandler.cpp \
     js/modules/resip_ua/resip_ua.cpp
 

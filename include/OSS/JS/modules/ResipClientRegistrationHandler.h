@@ -33,11 +33,17 @@
 class ResipClientRegistrationHandler : public OSS::JS::JSObjectWrap
 {
 public:
+  struct update_data
+  {
+    std::string key;
+  };
+
   JS_CONSTRUCTOR_DECLARE();
 
   /// Called when registraion succeeds or each time it is sucessfully
   /// refreshed (manual refreshes only). 
   /// virtual void onSuccess(ClientRegistrationHandle, const SipMessage& response)=0;
+  JS_METHOD_DECLARE(handleOnSuccess);
 
   ///  Called when all of my bindings have been removed
   /// virtual void onRemoved(ClientRegistrationHandle, const SipMessage& response) = 0;
@@ -53,14 +59,6 @@ public:
   /// virtual void onFailure(ClientRegistrationHandle, const SipMessage& response)=0;
   JS_METHOD_DECLARE(handleOnFailure);
 
-  /// Called when a TCP or TLS flow to the server has terminated.  This can be caused by socket
-  /// errors, or missing CRLF keep alives pong responses from the server.
-  //  Called only if clientOutbound is enabled on the UserProfile and the first hop server 
-  /// supports RFC5626 (outbound).
-  /// Default implementation is to immediately re-Register in an attempt to form a new flow.
-  /// virtual void onFlowTerminated(ClientRegistrationHandle);
-  JS_METHOD_DECLARE(handleOnFlowTerminated);
-
   /// Called before attempting to refresh a registration
   /// Return true if the refresh should go ahead or false otherwise
   /// Default implementation always returns true
@@ -68,10 +66,32 @@ public:
   JS_METHOD_DECLARE(handleOnRefreshRequired);
   
   resip::ClientRegistrationHandler* handler();
+
+  void onSuccess(const std::string& key);
+  void onRemoved(const std::string& key);
+  void onRequestRetry(const std::string& key);
+  void onFailure(const std::string& key);
+  void onRefreshRequired(const std::string& key);
+
+protected:
+  void onSuccessIsolated(void* user_data);
+  void onRemovedIsolated(void* user_data);
+  void onRequestRetryIsolated(void* user_data);
+  void onFailureIsolated(void* user_data);
+  void onRefreshRequiredIsolated(void* user_data);
+
 private:
   ResipClientRegistrationHandler();
   virtual ~ResipClientRegistrationHandler();
   resip::ClientRegistrationHandler* _handler;
+
+  JSPersistentFunctionHandle* _handleOnSuccess;
+  JSPersistentFunctionHandle* _handleOnRemoved;
+  JSPersistentFunctionHandle* _handleOnRequestRetry;
+  JSPersistentFunctionHandle* _handleOnFailure;
+  JSPersistentFunctionHandle* _handleOnRefreshRequired;
+
+  OSS::JS::JSIsolate::Ptr _isolate;
 };
 
 //
