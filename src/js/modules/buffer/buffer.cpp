@@ -233,8 +233,8 @@ JS_METHOD_IMPL(BufferObject::toString)
   {
     size = js_method_arg_as_uint32(0);
   }
-  
-  return JSString((const char*)pBuffer->_buffer.data(), size);
+  std::string str((const char*)pBuffer->_buffer.data(), size);
+  return JSString(str.c_str(), strlen(str.c_str()));
 }
 
 JS_METHOD_IMPL(BufferObject::equals) 
