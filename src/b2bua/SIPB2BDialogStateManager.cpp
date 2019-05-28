@@ -669,7 +669,7 @@ bool SIPB2BDialogStateManager::findDialog(
           return false;
         }
       }
-    }catch(OSS::Exception e)
+    }catch(const OSS::Exception& e)
     {
       OSS_LOG_WARNING(logId << "No existing dialog state for " << method << " - " << e.message());
       return false;
@@ -809,7 +809,7 @@ void SIPB2BDialogStateManager::onUpdateInitialUASState(
         //if (pResponse->is2xx())
         updateDialog(sessionId, leg1, 1);
       }
-      catch(OSS::Exception e)
+      catch(const OSS::Exception& e)
       {
         std::ostringstream logMsg;
         logMsg << pTransaction->getLogId() << "Unable to save dialog state for leg 1 - " << e.message();
@@ -919,7 +919,7 @@ void SIPB2BDialogStateManager::onUpdateInitialUACState(
       addDialog(leg2.callId, dialogData);
       _dataStore.dbPersist(dialogData);
     }
-    catch(OSS::Exception e)
+    catch(const OSS::Exception& e)
     {
       std::ostringstream logMsg;
       logMsg << pTransaction->getLogId() << "Unable to save dialog state for leg 2 - " << e.message();
@@ -1000,7 +1000,7 @@ void SIPB2BDialogStateManager::onUpdateMidCallUASState(
         updateDialog(dialogData.sessionId, *pLeg, boost::lexical_cast<int>(legIndexNumber));
         _dataStore.dbPersist(dialogData);
       }
-      catch(OSS::Exception e)
+      catch(const OSS::Exception& e)
       {
         std::ostringstream logMsg;
         logMsg << pTransaction->getLogId() << "Unable to save dialog state for " << legIndex << " - " << e.message();
@@ -1076,7 +1076,7 @@ void SIPB2BDialogStateManager::onUpdateMidCallUACState(
       updateDialog(dialogData);
       _dataStore.dbPersist(dialogData);
     }
-    catch(OSS::Exception e)
+    catch(const OSS::Exception& e)
     {
       std::ostringstream logMsg;
       logMsg << pTransaction->getLogId() << "Unable to save dialog state for reinvite " << e.message();
@@ -1674,7 +1674,7 @@ void SIPB2BDialogStateManager::onRouteAckRequest(
       OSS::log_debug(pMsg->createLoggerData());
 
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream logMsg;
     logMsg << logId << "Exception: " << e.message();

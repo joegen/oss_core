@@ -200,7 +200,7 @@ void SIPB2BTransaction::runTask()
     {
       pRouteResponse = _pManager->onRouteTransaction(_pClientRequest, shared_from_this(), _localInterface, outboundTarget);
     }
-    catch(OSS::Exception e)
+    catch(const OSS::Exception& e)
     {
       OSS::log_warning(_logId + e.message());
       releaseInternalRef();
@@ -403,7 +403,7 @@ void SIPB2BTransaction::runTask()
     // assure that this transaction is garbage collected
     //
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
 
     SIPMessage::Ptr serverError = _pServerRequest->createResponse(500, e.message());
@@ -597,7 +597,7 @@ void SIPB2BTransaction::runResponseTask()
       }
     }
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream errorMsg;
     errorMsg << _logId << "Fatal Exception while calling SIPB2BTransaction::runResponseTask() - "

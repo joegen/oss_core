@@ -280,7 +280,7 @@ void SBCRegisterBehavior::sendOptionsKeepAlive(const std::string& regRecord)
 
     _pManager->transactionManager().stack().sendRequest(msg, src, target, _keepAliveResponseCb, OSS::SIP::SIPTransaction::TerminateCallback());
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream logMsg;
     logMsg << "SBCRegisterBehavior::sendOptionsKeepAlive Failure - "
@@ -319,7 +319,7 @@ void SBCRegisterBehavior::runOptionsResponseThread()
 
         registration.eraseWorkSpaceRecord(atIndex == std::string::npos ? *_workspace : *(_pManager->workspace().getLocalRegDb()));
       }
-      catch(OSS::Exception e)
+      catch(const OSS::Exception& e)
       {
         #if 0
         std::ostringstream logMsg;
@@ -885,7 +885,7 @@ SIPMessage::Ptr SBCRegisterBehavior::onRouteUpperReg(
     if (_pManager->requireRtpForRegistrations())
       pTransaction->setProperty("require-rtp-proxy", "1");
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     OSS_LOG_ERROR("Unable to load " << regId << " Error=" << e.what());
     SIPMessage::Ptr serverError = pRequest->createResponse(SIPMessage::CODE_404_NotFound);
@@ -1199,7 +1199,7 @@ void SBCRegisterBehavior::sendGatewayKeepAlive(Gateway& gateway)
     msg->setProperty("gateway-name", gateway.name);
     _pManager->transactionManager().stack().sendRequest(msg, src, target, _keepAliveResponseCb, OSS::SIP::SIPTransaction::TerminateCallback());
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream logMsg;
     logMsg << "SBCRegisterBehavior::sendOptionsKeepAlive Failure - "

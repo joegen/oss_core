@@ -100,14 +100,14 @@ bool ClassType::load(const boost::filesystem::path& file)
   {
       static_cast<libconfig::Config*>(_persistentClass->_config)->readFile(OSS::boost_path(file).c_str());
   }
-  catch(libconfig::ParseException e)
+  catch(const libconfig::ParseException& e)
   {
     std::ostringstream errorMsg;
     errorMsg << "Persistent::ClassType::load Error reading " << file << " at line " << e.getLine() << " with error " << e.getError();
     OSS_LOG_ERROR(errorMsg.str());
     return false;
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     //_csFileMutex.unlock();
     std::ostringstream errorMsg;

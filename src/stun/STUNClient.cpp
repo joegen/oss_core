@@ -185,7 +185,11 @@ int STUNClient::getNatType(
   boost::asio::ip::udp::endpoint test_ep = boost::asio::ip::udp::endpoint(_test1MappedAddr.address(), _test1MappedAddr.getPort());
   boost::system::error_code ec;
   test_sock.bind(test_ep, ec);
-  bool isNat = (ec);
+  bool isNat = false;
+  
+  if (ec) {
+      isNat = true;
+  }
 
   if ( isNat )
   {

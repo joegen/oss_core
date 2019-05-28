@@ -122,8 +122,13 @@ inline bool TlsContext::initialize(
   OSS_LOG_DEBUG("TlsContext::initialize - Certificate: " << certFile << " Private Key: " << privateKey << " Verify Peer: " << verifyPeer );
   
   _pIoService = pIoService;
+#if 0
   _pServerContext = Context(new boost::asio::ssl::context(*pIoService, boost::asio::ssl::context::sslv23_server));
   _pClientContext = Context(new boost::asio::ssl::context(*pIoService, boost::asio::ssl::context::sslv23_client));
+#else
+  _pServerContext = Context(new boost::asio::ssl::context(boost::asio::ssl::context::sslv23_server));
+  _pClientContext = Context(new boost::asio::ssl::context(boost::asio::ssl::context::sslv23_client));
+#endif
   
   if (verifyPeer)
   {

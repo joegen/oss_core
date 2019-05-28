@@ -63,7 +63,7 @@ void SIPFSMDispatch::onReceivedMessage(SIPMessage::Ptr pMsg, SIPTransportSession
   {
     pMsg->parse();
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream logMsg;
     logMsg << "Incoming message failed to be parsed - " << e.message()

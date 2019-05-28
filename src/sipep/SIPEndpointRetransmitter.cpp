@@ -97,7 +97,7 @@ void SIPEndpointRetransmitter::handleTimer(const boost::system::error_code& e)
       _pTransport->writeMessage(_pRequest, target, port);
     }
   }
-  catch(std::exception e)
+  catch(const std::exception& e)
   {
     OSS_LOG_ERROR(_logId << "SIPEndpointRetransmitter::handleTimer - Exception: " << e.what());
   }

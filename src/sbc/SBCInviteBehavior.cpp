@@ -939,7 +939,7 @@ void SBCInviteBehavior::onProcessAckOr2xxRequest(
         sessionId, peerXOR, localAddress, targetAddress);
       _pManager->transactionManager().stack().sendRequestDirect(pMsg, localAddress, targetAddress);
     }
-    catch(OSS::Exception e)
+    catch(const OSS::Exception& e)
     {
       std::ostringstream logMsg;
       logMsg << logId << "Unable to process ACK.  Exception: " << e.message();

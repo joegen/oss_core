@@ -137,7 +137,7 @@ void RTPProxyManager::recycleState()
         }
       }
     }
-    catch(OSS::Exception e)
+    catch(const OSS::Exception& e)
     {
       std::ostringstream logMsg;
       logMsg << "RTPProxyManager::recycleState) Failure - "

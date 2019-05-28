@@ -39,17 +39,12 @@ To install build dependencies
 
 ## Prerequisites for Ubuntu
   apt-get -qq update
-  apt-get install -y libpoco-dev
-  apt-get install -y libboost-all-dev
-  apt-get install -y libzmq3-dev
-  apt-get install -y libv8-dev
-  apt-get install -y libhiredis-dev
-  apt-get install -y libconfig++-dev
-  apt-get install -y libpcap-dev
+  apt-get install -y build-essential autoconf libtool
+  apt-get install -y libpoco-dev libboost-all-dev libzmq3-dev libv8-dev libhiredis-dev libconfig++-dev libpcap-dev
 
 ## Optional dependencies for Ubuntu
-  libleveldb-dev
-  libmcrypt-dev
+  apt-get install -y libleveldb-dev libmcrypt-dev libdb++-dev
+  
   
 ## Building From Source (Mac and Linux)
 ------------------------------------------

@@ -144,7 +144,7 @@ void SIPB2BClientTransaction::runTask()
     // assure that this transaction is garbage collected
     //
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream errorMsg;
     errorMsg << _logId << "Fatal Exception while calling SIPB2BTransaction::runTask() - "
@@ -190,7 +190,7 @@ void SIPB2BClientTransaction::runResponseTask()
     releaseInternalRef();
     return;
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream errorMsg;
     errorMsg << _logId << "Fatal Exception while calling SIPB2BTransaction::runResponseTask() - "

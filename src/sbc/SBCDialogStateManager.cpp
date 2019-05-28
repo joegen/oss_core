@@ -568,7 +568,7 @@ void SBCDialogStateManager::onUpdateInitialUASState(
           addDialog(pResponse->hdrGet("call-id"), stateFile);
         }
       }
-      catch(OSS::Exception e)
+      catch(const OSS::Exception& e)
       {
         std::ostringstream logMsg;
         logMsg << pTransaction->getLogId() << "Unable to save dialog state for leg 1 - " << e.message();
@@ -786,7 +786,7 @@ void SBCDialogStateManager::onUpdateInitialUACState(
       
       leg2Persistent.persist(stateFile);
     }
-    catch(OSS::Exception e)
+    catch(const OSS::Exception& e)
     {
       std::ostringstream logMsg;
       logMsg << pTransaction->getLogId() << "Unable to save dialog state for leg 2 - " << e.message();
@@ -888,7 +888,7 @@ void SBCDialogStateManager::onUpdateReinviteUASState(
 
         legPersistent.persist(stateFile);
       }
-      catch(OSS::Exception e)
+      catch(const OSS::Exception& e)
       {
         std::ostringstream logMsg;
         logMsg << pTransaction->getLogId() << "Unable to save dialog state for " << legIndex << " - " << e.message();
@@ -986,7 +986,7 @@ void SBCDialogStateManager::onUpdateReinviteUACState(
 
       legPersistent.persist(stateFile);
     }
-    catch(OSS::Exception e)
+    catch(const OSS::Exception& e)
     {
       std::ostringstream logMsg;
       logMsg << pTransaction->getLogId() << "Unable to save dialog state for reinvite " << e.message();
@@ -1071,7 +1071,7 @@ void SBCDialogStateManager::flushStale()
       ClassType::remove(*iter);
     }
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream logMsg;
     logMsg << "purge_state_files() Failure - "
@@ -1157,7 +1157,7 @@ const SIPB2BTransaction::Ptr& pTransaction,
           return false;
         }
       }
-    }catch(OSS::Exception e)
+    }catch(const OSS::Exception& e)
     {
       OSS_LOG_WARNING(logId << "No existing dialog state file for " << method << " - " << e.message());
       return false;
@@ -1216,7 +1216,7 @@ const SIPB2BTransaction::Ptr& pTransaction,
             throw SBCStateException("Unable to determine dialog");
           }
         }
-      }catch(OSS::Exception e)
+      }catch(const OSS::Exception& e)
       {
         OSS_LOG_WARNING(logId << "No existing dialog state file for " << method << " - " << e.message() );
         return false;
@@ -1888,7 +1888,7 @@ void SBCDialogStateManager::onRouteAckRequest(
     }
   
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream logMsg;
     logMsg << logId << "Unable to process ACK.  Exception: " << e.message();

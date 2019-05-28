@@ -440,12 +440,12 @@ SIPMessage::Ptr SBCSDPBehavior::onProcessRequestBody(
     }
 
   }
-  catch(RTPProxyTooManySession e)
+  catch(const RTPProxyTooManySession& e)
   {
     SIPMessage::Ptr serverError = pServerRequest->createResponse(SIPMessage::CODE_503_ServiceUnavailable, e.message().c_str());
     return serverError;
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     SIPMessage::Ptr serverError = pServerRequest->createResponse(SIPMessage::CODE_400_BadRequest, e.message().c_str());
     return serverError;
@@ -579,7 +579,7 @@ void SBCSDPBehavior::onProcessResponseBody(
       OSS_LOG_INFO(pTransaction->getLogId() << "SBCSDPBehavior::onProcessResponseBody - Processing SDP for sessionId " << sessionId << " returned empty response");
     }
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream logMsg;
     logMsg << pTransaction->getLogId() << "Unable to process SDP in response.  Exception: " << e.message();

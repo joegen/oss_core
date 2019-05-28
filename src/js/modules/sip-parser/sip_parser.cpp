@@ -58,7 +58,7 @@ static /*size_t*/ v8::Handle<v8::Value> msgGetMethod(const v8::Arguments& args/*
     OSS::SIP::SIPCSeq hCSeq(cseq.c_str());
     return v8::String::New(hCSeq.getMethod().c_str());
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgGetMethod - " << e.message();
@@ -85,7 +85,7 @@ static /*size_t*/ v8::Handle<v8::Value> msgHdrPresent(const v8::Arguments& args/
   {
     return v8::Boolean::New(pMsg->hdrPresent(headerName.c_str()));
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrPresent - " << e.message();
@@ -112,7 +112,7 @@ static  /*size_t*/ v8::Handle<v8::Value> msgHdrGetSize(const v8::Arguments& args
   {
     return v8::Integer::New(pMsg->hdrGetSize(headerName.c_str()));
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrGetSize - " << e.message();
@@ -144,7 +144,7 @@ static /*const std::string&*/ v8::Handle<v8::Value> msgHdrGet(const v8::Argument
 
     return v8::String::New(pMsg->hdrGet(headerName.c_str()).c_str());
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrGet - " << e.message();
@@ -179,7 +179,7 @@ static /*bool*/ v8::Handle<v8::Value> msgHdrSet(const v8::Arguments& args/*const
   {
     return v8::Boolean::New(pMsg->hdrSet(headerName.c_str(), headerValue, index));
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrSet - " << e.message();
@@ -206,7 +206,7 @@ static /*bool*/ v8::Handle<v8::Value> msgHdrRemove(const v8::Arguments& args/*co
   {
     return v8::Boolean::New(pMsg->hdrRemove(headerName.c_str()));
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrRemove - " << e.message();
@@ -237,7 +237,7 @@ static /*bool*/ v8::Handle<v8::Value> msgHdrListAppend(const v8::Arguments& args
   {
     return v8::Boolean::New(pMsg->hdrListAppend(headerName.c_str(), headerValue));
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrListAppend - " << e.message();
@@ -268,7 +268,7 @@ static /*bool*/ v8::Handle<v8::Value> msgHdrListPrepend(const v8::Arguments& arg
   {
     return v8::Boolean::New(pMsg->hdrListPrepend(headerName.c_str(), headerValue));
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrListPrepend - " << e.message();
@@ -295,7 +295,7 @@ static /*std::string*/ v8::Handle<v8::Value> msgHdrListPopFront(const v8::Argume
   {
     return v8::String::New(pMsg->hdrListPopFront(headerName.c_str()).c_str());
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrListPopFront - " << e.message();
@@ -322,7 +322,7 @@ static /*bool*/ v8::Handle<v8::Value> msgHdrListRemove(const v8::Arguments& args
   {
     return v8::Boolean::New(pMsg->hdrListRemove(headerName.c_str()));
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrListRemove - " << e.message();
@@ -352,7 +352,7 @@ static  /*boost::tribool*/ v8::Handle<v8::Value> msgIsRequest(const v8::Argument
     else
       return v8::Boolean::New(pMsg->isRequest(method.c_str()));
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIsRequest - " << e.message();
@@ -376,7 +376,7 @@ static /*boost::tribool*/ v8::Handle<v8::Value> msgIsResponse(const v8::Argument
   {
     return v8::Boolean::New(pMsg->isResponse());
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIsResponse - " << e.message();
@@ -399,7 +399,7 @@ static /*boost::tribool*/ v8::Handle<v8::Value> msgIs1xx(const v8::Arguments& ar
   {
     return v8::Boolean::New(pMsg->is1xx());
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIs1xx - " << e.message();
@@ -422,7 +422,7 @@ static /*boost::tribool*/ v8::Handle<v8::Value> msgIs2xx(const v8::Arguments& ar
   {
     return v8::Boolean::New(pMsg->is2xx());
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIs2xx - " << e.message();
@@ -445,7 +445,7 @@ static /*boost::tribool*/ v8::Handle<v8::Value> msgIs3xx(const v8::Arguments& ar
   {
     return v8::Boolean::New(pMsg->is3xx());
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIs3xx - " << e.message();
@@ -468,7 +468,7 @@ static /*boost::tribool*/ v8::Handle<v8::Value> msgIs4xx(const v8::Arguments& ar
   {
     return v8::Boolean::New(pMsg->is4xx());
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIs4xx - " << e.message();
@@ -491,7 +491,7 @@ static /*boost::tribool*/ v8::Handle<v8::Value> msgIs5xx(const v8::Arguments& ar
   {
     return v8::Boolean::New(pMsg->is5xx());
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIs5xx - " << e.message();
@@ -514,7 +514,7 @@ static /*boost::tribool*/ v8::Handle<v8::Value> msgIs6xx(const v8::Arguments& ar
   {
     return v8::Boolean::New(pMsg->is6xx());
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIs6xx - " << e.message();
@@ -539,7 +539,7 @@ static /*boost::tribool*/ v8::Handle<v8::Value> msgIsResponseFamily(const v8::Ar
   {
     return v8::Boolean::New(pMsg->isResponseFamily(responseCode));
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIsResponseFamily - " << e.message();
@@ -563,7 +563,7 @@ static /*boost::tribool*/ v8::Handle<v8::Value> msgIsErrorResponse(const v8::Arg
   {
     return v8::Boolean::New(pMsg->isErrorResponse());
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgIsErrorResponse - " << e.message();
@@ -586,7 +586,7 @@ static /*boost::tribool*/ v8::Handle<v8::Value> msgIsMidDialog(const v8::Argumen
   {
     return v8::Boolean::New(pMsg->isMidDialog());
   }
-  catch(OSS::Exception e)
+  catch(const OSS::Exception& e)
   {
     std::ostringstream msg;
     msg << "JavaScript->C++ Exception: msgHdrGet - " << e.message();

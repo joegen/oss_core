@@ -283,7 +283,7 @@ bool SBCConsole::Client::requestConfiguration(int timeout)
     rstrm << response;
     json::Reader::Read(config, rstrm);
   }
-  catch(std::exception e)
+  catch(const std::exception& e)
   {
     OSS_LOG_ERROR("SBCConsole::Client - (Reader) JSON exception: " << e.what());
     return false;

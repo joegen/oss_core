@@ -753,7 +753,7 @@ public:
      *
      * @return A reference to the connection's strand object
      */
-    boost::asio::strand& get_strand() {
+    boost::asio::io_service::strand& get_strand() {
         boost::lock_guard<boost::recursive_mutex> lock(m_lock);
         return m_strand;
     }
@@ -1532,7 +1532,11 @@ public:
     
     // concurrency support
     mutable boost::recursive_mutex      m_lock;
+#if 0
     boost::asio::strand         m_strand;
+#else
+    boost::asio::io_service::strand         m_strand;
+#endif
     bool                        m_detached; // TODO: this should be atomic
     
     // OSS specific members
