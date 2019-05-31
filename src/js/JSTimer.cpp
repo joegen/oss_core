@@ -50,6 +50,11 @@ void JSTimer::onTimerExpire()
   JSTimer::Ptr pTimer = _pManager->removeTimer(_id);
   if(pTimer)
   {
+    //
+    // We must set autoDispose so that were are sure
+    // that it happens within the isolate thread and not here
+    //
+    pTimer->autoDisposeOnExecute() = true;
     _pManager->execute(pTimer);
   }
 }

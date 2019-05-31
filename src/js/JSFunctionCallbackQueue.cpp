@@ -40,12 +40,14 @@ JSFunctionCallbackQueue::~JSFunctionCallbackQueue()
 void JSFunctionCallbackQueue::execute(v8::Handle<v8::Value> func, v8::Handle<v8::Value>  args)
 {
   JSFunctionCallback::Ptr fun(new JSFunctionCallback(func, args));
+  fun->autoDisposeOnExecute() = true;
   execute(fun);
 }
 
 void JSFunctionCallbackQueue::execute(v8::Handle<v8::Value> func, v8::Handle<v8::Value>  args, v8::Handle<v8::Value> resultHandler)
 {
   JSFunctionCallback::Ptr fun(new JSFunctionCallback(func, args, resultHandler));
+  fun->autoDisposeOnExecute() = true;
   execute(fun);
 }
 

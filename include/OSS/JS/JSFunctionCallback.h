@@ -28,6 +28,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include "OSS/JS/JSIsolateManager.h"
+#include "OSS/UTL/Thread.h"
 
 
 namespace OSS {
@@ -46,24 +47,47 @@ public:
   virtual ~JSFunctionCallback();
   virtual void execute();
   void handle_to_arg_vector(v8::Handle<v8::Value> input, ArgumentVector& output);
+  void dispose();
+  bool& autoDisposeOnExecute();
+  bool autoDisposeOnExecute() const;
 private:
   v8::Persistent<v8::Function> _function;
   ArgumentVector _args;
   v8::Persistent<v8::Function> _resultHandler;
+  
+  bool _disposed;
+  bool _autoDisposeOnExecute;
+  OSS::mutex_critic_sec _disposeMutex;
 };
 
-inline JSFunctionCallback::JSFunctionCallback(v8::Handle<v8::Value> func)
+inline bool& JSFunctionCallback::autoDisposeOnExecute()
+{
+    return _autoDisposeOnExecute;
+}
+
+inline bool JSFunctionCallback::autoDisposeOnExecute() const
+{
+    return _autoDisposeOnExecute;
+}
+  
+inline JSFunctionCallback::JSFunctionCallback(v8::Handle<v8::Value> func) :
+    _disposed(false),
+    _autoDisposeOnExecute(false)
 {
   _function =  v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(func));
 }
 
-inline JSFunctionCallback::JSFunctionCallback(v8::Handle<v8::Value> func, v8::Handle<v8::Value>  args)
+inline JSFunctionCallback::JSFunctionCallback(v8::Handle<v8::Value> func, v8::Handle<v8::Value>  args)  :
+    _disposed(false),
+    _autoDisposeOnExecute(false)
 {
   _function =  v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(func));
   handle_to_arg_vector(args, _args);
 }
 
-inline JSFunctionCallback::JSFunctionCallback(v8::Handle<v8::Value> func, v8::Handle<v8::Value>  args, v8::Handle<v8::Value> resultHandler)
+inline JSFunctionCallback::JSFunctionCallback(v8::Handle<v8::Value> func, v8::Handle<v8::Value>  args, v8::Handle<v8::Value> resultHandler)  :
+    _disposed(false),
+    _autoDisposeOnExecute(false)
 {
   _function =  v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(func));
   _resultHandler =  v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(resultHandler));
@@ -72,6 +96,18 @@ inline JSFunctionCallback::JSFunctionCallback(v8::Handle<v8::Value> func, v8::Ha
 
 inline JSFunctionCallback::~JSFunctionCallback()
 {
+    dispose();
+}
+
+inline void JSFunctionCallback::dispose()
+{
+    OSS::mutex_critic_sec_lock lock(_disposeMutex);
+    
+    if (_disposed)
+    {
+        return;
+    }
+    
     _function.Dispose();
     if (!_resultHandler.IsEmpty())
     {
@@ -81,6 +117,7 @@ inline JSFunctionCallback::~JSFunctionCallback()
     {
       iter->Dispose();
     }
+    _disposed = true;
 }
 
 inline void JSFunctionCallback::handle_to_arg_vector(v8::Handle<v8::Value> input, ArgumentVector& output)
@@ -111,6 +148,11 @@ inline void JSFunctionCallback::execute()
     ArgumentVector resultArg;
     handle_to_arg_vector(result, resultArg);
     _resultHandler->Call(js_get_global(), resultArg.size(), resultArg.data());
+  }
+  
+  if (_autoDisposeOnExecute)
+  {
+      dispose();
   }
 }
 
