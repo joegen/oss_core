@@ -3,8 +3,8 @@ AC_PREREQ(2.57)
 #
 # Init library version
 #
-AC_INIT(oss_core, 3.0.0, info@ossapp.com)
-OSS_CORE_VERSION_CURRENT="3"
+AC_INIT(oss_core, 4.0.0, info@ossapp.com)
+OSS_CORE_VERSION_CURRENT="4"
 OSS_CORE_VERSION_AGE="0"
 OSS_CORE_VERSION_REVISION="0"
 
