@@ -30,6 +30,11 @@ AC_DEFINE_UNQUOTED([PACKAGE_REVISION], "${PACKAGE_REVISION}", [Revion number inc
 
 m4_include([oss_core.m4])
 
+#
+# Additonal external libraries
+#
+AC_CONFIG_SUBDIRS([libs/resiprocate])
+
 AC_CONFIG_FILES([
     include/OSS/build.h
     Makefile
