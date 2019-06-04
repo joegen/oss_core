@@ -36,6 +36,7 @@ public:
   struct update_data
   {
     std::string key;
+    std::string id;
     std::string eventBody; 
     bool isOutOfOrder;
   };
@@ -74,13 +75,14 @@ public:
 
   resip::ClientSubscriptionHandler* handler();
   
-  void onUpdatePending(const std::string& key, const std::string& eventBody, bool isOutOfOrder);
-  void onUpdateActive(const std::string& key, const std::string& eventBody, bool isOutOfOrder);
-  void onUpdateExtension(const std::string& key, const std::string& eventBody, bool isOutOfOrder);
-  void onTerminated(const std::string& key);
-  void onNewSubscription(const std::string& key);
-  void onNotifyNotReceived(const std::string& key);
-
+  void onUpdatePending(const std::string& key, const std::string& id, const std::string& eventBody, bool isOutOfOrder);
+  void onUpdateActive(const std::string& key, const std::string& id, const std::string& eventBody, bool isOutOfOrder);
+  void onUpdateExtension(const std::string& key, const std::string& id, const std::string& eventBody, bool isOutOfOrder);
+  void onTerminated(const std::string& key, const std::string& id);
+  void onNewSubscription(const std::string& key, const std::string& id);
+  void onNotifyNotReceived(const std::string& key, const std::string& id);
+  
+  static bool requestRefresh(const std::string& id, const std::string& contentType, std::string& content, OSS::UInt32 interval); 
 protected:
   void onUpdatePendingIsolated(void* user_data);
   void onUpdateActiveIsolated(void* user_data);

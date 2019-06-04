@@ -67,6 +67,49 @@ private:
   int _refreshInterval;
 };
 
+class SendClientSubscriptionRefresh : public resip::DumCommand
+{
+public:
+  SendClientSubscriptionRefresh(const std::string& id, const std::string& contentType, const std::string& content, OSS::UInt32 interval) :
+    _id(id),
+    _contentType(contentType),
+    _content(content),
+    _interval(interval)
+  {
+  }
+  
+  ~SendClientSubscriptionRefresh()
+  {
+  }
+
+  virtual void executeCommand()
+  {
+    ResipClientSubscriptionHandler::requestRefresh(_id, _contentType, _content, _interval);
+  }
+
+  virtual resip::Message* clone() const
+  {
+    return new SendClientSubscriptionRefresh(_id, _contentType, _content, _interval);
+  }
+
+  virtual std::ostream& encode(std::ostream& strm) const
+  {
+    strm << "Request Refresh for subscription id " << _id;
+    return strm;
+  }
+  
+  virtual std::ostream& encodeBrief(std::ostream& strm) const
+  {
+    return encode(strm);
+  }
+
+private:
+  std::string _id;
+  std::string _contentType;
+  std::string _content;
+  OSS::UInt32 _interval;
+};
+
 class SendClientRegistration : public resip::DumCommand
 {
 public:
@@ -125,6 +168,20 @@ JS_METHOD_IMPL(ResipDialogUsageManager::sendClientSubscription)
   return JSUndefined();
 }
 
+JS_METHOD_IMPL(ResipDialogUsageManager::sendClientSubscriptionRefresh)
+{
+  js_method_arg_declare_self(ResipDialogUsageManager, self);  
+  js_method_arg_declare_unwrapped_object(ResipUserProfile, profile, 0);
+  js_method_arg_declare_string(id, 1);
+  js_method_arg_declare_string(contentType, 2);
+  js_method_arg_declare_string(content, 3);
+  js_method_arg_declare_uint32(interval, 4);
+
+  SendClientSubscriptionRefresh* cmd = new SendClientSubscriptionRefresh(id, contentType, content, interval);
+  self->dum()->post(cmd);
+  return JSUndefined();
+}
+
 JS_METHOD_IMPL(ResipDialogUsageManager::sendClientRegistration)
 {
   js_method_arg_declare_self(ResipDialogUsageManager, self);  
@@ -146,6 +203,7 @@ JS_CLASS_INTERFACE(ResipDialogUsageManager, "DialogUsageManager")
   JS_CLASS_METHOD_DEFINE(ResipDialogUsageManager, "setClientRegistrationHandler", setClientRegistrationHandler);
   JS_CLASS_METHOD_DEFINE(ResipDialogUsageManager, "overrideContact", overrideContact);
   JS_CLASS_METHOD_DEFINE(ResipDialogUsageManager, "sendClientSubscription", sendClientSubscription);
+  JS_CLASS_METHOD_DEFINE(ResipDialogUsageManager, "sendClientSubscriptionRefresh", sendClientSubscriptionRefresh);
   JS_CLASS_METHOD_DEFINE(ResipDialogUsageManager, "sendClientRegistration", sendClientRegistration);
   JS_CLASS_INTERFACE_END(ResipDialogUsageManager); 
 }

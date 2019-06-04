@@ -10,8 +10,6 @@ RESIP_BUILD_DIR = $(top_builddir)/libs/resiprocate
 RESIPLA = $(RESIP_BUILD_DIR)/resip/stack/libresip.la
 $(RESIPLA):
 	cd $(RESIP_BUILD_DIR) && make
-resip_install:
-		cd $(RESIP_BUILD_DIR) && make install
 
 
 SUBDIRS = .
@@ -107,4 +105,4 @@ include unit_test/Makefile.am
 #
 # install hook
 #
-install-exec-hook: resip_install js_plugin-install-hook
+install-exec-hook: js_plugin-install-hook

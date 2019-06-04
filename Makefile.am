@@ -43,3 +43,6 @@ deb:
 	DESTDIR=`pwd`/DEBBUILD/libosscore-@VERSION@ make install 
 	cp debian.control `pwd`/DEBBUILD/libosscore-@VERSION@/DEBIAN/control
 	cd DEBBUILD && dpkg-deb --build libosscore-@VERSION@
+
+resip-install:
+	cd $(top_builddir)/libs/resiprocate && make install

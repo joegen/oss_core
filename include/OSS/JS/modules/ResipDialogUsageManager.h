@@ -89,6 +89,7 @@ public:
   JS_METHOD_DECLARE(overrideContact);
   JS_METHOD_DECLARE(sendClientSubscription);
   JS_METHOD_DECLARE(sendClientRegistration);
+  JS_METHOD_DECLARE(sendClientSubscriptionRefresh);
 
   resip::DialogUsageManager* dum();
   virtual void onDumCanBeDeleted();
