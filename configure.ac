@@ -10,7 +10,7 @@ OSS_CORE_VERSION_REVISION="0"
 
 AC_CONFIG_AUX_DIR(config)
 AM_INIT_AUTOMAKE([subdir-objects foreign] )
-m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+#m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_SRCDIR([src/OSS.cpp])
 AM_CONFIG_HEADER([src/config.h])
 AC_PROG_LIBTOOL
@@ -19,7 +19,6 @@ AC_PATH_PROG([BASH], [bash])
 AC_PROG_CXX
 AC_PROG_CC
 AC_CANONICAL_HOST
-
 
 #
 # Configure package revision number
@@ -33,7 +32,7 @@ m4_include([oss_core.m4])
 #
 # Additonal external libraries
 #
-AC_CONFIG_SUBDIRS([libs/resiprocate])
+
 
 AC_CONFIG_FILES([
     include/OSS/build.h
@@ -43,5 +42,9 @@ AC_CONFIG_FILES([
     src/Makefile
     include/Makefile
 ])
+
+#ac_configure_args="$ac_configure_args --disable-static CONFIGURE_CFLAGS='$CFLAGS $CPPFLAGS' CONFIGURE_CXXFLAGS='$CXXFLAGS $CPPFLAGS' CONFIGURE_LDFLAGS='$LDFLAGS' "
+
+AC_CONFIG_SUBDIRS([libs/resiprocate])
 
 AC_OUTPUT

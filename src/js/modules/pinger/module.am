@@ -9,7 +9,7 @@ INSTALL_PROCEDURES += pinger-install
 EXTRA_DIST += js/modules/pinger/index.js
 
 lib_LTLIBRARIES += liboss_jspinger.la
-liboss_jspinger_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
-liboss_jspinger_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jspinger_la_LDFLAGS = -module -fpic -avoid-version
+liboss_jspinger_la_LIBADD = $(OSS_CORE_DEP_LIBS) $(OSS_CORE_LA)
 liboss_jspinger_la_SOURCES = js/modules/pinger/pinger.cpp
 

@@ -8,6 +8,6 @@ INSTALL_PROCEDURES += socket-install
 EXTRA_DIST += js/modules/socket/index.js
 
 lib_LTLIBRARIES += liboss_jsinetsocket.la
-liboss_jsinetsocket_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
-liboss_jsinetsocket_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsinetsocket_la_LDFLAGS = -module -fpic -avoid-version
+liboss_jsinetsocket_la_LIBADD = $(OSS_CORE_DEP_LIBS) $(OSS_CORE_LA)
 liboss_jsinetsocket_la_SOURCES = js/modules/socket/c_inet_socket.c js/modules/socket/inet_socket.cpp

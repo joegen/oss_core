@@ -99,10 +99,6 @@ inline void JSModule::setModulesDir(const std::string& modulesDir)
   _modulesDir.push_back(modulesDir);
 }
 
-inline void JSModule::setMainScript(const boost::filesystem::path& script)
-{
-  _mainScript = script;
-}
 inline const boost::filesystem::path& JSModule::getMainScript() const
 {
   return _mainScript;

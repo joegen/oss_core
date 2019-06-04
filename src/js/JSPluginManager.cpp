@@ -72,7 +72,7 @@ JSPlugin* JSPluginManager::loadPlugin(const std::string& path)
   }
   catch(const Poco::Exception& e)
   {
-    OSS_LOG_ERROR("JSPluginManager::loadPlugin is unable to load " << path << " Exception: " << e.what());
+    OSS_LOG_ERROR("JSPluginManager::loadPlugin is unable to load " << path << " Exception: " << e.message());
   }
   return 0;
 }

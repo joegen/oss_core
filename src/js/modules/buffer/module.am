@@ -9,5 +9,5 @@ EXTRA_DIST += js/modules/buffer/index.js
 
 lib_LTLIBRARIES += liboss_jsbuffer.la
 liboss_jsbuffer_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
-liboss_jsbuffer_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsbuffer_la_LIBADD = $(OSS_CORE_DEP_LIBS) $(OSS_CORE_LA)
 liboss_jsbuffer_la_SOURCES = js/modules/buffer/buffer.cpp

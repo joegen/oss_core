@@ -10,11 +10,11 @@ INSTALL_PROCEDURES += esl-install
 EXTRA_DIST += js/modules/esl/index.js
 
 lib_LTLIBRARIES += liboss_jseslevent.la
-liboss_jseslevent_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
-liboss_jseslevent_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jseslevent_la_LDFLAGS = -module -fpic -avoid-version
+liboss_jseslevent_la_LIBADD = $(OSS_CORE_DEP_LIBS) $(OSS_CORE_LA)
 liboss_jseslevent_la_SOURCES = js/modules/esl/esl_event.cpp
 
 lib_LTLIBRARIES += liboss_jseslconnection.la
-liboss_jseslconnection_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
-liboss_jseslconnection_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jseslconnection_la_LDFLAGS = -module -fpic -avoid-version
+liboss_jseslconnection_la_LIBADD = $(OSS_CORE_DEP_LIBS) $(OSS_CORE_LA)
 liboss_jseslconnection_la_SOURCES = js/modules/esl/esl_connection.cpp

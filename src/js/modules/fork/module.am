@@ -9,6 +9,6 @@ INSTALL_PROCEDURES += fork-install
 EXTRA_DIST += js/modules/fork/index.js
 
 lib_LTLIBRARIES += liboss_jsfork.la
-liboss_jsfork_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
-liboss_jsfork_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsfork_la_LDFLAGS = -module -fpic -avoid-version
+liboss_jsfork_la_LIBADD = $(OSS_CORE_DEP_LIBS) $(OSS_CORE_LA)
 liboss_jsfork_la_SOURCES = js/modules/fork/fork.cpp

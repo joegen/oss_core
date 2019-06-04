@@ -37,6 +37,7 @@ include js/modules/sip-parser/module.am
 include js/modules/lexer/module.am
 include js/modules/parser/module.am
 include js/modules/pinger/module.am
+include js/modules/resip_ua/module.am
 
 if ENABLE_FEATURE_SBC
 if ENABLE_FEATURE_B2BUA
@@ -46,10 +47,6 @@ endif
 
 if ENABLE_FEATURE_INOTIFY
 include js/modules/inotify/module.am
-endif
-
-if ENABLE_FEATURE_RESIP_UA
-include js/modules/resip_ua/module.am
 endif
 
 

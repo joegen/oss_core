@@ -8,12 +8,16 @@ INSTALL_PROCEDURES += resip_ua-install
 
 EXTRA_DIST += js/modules/resip_ua/index.js
 
-RESIP_DIR=$(top_srcdir)/libs/resiprocate
-RESIPLA=$(RESIP_DIR)/resip/libresip.la $(RESIP_DIR)/resip/dum/libdum.la $(RESIP_DIR)/rutil/dns/ares/libresipares.la $(RESIP_DIR)/rutil/librutil.la
-
 lib_LTLIBRARIES += liboss_jsresip_ua.la
-liboss_jsresip_ua_la_LDFLAGS = -static -module -fpic -version-info @OSS_CORE_VERSION_INFO@
-liboss_jsresip_ua_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd) $(RESIPLA)
+liboss_jsresip_ua_la_LDFLAGS = -module -fpic -avoid-version
+liboss_jsresip_ua_la_LIBADD = \
+    $(OSS_CORE_DEP_LIBS) \
+    $(RESIPLA) \
+    $(RESIP_BUILD_DIR)/resip/dum//libdum.la \
+    $(RESIP_BUILD_DIR)/rutil/librutil.la \
+    $(RESIP_BUILD_DIR)/rutil/dns/ares/libresipares.la \
+    $(OSS_CORE_LA)
+
 liboss_jsresip_ua_la_SOURCES = \
     js/modules/resip_ua/ResipSipStack.cpp \
     js/modules/resip_ua/ResipDialogUsageManager.cpp \
@@ -24,7 +28,5 @@ liboss_jsresip_ua_la_SOURCES = \
     js/modules/resip_ua/resip_ua.cpp
 
 
-$(RESIPLA): $(RESIP_DIR)/resip/libresip.la
-	cd $(RESIP_DIR) && make
 
 

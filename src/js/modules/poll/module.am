@@ -8,7 +8,7 @@ INSTALL_PROCEDURES += poll-install
 EXTRA_DIST += js/modules/poll/index.js
 
 lib_LTLIBRARIES += liboss_jspoll.la
-liboss_jspoll_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
-liboss_jspoll_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jspoll_la_LDFLAGS = -module -fpic -avoid-version
+liboss_jspoll_la_LIBADD = $(OSS_CORE_DEP_LIBS) $(OSS_CORE_LA)
 liboss_jspoll_la_SOURCES = js/modules/poll/poll.cpp
 

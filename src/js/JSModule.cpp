@@ -132,6 +132,7 @@ static bool module_path_exists(const std::string& canonicalName, std::string& ab
   parent_path = JSModule::_mainScript.parent_path();
   boost::filesystem::path module_path = OSS::boost_path_concatenate(parent_path, "oss_modules");
   absPath = OSS::boost_path_concatenate(module_path, canonicalName);
+  
   if (boost::filesystem::exists(absPath))
   {
     absolutePath = OSS::boost_path(absPath);
@@ -421,6 +422,24 @@ JSModule::JSModule(JSIsolate* pIsolate) :
 
 JSModule::~JSModule()
 {
+}
+
+void JSModule::setMainScript(const boost::filesystem::path& script)
+{
+  std::string file = OSS::boost_path(script);
+  boost::filesystem::path currentPath = boost::filesystem::current_path();
+  if (OSS::string_starts_with(file, "./")) 
+  {
+    _mainScript = OSS::boost_path_concatenate(currentPath, file.substr(2, std::string::npos));
+  } 
+  else if (!OSS::string_starts_with(file, "/"))
+  {
+    _mainScript = OSS::boost_path_concatenate(currentPath, file);
+  } 
+  else
+  {
+    _mainScript = script;
+  }
 }
 
 bool JSModule::initialize(v8::TryCatch& try_catch, v8::Handle<v8::ObjectTemplate>& global)

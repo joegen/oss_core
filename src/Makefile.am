@@ -1,16 +1,24 @@
+
+OSS_CORE_DEP_LIBS = @OSS_CORE_DEP_LIBS@
+OSS_CORE_LA = liboss_core.la
+
+#
+# Compile External libs
+#
+RESIP_DIR = @OSS_CORE_SRCDIR@/libs/resiprocate
+RESIP_BUILD_DIR = $(top_builddir)/libs/resiprocate
+RESIPLA = $(RESIP_BUILD_DIR)/resip/stack/libresip.la
+$(RESIPLA):
+	cd $(RESIP_BUILD_DIR) && make
+resip_install:
+		cd $(RESIP_BUILD_DIR) && make install
+
+
 SUBDIRS = .
 
 EXTRA_DIST =
 
-corelibs =
-
-corelibldadd = \
-    @OSS_CORE_DEP_LIBS@ \
-    liboss_core.la
-
-corelibs += liboss_core.la
-
-lib_LTLIBRARIES = $(corelibs)
+lib_LTLIBRARIES = liboss_core.la
 
 localedir = $(datadir)/locale
 
@@ -29,21 +37,23 @@ AM_CPPFLAGS = \
     -I@OSS_CORE_SRCDIR@/src/utl/linux/pidfile \
     -I@OSS_CORE_SRCDIR@/src/net/udns/include \
     -I@OSS_CORE_SRCDIR@/src/net/esl/include \
+    -I$(RESIP_DIR) \
     @OSS_CORE_ADDITIONAL_INCLUDES@
-
-
 
 version_Current=@OSS_CORE_VERSION_CURRENT@
 version_Revision=@OSS_CORE_VERSION_REVISION@
 version_Age=@OSS_CORE_VERSION_AGE@
 
-LDADD = $(corelibldadd)
+LDADD = $(OSS_CORE_LA) $(OSS_CORE_DEP_LIBS)
 
 LDFLAGS = -rdynamic
 
-liboss_core_la_LDFLAGS = -version-info @OSS_CORE_VERSION_INFO@
-liboss_core_la_LIBADD = @OSS_CORE_DEP_LIBS@
+liboss_core_la_LDFLAGS = -rdynamic -fpic -avoid-version
+
+liboss_core_la_LIBADD = $(OSS_CORE_DEP_LIBS)
+
 liboss_core_la_CFLAGS = -DHAVE_INET_PTON_NTOP
+liboss_core_la_CPPFLAGS = $(AM_CPPFLAGS) -fPIC
 
 BUILT_SOURCES = boost_pch.hpp.gch
 CLEANFILES = boost_pch.hpp.gch
@@ -97,4 +107,4 @@ include unit_test/Makefile.am
 #
 # install hook
 #
-install-exec-hook: js_plugin-install-hook
+install-exec-hook: resip_install js_plugin-install-hook

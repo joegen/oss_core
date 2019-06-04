@@ -9,6 +9,6 @@ INSTALL_PROCEDURES += getopt-install
 EXTRA_DIST += js/modules/getopt/index.js
 
 lib_LTLIBRARIES += liboss_jsgetopt.la
-liboss_jsgetopt_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
-liboss_jsgetopt_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsgetopt_la_LDFLAGS = -module -fpic -avoid-version
+liboss_jsgetopt_la_LIBADD = $(OSS_CORE_DEP_LIBS) $(OSS_CORE_LA)
 liboss_jsgetopt_la_SOURCES = js/modules/getopt/getopt.cpp

@@ -1,8 +1,8 @@
 EXTRA_DIST += js/modules/examples/*.js js/modules/examples/data/*
 
 lib_LTLIBRARIES += liboss_jscpprpc_tester.la
-liboss_jscpprpc_tester_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
-liboss_jscpprpc_tester_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jscpprpc_tester_la_LDFLAGS = -module -fpic -avoid-version
+liboss_jscpprpc_tester_la_LIBADD = $(OSS_CORE_DEP_LIBS) $(OSS_CORE_LA)
 liboss_jscpprpc_tester_la_SOURCES = js/modules/examples/cpp_rpc_tester.cpp
 
 examples-install:

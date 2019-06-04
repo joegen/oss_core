@@ -11,6 +11,6 @@ EXTRA_DIST += \
     js/modules/isolate/isolate.js
 
 lib_LTLIBRARIES += liboss_jsisolate.la
-liboss_jsisolate_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
-liboss_jsisolate_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsisolate_la_LDFLAGS = -module -fpic -avoid-version
+liboss_jsisolate_la_LIBADD = $(OSS_CORE_DEP_LIBS) $(OSS_CORE_LA)
 liboss_jsisolate_la_SOURCES = js/modules/isolate/isolate.cpp

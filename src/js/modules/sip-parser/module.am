@@ -9,6 +9,6 @@ INSTALL_PROCEDURES += sipparser-install
 EXTRA_DIST += js/modules/sip-parser/index.js
 
 lib_LTLIBRARIES += liboss_jssipparser.la
-liboss_jssipparser_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
-liboss_jssipparser_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jssipparser_la_LDFLAGS = -module -fpic -avoid-version
+liboss_jssipparser_la_LIBADD = $(OSS_CORE_DEP_LIBS) $(OSS_CORE_LA)
 liboss_jssipparser_la_SOURCES = js/modules/sip-parser/sip_parser.cpp

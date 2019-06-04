@@ -8,6 +8,6 @@ INSTALL_PROCEDURES += utils-install
 EXTRA_DIST += js/modules/utils/index.js
 
 lib_LTLIBRARIES += liboss_jsutils.la
-liboss_jsutils_la_LDFLAGS = -module -fpic -version-info @OSS_CORE_VERSION_INFO@
-liboss_jsutils_la_LIBADD = @OSS_CORE_DEP_LIBS@ $(corelibldadd)
+liboss_jsutils_la_LDFLAGS = -module -fpic -avoid-version
+liboss_jsutils_la_LIBADD = $(OSS_CORE_DEP_LIBS) $(OSS_CORE_LA)
 liboss_jsutils_la_SOURCES = js/modules/utils/utils.cpp
