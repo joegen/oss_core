@@ -62,7 +62,8 @@ public:
   static void addSubscription(ClientSubscriptionHandle handle);
   static void removeSubscription(ClientSubscriptionHandle handle);
   static bool requestRefresh(const std::string& id, const std::string& contentType, const std::string& content, OSS::UInt32 interval = 0);
-  static bool popNextContent(const std::string& id, std::string& contentType, std::string& content);
+  static bool getSubscribePayload(const std::string& id, std::string& contentType, std::string& content);
+  static bool flushSubscribePayload(const std::string& id);
 private:
   ResipClientSubscriptionHandler* _handler;
 };
@@ -109,7 +110,7 @@ bool client_subscription_handler::requestRefresh(const std::string& id, const st
   return false;
 }
 
-bool client_subscription_handler::popNextContent(const std::string& id, std::string& contentType, std::string& content)
+bool client_subscription_handler::getSubscribePayload(const std::string& id, std::string& contentType, std::string& content)
 {
   OSS::mutex_critic_sec_lock lock(client_subscription_handler::_mutex);
   Subscriptions::iterator iter =  client_subscription_handler::_subscriptions.find(id);
@@ -117,6 +118,17 @@ bool client_subscription_handler::popNextContent(const std::string& id, std::str
   {
     contentType = iter->second.nextRefreshContentType;
     content = iter->second.nextRefreshContent;
+    return true;
+  }
+  return false;
+}
+
+bool client_subscription_handler::flushSubscribePayload(const std::string& id)
+{
+  OSS::mutex_critic_sec_lock lock(client_subscription_handler::_mutex);
+  Subscriptions::iterator iter =  client_subscription_handler::_subscriptions.find(id);
+  if (iter != client_subscription_handler::_subscriptions.end())
+  {
     iter->second.nextRefreshContentType = "";
     iter->second.nextRefreshContent = "";
     return true;
@@ -146,7 +158,7 @@ void client_subscription_handler::onReadyToSend(ClientSubscriptionHandle h, SipM
   std::string id = toString(h->getId());
   std::string contentType;
   std::string content;
-  if (client_subscription_handler::popNextContent(id, contentType, content) && !contentType.empty() && !content.empty())
+  if (client_subscription_handler::getSubscribePayload(id, contentType, content) && !contentType.empty() && !content.empty())
   {
     std::vector<std::string> tokens = OSS::string_tokenize(contentType, "/");
     if (tokens.size() == 2) 
@@ -166,6 +178,7 @@ void client_subscription_handler::onUpdatePending(ClientSubscriptionHandle h, co
   std::string key = toString(h->getDocumentKey());
   std::string id = toString(h->getId());
   std::string content = toString(notify);
+  client_subscription_handler::flushSubscribePayload(id);
   _handler->onUpdatePending(key, id, content, outOfOrder);
 }
 
@@ -175,6 +188,7 @@ void client_subscription_handler::onUpdateActive(ClientSubscriptionHandle h, con
   std::string key = toString(h->getDocumentKey());
   std::string id = toString(h->getId());
   std::string content = toString(notify);
+  client_subscription_handler::flushSubscribePayload(id);
   _handler->onUpdateActive(key, id, content, outOfOrder);
 }
 
