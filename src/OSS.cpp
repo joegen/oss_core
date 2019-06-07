@@ -25,8 +25,11 @@
 #include "OSS/UTL/Logger.h"
 #include "Poco/Stopwatch.h"
 #include "Poco/Timestamp.h"
+#include "Poco/LocalDateTime.h"
+#include "Poco/DateTimeFormatter.h"
 #include "OSS/UTL/Thread.h"
 #include "OSS/UTL/CoreUtils.h"
+#include "OSS/UTL/CrashHandler.h"
 
 
 namespace OSS {
@@ -74,6 +77,24 @@ namespace Private {
 
 static std::vector<boost::function<void()> > _initFuncs;
 static std::vector<boost::function<void()> > _deinitFuncs;
+static OSS::Debug::CrashHandler* _crashHandler = 0;
+static std::ostringstream _crashStream;
+
+ssize_t crash_handler_output_callback(const char* msg, size_t size)
+{
+  _crashStream << std::string(msg, size);
+  return size;
+}
+
+void crash_handler_signal_complete()
+{
+  Poco::LocalDateTime now;
+  std::ostringstream preamble;
+  preamble << "Date: " << Poco::DateTimeFormatter::format(now, "%Y/%m/%d %H:%M:%S") << std::endl;
+  std::cerr << preamble.str() << std::endl;
+  std::cerr << _crashStream.str() << std::endl;
+  OSS_LOG_ERROR(_crashStream.str());
+}
 
 void OSS_API OSS_register_init(boost::function<void()> func)
 {
@@ -85,12 +106,34 @@ void OSS_API OSS_register_deinit(boost::function<void()> func)
   _deinitFuncs.push_back(func);
 }
 
-void OSS_init(int argc, char** argv)
+static void enable_crash_handler()
+{
+  if (!_crashHandler)
+  {
+    _crashHandler = new OSS::Debug::CrashHandler();
+    _crashHandler->setThreadSafe(true); // resume the parent process or you will corrp code db during crash
+    _crashHandler->setColorOutput(false);
+    _crashHandler->setSignalComplete(crash_handler_signal_complete);
+    _crashHandler->setOutputCallback(crash_handler_output_callback);
+  }
+}
+void OSS_enable_crash_handler()
+{
+  OSS::mutex_critic_sec_lock lock(gInitMutex);
+  enable_crash_handler();
+}
+
+void OSS_init(int argc, char** argv, bool enableCrashHandling)
 {
   OSS::mutex_critic_sec_lock lock(gInitMutex);
   if (gCalledInit)
   {
     return;
+  }
+  
+  if (enableCrashHandling)
+  {
+    enable_crash_handler();
   }
   
   gCalledInit = true;
@@ -103,9 +146,9 @@ void OSS_init(int argc, char** argv)
     iter != _initFuncs.end(); iter++) (*iter)();
 }
 
-void OSS_API OSS_init()
+void OSS_API OSS_init(bool enableCrashHandling)
 {
-  OSS_init(0, 0);
+  OSS_init(0, 0, enableCrashHandling);
 }
 
 void OSS_argv(int* argc, char*** argv)
@@ -127,6 +170,8 @@ void OSS_deinit()
     iter != _deinitFuncs.end(); iter++) (*iter)();
 
   OSS::Private::net_deinit();
+  delete _crashHandler;
+  _crashHandler = 0;
 }
 
 

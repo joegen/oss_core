@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
+#include "OSS/OSS.h"
 #include "OSS/JS/JSPlugin.h"
 #include "OSS/UTL/CoreUtils.h"
 #include "OSS/UTL/Logger.h"
@@ -229,6 +230,12 @@ JS_METHOD_IMPL(__write_pid_file)
   return JSTrue;
 }
 
+JS_METHOD_IMPL(__enable_crash_handler)
+{
+  OSS::OSS_enable_crash_handler();
+  return JSTrue;
+}
+
 JS_EXPORTS_INIT()
 {
   js_export_method("read", __read);
@@ -246,6 +253,7 @@ JS_EXPORTS_INIT()
   js_export_method("endl", __oendl);
   js_export_method("cerr", __cerr);
   js_export_method("eendl", __eendl);
+  js_export_method("enable_crash_handler", __enable_crash_handler);
 #if !defined(__APPLE__)
   js_export_method("thread_self", __thread_self);
 #endif

@@ -278,7 +278,7 @@ inline bool CrashHandler::cleanup() const {
   return cleanup_;
 }
 
-void CrashHandler::setCleanup(bool value) {
+inline void CrashHandler::setCleanup(bool value) {
   cleanup_ = value;
 }
 
