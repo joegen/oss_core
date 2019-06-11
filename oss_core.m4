@@ -93,6 +93,7 @@ AC_ARG_ENABLE([all-features],
         ENABLE_FEATURE(MCRYPT)
         ENABLE_FEATURE(CONFIG)
         ENABLE_FEATURE(INOTIFY)
+        ENABLE_FEATURE(RESIPROCATE)
     ],
     [
         #
@@ -109,6 +110,13 @@ AC_ARG_ENABLE([all-features],
             AC_HELP_STRING([--disable-sbc], [Disable SBC Feature]),
             [DISABLE_FEATURE(SBC)],
             [ENABLE_FEATURE(SBC)])
+        #
+        # Enable RESIPROCATE compilation
+        #
+        AC_ARG_ENABLE([resiprocate],
+            AC_HELP_STRING([--enable-resiprocate], [Enable Compilation of Resiprocate module]),
+            [ENABLE_FEATURE(RESIPROCATE)],
+            [DISABLE_FEATURE(RESIPROCATE)])
         #
         # Disable RTP Proxy compilation
         #
