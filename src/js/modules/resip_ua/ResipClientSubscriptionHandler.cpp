@@ -83,7 +83,7 @@ client_subscription_handler::~client_subscription_handler()
 void client_subscription_handler::addSubscription(ClientSubscriptionHandle h)
 {
   OSS::mutex_critic_sec_lock lock(client_subscription_handler::_mutex);
-  std::string id = toString(h->getId());
+  std::string id = toString(h->getCallId());
   SubscriptionHandle handle;
   handle.h = h;
   client_subscription_handler::_subscriptions[id] = handle;
@@ -91,7 +91,7 @@ void client_subscription_handler::addSubscription(ClientSubscriptionHandle h)
 void client_subscription_handler::removeSubscription(ClientSubscriptionHandle h)
 {
   OSS::mutex_critic_sec_lock lock(client_subscription_handler::_mutex);
-  std::string id = toString(h->getId());
+  std::string id = toString(h->getCallId());
   client_subscription_handler::_subscriptions.erase(id);
 }
 
@@ -155,7 +155,7 @@ std::string client_subscription_handler::toString(const Data& data)
 
 void client_subscription_handler::onReadyToSend(ClientSubscriptionHandle h, SipMessage& msg)
 {
-  std::string id = toString(h->getId());
+  std::string id = toString(h->getCallId());
   std::string contentType;
   std::string content;
   if (client_subscription_handler::getSubscribePayload(id, contentType, content) && !contentType.empty() && !content.empty())
@@ -176,7 +176,7 @@ void client_subscription_handler::onUpdatePending(ClientSubscriptionHandle h, co
 {
   h->acceptUpdate();
   std::string key = toString(h->getDocumentKey());
-  std::string id = toString(h->getId());
+  std::string id = toString(h->getCallId());
   std::string content = toString(notify);
   client_subscription_handler::flushSubscribePayload(id);
   _handler->onUpdatePending(key, id, content, outOfOrder);
@@ -186,7 +186,7 @@ void client_subscription_handler::onUpdateActive(ClientSubscriptionHandle h, con
 {
   h->acceptUpdate();
   std::string key = toString(h->getDocumentKey());
-  std::string id = toString(h->getId());
+  std::string id = toString(h->getCallId());
   std::string content = toString(notify);
   client_subscription_handler::flushSubscribePayload(id);
   _handler->onUpdateActive(key, id, content, outOfOrder);
@@ -197,7 +197,7 @@ void client_subscription_handler::onUpdateExtension(ClientSubscriptionHandle h, 
 {
   h->acceptUpdate();
   std::string key = toString(h->getDocumentKey());
-  std::string id = toString(h->getId());
+  std::string id = toString(h->getCallId());
   std::string content = toString(notify);
   _handler->onUpdateExtension(key, id, content, outOfOrder);
 }
@@ -212,7 +212,7 @@ int client_subscription_handler::onRequestRetry(ClientSubscriptionHandle, int re
 void client_subscription_handler::onTerminated(ClientSubscriptionHandle h, const SipMessage* msg)
 {
   std::string key = toString(h->getDocumentKey());
-  std::string id = toString(h->getId());
+  std::string id = toString(h->getCallId());
   _handler->onTerminated(key, id);
 }
 
@@ -220,14 +220,14 @@ void client_subscription_handler::onTerminated(ClientSubscriptionHandle h, const
 void client_subscription_handler::onNewSubscription(ClientSubscriptionHandle h, const SipMessage& notify)
 {
   std::string key = toString(h->getDocumentKey());
-  std::string id = toString(h->getId());
+  std::string id = toString(h->getCallId());
   _handler->onNewSubscription(key, id);
 }
 
 void client_subscription_handler::onNotifyNotReceived(ClientSubscriptionHandle h)
 {
   std::string key = toString(h->getDocumentKey());
-  std::string id = toString(h->getId());
+  std::string id = toString(h->getCallId());
   _handler->onNotifyNotReceived(key, id);
   h->end();
 }
