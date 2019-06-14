@@ -42,6 +42,7 @@ public:
   JS_METHOD_DECLARE(setOutboundProxy);
   JS_METHOD_DECLARE(setDefaultFrom);
   JS_METHOD_DECLARE(setDigestCredential);
+  JS_METHOD_DECLARE(setClientSubscriptionWaitFornotify);
   const resip::SharedPtr<resip::MasterProfile>& profile() const;
 private:
   ResipMasterProfile();
