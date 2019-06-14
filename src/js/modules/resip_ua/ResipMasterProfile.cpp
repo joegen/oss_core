@@ -23,7 +23,7 @@ JS_CLASS_INTERFACE(ResipMasterProfile, "MasterProfile")
   JS_CLASS_METHOD_DEFINE(ResipMasterProfile, "setOutboundProxy", setOutboundProxy);
   JS_CLASS_METHOD_DEFINE(ResipMasterProfile, "setDefaultFrom", setDefaultFrom);
   JS_CLASS_METHOD_DEFINE(ResipMasterProfile, "setDigestCredential", setDigestCredential);
-  JS_CLASS_METHOD_DEFINE(ResipMasterProfile, "setClientSubscriptionWaitFornotify)", setClientSubscriptionWaitFornotify);
+  JS_CLASS_METHOD_DEFINE(ResipMasterProfile, "setClientSubscriptionWaitForNotify", setClientSubscriptionWaitForNotify);
   JS_CLASS_INTERFACE_END(ResipMasterProfile); 
 }
 
@@ -113,10 +113,10 @@ JS_METHOD_IMPL(ResipMasterProfile::setDigestCredential)
   return JSUndefined();
 }
 
-JS_METHOD_IMPL(ResipMasterProfile::setClientSubscriptionWaitFornotify)
+JS_METHOD_IMPL(ResipMasterProfile::setClientSubscriptionWaitForNotify)
 {
   js_method_arg_declare_self(ResipMasterProfile, self);
   js_method_arg_declare_uint32(expireMs, 0);
-  self->profile()->setClientSubscriptionWaitFornotify(expireMs);
+  self->profile()->setClientSubscriptionWaitForNotify(expireMs);
   return JSUndefined();
 }
