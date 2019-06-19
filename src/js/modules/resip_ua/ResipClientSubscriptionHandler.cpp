@@ -101,12 +101,14 @@ bool client_subscription_handler::requestRefresh(const std::string& id, const st
   Subscriptions::iterator iter =  client_subscription_handler::_subscriptions.find(id);
   if (iter != client_subscription_handler::_subscriptions.end())
   {
+    OSS_LOG_INFO("client_subscription_handler::requestRefresh - FOUND subscription handle for Call-ID: " << id << " AOR: " << toString(iter->second.h->getDocumentKey()));
     iter->second.nextRefreshContentType = contentType;
     iter->second.nextRefreshContent = content;
     ClientSubscriptionHandle h = iter->second.h;
     h->requestRefresh(interval);
     return true;
   }
+  OSS_LOG_WARNING("client_subscription_handler::requestRefresh - Unable to find a subscription handle for Call-ID " << id);
   return false;
 }
 

@@ -171,11 +171,10 @@ JS_METHOD_IMPL(ResipDialogUsageManager::sendClientSubscription)
 JS_METHOD_IMPL(ResipDialogUsageManager::sendClientSubscriptionRefresh)
 {
   js_method_arg_declare_self(ResipDialogUsageManager, self);  
-  js_method_arg_declare_unwrapped_object(ResipUserProfile, profile, 0);
-  js_method_arg_declare_string(id, 1);
-  js_method_arg_declare_string(contentType, 2);
-  js_method_arg_declare_string(content, 3);
-  js_method_arg_declare_uint32(interval, 4);
+  js_method_arg_declare_string(id, 0);
+  js_method_arg_declare_string(contentType, 1);
+  js_method_arg_declare_string(content, 2);
+  js_method_arg_declare_uint32(interval, 3);
 
   SendClientSubscriptionRefresh* cmd = new SendClientSubscriptionRefresh(id, contentType, content, interval);
   self->dum()->post(cmd);

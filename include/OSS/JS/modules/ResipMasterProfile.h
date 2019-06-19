@@ -36,6 +36,7 @@ public:
   JS_CONSTRUCTOR_DECLARE();
   JS_METHOD_DECLARE(addSupportedMethod);
   JS_METHOD_DECLARE(addAllowedEvent);
+  JS_METHOD_DECLARE(addSupportedMimeType);
   JS_METHOD_DECLARE(validateAcceptEnabled);
   JS_METHOD_DECLARE(validateContentEnabled);
   JS_METHOD_DECLARE(setUserAgent);

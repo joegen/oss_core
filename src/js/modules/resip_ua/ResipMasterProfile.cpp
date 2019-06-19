@@ -4,6 +4,7 @@
 #include <rutil/Logger.hxx>
 
 #include "OSS/JS/modules/ResipMasterProfile.h"
+#include "resip/stack/Mime.hxx"
 
 
 using OSS::JS::JSObjectWrap;
@@ -17,6 +18,7 @@ JS_CLASS_INTERFACE(ResipMasterProfile, "MasterProfile")
 {  
   JS_CLASS_METHOD_DEFINE(ResipMasterProfile, "addSupportedMethod", addSupportedMethod);
   JS_CLASS_METHOD_DEFINE(ResipMasterProfile, "addAllowedEvent", addAllowedEvent);
+  JS_CLASS_METHOD_DEFINE(ResipMasterProfile, "addSupportedMimeType", addSupportedMimeType);
   JS_CLASS_METHOD_DEFINE(ResipMasterProfile, "validateAcceptEnabled", validateAcceptEnabled);
   JS_CLASS_METHOD_DEFINE(ResipMasterProfile, "validateContentEnabled", validateContentEnabled);
   JS_CLASS_METHOD_DEFINE(ResipMasterProfile, "setUserAgent", setUserAgent);
@@ -49,6 +51,18 @@ JS_METHOD_IMPL(ResipMasterProfile::addSupportedMethod)
   js_method_arg_declare_int32(value, 0);
   MethodTypes method_type = (MethodTypes)value;
   self->profile()->addSupportedMethod(method_type);
+  return JSUndefined();
+}
+
+JS_METHOD_IMPL(ResipMasterProfile::addSupportedMimeType)
+{
+  js_method_arg_declare_self(ResipMasterProfile, self);
+  js_method_arg_declare_int32(value, 0);
+  js_method_arg_declare_string(type, 1);
+  js_method_arg_declare_string(sub_type, 2);
+  MethodTypes method_type = (MethodTypes)value;
+  Mime mime(type.c_str(), sub_type.c_str());
+  self->profile()->addSupportedMimeType(method_type, mime);
   return JSUndefined();
 }
 
