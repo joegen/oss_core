@@ -29,8 +29,14 @@
 #include "Poco/DateTimeFormatter.h"
 #include "OSS/UTL/Thread.h"
 #include "OSS/UTL/CoreUtils.h"
-#include "OSS/UTL/CrashHandler.h"
 
+#if ENABLE_CRASH_HANDLER
+#include "OSS/UTL/CrashHandler.h"
+#endif
+
+#if ENABLE_FEATURE_LEAK_CHECKER
+#include "leaktracer.h"
+#endif
 
 namespace OSS {
 
@@ -77,6 +83,8 @@ namespace Private {
 
 static std::vector<boost::function<void()> > _initFuncs;
 static std::vector<boost::function<void()> > _deinitFuncs;
+
+#if ENABLE_CRASH_HANDLER
 static OSS::Debug::CrashHandler* _crashHandler = 0;
 static std::ostringstream _crashStream;
 
@@ -96,6 +104,8 @@ void crash_handler_signal_complete()
   OSS_LOG_ERROR(_crashStream.str());
 }
 
+#endif
+
 void OSS_API OSS_register_init(boost::function<void()> func)
 {
   _initFuncs.push_back(func);
@@ -106,6 +116,7 @@ void OSS_API OSS_register_deinit(boost::function<void()> func)
   _deinitFuncs.push_back(func);
 }
 
+#if ENABLE_CRASH_HANDLER
 static void enable_crash_handler()
 {
   if (!_crashHandler)
@@ -117,10 +128,14 @@ static void enable_crash_handler()
     _crashHandler->setOutputCallback(crash_handler_output_callback);
   }
 }
+#endif
+
 void OSS_enable_crash_handler()
 {
+#if ENABLE_CRASH_HANDLER
   OSS::mutex_critic_sec_lock lock(gInitMutex);
   enable_crash_handler();
+#endif
 }
 
 void OSS_init(int argc, char** argv, bool enableCrashHandling)
@@ -130,11 +145,17 @@ void OSS_init(int argc, char** argv, bool enableCrashHandling)
   {
     return;
   }
-  
+
+#if ENABLE_CRASH_HANDLER
   if (enableCrashHandling)
   {
     enable_crash_handler();
   }
+#endif
+
+#if ENABLE_FEATURE_LEAK_CHECKER
+  leaktracer_startMonitoringAllThreads();
+#endif
   
   gCalledInit = true;
   gArgc = argc;
@@ -170,8 +191,18 @@ void OSS_deinit()
     iter != _deinitFuncs.end(); iter++) (*iter)();
 
   OSS::Private::net_deinit();
+#if ENABLE_CRASH_HANDLER
   delete _crashHandler;
   _crashHandler = 0;
+#endif
+
+#if ENABLE_FEATURE_LEAK_CHECKER
+  leaktracer_stopAllMonitoring();
+  std::ostringstream leak_strm;
+  leak_strm << "/tmp/oss_core_mem_check-" << getpid() << ".dump";
+  leaktracer_writeLeaksToFile(leak_strm.str().c_str());
+#endif
+  
 }
 
 

@@ -43,8 +43,8 @@ AC_CONFIG_FILES([
     include/Makefile
 ])
 
-#ac_configure_args="$ac_configure_args --disable-static CONFIGURE_CFLAGS='$CFLAGS $CPPFLAGS' CONFIGURE_CXXFLAGS='$CXXFLAGS $CPPFLAGS' CONFIGURE_LDFLAGS='$LDFLAGS' "
-
+#original_ac_configure_args="$ac_configure_args"
+#ac_configure_args="$original_ac_configure_args --disable-shared CONFIGURE_CFLAGS='$CFLAGS $CPPFLAGS' CONFIGURE_CXXFLAGS='$CXXFLAGS $CPPFLAGS' CONFIGURE_LDFLAGS='$LDFLAGS' "
 AC_CONFIG_SUBDIRS([libs/resiprocate])
 
 AC_OUTPUT

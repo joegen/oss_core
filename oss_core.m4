@@ -73,6 +73,22 @@ case $host_os in
         ;;
 esac
 
+#
+# Enable LEAK_CHECKER compilation
+#
+AC_ARG_ENABLE([leak-checker],
+    AC_HELP_STRING([--enable-leak-checker], [Enable Compilation of leak checker]),
+    [ENABLE_FEATURE(LEAK_CHECKER)],
+    [DISABLE_FEATURE(LEAK_CHECKER)])
+
+#
+# Enable CRASH_HANDLER compilation
+#
+AC_ARG_ENABLE([crash-handler],
+    AC_HELP_STRING([--enable-crash-handler], [Enable Compilation of crash hander]),
+    [ENABLE_FEATURE(CRASH_HANDLER)],
+    [DISABLE_FEATURE(CRASH_HANDLER)])
+
 
 #
 # Enable ALL features

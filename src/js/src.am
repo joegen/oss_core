@@ -16,7 +16,6 @@ liboss_core_la_SOURCES +=  \
     js/JSEventLoopComponent.cpp \
     js/JSInterIsolateCallManager.cpp \
     js/JSFileDescriptorManager.cpp
-
     bin_PROGRAMS += oss_core
     oss_core_SOURCES = js/oss_core.cpp
 endif

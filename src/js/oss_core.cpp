@@ -64,13 +64,14 @@ int main(int argc, char** argv)
     int h = open("/dev/null",O_RDWR); dup(h); dup(h); /* handle standard I/O */
     ::close(STDIN_FILENO);
   }
-  
+  OSS::OSS_init(argc, argv);
   int scriptIndex = isDaemon ? 2 : 1;
-  
+
   boost::filesystem::path path = boost::filesystem::path(argv[scriptIndex]);
   if (!boost::filesystem::exists(path))
   {
     std::cerr << "Script " << argv[scriptIndex] << " not found." << std::endl;
+    OSS::OSS_deinit();
     _exit(1);
   }
   
@@ -78,7 +79,7 @@ int main(int argc, char** argv)
 
   //std::set_terminate(&ServiceOptions::catch_global);
 
-  OSS::OSS_init(argc, argv);
+  
   
   //
   // Set optind so getopt knows the correct index where to find scrip params
@@ -87,5 +88,6 @@ int main(int argc, char** argv)
 
   JS::JSIsolate::Ptr pIsolate = JS::JSIsolateManager::instance().rootIsolate();
   OSS::SIP::SBC::SBCManager::instance()->modules().run(OSS::boost_path(path), false);
+  OSS::OSS_deinit();
   _exit(pIsolate->getExitValue());
 }

@@ -14,8 +14,11 @@ liboss_core_la_SOURCES +=  \
     utl/StackTrace.cpp \
     utl/LogFile.cpp \
     utl/Console.cpp \
-    utl/PropertyMapObject.cpp \
-    utl/CrashHandler.cpp
+    utl/PropertyMapObject.cpp
+
+if ENABLE_FEATURE_CRASH_HANDLER
+    liboss_core_la_SOURCES += utl/CrashHandler.cpp
+endif
 
 if ENABLE_FEATURE_INOTIFY
 liboss_core_la_SOURCES += utl/FileMonitor.cpp

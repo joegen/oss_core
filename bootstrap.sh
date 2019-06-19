@@ -2,7 +2,16 @@
 
 BASEDIR=`pwd`;
 LIBDIR=${BASEDIR}/libs;
-SUBDIRS="resiprocate";
+SUBDIRS="resiprocate leak_tracer";
+
+https://github.com/fredericgermain/LeakTracer.git
+
+bootstrap_leak_tracer() {
+  cd ${LIBDIR}
+  if [ ! -f ./LeakTracer/libleaktracer/include/leaktracer.h ]; then
+    git clone https://github.com/fredericgermain/LeakTracer.git
+  fi
+}
 
 bootstrap_resiprocate() {
   cd ${LIBDIR}
