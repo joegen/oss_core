@@ -29,6 +29,7 @@
 
 #include <resip/stack/SipStack.hxx>
 #include <resip/stack/EventStackThread.hxx>
+#include <resip/stack//UdpTransport.hxx>
 #include <rutil/SharedPtr.hxx>
 
 
@@ -40,10 +41,13 @@ namespace resip
 class ResipSIPStack : public OSS::JS::JSObjectWrap
 {
 public:
+  typedef std::map<OSS::UInt32, resip::UdpTransport*> UDPTransports;
   JS_CONSTRUCTOR_DECLARE();
   JS_METHOD_DECLARE(run);
   JS_METHOD_DECLARE(shutdown);
   JS_METHOD_DECLARE(addTransport);
+  JS_METHOD_DECLARE(sendStunTest);
+  JS_METHOD_DECLARE(getStunAddress);
   resip::SipStack* stack();
 private:
   ResipSIPStack();
@@ -52,6 +56,7 @@ private:
   resip::FdPollGrp* _pollGrp;
   resip::EventThreadInterruptor* _interruptor;
   resip::EventStackThread* _thread;
+  UDPTransports _udpTransports;
 };
 
 //
