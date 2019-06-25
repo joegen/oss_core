@@ -21,4 +21,7 @@ nobase_include_HEADERS += \
     OSS/JS/modules/ResipMasterProfile.h \
     OSS/JS/modules/ResipClientRegistrationHandler.h \
     OSS/JS/modules/ResipClientSubscriptionHandler.h \
-    OSS/JS/modules/ResipUserProfile.h
+    OSS/JS/modules/ResipUserProfile.h \
+    OSS/JS/modules/ResipAppDialogSetFactory.h \
+    OSS/JS/modules/ResipInviteSessionHandler.h \
+    OSS/JS/modules/ResipClientInviteSessionHandler.h
