@@ -1,5 +1,5 @@
 AC_PREREQ(2.57)
-AC_INIT(oss_core, 21.04, info@ossapp.com)
+AC_INIT(oss_core, 22.06, info@ossapp.com)
 AC_CONFIG_AUX_DIR(config)
 m4_include([config/general.m4])
 m4_include([config/oss_lib.m4])
